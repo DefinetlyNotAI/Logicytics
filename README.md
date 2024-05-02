@@ -14,6 +14,16 @@ Before running DataVoyager, it's recommended to first disable User Account Contr
 powershell.exe -ExecutionPolicy Bypass -File UACX.ps1
 ```
 
+It's also recommended to install all needed libraries, Here is how:
+
+1. Open Command Prompt as an administrator. You can do this by searching for `cmd` in the Start menu, right-clicking on it, and selecting "Run as administrator".
+2. Navigate to the directory where `requirements.txt` is located.
+3. Execute the script by typing the following command and pressing Enter:
+
+```cmd
+pip install -r requirements.txt
+```
+
 ## Running DataVoyager
 
 To run the main program, you need to execute `miner.py` with administrative privileges. Follow these steps:
@@ -22,8 +32,9 @@ To run the main program, you need to execute `miner.py` with administrative priv
 2. Navigate to the directory where `miner.py` is located.
 3. Run the script by typing the following command and pressing Enter:
 
+Make sure a password is available to the admin account, this is because this will ask for a password and not allow you to enter nothing.
 ```cmd
-python miner.py
+runas /user:Administrator miner.py
 ```
 
 ## Important Notes
