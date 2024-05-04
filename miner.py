@@ -14,7 +14,6 @@ import psutil
 import wmi
 
 
-# Define the CaptureOutput class to capture output and format it for Markdown
 class CaptureOutput:
     def __init__(self):
         self.output = ""
@@ -22,18 +21,26 @@ class CaptureOutput:
     def write(self, text):
         # Append a newline character after each message
         self.output += text + "\n"
-        # Check if the message contains "ERROR:" or "WARNING:" and add Markdown for color
-        if "ERROR:" in text:
-            self.output = self.output.replace("ERROR:", "<span style='color:red;'>ERROR:</span>")
-        elif "WARNING:" in text:
-            self.output = self.output.replace("WARNING:", "<span style='color:yellow;'>WARNING:</span>")
-        elif "INFO:" in text:
-            self.output = self.output.replace("INFO:", "<span style='color:blue;'>INFO:</span>")
-        elif "SYSTEM:" in text:
-            self.output = self.output.replace("SYSTEM:", "<span style='color:green;'>SYSTEM:</span>")
+        # Check if the message contains specific keywords and add Markdown for color
+        keywords = ["ERROR:", "WARNING:", "INFO:", "SYSTEM:"]
+        for keyword in keywords:
+            if keyword in text:
+                self.output = self.output.replace(keyword, f"<span style='color:{get_color(keyword)};'>{keyword}</span>")
+            else:
+                self.output = self.output.replace(keyword, keyword)
 
     def flush(self):
         pass
+
+    def get_color(self, keyword):
+        color_map = {
+            "ERROR": "red",
+            "WARNING": "yellow",
+            "INFO": "blue",
+            "SYSTEM": "green"
+        }
+        return color_map.get(keyword, "black")  # Default color if keyword is not found
+
 
 
 # Redirect stdout and stderr to the CaptureOutput class
