@@ -14,6 +14,7 @@ import psutil
 import wmi
 
 
+# Define the CaptureOutput class to capture output and format it for Markdown
 class CaptureOutput:
     def __init__(self):
         self.output = ""
@@ -25,22 +26,24 @@ class CaptureOutput:
         keywords = ["ERROR:", "WARNING:", "INFO:", "SYSTEM:"]
         for keyword in keywords:
             if keyword in text:
-                self.output = self.output.replace(keyword, f"<span style='color:{get_color(keyword)};'>{keyword}</span>")
+                # Correctly call the static method on the class
+                color = CaptureOutput.get_color(keyword)
+                self.output = self.output.replace(keyword, f"<span style='color:{color};'>{keyword}</span>")
             else:
                 self.output = self.output.replace(keyword, keyword)
 
     def flush(self):
         pass
 
-    def get_color(self, keyword):
+    @staticmethod
+    def get_color(keyword):
         color_map = {
-            "ERROR": "red",
-            "WARNING": "yellow",
-            "INFO": "blue",
-            "SYSTEM": "green"
+            "ERROR:": "red",
+            "WARNING:": "yellow",
+            "INFO:": "blue",
+            "SYSTEM:": "green"
         }
         return color_map.get(keyword, "black")  # Default color if keyword is not found
-
 
 
 # Redirect stdout and stderr to the CaptureOutput class
@@ -318,7 +321,7 @@ def filter_processes():
     # Filter and print the list of processes
     for p in processes:
         if p['name'] in system_processes or p['name'] in network_processes or p['name'] in web_browser_processes or p[
-                'name'] in email_clients or p['name'] in office_processes or p['name'] in antivirus_security_processes:
+            'name'] in email_clients or p['name'] in office_processes or p['name'] in antivirus_security_processes:
             print(f"INFO: PID = {p['pid']}, Program Name = {p['name']}")
             print()
 
@@ -474,17 +477,16 @@ def main():
     process_files()
     time.sleep(6)
     zip_data_folder()
-    print("INFO: Finished, Closing in 50 seconds...")
+    print("INFO: Finished, Closing in 3 seconds...")
     print()
     empty_data_folder()
     current_datetime = get_current_datetime()
     print("SYSTEM: Project Complete: ", current_datetime)
     print()
-    time.sleep(25)
+    time.sleep(3)  # If you see this, I am very evil, you will wait 0.01 seconds early
 
 
 if __name__ == "__main__":
     set_execution_policy_unrestricted()
     main()
     capture_and_save_output()
-    time.sleep(25)
