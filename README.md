@@ -44,11 +44,13 @@ python miner.py
   
 - **Do Not Remove or Delete Any Folders or Files**: The integrity of the data collection process depends on the presence of all necessary files and folders. Removing or deleting any part of the DataVoyager package could lead to errors or incomplete data collection.
 
-- **Memory Dumper Tool**: For those interested in additional functionality, you can explore the Memory Dumper tool located in the Memory Dumper folder. This tool offers advanced memory analysis capabilities.
+- **3rd-Party Memory Dumper Tool**: For those interested in additional functionality, you can explore the Memory Dumper tool located in the Memory Dumper folder. This tool offers advanced memory analysis capabilities.
 
 - **Initial Delay**: After starting DataVoyager, you might not see any immediate feedback or activity for about 5 minutes. This is normal and part of the data collection process.
 
 - **Access Permissions**: The only files you should access after running DataVoyager are the generated ZIP file and the `.md` log file. These files contain the collected data and log information, respectively.
+
+- **Releases**: Don't download files from there, that is just some-sort of mini update log, download from the main branch, and No, old versions won't be saved here, but might still be supported.
 
 ## Conclusion
 
