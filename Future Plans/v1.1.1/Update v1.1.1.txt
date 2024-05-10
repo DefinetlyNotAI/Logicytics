@@ -1,0 +1,18 @@
+Add A different log system
+	Logs Version Number, and any folders needed for the file (Error's)
+	Check for UAC, admin and the powershell protocol (Error's / Warnings)
+	Generates the log
+
+Update the Issue Template
+
+Fix the Portability Request
+
+Create new directory [EXPLAIN]
+	Version
+		Includes the version history
+		Explains the version
+	Explain_Files
+		Explain what each file/function does
+		Include the version it was introduced at
+
+Implement GOD.py
