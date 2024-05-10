@@ -4,7 +4,7 @@ Welcome to **DataVoyager**, a powerful tool designed to harvest and collect a wi
 
 ## Prerequisites
 
-Before running DataVoyager, it's recommended to first disable User Account Control (UAC) to ensure smooth operation. You can do this by running the `UACX.py` script as an administrator in the Command Prompt (cmd). Here's how:
+Before running DataVoyager, it's recommended to first disable User Account Control (UAC) to ensure smooth operation. You can do this by running the `UACPY.py` script as an administrator in the Command Prompt (cmd). Here's how:
 
 1. Open Command Prompt as an administrator. You can do this by searching for `cmd` in the Start menu, right-clicking on it, and selecting "Run as administrator".
 2. Navigate to the directory where `UACPY.py` is located.
