@@ -35,7 +35,7 @@ If applicable, add screenshots to help explain your problem.
  - Version [e.g. 1.0.0]
 
 **Copy and paste the log file produced**
-Place the md file contents here, make sure to read it and remove any sensitive data, replace it with XXX.
+For now you may ignore this.
 
 **Proposed Steps to Fix:**
 What do you propose should be fixed and how, this is optional
