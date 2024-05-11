@@ -20,18 +20,12 @@
 <!-- Go over all the following points, and put an `x` in all the boxes that apply. -->
 <!-- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
 
-- [ ] I have read the [contributing guidelines](https://github.com/twbs/bootstrap/blob/main/.github/CONTRIBUTING.md)
-- [ ] My code follows the code style of the project _(using `npm run lint`)_
-- [ ] My change introduces changes to the documentation
-- [ ] I have updated the documentation accordingly
-- [ ] I have added tests to cover my changes
+- [ ] I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md)
 - [ ] All new and existing tests passed
 
 #### Live previews
 
 <!-- Please add direct links where your modifications can be seen in the documentation -->
-
-- <https://deploy-preview-{your_pr_number}--twbs-bootstrap.netlify.app/>
 
 ### Related issues
 
