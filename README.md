@@ -1,6 +1,6 @@
 # Logicytics: System Data Harvester
 
-Welcome to **Logicytics**, a powerful tool designed to harvest and collect a wide range of windows system data for forensics. This guide will help you get started with using DataVoyager effectively.
+Welcome to **Logicytics** (Spelled Loj-ee-cit-iks), a powerful tool designed to harvest and collect a wide range of windows system data for forensics. This guide will help you get started with using DataVoyager effectively.
 
 ## Prerequisites
 
