@@ -1,5 +1,5 @@
 name: Report a bug
-description: Tell us about a bug or issue you may have identified in Bootstrap.
+description: Tell us about a bug or issue you may have identified in Logicytics.
 title: "Provide a general summary of the issue"
 labels: [bug]
 assignees: "-"
@@ -54,7 +54,7 @@ body:
   - type: dropdown
     id: Priority
     attributes:
-      label: What browser(s) are you seeing the problem on?
+      label: Select the bug priority you deem fits.
       multiple: false
       options:
         - High
