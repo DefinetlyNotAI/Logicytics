@@ -51,3 +51,14 @@ body:
       placeholder: "e.g., v1.1.0"
     validations:
       required: true
+  - type: dropdown
+    id: Priority
+    attributes:
+      label: What browser(s) are you seeing the problem on?
+      multiple: false
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
