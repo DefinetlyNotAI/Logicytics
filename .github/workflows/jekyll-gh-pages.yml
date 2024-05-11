@@ -1,57 +1,47 @@
-# Sample workflow for building and deploying a Jekyll site to GitHub Pages
-name: Deploy Jekyll with GitHub Pages dependencies preinstalled
+---
+layout: default
+title: "Contributing"
+date: 2023-04-01
+---
 
-on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
+# CONTRIBUTING.md
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+## Introduction
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+Welcome to our project We appreciate your interest in contributing to our open-source project. Your contributions help us improve and expand the project, making it better for everyone. This document outlines the process for contributing to our project.
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+## How to Contribute
 
-jobs:
-  # Build job
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./
-          destination: ./_site
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+### Reporting Bugs
 
-  # Deployment job
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4z
-      - name: First interaction
-        uses: actions/first-interaction@v1.3.0
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          issue-message: "Welcome to our repository Please read the CONTRIBUTING.md file before submitting your first issue."
-          pr-message: "Thank you for your contribution Please ensure your pull request follows our coding standards outlined in the CONTRIBUTING.md file."
+If you encounter a bug while using our project, please report it to us. Include as much detail as possible, such as the version of the project you're using, steps to reproduce the bug, and any error messages you receive.
+
+### Feature Requests
+
+If you have a feature request, please open an issue on our GitHub repository. Include a detailed description of the feature and how it would benefit the project.
+
+### Pull Requests
+
+1. **Fork the Repository**: Fork our repository to your GitHub account.
+2. **Create a Branch**: Create a new branch for your feature or bug fix.
+3. **Make Changes**: Make your changes in the new branch.
+4. **Commit Changes**: Commit your changes with a clear and descriptive message.
+5. **Push Changes**: Push your changes to your forked repository.
+6. **Open a Pull Request**: Open a pull request on our repository. Include a detailed description of your changes and how they address the issue or implement the feature.
+
+## Coding Standards
+
+- **Code Style**: Follow the project's existing code style. If you're unsure, refer to the `.editorconfig` file or ask for guidance.
+- **Commit Messages**: Write clear and descriptive commit messages. Use the imperative mood (e.g., "Add feature" instead of "Added feature").
+- **Documentation**: Update documentation as necessary to reflect any changes you make.
+
+## Communication
+
+- **Issues**: Use GitHub issues for bug reports and feature requests. Keep the discussion focused and relevant.
+- **Pull Requests**: Use pull requests to propose changes. Be prepared to discuss your changes and address any feedback.
+
+## Contact
+
+If you have any questions or need further clarification, please feel free to contact us at Nirt_12023@outlook.com.
+
+Thank you for your contributions!
