@@ -47,7 +47,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: What version of Bootstrap are you using?
-      placeholder: "e.g., v5.1.0 or v4.5.2"
+      label: What version of Logicytics are you using?
+      placeholder: "e.g., v1.1.0"
     validations:
       required: true
