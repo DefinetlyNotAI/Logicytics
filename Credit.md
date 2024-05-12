@@ -8,6 +8,27 @@ We are grateful for the foundational work provided by Bootstrap, a popular open-
 
 - [Bootstrap GitHub Repository](https://github.com/twbs/bootstrap)
 
+## evil3ad for Collect-MemoryDump
+
+We would like to extend our sincere thanks to evil3ad for the development and incorporation of Collect-MemoryDump into our main project. This tool has been instrumental in automating the process of memory dump collection, significantly improving our efficiency and effectiveness in forensic investigations.
+
+- [Collect-MemoryDump GitHub Repository](https://github.com/evild3ad/Collect-MemoryDump)
+
+## Magnet Forensics
+
+Magnet Forensics has been a crucial dependency for our tool, providing essential functionalities that have enriched our capabilities. We are grateful for the following tools from Magnet Forensics that have been integrated into our workflow:
+
+- [MAGNET DumpIt for Windows](https://www.magnetforensics.com/resources/magnet-dumpit-for-windows/)
+- [MAGNET Encrypted Disk Detector](https://www.magnetforensics.com/resources/encrypted-disk-detector/)
+- [MAGNET RAM Capture](https://www.magnetforensics.com/resources/magnet-ram-capture/)
+- [MAGNET Response](https://www.magnetforensics.com/resources/magnet-response/)
+
+## BelkaSoft's Live RAM Capturer
+
+We also acknowledge the support from BelkaSoft's Live RAM Capturer, which has been a valuable dependency for our tool, Collect-MemoryDump. This tool has played a significant role in enhancing our ability to capture live memory data, contributing to the overall success of our project.
+
+- [BelkaSoft's Live RAM Capturer](https://belkasoft.com/get)
+
 
 # Acknowledgments
 
