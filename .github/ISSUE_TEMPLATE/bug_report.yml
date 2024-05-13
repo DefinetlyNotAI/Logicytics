@@ -20,7 +20,7 @@ body:
     description: Provide a summary of the issue and what you expected to happen, including specific steps to reproduce.
   validations:
     required: true
-  - type: textarea
+  - type: markdown
   id: debug-log
   attributes:
     label: Copy and paste the Debug.md file contents here
