@@ -14,19 +14,20 @@ body:
         - label: I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md)
           required: true
   - type: textarea
-    id: what-happened
-    attributes:
-      label: Describe the issue
-      description: Provide a summary of the issue and what you expected to happen, including specific steps to reproduce.
-    validations:
-      required: true
-    - type: textarea
-    id: debug-log
-    attributes:
-      label: Copy and paste the Debug.md file contents here
-      description: Include the debug.md file to check the origin of the bug you are experiancing, read the [ReadMe](https://github.com/DefinetlyNotAI/Logicytics/blob/main/README.md) file for how to get the Debug.md File.
-    validations:
-      required: true
+  id: what-happened
+  attributes:
+    label: Describe the issue
+    description: Provide a summary of the issue and what you expected to happen, including specific steps to reproduce.
+  validations:
+    required: true
+- type: textarea
+  id: debug-log
+  attributes:
+    label: Copy and paste the Debug.md file contents here
+    description: Include the debug.md file to check the origin of the bug you are experiencing, read the [ReadMe](https://github.com/DefinetlyNotAI/Logicytics/blob/main/README.md) file for how to get the Debug.md File.
+  validations:
+    required: true
+
   - type: dropdown
     id: os
     attributes:
