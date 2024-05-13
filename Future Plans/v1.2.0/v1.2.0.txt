@@ -1,5 +1,0 @@
-Incorporate the 2 folders ideas
-
-Update the explained directory and readme
-
-Add project in the txt file
