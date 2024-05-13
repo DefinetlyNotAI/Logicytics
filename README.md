@@ -38,6 +38,19 @@ To run the main program, you need to execute `Logicytics.py` with administrative
 python Logicytics.py
 ```
 
+## Running Debugger
+
+To run the debugger program (Still in beta versions), you need to execute `DebugBeta.py` with administrative privileges. Follow these steps:
+
+1. Open Command Prompt as an administrator.
+2. Navigate to the directory where `DebugBeta.py` is located (Will be in the CODE directory).
+3. Run the script by typing the following command and pressing Enter:
+4. You will receive DEBUG.md, here is the file you require for reporting bugs.
+
+```cmd
+python DebugBeta.py
+```
+
 ## Important Notes
 
 - **Do Not Remove or Delete Any Folders or Files**: The integrity of the data collection process depends on the presence of all necessary files and folders. Removing or deleting any part of the Logicytics package could lead to errors or incomplete data collection.
@@ -51,6 +64,8 @@ python Logicytics.py
 - **Releases**: Don't download files from there, that is just some-sort of mini update log, download from the main branch, so No, old versions won't be saved here, and might not be supported.
 
 - **Credits**: In the credits you will find many people, firms and projects that we took/used code/software from, these will explain what and who and why we did that, if you aare the creator of the project and dont want us to use your code, you are free to communicate with us so we can take your code down.
+
+- **Explore**: Check all the files and ReadMe to understand how and what the project does.
 
 
 ## Conclusion
