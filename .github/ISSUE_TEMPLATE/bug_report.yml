@@ -1,5 +1,5 @@
 name: Report a bug
-description: Tell us about a bug or issue you may have identified in Bootstrap.
+description: Tell us about a bug or issue you may have identified in Logicytics.
 title: "Provide a general summary of the issue"
 labels: [bug]
 assignees: "-"
@@ -9,11 +9,9 @@ body:
       label: Prerequisites
       description: Take a couple minutes to help our maintainers work faster.
       options:
-        - label: I have [searched](https://github.com/twbs/bootstrap/issues?utf8=%E2%9C%93&q=is%3Aissue) for duplicate or closed issues
+        - label: I have [searched](https://github.com/DefinetlyNotAI/Logicytics/issues?utf8=%E2%9C%93&q=is%3Aissue) for duplicate or closed issues
           required: true
-        - label: I have [validated](https://html5.validator.nu/) any HTML to avoid common problems
-          required: true
-        - label: I have read the [contributing guidelines](https://github.com/twbs/bootstrap/blob/main/.github/CONTRIBUTING.md)
+        - label: I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md)
           required: true
   - type: textarea
     id: what-happened
@@ -22,30 +20,17 @@ body:
       description: Provide a summary of the issue and what you expected to happen, including specific steps to reproduce.
     validations:
       required: true
-  - type: textarea
-    id: reduced-test-case
+  - type: markdown
+    id: test-case
     attributes:
-      label: Reduced test cases
-      description: Include links [reduced test case](https://css-tricks.com/reduced-test-cases/) links or suggested fixes using CodePen ([v4 template](https://codepen.io/team/bootstrap/pen/yLabNQL) or [v5 template](https://codepen.io/team/bootstrap/pen/qBamdLj)).
-    validations:
-      required: true
-  - type: dropdown
-    id: os
-    attributes:
-      label: What operating system(s) are you seeing the problem on?
-      multiple: true
-      options:
-        - Windows
-        - macOS
-        - Android
-        - iOS
-        - Linux
+      label: Log-File
+      description: Include the log file generated
     validations:
       required: true
   - type: dropdown
     id: browser
     attributes:
-      label: What browser(s) are you seeing the problem on?
+      label: What browser(s) are you using?
       multiple: true
       options:
         - Chrome
@@ -56,7 +41,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: What version of Bootstrap are you using?
+      label: What version of Logicytics are you using?
       placeholder: "e.g., v5.1.0 or v4.5.2"
     validations:
       required: true
