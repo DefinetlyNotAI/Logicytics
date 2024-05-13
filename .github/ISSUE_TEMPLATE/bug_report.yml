@@ -11,8 +11,8 @@ body:
       description: Take a couple minutes to help our maintainers work faster.
     options:
       - label: I have [searched](https://github.com/DefinetlyNotAI/Logicytics/issues?utf8=%E2%9C%93&q=is%3Aissue) for duplicate or closed issues
-      required: true
       - label: I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md)
+    validations:
       required: true
         
   - type: textarea
