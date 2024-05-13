@@ -51,6 +51,8 @@ To run the debugger program (Still in beta versions), you need to execute `Debug
 python DebugBeta.py
 ```
 
+Make sure the .structure file is present, if you don't have it, use the `structure.py` found in the SYSTEM directory
+
 ## Important Notes
 
 - **Do Not Remove or Delete Any Folders or Files**: The integrity of the data collection process depends on the presence of all necessary files and folders. Removing or deleting any part of the Logicytics package could lead to errors or incomplete data collection.
