@@ -20,8 +20,8 @@ body:
       description: Provide a summary of the issue and what you expected to happen, including specific steps to reproduce.
     validations:
       required: true
-  - type: markdown
-    id: test-case
+  - type: textarea
+    id: log
     attributes:
       label: Log-File
       description: Include the log file generated
