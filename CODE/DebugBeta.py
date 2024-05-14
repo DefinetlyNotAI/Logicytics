@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import subprocess
 
 
@@ -24,6 +25,54 @@ def open_debug_file():
     debug_file_path = os.path.join(os.getcwd(), "DEBUG.md")
     with open(debug_file_path, "a"):
         pass  # Placeholder for adding content to DEBUG.md
+
+
+def check_vm():
+    # Command to check for virtual machine indicators in the system model information
+    command = "systeminfo | findstr /C:\"System Model\""
+
+    try:
+        # Execute the command and capture the output
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, text=True)
+
+        # Use regular expressions to check for virtual machine indicators
+        if re.search(r"VirtualBox|VBOX|VMWare", result.stdout):
+            message = "Running in a virtual machine."
+        else:
+            message = "Not running in a virtual machine."
+
+        # Write the message to a file only once, after the check is complete
+        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+            debug_file.write(f"<span style=\"color:green;\">SYSTEM</span>: {message}<br><br>")
+    except subprocess.CalledProcessError as e:
+        # Handle errors from the subprocess call
+        message = f"Error executing command: {e.stderr}"
+        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+            debug_file.write(f"<span style=\"color:red;\">ERROR</span>: {message}<br><br>")
+
+
+def cmd_raw(command, check):
+    # The command to be executed
+    try:
+        # Execute the command and capture the output
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, text=True)
+
+        if check == "bool":  # If check is "bool", return the command output or an empty string if it's empty
+            output = result.stdout.strip()  # Remove leading/trailing whitespace
+            if output:  # If the output is not empty
+                return output
+            else:
+                return ""  # Return an empty string if the output is empty
+        else:  # Write the command output to a file
+            with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+                debug_file.write(f"<span style=\"color:green;\">SYSTEM</span>: {result.stdout}<br><br>")
+    except subprocess.CalledProcessError as e:
+        if check == "bool":  # If check is "bool", return an empty string or an error message
+            return ""  # Return an empty string
+        else:  # Handle errors from the subprocess call
+            message = f"Error executing command: {e.stderr}"
+            with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+                debug_file.write(f"<span style=\"color:red;\">ERROR</span>: {message}<br><br>")
 
 
 def check_version_file(version_file_path):
@@ -108,6 +157,20 @@ def main():
     check_uac_status()
     check_admin_privileges()
     check_powershell_execution_policy()
+    check_vm()
+    cmd_raw("systeminfo", "null")
+    cmd_raw("wmic bios get serialnumber", "null")
+    cmd_raw("wmic computersystem get model", "null")
+    cmd_raw("wmic computersystem get manufacturer", "null")
+    if cmd_raw("driverquery | findstr /C:\"vmxnet\"", "bool") == "":
+        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+            debug_file.write(
+                "<span style=\"color:green;\">SYSTEM</span>: No VM Drivers Found.<br><br>")
+    else:
+        cmd_raw("driverquery | findstr /C:\"vmxnet\"", "null")
+    cmd_raw("wmic cpu get caption, name, deviceid, numberofcores, maxclockspeed, status", "null")
+    cmd_raw("wmic computersystem get totalphysicalmemory", "null")
+    cmd_raw("systeminfo | findstr /C:\"System Model\" /C:\"Manufacturer\"", "null")
 
 
 if __name__ == "__main__":

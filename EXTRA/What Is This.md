@@ -18,7 +18,7 @@ All tools are archived, to use them extract them to the same directory... Still 
 
 3. **Following On-Screen Instructions:** After executing the script, follow the on-screen instructions provided by the tool. This process can take approximately 1 hour to complete, depending on the system's specifications and the amount of data being processed.
 
-### God_Mode for Setting manipulation
+### GodMode for Setting manipulation
 
 **Tool Description:** `God_Mode.py` by DefinetlyNotAI is a utility designed to automatically open god-mode without leaving traces. It's a powerful tool that can be used for educational purposes to manipulate certain settings usually scattered in the control panel.
 

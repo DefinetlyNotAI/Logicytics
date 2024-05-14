@@ -2,11 +2,9 @@
 
 Welcome to **Logicytics** (Spelled Loj-ee-cit-iks), a powerful tool designed to harvest and collect a wide range of windows system data for forensics, it is a actively worked on project that uses python as its main language, its whole idea is it effectively gathers as much sensitive data as possible and outputs it into a ZIP file. This guide will help you get started with using DataVoyager effectively.
 
-This Software is around `32MB` as in version `1.1.2`.
-
 ## Prerequisites
 
-Before running Logicytics, it's recommended to first disable User Account Control (UAC) to ensure smooth operation. You can do this by running the `UACPY.py` script as an administrator in the Command Prompt (cmd). Here's how:
+Before running Logicytics, it's recommended to first disable User Account Control (UAC) to ensure smooth operation as well as enable cmd. You can do this by running the `UACPY.py` script as an administrator in the Command Prompt (cmd). Here's how:
 
 1. Open Command Prompt as an administrator. You can do this by searching for `cmd` in the Start menu, right-clicking on it, and selecting "Run as administrator".
 2. Navigate to the directory where `UACPY.py` is located.
@@ -15,7 +13,10 @@ Before running Logicytics, it's recommended to first disable User Account Contro
 ```powershell
 python UACPY.py
 ```
-
+or
+```powershell
+.\UACPY.py
+```
 Please note that this assumes you have Python installed on your system and that the `UACPY.py` script is located in the directory you navigate to in step 2. If Python is not installed or if you encounter any issues, you may need to install Python or adjust the command to point to your Python executable if it's not in your system's PATH.
 
 It's also recommended to install all needed libraries, Here is how:
@@ -28,6 +29,13 @@ It's also recommended to install all needed libraries, Here is how:
 pip install -r requirements.txt
 ```
 
+Finally its recommended to cripple windows defender, you can try to do so by running the following command (Please note it might not always work, and you will need ADMIN to run the script!):
+
+```powershell
+.\Window_Defender_Crippler.bat
+```
+
+Running it again will re-install those signatures, so after completing your job, re-run this file again.
 ## Running Logicytics
 
 To run the main program, you need to execute `Logicytics.py` with administrative privileges (Note its not needed to run as admin, but half of it's functionality would be disabled). Follow these steps:
@@ -38,6 +46,10 @@ To run the main program, you need to execute `Logicytics.py` with administrative
 
 ```cmd
 python Logicytics.py
+```
+or
+```powershell
+.\Logicytics.py
 ```
 
 ## Running Debugger
@@ -51,6 +63,10 @@ To run the debugger program (Still in beta versions), you need to execute `Debug
 
 ```cmd
 python DebugBeta.py
+```
+or
+```powershell
+.\DebugBeta.py
 ```
 
 Make sure the `.structure` file is present, if you don't have it, redownload the `structure.py` found in the SYSTEM directory of the this repo.
@@ -76,4 +92,4 @@ Make sure the `.structure` file is present, if you don't have it, redownload the
 
 Logicytics is a powerful tool for system data analysis. By following the instructions above, you can ensure a smooth and effective data collection process. Remember, the key to successful data harvesting is patience and adherence to the guidelines provided. Happy data mining!
 
-And We are not responsible for any illegal usage of this product.
+We are not responsible for any illegal usage of this product.

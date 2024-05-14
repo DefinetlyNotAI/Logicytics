@@ -4,9 +4,15 @@ This project is built on the shoulders of giants and inspired by the work of man
 
 ## Bootstrap by twbs
 
-We are grateful for the foundational work provided by Bootstrap, a popular open-source toolkit for developing responsive, mobile-first projects on the web. Bootstrap's comprehensive documentation and community support have been invaluable in shaping our project contributing.md and Issue Templates.
+We are grateful for the work provided by Bootstrap, a popular open-source toolkit for developing responsive, mobile-first projects on the web. Bootstrap's comprehensive documentation has been valuable in shaping our project contributing.md and Issue Templates.
 
 - [Bootstrap GitHub Repository](https://github.com/twbs/bootstrap)
+
+## winPEAS-ng by peas
+
+We are grateful for the foundational work provided by winPEAS, a perfect open-source tool for scanning dynamic window systems in a responsive, colorful manner. winPEAS's comprehensive documentation has been invaluable in helping indirectly shape our project by allowing escalation and post-exploitation actions.
+
+- [winPEAS-ng GitHub Repository](https://github.com/peass-ng)
 
 ## evil3ad for Collect-MemoryDump
 
@@ -16,7 +22,7 @@ We would like to extend our sincere thanks to evil3ad for the development and in
 
 ## Magnet Forensics
 
-Magnet Forensics has been a crucial dependency for our tool, providing essential functionalities that have enriched our capabilities. We are grateful for the following tools from Magnet Forensics that have been integrated into our workflow:
+Magnet Forensics has been a crucial dependency for our tool, providing essential functionalities that have enriched our abilities. We are grateful for the following tools from Magnet Forensics that have been integrated into our workflow:
 
 - [MAGNET DumpIt for Windows](https://www.magnetforensics.com/resources/magnet-dumpit-for-windows/)
 - [MAGNET Encrypted Disk Detector](https://www.magnetforensics.com/resources/encrypted-disk-detector/)
