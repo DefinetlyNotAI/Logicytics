@@ -1,117 +1,114 @@
 import os
+import sys
 import subprocess
-import winreg
 
 
-def delete_debug_file_if_exists():
-    # Get the current working directory
-    current_dir = os.getcwd()
-
-    # Construct the path to the DEBUG.md file in the current directory
-    debug_file_path = os.path.join(current_dir, "DEBUG.md")
-
-    # Check if the DEBUG.md file exists
+def delete_debug_file():
+    debug_file_path = os.path.join(os.getcwd(), "DEBUG.md")
     if os.path.exists(debug_file_path):
-        # If the file exists, delete it
         os.remove(debug_file_path)
-        print("DEBUG.md file has been deleted, to create a new one")
+        print("DEBUG.md file deleted. A new one will be created.")
     else:
-        print("DEBUG.md file does not exist, creating a new one")
+        print("DEBUG.md file does not exist. A new one will be created.")
 
 
-# Call the function to check and delete the DEBUG.md file if it exists
-delete_debug_file_if_exists()
+def define_paths():
+    version_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "SYSTEM",
+                                     "Logicystics.version")
+    structure_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "SYSTEM",
+                                       "Logicystics.structure")
+    return version_file_path, structure_file_path
 
-# Define the paths to the reference files
-version_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "SYSTEM",
-                                 "Logicystics.version")
-structure_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "SYSTEM",
-                                   "Logicystics.structure")
 
-# Open the DEBUG.md file in appending mode
-with open("DEBUG.md", "a") as debug_file:
-    # Check if the version file exists
+def open_debug_file():
+    debug_file_path = os.path.join(os.getcwd(), "DEBUG.md")
+    with open(debug_file_path, "a"):
+        pass  # Placeholder for adding content to DEBUG.md
+
+
+def check_version_file(version_file_path):
     if not os.path.exists(version_file_path):
-        debug_file.write("<span style='color:red;'>Error</span>: Version file not found.\n")
-        debug_file.write("\n")  # Explicitly add a newline
-        exit(1)
+        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+            debug_file.write("<span style=\"color:red;\">ERROR</span>: Logicystics.version file not found.<br><br>")
+        sys.exit(1)
     else:
-        # Read the version number from the version file
-        with open(version_file_path, 'r') as file:
-            version_number = file.read().strip()
-        debug_file.write("<span style='color:green;'>INFO</span>: Version number is {version_number}\n".format(
-            version_number=version_number))
-        debug_file.write("\n")  # Explicitly add a newline
+        with open(version_file_path, "r") as version_file:
+            version = version_file.read().strip()
+            with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+                debug_file.write(f"<span style=\"color:green;\">SYSTEM</span>: Version: {version}<br><br>")
 
-    # Check if the structure file exists
+
+def check_structure_file(structure_file_path):
     if not os.path.exists(structure_file_path):
-        debug_file.write("<span style='color:red;'>Error</span>: Structure file not found.\n")
-        debug_file.write("\n")  # Explicitly add a newline
-        exit(1)
+        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+            debug_file.write("<span style=\"color:red;\">ERROR</span>: Logicystics.structure file not found.<br><br>")
+        sys.exit(1)
+    else:
+        with open(structure_file_path, "r") as structure_file:
+            for line in structure_file:
+                line = line.strip()
+                if line:  # Check if the line is not empty
+                    # Replace {} with the parent working directory
+                    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                    path = os.path.join(parent_dir, line[1:])  # Remove the leading = and join with parent_dir
+                    if os.path.exists(path):
+                        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+                            debug_file.write(
+                                f"<span style=\"color:blue;\">INFO</span>: Success: {path} exists.<br><br>")
+                    else:
+                        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+                            debug_file.write(f"<span style=\"color:red;\">ERROR</span>: {path} does not exist.<br><br>")
 
-    # Read the structure file line-by-line and check if each line exists on the drive
-    with open(structure_file_path, 'r') as file:
-        for line in file:
-            line = line.strip()  # Remove any leading/trailing whitespace
-            # Construct the full path for the item
-            item_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "SYSTEM", line)
-            # Check if the item is a file
-            if not os.path.isfile(item_path):
-                debug_file.write(
-                    "<span style='color:red;'>Error</span>: File {line} not found.\n".format(line=line))
-                debug_file.write("\n")  # Explicitly add a newline
-            else:
-                debug_file.write(
-                    "<span style='color:green;'>INFO</span>: File exists and is found at {item_path}.\n".format(
-                        line=line,
-                        item_path=item_path))
-                debug_file.write("\n")  # Explicitly add a newline
 
-    # Check if UAC is enabled
-    try:
-        uac_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System", 0, winreg.KEY_READ)
-        uac_enabled = winreg.QueryValueEx(uac_key, "EnableLUA")[0] == 1
-        winreg.CloseKey(uac_key)
-        if uac_enabled:
-            debug_file.write("<span style='color:orange;'>Warning</span>: UAC is enabled.\n")
-            debug_file.write("\n")  # Explicitly add a newline
-        else:
-            debug_file.write("<span style='color:green;'>INFO</span>: UAC is not enabled.\n")
-            debug_file.write("\n")  # Explicitly add a newline
-    except WindowsError:
-        debug_file.write("<span style='color:red;'>Error</span>: UAC status could not be determined.\n")
-        debug_file.write("\n")  # Explicitly add a newline
-
-    # Check if the current user is an admin
-    try:
-        result = subprocess.run(["net", "session"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-                                check=True)
-        if result.returncode != 0:
+def check_uac_status():
+    uac_key = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+    uac_value = "LocalAccountTokenBypassPolicy"
+    uac_path = os.path.join(os.environ['WINDIR'], "System32", "config", uac_key)
+    uac_value_path = os.path.join(uac_path, uac_value)
+    if os.path.exists(uac_value_path):
+        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
             debug_file.write(
-                "<span style='color:orange;'>Warning</span>: The current user does not have administrative privileges.\n")
-            debug_file.write("\n")  # Explicitly add a newline
-        else:
+                "<span style=\"color:yellow;\">WARNING</span>: User Account Control (UAC) is enabled.<br><br>")
+    else:
+        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
             debug_file.write(
-                "<span style='color:green;'>INFO</span>: The current user has administrative privileges.\n")
-            debug_file.write("\n")  # Explicitly add a newline
+                "<span style=\"color:yellow;\">WARNING</span>: User Account Control (UAC) is not enabled.<br><br>")
+
+
+def check_admin_privileges():
+    try:
+        subprocess.run(["net", "session"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+            debug_file.write("<span style=\"color:blue;\">INFO</span>: Running with administrative privileges.<br><br>")
     except subprocess.CalledProcessError:
-        debug_file.write(
-            "<span style='color:orange;'>Warning</span>: The current user does not have administrative privileges.\n")
-        debug_file.write("\n")  # Explicitly add a newline
+        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+            debug_file.write(
+                "<span style=\"color:yellow;\">WARNING</span>: Not running with administrative privileges.<br><br>")
 
-    # Check the PowerShell execution policy
+
+def check_powershell_execution_policy():
     try:
-        execution_policy = subprocess.check_output(["powershell", "-Command", "Get-ExecutionPolicy"], text=True).strip()
-        if execution_policy != "Unrestricted":
+        subprocess.run(["powershell", "Get-ExecutionPolicy"], check=True, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE, text=True)
+        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
             debug_file.write(
-                "<span style='color:red;'>Error</span>: PowerShell execution policy is not set to 'Unrestricted'.\n")
-            debug_file.write("\n")  # Explicitly add a newline
-        else:
-            debug_file.write(
-                "<span style='color:green;'>INFO</span>: PowerShell execution policy is set to 'Unrestricted'.\n")
-            debug_file.write("\n")  # Explicitly add a newline
+                "<span style=\"color:blue;\">INFO</span>: PowerShell execution policy is set to Unrestricted.<br><br>")
     except subprocess.CalledProcessError:
-        debug_file.write(
-            "<span style='color:red;'>Error</span>: PowerShell execution policy could not be determined.\n")
-        debug_file.write("\n")  # Explicitly add a newline
+        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+            debug_file.write(
+                "<span style=\"color:red;\">ERROR</span>: PowerShell execution policy is not set to Unrestricted.<br><br>")
+
+
+def main():
+    delete_debug_file()
+    version_file_path, structure_file_path = define_paths()
+    open_debug_file()
+    check_version_file(version_file_path)
+    check_structure_file(structure_file_path)
+    check_uac_status()
+    check_admin_privileges()
+    check_powershell_execution_policy()
+
+
+if __name__ == "__main__":
+    main()
