@@ -8,9 +8,9 @@
 =structure.py
 =CODE\Antivirus_Finder.ps1
 =CODE\Browser_And_Policies_Miner.ps1
+=CODE\CMD_Disabled_Bypass.py
 =CODE\Copy_Media.py
 =CODE\Copy_System_Files.py
-=CODE\DEBUG.md
 =CODE\DebugBeta.py
 =CODE\Logicytics.py
 =CODE\Simple_Password_Miner.py
@@ -18,10 +18,12 @@
 =CODE\Tree_Command.bat
 =CODE\UAC.ps1
 =CODE\UACPY.py
+=CODE\Window_Defender_Crippler.bat
 =CODE\Window_Features_Lister.bat
 =CODE\Zipper.py
 =EXPLAIN\Antivirus Finder Explained.md
 =EXPLAIN\Browser And Policies Miner Explained.md
+=EXPLAIN\CMD Disabled Bypass Explained.md
 =EXPLAIN\Copy Media Explained.md
 =EXPLAIN\Copy System Files Explained.md
 =EXPLAIN\DebugBeta Explained.md
@@ -32,4 +34,5 @@
 =EXPLAIN\UAC Explained.md
 =EXPLAIN\UACPY Explained.md
 =EXPLAIN\Window Features Lister Explained.md
+=EXPLAIN\Windows Defender Crippler Explained.md
 =EXPLAIN\Zipper Explained.md
