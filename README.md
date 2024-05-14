@@ -51,7 +51,7 @@ To run the debugger program (Still in beta versions), you need to execute `Debug
 python DebugBeta.py
 ```
 
-Make sure the .structure file is present, if you don't have it, use the `structure.py` found in the SYSTEM directory
+Make sure the `.structure` file is present, if you don't have it, redownload the `structure.py` found in the SYSTEM directory of the this repo.
 
 ## Important Notes
 
