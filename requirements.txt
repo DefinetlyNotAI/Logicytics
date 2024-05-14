@@ -1,3 +1,5 @@
 psutil
 wmi
 pyautogui
+winreg
+pathlib
