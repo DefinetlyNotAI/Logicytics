@@ -2,6 +2,8 @@
 
 Welcome to **Logicytics** (Spelled Loj-ee-cit-iks), a powerful tool designed to harvest and collect a wide range of windows system data for forensics, it is a actively worked on project that uses python as its main language, its whole idea is it effectively gathers as much sensitive data as possible and outputs it into a ZIP file. This guide will help you get started with using DataVoyager effectively.
 
+This Software is around `32MB` as in version `1.1.2`.
+
 ## Prerequisites
 
 Before running Logicytics, it's recommended to first disable User Account Control (UAC) to ensure smooth operation. You can do this by running the `UACPY.py` script as an administrator in the Command Prompt (cmd). Here's how:
