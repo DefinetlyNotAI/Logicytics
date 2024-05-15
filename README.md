@@ -31,7 +31,7 @@ pip install -r requirements.txt
 
 Finally its recommended to cripple windows defender, you can try to do so by running the following command (Please note it might not always work, and you will need ADMIN to run the script!):
 
-```powershell
+```cmd
 .\Window_Defender_Crippler.bat
 ```
 
