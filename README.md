@@ -1,92 +1,98 @@
 # Logicytics: System Data Harvester
 
-Welcome to **Logicytics** (Spelled Loj-ee-cit-iks), a powerful tool designed to harvest and collect a wide range of windows system data for forensics, it is a actively worked on project that uses python as its main language, its whole idea is it effectively gathers as much sensitive data as possible and outputs it into a ZIP file. This guide will help you get started with using DataVoyager effectively.
+Welcome to **Logicytics**, a powerful tool designed to harvest and collect a wide range of Windows system data for forensics. It's an actively developed project that primarily uses Python. Its goal is to gather as much sensitive data as possible and output it into a ZIP file. This guide will help you get started with using Logicytics effectively.
 
 ## Prerequisites
 
-Before running Logicytics, it's recommended to first disable User Account Control (UAC) to ensure smooth operation as well as enable cmd. You can do this by running the `UACPY.py` script as an administrator in the Command Prompt (cmd). Here's how:
- 
-1. Open Command Prompt as an administrator. You can do this by searching for `cmd` in the Start menu, right-clicking on it, and selecting "Run as administrator".
-2. Navigate to the directory where `UACPY.py` is located.
-3. Execute the script by typing the following command and pressing Enter:
+Before running Logicytics, please follow these steps:
 
-```powershell
-python UACPY.py
-```
-or
-```powershell
-.\UACPY.py
-```
-Please note that this assumes you have Python installed on your system and that the `UACPY.py` script is located in the directory you navigate to in step 2. If Python is not installed or if you encounter any issues, you may need to install Python or adjust the command to point to your Python executable if it's not in your system's PATH.
+### Disable User Account Control (UAC)
 
-It's also recommended to install all needed libraries, Here is how:
+To ensure smooth operation and enable cmd, disable UAC by running the `UACPY.py` script as an administrator in the Command Prompt (cmd).
 
-1. Open Command Prompt as an administrator. You can do this by searching for `cmd` in the Start menu, right-clicking on it, and selecting "Run as administrator".
-2. Navigate to the directory where `requirements.txt` is located.
-3. Execute the script by typing the following command and pressing Enter:
+#### Steps:
 
-```cmd
-pip install -r requirements.txt
-```
+1. **Open Command Prompt as Administrator:**
+   - Search for `cmd` in the Start menu.
+   - Right-click on it and select "Run as administrator."
 
-Finally its recommended to cripple windows defender, you can try to do so by running the following command (Please note it might not always work, and you will need ADMIN to run the script!):
+2. **Navigate to the Script Directory:**
+   - Use the `cd` command to change directories to where `UACPY.py` is located.
+
+3. **Execute the Script:**
+   - Type `.\UACPY.py` and press Enter.
+
+**Note:** This requires Python to be installed on your system. The script should be in the directory you navigate to in step 2. If Python isn't installed or there are issues, consider installing Python or adjusting the command to point to your Python executable if it's not in your system's PATH.
+
+### Install Required Libraries
+
+Install necessary libraries by executing the following commands in the Command Prompt as an administrator:
+
+1. **Open Command Prompt as Administrator:**
+   - Follow the same method as above.
+
+2. **Navigate to the Requirements File Location:**
+   - Change directories to where `requirements.txt` is located using the `cd` command.
+
+3. **Install Libraries:**
+   - Type `pip install -r requirements.txt` and press Enter.
+
+### Cripple Windows Defender
+
+To improve performance, it's recommended to temporarily disable Windows Defender. Run the following command as an administrator:
 
 ```cmd
 .\Window_Defender_Crippler.bat
 ```
 
-Running it again will re-install those signatures, so after completing your job, re-run this file again.
+**Important:** Running this script again will reinstall the signatures. After completing your tasks, re-run this file to restore Windows Defender's protection.
+
+### Agree to the ToS
+
+Due to the use of third-party applications, they come with their own set of Terms of Service. It's mandatory to read the `!! Important!!.md` file located in the CODE/sys directory. Run the following command as an administrator:
+
 ## Running Logicytics
 
-To run the main program, you need to execute `Logicytics.py` with administrative privileges (Note its not needed to run as admin, but half of it's functionality would be disabled). Follow these steps:
+To run the main program, you need to execute `Logicytics.py` with administrative privileges. Follow these steps:
 
 1. Open Command Prompt as an administrator.
 2. Navigate to the directory where `Logicytics.py` is located.
 3. Run the script by typing the following command and pressing Enter:
 
-```cmd
-python Logicytics.py
-```
-or
 ```powershell
 .\Logicytics.py
 ```
 
 ## Running Debugger
 
-To run the debugger program (Still in beta versions), you need to execute `DebugBeta.py` with administrative privileges. Follow these steps:
+To run the debugger program (still in beta versions), you need to execute `DebugBeta.py` with administrative privileges. Follow these steps:
 
 1. Open Command Prompt as an administrator.
-2. Navigate to the directory where `DebugBeta.py` is located (Will be in the CODE directory).
+2. Navigate to the directory where `DebugBeta.py` is located (will be in the CODE directory).
 3. Run the script by typing the following command and pressing Enter:
-4. You will receive DEBUG.md, here is the file you require for reporting bugs.
+4. You will receive DEBUG.md, which contains the file required for reporting bugs.
 
-```cmd
-python DebugBeta.py
-```
-or
 ```powershell
 .\DebugBeta.py
 ```
 
-Make sure the `.structure` file is present, if you don't have it, redownload the `structure.py` found in the SYSTEM directory of the this repo.
+Ensure the `.structure` file is present. If you don't have it, download the `.structure` file found in the SYSTEM directory of this repo.
 
 ## Important Notes
 
-- **Do Not Remove or Delete Any Folders or Files**: The integrity of the data collection process depends on the presence of all necessary files and folders. Removing or deleting any part of the Logicytics package could lead to errors or incomplete data collection.
+- **Do Not Remove or Delete Any Folders or Files:** The integrity of the data collection process depends on the presence of all necessary files and folders. Removing or deleting any part of the Logicytics package could lead to errors or incomplete data collection.
 
-- **Third-Party Tool's**: For those interested in additional functionality, you can explore more 3rd party software in the EXTRA tab. This tool offers advanced memory analysis capabilities and more features.
+- **Third-Party Tools:** For those interested in additional functionality, you can explore more third-party software in the EXTRA tab. This tool offers advanced memory analysis capabilities and more features.
 
-- **Initial Delay**: After starting Logicytics, you might not see any immediate feedback or activity for about 1 minute. This is normal and part of the data collection process.
+- **Initial Delay:** After starting Logicytics, you might not see any immediate feedback or activity for about 1 minute. This is normal and part of the data collection process.
 
-- **Access Permissions**: The only files you should access after running Logicytics are the generated ZIP file and the `.md` log file (WIP). These files contain the collected data and log information, respectively and are found in the CODE sub-directory, you can freely move them anywhere.
+- **Access Permissions:** The only files you should access after running Logicytics are the generated ZIP file and the `.md` log file (WIP). These files contain the collected data and log information, respectively, and are found in the CODE subdirectory; you can freely move them anywhere.
 
-- **Releases**: Don't download files from there, that is just some-sort of mini update log, download from the main branch, so No, old versions won't be saved here, and might not be supported.
+- **Releases:** Don't download files from there; that is just some sort of mini-update log. Download from the main branch; old versions won't be saved here and might not be supported.
 
-- **Credits**: In the credits you will find many people, firms and projects that we took/used code/software from, these will explain what and who and why we did that, if you aare the creator of the project and dont want us to use your code, you are free to communicate with us so we can take your code down.
+- **Credits:** In the credits, you will find many people, firms, and projects whose code/software we used. If you are the creator of the project and don't want us to use your code, feel free to contact us so we can remove it.
 
-- **Explore**: Check all the files and ReadMe to understand how and what the project does.
-
+- **Explore:** Check all the files and ReadMe to understand how and what the project does.
 
 ## Conclusion
 

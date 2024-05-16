@@ -1,5 +1,3 @@
----
-
 # Contributing to Logicytics
 
 Looking to contribute something to Logicytics? **Here's how you can help.**
@@ -34,6 +32,7 @@ I will be looking at the open issues, analyze them, and provide guidance on how 
 
 Please keep in mind that I am small, have limited resources and am not always able to respond immediately. I will try to provide feedback as soon as possible, but please be patient. If you don't get a response immediately, it doesn't mean that we are ignoring you or that we don't care about your issue or PR. We will get back to you as soon as we can.
 
+If you decide to pull a PR or fork the project, keep in mind that you should only add/edit the scripts you need to, leave the Explain.md file and the updating of the structure file to me.
 
 ## Issues and labels
 
@@ -74,7 +73,8 @@ provide as much detail and context as possible.
 
 ## Coding Standards
 
-- **Code Style**: Follow the project's existing code style. If you're unsure, refer to the `.editorconfig` file or ask for guidance.
+- **Code Style**: Follow the project's existing code style.
+
 - **Commit Messages**: Write clear and descriptive commit messages. Use the imperative mood (e.g., "Add feature" instead of "Added feature").
 - **Documentation**: Update documentation as necessary to reflect any changes you make.
 
@@ -123,6 +123,3 @@ By contributing to the documentation, you agree to license your contribution und
 If you have any questions or need further clarification, please feel free to contact us at Nirt_12023@outlook.com.
 
 Thank you for your contributions!
-
-
----

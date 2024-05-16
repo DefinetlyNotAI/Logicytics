@@ -55,7 +55,7 @@ def main():
     set_execution_policy()
     checks()
     for script_path in ["./CMD_Disabled_Bypass.py", "./Copy_System_Files.py", "./Browser_And_Policies_Miner.ps1", "./Window_Features_Lister.bat",
-                        "./Antivirus_Finder.ps1", "./Simple_Password_Miner.py", "./Copy_Media.py",
+                        "./Antivirus_Finder.ps1", "./IP_Scanner.py", "./Device_Data.bat", "./Sys_Tools.py", "./Tree_Command.bat", "./Simple_Password_Miner.py", "./Copy_Media.py",
                         "./System_Info_Grabber.py", "./Zipper.py"]:
         execute_code(script_path)
 

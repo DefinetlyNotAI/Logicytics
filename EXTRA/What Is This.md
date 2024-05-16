@@ -28,6 +28,29 @@ All tools are archived, to use them extract them to the same directory... Still 
 
 2. **On-Screen GUI:** After executing the script, the tool will open to allow further manipulation of the settings.
 
+### Simple Hash Cracker for Password cracking
+
+**Tool Description:** `Simple Hash Cracker` by kurogai is a utility designed to crack simple hashes. It's a great tool that can be used for educational purposes to extract key info gotten from this tool.
+
+**Usage Instructions:**
+
+- **Running the Tool:** Navigate to the ZIP file and extract, you will find a README.md file that will explain the usage techniques.
+
+### SessionSploit
+
+**Tool Description:** `SessionSploit` by ebolaman is a utility designed to hijack logged in accounts. It's a great tool that can be used for educational purposes to extract data and change passwords at will.
+
+**Usage Instructions:**
+
+- **Running the Tool:** Navigate to the exe file and execute it.
+
+### UAC-Bypass
+
+**Tool Description:** `UAC-Bypass` by ebolaman is a utility designed to bypass the UAC prompt given when executing any shield icon exe (UAC prompter's). It's a great tool that can be used for educational purposes to run software without the need of admin permission.
+
+**Usage Instructions:**
+
+- **Running the Tool:** Navigate to the ZIP file and extract, you will find a README.md file that will explain the usage techniques (Note: it may be flagged as a virus!).
 
 ## Important Notes
 
