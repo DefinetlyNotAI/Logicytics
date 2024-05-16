@@ -1,4 +1,24 @@
 import subprocess
+import colorlog
+
+# Configure colorlog
+logger = colorlog.getLogger()
+logger.setLevel(colorlog.INFO)  # Set the log level
+handler = colorlog.StreamHandler()
+formatter = colorlog.ColoredFormatter(
+    "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+    datefmt=None,
+    reset=True,
+    log_colors={
+        'DEBUG': 'cyan',
+        'INFO': 'green',
+        'WARNING': 'yellow',
+        'ERROR': 'red',
+        'CRITICAL': 'red,bg_white',
+    }
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def get_uac_setting():
@@ -19,24 +39,25 @@ def set_uac_setting(value):
 
 
 def main():
-    print("INFO: Script started executing.")
+    logger.info("Script started executing.")
     # Get the current UAC setting
     old_uac_setting = get_uac_setting()
-    print(f"INFO: Old UAC setting: {old_uac_setting}")
+    logger.info(f"Old UAC setting: {old_uac_setting}")
 
     # Change the UAC setting to the opposite value
     new_uac_setting = '0' if old_uac_setting == '1' else '1'
     set_uac_setting(new_uac_setting)
-    print(f"INFO: New UAC setting: {new_uac_setting}")
+    logger.info(f"New UAC setting: {new_uac_setting}")
 
     # Ask the user to restart their computer
-    print("INFO: Please restart your computer for the changes to take effect.")
+    logger.info("Please restart your computer for the changes to take effect.")
     # Prompt the user to restart with confirmation
     user_input = input("Do you want to restart your computer now? (yes/no): ")
     if user_input.lower() == 'yes':
         subprocess.run(["powershell", "-Command", "shutdown /r /t 0"], check=True)
     else:
-        print("INFO: Restart cancelled by the user.")
+        logger.info("Restart cancelled by the user.")
 
 
-main()
+if __name__ == "__main__":
+    main()
