@@ -1,6 +1,26 @@
 import socket
 import subprocess
 import os
+import colorlog
+
+# Configure colorlog
+logger = colorlog.getLogger()
+logger.setLevel(colorlog.INFO)  # Set the log level
+handler = colorlog.StreamHandler()
+formatter = colorlog.ColoredFormatter(
+    "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+    datefmt=None,
+    reset=True,
+    log_colors={
+        'DEBUG': 'cyan',
+        'INFO': 'green',
+        'WARNING': 'yellow',
+        'ERROR': 'red',
+        'CRITICAL': 'red,bg_white',
+    }
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def get_local_ip():
@@ -10,13 +30,13 @@ def get_local_ip():
 
 
 def run_nmap_scan(target_ip=None):
-    print("Collecting IP...")
+    logger.info("Collecting IP...")
     if target_ip is None:
         target_ip = get_local_ip()
 
     # Get the current username
     username = os.getlogin()
-    print(f"Scanning {target_ip} from {username}... This might take a while... [~20 seconds]")
+    logger.info(f"Scanning {target_ip} from {username}... This might take a while... [~20 seconds]")
 
     # Construct the filename using the username
     filename = f"{username}_IP_Data.txt"
@@ -32,9 +52,9 @@ def run_nmap_scan(target_ip=None):
     with open(filename, 'w') as file:
         file.write(output_str)
 
-    print(f"Output written to {filename}")
+    logger.info(f"Output written to {filename}")
 
 
 # Example usage
-print("Setting up...")
+logger.info("Setting up...")
 run_nmap_scan()
