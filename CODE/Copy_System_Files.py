@@ -8,6 +8,12 @@ USER_NAME = getpass.getuser()
 DESTINATION_PREFIX = "DATA\\" + USER_NAME
 
 paths_and_name = [
+    "%windir%\\repair", "Repair Info"
+    "%windir%\\System32\\config", "Config Data"
+    "%windir%\\system32\\logfiles\\httperr\\httperr1.log", "HTTP Logs"
+    "%windir%\\iis6.log", "IIS6 Logs"
+    "%windir%\\debug", "Debug Data"
+    "%windir%\\System32\\drivers\\etc\\", "Driver Info"
     "%windir%\\repair\\sam", "SAM Backup",
     "%windir%\\System32\\config\\RegBack\\SAM", "SAM Registry Backup",
     "%windir%\\repair\\system", "System Backup",

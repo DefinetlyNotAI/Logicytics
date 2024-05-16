@@ -6,7 +6,8 @@ This section outlines the versions of our project that are currently supported w
 
 | Version | Supported          |
 |---------|--------------------|
-| 1.1.x   | :white_check_mark: |
+| 1.2.x   | :white_check_mark: |
+| 1.1.x   | :x: |
 | 1.0.x   | :x:                |
 
 ## Reporting a Vulnerability
@@ -21,7 +22,7 @@ If you believe you have found a security vulnerability in our project, we encour
 
 ### What to Expect
 
-- **Acknowledgment**: Upon receiving your report, we will acknowledge receipt within 2–5 business days.
+- **Acknowledgment**: Upon receiving your report, we will acknowledge receipt within 2ï¿½5 business days.
 - **Investigation**: Our security team will investigate the vulnerability and determine its validity.
 - **Update**: If the vulnerability is accepted, we will work on a fix and provide an update on the timeline for a security update.
 - **Communication**: We will communicate with you regarding the status of the vulnerability and any necessary actions.
