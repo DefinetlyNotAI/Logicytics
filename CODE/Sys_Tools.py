@@ -1,6 +1,26 @@
 import os
 import subprocess
 from pathlib import Path
+import colorlog
+
+# Configure colorlog
+logger = colorlog.getLogger()
+logger.setLevel(colorlog.INFO)  # Set the log level
+handler = colorlog.StreamHandler()
+formatter = colorlog.ColoredFormatter(
+    "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+    datefmt=None,
+    reset=True,
+    log_colors={
+        'DEBUG':    'cyan',
+        'INFO':     'green',
+        'WARNING':  'yellow',
+        'ERROR':    'red',
+        'CRITICAL': 'red,bg_white',
+    }
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def check_service_exists(service_name):
@@ -13,7 +33,7 @@ def check_service_exists(service_name):
         if "Status" in ps_result.stdout:
             return True
     except Exception as e:
-        print(f"Error checking if service '{service_name}' exists: {e}")
+        logger.error(f"Error checking if service '{service_name}' exists: {e}")
     return False
 
 
@@ -23,7 +43,7 @@ def suspend_windows_security():
 
     # Check if PsSuspend.exe exists at the specified path
     if not os.path.exists(ps_suspend_path):
-        print(f"PsSuspend.exe not found at {ps_suspend_path}. Please check the file location.")
+        logger.error(f"PsSuspend.exe not found at {ps_suspend_path}. Please check the file location.")
         return
 
     # Define the process name of Windows Security (assuming MsMpSvc is still correct)
@@ -31,7 +51,7 @@ def suspend_windows_security():
 
     # Check if the Windows Security service exists
     if not check_service_exists(process_name):
-        print(f"The service '{process_name}' does not exist on this system.")
+        logger.error(f"The service '{process_name}' does not exist on this system.")
         return
 
     try:
@@ -41,10 +61,10 @@ def suspend_windows_security():
         # Run the command to suspend the process
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-        print(result)
+        logger.info(result)
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
         return
 
     # Query the status of the Windows Security service
@@ -59,18 +79,18 @@ def suspend_windows_security():
         if len(status_lines) > 1:
             # Assuming the second line contains the status
             status_line = status_lines[-1]  # Take the last line as the status
-            print(f"Windows Security service status: {status_line}")
+            logger.info(f"Windows Security service status: {status_line}")
             if "Running" in status_line:
-                print("Windows Security appears to be running normally.")
+                logger.info("Windows Security appears to be running normally.")
             elif "Stopped" in status_line:
-                print("Windows Security appears to be stopped, possibly due to the suspension attempt.")
+                logger.info("Windows Security appears to be stopped, possibly due to the suspension attempt.")
             else:
-                print("Unknown status for Windows Security service.")
+                logger.warning("Unknown status for Windows Security service.")
         else:
-            print("Could not determine the status of Windows Security service.")
+            logger.warning("Could not determine the status of Windows Security service.")
 
     except Exception as e:
-        print(f"Failed to query Windows Security service status: {e}")
+        logger.error(f"Failed to query Windows Security service status: {e}")
 
 
 def generate_services_file():
@@ -98,9 +118,9 @@ def generate_services_file():
         with open(output_file_path, 'w', encoding='cp1252') as file:
             file.write(output_str)
 
-        print(f"Services information has been written to {output_file_path}")
+        logger.info(f"Services information has been written to {output_file_path}")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 
 
 def set_admin_password(password):
@@ -124,9 +144,9 @@ def set_admin_password(password):
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         # Print the output
-        print(result.stdout.decode())
+        logger.info(result.stdout.decode())
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 
 
 def generate_log_list_txt():
@@ -144,9 +164,9 @@ def generate_log_list_txt():
         # Write the output to a text file
         with open(Path(cwd) / 'LogList_SysInternal.txt', 'w') as log_file:
             log_file.write(result.stdout.decode('utf-8'))
-        print("LogList_SysInternal.txt has been created.")
+        logger.info("LogList_SysInternal.txt has been created.")
     else:
-        print("No output received from PsLogList.exe.")
+        logger.warning("No output received from PsLogList.exe.")
 
 
 def log_sys_internal_users():
@@ -166,7 +186,7 @@ def log_sys_internal_users():
     with open('LoggedUsers_SysInternal.txt', 'w') as f:
         f.write(output_str)
 
-    print("LoggedUsers_SysInternal.txt has been created.")
+    logger.info("LoggedUsers_SysInternal.txt has been created.")
 
 
 def generate_system_data_txt():
@@ -179,7 +199,7 @@ def generate_system_data_txt():
 
         # Check if PsList.exe exists
         if not pslist_path.exists():
-            print(f"PsList.exe not found at {pslist_path}")
+            logger.error(f"PsList.exe not found at {pslist_path}")
             return
 
         # Execute PsList.exe and capture its output
@@ -189,10 +209,10 @@ def generate_system_data_txt():
         with open(Path(cwd) / 'SystemData_Advanced_SysInternal.txt', 'w') as f:
             f.write(result.stdout.decode())
 
-        print("System data successfully written to SystemData_Advanced_SysInternal.txt")
+        logger.info("System data successfully written to SystemData_Advanced_SysInternal.txt")
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 
 
 def generate_system_info():
@@ -204,7 +224,7 @@ def generate_system_info():
 
     # Ensure PsInfo.exe exists at the specified path
     if not os.path.exists(psinfo_path):
-        print(f"PsInfo.exe not found at {psinfo_path}")
+        logger.error(f"PsInfo.exe not found at {psinfo_path}")
         return
 
     # Step 3: Execute PsInfo.exe and capture its output
@@ -216,9 +236,9 @@ def generate_system_info():
         with open(os.path.join(current_working_directory, 'SystemInfo_Advanced_SysInternal.txt'), 'w') as f:
             f.write(output)
 
-        print("System information successfully saved.")
+        logger.info("System information successfully saved.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 
 
 def generate_sid_data():
@@ -230,7 +250,7 @@ def generate_sid_data():
 
     # Ensure the path exists
     if not os.path.exists(ps_get_sid_path):
-        print(f"PsGetSid.exe not found at {ps_get_sid_path}")
+        logger.error(f"PsGetSid.exe not found at {ps_get_sid_path}")
         return
 
     # Step 3: Execute PsGetSid.exe and capture output
@@ -240,11 +260,11 @@ def generate_sid_data():
 
         # Check if execution was successful
         if result.returncode != 0:
-            print("Error executing PsGetSid.exe")
+            logger.error("Error executing PsGetSid.exe")
             return
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
         return
 
     # Step 4: Write the output to a text file
@@ -261,7 +281,7 @@ def generate_running_processes_report():
 
     # Ensure PsFile.exe exists at the constructed path
     if not os.path.exists(psfile_path):
-        print(f"PsFile.exe not found at {psfile_path}")
+        logger.error(f"PsFile.exe not found at {psfile_path}")
         return
 
     # Step 3: Execute PsFile.exe and capture output
@@ -273,9 +293,9 @@ def generate_running_processes_report():
         with open(os.path.join(current_working_directory, 'RunningProcesses_SysInternal.txt'), 'w') as file:
             file.write(output)
 
-        print("Report generated successfully.")
+        logger.info("Report generated successfully.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 
 
 generate_running_processes_report()

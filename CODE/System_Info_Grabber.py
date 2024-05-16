@@ -2,10 +2,30 @@ import getpass
 import socket
 import subprocess
 import re
+import time
 import uuid
 import psutil
 import wmi
+import colorlog
 
+# Configure colorlog
+logger = colorlog.getLogger()
+logger.setLevel(colorlog.INFO)  # Set the log level
+handler = colorlog.StreamHandler()
+formatter = colorlog.ColoredFormatter(
+    "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+    datefmt=None,
+    reset=True,
+    log_colors={
+        'DEBUG': 'cyan',
+        'INFO': 'green',
+        'WARNING': 'yellow',
+        'ERROR': 'red',
+        'CRITICAL': 'red,bg_white',
+    }
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 USER_NAME = getpass.getuser()
 DESTINATION_PREFIX = "DATA\\" + USER_NAME
 
@@ -35,7 +55,7 @@ def filter_processes():
                 or p['name'] in web_browser_processes or p['name'] in email_clients or p['name'] in office_processes or
                 p[
                     'name'] in antivirus_security_processes):
-            print(f"INFO: PID = {p['pid']}, Program Name = {p['name']}")
+            logger.info(f"INFO: PID = {p['pid']}, Program Name = {p['name']}")
             print()
 
 
@@ -103,25 +123,26 @@ def execute_command(command):
 ipv4, ipv6, mac_address = get_network_info()
 version_number, type = get_windows_version_info()
 
-print(f"INFO: Raw Processes Running Suitable to dump:- {filter_processes()}")
+logger.info(f"INFO: Raw Processes Running Suitable to dump:- {filter_processes()}")
 print()
-print(f"INFO: Computer Model: {get_computer_model()}")
+logger.info(f"INFO: Computer Model: {get_computer_model()}")
 print()
-print("INFO: CPU", execute_command('wmic cpu get Name').splitlines()[2].strip())
+logger.info("INFO: CPU", execute_command('wmic cpu get Name').splitlines()[2].strip())
 print()
-print("INFO: GPU", execute_command('wmic path win32_VideoController get Name').splitlines()[2].strip())
+logger.info("INFO: GPU", execute_command('wmic path win32_VideoController get Name').splitlines()[2].strip())
 print()
-print("INFO: RAM", execute_command('wmic MEMORYCHIP get BankLabel, Capacity, MemoryType').splitlines()[2].strip())
+logger.info("INFO: RAM", execute_command('wmic MEMORYCHIP get BankLabel, Capacity, MemoryType').splitlines()[2].strip())
 print()
-print("INFO: SSD", execute_command('wmic diskdrive get Model, MediaType, Size').splitlines()[2].strip())
+logger.info("INFO: SSD", execute_command('wmic diskdrive get Model, MediaType, Size').splitlines()[2].strip())
 print()
-print(f"INFO: Windows Version Number: {version_number}")
+logger.info(f"INFO: Windows Version Number: {version_number}")
 print()
-print(f"INFO: Windows Type: {type}")
+logger.info(f"INFO: Windows Type: {type}")
 print()
-print(f"INFO: IPv4: {ipv4}")
+logger.info(f"INFO: IPv4: {ipv4}")
 print()
-print(f"INFO: IPv6: {ipv6}")
+logger.info(f"INFO: IPv6: {ipv6}")
 print()
-print(f"INFO: MAC Address: {mac_address}")
+logger.info(f"INFO: MAC Address: {mac_address}")
 print()
+time.sleep(3)
