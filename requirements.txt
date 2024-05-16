@@ -5,3 +5,4 @@ PyAutoGUI~=0.9.54
 uuid~=1.30
 psutil~=5.9.8
 WMI~=1.5.1
+colorlog~=6.8.2

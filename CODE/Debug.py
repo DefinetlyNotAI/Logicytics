@@ -14,7 +14,8 @@ def check_python_versions():
             exit(1)
         else:
             with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                debug_file.write(f"<span style=\"color:green;\">SYSTEM</span>: Python found in the PATH. Executable(s) located at {result.stdout.strip()}.<br><br>")
+                debug_file.write(
+                    f"<span style=\"color:green;\">SYSTEM</span>: Python found in the PATH. Executable(s) located at {result.stdout.strip()}.<br><br>")
     except subprocess.CalledProcessError:
         # Second attempt to find Python3
         try:
@@ -25,11 +26,13 @@ def check_python_versions():
                 exit(1)
             else:
                 with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                    debug_file.write(f"<span style=\"color:green;\">SYSTEM</span>: Python3 found in the PATH. Executable located at {result.stdout.strip()}.<br><br>")
+                    debug_file.write(
+                        f"<span style=\"color:green;\">SYSTEM</span>: Python3 found in the PATH. Executable located at {result.stdout.strip()}.<br><br>")
         except subprocess.CalledProcessError:
             # Both attempts failed, log the error
             with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                debug_file.write("<span style=\"color:red;\">ERROR</span>: Neither 'python' nor 'python3' found in the PATH.<br><br>")
+                debug_file.write(
+                    "<span style=\"color:red;\">ERROR</span>: Neither 'python' nor 'python3' found in the PATH.<br><br>")
 
 
 def delete_debug_file():
@@ -201,7 +204,6 @@ def main():
     cmd_raw("wmic cpu get caption, name, deviceid, numberofcores, maxclockspeed, status", "null")
     cmd_raw("wmic computersystem get totalphysicalmemory", "null")
     cmd_raw("systeminfo | findstr /C:\"System Model\" /C:\"Manufacturer\"", "null")
-
 
 
 if __name__ == "__main__":
