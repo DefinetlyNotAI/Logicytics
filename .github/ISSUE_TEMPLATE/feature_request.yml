@@ -25,5 +25,15 @@ body:
     attributes:
       label: Motivation and context
       description: Tell us why this change is needed or helpful, and what problems it may help solve.
+
+  - type: dropdown
+    id: importance
+    attributes:
+      label: What is the importance for implementing this idea?
+      multiple: false
+      options:
+        - High
+        - Normal
+        - Low
     validations:
       required: true
