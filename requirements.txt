@@ -1,6 +1,6 @@
 DateTime~=5.5
 pathlib~=1.0.1
-tqdm~=4.66.1
+tqdm~=4.66.4
 PyAutoGUI~=0.9.54
 uuid~=1.30
 psutil~=5.9.8
