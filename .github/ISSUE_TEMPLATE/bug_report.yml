@@ -20,13 +20,13 @@ body:
       description: Provide a summary of the issue and what you expected to happen, including specific steps to reproduce.
     validations:
       required: true
-  - type: markdown
+  - type: textarea
+    id: log
     attributes:
-      value: "Include the log file generated"
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for taking the time to fill out this bug! If you need real-time help, join us on Discord.
+      label: Log-File
+      description: Include the log file generated
+    validations:
+      required: true
   - type: dropdown
     id: browser
     attributes:
