@@ -25,8 +25,8 @@ body:
   - type: textarea
     id: log
     attributes:
-      label: Log-File
-      description: Include the log file generated
+      label: Log File
+      description: Include the log file generated, copy it and paste it in.
     validations:
       required: true
   - type: dropdown
