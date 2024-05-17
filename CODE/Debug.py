@@ -3,6 +3,26 @@ import sys
 import re
 import os
 import subprocess
+import colorlog
+
+# Configure colorlog
+logger = colorlog.getLogger()
+logger.setLevel(colorlog.INFO)  # Set the log level
+handler = colorlog.StreamHandler()
+formatter = colorlog.ColoredFormatter(
+    "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+    datefmt=None,
+    reset=True,
+    log_colors={
+        'DEBUG': 'cyan',
+        'INFO': 'green',
+        'WARNING': 'yellow',
+        'ERROR': 'red',
+        'CRITICAL': 'red,bg_white',
+    }
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def check_python_versions():
@@ -39,9 +59,9 @@ def delete_debug_file():
     debug_file_path = os.path.join(os.getcwd(), "DEBUG.md")
     if os.path.exists(debug_file_path):
         os.remove(debug_file_path)
-        print("DEBUG.md file deleted. A new one will be created.")
+        logger.debug("DEBUG.md file deleted. A new one will be created.")
     else:
-        print("DEBUG.md file does not exist. A new one will be created.")
+        logger.debug("DEBUG.md file does not exist. A new one will be created.")
 
 
 def define_paths():

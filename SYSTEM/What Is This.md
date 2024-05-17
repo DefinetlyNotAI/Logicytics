@@ -6,7 +6,7 @@ The `SYSTEM` directory within this project is designed to house the resources th
 
 ### structure.py for creating .structure files
 
-**Tool Description:** `structure.py` is a utility designed for creating the structure files. It's a tool that can be used for debugging purposes.
+**Tool Description:** `structure.py` is a utility designed for creating the structure files. It's a tool that can be used for debugging purposes, this is not public!
 
 ### Logicystics.structure for debugging files
 

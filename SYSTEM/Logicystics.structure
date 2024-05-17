@@ -7,6 +7,7 @@
 =SECURITY.md
 =CODE\Antivirus_Finder.ps1
 =CODE\Browser_And_Policies_Miner.ps1
+=CODE\Clean.ps1
 =CODE\CMD_Disabled_Bypass.py
 =CODE\Copy_Media.py
 =CODE\Copy_System_Files.py
@@ -37,6 +38,7 @@
 =CODE\sys\pssuspend.exe
 =EXPLAIN\Antivirus Finder Explained.md
 =EXPLAIN\Browser And Policies Miner Explained.md
+=EXPLAIN\Clean Explained.md
 =EXPLAIN\CMD Disabled Bypass Explained.md
 =EXPLAIN\Copy Media Explained.md
 =EXPLAIN\Copy System Files Explained.md

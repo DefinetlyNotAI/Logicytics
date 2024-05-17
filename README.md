@@ -49,7 +49,7 @@ To improve performance, it's recommended to temporarily disable Windows Defender
 
 ### Agree to the ToS
 
-Due to the use of third-party applications, they come with their own set of Terms of Service. It's mandatory to read the `!! Important!!.md` file located in the CODE/sys directory. Run the following command as an administrator:
+Due to the use of third-party applications, they come with their own set of Terms of Service. It's mandatory to read the `!! Important!!.md` file located in the CODE/sys directory.
 
 ## Running Logicytics
 
@@ -65,7 +65,7 @@ To run the main program, you need to execute `Logicytics.py` with administrative
 
 ## Running Debugger
 
-To run the debugger program (still in beta versions), you need to execute `DebugBeta.py` with administrative privileges. Follow these steps:
+To run the debugger program, you need to execute `Debug.py` with administrative privileges. Follow these steps:
 
 1. Open Command Prompt as an administrator.
 2. Navigate to the directory where `DebugBeta.py` is located (will be in the CODE directory).
@@ -73,7 +73,7 @@ To run the debugger program (still in beta versions), you need to execute `Debug
 4. You will receive DEBUG.md, which contains the file required for reporting bugs.
 
 ```powershell
-.\DebugBeta.py
+.\Debug.py
 ```
 
 Ensure the `.structure` file is present. If you don't have it, download the `.structure` file found in the SYSTEM directory of this repo.

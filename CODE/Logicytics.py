@@ -23,11 +23,31 @@ formatter = colorlog.ColoredFormatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+
+def create_empty_data_directory():
+    """
+    Creates an empty 'DATA' directory in the current working directory.
+    """
+    current_working_dir = os.getcwd()
+    data_dir_path = os.path.join(current_working_dir, "DATA")
+    
+    try:
+        os.makedirs(data_dir_path, exist_ok=True)
+        logger.info(f"'{data_dir_path}' has been created.")
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        
+        
 def execute_code(script_path):
     if os.path.splitext(script_path)[1].lower() == '.ps1':
         unblock_command = f'powershell.exe -Command "Unblock-File -Path {script_path}"'
         subprocess.run(unblock_command, shell=True, check=True)
-        logger.info("Script unblocked.")
+        logger.info("PS1 Script unblocked.")
+        log = 1
+    elif os.path.splitext(script_path)[1].lower() == '.bat':
+        log = 1
+    else:
+        log = 0
 
     command = f'powershell.exe -Command "& {script_path}"'
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -35,9 +55,12 @@ def execute_code(script_path):
     # Print the output in real-time
     for line in iter(process.stdout.readline, b''):
         decoded_line = line.decode('utf-8').strip()
-        if decoded_line:
+        if decoded_line and log == 0:
             logger.info(decoded_line)
-    
+        elif decoded_line and log == 1:
+            logger.debug(decoded_line)
+            
+            
     # Wait for the process to finish and get the final output/error
     stdout, _ = process.communicate()
 
@@ -71,13 +94,14 @@ def checks():
         logger.warning("This script is intended to run on Windows.")
 
 def main():
+    create_empty_data_directory()
     set_execution_policy()
     checks()
     for script_path in ["./CMD_Disabled_Bypass.py", "./Copy_System_Files.py", "./Browser_And_Policies_Miner.ps1",
                         "./Window_Features_Lister.bat",
                         "./Antivirus_Finder.ps1", "./IP_Scanner.py", "./Device_Data.bat", "./Sys_Tools.py",
                         "./Tree_Command.bat", "./Simple_Password_Miner.py", "./Copy_Media.py",
-                        "./System_Info_Grabber.py", "./Zipper.py"]:
+                        "./System_Info_Grabber.py", "./Zipper.py", "Clean.ps1"]:
         execute_code(script_path)
 
 if __name__ == "__main__":
