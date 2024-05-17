@@ -21,12 +21,12 @@ body:
     validations:
       required: true
   - type: markdown
-    id: log
     attributes:
-      label: Log-File
-      description: Include the log file generated
-    validations:
-      required: true
+      value: "Include the log file generated"
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug! If you need real-time help, join us on Discord.
   - type: dropdown
     id: browser
     attributes:
