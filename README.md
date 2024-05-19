@@ -2,6 +2,7 @@
 
 Welcome to **Logicytics**, a powerful tool designed to harvest and collect a wide range of Windows system data for forensics. It's an actively developed project that primarily uses Python. Its goal is to gather as much sensitive data as possible and output it into a ZIP file. This guide will help you get started with using Logicytics effectively.
 
+
 ## Prerequisites
 
 Before running Logicytics, please follow these steps:
