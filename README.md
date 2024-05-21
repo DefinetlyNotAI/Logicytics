@@ -2,7 +2,6 @@
 
 Welcome to **Logicytics**, a powerful tool designed to harvest and collect a wide range of Windows system data for forensics. It's an actively developed project that primarily uses Python. Its goal is to gather as much sensitive data as possible and output it into a ZIP file. This guide will help you get started with using Logicytics effectively.
 
-
 ## Prerequisites
 
 Before running Logicytics, please follow these steps:
@@ -27,7 +26,7 @@ To ensure smooth operation and enable cmd, disable UAC by running the `UACPY.py`
 
 ### Install Required Libraries
 
-Install necessary libraries by executing the following commands in the Command Prompt as an administrator:
+Install the necessary libraries by executing the following commands in the Command Prompt as an administrator:
 
 1. **Open Command Prompt as Administrator:**
    - Follow the same method as above.
@@ -91,7 +90,7 @@ Ensure the `.structure` file is present. If you don't have it, download the `.st
 
 - **Releases:** Don't download files from there; that is just some sort of mini-update log. Download from the main branch; old versions won't be saved here and might not be supported.
 
-- **Credits:** In the credits, you will find many people, firms, and projects whose code/software we used. If you are the creator of the project and don't want us to use your code, feel free to contact us so we can remove it.
+- **Credits:** In the credits, you will find many people, firms, and projects whose code/software we used. If you are the creator of the project and don't want us to use your code, feel free to contact us, so we can remove it.
 
 - **Explore:** Check all the files and ReadMe to understand how and what the project does.
 

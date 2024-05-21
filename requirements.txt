@@ -1,8 +1,7 @@
 colorlog~=6.8.2
-DateTime~=5.5
 pathlib~=1.0.1
-tqdm~=4.66.4
+DateTime~=5.5
+requests~=2.31.0
 PyAutoGUI~=0.9.54
 uuid~=1.30
-psutil~=5.9.8
 WMI~=1.5.1
