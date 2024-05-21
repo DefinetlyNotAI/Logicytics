@@ -51,6 +51,8 @@ To improve performance, it's recommended to temporarily disable Windows Defender
 
 Due to the use of third-party applications, they come with their own set of Terms of Service. It's mandatory to read the `!! Important!!.md` file located in the CODE/sys directory.
 
+We also have our own ToS, you will be prompted by them when you first run Logicytics.
+
 ## Running Logicytics
 
 To run the main program, you need to execute `Logicytics.py` with administrative privileges. Follow these steps:
@@ -83,8 +85,6 @@ Ensure the `.structure` file is present. If you don't have it, download the `.st
 - **Do Not Remove or Delete Any Folders or Files:** The integrity of the data collection process depends on the presence of all necessary files and folders. Removing or deleting any part of the Logicytics package could lead to errors or incomplete data collection.
 
 - **Third-Party Tools:** For those interested in additional functionality, you can explore more third-party software in the EXTRA tab. This tool offers advanced memory analysis capabilities and more features.
-
-- **Initial Delay:** After starting Logicytics, you might not see any immediate feedback or activity for about 1 minute. This is normal and part of the data collection process.
 
 - **Access Permissions:** The only files you should access after running Logicytics are the generated ZIP file and the `.md` log file (WIP). These files contain the collected data and log information, respectively, and are found in the CODE subdirectory; you can freely move them anywhere.
 
