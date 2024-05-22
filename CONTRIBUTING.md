@@ -2,7 +2,7 @@
 
 Looking to contribute something to Logicytics? **Here's how you can help.**
 
-Please take a moment to review this document in order to make the contribution
+Please take a moment to review this document to make the contribution
 process easy and effective for everyone involved.
 
 Following these guidelines helps to communicate that you respect the time of
@@ -21,14 +21,14 @@ restrictions:
 - Please **do not** derail or troll issues. Keep the discussion on topic and
   respect the opinions of others.
 
-- Please **do not** post comments consisting solely of "+1" or " 👍 ".
+- Please **do not** post comments consisting solely of "+1" or "👍 ".
   Use [GitHub's "reactions" feature](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/)
   instead. We reserve the right to delete comments which violate this rule.
 
 
 ## Issues assignment
 
-I will be looking at the open issues, analyze them, and provide guidance on how to proceed. **Issues can be assigned to anyone other than me** However, contributors are welcome to participate in the discussion and provide their input on how to best solve the issue, and even submit a PR if they want to. Please wait that the issue is ready to be worked on before submitting a PR, we don't want to waste your time.
+I will be looking at the open issues, analyze them, and provide guidance on how to proceed. **Issues can be assigned to anyone other than me** However, contributors are welcome to participate in the discussion and provide their input on how to best solve the issue, and even submit a PR if they want to. Please wait that the issue is ready to be worked on before submitting a PR. We don't want to waste your time.
 
 Please keep in mind that I am small, have limited resources and am not always able to respond immediately. I will try to provide feedback as soon as possible, but please be patient. If you don't get a response immediately, it doesn't mean that we are ignoring you or that we don't care about your issue or PR. We will get back to you as soon as we can.
 
@@ -44,7 +44,7 @@ For a complete look at our labels, see the [project labels page](https://github.
 ## Bug reports
 
 A bug is a _demonstrable problem_ that is caused by the code in the repository.
-Good bug reports are extremely helpful, so thanks!
+Good bug reports are extremely helpful, so, thanks!
 
 Guidelines for bug reports:
 
@@ -101,7 +101,7 @@ project (indentation, accurate comments, etc.) and any other requirements
 3. **Make Changes**: Make your changes in the new branch.
 4. **Commit Changes**: Commit your changes with a clear and descriptive message.
 5. **Push Changes**: Push your changes to your forked repository.
-6. **Open a Pull Request**: Open a pull request on our repository. Include a detailed description of your changes and how they address the issue or implement the feature.
+6. **Open a Pull Request**: Open a pull request in our repository. Include a detailed description of your changes and how they address the issue or implement the feature.
 
 **IMPORTANT**: By submitting a patch, you agree to allow the project owners to
 license your work under the terms of the [MIT License](https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE) (if it
