@@ -51,7 +51,7 @@ To improve performance, it's recommended to temporarily disable Windows Defender
 
 Due to the use of third-party applications, they come with their own set of Terms of Service. It's mandatory to read the `!! Important!!.md` file located in the CODE/sys directory.
 
-We also have our own ToS, you will be prompted by them when you first run Logicytics.
+We also have our own ToS, it will prompt you when you first run Logicytics to agree to the ToS; don't worry as its small short and straightforward to read, and we don't attempt to trick you into selling your soul.
 
 ## Running Logicytics
 
