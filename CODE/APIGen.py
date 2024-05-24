@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 from tkinter import messagebox
 
+
 # Initialize the main window
 root = tk.Tk()
 root.title("VPN API Key Request")
