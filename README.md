@@ -93,7 +93,7 @@ Ensure the `.structure` file is present. If you don't have it, download the `.st
 - **Credits:** In the credits, you will find many people, firms, and projects whose code/software we used. If you are the creator of the project and don't want us to use your code, feel free to contact us, so we can remove it.
 
 - **Explore:** Check all the files and ReadMe to understand how and what the project does.
-
+- 
 ## Conclusion
 
 Logicytics is a powerful tool for system data analysis. By following the instructions above, you can ensure a smooth and effective data collection process. Remember, the key to successful data harvesting is patience and adherence to the guidelines provided. Happy data mining!
