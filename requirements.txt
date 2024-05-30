@@ -1,4 +1,5 @@
 colorlog~=6.8.2
+future~=1.0.0
 pathlib~=1.0.1
 DateTime~=5.5
 requests~=2.32.3
