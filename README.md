@@ -2,6 +2,16 @@
 
 Welcome to **Logicytics**, a powerful tool designed to harvest and collect a wide range of Windows system data for forensics. It's an actively developed project that primarily uses Python. Its goal is to gather as much sensitive data as possible and output it into a ZIP file. This guide will help you get started with using Logicytics effectively.
 
+<div align="center">
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/issues"><img src="https://img.shields.io/github/issues/DefinetlyNotAI/Logicytics" alt="GitHub Issues"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/tags"><img src="https://img.shields.io/github/v/tag/DefinetlyNotAI/Logicytics" alt="GitHub Tag"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/graphs/commit-activity"><img src="https://img.shields.io/github/commit-activity/t/DefinetlyNotAI/Logicytics" alt="GitHub Commit Activity"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/languages"><img src="https://img.shields.io/github/languages/count/DefinetlyNotAI/Logicytics" alt="GitHub Language Count"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions"><img src="https://img.shields.io/github/check-runs/DefinetlyNotAI/Logicytics/main" alt="GitHub Branch Check Runs"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/blob/master/LICENSE"><img src="https://img.shields.io/github/license/DefinetlyNotAI/Logicytics" alt="GitHub License"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics"><img src="https://img.shields.io/github/repo-size/DefinetlyNotAI/Logicytics" alt="GitHub Repo Size"></a>
+</div>
+
 
 ### Agree to the ToS
 
