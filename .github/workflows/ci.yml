@@ -4,8 +4,6 @@ jobs:
   run:
     runs-on: windows-latest
     steps:
-      - name: Codecov
-        uses: codecov/codecov-action@v4.4.1
       - name: Checkout
         uses: actions/checkout@v4
         with:
