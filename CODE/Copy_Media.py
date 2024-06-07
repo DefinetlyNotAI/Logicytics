@@ -61,6 +61,9 @@ def copy_folders(source_paths, destination_path):
 
 
 def main():
+    """
+    Main function to copy media folders from the user's profile to a destination folder.
+    """
     # Get the current user's username
     username = os.getlogin()
 
@@ -71,6 +74,7 @@ def main():
         f"C:/Users/{username}/Videos"
     ]
 
+    # Check if the source folders exist
     for folder in source_folders:
         if not os.path.exists(folder):
             logger.error(f"Source folder does not exist: {folder}")

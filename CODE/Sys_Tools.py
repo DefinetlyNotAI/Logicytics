@@ -64,11 +64,23 @@ def write_to_file(content, filename):
 
 
 def check_service_exists(service_name):
+    """
+    Check if a service with the given name exists.
+
+    Args:
+        service_name (str): The name of the service to check.
+
+    Returns:
+        bool: True if the service exists, False otherwise.
+    """
     ps_cmd = f"Get-Service -Name '{service_name}'"
     return "Status" in run_command(['powershell', '-Command', ps_cmd])
 
 
 def generate_services_file():
+    """
+    Generate a file containing services information.
+    """
     current_dir = os.getcwd()
     output_file_name = "Services_SysInternal.txt"
     output_file_path = os.path.join(current_dir, output_file_name)
@@ -82,7 +94,7 @@ def generate_services_file():
         # Decode the output using 'cp1252' and write to the file
         output_str = result.stdout.decode('cp1252')
         if output_str == "":
-            logger.error("An unexpected error occurred, may be due insufficient permissions")
+            logger.error("An unexpected error occurred, may be due to insufficient permissions")
         else:
             with open(output_file_path, 'w', encoding='cp1252') as file:
                 file.write(output_str)
@@ -97,6 +109,9 @@ def generate_services_file():
 
 
 def generate_log_list_txt():
+    """
+    Generate a log file with information from PsLogList.
+    """
     # Get the current working directory
     cwd = os.getcwd()
 
@@ -117,6 +132,9 @@ def generate_log_list_txt():
 
 
 def log_sys_internal_users():
+    """
+    Retrieves logged users using PsLoggedOn.exe and saves the output to a text file.
+    """
     # Get the current working directory
     cwd = os.getcwd()
 
@@ -137,6 +155,9 @@ def log_sys_internal_users():
 
 
 def generate_system_data_txt():
+    """
+    Generates system data using PsList.exe and saves it to a text file.
+    """
     try:
         # Get the current working directory
         cwd = os.getcwd()
@@ -163,6 +184,9 @@ def generate_system_data_txt():
 
 
 def generate_system_info():
+    """
+    Generates system information using PsInfo.exe and saves it to a text file.
+    """
     # Step 1: Get the current working directory
     current_working_directory = os.getcwd()
 
@@ -189,6 +213,9 @@ def generate_system_info():
 
 
 def generate_sid_data():
+    """
+    Generates SID data using PsGetSid.exe and saves it to a text file.
+    """
     # Step 1: Get the current working directory
     current_working_directory = os.getcwd()
 
@@ -220,6 +247,9 @@ def generate_sid_data():
 
 
 def generate_running_processes_report():
+    """
+    Generates a report of running processes using PsFile.exe and saves it to a text file.
+    """
     # Step 1: Determine the current working directory
     current_working_directory = os.getcwd()
 
@@ -246,6 +276,9 @@ def generate_running_processes_report():
 
 
 def try_execute(function):
+    """
+    Try to execute the given function and handle specific exceptions.
+    """
     try:
         function()
     except subprocess.CalledProcessError as e:

@@ -71,12 +71,24 @@ current_initial_text_index = 0
 
 
 # Function to check for existing.accept files
-def check_for_existing_accept_files():
-    # Search for any file ending with '.accept' in the current directory
+
+def check_for_existing_accept_files() -> bool:
+    """
+    Check if there is any file ending with '.accept' in the current directory.
+
+    Returns:
+        True if a file ending with '.accept' is found, False otherwise.
+    """
+    # Get the parent directory of the current working directory
     finalpath = os.path.dirname(os.getcwd())
+
+    # Iterate over the files in the SYSTEM directory
     for filename in os.listdir(os.path.join(finalpath, "SYSTEM")):
+        # Check if the file ends with '.accept'
         if filename.endswith('.accept'):
             return True
+
+    # If no file ending with '.accept' is found, return False
     return False
 
 
@@ -91,6 +103,11 @@ else:
 
 
     def on_accept_click():
+        """
+        Handles the click event when the user confirms their agreement to the terms.
+        Creates a file with the agreement confirmation, moves it to a different directory,
+        and deletes the original file.
+        """
         # Confirm the user's agreement
         agreement_confirmation = messagebox.askyesno(title="Agreement Confirmation",
                                                      message="Do you confirm that you agree to the terms?",
@@ -103,6 +120,7 @@ else:
 
                 # Inform the user that the file has been created
                 messagebox.showinfo(title="Success", message="A file 'ToS.accept' has been created.")
+
                 # Construct the source path of the ToS.accept file
                 current_working_dir = os.getcwd()
                 source_path = os.path.join(current_working_dir, "ToS.accept")
@@ -127,7 +145,7 @@ else:
                 else:
                     print("The file ToS.accept does not exist in the current directory.")
 
-                    # Close the application
+                # Close the application
                 root.destroy()
 
             else:
@@ -138,14 +156,25 @@ else:
 
 
     def on_reject_click():
+        """
+        Handles the event when the user rejects the terms.
+        Closes the application window.
+        """
         # Close the application
         root.destroy()
 
 
     def on_fun_summary_click():
+        """
+        This function handles the click event for the fun summary/legal words button.
+        Toggles the state of the button and updates the button text accordingly.
+        Also toggles the initial text displayed on the interface.
+        """
         global current_initial_text_index  # Declare it as global if necessary
+
         # Toggle the state of the fun summary/legal words button
         fun_summary_state.set(not fun_summary_state.get())
+
         if fun_summary_state.get():
             fun_summary_button.config(text="Click Here for Legal Words")
         else:
@@ -154,7 +183,6 @@ else:
         # Toggle the initial text
         current_initial_text_index = (current_initial_text_index + 1) % len(initial_texts)
         text_label.config(text=initial_texts[current_initial_text_index])
-
 
     # Accept button
     accept_button = tk.Button(root, text="Accept", command=on_accept_click)

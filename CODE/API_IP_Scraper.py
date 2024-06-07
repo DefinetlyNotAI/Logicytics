@@ -59,8 +59,15 @@ def save_to_file(filename, content):
 
 
 def main():
+    """
+    Main function to fetch and save public IP information using the VPNAPI service.
+    """
+
+    # Get the script directory and parent directory
     script_dir = os.path.dirname(os.path.realpath(__file__))
     parent_dir = os.path.join(script_dir, '..')
+
+    # Construct the path to the API key file
     api_key_file_path = os.path.join(parent_dir, 'SYSTEM', 'API-IP.KEY')
 
     # Check if the API key file exists before proceeding

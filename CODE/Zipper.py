@@ -27,6 +27,9 @@ DESTINATION_PREFIX = "DATA\\" + USER_NAME
 
 
 def zip_data_folder():
+    """
+    This function zips the contents of the 'DATA' folder into a zip file named after the user.
+    """
     # Define the source folder and the destination zip file
     source_folder = "DATA"
     destination_zip = f"{USER_NAME}_data.zip"
@@ -50,6 +53,10 @@ def zip_data_folder():
 
 
 def process_files():
+    """
+    This function processes files in the current directory by moving text files,
+    .file files, or files with no extension to the 'DATA' directory.
+    """
     # Define the current working directory and the DATA directory
     current_dir = os.getcwd()
     data_dir = os.path.join(current_dir, 'DATA')
@@ -61,7 +68,7 @@ def process_files():
     # List all items in the current directory
     items = os.listdir(current_dir)
 
-    # Filter items that are files with.txt,.file extensions or no extension
+    # Filter items that are files with .txt, .file extensions or no extension
     target_files = [item for item in items if
                     item.endswith('.txt') or item.endswith('.file') or not os.path.splitext(item)[1]]
 

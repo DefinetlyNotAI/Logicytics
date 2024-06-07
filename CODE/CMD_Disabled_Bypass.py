@@ -24,8 +24,10 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-# Function to simulate pressing Win+R to open the Run dialog
 def press_win_r():
+    """
+    Simulates pressing the Win+R keys to open the Run dialog
+    """
     try:
         pyautogui.hotkey('win', 'r')
         logger.info("Simulated pressing Win+R to open the Run dialog.")
@@ -33,8 +35,10 @@ def press_win_r():
         logger.error(f"Failed to simulate pressing Win+R: {e}")
 
 
-# Function to type the command to enable the command prompt
 def type_command():
+    """
+    Types the command to enable the command prompt
+    """
     try:
         pyautogui.write(
             'cmd.exe /k "REG add HKCU\\Software\\Policies\\Microsoft\\Windows\\System /v DisableCMD /t REG_DWORD /d 0 /f"')
@@ -43,8 +47,10 @@ def type_command():
         logger.error(f"Failed to type the command: {e}")
 
 
-# Function to press Enter to execute the command
 def press_enter():
+    """
+    Presses the Enter key to execute the command
+    """
     try:
         pyautogui.press('enter')
         logger.info("Pressed Enter to execute the command.")
@@ -52,8 +58,10 @@ def press_enter():
         logger.error(f"Failed to press Enter: {e}")
 
 
-# Function to simulate pressing Alt+F4 to close the command prompt window
 def press_alt_f4():
+    """
+    Simulates pressing Alt+F4 to close the command prompt window
+    """
     try:
         pyautogui.hotkey('alt', 'f4')
         logger.info("Simulated pressing Alt+F4 to close the command prompt window.")
@@ -61,7 +69,6 @@ def press_alt_f4():
         logger.error(f"Failed to simulate pressing Alt+F4: {e}")
 
 
-# Main execution flow
 if __name__ == "__main__":
     # Wait a bit to ensure the script is ready to run
     time.sleep(2)

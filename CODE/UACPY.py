@@ -22,6 +22,12 @@ logger.addHandler(handler)
 
 
 def get_uac_setting():
+    """
+    Retrieves the current UAC setting from the Windows registry.
+
+    Returns:
+        str: The current UAC setting value.
+    """
     # Query the current UAC setting using PowerShell
     uac_setting = subprocess.run(["powershell", "-Command",
                                   "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name 'EnableLUA'"],
@@ -32,13 +38,23 @@ def get_uac_setting():
 
 
 def set_uac_setting(value):
+    """
+    Sets the UAC setting in the Windows registry.
+
+    Args:
+        value (str): The new UAC setting value.
+    """
     # Set the UAC setting using PowerShell
     subprocess.run(["powershell", "-Command",
-                    "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name 'EnableLUA' -Value " + value],
+                    f"Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name 'EnableLUA' -Value {value}"],
                    check=True)
 
 
 def main():
+    """
+    The Main function retrieves the current UAC setting, changes it to the opposite value,
+    and prompts the user to restart their computer.
+    """
     logger.info("Script started executing.")
     # Get the current UAC setting
     old_uac_setting = get_uac_setting()
