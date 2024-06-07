@@ -1,3 +1,6 @@
+# Don't use this script as it is used
+# to update the Logicytics.structure file in the SYSTEM directory based on the files in the CODE directory.
+
 import os
 from pathlib import Path  # Use pathlib for more robust path manipulation
 
