@@ -3,7 +3,6 @@ from pathlib import Path
 import colorlog
 import requests
 
-
 # Configure colorlog
 logger = colorlog.getLogger()
 logger.setLevel(colorlog.DEBUG)  # Set the log level
@@ -24,7 +23,17 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
+# Function to read the version number from a file
 def read_version_file(file_path):
+    """
+    Read the version number from a file and remove any leading/trailing whitespace.
+
+    Args:
+        file_path (str): The path to the file containing the version number.
+
+    Returns:
+        str: The version number read from the file.
+    """
     try:
         with open(file_path, 'r') as f:
             content = f.read()
@@ -34,16 +43,34 @@ def read_version_file(file_path):
         return None
 
 
+# Function to compare two versions
 def compare_versions(source_version, target_version):
+    """
+    Compare two versions and log the result.
+
+    Args:
+        source_version (str): The version number to compare against.
+        target_version (str): The version number to compare.
+
+    Returns:
+        bool: True if the versions match, False otherwise.
+    """
     if source_version == target_version:
         logger.info("The versions match.")
         return True
     else:
-        logger.warning("Version", target_version, "does not match with the latest version", source_version)
+        logger.warning(f"Version {target_version} does not match with the latest version {source_version}")
         return False
 
 
+# Function to compare the downloaded and original versions
 def compare_logic():
+    """
+    Compare the downloaded version with the original version and delete the downloaded file if versions match.
+
+    Returns:
+        bool: True if versions match, False otherwise.
+    """
     url = 'https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/SYSTEM/Logicytics.version'
     response = requests.get(url)
 
@@ -59,7 +86,7 @@ def compare_logic():
         logger.error("Failed to download the file.")
         exit(1)
 
-    version_number_downloaded = read_version_file(current_working_dir / filename)
+    version_number_downloaded = read_version_file(str(current_working_dir / filename))
 
     # Now, compare the version number from the downloaded file to the original file in the SYSTEM directory
     # Assuming the original file exists in the parent directory under SYSTEM
@@ -67,7 +94,7 @@ def compare_logic():
     original_file_path = parent_directory / 'SYSTEM' / 'Logicytics.version'
 
     # Read the original file's version number
-    version_number_original = read_version_file(original_file_path)
+    version_number_original = read_version_file(str(original_file_path))
 
     # Compare the versions
     if compare_versions(version_number_downloaded, version_number_original):
@@ -80,7 +107,11 @@ def compare_logic():
         return False
 
 
+# Function to update the local repository
 def update_local_repo():
+    """
+    Update the local repository by fetching from origin and resetting to the main branch.
+    """
     # Define the commands as a list of strings
     commands = [
         'git fetch origin',

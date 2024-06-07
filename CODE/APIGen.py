@@ -3,37 +3,12 @@ import tkinter as tk
 from tkinter import messagebox
 
 
-# Initialize the main window
-root = tk.Tk()
-root.title("VPN API Key Request")
-
-
-# Instructions for obtaining the API key
-instructions = """
-Please visit https://vpnapi.io/dashboard to create an account and obtain your API key. Once you have your API key,
-please enter it below and click 'Submit'.
-
-We do apologise but for IP analysis we had to use this method, we ensure you its safe, if you are still in doubt you may use this pre-generated API key {c6048787b83f44b18d4ce50e5c8869ed}
-
-The KEY should not include the {} given, the key has a limit of 1000 requests a day, so its recommended to use your own API key, Thank you and we apologise for this inconvenience, to skip the API function type API-NO as your key.
-"""
-
-# Label to display instructions
-instruction_label = tk.Label(root, text=instructions)
-instruction_label.pack(pady=20)
-
-# Entry widgets for the user to input the API key
-api_key_entry = tk.Entry(root)
-api_key_entry.pack(pady=10)
-
-# Entry widget for the user to re-enter the API key for double-entry validation
-api_key_entry_confirm = tk.Entry(root)
-api_key_entry_confirm.pack(pady=10)
-
-
 def submit_api_key():
-    api_key = api_key_entry.get().strip()
-    api_key_confirm = api_key_entry_confirm.get().strip()
+    """
+    Submit the API key entered by the user and save it to the SYSTEM/API-IP.KEY file.
+    """
+    api_key = api_key_entry.get().strip()  # Get the API key entered by the user
+    api_key_confirm = api_key_entry_confirm.get().strip()  # Get the API key confirmation entered by the user
 
     # Enhanced error check for empty inputs
     if not api_key or not api_key_confirm:
@@ -64,12 +39,13 @@ def submit_api_key():
 
     # Proceed to create/update the API-IP.KEY file with the submitted API key
     try:
-        parent_dir = os.path.dirname(os.getcwd())
-        system_dir = os.path.join(parent_dir, "SYSTEM")
-        os.makedirs(system_dir, exist_ok=True)
+        parent_dir = os.path.dirname(os.getcwd())  # Get the parent directory of the current working directory
+        system_dir = os.path.join(parent_dir,
+                                  "SYSTEM")  # Join the parent directory and "SYSTEM" to get the system directory
+        os.makedirs(system_dir, exist_ok=True)  # Create the system directory if it doesn't exist
 
         with open(os.path.join(system_dir, 'API-IP.KEY'), 'w') as f:
-            f.write(api_key + "\n")
+            f.write(api_key + "\n")  # Write the API key to the API-IP.KEY file
 
         messagebox.showinfo(title="Success", message="API key saved to API-IP.KEY.")
     except Exception as e:
@@ -77,6 +53,32 @@ def submit_api_key():
 
     root.destroy()
 
+
+# Initialize the main window
+root = tk.Tk()
+root.title("VPN API Key Request")
+
+# Instructions for obtaining the API key
+instructions = """
+Please visit https://vpnapi.io/dashboard to create an account and obtain your API key. Once you have your API key,
+please enter it below and click 'Submit'.
+
+We do apologise but for IP analysis we had to use this method, we ensure you its safe, if you are still in doubt you may use this pre-generated API key {c6048787b83f44b18d4ce50e5c8869ed}
+
+The KEY should not include the {} given, the key has a limit of 1000 requests a day, so its recommended to use your own API key, Thank you and we apologise for this inconvenience, to skip the API function type API-NO as your key.
+"""
+
+# Label to display instructions
+instruction_label = tk.Label(root, text=instructions)
+instruction_label.pack(pady=20)
+
+# Entry widgets for the user to input the API key
+api_key_entry = tk.Entry(root)
+api_key_entry.pack(pady=10)
+
+# Entry widget for the user to re-enter the API key for double-entry validation
+api_key_entry_confirm = tk.Entry(root)
+api_key_entry_confirm.pack(pady=10)
 
 # Submit button for the user to finalize the API key submission
 submit_button = tk.Button(root, text="Submit", command=submit_api_key)

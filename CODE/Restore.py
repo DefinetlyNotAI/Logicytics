@@ -25,10 +25,18 @@ logger.addHandler(handler)
 
 
 def unzip_backup():
-    """Unzips the selected backup file into the CODE directory.
+    """
+    Unzips the selected backup file into the CODE directory.
+
     This function navigates to the parent directory and then to the BACKUP directory,
-    lists all.zip files in the BACKUP directory, allows the user to select one,
+    lists all .zip files in the BACKUP directory, allows the user to select one,
     and then unzips the selected file into the CODE directory, replacing files if required.
+
+    Raises:
+        FileNotFoundError: If the BACKUP directory is not found.
+        FileNotFoundError: If no .zip files are found in the BACKUP directory.
+        ValueError: If the user enters an invalid selection.
+        Exception: If an error occurs while unzipping the backup.
     """
     try:
         # Step 1 & 2: Navigate to the parent directory and then to the BACKUP directory
@@ -39,12 +47,12 @@ def unzip_backup():
         if not os.path.exists(backup_dir_path):
             raise FileNotFoundError(f"Backup directory '{backup_dir_path}' not found.")
 
-        # Step 3: List all.zip files in the BACKUP directory and prompt the user to select one
+        # Step 3: List all .zip files in the BACKUP directory and prompt the user to select one
         os.chdir(backup_dir_path)  # Change the current working directory to BACKUP
         zip_files = [file for file in os.listdir('.') if file.endswith('.zip')]
 
         if not zip_files:
-            raise FileNotFoundError("No.zip files found in the backup directory.")
+            raise FileNotFoundError("No .zip files found in the backup directory.")
 
         print("Select the backup to unzip:")
         for index, zip_file in enumerate(zip_files, start=1):
@@ -55,7 +63,7 @@ def unzip_backup():
         if selection < 0 or selection >= len(zip_files):
             raise ValueError("Invalid selection. Please enter a valid number.")
 
-        zip_file_name = zip_files[selection]  # User-selected.zip file
+        zip_file_name = zip_files[selection]  # User-selected .zip file
 
         # Step 4: Move back to the parent directory
         os.chdir(parent_dir)
