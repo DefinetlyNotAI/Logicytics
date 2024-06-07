@@ -1,7 +1,27 @@
 import subprocess
 from pathlib import Path
-
+import colorlog
 import requests
+
+
+# Configure colorlog
+logger = colorlog.getLogger()
+logger.setLevel(colorlog.DEBUG)  # Set the log level
+handler = colorlog.StreamHandler()
+formatter = colorlog.ColoredFormatter(
+    "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+    datefmt=None,
+    reset=True,
+    log_colors={
+        'DEBUG': 'cyan',
+        'INFO': 'green',
+        'WARNING': 'yellow',
+        'ERROR': 'red',
+        'CRITICAL': 'red,bg_white',
+    }
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def read_version_file(file_path):
@@ -10,16 +30,16 @@ def read_version_file(file_path):
             content = f.read()
             return content.strip()  # Remove any leading/trailing whitespace
     except FileNotFoundError:
-        print(f"File {file_path} not found.")
+        logger.error(f"File {file_path} not found.")
         return None
 
 
 def compare_versions(source_version, target_version):
     if source_version == target_version:
-        print("The versions match.")
+        logger.info("The versions match.")
         return True
     else:
-        print(target_version, "does not match with", source_version)
+        logger.warning("Version", target_version, "does not match with the latest version", source_version)
         return False
 
 
@@ -36,7 +56,7 @@ def compare_logic():
         with open(current_working_dir / filename, 'wb') as f:
             f.write(response.content)
     else:
-        print("Failed to download the file.")
+        logger.error("Failed to download the file.")
         exit(1)
 
     version_number_downloaded = read_version_file(current_working_dir / filename)
@@ -72,9 +92,9 @@ def update_local_repo():
         try:
             # Execute the command
             subprocess.run(command, shell=True, check=True)
-            print(f"Command '{command}' executed successfully.")
+            logger.info(f"Command '{command}' executed successfully.")
         except subprocess.CalledProcessError as e:
-            print(f"Failed to execute command '{command}'. Error: {e}")
+            logger.error(f"Failed to execute command '{command}'. Error: {e}")
 
 
 if compare_logic() is False:
