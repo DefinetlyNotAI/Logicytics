@@ -1,4 +1,4 @@
-# Logicytics: System Data Harvester
+# Logicytics: System Data Harvester 📎
 
 Welcome to **Logicytics**, a powerful tool designed to harvest and collect a wide range of Windows system data for forensics. It's an actively developed project that primarily uses Python. Its goal is to gather as much sensitive data as possible and output it into a ZIP file. This guide will help you get started with using Logicytics effectively.
 
@@ -13,13 +13,13 @@ Welcome to **Logicytics**, a powerful tool designed to harvest and collect a wid
 </div>
 
 
-### Agree to the ToS
+### ⚠️ Agree to the ToS ⚠️
 
 Due to the use of third-party applications, they come with their own set of Terms of Service. It's mandatory to read the `!! Important!!.md` file located in the CODE/sys directory.
 
 We also have our own ToS, it will prompt you when you first run Logicytics to agree to the ToS; don't worry as its small short and straightforward to read, and we don't attempt to trick you into selling your soul.
 
-## Running Logicytics
+## 💻 Running Logicytics 💻
 
 To run the main program, you need to execute `Logicytics.py` with administrative privileges. Follow these steps:
 
@@ -33,7 +33,7 @@ To run the main program, you need to execute `Logicytics.py` with administrative
 
 This will show the available command flags to use, if you want the default experience execute the following command `.\Logicytics.py --run`
 
-## Important Notes
+## ⚠️ Important Notes ⚠️
 
 - **Do Not Remove or Delete Any Folders or Files:** The integrity of the data collection process depends on the presence of all necessary files and folders. Removing or deleting any part of the Logicytics package could lead to errors or incomplete data collection.
 
@@ -47,8 +47,8 @@ This will show the available command flags to use, if you want the default exper
 
 - **Explore:** Check all the files and ReadMe to understand how and what the project does.
 
-## Conclusion
+## 📀 Conclusion 📀
 
 Logicytics is a powerful tool for system data analysis. By following the instructions above, you can ensure a smooth and effective data collection process. Remember, the key to successful data harvesting is patience and adherence to the guidelines provided. Happy data mining!
 
-We are not responsible for any illegal usage of this product.
+🪦 We are not responsible for any illegal usage of this product.
