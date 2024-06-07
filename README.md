@@ -8,7 +8,6 @@ Due to the use of third-party applications, they come with their own set of Term
 
 We also have our own ToS, it will prompt you when you first run Logicytics to agree to the ToS; don't worry as its small short and straightforward to read, and we don't attempt to trick you into selling your soul.
 
-
 ## Running Logicytics
 
 To run the main program, you need to execute `Logicytics.py` with administrative privileges. Follow these steps:
