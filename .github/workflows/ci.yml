@@ -4,14 +4,16 @@ jobs:
   run:
     runs-on: windows-latest
     steps:
+      - name: Codecov
+        uses: codecov/codecov-action@v4.4.1
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python 3.10
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Run tests and collect coverage
@@ -22,3 +24,5 @@ jobs:
           verbose: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+            
