@@ -2,6 +2,7 @@ import ctypes
 import os
 import platform
 import random
+import shutil
 import subprocess
 import colorlog
 from datetime import datetime
@@ -466,6 +467,18 @@ def logicytics(log, quit_var):
     """
     Executes different actions based on the 'log' and 'quit_var' parameters as well as preset 'run' parameter.
     """
+    current_dir = os.getcwd()  # Get the current working directory
+    directory_path = os.path.join(current_dir, "DATA")  # Construct the full path
+
+    try:
+        # Check if the specified path exists
+        if os.path.exists(directory_path):
+            # Remove the directory and all its contents
+            shutil.rmtree(directory_path)
+            print(f"Directory {directory_path} has been deleted.")
+    except Exception as e:
+        print(f"An error occurred while trying to delete the directory: {e}")
+
     if log == "normal":
         timestamp("Started Logicytics at ")
         print_random_logo()
