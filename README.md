@@ -2,6 +2,8 @@
 
 Welcome to **Logicytics**, a powerful tool designed to harvest and collect a wide range of Windows system data for forensics. It's an actively developed project that primarily uses Python. Its goal is to gather as much sensitive data as possible and output it into a ZIP file. This guide will help you get started with using Logicytics effectively.
 
+[![codecov](https://codecov.io/gh/DefinetlyNotAI/Logicytics/graph/badge.svg?token=1D0E3PDBWF)](https://codecov.io/gh/DefinetlyNotAI/Logicytics)
+
 ### Agree to the ToS
 
 Due to the use of third-party applications, they come with their own set of Terms of Service. It's mandatory to read the `!! Important!!.md` file located in the CODE/sys directory.
