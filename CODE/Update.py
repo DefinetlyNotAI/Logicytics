@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
-import os
+from pathlib import Path
+
 import requests
 
 
@@ -60,40 +60,26 @@ def compare_logic():
         return False
 
 
-def update_project(repo_url, num_levels_up):
-    """
-    Updates the project from the specified GitHub repository.
+def update_local_repo():
+    # Define the commands as a list of strings
+    commands = [
+        'git fetch origin',
+        'git reset --hard origin/main'
+    ]
 
-    :param repo_url: URL of the GitHub repository.
-    :param num_levels_up: Number of directory levels to move up from the current directory.
-    """
-    try:
-        # Determine the local path by moving up the specified number of levels
-        local_path = Path(os.getcwd()).parents[num_levels_up]
-
-        # Initialize the directory as a Git repository if it doesn't exist yet
-        if not local_path.exists():
-            os.makedirs(local_path)
-            subprocess.run(["git", "init"], cwd=str(local_path), check=True)
-
-        # Clone the repository if it doesn't exist locally
-        if not (local_path / ".git").exists():
-            print("Cloning repository...")
-            subprocess.run(["git", "clone", repo_url, str(local_path)], check=True)
-
-        # Change directory to the local path within the script
-        os.chdir(str(local_path))
-
-        # Pull the latest changes
-        print("Updating project...")
-        subprocess.run(["git", "pull"], check=True)
-
-        print("Project updated successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"An error occurred: {e}")
+    # Iterate over each command and execute it
+    for command in commands:
+        try:
+            # Execute the command
+            subprocess.run(command, shell=True, check=True)
+            print(f"Command '{command}' executed successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to execute command '{command}'. Error: {e}")
 
 
 if compare_logic() is False:
     Continue = input("Do you want to update Logicytics? (y/n) ")
     if Continue == "y":
-        update_project('https://github.com/DefinetlyNotAI/Logicytics.git', 2)
+        update_local_repo()
+    else:
+        exit(0)
