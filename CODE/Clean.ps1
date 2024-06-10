@@ -1,12 +1,12 @@
-# PowerShell Script to Automatically Delete 'DATA' Directories in the Current Working Directory
+# PowerShell Script to Delete 'DATA' Directories and Move ZIP Files to ACCESS/DATA Directory
 
-# Function to check if the current working directory exists
-function Test-CurrentDirectoryExists {
+# Function to check if a directory exists
+function Test-DirectoryExists {
     param (
         [Parameter(Mandatory=$true)]
-        [string]$currentWorkingDir
+        [string]$directoryPath
     )
-    return (Test-Path $currentWorkingDir)
+    return (Test-Path $directoryPath)
 }
 
 # Function to delete a directory safely
@@ -23,13 +23,38 @@ function Remove-SafeDirectory {
     }
 }
 
+# Function to move ZIP files to the specified directory
+function Move-ZipFiles {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$sourceDirectory,
+        [Parameter(Mandatory=$true)]
+        [string]$destinationDirectory
+    )
+    try {
+        # Ensure the destination directory exists, create it if not
+        if (-not (Test-DirectoryExists -directoryPath $destinationDirectory)) {
+            New-Item -ItemType Directory -Force -Path $destinationDirectory | Out-Null
+        }
+
+        # Find ZIP files in the source directory and move them
+        $zipFiles = Get-ChildItem -Path $sourceDirectory -Filter "*.zip" -File
+        foreach ($file in $zipFiles) {
+            Move-Item -Path $file.FullName -Destination $destinationDirectory -Force
+            Write-Host "INFO: Moved '$($file.FullName)' to '$destinationDirectory'"
+        }
+    } catch {
+        Write-Host "ERROR: Failed to move ZIP files: $_"
+    }
+}
+
 # Main script execution starts here
 
 # Get the current working directory
 $currentWorkingDir = Get-Location
 
 # Validate if the current working directory exists
-if (-not (Test-CurrentDirectoryExists -currentWorkingDir $currentWorkingDir)) {
+if (-not (Test-DirectoryExists -directoryPath $currentWorkingDir)) {
     Write-Host "ERROR: The current working directory does not exist."
     exit
 }
@@ -49,4 +74,10 @@ foreach ($dir in $directories) {
     }
 }
 
-Write-Host "INFO: Script completed. 'DATA' directory deleted."
+# After deleting 'DATA' directories, move ZIP files to ACCESS/DATA
+$sourceDirectory = Get-Location
+$destinationDirectory = Join-Path -Path $sourceDirectory.Parent -ChildPath "ACCESS\DATA"
+
+Move-ZipFiles -sourceDirectory $sourceDirectory -destinationDirectory $destinationDirectory
+
+Write-Host "INFO: Script completed. 'DATA' directories deleted and ZIP files moved to ACCESS/DATA."

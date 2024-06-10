@@ -1,12 +1,14 @@
 import ctypes
-import re
-import os
-import subprocess
-import colorlog
 import importlib.metadata as pkg_resources
-from pathlib import Path
-import requests
+import os
+import re
+import shutil
+import subprocess
 import winreg
+from pathlib import Path
+
+import colorlog
+import requests
 
 # Configure colorlog
 logger = colorlog.getLogger()
@@ -153,18 +155,6 @@ def check_python_versions():
             with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
                 debug_file.write(
                     "<span style=\"color:red;\">ERROR</span>: Neither 'python' nor 'python3' found in the PATH.<br><br>")
-
-
-def delete_debug_file():
-    """
-    Deletes the DEBUG.md file if it exists, otherwise creates a new one.
-    """
-    debug_file_path = os.path.join(os.getcwd(), "DEBUG.md")
-    if os.path.exists(debug_file_path):
-        os.remove(debug_file_path)
-        logger.debug("DEBUG.md file deleted. A new one will be created.")
-    else:
-        logger.debug("DEBUG.md file does not exist. A new one will be created.")
 
 
 def define_paths():
@@ -320,17 +310,17 @@ def check_uac_status():
             if has_uac == '0':
                 # UAC is enabled
                 with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                    debug_file.write("WARNING: User Account Control (UAC) is enabled.\n\n")
+                    debug_file.write("\n\nWARNING: User Account Control (UAC) is enabled.\n\n")
             else:
                 # UAC is disabled
                 with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                    debug_file.write("INFO: User Account Control (UAC) is disabled.\n\n")
+                    debug_file.write("\n\nINFO: User Account Control (UAC) is disabled.\n\n")
     except FileNotFoundError:
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-            debug_file.write("WARNING: The specified registry key does not exist.\n\n")
+            debug_file.write("\n\nWARNING: The specified registry key does not exist.\n\n")
     except PermissionError:
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-            debug_file.write("WARNING: Permission denied. Unable to read the registry key.\n\n")
+            debug_file.write("\n\nWARNING: Permission denied. Unable to read the registry key.\n\n")
 
 
 def check_admin_privileges():
@@ -395,7 +385,7 @@ def check_library():
     if the package exists using the check_library_exists function. If a package is not found,
     an error message is logged to the DEBUG.md file.
 
-    If an unexpected error occurs while processing the requirements file, an error message is
+    If an unexpected error occurs while processing the requirements' file, an error message is
     logged to the DEBUG.md file.
 
     Returns:
@@ -430,15 +420,89 @@ def check_library():
                 f"<span style=\"color:red;\">ERROR</span>: An unexpected error occurred while processing the requirements file: {e}<br><br>")
 
 
+def move_debug_file():
+    """
+    Moves the 'DEBUG.md' file from the current directory to the 'ACCESS/LOGS' directory.
+
+    This function first checks if the 'DEBUG.md' file exists in the current directory.
+    If it does, it deletes all contents in the 'ACCESS/LOGS' directory.
+    Then, it creates the 'ACCESS/LOGS' directory if it doesn't exist.
+    Finally, it moves the 'DEBUG.md' file to the 'ACCESS/LOGS' directory.
+
+    If the 'DEBUG.md' file does not exist in the current directory, an error message is logged.
+
+    Returns:
+        None
+    """
+    # Define the source and destination paths
+    current_dir = os.getcwd()  # Get the current working directory
+    source_path = os.path.join(current_dir, 'DEBUG.md')
+    parent_dir = os.path.dirname(current_dir)
+    logs_dir = os.path.join(parent_dir, 'ACCESS', 'LOGS')
+
+    # Check if the source file exists
+    if os.path.exists(source_path):
+        # Delete all contents in the LOGS directory
+        for filename in os.listdir(logs_dir):
+            file_path = os.path.join(logs_dir, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                logger.error(f"Failed to delete {file_path}. Reason: {e}")
+
+        # Create the destination directories if they don't exist
+        os.makedirs(logs_dir, exist_ok=True)
+
+        # Move the file
+        shutil.move(source_path, logs_dir)
+    else:
+        logger.error("DEBUG.md does not exist in the current directory.")
+
+
+def create_directories():
+    """
+    Creates the necessary directories for the ACCESS, DATA, and LOGS directories.
+
+    This function checks if the ACCESS directory exists in the parent directory and creates it if it doesn't.
+    It also checks if the DATA and LOGS directories exist within the ACCESS directory and creates them if they don't.
+
+    Returns:
+        None
+    """
+    # Define the path for the ACCESS directory in the parent directory
+    access_dir_path = os.path.join(os.path.dirname(os.getcwd()), 'ACCESS')
+
+    # Check if the ACCESS directory exists
+    if not os.path.exists(access_dir_path):
+        # Create the ACCESS directory
+        os.makedirs(access_dir_path)
+
+        # Now, assuming you want to create DATA and LOGS directories inside ACCESS,
+        # define their paths relative to ACCESS directory
+        data_dir_path = os.path.join(access_dir_path, 'DATA')
+        logs_dir_path = os.path.join(access_dir_path, 'LOGS')
+
+        # Check and create DATA directory
+        if not os.path.exists(data_dir_path):
+            os.makedirs(data_dir_path)
+
+        # Check and create LOGS directory
+        if not os.path.exists(logs_dir_path):
+            os.makedirs(logs_dir_path)
+
+
 def main():
     """
     This function is the main entry point of the debugger. It performs a series of checks and commands to gather system information.
     """
     # Log the start of the debugging process
-    logger.info("Starting debugger...")
+    logger.info("Running debugger...")
 
-    # Delete the debug file if it exists
-    delete_debug_file()
+    # Create the necessary directories
+    create_directories()
 
     # Define the paths to the version file and structure file
     version_file_path, structure_file_path = define_paths()
@@ -484,6 +548,12 @@ def main():
 
     # Execute systeminfo command to gather system information
     cmd_raw("systeminfo | findstr /C:\"System Model\" /C:\"Manufacturer\"", "null")
+
+    # Move the debug file
+    try:
+        move_debug_file()
+    except Exception as e:
+        logger.error(f"Failed to move DEBUG.md. Reason: {e}")
 
     # Log the completion of the debugging process
     logger.info("Completed debug execution.")
