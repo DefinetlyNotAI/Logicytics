@@ -34,6 +34,41 @@ Please keep in mind that I am small, have limited resources and am not always ab
 
 If you decide to pull a PR or fork the project, keep in mind that you should only add/edit the scripts you need to, leave the Explain.md file and the updating of the structure file to me.
 
+
+## Guidelines for Modifications
+
+When making modifications to the Logicytics project,
+please adhere to the following guidelines to ensure consistency and maintainability:
+
+### Basic Check Functions
+
+- **Limitations on Modifications**: Avoid making extreme modifications to the basic check functions in the `Logicytics.py` file. Specifically, refrain from altering the fundamental operations related to flags and file access mechanisms.
+
+### Documentation and Credit
+
+- **Comments and Docstrings**: Ensure that all additions and modifications are well-documented through comments and docstrings. Your contributions should be easy to understand and use, adhering to proper programming etiquette.
+  
+- **Credit**: Properly credit your work in the `CREDIT.md` file, following the credit rules outlined in the project's wiki. Include your name and a brief description of your contributions under the appropriate section.
+
+### Debugging and Proof of Work
+
+- **Debugging**: When modifying existing files, demonstrate thorough debugging efforts. Provide evidence of testing and debugging processes to ensure the reliability of your changes.
+
+- **Proof of Work**: Include proof of work with your contributions, showcasing the effectiveness and necessity of your modifications or additions.
+
+### Adding Features
+
+- **New Files for New Features**: When adding new features, create a separate file for each feature. Each new file must contain at least one function and adhere to the project's print rules as specified in the wiki. While any programming language may be used, adherence to the wiki's guidelines is mandatory.
+  
+- **Integration**: Do not integrate new features directly into the `Logicytics.py` opening functions. Leave the integration process to the project maintainers to ensure cohesive project structure.
+
+- **Root Folders**: Refrain from modifying root folders such as `.github`. Maintain the integrity of the project's directory structure.
+
+### Dependencies
+
+- **Requirement File**: Any new libraries introduced as part of your contributions should be listed in the `requirements.txt` file. This ensures that the project's dependencies are accurately tracked and managed.
+
+
 ## Issues and labels
 
 Our bug tracker utilizes several labels to help organize and identify issues.
@@ -74,7 +109,6 @@ provide as much detail and context as possible.
 ## Coding Standards
 
 - **Code Style**: Follow the project's existing code style.
-
 - **Commit Messages**: Write clear and descriptive commit messages. Use the imperative mood (e.g., "Add feature" instead of "Added feature").
 - **Documentation**: Update documentation as necessary to reflect any changes you make.
 
@@ -96,12 +130,7 @@ Please adhere to the coding guidelines used throughout the
 project (indentation, accurate comments, etc.) and any other requirements
 (such as test coverage).
 
-1. **Fork the Repository**: Fork our repository to your GitHub account.
-2. **Create a Branch**: Create a new branch for your feature or bug fix.
-3. **Make Changes**: Make your changes in the new branch.
-4. **Commit Changes**: Commit your changes with a clear and descriptive message.
-5. **Push Changes**: Push your changes to your forked repository.
-6. **Open a Pull Request**: Open a pull request in our repository. Include a detailed description of your changes and how they address the issue or implement the feature.
+View the WiKi for more information on how to write pull requests.
 
 **IMPORTANT**: By submitting a patch, you agree to allow the project owners to
 license your work under the terms of the [MIT License](https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE) (if it
