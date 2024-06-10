@@ -12,7 +12,6 @@ Welcome to **Logicytics**, a powerful tool designed to harvest and collect a wid
     <a href="https://github.com/DefinetlyNotAI/Logicytics"><img src="https://img.shields.io/github/repo-size/DefinetlyNotAI/Logicytics" alt="GitHub Repo Size"></a>
 </div>
 
-
 ### ⚠️ Agree to the ToS ⚠️
 
 Due to the use of third-party applications, they come with their own set of Terms of Service. It's mandatory to read the `!! Important!!.md` file located in the CODE/sys directory.
