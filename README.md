@@ -1,6 +1,12 @@
 # Logicytics: System Data Harvester 📎
 
-Welcome to **Logicytics**, a powerful tool designed to harvest and collect a wide range of Windows system data for forensics. It's an actively developed project that primarily uses Python. Its goal is to gather as much sensitive data as possible and output it into a ZIP file. This guide will help you get started with using Logicytics effectively.
+Welcome to Logicytics 🌐,
+a cutting-edge tool
+designed to meticulously harvest and collect a vast array of Windows system data for forensic analysis.
+Crafted with Python 🐍,
+it's an actively developed project
+aimed at gathering as much sensitive data as possible and packaging it neatly into a ZIP file 📦.
+This comprehensive guide is here to equip you with everything you need to use Logicytics effectively.
 
 <div align="center">
     <a href="https://github.com/DefinetlyNotAI/Logicytics/issues"><img src="https://img.shields.io/github/issues/DefinetlyNotAI/Logicytics" alt="GitHub Issues"></a>
@@ -12,43 +18,73 @@ Welcome to **Logicytics**, a powerful tool designed to harvest and collect a wid
     <a href="https://github.com/DefinetlyNotAI/Logicytics"><img src="https://img.shields.io/github/repo-size/DefinetlyNotAI/Logicytics" alt="GitHub Repo Size"></a>
 </div>
 
+## 🛠️ Installation and Setup 🛠️
 
-### ⚠️ Agree to the ToS ⚠️
+### Prerequisites
+Ensure your system meets these requirements:
+- Windows 10 or later.
+- Administrative rights.
+- Python installed (preferable version 3.11).
 
-Due to the use of third-party applications, they come with their own set of Terms of Service. It's mandatory to read the `!! Important!!.md` file located in the CODE/sys directory.
+### Step-by-Step Installation
+1. **Clone the Repository**: Use Git to clone Logicytics to your local machine. Open Command Prompt as an administrator and run:
+   ```powershell
+   git clone https://github.com/DefinetlyNotAI/Logicytics.git
+   ```
+2. **Navigate to the Project Directory**: Change your current directory to the cloned Logicytics folder:
+   ```powershell
+   cd Logicytics
+   ```
 
-We also have our own ToS, it will prompt you when you first run Logicytics to agree to the ToS; don't worry as its small short and straightforward to read, and we don't attempt to trick you into selling your soul.
+## 🔧 Configuration 🔧
 
-## 💻 Running Logicytics 💻
+Logicytics offers extensive customization options through flags while running.
 
-To run the main program, you need to execute `Logicytics.py` with administrative privileges. Follow these steps:
+These flags allow you to:
+- Specify which types of data to collect.
+- Exclude certain files/data from the data collection process.
+- Adjust logging levels for detailed insights.
 
-1. Open Command Prompt as an administrator.
-2. Navigate to the directory where `Logicytics.py` is located.
-3. Run the script by typing the following command and pressing Enter:
+More info on the wiki.
 
-```powershell
-.\Logicytics.py
-```
+## 🚀 Advanced Usage 🚀
 
-This will show the available command flags to use, if you want the default experience execute the following command `.\Logicytics.py --run`
+### Custom Scripts
+Extend Logicytics' functionality by creating custom Python scripts.
+Place these scripts in the `CODE` directory.
+(WIP) Logicytics will automatically execute these scripts during the data collection process,
+enabling tailored data extraction.
+For now, these scripts must be manually executed.
 
-## ⚠️ Important Notes ⚠️
+## 🛑 Troubleshooting 🛑
 
-- **Do Not Remove or Delete Any Folders or Files:** The integrity of the data collection process depends on the presence of all necessary files and folders. Removing or deleting any part of the Logicytics package could lead to errors or incomplete data collection.
+### Common Pitfalls
+- **Permission Denied**: Ensure you're running Logicytics with administrative privileges.
+- **Incomplete Data Collection**: Verify all necessary files and folders are intact and unmodified.
+- **Update Issues**: Use the `--update` flag to fetch the latest version of Logicytics.
 
-- **Third-Party Tools:** For those interested in additional functionality, you can explore more third-party software in the EXTRA tab. This tool offers advanced memory analysis capabilities and more features.
+### Support Resources
+Consult the `.md` log file in the `ACCESS/LOGS` directory for detailed error logs.
+Engage with the community through GitHub issues for assistance and feedback.
 
-- **Access Permissions:** The only files you should access after running Logicytics are the generated ZIP file and the `.md` log file (WIP). These files contain the collected data and log information, respectively, and are found in the CODE subdirectory; you can freely move them anywhere.
+## 📊 Data Analysis 📊
 
-- **Releases:** Don't download files from there; that is just some sort of mini-update log. Download from the main branch; old versions won't be saved here and might not be supported.
+Once Logicytics has completed its data collection,
+you'll find the results packaged neatly in a ZIP file within the `ACCESS/DATA` directory.
+This data can be analyzed using various tools and techniques, depending on your needs.
+Whether you're conducting forensic investigations, auditing system health,
+or analyzing performance metrics, Logicytics provides a solid foundation for your analysis.
 
-- **Credits:** In the credits, you will find many people, firms, and projects whose code/software we used. If you are the creator of the project and don't want us to use your code, feel free to contact us, so we can remove it.
+## 🌟 Conclusion 🌟
 
-- **Explore:** Check all the files and ReadMe to understand how and what the project does.
+By exploring the depths of Logicytics, you've gained a deeper understanding of its capabilities,
+configuration options, and advanced features.
+This tool is a powerful asset in your arsenal for system data analysis,
+offering flexibility, customization, and ease of use.
+Remember, the key to unlocking its full potential lies in experimentation and continuous learning.
+Happy data mining 🎯
 
-## 📀 Conclusion 📀
-
-Logicytics is a powerful tool for system data analysis. By following the instructions above, you can ensure a smooth and effective data collection process. Remember, the key to successful data harvesting is patience and adherence to the guidelines provided. Happy data mining!
-
-🪦 We are not responsible for any illegal usage of this product.
+This expanded guide aims to provide a thorough understanding of Logicytics,
+covering everything from installation and setup to advanced usage and troubleshooting.
+With this knowledge, you're well-equipped to utilize Logicytics to its fullest extent,
+enhancing your ability to analyze and understand system data.

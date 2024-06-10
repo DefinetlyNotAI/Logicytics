@@ -5,8 +5,8 @@ import random
 import shutil
 import subprocess
 import colorlog
-from datetime import datetime
 import argparse
+from datetime import datetime
 
 # Configure colorlog
 logger = colorlog.getLogger()
@@ -463,12 +463,45 @@ def print_random_logo():
         logger.warning(f"An error occurred while trying to read the file {file_path}: {e}")
 
 
+def create_directories():
+    """
+    Creates the necessary directories for the ACCESS, DATA, and LOGS directories.
+
+    This function checks if the ACCESS directory exists in the parent directory and creates it if it doesn't.
+    It also checks if the DATA and LOGS directories exist within the ACCESS directory and creates them if they don't.
+
+    Returns:
+        None
+    """
+    # Define the path for the ACCESS directory in the parent directory
+    access_dir_path = os.path.join(os.path.dirname(os.getcwd()), 'ACCESS')
+
+    # Check if the ACCESS directory exists
+    if not os.path.exists(access_dir_path):
+        # Create the ACCESS directory
+        os.makedirs(access_dir_path)
+
+        # Create DATA and LOGS directories inside ACCESS,
+        # Define their paths relative to ACCESS directory
+        data_dir_path = os.path.join(access_dir_path, 'DATA')
+        logs_dir_path = os.path.join(access_dir_path, 'LOGS')
+
+        # Check and create DATA directory
+        if not os.path.exists(data_dir_path):
+            os.makedirs(data_dir_path)
+
+        # Check and create LOGS directory
+        if not os.path.exists(logs_dir_path):
+            os.makedirs(logs_dir_path)
+
+
 def logicytics(log, quit_var):
     """
     Executes different actions based on the 'log' and 'quit_var' parameters as well as preset 'run' parameter.
     """
     current_dir = os.getcwd()  # Get the current working directory
     directory_path = os.path.join(current_dir, "DATA")  # Construct the full path
+    create_directories()
 
     try:
         # Check if the specified path exists
@@ -482,87 +515,90 @@ def logicytics(log, quit_var):
     if log == "normal":
         timestamp("Started Logicytics at ")
         print_random_logo()
-        if check_file("ToS.accept") and check_file("API-IP.KEY") and checks():
-            set_execution_policy("")
-            create_empty_data_directory("")
-            timestamp("Completed Checks at ")
-            print()
-            for script_path in files:
-                timestamp(f"Running Script {script_path} at ")
-                execute_code(script_path, "Script", "")
-
-            if quit_var == "shutdown":
-                os.system('shutdown /s /t 0')
-            elif quit_var == "restart":
-                os.system('shutdown /r /t 0')
-            elif quit_var == "bios":
-                logger.warning(
-                    "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding")
-                os.system('shutdown /r /t 10')
-            elif quit_var == "normal":
+        if check_file("ToS.accept") and check_file("API-IP.KEY"):
+            if checks():
+                set_execution_policy("")
+                create_empty_data_directory("")
+                timestamp("Completed Checks at ")
                 print()
-            else:
-                logger.critical("No Valid Flag")
-                exit(1)
+                for script_path in files:
+                    timestamp(f"Running Script {script_path} at ")
+                    execute_code(script_path, "Script", "")
+
+                if quit_var == "shutdown":
+                    os.system('shutdown /s /t 0')
+                elif quit_var == "restart":
+                    os.system('shutdown /r /t 0')
+                elif quit_var == "bios":
+                    logger.warning(
+                        "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding")
+                    os.system('shutdown /r /t 10')
+                elif quit_var == "normal":
+                    print()
+                else:
+                    logger.critical("No Valid Flag")
+                    exit(1)
         else:
-            logger.critical("Unexpected Error Occurred due to Missing permissions while Checking")
+            logger.critical("Unexpected Error Occurred while Checking")
             exit(1)
 
     elif log == "debug":
         timestamp("Started Logicytics at ")
         print_random_logo()
-        if check_file("ToS.accept") and check_file("API-IP.KEY") and checks():
-            set_execution_policy("Debug")
-            create_empty_data_directory("Debug")
-            timestamp("Completed Checks at ")
-            print()
-            for script_path in files:
-                timestamp(f"Running Script {script_path} at ")
-                execute_code(script_path, "Script", "Debug")
-
-            if quit_var == "shutdown":
-                os.system('shutdown /s /t 0')
-            elif quit_var == "restart":
-                os.system('shutdown /r /t 0')
-            elif quit_var == "bios":
-                logger.warning(
-                    "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding")
-                os.system('shutdown /r /t 10')
-            elif quit_var == "normal":
+        if check_file("ToS.accept") and check_file("API-IP.KEY"):
+            if checks():
+                set_execution_policy("Debug")
+                create_empty_data_directory("Debug")
+                timestamp("Completed Checks at ")
                 print()
-            else:
-                logger.critical("No Valid Flag")
-                exit(1)
+                for script_path in files:
+                    timestamp(f"Running Script {script_path} at ")
+                    execute_code(script_path, "Script", "Debug")
+
+                if quit_var == "shutdown":
+                    os.system('shutdown /s /t 0')
+                elif quit_var == "restart":
+                    os.system('shutdown /r /t 0')
+                elif quit_var == "bios":
+                    logger.warning(
+                        "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding")
+                    os.system('shutdown /r /t 10')
+                elif quit_var == "normal":
+                    print()
+                else:
+                    logger.critical("No Valid Flag")
+                    exit(1)
         else:
-            logger.critical("Unexpected Error Occurred due to Missing permissions while Checking")
+            logger.critical("Unexpected Error Occurred while Checking")
             exit(1)
 
     elif log == "mini_log":
         timestamp("Started Logicytics at ")
-        if check_file("ToS.accept") and check_file("API-IP.KEY") and checks():
-            set_execution_policy("Silent")
-            create_empty_data_directory("Silent")
-            timestamp("Completed Checks at ")
-            print()
-            for script_path in files:
-                timestamp(f"Running Script {script_path} at ")
-                execute_code(script_path, "Script", "Silent")
-
-            if quit_var == "shutdown":
-                os.system('shutdown /s /t 0')
-            elif quit_var == "restart":
-                os.system('shutdown /r /t 0')
-            elif quit_var == "bios":
-                logger.warning(
-                    "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding")
-                os.system('shutdown /r /t 10')
-            elif quit_var == "normal":
+        if check_file("ToS.accept") and check_file("API-IP.KEY"):
+            if checks():
+                set_execution_policy("Silent")
+                create_empty_data_directory("Silent")
+                timestamp("Completed Checks at ")
                 print()
-            else:
-                logger.critical("No Valid Flag")
-                exit(1)
+                for script_path in files:
+                    timestamp(f"Running Script {script_path} at ")
+                    execute_code(script_path, "Script", "Silent")
+
+                if quit_var == "shutdown":
+                    os.system('shutdown /s /t 0')
+                elif quit_var == "restart":
+                    os.system('shutdown /r /t 0')
+                elif quit_var == "bios":
+                    logger.warning(
+                        "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding")
+                    os.system('shutdown /r /t 10')
+                elif quit_var == "normal":
+                    print()
+                else:
+                    logger.critical("No Valid Flag")
+                    exit(1)
         else:
-            logger.critical("Unexpected Error Occurred due to Missing permissions while Checking")
+            logger.critical("Unexpected Error Occurred while Checking")
             exit(1)
 
     elif log == "silent":
@@ -571,6 +607,9 @@ def logicytics(log, quit_var):
             create_empty_data_directory("Silent")
             for script_path in files:
                 execute_code(script_path, "Script", "Silent")
+        else:
+            logger.critical("Unexpected Error Occurred while Checking")
+            exit(1)
     else:
         logger.critical("No Valid Flag")
         exit(1)
@@ -770,4 +809,5 @@ if log == "debug":
     logger.debug(f"Keys to be used: {keys}")
     logger.debug("Continue value: " + Continue)
 
-logicytics(log, quit_var)
+if run != "normal":
+    logicytics(log, quit_var)

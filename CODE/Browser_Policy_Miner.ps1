@@ -48,8 +48,19 @@ foreach ($sourcePath in $sourcePaths) {
         continue
     }
 
-    # Extract the identifier from the source path
-    $identifier = $sourcePath.Split('\')[-1].Split('\\')[-1]
+
+    # Extract the identifier from the source path using the corresponding index from the $identifiers array
+    try
+    {
+        $index = [Array]::IndexOf($identifiers, $sourcePath.Split('\')[-1].Split('\\')[-1])
+        $identifier = $identifiers[$index]
+    }
+    catch
+    {
+        Write-Host "WARNING: Failed to extract identifier from source path $fullSourcePath."
+        continue
+    }
+
 
     # Define the destination path
     $destinationPath = Join-Path -Path $baseDirectory -ChildPath "USER_$identifier"
