@@ -14,9 +14,11 @@ This comprehensive guide is here to equip you with everything you need to use Lo
     <a href="https://github.com/DefinetlyNotAI/Logicytics/graphs/commit-activity"><img src="https://img.shields.io/github/commit-activity/t/DefinetlyNotAI/Logicytics" alt="GitHub Commit Activity"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics/languages"><img src="https://img.shields.io/github/languages/count/DefinetlyNotAI/Logicytics" alt="GitHub Language Count"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics/actions"><img src="https://img.shields.io/github/check-runs/DefinetlyNotAI/Logicytics/main" alt="GitHub Branch Check Runs"></a>
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/blob/master/LICENSE"><img src="https://img.shields.io/github/license/DefinetlyNotAI/Logicytics" alt="GitHub License"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics"><img src="https://img.shields.io/github/repo-size/DefinetlyNotAI/Logicytics" alt="GitHub Repo Size"></a>
 </div>
+
+## ❤️ Support Me ❤️
+Please consider buying me a coffee or sponsering me in github sponser, I am saving for my college funds in MIT and I need your help! Supporters will be placed in the Credits ❤️
 
 ## 🛠️ Installation and Setup 🛠️
 

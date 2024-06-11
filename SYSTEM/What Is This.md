@@ -1,5 +1,3 @@
-To expand on the provided wiki content, let's delve deeper into each section, providing more detailed explanations and clarifications where necessary. This expansion aims to offer a comprehensive understanding of the `SYSTEM` directory and its contents.
-
 ---
 
 # Understanding the SYSTEM Directory
