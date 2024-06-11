@@ -2,20 +2,24 @@
 
 This project is built on the shoulders of giants and inspired by the work of many talented individuals and organizations. We acknowledge their contributions and are grateful for the knowledge and tools they have shared.
 
-## Coders Credits
+## ❤️ Sponsers Credits ❤️
+
+Until Now, no one. Please think of sparing a dollar ❤️
+
+## 👨‍💻 Coders Credits 👨‍💻
 
 Until Now, no one.
 
-## Refactorers Credits
+## 🛠️ Refactorers Credits 🛠️
 
 Until Now, no one.
 
 
-## Enhancers Credits
+## 🔨 Enhancers Credits 🔨
 
 Until Now, no one.
 
-## Third Party Credits
+## 🏢 Third Party Credits 🏢
 
 ### Bootstrap by twbs
 
