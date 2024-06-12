@@ -2,7 +2,7 @@
 
 This project is built on the shoulders of giants and inspired by the work of many talented individuals and organizations. We acknowledge their contributions and are grateful for the knowledge and tools they have shared.
 
-## ❤️ Sponsers Credits ❤️
+## ❤️ Sponsors Credits ❤️
 
 Until Now, no one. Please think of sparing a dollar ❤️
 
