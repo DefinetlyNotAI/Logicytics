@@ -68,6 +68,13 @@ please adhere to the following guidelines to ensure consistency and maintainabil
 
 - **Requirement File**: Any new libraries introduced as part of your contributions should be listed in the `requirements.txt` file. This ensures that the project's dependencies are accurately tracked and managed.
 
+### Must Do's
+
+- **Final Steps**: Ensure that you have run `Logicytics.py --dev` and completed all steps required given to you
+
+- **CREDIT.md**: Ensure that the `CREDIT.md` file has been properly updated.
+
+- **WiKi**: Ensure that you have followed the project's structure guidelines found in the WiKi.
 
 ## Issues and labels
 
