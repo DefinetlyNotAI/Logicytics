@@ -1,6 +1,5 @@
 # Logicytics: System Data Harvester 📎
 
-
 Welcome to Logicytics 🌐,
 a cutting-edge tool
 designed to meticulously harvest and collect a vast array of Windows system data for forensic analysis.
