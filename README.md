@@ -8,7 +8,6 @@ it's an actively developed project
 aimed at gathering as much sensitive data as possible and packaging it neatly into a ZIP file 📦.
 This comprehensive guide is here to equip you with everything you need to use Logicytics effectively.
 
-
 <div align="center">
     <a href="https://github.com/DefinetlyNotAI/Logicytics/issues"><img src="https://img.shields.io/github/issues/DefinetlyNotAI/Logicytics" alt="GitHub Issues"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics/tags"><img src="https://img.shields.io/github/v/tag/DefinetlyNotAI/Logicytics" alt="GitHub Tag"></a>
@@ -17,7 +16,6 @@ This comprehensive guide is here to equip you with everything you need to use Lo
     <a href="https://github.com/DefinetlyNotAI/Logicytics/actions"><img src="https://img.shields.io/github/check-runs/DefinetlyNotAI/Logicytics/main" alt="GitHub Branch Check Runs"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics"><img src="https://img.shields.io/github/repo-size/DefinetlyNotAI/Logicytics" alt="GitHub Repo Size"></a>
 </div>
-
 
 ## ❤️ Support Me ❤️
 Please consider buying me a coffee or sponsering me in github sponser, I am saving for my college funds in MIT and I need your help! Supporters will be placed in the Credits ❤️
