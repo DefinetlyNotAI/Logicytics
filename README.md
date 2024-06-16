@@ -17,7 +17,6 @@ This comprehensive guide is here to equip you with everything you need to use Lo
     <a href="https://github.com/DefinetlyNotAI/Logicytics"><img src="https://img.shields.io/github/repo-size/DefinetlyNotAI/Logicytics" alt="GitHub Repo Size"></a>
 </div>
 
-
 ## ❤️ Support Me ❤️
 Please consider buying me a coffee or sponsering me in github sponser, I am saving for my college funds in MIT and I need your help! Supporters will be placed in the Credits ❤️
 
