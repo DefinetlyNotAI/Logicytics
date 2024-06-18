@@ -24,11 +24,10 @@ def print_colored(text, color):
     color_codes = {
         'red': '\033[31m',
         'green': '\033[32m',
+        'yellow': '\033[33m',
     }
     if color.lower() in color_codes:
         print(color_codes[color.lower()] + text + reset)
-    else:
-        print("Invalid color name")
 
 
 def validate_error_id(error_id):
@@ -228,6 +227,7 @@ def main():
                 _, ext = os.path.splitext(file)
                 if ext:  # Ensure there's a file extension
                     print(file)
+            return True
         else:
             return False
 

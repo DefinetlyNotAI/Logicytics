@@ -5,13 +5,18 @@
 =CODE\Clean.ps1
 =CODE\CMD_Disabled_Bypass.py
 =CODE\Copy_Media.py
+=CODE\Crash_Reporter.py
 =CODE\Debugger.py
 =CODE\Device_Data.bat
-=CODE\Error_Catch.py
+=CODE\Error_Gen.py
 =CODE\Extra_Menu.py
+=CODE\Flags_Library.py
+=CODE\GUI.py
+=CODE\Hash.py
 =CODE\IP_Scanner.py
 =CODE\Legal.py
 =CODE\Logicytics.py
+=CODE\Recycle_Logs.py
 =CODE\Registry_miner.bat
 =CODE\Restore.py
 =CODE\Simple_Password_Miner.py
@@ -43,3 +48,5 @@
 =CODE\sys\psping.exe
 =CODE\sys\PsService.exe
 =CODE\sys\pssuspend.exe
+=CODE\__pycache__\Flags_Library.cpython-311.pyc
+=CODE\__pycache__\Logicytics.cpython-311.pyc
