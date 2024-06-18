@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import subprocess  # Import the subprocess module
+import mss
 
 # Assuming Flags_Library.py contains your flags data, compulsory_flags, and conflicts
 try:
@@ -9,10 +10,17 @@ except ImportError:
     print("Flags_Library.py not found. Please ensure it exists and contains the necessary data.")
     exit(1)
 
+with mss.mss() as sct:
+    monitors = sct.monitors
+    for idx, monitor in enumerate(monitors):
+        test = f"Monitor {idx}: Left={monitor['left']}, Top={monitor['top']}, Width={monitor['width']}, Height={monitor['height']}"
+
 # Initialize the main window
 root = tk.Tk()
-root.title("Dynamic Command Builder")
-root.geometry("400x300")
+root.title("⚠️ BETA ⚠️ Dynamic Command Builder ")
+result_width = int(monitor['width'] - (monitor['width']/7))
+result_height = int(monitor['height'] - (monitor['height']/7))
+root.geometry(f"{result_width}x{result_height}")
 disabled_buttons = set()
 
 # Variable to hold the command preview
@@ -40,6 +48,10 @@ buttons_grid.columnconfigure(0, weight=1)
 
 
 def reset_and_enable_buttons_except_execute():
+    """
+    Reset the command preview to the default state, validate the command to check for errors,
+    and enable all buttons except the Execute button.
+    """
     # Reset the command preview to the default state
     command_preview.set("./Logicytics.py")
 
@@ -54,6 +66,15 @@ def reset_and_enable_buttons_except_execute():
 
 # Function to handle hover events and update the tooltip
 def show_tooltip(event):
+    """
+    Shows a tooltip when the mouse hovers over a button.
+
+    Parameters:
+        event (tkinter.Event): The event object that triggered the tooltip display.
+
+    Returns:
+        None
+    """
     button_text = event.widget.cget("text")
     for flag_tuple in flags:
         if flag_tuple[0] == button_text:
@@ -76,12 +97,26 @@ def show_tooltip(event):
 
 # Function to handle mouse leave events to hide the tooltip
 def hide_tooltip():
+    """
+    Hides the tooltip by clearing the tooltip text and removing the tooltip label from the window.
+
+    This function is called when the mouse leaves an element with a tooltip.
+    It clears the tooltip text by setting it to an empty string using the `config` method of the `tooltip_label` widget.
+    It then removes the tooltip label from the window by calling the `pack_forget` method.
+    Finally, it ensures that the tooltip label remains on top of other elements by calling the `lift` method.
+
+    Returns:
+        None
+    """
     tooltip_label.config(text="")
     tooltip_label.pack_forget()
     tooltip_label.lift()  # Optionally keep it on top even when hidden
 
 
 def enable_all_buttons():
+    """
+    Enables all the buttons by setting their state to 'normal' and then clears the disabled buttons list.
+    """
     for btn in disabled_buttons:
         btn['state'] = 'normal'
     disabled_buttons.clear()
@@ -89,6 +124,31 @@ def enable_all_buttons():
 
 # Function to validate the command and update the error label
 def validate_command():
+    """
+    Validates the current command stored in `command_preview` against a set of rules defined by `compulsory_flags`
+    and `conflicts`.
+    These rules include checking for the presence of compulsory flags and ensuring there are no conflicting
+    flag combinations.
+    If the command fails validation, an appropriate error message is displayed, and the 'Execute' button
+    is disabled to prevent execution of invalid commands.
+    If the command passes validation, the error message is cleared,
+    and the 'Execute' button is enabled, indicating that the command is ready to be executed.
+
+    This function operates on global variables:
+    - `command_preview`: Contains the current command to be validated.
+    - `compulsory_flags`: A list of flags that must be present in the command for it to be considered valid.
+    - `conflicts`: A dictionary mapping sets of conflicting flags to error messages.
+    A command is considered invalid
+      if it contains both flags in any set of conflicts.
+    - `error_label`: A Tkinter Label widget used to display error messages.
+    - `execute_btn`: A Tkinter Button widget controlling the execution of the command.
+    Its state is toggled based on the
+      validation result.
+
+    Effects:
+    - Modifies the text of `error_label` to reflect the validation status or error message.
+    - Toggles the state of `execute_btn` between 'disabled' and 'normal' based on whether the command is valid.
+    """
     full_command = command_preview.get()
     compulsory_flag_count = 0  # Initialize the counter for compulsory flags
 
@@ -145,6 +205,28 @@ def find_button_by_name(name):
 
 # Modify the append_to_command_preview function to call validate_command immediately after updating the command preview
 def append_to_command_preview(button_name):
+    """
+    Appends a button's name to the current command preview and disables the corresponding button.
+
+    This function updates the global command preview by appending the specified button's name to it,
+    effectively simulating the action of pressing the button within the context of the command line interface.
+    It then locates and disables the button associated with the appended name to prevent duplicate actions.
+    Finally, it calls the `validate_command()` function to automatically check the validity of the updated command.
+
+    Parameters:
+    - button_name (str): The name of the button to be appended to the command preview and disabled.
+
+    Effects:
+    - Modifies the global `command_preview`
+    string by appending the new button name and joining the command parts with spaces.
+    - Updates the state of the button identified by `button_name` to 'disabled',
+    adding it to the `disabled_buttons` set to track disabled states.
+    - Calls the `validate_command()` function to ensure the command remains valid after the update.
+
+    Note:
+        This function assumes the existence of global variables `command_preview`,
+    `find_button_by_name()`, `disabled_buttons`, and `validate_command()`.
+    """
     current_command = command_preview.get().split()
     current_command.append(button_name)
     command_preview.set(' '.join(current_command))
@@ -173,6 +255,15 @@ for i, (button_text, _) in enumerate(flags):
 
 # Function to execute the command in cmd
 def execute_command(command_string):
+    """
+    A function that executes a command using powershell.exe based on the given command_string.
+
+    Parameters:
+    command_string (str): The command to be executed.
+
+    Returns:
+    None
+    """
     try:
         command = f'powershell.exe -Command "& {command_string}"'
         subprocess.Popen(command, shell=True)

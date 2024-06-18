@@ -6,3 +6,5 @@ pathlib~=1.0.1
 PyAutoGUI~=0.9.54
 uuid~=1.30
 WMI~=1.5.1
+mss~=9.0.1
+setuptools~=69.5.1
