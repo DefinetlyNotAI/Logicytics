@@ -1,6 +1,6 @@
-import os
 import hashlib
 from pathlib import Path
+from CODE.local_libraries.Setups import *
 
 
 def hash_zip():
@@ -34,17 +34,14 @@ def hash_zip():
             latest_zip = item
 
     if latest_zip is None:
-        print("No ZIP files found.")
-    else:
-        print(f"Latest ZIP file found: {latest_zip}")
+        crash("FNF", "fun6", "No ZIP files found.", "crash")
+        exit(1)
 
     # Step 4: Calculate the hash of the ZIP file
     with open(latest_zip, 'rb') as f:
         bytes_hash = f.read()
     hash_object = hashlib.sha256(bytes_hash)
     hex_dig = hash_object.hexdigest()
-
-    print(f"Hash of the latest ZIP file: {hex_dig}")
 
     # Step 5 & 6: Create a new file named after the ZIP file but with a '.hash' extension,
     # write the hash into it, and attempt to make it read-only.
@@ -56,9 +53,8 @@ def hash_zip():
     # Attempting to make the file read-only. Note: This may require administrative privileges.
     try:
         os.chmod(new_file_path, 0o444)  # 0o444 sets permissions so that the owner has read-only access
-        print(f"{new_file_name} has been created and set to read-only.")
-    except PermissionError:
-        print("Permission denied to change file permissions.")
+    except PermissionError as pe:
+        crash("PE", "fun6", pe, "error")
 
 
 # Call the function
@@ -66,3 +62,4 @@ try:
     hash_zip()
 except Exception as e:
     print(f"An error occurred: {e}")
+    crash("EVE", "fun64", e, "error")

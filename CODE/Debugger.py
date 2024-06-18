@@ -1,38 +1,13 @@
 import ctypes
-from datetime import datetime
 import importlib.metadata as pkg_resources
-import os
 import re
 import shutil
-import subprocess
 from pathlib import Path
-import colorlog
 import requests
+from datetime import datetime
+from CODE.local_libraries.Setups import *
 
-# Configure colorlog
-logger = colorlog.getLogger()
-logger.setLevel(colorlog.INFO)  # Set the log level
-handler = colorlog.StreamHandler()
-formatter = colorlog.ColoredFormatter(
-    "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
-    datefmt=None,
-    reset=True,
-    log_colors={
-        'DEBUG': 'cyan',
-        'INFO': 'green',
-        'WARNING': 'yellow',
-        'ERROR': 'red',
-        'CRITICAL': 'red,bg_white',
-    }
-)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-
-# Get the current date and time
-now = datetime.now()
-
-# Format the timestamp as a string
-time = f"{now.strftime('%Y-%m-%d')}"
+time = datetime.now().strftime('%Y-%m-%d')
 
 
 def read_version_file(file_path):
@@ -63,27 +38,6 @@ def compare_versions(source_version, target_version):
         return True
     else:
         return False
-
-
-def print_colored(text, color):
-    """
-    Prints the given text in the specified color.
-
-    :param text: The text to print.
-    :param color: The color code (e.g., 'red', 'green', etc.).
-    """
-    # ANSI escape sequence for resetting the color back to default
-    reset = "\033[0m"
-    # Mapping of color names to their corresponding ANSI codes
-    color_codes = {
-        'red': '\033[31m',
-    }
-
-    # Check if the color exists and print the colored text
-    if color.lower() in color_codes:
-        print(color_codes[color.lower()] + text + reset)
-    else:
-        print("Invalid color name")
 
 
 def main_compare_logic():

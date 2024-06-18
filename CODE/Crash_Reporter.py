@@ -1,83 +1,10 @@
 import os
-from datetime import datetime
 import tkinter as tk
 from tkinter import messagebox
+from CODE.local_libraries.Lists_and_variables import *
+from datetime import datetime
 
-
-# Define the supported languages
-languages = {
-    "py": "Python",
-    "js": "JavaScript",
-    "bat": "Batch",
-    "ps1": "PowerShell",
-    "java": "Java",
-    "c": "C",
-    "cpp": "C++",
-    "cs": "C#",
-    "go": "Go",
-    "rb": "Ruby",
-    "php": "PHP",
-    "swift": "Swift",
-    "kt": "Kotlin",
-    "scala": "Scala",
-    "rs": "Rust",
-    "ts": "TypeScript",
-    "r": "R",
-    "lua": "Lua",
-    "pl": "Perl",
-    "sh": "Shell Script",
-    "hs": "Haskell",
-    "f90": "Fortran (Fixed)",
-    "vbs": "VBScript",
-    "asm": "Assembly",
-    "ml": "OCaml",
-    "fs": "F#",
-    "dart": "Dart",
-    "groovy": "Groovy",
-    "tcl": "Tcl",
-    "awk": "AWK",
-    "julia": "Julia",
-    "erl": "Erlang",
-    "nim": "Nim",
-    "ada": "Ada",
-    "cobol": "COBOL",
-    "pascal": "Pascal",
-    "prolog": "Prolog",
-    "scheme": "Scheme",
-    "smalltalk": "Smalltalk",
-    "lisp": "Lisp",
-    "clojure": "Clojure",
-    "crystal": "Crystal",
-    "zig": "Zig",
-    "d": "D",
-    "objc": "Objective-C",
-    "as": "ActionScript",
-    "cfml": "ColdFusion",
-    "apex": "Apex",
-    "sol": "Solidity",
-    "kotlin": "Kotlin",
-    "coffee": "CoffeeScript",
-    "pyx": "Cython",
-    "jr": "Jython",
-    "ipy": "IronPython",
-    "booc": "Boo",
-    "nem": "Nemerle",
-    "valac": "Vala",
-    "gn": "Genie",
-    "seed7": "Seed7",
-    "ob": "Oberon",
-    "mod": "Modula-2",
-    "pico": "PicoLisp",
-    "ar": "Arc",
-    "ahk": "AutoHotkey",
-    "au3": "AutoIt",
-}
-
-# Get the current date and time
-now = datetime.now()
-
-# Format the timestamp as a string
-time = now.strftime('%Y-%m-%d_at_time_%H-%M-%S')
+time = datetime.now().strftime('%Y-%m-%d_at_time_%H-%M-%S')
 
 
 def gui_crash_msg(err_title, err_msg):

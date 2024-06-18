@@ -2,13 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import subprocess  # Import the subprocess module
 import mss
-
-# Assuming Flags_Library.py contains your flags data, compulsory_flags, and conflicts
-try:
-    from Flags_Library import *
-except ImportError:
-    print("Flags_Library.py not found. Please ensure it exists and contains the necessary data.")
-    exit(1)
+from CODE.local_libraries.Lists_and_variables import *
 
 with mss.mss() as sct:
     monitors = sct.monitors
