@@ -6,6 +6,8 @@ $UACStatus = Get-ItemProperty -Path $UACPath -Name "EnableLUA" -ErrorAction Sile
 
 if ($null -eq $UACStatus) {
     Write-Host "ERROR: UAC status could not be determined. Please ensure the script is run with administrative privileges."
+    Invoke-CrashReport -ErrorId "PE" -FunctionNo "fun7" -ErrorContent "UAC status could not be determined" -Type "crash"
+    exit
 } elseif ($UACStatus.EnableLUA -eq 1) {
     # UAC is on, disable it
     Set-ItemProperty -Path $UACPath -Name "EnableLUA" -Value 0

@@ -2,6 +2,7 @@ import os
 import subprocess
 import colorlog
 
+
 # Configure colorlog
 logger = colorlog.getLogger()
 logger.setLevel(colorlog.DEBUG)  # Set the log level
@@ -98,7 +99,7 @@ def navigate_and_search():
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
             # Exit after processing the file
-            print("Exiting after processing the file...")
+            print("Exiting after completed processing the file...")
             return True
             # Return to exit the function and thus the script
         else:

@@ -1,6 +1,65 @@
 import requests
-import os
 import colorlog
+import os
+import subprocess
+
+
+def crash(error_id, function_no, error_content, type):
+    """
+    Ensure error_id and function_no are strings
+    Prepare the data to write to the temporary files
+    Write the name of the placeholder script to the temporary file
+    Write the error message to the temporary file
+    Write the name of the placeholder function to the temporary file
+    Write the name of the placeholder language to the temporary file
+    Write the name of the placeholder crash to the temporary file
+    Write the type to the temporary file
+    Open Crash_Reporter.py in a new shell window
+    """
+    # Ensure error_id and function_no are strings
+    error_id = str(error_id)
+    function_no = str(function_no)
+
+    # Prepare the data to write to the temporary files
+    script_name = os.path.basename(__file__)
+    language = os.path.splitext(__file__)[1][1:]  # Extracting the language part
+
+    # Write the name of the placeholder script to the temporary file
+    with open("flag.temp", 'w') as f:
+        f.write(script_name)
+
+    # Write the error message to the temporary file
+    with open("error.temp", 'w') as f:
+        f.write(error_id)
+
+    # Write the name of the placeholder function to the temporary file
+    with open("function.temp", 'w') as f:
+        f.write(function_no)
+
+    # Write the name of the placeholder language to the temporary file
+    with open("language.temp", 'w') as f:
+        f.write(language)
+
+    # Write the name of the placeholder crash to the temporary file
+    with open("error_data.temp", 'w') as f:
+        f.write(error_content)
+
+    with open("type.temp", 'w') as f:
+        f.write(type)
+
+    # Open Crash_Reporter.py in a new shell window
+    # Note: This command works for Command Prompt.
+    # Adjust according to your needs.
+    process = subprocess.Popen(r'powershell.exe -Command "& .\Crash_Reporter.py"', shell=True,  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in iter(process.stdout.readline, b''):
+        decoded_line = line.decode('utf-8').strip()
+        print(decoded_line)
+    # Wait for the process to finish and get the final output/error
+    stdout, _ = process.communicate()
+    # Decode the output from bytes to string
+    stdout = stdout.decode('utf-8') if stdout else ""
+    print(stdout)
+
 
 # Configure colorlog for logging messages with colors
 logger = colorlog.getLogger()
@@ -37,6 +96,7 @@ def get_public_ip():
         return response.json()['ip']
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching public IP: {e}")
+        crash("CE", "fun69", e, "error")
         return None
 
 
@@ -56,6 +116,7 @@ def save_to_file(filename, content):
             file.write(content)
     except IOError as e:
         logger.error(f"Error writing to file: {e}")
+        crash("IOE", "fun87", e, "error")
 
 
 def main():
@@ -68,11 +129,12 @@ def main():
     parent_dir = os.path.join(script_dir, '..')
 
     # Construct the path to the API key file
-    api_key_file_path = os.path.join(parent_dir, 'SYSTEM', 'API-IP.KEY')
+    api_key_file_path = os.path.join(parent_dir, 'SYSTEM', 'API-IP.key')
 
     # Check if the API key file exists before proceeding
     if not os.path.exists(api_key_file_path):
-        logger.error("Exiting: The API-IP.KEY file does not exist.")
+        logger.error("Exiting: The API-IP.key file does not exist.")
+        crash("FNF", "fun106", "API-IP.key file not found", "error")
         return
 
     # Read the API key from the file
@@ -85,6 +147,7 @@ def main():
     public_ip = get_public_ip()
     if not public_ip:
         logger.error("Exiting: Could not fetch your public IP address.")
+        crash("CE", "fun132", "Could not fetch your public IP address", "error")
         return
 
     # Construct the URL for the request
@@ -96,6 +159,7 @@ def main():
         response.raise_for_status()  # Raises an HTTPError if the response was unsuccessful
     except requests.exceptions.HTTPError as e:
         logger.error(f"Exiting: Failed to retrieve data from VPNAPI. Error: {e}")
+        crash("HTP", "fun106", e, "error")
         return
 
     # Parse the JSON response

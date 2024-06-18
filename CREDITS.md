@@ -8,16 +8,21 @@ Until Now, no one. Please think of sparing a dollar ❤️
 
 ## 👨‍💻 Coders Credits 👨‍💻
 
-Until Now, no one.
+Until Now, no one. Become a contributor and help us spread the word.
 
 ## 🛠️ Refactorers Credits 🛠️
 
-Until Now, no one.
-
+Until Now, no one. Become a contributor and help us spread the word.
 
 ## 🔨 Enhancers Credits 🔨
 
-Until Now, no one.
+Until Now, no one. Become a contributor and help us spread the word.
+
+## 🐛 Bug bounty credits 🐛
+
+Until Now, no one. Become a contributor and help us spread the word.
+
+
 
 ## 🏢 Third Party Credits 🏢
 

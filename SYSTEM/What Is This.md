@@ -1,5 +1,3 @@
----
-
 # Understanding the SYSTEM Directory
 
 The `SYSTEM` directory within our project serves as a repository for essential resources that facilitate the verification of the final product's integrity in bug reports and support the core functionalities offered by the main software application. These utilities are specialized tools designed for testing the system, and it's crucial to refrain from altering any part of them.
@@ -16,7 +14,7 @@ The `SYSTEM` directory within our project serves as a repository for essential r
 
 ### Logicystics.version for Debugging Files
 
-**Tool Description:** Similar to `Logicystics.structure`, `Logicystics.version` is a data file. Its primary function is to record the current version of the software. This information is vital for debugging efforts, as it allows developers to identify specific versions of the software that may exhibit certain bugs or behaviors. Like other non-tool files in this directory, it supports the debugging process indirectly through provision of relevant data.
+**Tool Description:** Similar to `Logicystics.structure`, `Logicystics.version` is a data file. Its primary function is to record the current version of the software. This information is vital for debugging efforts, as it allows developers to identify specific versions of the software that may exhibit certain bugs or behaviors. Like other non-tool files in this directory, it supports the debugging process indirectly through the provision of relevant data.
 
 ### API.KEY for the IP API
 

@@ -1,6 +1,7 @@
 import subprocess
 import colorlog
 
+
 # Configure colorlog
 logger = colorlog.getLogger()
 logger.setLevel(colorlog.INFO)  # Set the log level

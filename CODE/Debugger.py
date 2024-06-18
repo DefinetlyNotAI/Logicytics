@@ -1,12 +1,11 @@
 import ctypes
+from datetime import datetime
 import importlib.metadata as pkg_resources
 import os
 import re
 import shutil
 import subprocess
-import winreg
 from pathlib import Path
-
 import colorlog
 import requests
 
@@ -28,6 +27,12 @@ formatter = colorlog.ColoredFormatter(
 )
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+# Get the current date and time
+now = datetime.now()
+
+# Format the timestamp as a string
+time = f"{now.strftime('%Y-%m-%d')}"
 
 
 def read_version_file(file_path):
@@ -293,36 +298,6 @@ def check_structure_file(structure_file_path):
                             debug_file.write(f"<span style=\"color:red;\">ERROR</span>: {path} does not exist.<br><br>")
 
 
-def check_uac_status():
-    """
-    Check the User Account Control (UAC) status.
-    Writes the result to DEBUG.md file.
-    """
-    # Define the registry key path
-    uac_key = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
-
-    try:
-        # Attempt to open the registry key
-        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, uac_key) as key:
-            # Check if the LocalAccountTokenBypassPolicy value exists
-            _, has_uac = winreg.QueryValueEx(key, "LocalAccountTokenBypassPolicy")
-
-            if has_uac == '0':
-                # UAC is enabled
-                with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                    debug_file.write("\n\nWARNING: User Account Control (UAC) is enabled.\n\n")
-            else:
-                # UAC is disabled
-                with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                    debug_file.write("\n\nINFO: User Account Control (UAC) is disabled.\n\n")
-    except FileNotFoundError:
-        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-            debug_file.write("\n\nWARNING: The specified registry key does not exist.\n\n")
-    except PermissionError:
-        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-            debug_file.write("\n\nWARNING: Permission denied. Unable to read the registry key.\n\n")
-
-
 def check_admin_privileges():
     """
     Check if the program is running with administrative privileges.
@@ -420,16 +395,17 @@ def check_library():
                 f"<span style=\"color:red;\">ERROR</span>: An unexpected error occurred while processing the requirements file: {e}<br><br>")
 
 
-def move_debug_file():
+def move_debug_file(time):
     """
-    Moves the 'DEBUG.md' file from the current directory to the 'ACCESS/LOGS' directory.
+    Moves the 'DEBUG.md' file from the current directory to the 'ACCESS/LOGS' directory,
+    renaming it to include a timestamp.
 
     This function first checks if the 'DEBUG.md' file exists in the current directory.
-    If it does, it deletes all contents in the 'ACCESS/LOGS' directory.
-    Then, it creates the 'ACCESS/LOGS' directory if it doesn't exist.
-    Finally, it moves the 'DEBUG.md' file to the 'ACCESS/LOGS' directory.
+    If it does, it ensures the 'ACCESS/LOGS' directory exists before moving the file.
+    It does not delete any other files or directories within 'ACCESS/LOGS'.
 
-    If the 'DEBUG.md' file does not exist in the current directory, an error message is logged.
+    Parameters:
+        time (str): The timestamp to append to the filename.
 
     Returns:
         None
@@ -442,22 +418,16 @@ def move_debug_file():
 
     # Check if the source file exists
     if os.path.exists(source_path):
-        # Delete all contents in the LOGS directory
-        for filename in os.listdir(logs_dir):
-            file_path = os.path.join(logs_dir, filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path):
-                    shutil.rmtree(file_path)
-            except Exception as e:
-                logger.error(f"Failed to delete {file_path}. Reason: {e}")
-
-        # Create the destination directories if they don't exist
+        # Ensure the destination directory exists
         os.makedirs(logs_dir, exist_ok=True)
 
-        # Move the file
-        shutil.move(source_path, logs_dir)
+        # Generate the new filename with the timestamp
+        new_filename = f"{time}_DEBUG.md"
+        new_path = os.path.join(logs_dir, new_filename)
+
+        # Move the file and rename it
+        shutil.move(source_path, new_path)
+        logger.info(f"Moved and renamed DEBUG.md to {new_path} successfully.")
     else:
         logger.error("DEBUG.md does not exist in the current directory.")
 
@@ -519,9 +489,6 @@ def main():
     # Check the structure file for integrity
     check_structure_file(structure_file_path)
 
-    # Check the UAC status
-    check_uac_status()
-
     # Check for administrative privileges
     check_admin_privileges()
 
@@ -551,7 +518,7 @@ def main():
 
     # Move the debug file
     try:
-        move_debug_file()
+        move_debug_file(time)
     except Exception as e:
         logger.error(f"Failed to move DEBUG.md. Reason: {e}")
 

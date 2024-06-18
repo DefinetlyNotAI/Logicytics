@@ -3,6 +3,64 @@ import subprocess
 from pathlib import Path
 import colorlog
 
+
+def crash(error_id, function_no, error_content, type):
+    """
+    Ensure error_id and function_no are strings
+    Prepare the data to write to the temporary files
+    Write the name of the placeholder script to the temporary file
+    Write the error message to the temporary file
+    Write the name of the placeholder function to the temporary file
+    Write the name of the placeholder language to the temporary file
+    Write the name of the placeholder crash to the temporary file
+    Write the type to the temporary file
+    Open Crash_Reporter.py in a new shell window
+    """
+    # Ensure error_id and function_no are strings
+    error_id = str(error_id)
+    function_no = str(function_no)
+
+    # Prepare the data to write to the temporary files
+    script_name = os.path.basename(__file__)
+    language = os.path.splitext(__file__)[1][1:]  # Extracting the language part
+
+    # Write the name of the placeholder script to the temporary file
+    with open("flag.temp", 'w') as f:
+        f.write(script_name)
+
+    # Write the error message to the temporary file
+    with open("error.temp", 'w') as f:
+        f.write(error_id)
+
+    # Write the name of the placeholder function to the temporary file
+    with open("function.temp", 'w') as f:
+        f.write(function_no)
+
+    # Write the name of the placeholder language to the temporary file
+    with open("language.temp", 'w') as f:
+        f.write(language)
+
+    # Write the name of the placeholder crash to the temporary file
+    with open("error_data.temp", 'w') as f:
+        f.write(error_content)
+
+    with open("type.temp", 'w') as f:
+        f.write(type)
+
+    # Open Crash_Reporter.py in a new shell window
+    # Note: This command works for Command Prompt.
+    # Adjust according to your needs.
+    process = subprocess.Popen(r'powershell.exe -Command "& .\Crash_Reporter.py"', shell=True,  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in iter(process.stdout.readline, b''):
+        decoded_line = line.decode('utf-8').strip()
+        print(decoded_line)
+    # Wait for the process to finish and get the final output/error
+    stdout, _ = process.communicate()
+    # Decode the output from bytes to string
+    stdout = stdout.decode('utf-8') if stdout else ""
+    print(stdout)
+    
+    
 # Configure colorlog
 logger = colorlog.getLogger(__name__)
 logger.setLevel(colorlog.INFO)  # Set the log level
@@ -38,9 +96,11 @@ def run_command(command, shell=False, **kwargs):
     except subprocess.CalledProcessError as e:
         # Suppress the raw error output and return a custom error message
         logger.error(f"Command '{command}' failed with custom error code: {e.returncode}")
+        crash("EVE", "fun68", e.returncode, "error")
         return f"Custom error code: {e.returncode}"
     except Exception as e:
         logger.error(f"An unexpected error occurred while running command '{command}': {e}")
+        crash("OGE", "fun68", e, "error")
         return f"Unexpected error: {e}"
 
 
@@ -57,10 +117,13 @@ def write_to_file(content, filename):
         logger.info(f"Successfully wrote to {filename}")
     except PermissionError as pe:
         logger.error(f"Permission Error: {pe}")
+        crash("PE", "fun91", pe, "error")
     except FileNotFoundError as fnfe:
         logger.error(f"File Not Found Error: {fnfe}")
+        crash("FNF", "fun91", fnfe, "error")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
+        crash("OGE", "fun91", e, "error")
 
 
 def check_service_exists(service_name):
@@ -95,6 +158,7 @@ def generate_services_file():
         output_str = result.stdout.decode('cp1252')
         if output_str == "":
             logger.error("An unexpected error occurred, may be due to insufficient permissions")
+            crash("UKN", "fun127", "Unexpected error, May be due to insufficient permissions", "error")
         else:
             with open(output_file_path, 'w', encoding='cp1252') as file:
                 file.write(output_str)
@@ -102,10 +166,13 @@ def generate_services_file():
         logger.info(f"Services information has been written to {output_file_path}")
     except PermissionError as pe:
         logger.error(f"Permission Error: {pe}")
+        crash("PE", "fun127", pe, "error")
     except FileNotFoundError as fnfe:
         logger.error(f"File Not Found Error: {fnfe}")
+        crash("FNF", "fun127", fnfe, "error")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
+        crash("OGE", "fun127", e, "error")
 
 
 def generate_log_list_txt():
@@ -168,6 +235,7 @@ def generate_system_data_txt():
         # Check if PsList.exe exists
         if not pslist_path.exists():
             logger.critical(f"PsList.exe not found at {pslist_path}")
+            crash("FNF", "fun208", pslist_path.exists(), "crash")
             return
 
         # Execute PsList.exe and capture its output
@@ -181,6 +249,7 @@ def generate_system_data_txt():
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
+        crash("OGE", "fun208", e, "error")
 
 
 def generate_system_info():
@@ -196,6 +265,7 @@ def generate_system_info():
     # Ensure PsInfo.exe exists at the specified path
     if not os.path.exists(psinfo_path):
         logger.critical(f"PsInfo.exe not found at {psinfo_path}")
+        crash("FNF", "fun239", os.path.exists(psinfo_path), "crash")
         return
 
     # Step 3: Execute PsInfo.exe and capture its output
@@ -210,6 +280,7 @@ def generate_system_info():
         logger.info("System information successfully saved.")
     except Exception as e:
         logger.error(f"An error occurred: {e}")
+        crash("OGE", "fun238", e, "error")
 
 
 def generate_sid_data():
@@ -225,6 +296,7 @@ def generate_sid_data():
     # Ensure the path exists
     if not os.path.exists(ps_get_sid_path):
         logger.critical(f"PsGetSid.exe not found at {ps_get_sid_path}")
+        crash("FNF", "fun270", os.path.exists(ps_get_sid_path), "crash")
         return
 
     # Step 3: Execute PsGetSid.exe and capture output
@@ -235,10 +307,12 @@ def generate_sid_data():
         # Check if execution was successful
         if result.returncode != 0:
             logger.error("Error executing PsGetSid.exe")
+            crash("OSE", "fun268", result.returncode, "error")
             return
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
+        crash("OGE", "fun268", e, "error")
         return
 
     # Step 4: Write the output to a text file
@@ -259,6 +333,7 @@ def generate_running_processes_report():
     # Ensure PsFile.exe exists at the constructed path
     if not os.path.exists(psfile_path):
         logger.critical(f"PsFile.exe not found at {psfile_path}")
+        crash("FNF", "fun307", os.path.exists(psfile_path), "crash")
         return
 
     # Step 3: Execute PsFile.exe and capture output
@@ -273,6 +348,7 @@ def generate_running_processes_report():
         logger.info("Report generated successfully.")
     except Exception as e:
         logger.error(f"An error occurred: {e}")
+        crash("OGE", "fun304", e, "error")
 
 
 def try_execute(function):
@@ -283,12 +359,16 @@ def try_execute(function):
         function()
     except subprocess.CalledProcessError as e:
         logger.error(f"Subprocess call failed: {e}")
+        crash("EVE", "fun334", e.returncode, "error")
     except FileNotFoundError as e:
         logger.error(f"File not found: {e}")
+        crash("FNF", "fun334", e.filename, "error")
     except PermissionError as e:
         logger.error(f"Permission error: {e}")
+        crash("PE", "fun334", e, "error")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
+        crash("OGE", "fun334", e, "error")
 
 
 if __name__ == "__main__":
