@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import subprocess  # Import the subprocess module
 import mss
-from CODE.local_libraries.Lists_and_variables import *
+from local_libraries.Lists_and_variables import *
 
 with mss.mss() as sct:
     monitors = sct.monitors

@@ -1,7 +1,7 @@
 import os
 import tkinter as tk
 from tkinter import messagebox
-from CODE.local_libraries.Lists_and_variables import *
+from local_libraries.Lists_and_variables import *
 from datetime import datetime
 
 time = datetime.now().strftime('%Y-%m-%d_at_time_%H-%M-%S')

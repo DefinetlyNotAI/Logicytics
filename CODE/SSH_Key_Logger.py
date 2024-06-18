@@ -1,5 +1,5 @@
 import getpass
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 def copy_ssh_files_to_txt():

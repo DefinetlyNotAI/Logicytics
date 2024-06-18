@@ -1,6 +1,6 @@
 import hashlib
 from pathlib import Path
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 def hash_zip():

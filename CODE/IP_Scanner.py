@@ -1,5 +1,5 @@
 import time
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 def run_command_with_timeout(command, timeout=10):

@@ -3,8 +3,8 @@ import platform
 import random
 import shutil
 import argparse
-from CODE.local_libraries.Lists_and_variables import *  # Import the list of flag names and any flag related dictionary.
-from CODE.local_libraries.Setups import *
+from local_libraries.Lists_and_variables import *  # Import the list of flag names and any flag related dictionary.
+from local_libraries.Setups import *
 from datetime import datetime
 
 
