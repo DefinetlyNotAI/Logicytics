@@ -38,25 +38,29 @@ Ensure your system meets these requirements:
    cd Logicytics
    ```
 
+### Basic Usage
+1. **CLI**: The most preferred method, all in your command line! More feedback can be given, to use it just open `CMD` in the `CODE` directory, and run `./Logicytics.py`
+
+2. **GUI**: Still in beta, GUI is not recommended unless you are unfamilier with CLI, the GUI automatically constructs your command and executes it from a basic window. To use this feature go to the `CODE` directory and run the `GUI.py` file, or type in the terminal `./GUI.py`.
+
 ## 🔧 Configuration 🔧
 
 Logicytics offers extensive customization options through flags while running.
 
 These flags allow you to:
-- Specify which types of data to collect.
+- Specify which types of files to collect data.
 - Exclude certain files/data from the data collection process.
 - Adjust logging levels for detailed insights.
 
-More info on the wiki.
+More info about the flags on the wiki.
 
 ## 🚀 Advanced Usage 🚀
 
 ### Custom Scripts
 Extend Logicytics' functionality by creating custom Python scripts.
 Place these scripts in the `CODE` directory.
-(WIP) Logicytics will automatically execute these scripts during the data collection process,
-enabling tailored data extraction.
-For now, these scripts must be manually executed.
+Logicytics will automatically execute these scripts during the data collection process,
+enabling tailored data extraction (When using the `--mods` flag).
 
 ## 🛑 Troubleshooting 🛑
 
@@ -64,6 +68,7 @@ For now, these scripts must be manually executed.
 - **Permission Denied**: Ensure you're running Logicytics with administrative privileges.
 - **Incomplete Data Collection**: Verify all necessary files and folders are intact and unmodified.
 - **Update Issues**: Use the `--update` flag to fetch the latest version of Logicytics.
+- **Recovery**: Use the `--backup` and `--restore` to keep a history of intact files in case of errors.
 
 ### Support Resources
 Consult the `.md` log file in the `ACCESS/LOGS` directory for detailed error logs.
