@@ -1,5 +1,5 @@
 from pathlib import Path
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 def run_command(command, shell=False, **kwargs):

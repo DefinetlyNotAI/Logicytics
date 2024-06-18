@@ -1,4 +1,4 @@
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 def get_uac_setting():

@@ -2,7 +2,7 @@ import re
 import socket
 import uuid
 import wmi
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 def extract_version_number(output):

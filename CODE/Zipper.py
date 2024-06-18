@@ -1,7 +1,7 @@
 import getpass
 import shutil
 import zipfile
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 USER_NAME = getpass.getuser()
 DESTINATION_PREFIX = "DATA\\" + USER_NAME

@@ -1,6 +1,6 @@
 import shutil
 from datetime import datetime
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 def filter_zip_files(names):

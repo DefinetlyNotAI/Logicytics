@@ -2,7 +2,7 @@ import sqlite3
 import winreg
 import shutil
 from contextlib import closing
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 def copy_file(src_path, dest_dir):

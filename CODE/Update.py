@@ -1,6 +1,6 @@
 from pathlib import Path
 import requests
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 # Function to read the version number from a file

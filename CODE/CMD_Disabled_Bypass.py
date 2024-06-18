@@ -1,6 +1,6 @@
 import pyautogui
 import time
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 def press_win_r():

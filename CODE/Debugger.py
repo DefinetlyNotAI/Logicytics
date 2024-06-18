@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 import requests
 from datetime import datetime
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 time = datetime.now().strftime('%Y-%m-%d')
 

@@ -1,5 +1,5 @@
 import zipfile
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 def unzip_backup():

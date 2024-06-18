@@ -1,5 +1,5 @@
 import re
-from CODE.local_libraries.Setups import *
+from local_libraries.Setups import *
 
 
 def validate_error_id(error_id):
