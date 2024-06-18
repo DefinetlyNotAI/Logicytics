@@ -1,0 +1,39 @@
+AE = Arithmetic Error = there's an issue with arithmetic operations, such as division by zero.
+BE = Buffer Error = there's an attempt to read or write beyond the boundaries of a buffer.
+LE = Lookup Error = a key is not found in a dictionary or similar data structure.
+ME = Memory Error = issues with memory allocation or access occur, such as out-of-memory errors.
+NE = Name Error = a local or global name is not found.
+RFE = Reference Error = trying to reference a variable that has not been assigned a value.
+SNE = Syntax Error = in errors in the syntax of the program, which prevent it from being executed correctly.
+SYE = System Error = general errors related to the system environment, not specifically tied to programming logic.
+TE = Type Error = an operation or function is applied to an object of inappropriate type.
+VE = Value Error = a built-in operation or function receives an argument of correct type but inappropriate value.
+OE = Overflow Error = an arithmetic operation attempts to create a number that is outside the range that can be represented with a given number of bits.
+RCE = Recursion Error = during recursion it exceeds maximum recursion depth.
+RNE = Runtime Error = the program is running, not at compile time, Leading to de-sync
+AE = Attribute Error = an attribute reference or assignment fails.
+EE = EOF Error = attempting to read past the end of a file.
+IPE = Import Error = an import statement fails, typically because the module cannot be found.
+MNF = Module Not Found Error = a error similar to an import error occurs, usually when the specified module does not exist.
+ULE = Unbound Local Error = a local variable is referenced before it has been assigned a value.
+IDE = Indentation Error = incorrect indentation occurs, which is significant in languages like Python.
+TE = Tab Error = an error similar to an indentation error occurs, usually when tabs and spaces are mixed inconsistently.
+KE = Key Error = a dictionary key is not found.
+IDX = Index Error = trying to access an element at an invalid index in a sequence.
+SI = Stop Iteration = a control flow statement used to exit a loop prematurely occurs.
+GNE = Generator Exit = a generator's next() method is called after it has finished iterating.
+OSE = OS Error = operating system-level errors occur, such as file not found or permission denied.
+EVE = Environment Error = there's an issue with the runtime environment, such as missing dependencies.
+IOE = IO Error = errors related to input/output operations occur, such as reading from or writing to a file.
+NAD = Not A Directory Error = a path expected to be a directory is not actually a directory.
+PE = Permission Error = the program tries to perform an action for which it lacks permissions.
+FNF = File Not Found Error = the file requested could not be located.
+BIE = Blocking IO Error = an I/O operation blocks the execution of the program.
+BPE = Broken Pipe Error = the other end of a pipe or socket connection is closed unexpectedly.
+CPE = Child Process Error = errors related to creating or managing child processes occur.
+CE = Connection Error = establishing a network connection fails.
+TE = Timeout Error = a network request takes longer than the allowed time.
+HTP = HTTP Error = errors related to HTTP requests, such as 404 Not Found or 500 Internal Server Error or other basic connection errors occur.
+URL = URL Error = there's an issue with a URL, such as malformed syntax.
+OGE = Other Generic Error = no specific error was caught, usually a catch-all category for errors that don't fit into the other categories.
+UKE = Unknown Error = an unknown error occurs, or something unexpected occurs.

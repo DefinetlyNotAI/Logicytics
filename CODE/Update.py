@@ -1,7 +1,66 @@
+import os
 import subprocess
 from pathlib import Path
 import colorlog
 import requests
+
+
+def crash(error_id, function_no, error_content, type):
+    """
+    Ensure error_id and function_no are strings
+    Prepare the data to write to the temporary files
+    Write the name of the placeholder script to the temporary file
+    Write the error message to the temporary file
+    Write the name of the placeholder function to the temporary file
+    Write the name of the placeholder language to the temporary file
+    Write the name of the placeholder crash to the temporary file
+    Write the type to the temporary file
+    Open Crash_Reporter.py in a new shell window
+    """
+    # Ensure error_id and function_no are strings
+    error_id = str(error_id)
+    function_no = str(function_no)
+
+    # Prepare the data to write to the temporary files
+    script_name = os.path.basename(__file__)
+    language = os.path.splitext(__file__)[1][1:]  # Extracting the language part
+
+    # Write the name of the placeholder script to the temporary file
+    with open("flag.temp", 'w') as f:
+        f.write(script_name)
+
+    # Write the error message to the temporary file
+    with open("error.temp", 'w') as f:
+        f.write(error_id)
+
+    # Write the name of the placeholder function to the temporary file
+    with open("function.temp", 'w') as f:
+        f.write(function_no)
+
+    # Write the name of the placeholder language to the temporary file
+    with open("language.temp", 'w') as f:
+        f.write(language)
+
+    # Write the name of the placeholder crash to the temporary file
+    with open("error_data.temp", 'w') as f:
+        f.write(error_content)
+
+    with open("type.temp", 'w') as f:
+        f.write(type)
+
+    # Open Crash_Reporter.py in a new shell window
+    # Note: This command works for Command Prompt.
+    # Adjust according to your needs.
+    process = subprocess.Popen(r'powershell.exe -Command "& .\Crash_Reporter.py"', shell=True,  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in iter(process.stdout.readline, b''):
+        decoded_line = line.decode('utf-8').strip()
+        print(decoded_line)
+    # Wait for the process to finish and get the final output/error
+    stdout, _ = process.communicate()
+    # Decode the output from bytes to string
+    stdout = stdout.decode('utf-8') if stdout else ""
+    print(stdout)
+
 
 # Configure colorlog
 logger = colorlog.getLogger()
@@ -40,6 +99,7 @@ def read_version_file(file_path):
             return content.strip()  # Remove any leading/trailing whitespace
     except FileNotFoundError:
         logger.error(f"File {file_path} not found.")
+        crash("FNF", "fun70", f"File not found at {file_path}", "error")
         return None
 
 
@@ -56,7 +116,7 @@ def compare_versions(source_version, target_version):
         bool: True if the versions match, False otherwise.
     """
     if source_version == target_version:
-        logger.info("The versions match.")
+        logger.info(f"The versions match. Your version {target_version} matches with the latest version {source_version}")
         return True
     else:
         logger.warning(f"Version {target_version} does not match with the latest version {source_version}")
@@ -84,6 +144,7 @@ def compare_logic():
             f.write(response.content)
     else:
         logger.error("Failed to download the file.")
+        crash("CE", "fun111", response.status_code, "crash")
         exit(1)
 
     version_number_downloaded = read_version_file(str(current_working_dir / filename))
@@ -126,6 +187,8 @@ def update_local_repo():
             logger.info(f"Command '{command}' executed successfully.")
         except subprocess.CalledProcessError as e:
             logger.error(f"Failed to execute command '{command}'. Error: {e}")
+            crash("EVE", "fun166", e.returncode, "crash")
+            exit(1)
 
 
 if compare_logic() is False:

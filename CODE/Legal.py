@@ -3,6 +3,7 @@ import os
 import shutil
 from tkinter import messagebox  # Explicitly import messagebox
 
+
 # Initialize the main window
 root = tk.Tk()
 root.title("Logicytics Consent")
@@ -168,7 +169,7 @@ else:
         """
         This function handles the click event for the fun summary/legal words button.
         Toggles the state of the button and updates the button text accordingly.
-        Also toggles the initial text displayed on the interface.
+        Also toggle the initial text displayed on the interface.
         """
         global current_initial_text_index  # Declare it as global if necessary
 

@@ -5,7 +5,7 @@ from tkinter import messagebox
 
 def submit_api_key():
     """
-    Submit the API key entered by the user and save it to the SYSTEM/API-IP.KEY file.
+    Submit the API key entered by the user and save it to the SYSTEM/API-IP.key file.
     """
     api_key = api_key_entry.get().strip()  # Get the API key entered by the user
     api_key_confirm = api_key_entry_confirm.get().strip()  # Get the API key confirmation entered by the user
@@ -25,10 +25,10 @@ def submit_api_key():
         messagebox.showwarning(title="Warning", message="The API keys do not match. Please try again.")
         return
 
-    # Check if the API-IP.KEY file already exists and read its content
-    if os.path.exists('SYSTEM/API-IP.KEY'):
+    # Check if the API-IP.key file already exists and read its content
+    if os.path.exists('SYSTEM/API-IP.key'):
         try:
-            with open('SYSTEM/API-IP.KEY', 'r') as f:
+            with open('SYSTEM/API-IP.key', 'r') as f:
                 existing_key = f.read().strip()
             if existing_key == api_key:
                 messagebox.showinfo(title="Info", message="The same API key is already used. No action needed.")
@@ -37,17 +37,17 @@ def submit_api_key():
             messagebox.showerror(title="Error", message=f"Failed to read existing API key: {str(e)}")
             return
 
-    # Proceed to create/update the API-IP.KEY file with the submitted API key
+    # Proceed to create/update the API-IP.key file with the submitted API key
     try:
         parent_dir = os.path.dirname(os.getcwd())  # Get the parent directory of the current working directory
         system_dir = os.path.join(parent_dir,
                                   "SYSTEM")  # Join the parent directory and "SYSTEM" to get the system directory
         os.makedirs(system_dir, exist_ok=True)  # Create the system directory if it doesn't exist
 
-        with open(os.path.join(system_dir, 'API-IP.KEY'), 'w') as f:
-            f.write(api_key + "\n")  # Write the API key to the API-IP.KEY file
+        with open(os.path.join(system_dir, 'API-IP.key'), 'w') as f:
+            f.write(api_key + "\n")  # Write the API key to the API-IP.key file
 
-        messagebox.showinfo(title="Success", message="API key saved to API-IP.KEY.")
+        messagebox.showinfo(title="Success", message="API key saved to API-IP.key.")
     except Exception as e:
         messagebox.showerror(title="Error", message=f"Failed to save API key: {str(e)}")
 
