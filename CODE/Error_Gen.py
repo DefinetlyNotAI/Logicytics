@@ -1,33 +1,5 @@
-import os
 import re
-
-
-def print_colored(text, color):
-    """
-    Prints the given text in the specified color.
-
-    Parameters:
-        text (str): The text to print.
-        color (str): The color code (e.g., 'red', 'green', etc.).
-
-    Returns:
-        None
-
-    Raises:
-        ValueError: If the color name is invalid.
-
-    Example:
-        print_colored("Hello, world!", "red")
-        # Output: Hello, world! (in red color)
-    """
-    reset = "\033[0m"
-    color_codes = {
-        'red': '\033[31m',
-        'green': '\033[32m',
-        'yellow': '\033[33m',
-    }
-    if color.lower() in color_codes:
-        print(color_codes[color.lower()] + text + reset)
+from CODE.local_libraries.Setups import *
 
 
 def validate_error_id(error_id):

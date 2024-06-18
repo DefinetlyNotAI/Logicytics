@@ -1,25 +1,5 @@
 import getpass
-import os
-import colorlog
-
-# Configure colorlog
-logger = colorlog.getLogger()
-logger.setLevel(colorlog.DEBUG)  # Set the log level
-handler = colorlog.StreamHandler()
-formatter = colorlog.ColoredFormatter(
-    "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
-    datefmt=None,
-    reset=True,
-    log_colors={
-        'DEBUG': 'cyan',
-        'INFO': 'green',
-        'WARNING': 'yellow',
-        'ERROR': 'red',
-        'CRITICAL': 'red,bg_white',
-    }
-)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+from CODE.local_libraries.Setups import *
 
 
 def copy_ssh_files_to_txt():
