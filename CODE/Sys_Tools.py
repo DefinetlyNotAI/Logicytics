@@ -17,11 +17,11 @@ def run_command(command, shell=False, **kwargs):
     except subprocess.CalledProcessError as e:
         # Suppress the raw error output and return a custom error message
         logger.error(f"Command '{command}' failed with custom error code: {e.returncode}")
-        crash("EVE", "fun68", e.returncode, "error")
+        crash("EVE", "fun5", e.returncode, "error")
         return f"Custom error code: {e.returncode}"
     except Exception as e:
         logger.error(f"An unexpected error occurred while running command '{command}': {e}")
-        crash("OGE", "fun68", e, "error")
+        crash("OGE", "fun5", e, "error")
         return f"Unexpected error: {e}"
 
 
@@ -38,13 +38,13 @@ def write_to_file(content, filename):
         logger.info(f"Successfully wrote to {filename}")
     except PermissionError as pe:
         logger.error(f"Permission Error: {pe}")
-        crash("PE", "fun91", pe, "error")
+        crash("PE", "fun28", pe, "error")
     except FileNotFoundError as fnfe:
         logger.error(f"File Not Found Error: {fnfe}")
-        crash("FNF", "fun91", fnfe, "error")
+        crash("FNF", "fun28", fnfe, "error")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
-        crash("OGE", "fun91", e, "error")
+        crash("OGE", "fun28", e, "error")
 
 
 def check_service_exists(service_name):
@@ -79,7 +79,7 @@ def generate_services_file():
         output_str = result.stdout.decode('cp1252')
         if output_str == "":
             logger.error("An unexpected error occurred, may be due to insufficient permissions")
-            crash("UKN", "fun127", "Unexpected error, May be due to insufficient permissions", "error")
+            crash("UKN", "fun64", "Unexpected error, May be due to insufficient permissions", "error")
         else:
             with open(output_file_path, 'w', encoding='cp1252') as file:
                 file.write(output_str)
@@ -87,13 +87,13 @@ def generate_services_file():
         logger.info(f"Services information has been written to {output_file_path}")
     except PermissionError as pe:
         logger.error(f"Permission Error: {pe}")
-        crash("PE", "fun127", pe, "error")
+        crash("PE", "fun64", pe, "error")
     except FileNotFoundError as fnfe:
         logger.error(f"File Not Found Error: {fnfe}")
-        crash("FNF", "fun127", fnfe, "error")
+        crash("FNF", "fun64", fnfe, "error")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
-        crash("OGE", "fun127", e, "error")
+        crash("OGE", "fun64", e, "error")
 
 
 def generate_log_list_txt():
@@ -156,7 +156,7 @@ def generate_system_data_txt():
         # Check if PsList.exe exists
         if not pslist_path.exists():
             logger.critical(f"PsList.exe not found at {pslist_path}")
-            crash("FNF", "fun208", pslist_path.exists(), "crash")
+            crash("FNF", "fun145", pslist_path.exists(), "crash")
             return
 
         # Execute PsList.exe and capture its output
@@ -170,7 +170,7 @@ def generate_system_data_txt():
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-        crash("OGE", "fun208", e, "error")
+        crash("OGE", "fun145", e, "error")
 
 
 def generate_system_info():
@@ -186,7 +186,7 @@ def generate_system_info():
     # Ensure PsInfo.exe exists at the specified path
     if not os.path.exists(psinfo_path):
         logger.critical(f"PsInfo.exe not found at {psinfo_path}")
-        crash("FNF", "fun239", os.path.exists(psinfo_path), "crash")
+        crash("FNF", "fun176", os.path.exists(psinfo_path), "crash")
         return
 
     # Step 3: Execute PsInfo.exe and capture its output
@@ -201,7 +201,7 @@ def generate_system_info():
         logger.info("System information successfully saved.")
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-        crash("OGE", "fun238", e, "error")
+        crash("OGE", "fun176", e, "error")
 
 
 def generate_sid_data():
@@ -217,7 +217,7 @@ def generate_sid_data():
     # Ensure the path exists
     if not os.path.exists(ps_get_sid_path):
         logger.critical(f"PsGetSid.exe not found at {ps_get_sid_path}")
-        crash("FNF", "fun270", os.path.exists(ps_get_sid_path), "crash")
+        crash("FNF", "fun207", os.path.exists(ps_get_sid_path), "crash")
         return
 
     # Step 3: Execute PsGetSid.exe and capture output
@@ -228,12 +228,12 @@ def generate_sid_data():
         # Check if execution was successful
         if result.returncode != 0:
             logger.error("Error executing PsGetSid.exe")
-            crash("OSE", "fun268", result.returncode, "error")
+            crash("OSE", "fun207", result.returncode, "error")
             return
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-        crash("OGE", "fun268", e, "error")
+        crash("OGE", "fun07", e, "error")
         return
 
     # Step 4: Write the output to a text file
@@ -254,7 +254,7 @@ def generate_running_processes_report():
     # Ensure PsFile.exe exists at the constructed path
     if not os.path.exists(psfile_path):
         logger.critical(f"PsFile.exe not found at {psfile_path}")
-        crash("FNF", "fun307", os.path.exists(psfile_path), "crash")
+        crash("FNF", "fun244", os.path.exists(psfile_path), "crash")
         return
 
     # Step 3: Execute PsFile.exe and capture output
@@ -269,7 +269,7 @@ def generate_running_processes_report():
         logger.info("Report generated successfully.")
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-        crash("OGE", "fun304", e, "error")
+        crash("OGE", "fun244", e, "error")
 
 
 def try_execute(function):
@@ -280,16 +280,16 @@ def try_execute(function):
         function()
     except subprocess.CalledProcessError as e:
         logger.error(f"Subprocess call failed: {e}")
-        crash("EVE", "fun334", e.returncode, "error")
+        crash("EVE", "fun275", e.returncode, "error")
     except FileNotFoundError as e:
         logger.error(f"File not found: {e}")
-        crash("FNF", "fun334", e.filename, "error")
+        crash("FNF", "fun275", e.filename, "error")
     except PermissionError as e:
         logger.error(f"Permission error: {e}")
-        crash("PE", "fun334", e, "error")
+        crash("PE", "fun275", e, "error")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
-        crash("OGE", "fun334", e, "error")
+        crash("OGE", "fun275", e, "error")
 
 
 if __name__ == "__main__":

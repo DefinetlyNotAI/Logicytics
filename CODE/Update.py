@@ -20,7 +20,7 @@ def read_version_file(file_path):
             return content.strip()  # Remove any leading/trailing whitespace
     except FileNotFoundError:
         logger.error(f"File {file_path} not found.")
-        crash("FNF", "fun70", f"File not found at {file_path}", "error")
+        crash("FNF", "fun7", f"File not found at {file_path}", "error")
         return None
 
 
@@ -65,7 +65,7 @@ def compare_logic():
             f.write(response.content)
     else:
         logger.error("Failed to download the file.")
-        crash("CE", "fun111", response.status_code, "crash")
+        crash("CE", "fun48", response.status_code, "crash")
         exit(1)
 
     version_number_downloaded = read_version_file(str(current_working_dir / filename))
@@ -108,7 +108,7 @@ def update_local_repo():
             logger.info(f"Command '{command}' executed successfully.")
         except subprocess.CalledProcessError as e:
             logger.error(f"Failed to execute command '{command}'. Error: {e}")
-            crash("EVE", "fun166", e.returncode, "crash")
+            crash("EVE", "fun93", e.returncode, "crash")
             exit(1)
 
 

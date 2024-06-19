@@ -14,7 +14,7 @@ def filter_zip_files(names):
         return [name for name in names if name.endswith('.zip')]
     except Exception as e:
         logger.error(f"Error filtering zip files: {e}")
-        crash("OGE", "fun69", e, "error")
+        crash("OGE", "fun6", e, "error")
         raise
 
 
@@ -33,7 +33,7 @@ def create_backup():
         # Check if the source directory exists
         if not os.path.exists(source_dir):
             logger.error(f"Source directory does not exist: {source_dir}")
-            crash("DE", "fun84", os.path.exists(source_dir), "error")
+            crash("DE", "fun21", os.path.exists(source_dir), "error")
             raise FileNotFoundError(f"Source directory does not exist: {source_dir}")
 
         # Create the BACKUP directory if it doesn't already exist
@@ -56,7 +56,7 @@ def create_backup():
         logger.info(f"Backup created at {zip_file_path}.zip")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
-        crash("OGE", "fun84", e, "error")
+        crash("OGE", "fun21", e, "error")
 
 
 create_backup()

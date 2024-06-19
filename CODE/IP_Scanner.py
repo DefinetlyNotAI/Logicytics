@@ -52,7 +52,7 @@ def get_netstat_info():
     output, error = run_command_with_timeout("netstat -a", timeout=10)
     if error:
         logger.error(f"Error running netstat: {error}")
-        crash("EVE", "fun111", error, "error")
+        crash("EVE", "fun47", error, "error")
     else:
         logger.info("Netstat completed.")
     return output, error
@@ -66,7 +66,7 @@ def get_ipconfig_info():
     output, error = run_command_with_timeout("ipconfig /all")
     if error:
         logger.error(f"Error running ipconfig: {error}")
-        crash("EVE", "fun125", error, "error")
+        crash("EVE", "fun61", error, "error")
     else:
         logger.info("Ipconfig completed.")
     return output, error
@@ -80,7 +80,7 @@ def get_wifi_profiles():
     output, error = run_command_with_timeout("netsh wlan show profiles", timeout=15)
     if error:
         logger.error(f"Error running netsh: {error}")
-        crash("EVE", "fun139", error, "error")
+        crash("EVE", "fun83", error, "error")
     else:
         logger.info("Netsh completed.")
     return output, error
