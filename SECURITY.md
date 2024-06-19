@@ -4,14 +4,15 @@
 
 This section outlines the versions of our project that are currently supported with security updates.
 
-| Version | Supported          |
-|---------|--------------------|
-| 1.5.x   | :white_check_mark: |
-| 1.4.x   | :x:                |
-| 1.3.x   | :x:                |
-| 1.2.x   | :x:                |
-| 1.1.x   | :x:                |
-| 1.0.x   | :x:                |
+| Version | Supported |
+|---------|-----------|
+| 1.6.x   | ✅         |
+| 1.5.0   | ❌         |
+| 1.4.0   | ❌         |
+| 1.3.x   | ❌         |
+| 1.2.x   | ❌         |
+| 1.1.x   | ❌         |
+| 1.0.x   | ❌         |
 
 ## Reporting a Vulnerability
 

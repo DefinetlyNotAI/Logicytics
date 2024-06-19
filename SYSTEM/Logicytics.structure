@@ -10,7 +10,6 @@
 =CODE\Device_Data.bat
 =CODE\Error_Gen.py
 =CODE\Extra_Menu.py
-=CODE\Flags_Library.py
 =CODE\GUI.py
 =CODE\Hash.py
 =CODE\IP_Scanner.py
@@ -32,6 +31,11 @@
 =CODE\Window_Defender_Crippler.bat
 =CODE\Window_Features_Lister.ps1
 =CODE\Zipper.py
+=CODE\local_libraries\Lists_and_variables.py
+=CODE\local_libraries\ReadMe.md
+=CODE\local_libraries\Setups.py
+=CODE\local_libraries\__pycache__\Lists_and_variables.cpython-311.pyc
+=CODE\local_libraries\__pycache__\Setups.cpython-311.pyc
 =CODE\logo\1.txt
 =CODE\logo\2.txt
 =CODE\logo\3.txt
@@ -48,5 +52,4 @@
 =CODE\sys\psping.exe
 =CODE\sys\PsService.exe
 =CODE\sys\pssuspend.exe
-=CODE\__pycache__\Flags_Library.cpython-311.pyc
 =CODE\__pycache__\Logicytics.cpython-311.pyc
