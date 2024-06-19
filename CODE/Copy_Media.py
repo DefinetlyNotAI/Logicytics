@@ -33,19 +33,28 @@ def copy_folders(source_paths, destination_path):
             logger.info(f"Folder '{os.path.basename(source_path)}' copied successfully.")
         except PermissionError as e:
             logger.error(f"Permission denied while trying to copy folder '{os.path.basename(source_path)}': {e}")
-            crash("PE", "fun91", e, "error")
+            crash("PE", "fun28", e, "error")
         except OSError as e:
             logger.error(f"An error occurred while trying to copy folder '{os.path.basename(source_path)}': {e}")
-            crash("OSE", "fun91", e, "error")
+            crash("OSE", "fun28", e, "error")
         except Exception as e:
             logger.error(
                 f"Unexpected error occurred while trying to copy folder '{os.path.basename(source_path)}': {e}")
-            crash("OGE", "fun91", e, "error")
+            crash("OGE", "fun28", e, "error")
 
 
-def main():
+def media_copier():
     """
     Main function to copy media folders from the user's profile to a destination folder.
+
+    This function retrieves the current user's username and defines the source folders
+    using the current user's username. It then checks if the source folders exist and
+    creates the destination folder if it doesn't exist. The function estimates the sizes
+    of the source folders and proceeds with copying the folders to the destination folder
+    without user confirmation.
+
+    Returns:
+        None
     """
     # Get the current user's username
     username = os.getlogin()
@@ -61,7 +70,7 @@ def main():
     for folder in source_folders:
         if not os.path.exists(folder):
             logger.error(f"Source folder does not exist: {folder}")
-            crash("FNF", "fun109", os.path.exists(folder), "error")
+            crash("FNF", "fun46", os.path.exists(folder), "error")
             continue
 
     # Get the script's directory
@@ -84,7 +93,7 @@ def main():
             logger.info(f"Estimated size of '{folder}': {formatted_size}")
         else:
             logger.error(f"ERROR: Folder not found: {folder}")
-            crash("FNF", "fun109", os.path.exists(folder), "error")
+            crash("FNF", "fun46", os.path.exists(folder), "error")
 
     # Proceed with copying the folders without user confirmation
     copy_folders(source_folders, destination_folder)
@@ -92,4 +101,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    media_copier()

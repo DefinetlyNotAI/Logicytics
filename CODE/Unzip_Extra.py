@@ -44,7 +44,7 @@ def unzip_extra():
 
     except Exception as e:
         logger.error(f"An error occurred while unzipping the extra files: {str(e)}")
-        crash("OGE", "fun70", str(e), "error")
+        crash("OGE", "fun5", str(e), "error")
 
 
 # Call the function to start unzipping the backups automatically

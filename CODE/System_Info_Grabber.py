@@ -77,7 +77,7 @@ def execute_command(command):
     stdout, stderr = process.communicate()
     if process.returncode != 0:
         logger.error(f"Command '{command}' failed with error: {stderr}")
-        crash("UKN", "fun132", process.returncode, "error")
+        crash("UKN", "fun65", process.returncode, "error")
         return ""
     return stdout.strip()
 
@@ -99,7 +99,7 @@ def write_to_file(filename, content):
         logger.info(f"Saved text file in {filename}")
     except IOError as e:
         logger.error(f"Error writing to file: {e}")
-        crash("IOE", "fun152", e, "error")
+        crash("IOE", "fun85", e, "error")
 
 
 def remove_prefix_from_lines(content: str, prefix: str) -> str:

@@ -18,7 +18,7 @@ def zip_data_folder():
     # Check if the source folder exists
     if not os.path.exists(source_folder):
         logger.error(f"The folder {source_folder} does not exist.")
-        crash("DE", "fun72", os.path.exists(source_folder), "error")
+        crash("DE", "fun10", os.path.exists(source_folder), "error")
         return
 
     # Create a ZipFile object
@@ -72,12 +72,12 @@ def process_files():
 
                 except PermissionError as e:
                     logger.error(f"Failed to delete {item}: {e}")
-                    crash("PE", "fun99", e, "error")
+                    crash("PE", "fun37", e, "error")
                     continue  # Skip this iteration and move to the next item
 
                 except Exception as e:
                     logger.error(f"An unexpected error occurred while processing {item}: {e}")
-                    crash("OGE", "fun99", e, "error")
+                    crash("OGE", "fun37", e, "error")
                     continue  # Skip this iteration and move to the next item
             else:
                 logger.info(f"Skipping {item} as it is not a file (it might be a directory).")

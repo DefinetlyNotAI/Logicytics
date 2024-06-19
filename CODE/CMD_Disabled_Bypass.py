@@ -12,7 +12,7 @@ def press_win_r():
         logger.info("Simulated pressing Win+R to open the Run dialog.")
     except Exception as e:
         logger.error(f"Failed to simulate pressing Win+R: {e}")
-        crash("IOE", "fun71", e, "error")
+        crash("IOE", "fun6", e, "error")
 
 
 def type_command():
@@ -25,7 +25,7 @@ def type_command():
         logger.info("Typed the command to attempt to enable command prompt.")
     except Exception as e:
         logger.error(f"Failed to type the command: {e}")
-        crash("IOE", "fun83", e, "error")
+        crash("IOE", "fun18", e, "error")
 
 
 def press_enter():
@@ -37,7 +37,7 @@ def press_enter():
         logger.info("Pressed Enter to execute the command.")
     except Exception as e:
         logger.error(f"Failed to press Enter: {e}")
-        crash("IOE", "fun96", e, "error")
+        crash("IOE", "fun31", e, "error")
 
 
 def press_alt_f4():
@@ -49,7 +49,7 @@ def press_alt_f4():
         logger.info("Simulated pressing Alt+F4 to close the command prompt window.")
     except Exception as e:
         logger.error(f"Failed to simulate pressing Alt+F4: {e}")
-        crash("IOE", "fun108", e, "error")
+        crash("IOE", "fun43", e, "error")
 
 
 if __name__ == "__main__":

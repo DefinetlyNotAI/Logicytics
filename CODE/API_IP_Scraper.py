@@ -16,7 +16,7 @@ def get_public_ip():
         return response.json()['ip']
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching public IP: {e}")
-        crash("CE", "fun69", e, "error")
+        crash("CE", "fun5", e, "error")
         return None
 
 
@@ -36,10 +36,10 @@ def save_to_file(filename, content):
             file.write(content)
     except IOError as e:
         logger.error(f"Error writing to file: {e}")
-        crash("IOE", "fun87", e, "error")
+        crash("IOE", "fun23", e, "error")
 
 
-def main():
+def ip_scraper():
     """
     Main function to fetch and save public IP information using the VPNAPI service.
     """
@@ -54,7 +54,7 @@ def main():
     # Check if the API key file exists before proceeding
     if not os.path.exists(api_key_file_path):
         logger.error("Exiting: The API-IP.key file does not exist.")
-        crash("FNF", "fun106", "API-IP.key file not found", "error")
+        crash("FNF", "fun42", "API-IP.key file not found", "error")
         return
 
     # Read the API key from the file
@@ -67,7 +67,7 @@ def main():
     public_ip = get_public_ip()
     if not public_ip:
         logger.error("Exiting: Could not fetch your public IP address.")
-        crash("CE", "fun132", "Could not fetch your public IP address", "error")
+        crash("CE", "fun42", "Could not fetch your public IP address", "error")
         return
 
     # Construct the URL for the request
@@ -79,7 +79,7 @@ def main():
         response.raise_for_status()  # Raises an HTTPError if the response was unsuccessful
     except requests.exceptions.HTTPError as e:
         logger.error(f"Exiting: Failed to retrieve data from VPNAPI. Error: {e}")
-        crash("HTP", "fun106", e, "error")
+        crash("HTP", "fun42", e, "error")
         return
 
     # Parse the JSON response
@@ -102,4 +102,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    ip_scraper()

@@ -59,7 +59,7 @@ def unzip_backup():
 
     except Exception as e:
         logger.error(f"An error occurred while unzipping the backup: {str(e)}")
-        crash("OGE", "fun70", e, "error")
+        crash("OGE", "fun5", e, "error")
 
 
 # Call the function to start unzipping the backup

@@ -62,4 +62,4 @@ try:
     hash_zip()
 except Exception as e:
     print(f"An error occurred: {e}")
-    crash("EVE", "fun64", e, "error")
+    crash("EVE", "fun60", e, "error")

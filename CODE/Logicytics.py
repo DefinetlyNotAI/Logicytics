@@ -174,7 +174,7 @@ def create_empty_data_directory(Silent):
             logger.debug(f"Data directory exists: {os.path.exists(data_dir_path)}")
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-        crash("OGE", "fun236", e, "error")
+        crash("OGE", "fun153", e, "error")
 
 
 def install_libraries(command: str) -> None:
@@ -198,7 +198,7 @@ def install_libraries(command: str) -> None:
         if process.returncode != 0:
             # Log the error and the standard error
             logger.error(f"Error occurred while executing command: {command}")
-            crash("EVE", "fun263", process.returncode, "error")
+            crash("EVE", "fun180", process.returncode, "error")
             return
 
         # Process the output and log each line
@@ -208,7 +208,7 @@ def install_libraries(command: str) -> None:
     except Exception as e:
         # Log any exceptions that occur
         logger.error(f"An error occurred: {e}")
-        crash("OGE", "fun263", e, "error")
+        crash("OGE", "fun180", e, "error")
 
 
 def execute_code(script: str, type: str, silence: str) -> tuple[str, str]:
@@ -246,7 +246,7 @@ def execute_code(script: str, type: str, silence: str) -> tuple[str, str]:
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     else:
         logger.critical(f"Script Failure, Unknown entry type: {type}")
-        crash("AE", "fun297", f"Script Failure, Unknown entry type: {type}", "crash")
+        crash("AE", "fun214", f"Script Failure, Unknown entry type: {type}", "crash")
         exit(1)
 
     if silence == "Debug":
@@ -337,11 +337,11 @@ def set_execution_policy(Silent: str) -> None:
                 logger.info("Execution policy has been set to Unrestricted.")
         else:
             logger.error("An error occurred while trying to set the execution policy.")
-            crash("OSE", "fun391", "Not able to set execution policy", "error")
+            crash("OSE", "fun308", "Not able to set execution policy", "error")
 
     except subprocess.CalledProcessError as e:
         logger.error(f"An error occurred while trying to set the execution policy: {e}")
-        crash("EVE", "fun392", e, "error")
+        crash("EVE", "fun308", e, "error")
 
 
 def checks(run_flag):
@@ -364,11 +364,11 @@ def checks(run_flag):
             return True
         else:
             logger.critical("Logicytics.py is running without administrative privileges.")
-            crash("PE", "fun431", "Not running with administrative privileges", "error")
+            crash("PE", "fun347", "Not running with administrative privileges", "error")
             return False
     else:
         logger.critical("This script is intended to run on Windows.")
-        crash("OSE", "fun431", "This script is intended to run on Windows", "error")
+        crash("OSE", "fun347", "This script is intended to run on Windows", "error")
         return False
 
 
@@ -420,7 +420,7 @@ def print_random_logo():
     # Check if there are any .txt files in the logo directory
     if not logo_files:
         logger.critical("No .txt files found in the logo directory.")
-        crash("FNF", "fun489", "No .txt files found in the logo directory", "crash")
+        crash("FNF", "fun399", "No .txt files found in the logo directory", "crash")
         exit(1)
 
     # Choose a random logo file
@@ -506,11 +506,11 @@ def logicytics(log, quit_var, run):
                     print()
                 else:
                     logger.critical("No Valid Flag")
-                    crash("AE", "fun560", "No Valid Flag", "crash")
+                    crash("AE", "fun470", "No Valid Flag", "crash")
                     exit(1)
         else:
             logger.critical("Unexpected Error Occurred while Checking")
-            crash("OGE", "fun560", "Unexpected Error Occurred while Checking", "crash")
+            crash("OGE", "fun470", "Unexpected Error Occurred while Checking", "crash")
             exit(1)
 
     elif log == "debug":
@@ -538,11 +538,11 @@ def logicytics(log, quit_var, run):
                     print()
                 else:
                     logger.critical("No Valid Flag")
-                    crash("AE", "fun560", "No Valid Flag", "crash")
+                    crash("AE", "fun470", "No Valid Flag", "crash")
                     exit(1)
         else:
             logger.critical("Unexpected Error Occurred while Checking")
-            crash("OGE", "fun560", "Unexpected Error Occurred while Checking", "crash")
+            crash("OGE", "fun470", "Unexpected Error Occurred while Checking", "crash")
             exit(1)
 
     elif log == "mini_log":
@@ -569,11 +569,11 @@ def logicytics(log, quit_var, run):
                     print()
                 else:
                     logger.critical("No Valid Flag")
-                    crash("AE", "fun560", "No Valid Flag", "crash")
+                    crash("AE", "fun470", "No Valid Flag", "crash")
                     exit(1)
         else:
             logger.critical("Unexpected Error Occurred while Checking")
-            crash("OGE", "fun560", "Unexpected Error Occurred while Checking", "crash")
+            crash("OGE", "fun470", "Unexpected Error Occurred while Checking", "crash")
             exit(1)
 
     elif log == "silent":
@@ -584,207 +584,221 @@ def logicytics(log, quit_var, run):
                 execute_code(script_path, "Script", "Silent")
         else:
             logger.critical("Unexpected Error Occurred while Checking")
-            crash("AE", "fun560", "Unexpected Error Occurred while Checking", "crash")
+            crash("AE", "fun470", "Unexpected Error Occurred while Checking", "crash")
             exit(1)
     else:
         logger.critical("No Valid Flag")
-        crash("AE", "fun560", "No Valid Flag", "crash")
+        crash("AE", "fun470", "No Valid Flag", "crash")
         exit(1)
 
 
-keys = parse_true_values(flagger())
+def setup():
+    """
+    Generates a setup based on the given command line arguments.
 
-run = "normal"
-log = "normal"
-quit_var = "normal"
+    Returns:
+        tuple: A tuple containing the run type, log type, quit type, and a list of files to execute.
+    """
+    keys = parse_true_values(flagger())
 
-# Update variables based on keys found
-for key in keys:
-    if key in run_actions:
-        run = run_actions[key]
-    if key in log_actions:
-        log = log_actions[key]
-    if key in quit_actions:
-        quit_var = quit_actions[key]
+    run = "normal"
+    log = "normal"
+    quit_var = "normal"
 
-files = []
-Continue = ""
+    # Update variables based on keys found
+    for key in keys:
+        if key in run_actions:
+            run = run_actions[key]
+        if key in log_actions:
+            log = log_actions[key]
+        if key in quit_actions:
+            quit_var = quit_actions[key]
 
-if run == "run":
-    # The First 2 commands are part of the startup, the Last 2 commands are part of the cleanup process
-    # Debugger.py, Legal.py, UAC.ps1, UACPY.py, Backup.py, Restore.py, Update.py, Extra_Menu.py, Logicytics.py
-    # Windows_Defender_Crippler.bat, APIGen.py, Structure.py, Crash_Reporter.py, Error_Gen.py, Unzip_Extra.py
-    # and more are out of scope.
-    files = ["./CMD_Disabled_Bypass.py",
-             "./Simple_Password_Miner.py",
-             "./Browser_Policy_Miner.ps1",
-             "./Window_Features_Lister.ps1",
-             "./IP_Scanner.py",
-             "./API_IP_Scraper.py",
-             "./Device_Data.bat",
-             "./Registry_miner.bat",
-             "./Sys_Tools.py",
-             "./SSH_Key_Logger.py",
-             "./Tree_Command.bat",
-             "./Copy_Media.py",
-             "./System_Info_Grabber.py",
-             "./Zipper.py",
-             "./Clean.ps1",
-             "./Hash.py",
-             "./Recycle_Logs.py"]
+    files = []
+    Continue = ""
 
-if run == "onlypy":
-    files = ["./CMD_Disabled_Bypass.py",
-             "./Simple_Password_Miner.py",
-             "./IP_Scanner.py",
-             "./API_IP_Scraper.py",
-             "./Sys_Tools.py",
-             "./Copy_Media.py",
-             "./SSH_Key_Logger.py",
-             "./System_Info_Grabber.py",
-             "./Zipper.py",
-             "./Clean.ps1",
-             "./Hash.py",
-             "./Recycle_Logs.py"]
+    if run == "run":
+        # The First 2 commands are part of the startup, the Last 2 commands are part of the cleanup process
+        # Debugger.py, Legal.py, UAC.ps1, UACPY.py, Backup.py,
+        # Restore.py, Update.py, Extra_Menu.py, Logicytics.py
+        # Windows_Defender_Crippler.bat, APIGen.py,
+        # Structure.py, Crash_Reporter.py, Error_Gen.py, Unzip_Extra.py
+        # and more are out of scope.
+        files = ["./CMD_Disabled_Bypass.py",
+                 "./Simple_Password_Miner.py",
+                 "./Browser_Policy_Miner.ps1",
+                 "./Window_Features_Lister.ps1",
+                 "./IP_Scanner.py",
+                 "./API_IP_Scraper.py",
+                 "./Device_Data.bat",
+                 "./Registry_miner.bat",
+                 "./Sys_Tools.py",
+                 "./SSH_Key_Logger.py",
+                 "./Tree_Command.bat",
+                 "./Copy_Media.py",
+                 "./System_Info_Grabber.py",
+                 "./Zipper.py",
+                 "./Clean.ps1",
+                 "./Hash.py",
+                 "./Recycle_Logs.py"]
 
-if run == "setup_only":
-    install_libraries("pip install -r../requirements.txt")
-    files = ["./CMD_Disabled_Bypass.py",
-             "./UACPY.py",
-             "./Window_Defender_Crippler.bat",
-             "./Recycle_Logs.py"]
+    if run == "onlypy":
+        files = ["./CMD_Disabled_Bypass.py",
+                 "./Simple_Password_Miner.py",
+                 "./IP_Scanner.py",
+                 "./API_IP_Scraper.py",
+                 "./Sys_Tools.py",
+                 "./Copy_Media.py",
+                 "./SSH_Key_Logger.py",
+                 "./System_Info_Grabber.py",
+                 "./Zipper.py",
+                 "./Clean.ps1",
+                 "./Hash.py",
+                 "./Recycle_Logs.py"]
 
-if run == "setup":
-    install_libraries("pip install -r../requirements.txt")
-    files = ["./CMD_Disabled_Bypass.py",
-             "./UACPY.py",
-             "./Window_Defender_Crippler.bat",
-             "./Simple_Password_Miner.py",
-             "./Browser_Policy_Miner.ps1",
-             "./Window_Features_Lister.ps1",
-             "./IP_Scanner.py",
-             "./API_IP_Scraper.py",
-             "./Device_Data.bat",
-             "./Registry_miner.bat",
-             "./Sys_Tools.py",
-             "./SSH_Key_Logger.py",
-             "./Tree_Command.bat",
-             "./Copy_Media.py",
-             "./System_Info_Grabber.py",
-             "./Zipper.py",
-             "./Clean.ps1",
-             "./Hash.py", ]
+    if run == "setup_only":
+        install_libraries("pip install -r../requirements.txt")
+        files = ["./CMD_Disabled_Bypass.py",
+                 "./UACPY.py",
+                 "./Window_Defender_Crippler.bat",
+                 "./Recycle_Logs.py"]
 
-if run == "minimum":
-    files = ["./CMD_Disabled_Bypass.py",
-             "./Simple_Password_Miner.py",
-             "./Browser_Policy_Miner.ps1",
-             "./Window_Features_Lister.ps1",
-             "./IP_Scanner.py",
-             "./Device_Data.bat",
-             "./Registry_miner.bat",
-             "./SSH_Key_Logger.py",
-             "./Tree_Command.bat",
-             "./Copy_Media.py",
-             "./System_Info_Grabber.py",
-             "./Zipper.py",
-             "./Clean.ps1",
-             "./Hash.py", ]
+    if run == "setup":
+        install_libraries("pip install -r../requirements.txt")
+        files = ["./CMD_Disabled_Bypass.py",
+                 "./UACPY.py",
+                 "./Window_Defender_Crippler.bat",
+                 "./Simple_Password_Miner.py",
+                 "./Browser_Policy_Miner.ps1",
+                 "./Window_Features_Lister.ps1",
+                 "./IP_Scanner.py",
+                 "./API_IP_Scraper.py",
+                 "./Device_Data.bat",
+                 "./Registry_miner.bat",
+                 "./Sys_Tools.py",
+                 "./SSH_Key_Logger.py",
+                 "./Tree_Command.bat",
+                 "./Copy_Media.py",
+                 "./System_Info_Grabber.py",
+                 "./Zipper.py",
+                 "./Clean.ps1",
+                 "./Hash.py", ]
 
-if run == "only_native":
-    files = ["./CMD_Disabled_Bypass.py",
-             "./Simple_Password_Miner.py",
-             "./Browser_Policy_Miner.ps1",
-             "./Window_Features_Lister.ps1",
-             "./Device_Data.bat",
-             "./Registry_miner.bat",
-             "./Tree_Command.bat",
-             "./Zipper.py",
-             "./Clean.ps1",
-             "./Hash.py", ]
+    if run == "minimum":
+        files = ["./CMD_Disabled_Bypass.py",
+                 "./Simple_Password_Miner.py",
+                 "./Browser_Policy_Miner.ps1",
+                 "./Window_Features_Lister.ps1",
+                 "./IP_Scanner.py",
+                 "./Device_Data.bat",
+                 "./Registry_miner.bat",
+                 "./SSH_Key_Logger.py",
+                 "./Tree_Command.bat",
+                 "./Copy_Media.py",
+                 "./System_Info_Grabber.py",
+                 "./Zipper.py",
+                 "./Clean.ps1",
+                 "./Hash.py", ]
 
-if run == "debugger_only":
-    files = ["./Debugger.py",
-             "./Recycle_Logs.py"]
+    if run == "only_native":
+        files = ["./CMD_Disabled_Bypass.py",
+                 "./Simple_Password_Miner.py",
+                 "./Browser_Policy_Miner.ps1",
+                 "./Window_Features_Lister.ps1",
+                 "./Device_Data.bat",
+                 "./Registry_miner.bat",
+                 "./Tree_Command.bat",
+                 "./Zipper.py",
+                 "./Clean.ps1",
+                 "./Hash.py", ]
 
-if run == "debugger":
-    files = ["./Debugger.py",
-             "./Recycle_Logs.py",
-             "./CMD_Disabled_Bypass.py",
-             "./Simple_Password_Miner.py",
-             "./Browser_Policy_Miner.ps1",
-             "./Window_Features_Lister.ps1",
-             "./IP_Scanner.py",
-             "./API_IP_Scraper.py",
-             "./Device_Data.bat",
-             "./Registry_miner.bat",
-             "./Sys_Tools.py",
-             "./SSH_Key_Logger.py",
-             "./Tree_Command.bat",
-             "./Copy_Media.py",
-             "./System_Info_Grabber.py",
-             "./Zipper.py",
-             "./Clean.ps1"
-             "./Hash.py", ]
+    if run == "debugger_only":
+        files = ["./Debugger.py",
+                 "./Recycle_Logs.py"]
 
-if run == "mods":
-    files = generate_file_list()
+    if run == "debugger":
+        files = ["./Debugger.py",
+                 "./Recycle_Logs.py",
+                 "./CMD_Disabled_Bypass.py",
+                 "./Simple_Password_Miner.py",
+                 "./Browser_Policy_Miner.ps1",
+                 "./Window_Features_Lister.ps1",
+                 "./IP_Scanner.py",
+                 "./API_IP_Scraper.py",
+                 "./Device_Data.bat",
+                 "./Registry_miner.bat",
+                 "./Sys_Tools.py",
+                 "./SSH_Key_Logger.py",
+                 "./Tree_Command.bat",
+                 "./Copy_Media.py",
+                 "./System_Info_Grabber.py",
+                 "./Zipper.py",
+                 "./Clean.ps1"
+                 "./Hash.py", ]
 
-if run == "legacy":
-    files = ["./CMD_Disabled_Bypass.py",
-             "./Simple_Password_Miner.py",
-             "./Device_Data.bat",
-             "./Tree_Command.bat",
-             "./Copy_Media.py",
-             "./Zipper.py",
-             "./Clean.ps1"]
+    if run == "mods":
+        files = generate_file_list()
 
-if run == "dev":
-    Continue = input(
-        "This flag will run all the development required scripts, use this only if you know what you are doing and have completed development and are on the stage of merging/pushing. Do this only on your own machine, this will also run the debugger for final checks, Press `Enter` to continue, press anything else to cancel... ")
-    if Continue == "":
-        files = ["./Error_Gen.py",
-                 "./Structure.py",
-                 "./Debugger.py",
-                 ]
+    if run == "legacy":
+        files = ["./CMD_Disabled_Bypass.py",
+                 "./Simple_Password_Miner.py",
+                 "./Device_Data.bat",
+                 "./Tree_Command.bat",
+                 "./Copy_Media.py",
+                 "./Zipper.py",
+                 "./Clean.ps1"]
 
-if run == "unzip_extra":
-    Continue = input(
-        "This flag will unzip all the extra files in the EXTRA directory. Only do this if you know what you are doing and want to use the extra feature, Do this only on your own machine, Might trigger antivirus, Best to backup your files first. Press `Enter` to continue, press anything else to cancel... ")
-    if Continue == "":
-        files = ["./Unzip_Extra.py"]
+    if run == "dev":
+        Continue = input(
+            "This flag will run all the development required scripts, use this only if you know what you are doing and have completed development and are on the stage of merging/pushing. Do this only on your own machine, this will also run the debugger for final checks, Press `Enter` to continue, press anything else to cancel... ")
+        if Continue == "":
+            files = ["./Error_Gen.py",
+                     "./Structure.py",
+                     "./Debugger.py",
+                     ]
 
-if run == "backup":
-    Continue = input(
-        "This flag will zip all the files in the CODE directory for backup uses. Do this only on your own machine, Press `Enter` to continue, press anything else to cancel... ")
-    if Continue == "":
-        files = ["./Backup.py"]
+    if run == "unzip_extra":
+        Continue = input(
+            "This flag will unzip all the extra files in the EXTRA directory. Only do this if you know what you are doing and want to use the extra feature, Do this only on your own machine, Might trigger antivirus, Best to backup your files first. Press `Enter` to continue, press anything else to cancel... ")
+        if Continue == "":
+            files = ["./Unzip_Extra.py"]
 
-if run == "restore":
-    Continue = input(
-        "This flag will unzip the backed up files in the BACKUP directory. Used to restore old files in case of breaking or unexpected errors, a menu might appear if more than 1 Backup is found, Do this only on your own machine. Press `Enter` to continue, press anything else to cancel... ")
-    if Continue == "":
-        files = ["./Restore.py"]
+    if run == "backup":
+        Continue = input(
+            "This flag will zip all the files in the CODE directory for backup uses. Do this only on your own machine, Press `Enter` to continue, press anything else to cancel... ")
+        if Continue == "":
+            files = ["./Backup.py"]
 
-if run == "update":
-    Continue = input(
-        "This flag will update this project from the latest version in the GitHub repository. Do this only on your own machine as you may need to download extra features, Best to backup your files first. Press `Enter` to continue, press anything else to cancel... ")
-    if Continue == "":
-        files = ["./Update.py"]
+    if run == "restore":
+        Continue = input(
+            "This flag will unzip the backed up files in the BACKUP directory. Used to restore old files in case of breaking or unexpected errors, a menu might appear if more than 1 Backup is found, Do this only on your own machine. Press `Enter` to continue, press anything else to cancel... ")
+        if Continue == "":
+            files = ["./Restore.py"]
 
-if run == "extra":
-    Continue = input(
-        "This flag will open a menu to run any of the extra files in the EXTRA directory. Only do this if you know what you are doing and want to use the extra feature, Might trigger antivirus. Press `Enter` to continue, press anything else to cancel... ")
-    if Continue == "":
-        files = ["./Extra_Menu.py"]
+    if run == "update":
+        Continue = input(
+            "This flag will update this project from the latest version in the GitHub repository. Do this only on your own machine as you may need to download extra features, Best to backup your files first. Press `Enter` to continue, press anything else to cancel... ")
+        if Continue == "":
+            files = ["./Update.py"]
 
-if log == "debug":
-    logger.debug("Log: " + run)
-    for file in files:
-        logger.debug("File's from List: " + file)
-    logger.debug("Quit Type: " + quit_var)
-    logger.debug(f"Keys to be used: {keys}")
-    logger.debug("Continue value: " + Continue)
+    if run == "extra":
+        Continue = input(
+            "This flag will open a menu to run any of the extra files in the EXTRA directory. Only do this if you know what you are doing and want to use the extra feature, Might trigger antivirus. Press `Enter` to continue, press anything else to cancel... ")
+        if Continue == "":
+            files = ["./Extra_Menu.py"]
 
-if run != "normal":
-    logicytics(log, quit_var, run)
+    if log == "debug":
+        logger.debug("Log: " + run)
+        for file in files:
+            logger.debug("File's from List: " + file)
+        logger.debug("Quit Type: " + quit_var)
+        logger.debug(f"Keys to be used: {keys}")
+        logger.debug("Continue value: " + Continue)
+
+    return run, log, quit_var, run, files
+
+
+index = setup()
+files = index[4]
+if index[0] != "normal":
+    logicytics(index[1], index[2], index[3])

