@@ -1,73 +1,74 @@
-// This has not been tested!
-
 #include <stdio.h>
 #include <stdlib.h>
 
 void crash(const char* errorId, const char* functionName, const char* errorContent, const char* type) {
-    /**
-     * Crashes the program and generates a crash report.
-     *
-     * @param errorId The ID of the error that caused the crash.
-     * @param functionName The name of the function where the crash occurred.
-     * @param errorContent The content of the error that caused the crash.
-     * @param type The type of the error that caused the crash.
-     *
-     * @throws None
-     */
-    // Check if the file operations were successful
-    if (fopen("flag.temp", "w") == NULL) {
+    FILE* flagFile;
+    FILE* errorFile;
+    FILE* functionFile;
+    FILE* languageFile;
+    FILE* errorDataFile;
+    FILE* typeFile;
+
+    // Attempt to open each file using fopen_s
+    if (fopen_s(&flagFile, "flag.temp", "w")!= 0) {
         fprintf(stderr, "Failed to open flag.temp file\n");
         return;
     }
 
-    if (fopen("error.temp", "w") == NULL) {
+    if (fopen_s(&errorFile, "error.temp", "w")!= 0) {
         fprintf(stderr, "Failed to open error.temp file\n");
         return;
     }
 
-    if (fopen("function.temp", "w") == NULL) {
+    if (fopen_s(&functionFile, "function.temp", "w")!= 0) {
         fprintf(stderr, "Failed to open function.temp file\n");
         return;
     }
 
-    if (fopen("language.temp", "w") == NULL) {
+    if (fopen_s(&languageFile, "language.temp", "w")!= 0) {
         fprintf(stderr, "Failed to open language.temp file\n");
         return;
     }
 
-    if (fopen("error_data.temp", "w") == NULL) {
+    if (fopen_s(&errorDataFile, "error_data.temp", "w")!= 0) {
         fprintf(stderr, "Failed to open error_data.temp file\n");
         return;
     }
 
-    if (fopen("type.temp", "w") == NULL) {
+    if (fopen_s(&typeFile, "type.temp", "w")!= 0) {
         fprintf(stderr, "Failed to open type.temp file\n");
         return;
     }
 
     // Write the data to the files
-    FILE *flagFile = fopen("flag.temp", "w");
-    fprintf(flagFile, "%s", "PlaceholderScriptName.c");
+    if (fprintf(flagFile, "%s", "PlaceholderScriptName.c") < 0) {
+        perror("Error writing to flag.temp");
+    }
     fclose(flagFile);
 
-    FILE *errorFile = fopen("error.temp", "w");
-    fprintf(errorFile, "%s", errorId);
+    if (fprintf(errorFile, "%s", errorId) < 0) {
+        perror("Error writing to error.temp");
+    }
     fclose(errorFile);
 
-    FILE *functionFile = fopen("function.temp", "w");
-    fprintf(functionFile, "%s", functionName);
+    if (fprintf(functionFile, "%s", functionName) < 0) {
+        perror("Error writing to function.temp");
+    }
     fclose(functionFile);
 
-    FILE *languageFile = fopen("language.temp", "w");
-    fprintf(languageFile, "%s", type);
+    if (fprintf(languageFile, "%s", type) < 0) {
+        perror("Error writing to language.temp");
+    }
     fclose(languageFile);
 
-    FILE *errorDataFile = fopen("error_data.temp", "w");
-    fprintf(errorDataFile, "%s", errorContent);
+    if (fprintf(errorDataFile, "%s", errorContent) < 0) {
+        perror("Error writing to error_data.temp");
+    }
     fclose(errorDataFile);
 
-    FILE *typeFile = fopen("type.temp", "w");
-    fprintf(typeFile, "%s", type);
+    if (fprintf(typeFile, "%s", type) < 0) {
+        perror("Error writing to type.temp");
+    }
     fclose(typeFile);
 
     // Execute the crash reporter
