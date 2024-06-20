@@ -1,8 +1,7 @@
 ### Example user template template
-### Example user template
 
 # IntelliJ project files
-.idea
+!/.idea/
 !/SYSTEM/API-IP.key
 !/SYSTEM/ToS.accept
 !/WEB/
