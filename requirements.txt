@@ -7,4 +7,4 @@ colorlog~=6.8.2
 PyAutoGUI~=0.9.54
 uuid~=1.30
 WMI~=1.5.1
-setuptools~=69.5.1
+setuptools~=70.1.0
