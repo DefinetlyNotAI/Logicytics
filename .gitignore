@@ -3,3 +3,5 @@
 
 # IntelliJ project files
 .idea
+!/SYSTEM/API-IP.key
+!/SYSTEM/ToS.accept
