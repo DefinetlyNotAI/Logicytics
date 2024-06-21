@@ -28,6 +28,7 @@ Ensure your system meets these requirements:
 - Administrative rights.
 - Python installed (preferable version 3.11).
 
+
 ### Step-by-Step Installation
 1. **Clone the Repository**: Use Git to clone Logicytics to your local machine. Open Command Prompt as an administrator and run:
    ```powershell
