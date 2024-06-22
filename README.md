@@ -41,7 +41,7 @@ Ensure your system meets these requirements:
    cd Logicytics
    ```
 
-3. **Setup Logicytics**: Navigate to the `REQUIREMENTS` folder and run the `setup.py` script using the following command, 
+3. **Setup Logicytics**: Navigate to the `SETUP` folder and run the `setup.py` script using the following command, 
    This will install the required dependencies and create any necessary files for full functionality.
    ```powershell
    pip install -e.
