@@ -18,7 +18,9 @@ This comprehensive guide is here to equip you with everything you need to use Lo
 </div>
 
 ## ❤️ Support Me ❤️
-Please consider buying me a coffee or sponsering me in github sponser, I am saving for my college funds in MIT and I need your help! Supporters will be placed in the Credits ❤️
+Please consider buying me a coffee or sponsoring me in GitHub sponsor,
+I am saving for my college funds in MIT, and I need your help!
+Supporters will be placed in the Credits ❤️
 
 ## 🛠️ Installation and Setup 🛠️
 
@@ -38,10 +40,19 @@ Ensure your system meets these requirements:
    cd Logicytics
    ```
 
+3. **Setup Logicytics**: Navigate to the `REQUIREMENTS` folder and run the `setup.py` script using the following command, 
+   This will install the required dependencies and create any necessary files for full functionality.
+   ```powershell
+   pip install -e.
+   ```
+
+4. **Run Logicytics**: Navigate to the `CODE` folder and run `./Logicytics.py` more info below.
+
+
 ### Basic Usage
 1. **CLI**: The most preferred method, all in your command line! More feedback can be given, to use it just open `CMD` in the `CODE` directory, and run `./Logicytics.py`
 
-2. **GUI**: Still in beta, GUI is not recommended unless you are unfamilier with CLI, the GUI automatically constructs your command and executes it from a basic window. To use this feature go to the `CODE` directory and run the `GUI.py` file, or type in the terminal `./GUI.py`.
+2. **GUI**: Still in beta, GUI is not recommended unless you are unfamiliar with CLI, the GUI automatically constructs your command and executes it from a basic window. To use this feature, go to the `CODE` directory and run the `GUI.py` file, or type in the terminal `./GUI.py`.
 
 ## 🔧 Configuration 🔧
 
