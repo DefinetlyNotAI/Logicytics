@@ -3,7 +3,10 @@ import os
 
 # Paths to the requirements.txt and Logicytics.version files
 requirements_path = 'requirements.txt'
-version_path = os.path.join('SYSTEM', 'Logicytics.version')
+# Get the current directory's parent directory
+parent_dir = os.path.dirname(os.getcwd())
+# Construct the path to the Logicytics.version file in the SYSTEM directory under the parent directory
+version_path = os.path.join(parent_dir, 'SYSTEM', 'Logicytics.version')
 
 # Read the version from Logicytics.version
 with open(version_path, 'r') as f:

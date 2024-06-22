@@ -1,3 +1,14 @@
+# Logicytics.py
+# Logicytics.py acts like the bootstrapper for the rest of the repository.
+# Logicytics is a python script used to automate various tasks.
+# It is intended to be used on Windows systems.
+# It can be used to automate various tasks, including;
+# - Running scripts with administrative privileges
+# - Checking if a file or directory exists
+# - Checking file types
+# - Generating a list of files in the current working directory, excluding directories
+# - Generating a list of files in the current working directory that match a certain pattern
+
 import ctypes
 import platform
 import random
@@ -177,40 +188,6 @@ def create_empty_data_directory(Silent):
         crash("OGE", "fun153", e, "error")
 
 
-def install_libraries(command: str) -> None:
-    """
-    Executes a command to install libraries and prints the output.
-
-    Args:
-        command (str): The command to execute.
-
-    Returns:
-        None
-    """
-    try:
-        # Execute the command and capture the output
-        process = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-        )
-        stdout, stderr = process.communicate()
-
-        # Check for errors
-        if process.returncode != 0:
-            # Log the error and the standard error
-            logger.error(f"Error occurred while executing command: {command}")
-            crash("EVE", "fun180", process.returncode, "error")
-            return
-
-        # Process the output and log each line
-        for line in stdout.decode('utf-8').splitlines():
-            logger.info(line)
-
-    except Exception as e:
-        # Log any exceptions that occur
-        logger.error(f"An error occurred: {e}")
-        crash("OGE", "fun180", e, "error")
-
-
 def execute_code(script: str, type: str, silence: str) -> tuple[str, str]:
     """
     Executes a script and logs the output based on the script type and silence level.
@@ -246,7 +223,7 @@ def execute_code(script: str, type: str, silence: str) -> tuple[str, str]:
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     else:
         logger.critical(f"Script Failure, Unknown entry type: {type}")
-        crash("AE", "fun214", f"Script Failure, Unknown entry type: {type}", "crash")
+        crash("AE", "fun180", f"Script Failure, Unknown entry type: {type}", "crash")
         exit(1)
 
     if silence == "Debug":
@@ -337,14 +314,20 @@ def set_execution_policy(Silent: str) -> None:
                 logger.info("Execution policy has been set to Unrestricted.")
         else:
             logger.error("An error occurred while trying to set the execution policy.")
-            crash("OSE", "fun308", "Not able to set execution policy", "error")
+            crash("OSE", "fun274", "Not able to set execution policy", "error")
 
     except subprocess.CalledProcessError as e:
         logger.error(f"An error occurred while trying to set the execution policy: {e}")
-        crash("EVE", "fun308", e, "error")
+        crash("EVE", "fun274", e, "error")
 
 
 def checks(run_flag):
+    """
+    Checks if the script is running with administrative privileges on Windows.
+
+    Returns:
+        bool: True if the script is running with administrative privileges, False otherwise.
+    """
     def is_admin(run_flag):
         """
         Checks if the script is running with administrative privileges on Windows.
@@ -364,11 +347,11 @@ def checks(run_flag):
             return True
         else:
             logger.critical("Logicytics.py is running without administrative privileges.")
-            crash("PE", "fun347", "Not running with administrative privileges", "error")
+            crash("PE", "fun313", "Not running with administrative privileges", "error")
             return False
     else:
         logger.critical("This script is intended to run on Windows.")
-        crash("OSE", "fun347", "This script is intended to run on Windows", "error")
+        crash("OSE", "fun313", "This script is intended to run on Windows", "error")
         return False
 
 
@@ -420,7 +403,7 @@ def print_random_logo():
     # Check if there are any .txt files in the logo directory
     if not logo_files:
         logger.critical("No .txt files found in the logo directory.")
-        crash("FNF", "fun399", "No .txt files found in the logo directory", "crash")
+        crash("FNF", "fun371", "No .txt files found in the logo directory", "crash")
         exit(1)
 
     # Choose a random logo file
@@ -506,11 +489,11 @@ def logicytics(log, quit_var, run):
                     print()
                 else:
                     logger.critical("No Valid Flag")
-                    crash("AE", "fun470", "No Valid Flag", "crash")
+                    crash("AE", "fun442", "No Valid Flag", "crash")
                     exit(1)
         else:
             logger.critical("Unexpected Error Occurred while Checking")
-            crash("OGE", "fun470", "Unexpected Error Occurred while Checking", "crash")
+            crash("OGE", "fun442", "Unexpected Error Occurred while Checking", "crash")
             exit(1)
 
     elif log == "debug":
@@ -538,11 +521,11 @@ def logicytics(log, quit_var, run):
                     print()
                 else:
                     logger.critical("No Valid Flag")
-                    crash("AE", "fun470", "No Valid Flag", "crash")
+                    crash("AE", "fun442", "No Valid Flag", "crash")
                     exit(1)
         else:
             logger.critical("Unexpected Error Occurred while Checking")
-            crash("OGE", "fun470", "Unexpected Error Occurred while Checking", "crash")
+            crash("OGE", "fun442", "Unexpected Error Occurred while Checking", "crash")
             exit(1)
 
     elif log == "mini_log":
@@ -569,11 +552,11 @@ def logicytics(log, quit_var, run):
                     print()
                 else:
                     logger.critical("No Valid Flag")
-                    crash("AE", "fun470", "No Valid Flag", "crash")
+                    crash("AE", "fun442", "No Valid Flag", "crash")
                     exit(1)
         else:
             logger.critical("Unexpected Error Occurred while Checking")
-            crash("OGE", "fun470", "Unexpected Error Occurred while Checking", "crash")
+            crash("OGE", "fun442", "Unexpected Error Occurred while Checking", "crash")
             exit(1)
 
     elif log == "silent":
@@ -584,11 +567,11 @@ def logicytics(log, quit_var, run):
                 execute_code(script_path, "Script", "Silent")
         else:
             logger.critical("Unexpected Error Occurred while Checking")
-            crash("AE", "fun470", "Unexpected Error Occurred while Checking", "crash")
+            crash("AE", "fun442", "Unexpected Error Occurred while Checking", "crash")
             exit(1)
     else:
         logger.critical("No Valid Flag")
-        crash("AE", "fun470", "No Valid Flag", "crash")
+        crash("AE", "fun442", "No Valid Flag", "crash")
         exit(1)
 
 
@@ -655,34 +638,6 @@ def setup():
                  "./Clean.ps1",
                  "./Hash.py",
                  "./Recycle_Logs.py"]
-
-    if run == "setup_only":
-        install_libraries("pip install -r../requirements.txt")
-        files = ["./CMD_Disabled_Bypass.py",
-                 "./UACPY.py",
-                 "./Window_Defender_Crippler.bat",
-                 "./Recycle_Logs.py"]
-
-    if run == "setup":
-        install_libraries("pip install -r../requirements.txt")
-        files = ["./CMD_Disabled_Bypass.py",
-                 "./UACPY.py",
-                 "./Window_Defender_Crippler.bat",
-                 "./Simple_Password_Miner.py",
-                 "./Browser_Policy_Miner.ps1",
-                 "./Window_Features_Lister.ps1",
-                 "./IP_Scanner.py",
-                 "./API_IP_Scraper.py",
-                 "./Device_Data.bat",
-                 "./Registry_miner.bat",
-                 "./Sys_Tools.py",
-                 "./SSH_Key_Logger.py",
-                 "./Tree_Command.bat",
-                 "./Copy_Media.py",
-                 "./System_Info_Grabber.py",
-                 "./Zipper.py",
-                 "./Clean.ps1",
-                 "./Hash.py", ]
 
     if run == "minimum":
         files = ["./CMD_Disabled_Bypass.py",
