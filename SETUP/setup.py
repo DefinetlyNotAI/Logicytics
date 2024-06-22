@@ -5,10 +5,8 @@ from setuptools import setup, find_packages
 
 def download_folders(urls):
     for url in urls:
-        # Extract the folder ID from the URL
-        folder_id = url.split('/')[-1]
-        # Use gdown to download the folder (note: this will prompt for authorization)
-        subprocess.run(["gdown", "--id", folder_id], check=True)
+        # Directly use the URL with gdown to download the folder
+        subprocess.run(["gdown", url], check=True)
 
 
 # Paths to the requirements.txt and Logicytics.version files
