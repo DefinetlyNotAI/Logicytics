@@ -4,7 +4,7 @@ Welcome to Logicytics 🌐,
 a cutting-edge tool
 designed to meticulously harvest and collect a vast array of Windows system data for forensic analysis.
 Crafted with Python 🐍,
-it's an actively developed project
+it's an actively developed project that is
 aimed at gathering as much sensitive data as possible and packaging it neatly into a ZIP file 📦.
 This comprehensive guide is here to equip you with everything you need to use Logicytics effectively.
 
