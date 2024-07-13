@@ -9,9 +9,16 @@ def get_uac_setting():
         str: The current UAC setting value.
     """
     # Query the current UAC setting using PowerShell
-    uac_setting = subprocess.run(["powershell", "-Command",
-                                  "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name 'EnableLUA'"],
-                                 capture_output=True, text=True, check=True)
+    uac_setting = subprocess.run(
+        [
+            "powershell",
+            "-Command",
+            "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name 'EnableLUA'",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
     # Extract the value
     value = uac_setting.stdout.strip()
     return value
@@ -25,9 +32,14 @@ def set_uac_setting(value):
         value (str): The new UAC setting value.
     """
     # Set the UAC setting using PowerShell
-    subprocess.run(["powershell", "-Command",
-                    f"Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name 'EnableLUA' -Value {value}"],
-                   check=True)
+    subprocess.run(
+        [
+            "powershell",
+            "-Command",
+            f"Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name 'EnableLUA' -Value {value}",
+        ],
+        check=True,
+    )
 
 
 def main():
@@ -41,7 +53,7 @@ def main():
     logger.info(f"Old UAC setting: {old_uac_setting}")
 
     # Change the UAC setting to the opposite value
-    new_uac_setting = '0' if old_uac_setting == '1' else '1'
+    new_uac_setting = "0" if old_uac_setting == "1" else "1"
     set_uac_setting(new_uac_setting)
     logger.info(f"New UAC setting: {new_uac_setting}")
 
@@ -49,7 +61,7 @@ def main():
     logger.info("Please restart your computer for the changes to take effect.")
     # Prompt the user to restart with confirmation
     user_input = input("Do you want to restart your computer now? (yes/no): ")
-    if user_input.lower() == 'yes':
+    if user_input.lower() == "yes":
         subprocess.run(["powershell", "-Command", "shutdown /r /t 0"], check=True)
     else:
         logger.info("Restart cancelled by the user.")

@@ -33,18 +33,21 @@ def generate_file_list():
         4. Remove specified files from the list of file paths.
     """
     # Step 1 & 2: List all files in the current working directory, excluding directories
-    files = [f'./{file}' for file in os.listdir() if os.path.isfile(file)]
+    files = [f"./{file}" for file in os.listdir() if os.path.isfile(file)]
 
     # Step 3: Append './' to the beginning of each file path
-    files = ['./CMD_Disabled_Bypass.py', './Simple_Password_Miner.py'] + files + ['./Zipper.py', './Clean.ps1',
-                                                                                  './Hash.py', 'Recycle_Logs.py']
+    files = (
+        ["./CMD_Disabled_Bypass.py", "./Simple_Password_Miner.py"]
+        + files
+        + ["./Zipper.py", "./Clean.ps1", "./Hash.py", "Recycle_Logs.py"]
+    )
 
     # Step 4: Remove duplicates
     files = list(dict.fromkeys(files))
 
     # Step 5: Remove specified files
 
-    files = [file for file in files if file.split('/')[-1] not in excluded_files]
+    files = [file for file in files if file.split("/")[-1] not in excluded_files]
 
     return files
 
@@ -81,7 +84,9 @@ def flagger():
         return {}
 
     # Count the number of compulsory flags that are set
-    set_compulsory_flags_count = sum(args.__dict__.get(flag, False) for flag in compulsory_flags)
+    set_compulsory_flags_count = sum(
+        args.__dict__.get(flag, False) for flag in compulsory_flags
+    )
 
     # Enforce that exactly one compulsory flag is set
     if set_compulsory_flags_count != 1:
@@ -129,10 +134,10 @@ def check_file(name):
         bool: True if the file is found, False otherwise.
     """
     # Get the absolute path to the parent directory
-    parent_dir = os.path.abspath(os.path.join(os.getcwd(), '..'))
+    parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 
     # Construct the path to the SYSTEM directory within the parent directory
-    system_dir_path = os.path.join(parent_dir, 'SYSTEM')
+    system_dir_path = os.path.join(parent_dir, "SYSTEM")
 
     # Construct the full path to the file within the SYSTEM directory
     file_path = os.path.join(system_dir_path, name)
@@ -203,7 +208,7 @@ def execute_code(script: str, type: str, silence: str) -> tuple[str, str]:
     global words, unblock_command
 
     # Unblock the script if it is a PowerShell script
-    if os.path.splitext(script)[1].lower() == '.ps1':
+    if os.path.splitext(script)[1].lower() == ".ps1":
         unblock_command = f'powershell.exe -Command "Unblock-File -Path {script}"'
         subprocess.run(unblock_command, shell=True, check=True)
         if silence != "Silent":
@@ -220,7 +225,9 @@ def execute_code(script: str, type: str, silence: str) -> tuple[str, str]:
         process = subprocess.Popen(command, shell=True)
     elif type == "Script":
         command = f'powershell.exe -Command "& {script}"'
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        process = subprocess.Popen(
+            command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
     else:
         logger.critical(f"Script Failure, Unknown entry type: {type}")
         crash("AE", "fun180", f"Script Failure, Unknown entry type: {type}", "crash")
@@ -233,15 +240,15 @@ def execute_code(script: str, type: str, silence: str) -> tuple[str, str]:
 
     # Log the output based on the script type and silence level
     if silence != "Silent":
-        if os.path.splitext(script)[1].lower() in ['.ps1', '.bat']:
+        if os.path.splitext(script)[1].lower() in [".ps1", ".bat"]:
             # Initialize Identifier variable
             Identifier = None
             decoded_line = ""
             # Read the first word until :
-            for line in iter(process.stdout.readline, b''):
-                decoded_line = line.decode('utf-8').strip()
-                if ':' in decoded_line:
-                    words = decoded_line.split(':', 1)
+            for line in iter(process.stdout.readline, b""):
+                decoded_line = line.decode("utf-8").strip()
+                if ":" in decoded_line:
+                    words = decoded_line.split(":", 1)
                     Identifier = words[0].strip().upper()
                 decoded_line = words[1].strip()
 
@@ -261,21 +268,21 @@ def execute_code(script: str, type: str, silence: str) -> tuple[str, str]:
                 logger.warning(decoded_line)
             else:
                 logger.debug(decoded_line)
-        elif os.path.splitext(script)[1].lower() == '.py':
+        elif os.path.splitext(script)[1].lower() == ".py":
             # Print the output in real-time
-            for line in iter(process.stdout.readline, b''):
-                decoded_line = line.decode('utf-8').strip()
+            for line in iter(process.stdout.readline, b""):
+                decoded_line = line.decode("utf-8").strip()
                 print(decoded_line)
         else:
-            for line in iter(process.stdout.readline, b''):
-                decoded_line = line.decode('utf-8').strip()
+            for line in iter(process.stdout.readline, b""):
+                decoded_line = line.decode("utf-8").strip()
                 logger.info(decoded_line)
 
     # Wait for the process to finish and get the final output/error
     stdout, _ = process.communicate()
 
     # Decode the output from bytes to string
-    stdout = stdout.decode('utf-8') if stdout else ""
+    stdout = stdout.decode("utf-8") if stdout else ""
 
     # Return the output
     print()
@@ -303,13 +310,19 @@ def set_execution_policy(Silent: str) -> None:
 
     try:
         # Execute the command
-        result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result = subprocess.run(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
 
         if Silent == "Debug":
             logger.debug(f"Result: {result}")
 
         # Check the output for success
-        if 'SUCCESS' in result.stdout:
+        if "SUCCESS" in result.stdout:
             if Silent != "Silent":
                 logger.info("Execution policy has been set to Unrestricted.")
         else:
@@ -328,6 +341,7 @@ def checks(run_flag):
     Returns:
         bool: True if the script is running with administrative privileges, False otherwise.
     """
+
     def is_admin(run_flag):
         """
         Checks if the script is running with administrative privileges on Windows.
@@ -341,12 +355,14 @@ def checks(run_flag):
             except:
                 return False
 
-    if platform.system() == 'Windows':
+    if platform.system() == "Windows":
         if is_admin(run_flag):
             logger.info("Logicytics.py is running with administrative privileges.")
             return True
         else:
-            logger.critical("Logicytics.py is running without administrative privileges.")
+            logger.critical(
+                "Logicytics.py is running without administrative privileges."
+            )
             crash("PE", "fun313", "Not running with administrative privileges", "error")
             return False
     else:
@@ -387,18 +403,20 @@ def print_random_logo():
     Raises:
         IOError: If there is an error reading the logo file.
     """
-    logo_dir = './logo'
+    logo_dir = "./logo"
 
     # Check if the logo directory exists
     if not os.path.exists(logo_dir):
-        logger.warning(f"The directory '{logo_dir}' does not exist, attempting to create it.")
+        logger.warning(
+            f"The directory '{logo_dir}' does not exist, attempting to create it."
+        )
         return
 
     # Create the logo directory if it doesn't exist
     os.makedirs(logo_dir, exist_ok=True)
 
     # Get a list of all .txt files in the logo directory
-    logo_files = [f for f in os.listdir(logo_dir) if f.endswith('.txt')]
+    logo_files = [f for f in os.listdir(logo_dir) if f.endswith(".txt")]
 
     # Check if there are any .txt files in the logo directory
     if not logo_files:
@@ -412,10 +430,12 @@ def print_random_logo():
 
     try:
         # Read and print the content of the random logo file
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             print(f.read())
     except IOError as e:
-        logger.warning(f"An error occurred while trying to read the file {file_path}: {e}")
+        logger.warning(
+            f"An error occurred while trying to read the file {file_path}: {e}"
+        )
 
 
 def create_directories():
@@ -429,7 +449,7 @@ def create_directories():
         None
     """
     # Define the path for the ACCESS directory in the parent directory
-    access_dir_path = os.path.join(os.path.dirname(os.getcwd()), 'ACCESS')
+    access_dir_path = os.path.join(os.path.dirname(os.getcwd()), "ACCESS")
 
     # Check if the ACCESS directory exists
     if not os.path.exists(access_dir_path):
@@ -438,8 +458,8 @@ def create_directories():
 
         # Create DATA and LOGS directories inside ACCESS,
         # Define their paths relative to ACCESS directory
-        data_dir_path = os.path.join(access_dir_path, 'DATA')
-        logs_dir_path = os.path.join(access_dir_path, 'LOGS')
+        data_dir_path = os.path.join(access_dir_path, "DATA")
+        logs_dir_path = os.path.join(access_dir_path, "LOGS")
 
         # Check and create DATA directory
         if not os.path.exists(data_dir_path):
@@ -478,13 +498,14 @@ def logicytics(log, quit_var, run):
                     execute_code(script_path, "Script", "")
 
                 if quit_var == "shutdown":
-                    os.system('shutdown /s /t 0')
+                    os.system("shutdown /s /t 0")
                 elif quit_var == "restart":
-                    os.system('shutdown /r /t 0')
+                    os.system("shutdown /r /t 0")
                 elif quit_var == "bios":
                     logger.warning(
-                        "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding")
-                    os.system('shutdown /r /t 10')
+                        "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding"
+                    )
+                    os.system("shutdown /r /t 10")
                 elif quit_var == "normal":
                     print()
                 else:
@@ -510,13 +531,14 @@ def logicytics(log, quit_var, run):
                     execute_code(script_path, "Script", "Debug")
 
                 if quit_var == "shutdown":
-                    os.system('shutdown /s /t 0')
+                    os.system("shutdown /s /t 0")
                 elif quit_var == "restart":
-                    os.system('shutdown /r /t 0')
+                    os.system("shutdown /r /t 0")
                 elif quit_var == "bios":
                     logger.warning(
-                        "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding")
-                    os.system('shutdown /r /t 10')
+                        "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding"
+                    )
+                    os.system("shutdown /r /t 10")
                 elif quit_var == "normal":
                     print()
                 else:
@@ -541,13 +563,14 @@ def logicytics(log, quit_var, run):
                     execute_code(script_path, "Script", "Silent")
 
                 if quit_var == "shutdown":
-                    os.system('shutdown /s /t 0')
+                    os.system("shutdown /s /t 0")
                 elif quit_var == "restart":
-                    os.system('shutdown /r /t 0')
+                    os.system("shutdown /r /t 0")
                 elif quit_var == "bios":
                     logger.warning(
-                        "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding")
-                    os.system('shutdown /r /t 10')
+                        "Sorry, this is a impossible task, we will restart the device for you in 10 seconds, and you have to mash the (esc) or (f10) button, thanks for understanding"
+                    )
+                    os.system("shutdown /r /t 10")
                 elif quit_var == "normal":
                     print()
                 else:
@@ -607,138 +630,155 @@ def setup():
         # Windows_Defender_Crippler.bat, APIGen.py,
         # Structure.py, Crash_Reporter.py, Error_Gen.py, Unzip_Extra.py
         # and more are out of scope.
-        files = ["./CMD_Disabled_Bypass.py",
-                 "./Simple_Password_Miner.py",
-                 "./Browser_Policy_Miner.ps1",
-                 "./Window_Features_Lister.ps1",
-                 "./IP_Scanner.py",
-                 "./API_IP_Scraper.py",
-                 "./Device_Data.bat",
-                 "./Registry_miner.bat",
-                 "./Sys_Tools.py",
-                 "./SSH_Key_Logger.py",
-                 "./Tree_Command.bat",
-                 "./Copy_Media.py",
-                 "./System_Info_Grabber.py",
-                 "./Zipper.py",
-                 "./Clean.ps1",
-                 "./Hash.py",
-                 "./Recycle_Logs.py"]
+        files = [
+            "./CMD_Disabled_Bypass.py",
+            "./Simple_Password_Miner.py",
+            "./Browser_Policy_Miner.ps1",
+            "./Window_Features_Lister.ps1",
+            "./IP_Scanner.py",
+            "./API_IP_Scraper.py",
+            "./Device_Data.bat",
+            "./Registry_miner.bat",
+            "./Sys_Tools.py",
+            "./SSH_Key_Logger.py",
+            "./Tree_Command.bat",
+            "./Copy_Media.py",
+            "./System_Info_Grabber.py",
+            "./Zipper.py",
+            "./Clean.ps1",
+            "./Hash.py",
+            "./Recycle_Logs.py",
+        ]
 
     if run == "onlypy":
-        files = ["./CMD_Disabled_Bypass.py",
-                 "./Simple_Password_Miner.py",
-                 "./IP_Scanner.py",
-                 "./API_IP_Scraper.py",
-                 "./Sys_Tools.py",
-                 "./Copy_Media.py",
-                 "./SSH_Key_Logger.py",
-                 "./System_Info_Grabber.py",
-                 "./Zipper.py",
-                 "./Clean.ps1",
-                 "./Hash.py",
-                 "./Recycle_Logs.py"]
+        files = [
+            "./CMD_Disabled_Bypass.py",
+            "./Simple_Password_Miner.py",
+            "./IP_Scanner.py",
+            "./API_IP_Scraper.py",
+            "./Sys_Tools.py",
+            "./Copy_Media.py",
+            "./SSH_Key_Logger.py",
+            "./System_Info_Grabber.py",
+            "./Zipper.py",
+            "./Clean.ps1",
+            "./Hash.py",
+            "./Recycle_Logs.py",
+        ]
 
     if run == "minimum":
-        files = ["./CMD_Disabled_Bypass.py",
-                 "./Simple_Password_Miner.py",
-                 "./Browser_Policy_Miner.ps1",
-                 "./Window_Features_Lister.ps1",
-                 "./IP_Scanner.py",
-                 "./Device_Data.bat",
-                 "./Registry_miner.bat",
-                 "./SSH_Key_Logger.py",
-                 "./Tree_Command.bat",
-                 "./Copy_Media.py",
-                 "./System_Info_Grabber.py",
-                 "./Zipper.py",
-                 "./Clean.ps1",
-                 "./Hash.py", ]
+        files = [
+            "./CMD_Disabled_Bypass.py",
+            "./Simple_Password_Miner.py",
+            "./Browser_Policy_Miner.ps1",
+            "./Window_Features_Lister.ps1",
+            "./IP_Scanner.py",
+            "./Device_Data.bat",
+            "./Registry_miner.bat",
+            "./SSH_Key_Logger.py",
+            "./Tree_Command.bat",
+            "./Copy_Media.py",
+            "./System_Info_Grabber.py",
+            "./Zipper.py",
+            "./Clean.ps1",
+            "./Hash.py",
+        ]
 
     if run == "only_native":
-        files = ["./CMD_Disabled_Bypass.py",
-                 "./Simple_Password_Miner.py",
-                 "./Browser_Policy_Miner.ps1",
-                 "./Window_Features_Lister.ps1",
-                 "./Device_Data.bat",
-                 "./Registry_miner.bat",
-                 "./Tree_Command.bat",
-                 "./Zipper.py",
-                 "./Clean.ps1",
-                 "./Hash.py", ]
+        files = [
+            "./CMD_Disabled_Bypass.py",
+            "./Simple_Password_Miner.py",
+            "./Browser_Policy_Miner.ps1",
+            "./Window_Features_Lister.ps1",
+            "./Device_Data.bat",
+            "./Registry_miner.bat",
+            "./Tree_Command.bat",
+            "./Zipper.py",
+            "./Clean.ps1",
+            "./Hash.py",
+        ]
 
     if run == "debugger_only":
-        files = ["./Debugger.py",
-                 "./Recycle_Logs.py"]
+        files = ["./Debugger.py", "./Recycle_Logs.py"]
 
     if run == "debugger":
-        files = ["./Debugger.py",
-                 "./Recycle_Logs.py",
-                 "./CMD_Disabled_Bypass.py",
-                 "./Simple_Password_Miner.py",
-                 "./Browser_Policy_Miner.ps1",
-                 "./Window_Features_Lister.ps1",
-                 "./IP_Scanner.py",
-                 "./API_IP_Scraper.py",
-                 "./Device_Data.bat",
-                 "./Registry_miner.bat",
-                 "./Sys_Tools.py",
-                 "./SSH_Key_Logger.py",
-                 "./Tree_Command.bat",
-                 "./Copy_Media.py",
-                 "./System_Info_Grabber.py",
-                 "./Zipper.py",
-                 "./Clean.ps1"
-                 "./Hash.py", ]
+        files = [
+            "./Debugger.py",
+            "./Recycle_Logs.py",
+            "./CMD_Disabled_Bypass.py",
+            "./Simple_Password_Miner.py",
+            "./Browser_Policy_Miner.ps1",
+            "./Window_Features_Lister.ps1",
+            "./IP_Scanner.py",
+            "./API_IP_Scraper.py",
+            "./Device_Data.bat",
+            "./Registry_miner.bat",
+            "./Sys_Tools.py",
+            "./SSH_Key_Logger.py",
+            "./Tree_Command.bat",
+            "./Copy_Media.py",
+            "./System_Info_Grabber.py",
+            "./Zipper.py",
+            "./Clean.ps1" "./Hash.py",
+        ]
 
     if run == "mods":
         files = generate_file_list()
 
     if run == "legacy":
-        files = ["./CMD_Disabled_Bypass.py",
-                 "./Simple_Password_Miner.py",
-                 "./Device_Data.bat",
-                 "./Tree_Command.bat",
-                 "./Copy_Media.py",
-                 "./Zipper.py",
-                 "./Clean.ps1"]
+        files = [
+            "./CMD_Disabled_Bypass.py",
+            "./Simple_Password_Miner.py",
+            "./Device_Data.bat",
+            "./Tree_Command.bat",
+            "./Copy_Media.py",
+            "./Zipper.py",
+            "./Clean.ps1",
+        ]
 
     if run == "dev":
         Continue = input(
-            "This flag will run all the development required scripts, use this only if you know what you are doing and have completed development and are on the stage of merging/pushing. Do this only on your own machine, this will also run the debugger for final checks, Press `Enter` to continue, press anything else to cancel... ")
+            "This flag will run all the development required scripts, use this only if you know what you are doing and have completed development and are on the stage of merging/pushing. Do this only on your own machine, this will also run the debugger for final checks, Press `Enter` to continue, press anything else to cancel... "
+        )
         if Continue == "":
-            files = ["./Error_Gen.py",
-                     "./Structure.py",
-                     "./Debugger.py",
-                     ]
+            files = [
+                "./Error_Gen.py",
+                "./Structure.py",
+                "./Debugger.py",
+            ]
 
     if run == "unzip_extra":
         Continue = input(
-            "This flag will unzip all the extra files in the EXTRA directory. Only do this if you know what you are doing and want to use the extra feature, Do this only on your own machine, Might trigger antivirus, Best to backup your files first. Press `Enter` to continue, press anything else to cancel... ")
+            "This flag will unzip all the extra files in the EXTRA directory. Only do this if you know what you are doing and want to use the extra feature, Do this only on your own machine, Might trigger antivirus, Best to backup your files first. Press `Enter` to continue, press anything else to cancel... "
+        )
         if Continue == "":
             files = ["./Unzip_Extra.py"]
 
     if run == "backup":
         Continue = input(
-            "This flag will zip all the files in the CODE directory for backup uses. Do this only on your own machine, Press `Enter` to continue, press anything else to cancel... ")
+            "This flag will zip all the files in the CODE directory for backup uses. Do this only on your own machine, Press `Enter` to continue, press anything else to cancel... "
+        )
         if Continue == "":
             files = ["./Backup.py"]
 
     if run == "restore":
         Continue = input(
-            "This flag will unzip the backed up files in the BACKUP directory. Used to restore old files in case of breaking or unexpected errors, a menu might appear if more than 1 Backup is found, Do this only on your own machine. Press `Enter` to continue, press anything else to cancel... ")
+            "This flag will unzip the backed up files in the BACKUP directory. Used to restore old files in case of breaking or unexpected errors, a menu might appear if more than 1 Backup is found, Do this only on your own machine. Press `Enter` to continue, press anything else to cancel... "
+        )
         if Continue == "":
             files = ["./Restore.py"]
 
     if run == "update":
         Continue = input(
-            "This flag will update this project from the latest version in the GitHub repository. Do this only on your own machine as you may need to download extra features, Best to backup your files first. Press `Enter` to continue, press anything else to cancel... ")
+            "This flag will update this project from the latest version in the GitHub repository. Do this only on your own machine as you may need to download extra features, Best to backup your files first. Press `Enter` to continue, press anything else to cancel... "
+        )
         if Continue == "":
             files = ["./Update.py"]
 
     if run == "extra":
         Continue = input(
-            "This flag will open a menu to run any of the extra files in the EXTRA directory. Only do this if you know what you are doing and want to use the extra feature, Might trigger antivirus. Press `Enter` to continue, press anything else to cancel... ")
+            "This flag will open a menu to run any of the extra files in the EXTRA directory. Only do this if you know what you are doing and want to use the extra feature, Might trigger antivirus. Press `Enter` to continue, press anything else to cancel... "
+        )
         if Continue == "":
             files = ["./Extra_Menu.py"]
 

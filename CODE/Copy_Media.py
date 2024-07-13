@@ -29,17 +29,27 @@ def copy_folders(source_paths, destination_path):
     """Copy folders to a specified destination."""
     for source_path in source_paths:
         try:
-            shutil.copytree(str(source_path), os.path.join(str(destination_path), os.path.basename(str(source_path))))
-            logger.info(f"Folder '{os.path.basename(source_path)}' copied successfully.")
+            shutil.copytree(
+                str(source_path),
+                os.path.join(str(destination_path), os.path.basename(str(source_path))),
+            )
+            logger.info(
+                f"Folder '{os.path.basename(source_path)}' copied successfully."
+            )
         except PermissionError as e:
-            logger.error(f"Permission denied while trying to copy folder '{os.path.basename(source_path)}': {e}")
+            logger.error(
+                f"Permission denied while trying to copy folder '{os.path.basename(source_path)}': {e}"
+            )
             crash("PE", "fun28", e, "error")
         except OSError as e:
-            logger.error(f"An error occurred while trying to copy folder '{os.path.basename(source_path)}': {e}")
+            logger.error(
+                f"An error occurred while trying to copy folder '{os.path.basename(source_path)}': {e}"
+            )
             crash("OSE", "fun28", e, "error")
         except Exception as e:
             logger.error(
-                f"Unexpected error occurred while trying to copy folder '{os.path.basename(source_path)}': {e}")
+                f"Unexpected error occurred while trying to copy folder '{os.path.basename(source_path)}': {e}"
+            )
             crash("OGE", "fun28", e, "error")
 
 
@@ -63,7 +73,7 @@ def media_copier():
     source_folders = [
         f"C:/Users/{username}/Music",
         f"C:/Users/{username}/Pictures",
-        f"C:/Users/{username}/Videos"
+        f"C:/Users/{username}/Videos",
     ]
 
     # Check if the source folders exist

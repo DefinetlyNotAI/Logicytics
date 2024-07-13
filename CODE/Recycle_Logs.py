@@ -7,9 +7,9 @@ def get_file_age(file_name):
     """
     Extracts the date from the file name and calculates the age of the file.
     """
-    match = re.search(r'\d{4}-\d{2}-\d{2}', file_name)
+    match = re.search(r"\d{4}-\d{2}-\d{2}", file_name)
     if match:
-        file_date = datetime.strptime(match.group(), '%Y-%m-%d')
+        file_date = datetime.strptime(match.group(), "%Y-%m-%d")
         return file_date
     return None
 
@@ -38,13 +38,13 @@ def should_delete_file(file_name, file_size, total_files):
         return True, "Total number of files exceeds 30."
 
     # Apply specific deletion criteria
-    if 'crash' in file_name.lower():
+    if "crash" in file_name.lower():
         if file_days_old > 90:
             return True, "Contains 'crash' and older than 90 days."
-    elif 'error' in file_name.lower():
+    elif "error" in file_name.lower():
         if file_days_old > 30:
             return True, "Contains 'error' and older than 30 days."
-    elif file_name.endswith('.md'):
+    elif file_name.endswith(".md"):
         if file_days_old > 20:
             return True, "Has '.md' extension and older than 20 days."
 
@@ -79,5 +79,5 @@ def manage_logs_directory(logs_dir_path):
 
 # Example usage
 script_dir = os.path.dirname(os.path.realpath(__file__))
-logs_dir_path = os.path.join(script_dir, '..', 'ACCESS', 'LOGS')
+logs_dir_path = os.path.join(script_dir, "..", "ACCESS", "LOGS")
 manage_logs_directory(logs_dir_path)

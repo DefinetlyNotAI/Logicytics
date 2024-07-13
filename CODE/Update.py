@@ -15,7 +15,7 @@ def read_version_file(file_path):
         str: The version number read from the file.
     """
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             content = f.read()
             return content.strip()  # Remove any leading/trailing whitespace
     except FileNotFoundError:
@@ -37,10 +37,14 @@ def compare_versions(source_version, target_version):
         bool: True if the versions match, False otherwise.
     """
     if source_version == target_version:
-        logger.info(f"The versions match. Your version {target_version} matches with the latest version {source_version}")
+        logger.info(
+            f"The versions match. Your version {target_version} matches with the latest version {source_version}"
+        )
         return True
     else:
-        logger.warning(f"Version {target_version} does not match with the latest version {source_version}")
+        logger.warning(
+            f"Version {target_version} does not match with the latest version {source_version}"
+        )
         return False
 
 
@@ -52,7 +56,7 @@ def compare_logic():
     Returns:
         bool: True if versions match, False otherwise.
     """
-    url = 'https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/SYSTEM/Logicytics.version'
+    url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/SYSTEM/Logicytics.version"
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -60,8 +64,8 @@ def compare_logic():
         current_working_dir = Path.cwd()
 
         # Save the file locally within the current working directory
-        filename = 'Logicytics.version'
-        with open(current_working_dir / filename, 'wb') as f:
+        filename = "Logicytics.version"
+        with open(current_working_dir / filename, "wb") as f:
             f.write(response.content)
     else:
         logger.error("Failed to download the file.")
@@ -72,8 +76,10 @@ def compare_logic():
 
     # Now, compare the version number from the downloaded file to the original file in the SYSTEM directory
     # Assuming the original file exists in the parent directory under SYSTEM
-    parent_directory = Path(__file__).resolve().parent.parent  # Adjust this path as needed
-    original_file_path = parent_directory / 'SYSTEM' / 'Logicytics.version'
+    parent_directory = (
+        Path(__file__).resolve().parent.parent
+    )  # Adjust this path as needed
+    original_file_path = parent_directory / "SYSTEM" / "Logicytics.version"
 
     # Read the original file's version number
     version_number_original = read_version_file(str(original_file_path))
@@ -81,11 +87,13 @@ def compare_logic():
     # Compare the versions
     if compare_versions(version_number_downloaded, version_number_original):
         (Path(current_working_dir / filename)).unlink(
-            missing_ok=True)  # Safely delete the file even if it doesn't exist
+            missing_ok=True
+        )  # Safely delete the file even if it doesn't exist
         return True
     else:
         (Path(current_working_dir / filename)).unlink(
-            missing_ok=True)  # Safely delete the file even if it doesn't exist
+            missing_ok=True
+        )  # Safely delete the file even if it doesn't exist
         return False
 
 
@@ -95,10 +103,7 @@ def update_local_repo():
     Update the local repository by fetching from origin and resetting to the main branch.
     """
     # Define the commands as a list of strings
-    commands = [
-        'git fetch origin',
-        'git reset --hard origin/main'
-    ]
+    commands = ["git fetch origin", "git reset --hard origin/main"]
 
     # Iterate over each command and execute it
     for command in commands:

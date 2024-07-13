@@ -11,9 +11,9 @@ def get_public_ip():
         None: If there's an error fetching the IP.
     """
     try:
-        response = requests.get('https://api.ipify.org?format=json')
+        response = requests.get("https://api.ipify.org?format=json")
         response.raise_for_status()  # Raises an HTTPError if the response was unsuccessful
-        return response.json()['ip']
+        return response.json()["ip"]
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching public IP: {e}")
         crash("CE", "fun5", e, "error")
@@ -32,7 +32,7 @@ def save_to_file(filename, content):
         IOError: If there's an issue writing to the file.
     """
     try:
-        with open(filename, 'w') as file:
+        with open(filename, "w") as file:
             file.write(content)
     except IOError as e:
         logger.error(f"Error writing to file: {e}")
@@ -46,10 +46,10 @@ def ip_scraper():
 
     # Get the script directory and parent directory
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    parent_dir = os.path.join(script_dir, '..')
+    parent_dir = os.path.join(script_dir, "..")
 
     # Construct the path to the API key file
-    api_key_file_path = os.path.join(parent_dir, 'SYSTEM', 'API-IP.key')
+    api_key_file_path = os.path.join(parent_dir, "SYSTEM", "API-IP.key")
 
     # Check if the API key file exists before proceeding
     if not os.path.exists(api_key_file_path):
@@ -58,7 +58,7 @@ def ip_scraper():
         return
 
     # Read the API key from the file
-    with open(api_key_file_path, 'r') as file:
+    with open(api_key_file_path, "r") as file:
         api_key = file.read().strip()
         if api_key == "API-NO":
             exit()
@@ -71,7 +71,7 @@ def ip_scraper():
         return
 
     # Construct the URL for the request
-    url = f'https://vpnapi.io/api/{public_ip}?key={api_key}'
+    url = f"https://vpnapi.io/api/{public_ip}?key={api_key}"
 
     # Make the request to the VPNAPI service
     try:
@@ -97,7 +97,7 @@ def ip_scraper():
     )
 
     # Save the formatted output to a file
-    save_to_file('API_Output.txt', output)
+    save_to_file("API_Output.txt", output)
     logger.info("Operation completed successfully.")
 
 

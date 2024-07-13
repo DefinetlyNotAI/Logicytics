@@ -22,8 +22,8 @@ def update_structure_file():
     script_parent_directory = current_script_directory
 
     # Construct the directories based on the common parent directory
-    code_directory = script_parent_directory / 'CODE'
-    system_directory = script_parent_directory / 'SYSTEM'
+    code_directory = script_parent_directory / "CODE"
+    system_directory = script_parent_directory / "SYSTEM"
 
     # Ensure the system directory exists; create it if it doesn't
     system_directory.mkdir(parents=True, exist_ok=True)
@@ -35,22 +35,32 @@ def update_structure_file():
             for name in files:
                 full_path = Path(root) / name
                 rel_path = full_path.relative_to(script_parent_directory)
-                if '.' in str(rel_path):  # Check if the path includes a file extension
-                    paths.append('=' + str(rel_path).replace(str(script_parent_directory.name) + '/', ''))
+                if "." in str(rel_path):  # Check if the path includes a file extension
+                    paths.append(
+                        "="
+                        + str(rel_path).replace(
+                            str(script_parent_directory.name) + "/", ""
+                        )
+                    )
             for name in dirs:
                 full_path = Path(root) / name
                 rel_path = full_path.relative_to(script_parent_directory)
-                if '.' in str(rel_path):  # Check if the path includes a file extension
-                    paths.append('=' + str(rel_path).replace(str(script_parent_directory.name) + '/', ''))
+                if "." in str(rel_path):  # Check if the path includes a file extension
+                    paths.append(
+                        "="
+                        + str(rel_path).replace(
+                            str(script_parent_directory.name) + "/", ""
+                        )
+                    )
         return paths
 
     # Collect paths of all files and directories in the CODE directory
     all_paths = collect_paths(code_directory)
 
     # Create or overwrite the Logicytics.structure file in the SYSTEM directory
-    with open(system_directory / 'Logicytics.structure', 'w') as file:
+    with open(system_directory / "Logicytics.structure", "w") as file:
         for path in all_paths:
-            file.write(path + '\n')
+            file.write(path + "\n")
 
     print("The Logicytics.structure file has been updated successfully.")
 

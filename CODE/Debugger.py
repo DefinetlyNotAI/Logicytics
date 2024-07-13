@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 from local_libraries.Setups import *
 
-time = datetime.now().strftime('%Y-%m-%d')
+time = datetime.now().strftime("%Y-%m-%d")
 
 
 def read_version_file(file_path):
@@ -18,11 +18,11 @@ def read_version_file(file_path):
     :return: The content of the file with leading/trailing whitespace removed or None if the file is not found.
     """
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             content = f.read()
             return content.strip()  # Remove any leading/trailing whitespace
     except FileNotFoundError:
-        print_colored(f"File {file_path} not found.", 'red')
+        print_colored(f"File {file_path} not found.", "red")
         return None
 
 
@@ -48,7 +48,7 @@ def main_compare_logic():
         bool: True if the versions are the same, False otherwise.
     """
     # Download the Logicytics.version file from GitHub
-    url = 'https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/SYSTEM/Logicytics.version'
+    url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/SYSTEM/Logicytics.version"
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -56,8 +56,8 @@ def main_compare_logic():
         current_working_dir = Path.cwd()
 
         # Save the file locally within the current working directory
-        filename = 'Logicytics.version'
-        with open(current_working_dir / filename, 'wb') as f:
+        filename = "Logicytics.version"
+        with open(current_working_dir / filename, "wb") as f:
             f.write(response.content)
     else:
         print_colored("Failed to download the file.", "red")
@@ -67,17 +67,21 @@ def main_compare_logic():
     version_number_downloaded = read_version_file(current_working_dir / filename)
 
     # Compare the version number with the original file
-    parent_directory = Path(__file__).resolve().parent.parent  # Adjust this path as needed
-    original_file_path = parent_directory / 'SYSTEM' / 'Logicytics.version'
+    parent_directory = (
+        Path(__file__).resolve().parent.parent
+    )  # Adjust this path as needed
+    original_file_path = parent_directory / "SYSTEM" / "Logicytics.version"
     version_number_original = read_version_file(original_file_path)
 
     if compare_versions(version_number_downloaded, version_number_original):
         (Path(current_working_dir / filename)).unlink(
-            missing_ok=True)  # Safely delete the file even if it doesn't exist
+            missing_ok=True
+        )  # Safely delete the file even if it doesn't exist
         return True
     else:
         (Path(current_working_dir / filename)).unlink(
-            missing_ok=True)  # Safely delete the file even if it doesn't exist
+            missing_ok=True
+        )  # Safely delete the file even if it doesn't exist
         return False
 
 
@@ -88,32 +92,49 @@ def check_python_versions():
     Writes an error message to DEBUG.md if neither executable is found.
     """
     try:
-        result = subprocess.run(['where', 'python.exe'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        if result.stdout.strip() == '':
+        result = subprocess.run(
+            ["where", "python.exe"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        if result.stdout.strip() == "":
             with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                debug_file.write("<span style=\"color:red;\">ERROR</span>: Python executable not found.<br><br>")
+                debug_file.write(
+                    '<span style="color:red;">ERROR</span>: Python executable not found.<br><br>'
+                )
             exit(1)
         else:
             with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
                 debug_file.write(
-                    f"<span style=\"color:green;\">SYSTEM</span>: Python found in the PATH. Executable(s) located at {result.stdout.strip()}.<br><br>")
+                    f'<span style="color:green;">SYSTEM</span>: Python found in the PATH. Executable(s) located at {result.stdout.strip()}.<br><br>'
+                )
     except subprocess.CalledProcessError:
         # Second attempt to find Python3
         try:
-            result = subprocess.run(['where', 'python3'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            if result.stdout.strip() == '':
+            result = subprocess.run(
+                ["where", "python3"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            if result.stdout.strip() == "":
                 with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                    debug_file.write("<span style=\"color:red;\">ERROR</span>: Python3 executable not found.<br><br>")
+                    debug_file.write(
+                        '<span style="color:red;">ERROR</span>: Python3 executable not found.<br><br>'
+                    )
                 exit(1)
             else:
                 with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
                     debug_file.write(
-                        f"<span style=\"color:green;\">SYSTEM</span>: Python3 found in the PATH. Executable located at {result.stdout.strip()}.<br><br>")
+                        f'<span style="color:green;">SYSTEM</span>: Python3 found in the PATH. Executable located at {result.stdout.strip()}.<br><br>'
+                    )
         except subprocess.CalledProcessError:
             # Both attempts failed, log the error
             with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
                 debug_file.write(
-                    "<span style=\"color:red;\">ERROR</span>: Neither 'python' nor 'python3' found in the PATH.<br><br>")
+                    "<span style=\"color:red;\">ERROR</span>: Neither 'python' nor 'python3' found in the PATH.<br><br>"
+                )
 
 
 def define_paths():
@@ -123,10 +144,16 @@ def define_paths():
         version_file_path: Path to the Logicytics.version file
         structure_file_path: Path to the Logicytics.structure file
     """
-    version_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "SYSTEM",
-                                     "Logicytics.version")
-    structure_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "SYSTEM",
-                                       "Logicytics.structure")
+    version_file_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "SYSTEM",
+        "Logicytics.version",
+    )
+    structure_file_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "SYSTEM",
+        "Logicytics.structure",
+    )
     return version_file_path, structure_file_path
 
 
@@ -144,10 +171,16 @@ def check_vm():
     Checks for virtual machine indicators in the system model information.
     Writes the result to DEBUG.md file.
     """
-    command = "systeminfo | findstr /C:\"System Model\""
+    command = 'systeminfo | findstr /C:"System Model"'
 
     try:
-        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, text=True)
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=True,
+            text=True,
+        )
 
         if re.search(r"VirtualBox|VBOX|VMWare", result.stdout):
             message = "Running in a virtual machine."
@@ -155,11 +188,15 @@ def check_vm():
             message = "Not running in a virtual machine."
 
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-            debug_file.write(f"<span style=\"color:green;\">SYSTEM</span>: {message}<br><br>")
+            debug_file.write(
+                f'<span style="color:green;">SYSTEM</span>: {message}<br><br>'
+            )
     except subprocess.CalledProcessError as e:
         message = f"Error executing command: {e.stderr}"
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-            debug_file.write(f"<span style=\"color:red;\">ERROR</span>: {message}<br><br>")
+            debug_file.write(
+                f'<span style="color:red;">ERROR</span>: {message}<br><br>'
+            )
 
 
 def cmd_raw(command, check):
@@ -177,7 +214,13 @@ def cmd_raw(command, check):
         subprocess.CalledProcessError: If an error occurs during command execution.
     """
     try:
-        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, text=True)
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=True,
+            text=True,
+        )
 
         if check == "bool":
             output = result.stdout.strip()
@@ -187,14 +230,18 @@ def cmd_raw(command, check):
                 return ""
         else:
             with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                debug_file.write(f"<span style=\"color:green;\">SYSTEM</span>: {result.stdout}<br><br>")
+                debug_file.write(
+                    f'<span style="color:green;">SYSTEM</span>: {result.stdout}<br><br>'
+                )
     except subprocess.CalledProcessError as e:
         if check == "bool":
             return ""
         else:
             message = f"Error executing command: {e.stderr}"
             with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                debug_file.write(f"<span style=\"color:red;\">ERROR</span>: {message}<br><br>")
+                debug_file.write(
+                    f'<span style="color:red;">ERROR</span>: {message}<br><br>'
+                )
 
 
 def check_version_file(version_file_path):
@@ -209,18 +256,23 @@ def check_version_file(version_file_path):
     """
     if not os.path.exists(version_file_path):
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-            debug_file.write("<span style=\"color:red;\">ERROR</span>: Logicytics.version file not found.<br><br>")
+            debug_file.write(
+                '<span style="color:red;">ERROR</span>: Logicytics.version file not found.<br><br>'
+            )
         exit(1)
     else:
         with open(version_file_path, "r") as version_file:
             version = version_file.read().strip()
             if main_compare_logic():
                 with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                    debug_file.write(f"<span style=\"color:green;\">SYSTEM</span>: Version: {version}<br><br>")
+                    debug_file.write(
+                        f'<span style="color:green;">SYSTEM</span>: Version: {version}<br><br>'
+                    )
             else:
                 with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
                     debug_file.write(
-                        f"<span style=\"color:yellow;\">WARNING</span>: Version: {version} is outdated and can be updated<br><br>")
+                        f'<span style="color:yellow;">WARNING</span>: Version: {version} is outdated and can be updated<br><br>'
+                    )
 
 
 def check_structure_file(structure_file_path):
@@ -235,21 +287,32 @@ def check_structure_file(structure_file_path):
     """
     if not os.path.exists(structure_file_path):
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-            debug_file.write("<span style=\"color:red;\">ERROR</span>: Logicytics.structure file not found.<br><br>")
+            debug_file.write(
+                '<span style="color:red;">ERROR</span>: Logicytics.structure file not found.<br><br>'
+            )
     else:
         with open(structure_file_path, "r") as structure_file:
             for line in structure_file:
                 line = line.strip()
                 if line:
-                    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                    parent_dir = os.path.dirname(
+                        os.path.dirname(os.path.abspath(__file__))
+                    )
                     path = os.path.join(parent_dir, line[1:])
                     if os.path.exists(path):
-                        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
+                        with open(
+                            os.path.join(os.getcwd(), "DEBUG.md"), "a"
+                        ) as debug_file:
                             debug_file.write(
-                                f"<span style=\"color:blue;\">INFO</span>: Success: {path} exists.<br><br>")
+                                f'<span style="color:blue;">INFO</span>: Success: {path} exists.<br><br>'
+                            )
                     else:
-                        with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-                            debug_file.write(f"<span style=\"color:red;\">ERROR</span>: {path} does not exist.<br><br>")
+                        with open(
+                            os.path.join(os.getcwd(), "DEBUG.md"), "a"
+                        ) as debug_file:
+                            debug_file.write(
+                                f'<span style="color:red;">ERROR</span>: {path} does not exist.<br><br>'
+                            )
 
 
 def check_admin_privileges():
@@ -258,14 +321,23 @@ def check_admin_privileges():
     Writes the result to DEBUG.md file.
     """
     try:
-        subprocess.run(["net", "session"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        subprocess.run(
+            ["net", "session"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
         ctypes.windll.shell32.IsUserAnAdmin()
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-            debug_file.write("<span style=\"color:blue;\">INFO</span>: Running with administrative privileges.<br><br>")
+            debug_file.write(
+                '<span style="color:blue;">INFO</span>: Running with administrative privileges.<br><br>'
+            )
     except subprocess.CalledProcessError:
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
             debug_file.write(
-                "<span style=\"color:yellow;\">WARNING</span>: Not running with administrative privileges.<br><br>")
+                '<span style="color:yellow;">WARNING</span>: Not running with administrative privileges.<br><br>'
+            )
 
 
 def check_powershell_execution_policy():
@@ -274,15 +346,22 @@ def check_powershell_execution_policy():
     Writes the result to DEBUG.md file.
     """
     try:
-        subprocess.run(["powershell", "Get-ExecutionPolicy"], check=True, stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE, text=True)
+        subprocess.run(
+            ["powershell", "Get-ExecutionPolicy"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
             debug_file.write(
-                "<span style=\"color:blue;\">INFO</span>: PowerShell execution policy is set to Unrestricted.<br><br>")
+                '<span style="color:blue;">INFO</span>: PowerShell execution policy is set to Unrestricted.<br><br>'
+            )
     except subprocess.CalledProcessError:
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
             debug_file.write(
-                "<span style=\"color:red;\">ERROR</span>: PowerShell execution policy is not set to Unrestricted.<br><br>")
+                '<span style="color:red;">ERROR</span>: PowerShell execution policy is not set to Unrestricted.<br><br>'
+            )
 
 
 def check_library_exists(package_name):
@@ -296,12 +375,14 @@ def check_library_exists(package_name):
         pkg_resources.distribution(package_name)
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
             debug_file.write(
-                f"<span style=\"color:blue;\">INFO</span>: The library '{package_name}' is installed.<br><br>")
+                f"<span style=\"color:blue;\">INFO</span>: The library '{package_name}' is installed.<br><br>"
+            )
         return True
     except pkg_resources.PackageNotFoundError:
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
             debug_file.write(
-                f"<span style=\"color:red;\">ERROR</span>: The package '{package_name}' is not installed.<br><br>")
+                f"<span style=\"color:red;\">ERROR</span>: The package '{package_name}' is not installed.<br><br>"
+            )
         return False
 
 
@@ -321,32 +402,35 @@ def check_library():
         None
     """
     # Construct the full path to the requirements.txt file
-    full_path = os.path.join(os.getcwd(), '..', 'requirements.txt')
+    full_path = os.path.join(os.getcwd(), "..", "requirements.txt")
 
     # Ensure the requirements.txt file exists
     if not os.path.exists(full_path):
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
             debug_file.write(
-                f"<span style=\"color:red;\">ERROR</span>: Requirements file {full_path} does not exist.<br><br>")
+                f'<span style="color:red;">ERROR</span>: Requirements file {full_path} does not exist.<br><br>'
+            )
         return
 
     # Attempt to read the requirements.txt file line by line
     try:
-        with open(full_path, 'r') as file:
+        with open(full_path, "r") as file:
             for line in file:
                 # Ignore anything after '~='
-                name = line.strip().split('~=', 1)[0]
+                name = line.strip().split("~=", 1)[0]
 
                 # Check if the package exists
                 if not check_library_exists(name):
                     with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
                         debug_file.write(
-                            f"<span style=\"color:red;\">ERROR</span>: The package '{name}' is not installed.<br><br>")
+                            f"<span style=\"color:red;\">ERROR</span>: The package '{name}' is not installed.<br><br>"
+                        )
 
     except Exception as e:
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
             debug_file.write(
-                f"<span style=\"color:red;\">ERROR</span>: An unexpected error occurred while processing the requirements file: {e}<br><br>")
+                f'<span style="color:red;">ERROR</span>: An unexpected error occurred while processing the requirements file: {e}<br><br>'
+            )
 
 
 def move_debug_file(time):
@@ -366,9 +450,9 @@ def move_debug_file(time):
     """
     # Define the source and destination paths
     current_dir = os.getcwd()  # Get the current working directory
-    source_path = os.path.join(current_dir, 'DEBUG.md')
+    source_path = os.path.join(current_dir, "DEBUG.md")
     parent_dir = os.path.dirname(current_dir)
-    logs_dir = os.path.join(parent_dir, 'ACCESS', 'LOGS')
+    logs_dir = os.path.join(parent_dir, "ACCESS", "LOGS")
 
     # Check if the source file exists
     if os.path.exists(source_path):
@@ -397,7 +481,7 @@ def create_directories():
         None
     """
     # Define the path for the ACCESS directory in the parent directory
-    access_dir_path = os.path.join(os.path.dirname(os.getcwd()), 'ACCESS')
+    access_dir_path = os.path.join(os.path.dirname(os.getcwd()), "ACCESS")
 
     # Check if the ACCESS directory exists
     if not os.path.exists(access_dir_path):
@@ -406,8 +490,8 @@ def create_directories():
 
         # Now, assuming you want to create DATA and LOGS directories inside ACCESS,
         # define their paths relative to ACCESS directory
-        data_dir_path = os.path.join(access_dir_path, 'DATA')
-        logs_dir_path = os.path.join(access_dir_path, 'LOGS')
+        data_dir_path = os.path.join(access_dir_path, "DATA")
+        logs_dir_path = os.path.join(access_dir_path, "LOGS")
 
         # Check and create DATA directory
         if not os.path.exists(data_dir_path):
@@ -461,14 +545,16 @@ def main():
     cmd_raw("wmic computersystem get manufacturer", "null")
 
     # Check for VM drivers
-    if cmd_raw("driverquery | findstr /C:\"vmxnet\"", "bool") == "":
+    if cmd_raw('driverquery | findstr /C:"vmxnet"', "bool") == "":
         with open(os.path.join(os.getcwd(), "DEBUG.md"), "a") as debug_file:
-            debug_file.write("<span style=\"color:green;\">SYSTEM</span>: No VM Drivers Found.<br><br>")
+            debug_file.write(
+                '<span style="color:green;">SYSTEM</span>: No VM Drivers Found.<br><br>'
+            )
     else:
-        cmd_raw("driverquery | findstr /C:\"vmxnet\"", "null")
+        cmd_raw('driverquery | findstr /C:"vmxnet"', "null")
 
     # Execute systeminfo command to gather system information
-    cmd_raw("systeminfo | findstr /C:\"System Model\" /C:\"Manufacturer\"", "null")
+    cmd_raw('systeminfo | findstr /C:"System Model" /C:"Manufacturer"', "null")
 
     # Move the debug file
     try:

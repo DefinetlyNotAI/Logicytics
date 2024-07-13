@@ -12,7 +12,7 @@ def print_colored(text, color):
     reset = "\033[0m"
     # Mapping of color names to their corresponding ANSI codes
     color_codes = {
-        'red': '\033[31m',
+        "red": "\033[31m",
     }
 
     # Check if the color exists and print the colored text
@@ -34,7 +34,7 @@ def navigate_and_search():
     parent_dir = os.path.dirname(current_dir)
 
     # Then navigate to the 'EXTRA' directory within the parent directory
-    extra_dir_path = os.path.join(parent_dir, 'EXTRA')
+    extra_dir_path = os.path.join(parent_dir, "EXTRA")
 
     # Check if the 'EXTRA' directory exists
     if not os.path.exists(extra_dir_path):
@@ -45,12 +45,14 @@ def navigate_and_search():
     files_found = []
     for root, dirs, files in os.walk(extra_dir_path):
         for file in files:
-            if file.endswith('.ps1') or file.endswith('.exe') or file.endswith('.py'):
+            if file.endswith(".ps1") or file.endswith(".exe") or file.endswith(".py"):
                 files_found.append(os.path.join(root, file))
 
     # If no files were found, inform the user
     if not files_found:
-        print_colored("No .ps1, .exe, or .py files were found in the specified directory.", "red")
+        print_colored(
+            "No .ps1, .exe, or .py files were found in the specified directory.", "red"
+        )
         exit(1)
 
     # Create a menu for the user to select a file
@@ -68,13 +70,30 @@ def navigate_and_search():
 
             # Determine the file type and open accordingly
             _, file_extension = os.path.splitext(selected_file)
-            if file_extension.lower() == '.exe':
-                subprocess.run([selected_file], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            elif file_extension.lower() == '.py':
-                subprocess.run(['python', selected_file], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            elif file_extension.lower() == '.ps1':
-                subprocess.run(['powershell', '-ExecutionPolicy', 'Bypass', '-File', selected_file],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if file_extension.lower() == ".exe":
+                subprocess.run(
+                    [selected_file],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            elif file_extension.lower() == ".py":
+                subprocess.run(
+                    ["python", selected_file],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            elif file_extension.lower() == ".ps1":
+                subprocess.run(
+                    [
+                        "powershell",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        selected_file,
+                    ],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
 
             # Exit after processing the file
             print("Exiting after completed processing the file...")
