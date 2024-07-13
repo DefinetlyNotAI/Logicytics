@@ -13,7 +13,7 @@ fun_summary_state = tk.BooleanVar(value=True)
 
 # List to hold the initial texts
 initial_texts = [
-    '''
+    """
 TERMS OF SERVICE
 
 ### Title:
@@ -36,9 +36,8 @@ TERMS OF SERVICE
 - We take your privacy seriously, but not ourselves too much. After all, life's too short for boring legal jargon. So, enjoy your journey with Logicytics, where data meets fun. 😉
 
 **Disclaimer:**
-- Nothing shared through Logicytics leaves the digital realm. It's like having a private conversation in a crowded room—no one else hears a thing. 👂''',
-
-    '''
+- Nothing shared through Logicytics leaves the digital realm. It's like having a private conversation in a crowded room—no one else hears a thing. 👂""",
+    """
 TERMS OF SERVICE
 
 ### Popup Title:
@@ -64,7 +63,7 @@ TERMS OF SERVICE
   - Engaging in external modifications to the software.
 
 **Disclaimers:**
-- Logicytics disclaims liability for any damages resulting from the use of its services. Users assume full responsibility for their actions and interpretations of data obtained through our platform.'''
+- Logicytics disclaims liability for any damages resulting from the use of its services. Users assume full responsibility for their actions and interpretations of data obtained through our platform.""",
 ]
 
 # Variable to track the current index of the initial text
@@ -72,6 +71,7 @@ current_initial_text_index = 0
 
 
 # Function to check for existing.accept files
+
 
 def check_for_existing_accept_files() -> bool:
     """
@@ -86,7 +86,7 @@ def check_for_existing_accept_files() -> bool:
     # Iterate over the files in the SYSTEM directory
     for filename in os.listdir(os.path.join(finalpath, "SYSTEM")):
         # Check if the file ends with '.accept'
-        if filename.endswith('.accept'):
+        if filename.endswith(".accept"):
             return True
 
     # If no file ending with '.accept' is found, return False
@@ -102,7 +102,6 @@ else:
     text_label = tk.Label(root, text=initial_texts[current_initial_text_index])
     text_label.pack(pady=20)  # Use pack for simpler layout
 
-
     def on_accept_click():
         """
         Handles the click event when the user confirms their agreement to the terms.
@@ -110,17 +109,21 @@ else:
         and deletes the original file.
         """
         # Confirm the user's agreement
-        agreement_confirmation = messagebox.askyesno(title="Agreement Confirmation",
-                                                     message="Do you confirm that you agree to the terms?",
-                                                     parent=root)
+        agreement_confirmation = messagebox.askyesno(
+            title="Agreement Confirmation",
+            message="Do you confirm that you agree to the terms?",
+            parent=root,
+        )
         try:
             if agreement_confirmation:
                 # Create a file with the agreement confirmation
-                with open("ToS.accept", 'w') as f:
+                with open("ToS.accept", "w") as f:
                     f.write("You have agreed to the terms.\n")
 
                 # Inform the user that the file has been created
-                messagebox.showinfo(title="Success", message="A file 'ToS.accept' has been created.")
+                messagebox.showinfo(
+                    title="Success", message="A file 'ToS.accept' has been created."
+                )
 
                 # Construct the source path of the ToS.accept file
                 current_working_dir = os.getcwd()
@@ -142,19 +145,25 @@ else:
                     # Delete the original file
                     os.remove(source_path)
 
-                    print(f"File moved successfully to {destination_path}. Original file deleted.")
+                    print(
+                        f"File moved successfully to {destination_path}. Original file deleted."
+                    )
                 else:
-                    print("The file ToS.accept does not exist in the current directory.")
+                    print(
+                        "The file ToS.accept does not exist in the current directory."
+                    )
 
                 # Close the application
                 root.destroy()
 
             else:
-                messagebox.showwarning(title="Warning", message="Agreement not confirmed. Application remains open.")
+                messagebox.showwarning(
+                    title="Warning",
+                    message="Agreement not confirmed. Application remains open.",
+                )
         except Exception:
             # Close the application
             root.destroy()
-
 
     def on_reject_click():
         """
@@ -163,7 +172,6 @@ else:
         """
         # Close the application
         root.destroy()
-
 
     def on_fun_summary_click():
         """
@@ -182,7 +190,9 @@ else:
             fun_summary_button.config(text="Click Here for Fun Words")
 
         # Toggle the initial text
-        current_initial_text_index = (current_initial_text_index + 1) % len(initial_texts)
+        current_initial_text_index = (current_initial_text_index + 1) % len(
+            initial_texts
+        )
         text_label.config(text=initial_texts[current_initial_text_index])
 
     # Accept button
@@ -194,7 +204,9 @@ else:
     reject_button.pack(pady=10)  # Use pack for simpler layout
 
     # Fun Summary/Legal Words button
-    fun_summary_button = tk.Button(root, text="Click Here for Legal Words", command=on_fun_summary_click)
+    fun_summary_button = tk.Button(
+        root, text="Click Here for Legal Words", command=on_fun_summary_click
+    )
     fun_summary_button.pack(pady=10)  # Use pack for simpler layout
 
 # Start the application

@@ -4,7 +4,7 @@ from tkinter import messagebox
 from datetime import datetime
 from local_libraries.Lists_and_variables import *
 
-time = datetime.now().strftime('%Y-%m-%d_at_time_%H-%M-%S')
+time = datetime.now().strftime("%Y-%m-%d_at_time_%H-%M-%S")
 
 
 def gui_crash_msg(err_title, err_msg):
@@ -46,21 +46,23 @@ def extract_code_from_error_codes(script_name):
         - If any other error occurs, an error message is printed.
 
     """
-    parent_dir = '..'
-    error_codes_path = os.path.join(parent_dir, 'SYSTEM', 'error.codes')
+    parent_dir = ".."
+    error_codes_path = os.path.join(parent_dir, "SYSTEM", "error.codes")
 
     try:
-        with open(error_codes_path, 'r') as file:
+        with open(error_codes_path, "r") as file:
             content = file.read()
             filename_only = os.path.splitext(script_name)[0]
 
-            lines = content.split('\n')
-            line_with_filename = next((line for line in lines if filename_only in line), None)
+            lines = content.split("\n")
+            line_with_filename = next(
+                (line for line in lines if filename_only in line), None
+            )
 
             if line_with_filename is None:
                 return None
 
-            code_part = line_with_filename.split('=')[1].strip()
+            code_part = line_with_filename.split("=")[1].strip()
             return code_part
 
     except FileNotFoundError:
@@ -83,12 +85,18 @@ def save_contents_to_list():
         list: A list containing the contents of the temporary files.
 
     """
-    temp_files = ['flag.temp', 'error.temp', 'function.temp', 'language.temp', 'error_data.temp']
+    temp_files = [
+        "flag.temp",
+        "error.temp",
+        "function.temp",
+        "language.temp",
+        "error_data.temp",
+    ]
     contents_list = []
 
     for temp_file in temp_files:
         if os.path.exists(temp_file):
-            with open(temp_file, 'r') as f:
+            with open(temp_file, "r") as f:
                 contents_list.append(f.read().strip())
             os.remove(temp_file)  # Delete the temporary file
 
@@ -109,7 +117,7 @@ def temporary_file_scanner():
     """
     temp_file_path = "flag.temp"
     if os.path.exists(temp_file_path):
-        with open(temp_file_path, 'r') as f:
+        with open(temp_file_path, "r") as f:
             script_name = f.read().strip()
         os.remove(temp_file_path)
         return script_name
@@ -130,7 +138,7 @@ def read_type():
     """
     # Step 1 & 2: Open the file and read its contents
     try:
-        with open('type.temp', 'r') as file:
+        with open("type.temp", "r") as file:
             content = file.read()
     except FileNotFoundError:
         print("The file 'error.temp' does not exist.")
@@ -139,7 +147,7 @@ def read_type():
     # Step 3: The file is automatically closed after exiting the 'with' block
     # Step 3: Delete the file
     try:
-        os.remove('type.temp')
+        os.remove("type.temp")
     except OSError as e:
         print(f"Error deleting file: {e.strerror}")
 
@@ -150,10 +158,14 @@ def read_type():
 
 
 def write_logs(err_title, err_msg):
-    logs_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ACCESS", "LOGS",
-                                  file_err_title)
+    logs_file_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "ACCESS",
+        "LOGS",
+        file_err_title,
+    )
 
-    with open(logs_file_path, 'w') as file:
+    with open(logs_file_path, "w") as file:
         file.write(err_title)
         file.write(err_msg)
 
@@ -164,16 +176,13 @@ if __name__ == "__main__":
 
     contents_list = save_contents_to_list()
 
-    result = {
-        'file_code': file_code,
-        'temp_contents': contents_list
-    }
+    result = {"file_code": file_code, "temp_contents": contents_list}
 
     # Extracting the 'file_code' value directly since it's not inside a list
-    file_code = result['file_code']
+    file_code = result["file_code"]
 
     # The 'temp_contents' key contains a list of strings, so we join them with '-'
-    temp_contents_str = '-'.join(result['temp_contents'])
+    temp_contents_str = "-".join(result["temp_contents"])
 
     # Constructing the final string
     full_code = f"{file_code}-{temp_contents_str}"
@@ -188,9 +197,9 @@ if __name__ == "__main__":
     err_data = split_output[4]
 
     # Path to the error.dictionary file
-    file_path = os.path.join(os.pardir, 'SYSTEM', 'error.dictionary')
+    file_path = os.path.join(os.pardir, "SYSTEM", "error.dictionary")
 
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         for line in file:
             # Split the line into words
             words = line.split()
@@ -206,7 +215,7 @@ if __name__ == "__main__":
         dic_code_full = "UKE = Unknown Error = an unknown error occurs, or something unexpected occurs. This is a special case, where the reporter also received the error!"
 
     # Now, splitting the string into a list based on the "=" delimiter should work without issues
-    split_list = dic_code_full.split('=')
+    split_list = dic_code_full.split("=")
 
     # Since the string is guaranteed to have at least one "=", we can safely assign the parts to variables
     first_part, errtype, message = split_list
@@ -225,7 +234,7 @@ if __name__ == "__main__":
     if crash_data == "crash":
         err_title = f"Fatal{errtype}({first_part}) at {time}"
         file_err_title = f"{time}_crash_log"
-        err_msg = f'''
+        err_msg = f"""
         
         A Crash Occurred!! 
         At the time {time}, with the file {file_name}, it crashed with the error "{errtype}" which typically occurs when{message}
@@ -242,14 +251,14 @@ if __name__ == "__main__":
         We were able to get the following raw data,
 
         {err_data}
-        '''
+        """
         write_logs(err_title, err_msg)
         gui_crash_msg(err_title, err_msg)
 
     else:
         err_title = f"Error{errtype}({first_part}) at {time}"
         file_err_title = f"{time}_error_log"
-        err_msg = f'''
+        err_msg = f"""
         
         An error occurred at the time {time}, with the file {file_name}, it crashed with the error "{errtype}" which typically occurs when{message}
         We deeply apologize for this, it is suggested to report these errors to GitHub issues in our repository
@@ -264,5 +273,5 @@ if __name__ == "__main__":
         We were able to get the following raw data,
         
         {err_data}
-        '''
+        """
         write_logs(err_title, err_msg)

@@ -22,7 +22,7 @@ def zip_data_folder():
         return
 
     # Create a ZipFile object
-    with zipfile.ZipFile(destination_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile(destination_zip, "w", zipfile.ZIP_DEFLATED) as zipf:
         # Iterate over all the files in the source folder
         for root, dirs, files in os.walk(source_folder):
             for file in files:
@@ -41,7 +41,7 @@ def process_files():
     """
     # Define the current working directory and the DATA directory
     current_dir = os.getcwd()
-    data_dir = os.path.join(current_dir, 'DATA')
+    data_dir = os.path.join(current_dir, "DATA")
 
     # Ensure the DATA directory exists, if not, create it
     if not os.path.exists(data_dir):
@@ -51,8 +51,13 @@ def process_files():
     items = os.listdir(current_dir)
 
     # Filter items that are files with .txt, .file extensions or no extension
-    target_files = [item for item in items if
-                    item.endswith('.txt') or item.endswith('.file') or not os.path.splitext(item)[1]]
+    target_files = [
+        item
+        for item in items
+        if item.endswith(".txt")
+        or item.endswith(".file")
+        or not os.path.splitext(item)[1]
+    ]
 
     if target_files:
         logger.info(f"Found {len(target_files)} files to process.")
@@ -76,13 +81,19 @@ def process_files():
                     continue  # Skip this iteration and move to the next item
 
                 except Exception as e:
-                    logger.error(f"An unexpected error occurred while processing {item}: {e}")
+                    logger.error(
+                        f"An unexpected error occurred while processing {item}: {e}"
+                    )
                     crash("OGE", "fun37", e, "error")
                     continue  # Skip this iteration and move to the next item
             else:
-                logger.info(f"Skipping {item} as it is not a file (it might be a directory).")
+                logger.info(
+                    f"Skipping {item} as it is not a file (it might be a directory)."
+                )
     else:
-        logger.warning("No `.txt` files or files without extensions found in the current directory.")
+        logger.warning(
+            "No `.txt` files or files without extensions found in the current directory."
+        )
 
 
 process_files()

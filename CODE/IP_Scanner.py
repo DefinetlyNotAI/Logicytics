@@ -15,8 +15,13 @@ def run_command_with_timeout(command, timeout=10):
     """
     try:
         # Start the process
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
-                                   universal_newlines=True)
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
+            universal_newlines=True,
+        )
 
         # Variables to store output and error messages
         output = ""
@@ -97,7 +102,7 @@ def main():
 
     # Save the outputs to a file with clear separation
     filename = "network_info.txt"
-    with open(filename, 'w') as file:
+    with open(filename, "w") as file:
         file.write("=== Network Statistics ===\n")
         file.write(netstat_output + "\n\n")
         file.write("=== IP Configuration ===\n")

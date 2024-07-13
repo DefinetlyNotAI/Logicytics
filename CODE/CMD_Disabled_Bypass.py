@@ -8,7 +8,7 @@ def press_win_r():
     Simulates pressing the Win+R keys to open the Run dialog
     """
     try:
-        pyautogui.hotkey('win', 'r')
+        pyautogui.hotkey("win", "r")
         logger.info("Simulated pressing Win+R to open the Run dialog.")
     except Exception as e:
         logger.error(f"Failed to simulate pressing Win+R: {e}")
@@ -21,7 +21,8 @@ def type_command():
     """
     try:
         pyautogui.write(
-            'cmd.exe /k "REG add HKCU\\Software\\Policies\\Microsoft\\Windows\\System /v DisableCMD /t REG_DWORD /d 0 /f"')
+            'cmd.exe /k "REG add HKCU\\Software\\Policies\\Microsoft\\Windows\\System /v DisableCMD /t REG_DWORD /d 0 /f"'
+        )
         logger.info("Typed the command to attempt to enable command prompt.")
     except Exception as e:
         logger.error(f"Failed to type the command: {e}")
@@ -33,7 +34,7 @@ def press_enter():
     Presses the Enter key to execute the command
     """
     try:
-        pyautogui.press('enter')
+        pyautogui.press("enter")
         logger.info("Pressed Enter to execute the command.")
     except Exception as e:
         logger.error(f"Failed to press Enter: {e}")
@@ -45,7 +46,7 @@ def press_alt_f4():
     Simulates pressing Alt+F4 to close the command prompt window
     """
     try:
-        pyautogui.hotkey('alt', 'f4')
+        pyautogui.hotkey("alt", "f4")
         logger.info("Simulated pressing Alt+F4 to close the command prompt window.")
     except Exception as e:
         logger.error(f"Failed to simulate pressing Alt+F4: {e}")
@@ -67,4 +68,5 @@ if __name__ == "__main__":
     press_alt_f4()
 
     logger.info(
-        "Command executed to enable the command prompt and the window has been closed.")
+        "Command executed to enable the command prompt and the window has been closed."
+    )

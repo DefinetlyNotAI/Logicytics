@@ -24,12 +24,14 @@ def hash_zip():
     It attempts to make the new file read-only. If it fails to do so due to insufficient permissions, it prints "Permission denied to change file permissions."
     """
     # Step 1 & 2: Navigate to the parent directory and access the 'ACCESS/DATA' subdirectory
-    parent_dir = Path('..')  # Adjust '..' if necessary to correctly point to the parent directory
-    data_dir = parent_dir / 'ACCESS/DATA'
+    parent_dir = Path(
+        ".."
+    )  # Adjust '..' if necessary to correctly point to the parent directory
+    data_dir = parent_dir / "ACCESS/DATA"
 
     # Step 3: Find the latest ZIP file
     latest_zip = None
-    for item in data_dir.glob('**/*.zip'):
+    for item in data_dir.glob("**/*.zip"):
         if latest_zip is None or item.stat().st_mtime > latest_zip.stat().st_mtime:
             latest_zip = item
 
@@ -38,21 +40,23 @@ def hash_zip():
         exit(1)
 
     # Step 4: Calculate the hash of the ZIP file
-    with open(latest_zip, 'rb') as f:
+    with open(latest_zip, "rb") as f:
         bytes_hash = f.read()
     hash_object = hashlib.sha256(bytes_hash)
     hex_dig = hash_object.hexdigest()
 
     # Step 5 & 6: Create a new file named after the ZIP file but with a '.hash' extension,
     # write the hash into it, and attempt to make it read-only.
-    new_file_name = latest_zip.stem + '.SHA-256'
+    new_file_name = latest_zip.stem + ".SHA-256"
     new_file_path = data_dir / new_file_name
-    with open(new_file_path, 'w') as f:
+    with open(new_file_path, "w") as f:
         f.write(hex_dig)
 
     # Attempting to make the file read-only. Note: This may require administrative privileges.
     try:
-        os.chmod(new_file_path, 0o444)  # 0o444 sets permissions so that the owner has read-only access
+        os.chmod(
+            new_file_path, 0o444
+        )  # 0o444 sets permissions so that the owner has read-only access
     except PermissionError as pe:
         crash("PE", "fun6", pe, "error")
 

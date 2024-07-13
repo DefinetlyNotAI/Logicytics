@@ -20,14 +20,16 @@ def unzip_backup():
         # Step 1 & 2: Navigate to the parent directory and then to the BACKUP directory
         current_dir = os.getcwd()  # Get the current working directory
         parent_dir = os.path.dirname(current_dir)  # Move up to the parent directory
-        backup_dir_path = os.path.join(parent_dir, 'BACKUP')  # Path to the BACKUP directory
+        backup_dir_path = os.path.join(
+            parent_dir, "BACKUP"
+        )  # Path to the BACKUP directory
 
         if not os.path.exists(backup_dir_path):
             raise FileNotFoundError(f"Backup directory '{backup_dir_path}' not found.")
 
         # Step 3: List all .zip files in the BACKUP directory and prompt the user to select one
         os.chdir(backup_dir_path)  # Change the current working directory to BACKUP
-        zip_files = [file for file in os.listdir('.') if file.endswith('.zip')]
+        zip_files = [file for file in os.listdir(".") if file.endswith(".zip")]
 
         if not zip_files:
             raise FileNotFoundError("No .zip files found in the backup directory.")
@@ -47,13 +49,16 @@ def unzip_backup():
         os.chdir(parent_dir)
 
         # Step 5: Unzip the contents into the CODE directory, replacing files if required
-        code_dir_path = os.path.join(parent_dir, 'CODE')  # Path to the CODE directory
+        code_dir_path = os.path.join(parent_dir, "CODE")  # Path to the CODE directory
         if not os.path.exists(code_dir_path):
             os.makedirs(code_dir_path)  # Create the CODE directory if it doesn't exist
 
-        with zipfile.ZipFile(os.path.join(backup_dir_path, zip_file_name), 'r') as zip_ref:
+        with zipfile.ZipFile(
+            os.path.join(backup_dir_path, zip_file_name), "r"
+        ) as zip_ref:
             zip_ref.extractall(
-                code_dir_path)  # Extracts all the files into CODE directory, replacing them if they exist
+                code_dir_path
+            )  # Extracts all the files into CODE directory, replacing them if they exist
 
         logger.info(f"Unzipped {zip_file_name} into {code_dir_path}")
 

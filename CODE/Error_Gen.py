@@ -21,9 +21,12 @@ def validate_error_id(error_id):
         validate_error_id("AA") # Returns True
         validate_error_id("A1") # Raises ValueError: "This ID is not valid due to the length being less than 2 or greater than 4 or contains numbers."
     """
-    if len(error_id) < 2 or len(error_id) > 4 or re.search(r'\d', error_id):
+    if len(error_id) < 2 or len(error_id) > 4 or re.search(r"\d", error_id):
         raise ValueError(
-            "\033[91m" + "This ID is not valid due to the length being less than 2 or greater than 4 or contains numbers." + "\033[0m")
+            "\033[91m"
+            + "This ID is not valid due to the length being less than 2 or greater than 4 or contains numbers."
+            + "\033[0m"
+        )
     return True
 
 
@@ -43,7 +46,11 @@ def validate_file_name(file_name):
     This function first checks if the file name includes a file extension. If not, it raises a ValueError with a colored error message. Then, it checks if the file exists in the file system. If not, it generates suggestions for similar file names by replacing a single character in the file name with all the lowercase ASCII letters. If no similar file names are found, it prints a colored message indicating that no similar files were found. Otherwise, it prints a colored message with the suggestions. Finally, it returns True if the file name is valid and exists in the file system, False otherwise.
     """
     if "." not in file_name:
-        raise ValueError("\033[91m" + "Please include the file extension (e.g. hello.html)." + "\033[0m")
+        raise ValueError(
+            "\033[91m"
+            + "Please include the file extension (e.g. hello.html)."
+            + "\033[0m"
+        )
 
     # Check if the file exists
     if not os.path.exists(file_name):
@@ -51,14 +58,17 @@ def validate_file_name(file_name):
         suggestions = []
         for i in range(len(file_name)):
             for j in range(26):  # Assuming ASCII letters
-                new_name = file_name[:i] + chr(ord('a') + j) + file_name[i + 1:]
+                new_name = file_name[:i] + chr(ord("a") + j) + file_name[i + 1 :]
                 if os.path.exists(new_name):
                     suggestions.append(new_name)
 
         if not suggestions:
-            print_colored(f"No similar files found for '{file_name}'.", 'yellow')
+            print_colored(f"No similar files found for '{file_name}'.", "yellow")
         else:
-            print_colored(f"No file named '{file_name}' found. Did you mean one of these?", 'yellow')
+            print_colored(
+                f"No file named '{file_name}' found. Did you mean one of these?",
+                "yellow",
+            )
             for suggestion in suggestions:
                 print(suggestion)
 
@@ -100,9 +110,9 @@ def read_error_codes(file_path):
         error_codes = read_error_codes('error_codes.txt')
     """
     if not check_file_exists(file_path):
-        print_colored(f"File {file_path} does not exist. Creating a new one.", 'red')
-        open(file_path, 'a').close()
-    with open(file_path, 'r') as file:
+        print_colored(f"File {file_path} does not exist. Creating a new one.", "red")
+        open(file_path, "a").close()
+    with open(file_path, "r") as file:
         content = file.readlines()
     return [line.strip() for line in content]
 
@@ -153,7 +163,7 @@ def write_new_entry(file_path, file_name, error_id):
     Example usage:
         write_new_entry("error_codes.txt", "example.txt", "1234")
     """
-    with open(file_path, 'a') as file:
+    with open(file_path, "a") as file:
         file.write(f"{file_name} = {error_id}\n")
 
 
@@ -190,11 +200,13 @@ def main():
         If there are files without error codes, it prints them with color coding, ensuring they have file extensions.
         Returns False if there are no files without error codes.
         """
-        existing_entries = set(line.split('=')[0].strip() for line in read_error_codes(file_path))
+        existing_entries = set(
+            line.split("=")[0].strip() for line in read_error_codes(file_path)
+        )
         all_files = set([f for f in os.listdir(current_dir) if os.path.isfile(f)])
         files_without_error_codes = all_files - existing_entries
         if len(files_without_error_codes) != 0:
-            print_colored("Suggested files without error codes:", 'green')
+            print_colored("Suggested files without error codes:", "green")
             for file in files_without_error_codes:
                 _, ext = os.path.splitext(file)
                 if ext:  # Ensure there's a file extension
@@ -205,20 +217,28 @@ def main():
 
     print_colored(
         "Hi, welcome to the Error Codes Generator. Let's get started by inputting the file name and error ID you created,",
-        'green')
+        "green",
+    )
     print_colored(
         "the file name is ANY file you made in the CODE directory while the error ID is a unique ID that you created for that file (Make it Unique).",
-        'green')
+        "green",
+    )
     print()
 
     # List files without error codes
     if list_files_without_error_codes():
         successful_additions = 0
-        print_colored("\nType exit to quit.", 'green')
+        print_colored("\nType exit to quit.", "green")
 
         while True:
-            file_name = input("\nEnter the file name with its extension (e.g., hello.html): ")
-            error_id = input("Enter a unique error ID (2-4 characters, no numbers): ").strip().upper()
+            file_name = input(
+                "\nEnter the file name with its extension (e.g., hello.html): "
+            )
+            error_id = (
+                input("Enter a unique error ID (2-4 characters, no numbers): ")
+                .strip()
+                .upper()
+            )
 
             if file_name == "exit" or error_id == "exit":
                 break
@@ -228,17 +248,28 @@ def main():
                 validate_file_name(file_name)
 
                 if not os.path.exists(file_name):
-                    print_colored(f"The file '{file_name}' doesn't exist in the current working directory.", 'red')
+                    print_colored(
+                        f"The file '{file_name}' doesn't exist in the current working directory.",
+                        "red",
+                    )
                     continue
 
-                existing_entry_by_name = find_existing_entry(file_path, file_name=file_name)
+                existing_entry_by_name = find_existing_entry(
+                    file_path, file_name=file_name
+                )
                 if existing_entry_by_name:
-                    print_colored(f"File name already exists in error.codes: {existing_entry_by_name}", 'red')
+                    print_colored(
+                        f"File name already exists in error.codes: {existing_entry_by_name}",
+                        "red",
+                    )
                     continue
 
                 existing_entry_by_id = find_existing_entry(file_path, error_id=error_id)
                 if existing_entry_by_id:
-                    print_colored(f"Error ID already exists in error.codes: {existing_entry_by_id}", 'red')
+                    print_colored(
+                        f"Error ID already exists in error.codes: {existing_entry_by_id}",
+                        "red",
+                    )
                     continue
 
                 write_new_entry(file_path, file_name, error_id)
@@ -247,13 +278,15 @@ def main():
             except ValueError as e:
                 print(e)
 
-            user_continue = input("\nDo you want to add another file? (yes/no): ").lower()
+            user_continue = input(
+                "\nDo you want to add another file? (yes/no): "
+            ).lower()
             if user_continue != "yes":
                 break
 
-        print_colored(f"\nTotal successful additions: {successful_additions}", 'green')
+        print_colored(f"\nTotal successful additions: {successful_additions}", "green")
     else:
-        print_colored("No files without error codes found.", 'green')
+        print_colored("No files without error codes found.", "green")
 
     # Sort error codes after all operations
     sort_error_codes()
@@ -273,19 +306,19 @@ def sort_error_codes():
     None
     """
     base_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.join(base_path, '..', 'SYSTEM', 'error.codes')
+    file_path = os.path.join(base_path, "..", "SYSTEM", "error.codes")
 
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path, "r") as file:
             lines = file.readlines()
 
         sorted_lines = sorted(lines)
 
-        with open(file_path, 'w') as file:
+        with open(file_path, "w") as file:
             file.writelines(sorted_lines)
 
         print()
-        print_colored("Error codes have been sorted.", 'green')
+        print_colored("Error codes have been sorted.", "green")
     except FileNotFoundError:
         print(f"File {file_path} not found.")
 

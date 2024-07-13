@@ -15,7 +15,7 @@ def extract_version_number(output):
     Returns:
         str: The extracted version number or None if no match is found.
     """
-    pattern = r'\b\d+(\.\d+){2,}\b'
+    pattern = r"\b\d+(\.\d+){2,}\b"
     match = re.search(pattern, output)
     return match.group(0) if match else None
 
@@ -27,11 +27,14 @@ def get_windows_version_info():
     Returns:
         tuple: A tuple containing the version number (str) and type (str) or None if no match is found.
     """
-    command = 'wmic os get Caption, Version'
+    command = "wmic os get Caption, Version"
     result = subprocess.run(command, stdout=subprocess.PIPE, text=True, shell=True)
     version_number = extract_version_number(result.stdout)
-    type_ = re.search(r'(\bHome\b|\bEnterprise\b)', result.stdout, re.IGNORECASE).group(1) if re.search(
-        r'(\bHome\b|\bEnterprise\b)', result.stdout, re.IGNORECASE) else None
+    type_ = (
+        re.search(r"(\bHome\b|\bEnterprise\b)", result.stdout, re.IGNORECASE).group(1)
+        if re.search(r"(\bHome\b|\bEnterprise\b)", result.stdout, re.IGNORECASE)
+        else None
+    )
     return version_number, type_
 
 
@@ -45,7 +48,11 @@ def get_network_info():
     hostname = socket.gethostname()
     ipv4 = socket.gethostbyname(hostname)
     ipv6 = [item[4][0] for item in socket.getaddrinfo(hostname, None, socket.AF_INET6)]
-    mac_address = ':'.join(['{:02x}'.format((uuid.getnode() >> i) & 0xff) for i in range(0, 8 * 6, 8)][::-1])
+    mac_address = ":".join(
+        ["{:02x}".format((uuid.getnode() >> i) & 0xFF) for i in range(0, 8 * 6, 8)][
+            ::-1
+        ]
+    )
     return ipv4, ipv6, mac_address
 
 
@@ -73,7 +80,9 @@ def execute_command(command):
         str: The output of the command or an empty string if the command fails.
     """
     logger.info(f"Executing command: {command}")
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
     stdout, stderr = process.communicate()
     if process.returncode != 0:
         logger.error(f"Command '{command}' failed with error: {stderr}")
@@ -94,7 +103,7 @@ def write_to_file(filename, content):
         None
     """
     try:
-        with open(filename, 'w', encoding='utf-8') as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(content)
         logger.info(f"Saved text file in {filename}")
     except IOError as e:
@@ -114,10 +123,10 @@ def remove_prefix_from_lines(content: str, prefix: str) -> str:
         str: The modified string with the prefix removed from each line.
     """
     # Split the content into lines and remove the prefix from each line
-    modified_lines = [line.lstrip(prefix) for line in content.split('\n')]
+    modified_lines = [line.lstrip(prefix) for line in content.split("\n")]
 
     # Join the modified lines back into a single string
-    modified_content = '\n'.join(modified_lines)
+    modified_content = "\n".join(modified_lines)
 
     return modified_content
 
@@ -125,8 +134,12 @@ def remove_prefix_from_lines(content: str, prefix: str) -> str:
 # Main execution block
 ipv4, ipv6, mac_address = get_network_info()
 version_number, type_ = get_windows_version_info()
-commands = ['wmic cpu get Name', 'wmic path win32_VideoController get Name',
-            'wmic MEMORYCHIP get BankLabel, Capacity, MemoryType', 'wmic diskdrive get Model, MediaType, Size']
+commands = [
+    "wmic cpu get Name",
+    "wmic path win32_VideoController get Name",
+    "wmic MEMORYCHIP get BankLabel, Capacity, MemoryType",
+    "wmic diskdrive get Model, MediaType, Size",
+]
 hardware_info = [execute_command(cmd).splitlines()[2].strip() for cmd in commands]
 
 content = [
@@ -136,8 +149,8 @@ content = [
     f"Windows Type: {type_}\n",
     f"IPv4: {ipv4}\n",
     f"IPv6: {ipv6}\n",
-    f"MAC Address: {mac_address}"
+    f"MAC Address: {mac_address}",
 ]
 
 filename = os.path.join(os.getcwd(), "system_info.txt")
-write_to_file(filename, remove_prefix_from_lines(', '.join(content), ', '))
+write_to_file(filename, remove_prefix_from_lines(", ".join(content), ", "))
