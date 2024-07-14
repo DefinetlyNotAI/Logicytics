@@ -1,2 +1,3 @@
 WEB/** linguist-detectable=false
 *.html linguist-vendored
+*.rtf linguist-vendored
