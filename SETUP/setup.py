@@ -1,12 +1,5 @@
 import os
-import subprocess  # Import subprocess to run shell commands
 from setuptools import setup, find_packages
-
-
-def download_folders(urls):
-    for url in urls:
-        # Directly use the URL with gdown to download the folder
-        subprocess.run(["gdown", url], check=True)
 
 
 # Paths to the requirements.txt and Logicytics.version files
@@ -33,12 +26,3 @@ setup(
         ],
     },
 )
-
-# Define the URLs of the folders to download
-folder_urls = [
-    "https://drive.google.com/drive/folders/1ZHH54PN6uYapGwxX4QMKJ2ELwoidBBZC?usp=sharing",
-    "https://drive.google.com/drive/folders/1ajFtSFJ_oMhC9hEKf2mRt0SvsKoHvVji?usp=sharing",
-]
-
-# Call the function to download the folders after setup
-download_folders(folder_urls)
