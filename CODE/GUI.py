@@ -1,7 +1,9 @@
+import subprocess  # Import the subprocess module
 import tkinter as tk
 from tkinter import messagebox
-import subprocess  # Import the subprocess module
+
 import mss
+
 from local_libraries.Lists_and_variables import *
 
 with mss.mss() as sct:
@@ -76,12 +78,12 @@ def show_tooltip(event):
             if len(tooltip_text) > 0:  # Check if the tooltip text is not empty
                 tooltip_label.config(text=tooltip_text)
                 x = (
-                    error_label.winfo_x()
-                    + (error_label.winfo_width() / 2)
-                    - (tooltip_label.winfo_width() / 2)
+                        error_label.winfo_x()
+                        + (error_label.winfo_width() / 2)
+                        - (tooltip_label.winfo_width() / 2)
                 )
                 y = (
-                    error_label.winfo_y() + error_label.winfo_height() + 10
+                        error_label.winfo_y() + error_label.winfo_height() + 10
                 )  # Add some margin
                 tooltip_label.place(
                     x=x, y=y
@@ -168,7 +170,7 @@ def validate_command():
                 1  # Increment the counter if a compulsory flag is found
             )
             if (
-                compulsory_flag_count > 1
+                    compulsory_flag_count > 1
             ):  # Check if more than one compulsory flag is found
                 error_label.config(text="Error: More than one run type flag is used.")
                 execute_btn["state"] = "disabled"  # Disable the Execute button

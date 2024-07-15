@@ -1,8 +1,8 @@
 name: Feature request
 description: Suggest new or updated features to include in Logicytics.
 title: "Suggest a new feature"
-labels: [feature]
-assignees: []
+labels: [ feature ]
+assignees: [ ]
 body:
   - type: checkboxes
     attributes:

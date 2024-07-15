@@ -4,15 +4,20 @@ $UACPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
 # Check the current UAC setting
 $UACStatus = Get-ItemProperty -Path $UACPath -Name "EnableLUA" -ErrorAction SilentlyContinue
 
-if ($null -eq $UACStatus) {
+if ($null -eq $UACStatus)
+{
     Write-Host "ERROR: UAC status could not be determined. Please ensure the script is run with administrative privileges."
     Invoke-CrashReport -ErrorId "PE" -FunctionNo "fun7" -ErrorContent "UAC status could not be determined" -Type "crash"
     exit
-} elseif ($UACStatus.EnableLUA -eq 1) {
+}
+elseif ($UACStatus.EnableLUA -eq 1)
+{
     # UAC is on, disable it
     Set-ItemProperty -Path $UACPath -Name "EnableLUA" -Value 0
     Write-Host "INFO: UAC has been disabled. Would you like to restart the computer now? (Y/N)"
-} else {
+}
+else
+{
     # UAC is off, enable it
     Set-ItemProperty -Path $UACPath -Name "EnableLUA" -Value 1
     Write-Host "INFO: UAC has been enabled. Would you like to restart the computer now? (Y/N)"
@@ -20,9 +25,12 @@ if ($null -eq $UACStatus) {
 
 $confirmation = Read-Host
 
-if ($confirmation -eq "Y" -or $confirmation -eq "y") {
+if ($confirmation -eq "Y" -or $confirmation -eq "y")
+{
     Write-Host "INFO: Restarting the computer..."
     Restart-Computer -Force
-} else {
+}
+else
+{
     Write-Host "INFO: Restart canceled by user."
 }

@@ -18,6 +18,7 @@ This comprehensive guide is here to equip you with everything you need to use Lo
 </div>
 
 ## ❤️ Support Me ❤️
+
 Please consider buying me a coffee or sponsoring me in GitHub sponsor,
 I am saving for my college funds in MIT, and I need your help!
 Supporters will be placed in the Credits ❤️
@@ -25,14 +26,17 @@ Supporters will be placed in the Credits ❤️
 ## 🛠️ Installation and Setup 🛠️
 
 ### Prerequisites
+
 Ensure your system meets these requirements:
+
 - Windows 10 or later.
 - Administrative rights.
 - Python installed (preferable version 3.11).
 
-
 ### Step-by-Step Installation
-1. **Clone the Repository**: Use Git to clone Logicytics to your local machine. Open Command Prompt as an administrator and run:
+
+1. **Clone the Repository**: Use Git to clone Logicytics to your local machine. Open Command Prompt as an administrator
+   and run:
    ```powershell
    git clone https://github.com/DefinetlyNotAI/Logicytics.git
    ```
@@ -41,7 +45,7 @@ Ensure your system meets these requirements:
    cd Logicytics
    ```
 
-3. **Setup Logicytics**: Navigate to the `SETUP` folder and run the `setup.py` script using the following command, 
+3. **Setup Logicytics**: Navigate to the `SETUP` folder and run the `setup.py` script using the following command,
    This will install the required dependencies and create any necessary files for full functionality.
    ```powershell
    pip install -e .
@@ -49,17 +53,21 @@ Ensure your system meets these requirements:
 
 4. **Run Logicytics**: Navigate to the `CODE` folder and run `./Logicytics.py` more info below.
 
-
 ### Basic Usage
-1. **CLI**: The most preferred method, all in your command line! More feedback can be given, to use it just open `CMD` in the `CODE` directory, and run `./Logicytics.py`
 
-2. **GUI**: Still in beta, GUI is not recommended unless you are unfamiliar with CLI, the GUI automatically constructs your command and executes it from a basic window. To use this feature, go to the `CODE` directory and run the `GUI.py` file, or type in the terminal `./GUI.py`.
+1. **CLI**: The most preferred method, all in your command line! More feedback can be given, to use it just open `CMD`
+   in the `CODE` directory, and run `./Logicytics.py`
+
+2. **GUI**: Still in beta, GUI is not recommended unless you are unfamiliar with CLI, the GUI automatically constructs
+   your command and executes it from a basic window. To use this feature, go to the `CODE` directory and run
+   the `GUI.py` file, or type in the terminal `./GUI.py`.
 
 ## 🔧 Configuration 🔧
 
 Logicytics offers extensive customization options through flags while running.
 
 These flags allow you to:
+
 - Specify which types of files to collect data.
 - Exclude certain files/data from the data collection process.
 - Adjust logging levels for detailed insights.
@@ -69,6 +77,7 @@ More info about the flags on the wiki.
 ## 🚀 Advanced Usage 🚀
 
 ### Custom Scripts
+
 Extend Logicytics' functionality by creating custom Python scripts.
 Place these scripts in the `CODE` directory.
 Logicytics will automatically execute these scripts during the data collection process,
@@ -77,12 +86,14 @@ enabling tailored data extraction (When using the `--mods` flag).
 ## 🛑 Troubleshooting 🛑
 
 ### Common Pitfalls
+
 - **Permission Denied**: Ensure you're running Logicytics with administrative privileges.
 - **Incomplete Data Collection**: Verify all necessary files and folders are intact and unmodified.
 - **Update Issues**: Use the `--update` flag to fetch the latest version of Logicytics.
 - **Recovery**: Use the `--backup` and `--restore` to keep a history of intact files in case of errors.
 
 ### Support Resources
+
 Consult the `.md` log file in the `ACCESS/LOGS` directory for detailed error logs.
 Engage with the community through GitHub issues for assistance and feedback.
 
