@@ -13,7 +13,7 @@ def run_command(command, shell=False, **kwargs):
     """
     try:
         result = subprocess.run(command, shell=shell, check=True, **kwargs)
-        return result.stdout.decode("utf-8")
+        return result.stdout
     except subprocess.CalledProcessError as e:
         # Suppress the raw error output and return a custom error message
         logger.error(
