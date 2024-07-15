@@ -115,7 +115,6 @@ conflicts = {
     ("dev", "mini_log"): "Both 'dev' and 'mini-log' are used.",
 }
 
-
 # Flags that are used to control the files run.
 run_actions = {
     "onlypy": "onlypy",

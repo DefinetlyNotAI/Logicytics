@@ -2,9 +2,11 @@ import ctypes
 import importlib.metadata as pkg_resources
 import re
 import shutil
-from pathlib import Path
-import requests
 from datetime import datetime
+from pathlib import Path
+
+import requests
+
 from local_libraries.Setups import *
 
 time = datetime.now().strftime("%Y-%m-%d")
@@ -301,14 +303,14 @@ def check_structure_file(structure_file_path):
                     path = os.path.join(parent_dir, line[1:])
                     if os.path.exists(path):
                         with open(
-                            os.path.join(os.getcwd(), "DEBUG.md"), "a"
+                                os.path.join(os.getcwd(), "DEBUG.md"), "a"
                         ) as debug_file:
                             debug_file.write(
                                 f'<span style="color:blue;">INFO</span>: Success: {path} exists.<br><br>'
                             )
                     else:
                         with open(
-                            os.path.join(os.getcwd(), "DEBUG.md"), "a"
+                                os.path.join(os.getcwd(), "DEBUG.md"), "a"
                         ) as debug_file:
                             debug_file.write(
                                 f'<span style="color:red;">ERROR</span>: {path} does not exist.<br><br>'

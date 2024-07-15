@@ -1,5 +1,6 @@
-from local_libraries.Setups import *
 import shutil
+
+from local_libraries.Setups import *
 
 
 def format_size(size_bytes):

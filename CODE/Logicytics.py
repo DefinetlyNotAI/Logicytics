@@ -9,14 +9,15 @@
 # - Generating a list of files in the current working directory, excluding directories
 # - Generating a list of files in the current working directory that match a certain pattern
 
+import argparse
 import ctypes
 import platform
 import random
 import shutil
-import argparse
+from datetime import datetime
+
 from local_libraries.Lists_and_variables import *  # Import the list of flag names and any flag related dictionary.
 from local_libraries.Setups import *
-from datetime import datetime
 
 
 def generate_file_list():
@@ -37,9 +38,9 @@ def generate_file_list():
 
     # Step 3: Append './' to the beginning of each file path
     files = (
-        ["./CMD_Disabled_Bypass.py", "./Simple_Password_Miner.py"]
-        + files
-        + ["./Zipper.py", "./Clean.ps1", "./Hash.py", "Recycle_Logs.py"]
+            ["./CMD_Disabled_Bypass.py", "./Simple_Password_Miner.py"]
+            + files
+            + ["./Zipper.py", "./Clean.ps1", "./Hash.py", "Recycle_Logs.py"]
     )
 
     # Step 4: Remove duplicates

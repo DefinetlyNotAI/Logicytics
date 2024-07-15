@@ -1,5 +1,7 @@
-import pyautogui
 import time
+
+import pyautogui
+
 from local_libraries.Setups import *
 
 

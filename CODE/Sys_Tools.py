@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from local_libraries.Setups import *
 
 
@@ -215,10 +216,10 @@ def generate_system_info():
 
         # Step 4: Write the output to a text file
         with open(
-            os.path.join(
-                current_working_directory, "SystemInfo_Advanced_SysInternal.txt"
-            ),
-            "w",
+                os.path.join(
+                    current_working_directory, "SystemInfo_Advanced_SysInternal.txt"
+                ),
+                "w",
         ) as f:
             f.write(output)
 
@@ -264,7 +265,7 @@ def generate_sid_data():
 
     # Step 4: Write the output to a text file
     with open(
-        os.path.join(current_working_directory, "SID_Data_SysInternal.txt"), "w"
+            os.path.join(current_working_directory, "SID_Data_SysInternal.txt"), "w"
     ) as file:
         file.write(output)
 
@@ -294,8 +295,8 @@ def generate_running_processes_report():
 
         # Step 4: Write the output to a text file
         with open(
-            os.path.join(current_working_directory, "RunningProcesses_SysInternal.txt"),
-            "w",
+                os.path.join(current_working_directory, "RunningProcesses_SysInternal.txt"),
+                "w",
         ) as file:
             file.write(output)
 

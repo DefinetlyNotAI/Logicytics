@@ -32,7 +32,8 @@ $currentUser = $env:USERNAME
 # Define the base directory for the destination
 $baseDirectory = "DATA"
 
-function Invoke-CrashReport {
+function Invoke-CrashReport
+{
     param(
         [string]$ErrorId,
         [string]$FunctionNo,
@@ -75,7 +76,8 @@ function Invoke-CrashReport {
     [void]$Process.Start()
 
     # Read the output
-    while (-not $Process.StandardOutput.EndOfStream) {
+    while (-not $Process.StandardOutput.EndOfStream)
+    {
         $line = $Process.StandardOutput.ReadLine()
         Write-Host $line
     }
@@ -85,17 +87,20 @@ function Invoke-CrashReport {
 }
 
 # Function to check if a path exists and is accessible
-function Test-PathAndAccess($path) {
+function Test-PathAndAccess($path)
+{
     return Test-Path $path -PathType Container -ErrorAction SilentlyContinue
 }
 
 # Loop through each source path
-foreach ($sourcePath in $sourcePaths) {
+foreach ($sourcePath in $sourcePaths)
+{
     # Replace the placeholder with the current user's name
     $fullSourcePath = $sourcePath -replace '\{\}', $currentUser
 
     # Enhanced error checking for source path existence and accessibility
-    if (-not (Test-PathAndAccess $fullSourcePath)) {
+    if (-not (Test-PathAndAccess $fullSourcePath))
+    {
         Write-Host "WARNING: Source path $fullSourcePath does not exist or cannot be accessed."
         continue
     }
@@ -118,16 +123,20 @@ foreach ($sourcePath in $sourcePaths) {
     $destinationPath = Join-Path -Path $baseDirectory -ChildPath "USER_$identifier"
 
     # Enhanced error checking for destination directory existence
-    if (-not (Test-PathAndAccess $destinationPath)) {
+    if (-not (Test-PathAndAccess $destinationPath))
+    {
         New-Item -ItemType Directory -Path $destinationPath -Force | Out-Null
     }
 
     # Attempt to copy the folder to the DATA directory and rename it
-    try {
+    try
+    {
         Copy-Item -Path $fullSourcePath -Destination $destinationPath -Recurse -Force -ErrorAction SilentlyContinue
         # Print the success message to the console
         Write-Host "INFO: Successfully copied $fullSourcePath to $destinationPath"
-    } catch {
+    }
+    catch
+    {
         # Detailed error handling
         Write-Host "ERROR: An error occurred while copying $fullSourcePath to $destinationPath. Error: $_"
         Invoke-CrashReport -ErrorId "OGE" -FunctionNo "fun93" -ErrorContent $_ -Type "crash"

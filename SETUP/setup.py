@@ -1,6 +1,6 @@
 import os
-from setuptools import setup, find_packages
 
+from setuptools import setup, find_packages
 
 # Paths to the requirements.txt and Logicytics.version files
 requirements_path = "../requirements.txt"

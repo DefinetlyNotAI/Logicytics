@@ -1,6 +1,7 @@
 import getpass
 import shutil
 import zipfile
+
 from local_libraries.Setups import *
 
 USER_NAME = getpass.getuser()
@@ -55,8 +56,8 @@ def process_files():
         item
         for item in items
         if item.endswith(".txt")
-        or item.endswith(".file")
-        or not os.path.splitext(item)[1]
+           or item.endswith(".file")
+           or not os.path.splitext(item)[1]
     ]
 
     if target_files:

@@ -1,6 +1,6 @@
 import os
-from datetime import datetime
 import re
+from datetime import datetime
 
 
 def get_file_age(file_name):

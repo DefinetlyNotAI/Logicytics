@@ -1,49 +1,60 @@
 # PowerShell Script to Delete 'DATA' Directories and Move ZIP Files to ACCESS/DATA Directory
 
 # Function to check if a directory exists
-function Test-DirectoryExists {
+function Test-DirectoryExists
+{
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$directoryPath
     )
     return (Test-Path $directoryPath)
 }
 
 # Function to delete a directory safely
-function Remove-SafeDirectory {
+function Remove-SafeDirectory
+{
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$directoryPath
     )
-    try {
+    try
+    {
         Remove-Item -Recurse -Force $directoryPath -ErrorAction Stop
         Write-Host "INFO: '$directoryPath' has been successfully deleted."
-    } catch {
+    }
+    catch
+    {
         Write-Host "ERROR: Failed to delete '$directoryPath': $_"
     }
 }
 
 # Function to move ZIP files to the specified directory
-function Move-ZipFiles {
+function Move-ZipFiles
+{
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$sourceDirectory,
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$destinationDirectory
     )
-    try {
+    try
+    {
         # Ensure the destination directory exists, create it if not
-        if (-not (Test-DirectoryExists -directoryPath $destinationDirectory)) {
+        if (-not (Test-DirectoryExists -directoryPath $destinationDirectory))
+        {
             New-Item -ItemType Directory -Force -Path $destinationDirectory | Out-Null
         }
 
         # Find ZIP files in the source directory and move them
         $zipFiles = Get-ChildItem -Path $sourceDirectory -Filter "*.zip" -File
-        foreach ($file in $zipFiles) {
+        foreach ($file in $zipFiles)
+        {
             Move-Item -Path $file.FullName -Destination $destinationDirectory -Force
-            Write-Host "INFO: Moved '$($file.FullName)' to '$destinationDirectory'"
+            Write-Host "INFO: Moved '$( $file.FullName )' to '$destinationDirectory'"
         }
-    } catch {
+    }
+    catch
+    {
         Write-Host "ERROR: Failed to move ZIP files: $_"
     }
 }
@@ -54,7 +65,8 @@ function Move-ZipFiles {
 $currentWorkingDir = Get-Location
 
 # Validate if the current working directory exists
-if (-not (Test-DirectoryExists -directoryPath $currentWorkingDir)) {
+if (-not (Test-DirectoryExists -directoryPath $currentWorkingDir))
+{
     Write-Host "ERROR: The current working directory does not exist."
     exit
 }
@@ -66,9 +78,11 @@ $directoryName = "DATA"
 $directories = Get-ChildItem -Directory
 
 # Loop through each directory
-foreach ($dir in $directories) {
+foreach ($dir in $directories)
+{
     # Check if the directory name matches the target
-    if ($dir.Name -eq $directoryName) {
+    if ($dir.Name -eq $directoryName)
+    {
         # Safely attempt to delete the directory
         Remove-SafeDirectory -directoryPath $dir.FullName
     }

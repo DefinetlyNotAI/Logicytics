@@ -1,4 +1,5 @@
-function Invoke-CrashReport {
+function Invoke-CrashReport
+{
     param(
         [string]$ErrorId,
         [string]$FunctionNo,
@@ -41,7 +42,8 @@ function Invoke-CrashReport {
     [void]$Process.Start()
 
     # Read the output
-    while (-not $Process.StandardOutput.EndOfStream) {
+    while (-not $Process.StandardOutput.EndOfStream)
+    {
         $line = $Process.StandardOutput.ReadLine()
         Write-Host $line
     }
