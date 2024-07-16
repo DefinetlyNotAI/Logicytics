@@ -13,17 +13,26 @@ script_path = os.path.realpath(__file__)
 # Function to check if Python is installed
 def check_python_installed():
     """
-    Function to check if Python is installed.
+    Check if Python is installed on the system.
+
+    This function uses the `subprocess` module to run a command to check the version of Python.
+    If the command is successful and the output is printed, it means that Python is installed.
+    If the command fails, it raises a `FileNotFoundError` exception, indicating that Python is not installed.
+    Any other exception that occurs during the execution of the command is then caught and an error message would be logged.
+
+    Returns:
+        bool: True if Python is installed, False otherwise.
+
     """
     try:
         subprocess.run([sys.executable, "--version"], check=True, capture_output=True, text=True)
-        print("Python is already installed.")
+        print("\nPython is already installed.")
         return True
     except FileNotFoundError:
-        print("Error: Python executable not found. Python might not be installed.")
+        print("\nError: Python executable not found. Python might not be installed.")
         return False
     except subprocess.CalledProcessError or Exception as e:
-        print(f"Error checking Python installation: {e}")
+        print(f"\nError checking Python installation: {e}")
         return False
 
 
@@ -41,13 +50,13 @@ def download_python_installer(version="3.11.8"):
     """
     url = f"https://www.python.org/ftp/python/{version}/python-{version}-amd64.exe"
     installer_path = os.path.join(os.getcwd(), "python-installer.exe")
-    print(f"Attempting to download Python {version} installer...")
+    print(f"\nAttempting to download Python {version} installer...")
     try:
         urlretrieve(url, installer_path)
-        print(f"Successfully downloaded to {installer_path}")
+        print(f"\nSuccessfully downloaded to {installer_path}")
         return installer_path
     except Exception as e:
-        print(f"Failed to download Python {version} installer: {e}")
+        print(f"\nFailed to download Python {version} installer: {e}")
         return None
 
 
@@ -62,14 +71,14 @@ def install_python(installer_path):
     :rtype: None
     """
     if installer_path is None:
-        print("Installer path not found. Cannot proceed with installation.")
+        print("\nInstaller path not found. Cannot proceed with installation.")
         return
-    print("Initiating Python installation...")
+    print("\nInitiating Python installation...")
     try:
         subprocess.run([installer_path, "/quiet", "InstallAllUsers=1", "PrependPath=1"], check=True)
-        print("Python installation completed successfully.")
+        print("\nPython installation completed successfully.")
     except Exception as e:
-        print(f"Error during Python installation: {e}")
+        print(f"\nError during Python installation: {e}")
 
 
 # Function to clone the repository if it doesn't already exist
@@ -87,11 +96,11 @@ def clone_repo_if_not_exists(repo_url):
     if not any(path.name == repo_name and path.is_dir() for path in script_dir.iterdir()):
         try:
             subprocess.run(["git", "clone", repo_url], cwd=script_dir, check=True)
-            print(f"Repository {repo_name} cloned successfully.")
+            print(f"\nRepository {repo_name} cloned successfully.")
         except Exception as e:
-            print(f"Failed to clone repository {repo_name}: {e}")
+            print(f"\nFailed to clone repository {repo_name}: {e}")
     else:
-        print(f"The repository {repo_name} already exists in the current directory. Skipping clone.")
+        print(f"\nThe repository {repo_name} already exists in the current directory. Skipping clone.")
 
 
 # Main function
@@ -103,7 +112,7 @@ def main():
     :return: None
     :rtype: None
     """
-    print("Starting setup process...")
+    print("\nStarting setup process...")
 
     # Check if Python is installed
     if not check_python_installed():
@@ -124,9 +133,9 @@ def main():
             with open("Download.log", "w") as log_file:
                 log_file.write(result.stdout)
 
-            print("Dependencies installed successfully.")
+            print("\nDependencies installed successfully.")
         except Exception as e:
-            print(f"Error installing dependencies: {e}")
+            print(f"\nError installing dependencies: {e}")
 
         # Prepare the logs directory
         logs_dir = script_dir / "Logicytics" / "ACCESS" / "LOGS"
@@ -138,7 +147,7 @@ def main():
         # Delete this file
         os.system(f'del "{script_path}"')
     else:
-        print(f"The SETUP directory does not exist at {setup_dir}. Cannot proceed.")
+        print(f"\nThe SETUP directory does not exist at {setup_dir}. Cannot proceed.")
 
 
 if __name__ == "__main__":
