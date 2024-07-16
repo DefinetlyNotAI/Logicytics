@@ -38,9 +38,9 @@ def generate_file_list():
 
     # Step 3: Append './' to the beginning of each file path
     files = (
-            ["./CMD_Disabled_Bypass.py", "./Simple_Password_Miner.py"]
-            + files
-            + ["./Zipper.py", "./Clean.ps1", "./Hash.py", "Recycle_Logs.py"]
+        ["./CMD_Disabled_Bypass.py", "./Simple_Password_Miner.py"]
+        + files
+        + ["./Zipper.py", "./Clean.ps1", "./Hash.py", "Recycle_Logs.py"]
     )
 
     # Step 4: Remove duplicates

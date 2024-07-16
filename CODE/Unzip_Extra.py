@@ -40,7 +40,7 @@ def unzip_extra():
 
         for zip_file in zip_files:
             with zipfile.ZipFile(
-                    os.path.join(extra_dir_path, zip_file), "r"
+                os.path.join(extra_dir_path, zip_file), "r"
             ) as zip_ref:
                 zip_ref.extractall(
                     extra_dir_path

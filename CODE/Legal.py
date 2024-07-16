@@ -101,7 +101,6 @@ else:
     text_label = tk.Label(root, text=initial_texts[current_initial_text_index])
     text_label.pack(pady=20)  # Use pack for simpler layout
 
-
     def on_accept_click():
         """
         Handles the click event when the user confirms their agreement to the terms.
@@ -165,7 +164,6 @@ else:
             # Close the application
             root.destroy()
 
-
     def on_reject_click():
         """
         Handles the event when the user rejects the terms.
@@ -173,7 +171,6 @@ else:
         """
         # Close the application
         root.destroy()
-
 
     def on_fun_summary_click():
         """
@@ -196,7 +193,6 @@ else:
             initial_texts
         )
         text_label.config(text=initial_texts[current_initial_text_index])
-
 
     # Accept button
     accept_button = tk.Button(root, text="Accept", command=on_accept_click)
