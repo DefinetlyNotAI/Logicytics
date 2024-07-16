@@ -51,9 +51,7 @@ def get_network_info():
     ipv4 = socket.gethostbyname(hostname)
     ipv6 = [item[4][0] for item in socket.getaddrinfo(hostname, None, socket.AF_INET6)]
     mac_address = ":".join(
-        ["{:02x}".format((uuid.getnode() >> i) & 0xFF) for i in range(0, 8 * 6, 8)][
-        ::-1
-        ]
+        ["{:02x}".format((uuid.getnode() >> i) & 0xFF) for i in range(0, 8 * 6, 8)][::-1]
     )
     return ipv4, ipv6, mac_address
 
