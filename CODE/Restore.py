@@ -55,7 +55,7 @@ def unzip_backup():
             os.makedirs(code_dir_path)  # Create the CODE directory if it doesn't exist
 
         with zipfile.ZipFile(
-                os.path.join(backup_dir_path, zip_file_name), "r"
+            os.path.join(backup_dir_path, zip_file_name), "r"
         ) as zip_ref:
             zip_ref.extractall(
                 code_dir_path

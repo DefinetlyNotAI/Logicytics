@@ -55,7 +55,9 @@ def process_files():
     target_files = [
         item
         for item in items
-        if item.endswith(".txt") or item.endswith(".file") or not os.path.splitext(item)[1]
+        if item.endswith(".txt")
+        or item.endswith(".file")
+        or not os.path.splitext(item)[1]
     ]
 
     if target_files:

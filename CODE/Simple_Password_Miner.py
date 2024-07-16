@@ -55,8 +55,8 @@ def search_filesystem():
             if any(extension in file for extension in extensions):
                 file_path = os.path.join(root, file)
                 if (
-                        "password" in file_path.lower()
-                        or "password" in open(file_path).read().lower()
+                    "password" in file_path.lower()
+                    or "password" in open(file_path).read().lower()
                 ):
                     logger.info(f"Found password in file: {file_path}")
                     copy_file(file_path, "DATA/found_passwords")

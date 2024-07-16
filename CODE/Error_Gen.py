@@ -59,7 +59,7 @@ def validate_file_name(file_name):
         suggestions = []
         for i in range(len(file_name)):
             for j in range(26):  # Assuming ASCII letters
-                new_name = file_name[:i] + chr(ord("a") + j) + file_name[i + 1:]
+                new_name = file_name[:i] + chr(ord("a") + j) + file_name[i + 1 :]
                 if os.path.exists(new_name):
                     suggestions.append(new_name)
 
