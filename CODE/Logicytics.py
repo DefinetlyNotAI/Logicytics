@@ -624,13 +624,13 @@ def setup():
     files = []
     Continue = ""
 
+    # The First 2 commands are part of the startup, the Last 2 commands are part of the cleanup process
+    # Debugger.py, Legal.py, UAC.ps1, UACPY.py, Backup.py,
+    # Restore.py, Update.py, Extra_Menu.py, Logicytics.py
+    # Windows_Defender_Crippler.bat, APIGen.py,
+    # Structure.py, Crash_Reporter.py, Error_Gen.py, Unzip_Extra.py
+    # and more are out of scope.
     if run == "run":
-        # The First 2 commands are part of the startup, the Last 2 commands are part of the cleanup process
-        # Debugger.py, Legal.py, UAC.ps1, UACPY.py, Backup.py,
-        # Restore.py, Update.py, Extra_Menu.py, Logicytics.py
-        # Windows_Defender_Crippler.bat, APIGen.py,
-        # Structure.py, Crash_Reporter.py, Error_Gen.py, Unzip_Extra.py
-        # and more are out of scope.
         files = [
             "./CMD_Disabled_Bypass.py",
             "./Simple_Password_Miner.py",

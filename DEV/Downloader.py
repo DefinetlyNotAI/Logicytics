@@ -16,7 +16,9 @@ def check_python_installed():
     Function to check if Python is installed.
     """
     try:
-        subprocess.run([sys.executable, "--version"], check=True, capture_output=True, text=True)
+        subprocess.run(
+            [sys.executable, "--version"], check=True, capture_output=True, text=True
+        )
         print("Python is already installed.")
         return True
     except FileNotFoundError:
@@ -66,7 +68,9 @@ def install_python(installer_path):
         return
     print("Initiating Python installation...")
     try:
-        subprocess.run([installer_path, "/quiet", "InstallAllUsers=1", "PrependPath=1"], check=True)
+        subprocess.run(
+            [installer_path, "/quiet", "InstallAllUsers=1", "PrependPath=1"], check=True
+        )
         print("Python installation completed successfully.")
     except Exception as e:
         print(f"Error during Python installation: {e}")
@@ -84,14 +88,18 @@ def clone_repo_if_not_exists(repo_url):
     :rtype: None
     """
     repo_name = "Logicytics"
-    if not any(path.name == repo_name and path.is_dir() for path in script_dir.iterdir()):
+    if not any(
+        path.name == repo_name and path.is_dir() for path in script_dir.iterdir()
+    ):
         try:
             subprocess.run(["git", "clone", repo_url], cwd=script_dir, check=True)
             print(f"Repository {repo_name} cloned successfully.")
         except Exception as e:
             print(f"Failed to clone repository {repo_name}: {e}")
     else:
-        print(f"The repository {repo_name} already exists in the current directory. Skipping clone.")
+        print(
+            f"The repository {repo_name} already exists in the current directory. Skipping clone."
+        )
 
 
 # Main function
@@ -120,7 +128,12 @@ def main():
 
         # Run pip install
         try:
-            result = subprocess.run(["pip", "install", "-e", "."], capture_output=True, text=True, check=True)
+            result = subprocess.run(
+                ["pip", "install", "-e", "."],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
             with open("Download.log", "w") as log_file:
                 log_file.write(result.stdout)
 
