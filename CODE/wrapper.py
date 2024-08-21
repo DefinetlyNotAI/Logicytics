@@ -260,6 +260,7 @@ class Actions:
         parser.add_argument("--modded", action="store_true")
         parser.add_argument("--speedy", action="store_true")
         parser.add_argument("--basic", action="store_true")
+        parser.add_argument("--webhook", action="store_true")
 
         args = parser.parse_args()
         skip = False
@@ -270,9 +271,9 @@ class Actions:
             exit(1)
 
         # Check for exclusivity rules
-        if args.reboot or args.shutdown:
+        if args.reboot or args.shutdown or args.webhook:
             if not (args.basic or args.speedy or args.modded or args.silent or args.minimal or args.exe):
-                print("Error: --reboot and --shutdown flags require at least one of the following flags: --basic, --speedy, --modded, --silent, --minimal, --exe.")
+                print("Error: --reboot and --shutdown and --webhook flags require at least one of the following flags: --basic, --speedy, --modded, --silent, --minimal, --exe.")
                 exit(1)
             else:
                 skip = True
@@ -287,7 +288,7 @@ class Actions:
             # Ensure only 2 flags is used
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
             if len(used_flags) > 2:
-                print("Error: Only one flag is allowed with the --reboot and --shutdown flags.")
+                print("Error: Only one flag is allowed with the --reboot and --shutdown and --webhook flags.")
                 exit(1)
 
         # Set flags to True or False based on whether they were used
@@ -306,4 +307,8 @@ class Actions:
                     break
 
         # Convert the list to a tuple and return it
-        return tuple(true_keys)
+        if len(tuple(true_keys)) < 3:
+            return tuple(true_keys)
+        else:
+            print("Error: Only one flag is allowed with the --reboot and --shutdown and --webhook flags.")
+            exit(1)

@@ -16,6 +16,7 @@
     --extra (Opens a menu for extra dir)
     --dev (Step to check for developers)
     --debug
+    --webhook (Sends file via webhook if available)
 
 3) Make sure to group in compulsory, and not allowed to be together ✅
 4) Run logicytics normally with the following things to grab - Put them in separate files)
