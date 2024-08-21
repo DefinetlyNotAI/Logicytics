@@ -1,4 +1,4 @@
-1) Do checks
+1) Do checks that admin is given
 2) Check following flags
     --minimal
     --unzip-extra (Unzips the extra directory)
@@ -69,3 +69,4 @@ Check:
     execution policy
     does it have the dependencies installed
 
+REDO README.
