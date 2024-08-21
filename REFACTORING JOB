@@ -1,21 +1,25 @@
 1) Do checks that admin is given ✅
-2) Check following flags
+2) Check following flags ✅
     --minimal
+    --basic
+    --exe (Uses exe files only)
+    --silent
+    --modded (Runs every file in the CODE directory)
+    --speedy (Only run fast commands)
+        --reboot
+        --shutdown
+
     --unzip-extra (Unzips the extra directory)
     --backup
     --restore
     --update
     --extra (Opens a menu for extra dir)
-    --mods
     --dev (Step to check for developers)
-    --exe (Uses exe files only)
-    --silent
-    --reboot
-    --shutdown
-    --modded (Runs every file in the CODE directory)
-    --speedy (Only run fast commands)
-3) Make sure to group in compulsory, and not allowed to be together
+    --debug
+
+3) Make sure to group in compulsory, and not allowed to be together ✅
 4) Run logicytics normally with the following things to grab - Put them in separate files)
+(USE FLAGS)
         systeminfo command
         all sysinternal exe
         registry backup
