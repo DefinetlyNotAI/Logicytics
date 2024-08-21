@@ -1,4 +1,4 @@
-1) Do checks that admin is given
+1) Do checks that admin is given ✅
 2) Check following flags
     --minimal
     --unzip-extra (Unzips the extra directory)

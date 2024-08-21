@@ -1,8 +1,12 @@
 import ctypes
-import subprocess
-import colorlog
 import os
 from datetime import datetime
+import colorlog
+import subprocess
+
+
+# os.makedirs("../ACCESS/LOGS/", exist_ok=True)
+# log = Log(filename="../ACCESS/LOGS/Logicytics.log", debug=True)
 
 
 class Log:
@@ -210,15 +214,23 @@ class Log:
                 f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message))}\n"
             )
 
-def is_admin() -> bool:
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except AttributeError:
-        return False
+class Checks:
+    def __init__(self):
+        self.Actions = Actions()
 
-def run_command(command) -> subprocess.CompletedProcess:
-    result = subprocess.run(command, shell=True)
-    return result
+    @staticmethod
+    def is_admin() -> bool:
+        try:
+            return ctypes.windll.shell32.IsUserAnAdmin()
+        except AttributeError:
+            return False
 
-os.makedirs("../ACCESS/LOGS/", exist_ok=True)
-log = Log(filename="../ACCESS/LOGS/Logicytics.log", debug=True)
+    def using_uac(self) -> bool:
+        value = self.Actions.run_command("powershell (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA")
+        return int(value.strip("\n")) == 1
+
+class Actions:
+    @staticmethod
+    def run_command(command):
+        process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return process.stdout
