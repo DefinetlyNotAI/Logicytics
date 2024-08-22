@@ -23,3 +23,4 @@ if __name__ == "__main__":
     os.makedirs("../ACCESS/LOGS/", exist_ok=True)
     log = Log(filename="../ACCESS/LOGS/Logicytics.log", debug=DEBUG)
     action, sub_action = Actions().flags()
+    print(action, sub_action)

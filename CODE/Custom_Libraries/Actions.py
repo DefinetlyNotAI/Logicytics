@@ -12,27 +12,24 @@ class Actions:
     def flags():
         # Define the argument parser
         parser = argparse.ArgumentParser(description="Logicytics, The most powerful tool for system data analysis.")
-
         # Define flags
-        parser.add_argument("--minimal", action="store_true")
-        parser.add_argument("--unzip-extra", action="store_true")
-        parser.add_argument("--backup", action="store_true")
-        parser.add_argument("--restore", action="store_true")
-        parser.add_argument("--update", action="store_true")
-        parser.add_argument("--extra", action="store_true")
-        parser.add_argument("--dev", action="store_true")
-        parser.add_argument("--exe", action="store_true")
-        parser.add_argument("--silent", action="store_true")
-        parser.add_argument("--reboot", action="store_true")
-        parser.add_argument("--shutdown", action="store_true")
-        parser.add_argument("--DEBUG", action="store_true")
-        parser.add_argument("--modded", action="store_true")
-        parser.add_argument("--speedy", action="store_true")
-        parser.add_argument("--basic", action="store_true")
-        parser.add_argument("--webhook", action="store_true")
-
+        parser.add_argument("--basic", action="store_true", help="Runs Logicytics default")
+        parser.add_argument("--minimal", action="store_true", help="Run Logicytics in minimal mode.")
+        parser.add_argument("--unzip-extra", action="store_true", help="Unzip the extra directory zip file - Use on your own device only -.")
+        parser.add_argument("--backup", action="store_true", help="Backup Logicytics files to the ACCESS/BACKUPS directory - Use on your own device only -.")
+        parser.add_argument("--restore", action="store_true", help="Restore Logicytics files from the ACCESS/BACKUPS directory - Use on your own device only -.")
+        parser.add_argument("--update", action="store_true", help="Update Logicytics from GitHub - Use on your own device only -.")
+        parser.add_argument("--extra", action="store_true", help="Open the extra directory for more tools.")
+        parser.add_argument("--dev", action="store_true", help="Run Logicytics developer mod, this is only for people who want to register their contributions properly. - Use on your own device only -.")
+        parser.add_argument("--exe", action="store_true", help="Run Logicytics using its precompiled exe's, These may be outdated and not the best, use only if the device doesnt have python installed.")
+        parser.add_argument("--debug", action="store_true", help="Runs the Debugger, Will check for any issues, warning etc, useful for debugging and issue reporting")
+        parser.add_argument("--modded", action="store_true", help="Runs the normal Logicytics, as well as any file in the MODS directory, Useful for custom scripts")
+        parser.add_argument("--speedy", action="store_true", help="Runs Logicytics Speedy mode, where it runs in parallel only fast files")
+        parser.add_argument("--webhook", action="store_true", help="Special Flag that will send zip file via webhook")
+        parser.add_argument("--reboot", action="store_true", help="Special Flag that will reboot the device afterward")
+        parser.add_argument("--shutdown", action="store_true", help="Special Flag that will shutdown the device afterward")
         args = parser.parse_args()
-        skip = False
+        special_flag_used = False
 
         empty_check = str(args).removeprefix("Namespace(").removesuffix(")").replace("=", " = ").replace(",", " ").split(" ")
         if "True" not in empty_check:
@@ -42,12 +39,12 @@ class Actions:
         # Check for exclusivity rules
         if args.reboot or args.shutdown or args.webhook:
             if not (args.basic or args.speedy or args.modded or args.silent or args.minimal or args.exe):
-                print("Error: --reboot and --shutdown and --webhook flags require at least one of the following flags: --basic, --speedy, --modded, --silent, --minimal, --exe.")
+                print("Error: --reboot and --shutdown and --webhook flags require at least one of the following flags: --basic, --speedy, --modded, --minimal, --exe.")
                 exit(1)
             else:
-                skip = True
+                special_flag_used = True
 
-        if not skip:
+        if not special_flag_used:
             # Ensure only one flag is used
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
             if len(used_flags) > 1:
