@@ -31,7 +31,7 @@
         API IP Scraper✅
         media backup ✅
         system restore backup ❌
-        backup everyfile with the following names in them: password secret code login
+        backup everyfile with the following names in them: password secret code login ✅
         ssh backup ✅
         wmic command✅
         ipv4, ipv6, and mac address commands ✅
@@ -41,20 +41,7 @@
         firewall, antivirus settings and data ❌
         drivers used✅
         disklist (and its subcommands) ❌
-        Property
-           Property(C): WindowsBuild = 9600
-           Property(C): PhysicalMemory = 16024
-           Property(C): VirtualMemory = 8223
-           Property(C): LogonUser = Hp
-           Property(C): UserSID = S-1-5-21-3364260432-1847390784-2640483925-1001
-           Property(C): UserLanguageID = 2057
-           Property(C): ComputerName = SANS
-           Property(C): SystemLanguageID = 2057
-           Property(C): Time = 00:04:17
-           Property(C): Date = 22/08/2024
-           Property(C): USERNAME = HP
-           Property(C): COMPANYNAME = HP
-           Property(C): ROOTDRIVE = C:\
+        Property✅
        (USE LOG CLASS FROM ALGOPY)
 
 5) In case of crashes it places the errors in ERROR.log
