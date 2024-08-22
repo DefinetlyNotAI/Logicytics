@@ -22,10 +22,10 @@
 
 4) Run logicytics normally with the following things to grab - Put them in separate files)
 (USE FLAGS)
-        systeminfo command
-        all sysinternal exe
-        registry backup
-        tree command
+        systeminfo command ✅
+        all sysinternal exe ✅
+        registry backup ✅
+        tree command ✅
         browser data backup
         windows features list
         API IP Scraper
@@ -39,8 +39,8 @@
                         f"Tor Used: {'Yes' if data['security']['tor'] else 'No'}\n"
                     )
                     From https://ipify.org
-        media backup
-        system restore backup
+        media backup ✅
+        system restore backup ❌
         backup everyfile with the following names in them: password secret code login
         ssh backup
         wmic command
@@ -49,22 +49,22 @@
         log windows bootloader and boot manager
         firewall, antivirus settings and data
         drivers used
-        disklist (and its subcommands)
-        Property(C): WindowsBuild = 9600
-        Property(C): PhysicalMemory = 16024
-        Property(C): VirtualMemory = 8223
-        Property(C): LogonUser = Hp
-        Property(C): UserSID = S-1-5-21-3364260432-1847390784-2640483925-1001
-        Property(C): UserLanguageID = 2057
-        Property(C): ComputerName = SANS
-        Property(C): SystemLanguageID = 2057
-        Property(C): Time = 00:04:17
-        Property(C): Date = 22/08/2024
-        Property(C): USERNAME = HP
-        Property(C): COMPANYNAME = HP
-        Property(C): ROOTDRIVE = C:\
-
-(USE LOG CLASS FROM ALGOPY)
+        disklist (and its subcommands) ❌
+        Property
+           Property(C): WindowsBuild = 9600
+           Property(C): PhysicalMemory = 16024
+           Property(C): VirtualMemory = 8223
+           Property(C): LogonUser = Hp
+           Property(C): UserSID = S-1-5-21-3364260432-1847390784-2640483925-1001
+           Property(C): UserLanguageID = 2057
+           Property(C): ComputerName = SANS
+           Property(C): SystemLanguageID = 2057
+           Property(C): Time = 00:04:17
+           Property(C): Date = 22/08/2024
+           Property(C): USERNAME = HP
+           Property(C): COMPANYNAME = HP
+           Property(C): ROOTDRIVE = C:\
+       (USE LOG CLASS FROM ALGOPY)
 
 5) In case of crashes it places the errors in ERROR.log
 6) Errors must be in following format
