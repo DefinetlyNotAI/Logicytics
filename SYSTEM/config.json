@@ -2,5 +2,6 @@
   "WEBHOOK URL": "",
   "DEBUG": true,
   "VERSION": "2.0.0",
-  "FILES": ["",""]
+  "FILES": ["",""],
+  "ipgeolocation.io API KEY": ""
 }

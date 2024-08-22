@@ -92,12 +92,13 @@ class Actions:
                 debug = data.get('DEBUG', False)
                 version = data.get('VERSION', '2.0.0')
                 files = data.get('FILES', [])
+                api_key = data.get('ipgeolocation.io API KEY', '')
 
-                if not (all(isinstance(file, str) for file in files) and isinstance(webhook_url, str) and isinstance(debug, bool) and isinstance(version, str)):
+                if not (all(isinstance(file, str) for file in files) and isinstance(webhook_url, str) and isinstance(debug, bool) and isinstance(version, str) and isinstance(api_key, str)):
                     print("Invalid config.json format.")
                     exit(1)
 
-                return webhook_url, debug, version, files
+                return webhook_url, debug, version, files, api_key
         except FileNotFoundError:
             print("config.json not found.")
             exit(1)

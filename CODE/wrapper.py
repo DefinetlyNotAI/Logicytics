@@ -19,7 +19,7 @@ class Checks:
         return int(value.strip("\n")) == 1
 
 if __name__ == "__main__":
-    WEBHOOK, DEBUG, VERSION, FILES = Actions.read_config()
+    WEBHOOK, DEBUG, VERSION, FILES, API_KEY = Actions.read_config()
     os.makedirs("../ACCESS/LOGS/", exist_ok=True)
     log = Log(filename="../ACCESS/LOGS/Logicytics.log", debug=DEBUG)
     action, sub_action = Actions().flags()

@@ -21,30 +21,20 @@
 3) Make sure to group in compulsory, and not allowed to be together ✅
 
 4) Run logicytics normally with the following things to grab - Put them in separate files)
-(USE FLAGS)
+        (USE FLAGS)
         systeminfo command ✅
         all sysinternal exe ✅
         registry backup ✅
         tree command ✅
         browser data backup✅
-        windows features list
-        API IP Scraper
-                    output = (
-                        f"Country: {data['location']['country']}\n"
-                        f"City: {data['location']['city']}\n"
-                        f"ISP: {data['network']['autonomous_system_organization']}\n"
-                        f"Organization: {data['network']['autonomous_system_organization']}\n\n"
-                        f"VPN Used: {'Yes' if data['security']['vpn'] else 'No'}\n"
-                        f"Proxy Used: {'Yes' if data['security']['proxy'] else 'No'}\n"
-                        f"Tor Used: {'Yes' if data['security']['tor'] else 'No'}\n"
-                    )
-                    From https://ipify.org
+        windows features list✅
+        API IP Scraper✅
         media backup ✅
         system restore backup ❌
         backup everyfile with the following names in them: password secret code login
-        ssh backup
+        ssh backup ✅
         wmic command✅
-        ipv4, ipv6, and mac address commands
+        ipv4, ipv6, and mac address commands ✅
         wtl file creation✅
         log windows ✅
         log windows bootloader and boot manager ❌
