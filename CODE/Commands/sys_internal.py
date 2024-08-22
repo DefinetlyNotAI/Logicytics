@@ -1,10 +1,5 @@
 import subprocess
 import os
-
-# Define the path to your Sysinternals folder
-sysinternals_path = 'SysInternal_Suite'
-
-# List of Sysinternals executables to run
 executables = [
     'psfile.exe',
     'PsGetsid.exe',
@@ -13,14 +8,12 @@ executables = [
     'PsLoggedon.exe',
     'psloglist.exe',
 ]
-
-# Open the output file in append mode
 with open('SysInternal.txt', 'a') as outfile:
     # Iterate over each executable
     for executable in executables:
         try:
             # Construct the command to run the executable
-            command = f'"{os.path.join(sysinternals_path, executable)}"'
+            command = f"{os.path.join('SysInternal_Suite', executable)}"
 
             # Execute the command and capture the output
             result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -35,5 +28,3 @@ with open('SysInternal.txt', 'a') as outfile:
 
         except Exception as e:
             outfile.write(f'Error executing {executable}: {str(e)}\n')
-
-print("Script completed.")

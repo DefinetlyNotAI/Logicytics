@@ -43,12 +43,12 @@
         system restore backup ❌
         backup everyfile with the following names in them: password secret code login
         ssh backup
-        wmic command
+        wmic command✅
         ipv4, ipv6, and mac address commands
-        wtl file creation
+        wtl file creation✅
         log windows bootloader and boot manager
-        firewall, antivirus settings and data
-        drivers used
+        firewall, antivirus settings and data ❌
+        drivers used✅
         disklist (and its subcommands) ❌
         Property
            Property(C): WindowsBuild = 9600
