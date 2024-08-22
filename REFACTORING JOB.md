@@ -26,7 +26,7 @@
         all sysinternal exe ✅
         registry backup ✅
         tree command ✅
-        browser data backup
+        browser data backup✅
         windows features list
         API IP Scraper
                     output = (
@@ -46,7 +46,8 @@
         wmic command✅
         ipv4, ipv6, and mac address commands
         wtl file creation✅
-        log windows bootloader and boot manager
+        log windows ✅
+        log windows bootloader and boot manager ❌
         firewall, antivirus settings and data ❌
         drivers used✅
         disklist (and its subcommands) ❌
@@ -72,6 +73,7 @@
     each code is the first letters of the name
 7) Zips any made data and files
 8) When a zip file is made, a HASH is supplied with it of the zip file
+9) Delete all logs in event viewer
 
 ALSO
 
