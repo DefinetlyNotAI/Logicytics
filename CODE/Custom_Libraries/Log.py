@@ -6,17 +6,17 @@ import colorlog
 
 class Log:
     def __init__(
-            self,
-            filename=pathlib.Path("../../ACCESS/LOGS/Logicytics.log"),
-            err_filename=None,
-            use_colorlog=True,
-            debug=False,
-            debug_color="cyan",
-            info_color="green",
-            warning_color="yellow",
-            error_color="red",
-            critical_color="red",
-            colorlog_fmt_parameters="%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+        self,
+        filename=pathlib.Path("../../ACCESS/LOGS/Logicytics.log"),
+        err_filename=None,
+        use_colorlog=True,
+        debug=False,
+        debug_color="cyan",
+        info_color="green",
+        warning_color="yellow",
+        error_color="red",
+        critical_color="red",
+        colorlog_fmt_parameters="%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
     ):
         """
         Initializes a new instance of the LOG class.
@@ -76,7 +76,6 @@ class Log:
             )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
-
 
         self.filename = str(filename)
         if err_filename is None:

@@ -1,7 +1,6 @@
 {
   "WEBHOOK URL": "",
+  "ipgeolocation.io API KEY": "",
   "DEBUG": true,
-  "VERSION": "2.0.0",
-  "FILES": ["",""],
-  "ipgeolocation.io API KEY": ""
+  "VERSION": "2.0.0"
 }

@@ -1,6 +1,7 @@
 import os
 import shutil
 from CODE.Custom_Libraries.Log import Log
+from CODE.Custom_Libraries.Actions import *
 
 
 def backup_ssh_keys_and_config():
@@ -8,7 +9,7 @@ def backup_ssh_keys_and_config():
     current_dir = os.getcwd()
 
     # Define the path to the SSH directory
-    ssh_folder = os.path.join(os.environ['USERPROFILE'], '.ssh')
+    ssh_folder = os.path.join(os.environ["USERPROFILE"], ".ssh")
 
     # Define the destination directory as the current working directory
     destination_dir = current_dir
@@ -19,13 +20,15 @@ def backup_ssh_keys_and_config():
 
     # Define source and destination directories
     source_dir = ssh_folder
-    destination_dir = os.path.join(current_dir, 'ssh_backup')  # Use a subdirectory named 'ssh_backup' in the current directory
+    destination_dir = os.path.join(
+        current_dir, "ssh_backup"
+    )  # Use a subdirectory named 'ssh_backup' in the current directory
 
     # Copy SSH keys and config
     try:
         shutil.copytree(source_dir, destination_dir)
-        Log().info("SSH keys and configuration backed up successfully.")
+        Log(debug=DEBUG).info("SSH keys and configuration backed up successfully.")
     except Exception as e:
-        Log().error(f"Failed to back up SSH keys and configuration: {e}")
+        Log(debug=DEBUG).error(f"Failed to back up SSH keys and configuration: {e}")
 
-    Log().info("SSH Miner completed.")
+    Log(debug=DEBUG).info("SSH Miner completed.")
