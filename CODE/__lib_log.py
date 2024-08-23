@@ -7,7 +7,7 @@ import colorlog
 class Log:
     def __init__(
         self,
-        filename=pathlib.Path("../../ACCESS/LOGS/Logicytics.log"),
+        filename=pathlib.Path("../ACCESS/LOGS/Logicytics.log"),
         err_filename=None,
         use_colorlog=True,
         debug=False,

@@ -21,6 +21,7 @@ class Checks:
         )
         return int(value.strip("\n")) == 1
 
+
 if __name__ == "__main__":
     # Initialization
     os.makedirs("../ACCESS/LOGS/", exist_ok=True)
@@ -30,35 +31,36 @@ if __name__ == "__main__":
         action, sub_action = Actions().flags()
         log.info("2 actions detected")
     except Exception as e:
-        log.info("YOU MAY SAFELY IGNORE THIS: Only one action detected as we tried unpacking and got " + str(e))
+        log.info("YOU MAY SAFELY IGNORE THIS ERROR (Its expected): " + str(e))
         action = Actions().flags()
+        action = action[0]
         sub_action = None
     check_status = Checks()
 
-    # Quick run actions
+    # TODO Quick run actions
     if action == "debug":
-        Actions().run_command("python _debug.py", new_shell=True)
+        import _debug
         exit(0)
     if action == "dev":
-        Actions().run_command("python _dev.py", new_shell=True)
+        import _dev
         exit(0)
     if action == "extra":
-        Actions().run_command("python _extra.py --extra", new_shell=True)
+        import _extra
         exit(0)
     if action == "update":
-        Actions().run_command("python _health.py --update", new_shell=True)
+        import _health
         exit(0)
     if action == "restore":
-        Actions().run_command("python _health.py --restore", new_shell=True)
+        import _health
         exit(0)
     if action == "backup":
-        Actions().run_command("python _health.py --backup", new_shell=True)
+        import _health
         exit(0)
     if action == "unzip-extra":
-        Actions().run_command("python _extra.py --unzip", new_shell=True)
+        import _extra
         exit(0)
 
-    # Checks for privileges etc
+    # Checks for privileges and errors
     if not check_status.admin():
         log.critical("Please run this script with admin privileges")
         exit(1)
@@ -81,11 +83,8 @@ if __name__ == "__main__":
         log.warning("This uses multiprocessing - Highly experimental and unstable")
         execution_list = ["driverquery.py", "log_miner.py", "media_backup.py", "online_ip_scraper.py", "registry.py", "sensitive_data_miner.py", "ssh_miner.py", "sys_internal.py", "sysinfo.py", "tasklist.py", "tree.py", "wmic.py"]
         # TODO Run them in parallel
-
-
     # Add final action
     execution_list.append("_zipper.py")
-
     # Additional Sub Actions
     if sub_action == "reboot":
         execution_list.append("R")  # Reboot
