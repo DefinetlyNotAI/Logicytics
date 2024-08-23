@@ -1,11 +1,12 @@
-from CODE.Custom_Libraries.Actions import Actions
+from CODE.Custom_Libraries.Actions import *
 from CODE.Custom_Libraries.Log import Log
+
 
 def driverquery():
     try:
-        output = Actions.run_command('driverquery /v')
+        output = Actions.run_command("driverquery /v")
         open("Drivers.txt", "w").write(output)
-        Log().info("Driver Query Successful")
+        Log(debug=DEBUG).info("Driver Query Successful")
     except Exception as e:
-        Log().error(e)
-    Log().info("Driver Query Executed")
+        Log(debug=DEBUG).error(e)
+    Log(debug=DEBUG).info("Driver Query Executed")

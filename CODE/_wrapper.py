@@ -15,11 +15,13 @@ class Checks:
             return False
 
     def using_uac(self) -> bool:
-        value = self.Actions.run_command("powershell (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA")
+        value = self.Actions.run_command(
+            "powershell (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA"
+        )
         return int(value.strip("\n")) == 1
 
+
 if __name__ == "__main__":
-    WEBHOOK, DEBUG, VERSION, FILES, API_KEY = Actions.read_config()
     os.makedirs("../ACCESS/LOGS/", exist_ok=True)
     log = Log(debug=DEBUG)
     action, sub_action = Actions().flags()
