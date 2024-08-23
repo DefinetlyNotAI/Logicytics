@@ -1,5 +1,7 @@
 import subprocess
 import os
+from CODE.Custom_Libraries.Log import Log
+
 
 def backup_registry():
     # Define the path where the registry will be exported
@@ -11,8 +13,7 @@ def backup_registry():
     try:
         # Execute the command
         subprocess.run(cmd, shell=True, check=True)
-        print(f'Registry backed up successfully to {export_path}')
+        Log().info(f'Registry backed up successfully to {export_path}')
     except subprocess.CalledProcessError as e:
-        print(f'Failed to back up the registry: {e}')
-
-backup_registry()
+        Log().error(f'Failed to back up the registry: {e}')
+    Log().info(f'Registry back-up executed')

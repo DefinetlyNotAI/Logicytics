@@ -73,3 +73,4 @@ REDO README.
 Add requirements.txt
 
 (_files wont be seen by --mod flag)
+(All files generated must either be directories or txt or json or md or reg or docx or png or jpeg or jpg files)
