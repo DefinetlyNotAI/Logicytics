@@ -1,6 +1,6 @@
 import requests
-from CODE.Custom_Libraries.Log import Log
-from CODE.Custom_Libraries.Actions import *
+from __lib_log import Log
+from __lib_actions import *
 
 
 class IP:

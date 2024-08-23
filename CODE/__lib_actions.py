@@ -22,7 +22,7 @@ class Actions:
             "--basic", action="store_true", help="Runs Logicytics default"
         )
         parser.add_argument(
-            "--minimal", action="store_true", help="Run Logicytics in minimal mode."
+            "--minimal", action="store_true", help="Run Logicytics in minimal mode. Just bare essential scraping"
         )
         parser.add_argument(
             "--unzip-extra",
@@ -163,7 +163,7 @@ class Actions:
     @staticmethod
     def read_config():
         try:
-            with open("../SYSTEM/config.json", "r") as file:
+            with open("config.json", "r") as file:
                 data = json.load(file)
 
                 webhook_url = data.get("WEBHOOK_URL", "")
@@ -186,4 +186,4 @@ class Actions:
             exit(1)
 
 
-WEBHOOK, DEBUG, VERSION, API_KEY = Actions.read_config()
+WEBHOOK, DEBUG, VERSION, API_KEY = Actions().read_config()
