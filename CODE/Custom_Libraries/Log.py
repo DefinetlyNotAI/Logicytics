@@ -1,11 +1,13 @@
 import os
+import pathlib
 from datetime import datetime
 import colorlog
+
 
 class Log:
     def __init__(
             self,
-            filename="Server.log",
+            filename=pathlib.Path("../../ACCESS/LOGS/Logicytics.log"),
             err_filename=None,
             use_colorlog=True,
             debug=False,
@@ -44,6 +46,9 @@ class Log:
         Returns:
             None
         """
+        if not os.path.exists(filename):
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+        self.level = debug
         self.color = use_colorlog
         if self.color:
             # Configure colorlog for logging messages with colors
@@ -138,6 +143,19 @@ class Log:
 
         padded_message += "|"
         return padded_message
+
+    def debug(self, message):
+        """
+        Logs an debug message via colorlog
+
+        Args:
+            message: The message to be logged.
+
+        Returns:
+            None
+        """
+        if self.level:
+            colorlog.debug(message)
 
     def info(self, message):
         """

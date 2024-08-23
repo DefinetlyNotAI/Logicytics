@@ -21,6 +21,6 @@ class Checks:
 if __name__ == "__main__":
     WEBHOOK, DEBUG, VERSION, FILES, API_KEY = Actions.read_config()
     os.makedirs("../ACCESS/LOGS/", exist_ok=True)
-    log = Log(filename="../ACCESS/LOGS/Logicytics.log", debug=DEBUG)
+    log = Log(debug=DEBUG)
     action, sub_action = Actions().flags()
     print(action, sub_action)

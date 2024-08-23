@@ -1,7 +1,11 @@
 import subprocess
+from CODE.Custom_Libraries.Log import Log
 
-def backup_windows_logs_powershell(log_type='System', backup_file='Logs_backup.csv'):
+
+def backup_windows_logs():
     try:
+        log_type='System'
+        backup_file='Logs_backup.csv'
         # Construct the PowerShell command as a single string
         cmd = f'Get-EventLog -LogName "{log_type}" | Export-Csv -Path "{backup_file}" -NoTypeInformation'
 
@@ -12,9 +16,8 @@ def backup_windows_logs_powershell(log_type='System', backup_file='Logs_backup.c
         if process.returncode != 0:
             raise Exception(f"Failed to backup logs: {stderr.strip()}")
 
-        print(f"Windows logs backed up to {backup_file}")
+        Log().info(f"Windows logs backed up to {backup_file}")
     except Exception as e:
-        print(f"Failed to backup logs: {str(e)}")
+        Log().error(f"Failed to backup logs: {str(e)}")
 
-backup_windows_logs_powershell('System', 'system_logs_backup.csv')
-
+    Log().info("Log Miner completed.")

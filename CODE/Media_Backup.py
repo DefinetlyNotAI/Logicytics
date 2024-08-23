@@ -2,6 +2,7 @@ import shutil
 import os
 from datetime import datetime
 import getpass
+from CODE.Custom_Libraries.Log import Log
 
 def backup_media():
     # Auto-detect the Windows username
@@ -28,9 +29,8 @@ def backup_media():
                     dst_file = os.path.join(backup_directory, datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + "_" + file)
                     try:
                         shutil.copy2(src_file, dst_file)
-                        print(f"Copied {file} to {dst_file}")
+                        Log().info(f"Copied {file} to {dst_file}")
                     except Exception as e:
-                        print(f"Failed to copy {file}: {str(e)}")
+                        Log().error(f"Failed to copy {file}: {str(e)}")
 
-# Run the backup function
-backup_media()
+    Log().info("Media backup script completed.")
