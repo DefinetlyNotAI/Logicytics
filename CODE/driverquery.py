@@ -1,5 +1,5 @@
-from CODE.Custom_Libraries.Actions import *
-from CODE.Custom_Libraries.Log import Log
+from __lib_actions import *
+from __lib_log import Log
 
 
 def driverquery():
