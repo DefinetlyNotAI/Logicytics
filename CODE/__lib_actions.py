@@ -1,15 +1,15 @@
 import subprocess
 import argparse
 import json
+from __lib_log import Log as log
 
 
 class Actions:
     @staticmethod
     def run_command(command):
-        process = subprocess.run(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-        )
+        process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         return process.stdout
+
 
     @staticmethod
     def flags():
@@ -114,8 +114,8 @@ class Actions:
                 or args.minimal
                 or args.exe
             ):
-                print(
-                    "Error: --reboot and --shutdown and --webhook flags require at least one of the following flags: --basic, --speedy, --modded, --minimal, --exe."
+                log().critical(
+                    "--reboot and --shutdown and --webhook flags require at least one of the following flags: --basic, --speedy, --modded, --minimal, --exe."
                 )
                 exit(1)
             else:
@@ -125,14 +125,14 @@ class Actions:
             # Ensure only one flag is used
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
             if len(used_flags) > 1:
-                print("Error: Only one flag is allowed.")
+                log().critical("Only one flag is allowed.")
                 exit(1)
         else:
             # Ensure only 2 flags is used
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
             if len(used_flags) > 2:
-                print(
-                    "Error: Only one flag is allowed with the --reboot and --shutdown and --webhook flags."
+                log().critical(
+                    "Only one flag is allowed with the --reboot and --shutdown and --webhook flags."
                 )
                 exit(1)
 
@@ -155,8 +155,8 @@ class Actions:
         if len(tuple(true_keys)) < 3:
             return tuple(true_keys)
         else:
-            print(
-                "Error: Only one flag is allowed with the --reboot and --shutdown and --webhook flags."
+            log().critical(
+                "Only one flag is allowed with the --reboot and --shutdown and --webhook flags."
             )
             exit(1)
 
@@ -177,12 +177,12 @@ class Actions:
                     and isinstance(version, str)
                     and isinstance(api_key, str)
                 ):
-                    print("Invalid config.json format.")
+                    log().critical("Invalid config.json format.")
                     exit(1)
 
                 return webhook_url, debug, version, api_key
         except FileNotFoundError:
-            print("config.json not found.")
+            log().critical("The config.json file is not found.")
             exit(1)
 
 
