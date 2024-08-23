@@ -4,7 +4,7 @@ from CODE.Custom_Libraries.Log import Log
 from CODE.Custom_Libraries.Actions import *
 
 
-def backup_ssh_keys_and_config():
+def ssh_miner():
     # Get the current working directory
     current_dir = os.getcwd()
 
