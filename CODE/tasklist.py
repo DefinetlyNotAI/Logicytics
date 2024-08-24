@@ -6,7 +6,6 @@ def tasklist():
     try:
         result = subprocess.run(
             "tasklist /v /fo csv",
-            shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )

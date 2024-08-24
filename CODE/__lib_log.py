@@ -83,15 +83,15 @@ class Log:
         else:
             self.err_filename = str(err_filename)
         if not os.path.exists(self.filename):
-            self.__only("|" + "-" * 19 + "|" + "-" * 13 + "|" + "-" * 154 + "|")
+            self.__only("|" + "-" * 19 + "|" + "-" * 13 + "|" + "-" * 152 + "|")
             self.__only(
                 "|     Timestamp     |  LOG Level  |"
-                + " " * 71
+                + " " * 70
                 + "LOG Messages"
-                + " " * 71
+                + " " * 70
                 + "|"
             )
-            self.__only("|" + "-" * 19 + "|" + "-" * 13 + "|" + "-" * 154 + "|")
+            self.__only("|" + "-" * 19 + "|" + "-" * 13 + "|" + "-" * 152 + "|")
 
     @staticmethod
     def __timestamp() -> str:
@@ -130,14 +130,14 @@ class Log:
         - str: The padded message with a length of exactly 153 characters.
         """
         # Calculate the number of spaces needed
-        num_spaces = 153 - len(message)
+        num_spaces = 151 - len(message)
 
         if num_spaces > 0:
             # If the message is shorter than 153 characters, add spaces to the end
             padded_message = message + " " * num_spaces
         else:
-            # If the message is already longer than 153 characters, truncate it to the first 153 characters
-            padded_message = message[:150]
+            # If the message is already longer than 153 characters, truncate it to the first 148 characters
+            padded_message = message[:148]
             padded_message += "..."
 
         padded_message += "|"
@@ -223,3 +223,5 @@ class Log:
             f.write(
                 f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message))}\n"
             )
+
+#TODO Make everyone use log properlly, with DEBUG param set!!

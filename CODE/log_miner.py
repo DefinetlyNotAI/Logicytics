@@ -1,3 +1,5 @@
+import subprocess
+
 from __lib_log import Log
 from __lib_actions import *
 
@@ -11,7 +13,7 @@ def backup_windows_logs():
 
         # Use subprocess.Popen to execute the PowerShell command
         process = subprocess.Popen(
-            ["powershell.exe"],
+            ["powershell.exe", "-Command", cmd],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

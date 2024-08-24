@@ -120,6 +120,7 @@ if __name__ == "__main__":
         sub_action = None
     check_status = Checks()
 
+    """
     # TODO Quick run actions
     if action == "debug":
         import _debug
@@ -149,7 +150,7 @@ if __name__ == "__main__":
         import _extra
 
         exit(0)
-
+    """
     # Checks for privileges and errors
     if not check_status.admin():
         log.critical("Please run this script with admin privileges")
