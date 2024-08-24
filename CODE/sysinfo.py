@@ -6,6 +6,10 @@ def sysinfo():
     try:
         data = Actions.run_command("systeminfo")
         open("SysInfo.txt", "w").write(data)
-        Log(debug=DEBUG).info("System Info Successful")
+        log.info("System Info Successful")
     except Exception as e:
-        Log(debug=DEBUG).error("Error while getting system info: " + str(e))
+        log.error("Error while getting system info: " + str(e))
+
+
+log = Log(debug=DEBUG)
+sysinfo()
