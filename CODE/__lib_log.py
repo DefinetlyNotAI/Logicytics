@@ -25,23 +25,21 @@ class Log:
 
         Best to only modify filename, and DEBUG.
 
-        Only if you are planning to use the dual-log parameter that allows you to both log unto the shell and the log File:
-            IMPORTANT: This class requires colorlog to be installed and also uses it in the INFO level,
-            To use the DEBUG level, set DEBUG to True.
+        Only if you are planning to use the dual-log parameter that allows you to both log unto the shell and the log
+        File: IMPORTANT: This class requires colorlog to be installed and also uses it in the INFO level, To use the
+        DEBUG level, set DEBUG to True.
 
             If you are using colorlog, DO NOT INITIALIZE IT MANUALLY, USE THE LOG CLASS PARAMETER'S INSTEAD.
             Sorry for any inconvenience that may arise.
 
-        Args:
-            filename (str, optional): The name of the log File. Defaults to "Server.log".
-            use_colorlog (bool, optional): Whether to use colorlog. Defaults to True.
-            debug (bool, optional): Whether to use the DEBUG level. Defaults to False (which uses the INFO level).
-            debug_color (str, optional): The color of the DEBUG level. Defaults to "cyan".
-            info_color (str, optional): The color of the info level. Defaults to "green".
-            warning_color (str, optional): The color of the warning level. Defaults to "yellow".
-            error_color (str, optional): The color of the error level. Defaults to "red".
-            critical_color (str, optional): The color of the critical level. Defaults to "red".
-            colorlog_fmt_parameters (str, optional): The format of the log message. Defaults to "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s".
+        Args: filename (str, optional): The name of the log File. Defaults to "Server.log". use_colorlog (bool,
+        optional): Whether to use colorlog. Defaults to True. debug (bool, optional): Whether to use the DEBUG level.
+        Defaults to False (which uses the INFO level). debug_color (str, optional): The color of the DEBUG level.
+        Defaults to "cyan". info_color (str, optional): The color of the info level. Defaults to "green".
+        warning_color (str, optional): The color of the warning level. Defaults to "yellow". error_color (str,
+        optional): The color of the error level. Defaults to "red". critical_color (str, optional): The color of the
+        critical level. Defaults to "red". colorlog_fmt_parameters (str, optional): The format of the log message.
+        Defaults to "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s".
 
         Returns:
             None
@@ -224,5 +222,5 @@ class Log:
             colorlog.critical(message)
         with open(self.err_filename, "a") as f:
             f.write(
-                f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message) + str(FILECODE) + str(ERRCODE) + str(FUNCODE))}\n"
+                f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message) + str(FILECODE) + ':' + str(ERRCODE) + ':' + str(FUNCODE))}\n"
             )

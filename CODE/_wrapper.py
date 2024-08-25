@@ -82,6 +82,7 @@ class Do:
 
 # Initialization
 os.makedirs("../ACCESS/LOGS/", exist_ok=True)
+os.makedirs("../ACCESS/LOGS/DEBUG", exist_ok=True)
 os.makedirs("../ACCESS/BACKUP/", exist_ok=True)
 os.makedirs("../ACCESS/DATA/Hashes", exist_ok=True)
 os.makedirs("../ACCESS/DATA/Zip", exist_ok=True)
