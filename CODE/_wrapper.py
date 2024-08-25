@@ -2,7 +2,7 @@ import ctypes
 import threading
 from __lib_actions import *
 from __lib_log import *
-
+from _zipper import zip_and_hash
 
 class Checks:
     def __init__(self):
@@ -22,11 +22,11 @@ class Checks:
         return int(value.strip("\n")) == 1
 
 
-class Special:
+class Do:
     @staticmethod
     def get_files_with_extensions(directory, List):
         for filename in os.listdir(directory):
-            if filename.endswith(('.py', '.exe', '.ps1', '.bat')):
+            if filename.endswith(('.py', '.exe', '.ps1', '.bat')) and not filename.startswith('_'):
                 List.append(filename)
         return List
 
@@ -77,6 +77,8 @@ class Special:
 # Initialization
 os.makedirs("../ACCESS/LOGS/", exist_ok=True)
 os.makedirs("../ACCESS/BACKUP/", exist_ok=True)
+os.makedirs("../ACCESS/DATA/Hashes", exist_ok=True)
+os.makedirs("../ACCESS/DATA/Zip", exist_ok=True)
 log = Log(debug=DEBUG)
 log.info("Starting...")
 try:
@@ -166,17 +168,15 @@ if action == "exe":
     )
     execution_list = ["sys_internal.py", "wmic.py"]
 if action == "modded":
-    execution_list = Special().get_files_with_extensions('../MODS', execution_list)
+    execution_list = Do().get_files_with_extensions('../MODS', execution_list)
 
-# Add final action
-execution_list.append("_zipper.py")
 log.debug(execution_list)
 
 # Check weather to use threading or not
 if action == "threaded":
     threads = []
     for index, file in enumerate(execution_list):
-        thread = threading.Thread(target=Special().execute_file, args=(index,))
+        thread = threading.Thread(target=Do().execute_file, args=(index,))
         threads.append(thread)
         thread.start()
 
@@ -184,8 +184,17 @@ if action == "threaded":
         thread.join()
 else:
     for file in range(len(execution_list)):  # Loop through List
-        Special().execute(execution_list[file])
+        Do().execute(execution_list[file])
         log.info(f"{execution_list[file]} executed")
+
+# Zip generated files
+if action == "modded":
+    zip_loc, hash_loc = zip_and_hash('../MODS', 'MODS', action)
+    log.info(zip_loc)
+    log.debug(hash_loc)
+zip_loc, hash_loc = zip_and_hash('../CODE', 'CODE', action)
+log.info(zip_loc)
+log.debug(hash_loc)
 
 # Finish with sub actions
 log.info("Completed successfully")
@@ -198,3 +207,6 @@ if sub_action == "reboot":
 if sub_action == "webhook":
     log.info("Sending webhook...")
     # TODO Implement
+
+log.info("Exiting...")
+exit(0)
