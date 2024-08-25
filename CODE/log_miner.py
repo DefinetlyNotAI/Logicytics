@@ -1,5 +1,5 @@
-from Libs.__lib_actions import *
-
+from __lib_actions import *
+from __lib_log import * 
 
 def backup_windows_logs():
     try:
@@ -21,8 +21,11 @@ def backup_windows_logs():
         if process.returncode != 0:
             raise Exception(f"Failed to backup logs: {stderr.strip()}")
 
-        Log(debug=DEBUG).info(f"Windows logs backed up to {backup_file}")
+        log.info(f"Windows logs backed up to {backup_file}")
     except Exception as e:
-        Log(debug=DEBUG).error(f"Failed to backup logs: {str(e)}")
+        log.error(f"Failed to backup logs: {str(e)}")
 
-    Log(debug=DEBUG).info("Log Miner completed.")
+    log.info("Log Miner completed.")
+
+log = Log(debug=DEBUG)
+backup_windows_logs()

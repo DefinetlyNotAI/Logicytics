@@ -1,5 +1,5 @@
-import os
-from Libs.__lib_actions import *
+from __lib_actions import *
+from __lib_log import *
 
 
 def backup_registry():
@@ -12,7 +12,10 @@ def backup_registry():
     try:
         # Execute the command
         subprocess.run(cmd, shell=True, check=True)
-        Log(debug=DEBUG).info(f"Registry backed up successfully to {export_path}")
+        log.info(f"Registry backed up successfully to {export_path}")
     except subprocess.CalledProcessError as e:
-        Log(debug=DEBUG).error(f"Failed to back up the registry: {e}")
-    Log(debug=DEBUG).info(f"Registry back-up executed")
+        log.error(f"Failed to back up the registry: {e}")
+    log.info(f"Registry back-up executed")
+
+log = Log(debug=DEBUG)
+backup_registry()

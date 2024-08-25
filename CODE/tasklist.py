@@ -1,4 +1,5 @@
-from Libs.__lib_actions import *
+from __lib_actions import *
+from __lib_log import Log
 
 
 def tasklist():
@@ -10,8 +11,11 @@ def tasklist():
         )
         with open("tasks.csv", "wb") as file:
             file.write(result.stdout)
-        Log(debug=DEBUG).info("Tasklist exported to tasks.csv")
+        log.info("Tasklist exported to tasks.csv")
     except subprocess.CalledProcessError as e:
-        Log(debug=DEBUG).error(f"Subprocess Error: {e}")
+        log.error(f"Subprocess Error: {e}")
     except Exception as e:
-        Log(debug=DEBUG).error(f"Error: {e}")
+        log.error(f"Error: {e}")
+
+log = Log(debug=DEBUG)
+tasklist()

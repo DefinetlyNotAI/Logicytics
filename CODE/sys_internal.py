@@ -1,5 +1,6 @@
 import os
-from Libs.__lib_actions import *
+from __lib_actions import *
+from __lib_log import Log
 
 
 def sys_internal():
@@ -26,7 +27,7 @@ def sys_internal():
                 # Write the output to the file
                 outfile.write("-" * 190)
                 outfile.write(f"{executable} Output:\n{result.stdout.decode()}")
-                Log(debug=DEBUG).info(f"{executable}: Successfully executed")
+                log.info(f"{executable}: Successfully executed")
 
                 # Optionally, handle errors if any
                 if (
@@ -34,10 +35,13 @@ def sys_internal():
                     and result.returncode != 0
                     and result.stderr.decode() is not None
                 ):
-                    Log(debug=DEBUG).warning(f"{executable}: {result.stderr.decode()}")
+                    log.warning(f"{executable}: {result.stderr.decode()}")
                     outfile.write(f"{executable}:\n{result.stderr.decode()}")
 
             except Exception as e:
-                Log(debug=DEBUG).error(f"Error executing {executable}: {str(e)}")
+                log.error(f"Error executing {executable}: {str(e)}")
                 outfile.write(f"Error executing {executable}: {str(e)}\n")
-    Log(debug=DEBUG).info("SysInternal: Successfully executed")
+    log.info("SysInternal: Successfully executed")
+
+log = Log(debug=DEBUG)
+sys_internal()

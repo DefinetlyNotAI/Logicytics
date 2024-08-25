@@ -1,13 +1,11 @@
 import subprocess
 import argparse
 import json
-from Libs.__lib_log import Log
-
 
 class Actions:
     @staticmethod
     def run_command(command):
-        process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        process = subprocess.run(command, capture_output=True, text=True)
         return process.stdout
     # TODO Remove this and make others use command normally - TEST THEM ALL
 
@@ -114,7 +112,7 @@ class Actions:
                 or args.minimal
                 or args.exe
             ):
-                log.critical(
+                print(
                     "--reboot and --shutdown and --webhook flags require at least one of the following flags: --basic, --speedy, --modded, --minimal, --exe."
                 )
                 exit(1)
@@ -125,13 +123,13 @@ class Actions:
             # Ensure only one flag is used
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
             if len(used_flags) > 1:
-                log.critical("Only one flag is allowed.")
+                print("Only one flag is allowed.")
                 exit(1)
         else:
             # Ensure only 2 flags is used
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
             if len(used_flags) > 2:
-                log.critical(
+                print(
                     "Only one flag is allowed with the --reboot and --shutdown and --webhook flags."
                 )
                 exit(1)
@@ -155,7 +153,7 @@ class Actions:
         if len(tuple(true_keys)) < 3:
             return tuple(true_keys)
         else:
-            log.critical(
+            print(
                 "Only one flag is allowed with the --reboot and --shutdown and --webhook flags."
             )
             exit(1)
@@ -163,7 +161,7 @@ class Actions:
     @staticmethod
     def read_config():
         try:
-            with open("Libs/config.json", "r") as file:
+            with open("config.json", "r") as file:
                 data = json.load(file)
 
                 webhook_url = data.get("WEBHOOK_URL", "")
@@ -177,14 +175,13 @@ class Actions:
                     and isinstance(version, str)
                     and isinstance(api_key, str)
                 ):
-                    log.critical("Invalid config.json format.")
+                    print("Invalid config.json format.")
                     exit(1)
 
                 return webhook_url, debug, version, api_key
         except FileNotFoundError:
-            log.critical("The config.json file is not found.")
+            print("The config.json file is not found.")
             exit(1)
 
 
-log = Log()
 WEBHOOK, DEBUG, VERSION, API_KEY = Actions().read_config()

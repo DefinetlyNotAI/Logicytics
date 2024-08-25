@@ -2,7 +2,8 @@ import shutil
 import os
 from datetime import datetime
 import getpass
-from Libs.__lib_actions import *
+from __lib_actions import *
+from __lib_log import Log
 
 
 def backup_media():
@@ -33,8 +34,11 @@ def backup_media():
                     )
                     try:
                         shutil.copy2(src_file, dst_file)
-                        Log(debug=DEBUG).info(f"Copied {file} to {dst_file}")
+                        log.info(f"Copied {file} to {dst_file}")
                     except Exception as e:
-                        Log(debug=DEBUG).error(f"Failed to copy {file}: {str(e)}")
+                        log.error(f"Failed to copy {file}: {str(e)}")
 
-    Log(debug=DEBUG).info("Media backup script completed.")
+    log.info("Media backup script completed.")
+
+log = Log(debug=DEBUG)
+backup_media()
