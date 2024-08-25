@@ -32,5 +32,6 @@ def ssh_miner():
 
     log.info("SSH Miner completed.")
 
+
 log = Log(debug=DEBUG)
 ssh_miner()

@@ -43,5 +43,6 @@ def sys_internal():
                 outfile.write(f"Error executing {executable}: {str(e)}\n")
     log.info("SysInternal: Successfully executed")
 
+
 log = Log(debug=DEBUG)
 sys_internal()

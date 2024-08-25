@@ -2,12 +2,12 @@ import subprocess
 import argparse
 import json
 
+
 class Actions:
     @staticmethod
     def run_command(command):
         process = subprocess.run(command, capture_output=True, text=True)
         return process.stdout
-    # TODO Remove this and make others use command normally - TEST THEM ALL
 
     @staticmethod
     def flags():
@@ -17,10 +17,12 @@ class Actions:
         )
         # Define flags
         parser.add_argument(
-            "--basic", action="store_true", help="Runs Logicytics default"
+            "--default", action="store_true", help="Runs Logicytics default"
         )
         parser.add_argument(
-            "--minimal", action="store_true", help="Run Logicytics in minimal mode. Just bare essential scraping"
+            "--minimal",
+            action="store_true",
+            help="Run Logicytics in minimal mode. Just bare essential scraping",
         )
         parser.add_argument(
             "--unzip-extra",

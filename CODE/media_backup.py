@@ -40,5 +40,6 @@ def backup_media():
 
     log.info("Media backup script completed.")
 
+
 log = Log(debug=DEBUG)
 backup_media()
