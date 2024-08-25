@@ -52,12 +52,14 @@ class Actions:
         parser.add_argument(
             "--dev",
             action="store_true",
-            help="Run Logicytics developer mod, this is only for people who want to register their contributions properly. - Use on your own device only -.",
+            help="Run Logicytics developer mod, this is only for people who want to register their contributions "
+                 "properly. - Use on your own device only -.",
         )
         parser.add_argument(
             "--exe",
             action="store_true",
-            help="Run Logicytics using its precompiled exe's, These may be outdated and not the best, use only if the device doesnt have python installed.",
+            help="Run Logicytics using its precompiled exe's, These may be outdated and not the best, use only if the "
+                 "device doesnt have python installed.",
         )
         parser.add_argument(
             "--debug",
@@ -107,15 +109,16 @@ class Actions:
         # Check for exclusivity rules
         if args.reboot or args.shutdown or args.webhook:
             if not (
-                args.basic
-                or args.speedy
-                or args.modded
-                or args.silent
-                or args.minimal
-                or args.exe
+                    args.basic
+                    or args.speedy
+                    or args.modded
+                    or args.silent
+                    or args.minimal
+                    or args.exe
             ):
                 print(
-                    "--reboot and --shutdown and --webhook flags require at least one of the following flags: --basic, --speedy, --modded, --minimal, --exe."
+                    "--reboot and --shutdown and --webhook flags require at least one of the following flags: "
+                    "--default, --threaded, --modded, --minimal, --exe."
                 )
                 exit(1)
             else:
@@ -170,20 +173,22 @@ class Actions:
                 debug = data.get("DEBUG", False)
                 version = data.get("VERSION", "2.0.0")
                 api_key = data.get("ipgeolocation.io API KEY", "")
+                files = data.get("CURRENT_FILES", [])
 
                 if not (
-                    isinstance(webhook_url, str)
-                    and isinstance(debug, bool)
-                    and isinstance(version, str)
-                    and isinstance(api_key, str)
+                        isinstance(webhook_url, str)
+                        and isinstance(debug, bool)
+                        and isinstance(version, str)
+                        and isinstance(api_key, str)
+                        and isinstance(files, list)
                 ):
                     print("Invalid config.json format.")
                     exit(1)
 
-                return webhook_url, debug, version, api_key
+                return webhook_url, debug, version, api_key, files
         except FileNotFoundError:
             print("The config.json File is not found.")
             exit(1)
 
 
-WEBHOOK, DEBUG, VERSION, API_KEY = Actions().read_config()
+WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions().read_config()

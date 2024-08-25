@@ -40,22 +40,22 @@
    - disklist (and its subcommands) ❌
    - Property✅
    - (USE LOG CLASS FROM ALGOPY)✅
-5) Make it know work all together✅
+5) Make it know work all together ✅
 6) In case of crashes it places the errors in ERROR.log ❌
-7) Errors must be in following format✅
-    - FILECODE-ERRORCODE-FUNCTIONCODE✅
+7) Errors must be in following format ✅
+    - FILECODE-ERRORCODE-FUNCTIONCODE ✅
       - Filecode: First letter of file EXCEPT _files where its first 2 letters
       - Errorcode: U -> Unknown, G -> General (exception as e), P -> Privileges error
       - Functioncode: X -> Unknown, ANY-OTHER-LETTER -> The first letter of the function, BA -> Base code, not function
-    - Each code is the first letters of the name✅
-8) Zips any made data and files✅
+    - Each code is the first letters of the name ✅
+8) Zips any made data and files ✅
 9) When a zip file is made, a HASH is supplied with it of the zip file✅
-10) Delete all logs in event viewer⚙️
-11) Incorporate the _files
+10) Delete all logs in event viewer ⚙️
+11) Incorporate the _files fully
 ---
 
 1) Make .structure and .version into 1 file JSON ✅
-2) Make a debugger.py file that if run will attempt to debug Logicytics,
+2) [11] Make a debugger.py file that if run will attempt to debug Logicytics,
    - Check:
        - date and time
        - device model
@@ -71,10 +71,11 @@
 ---
 
 1) REDO README.
-2) Add requirements.txt
+2) Add requirements.txt ✅
 3) Add rules to contributing.md
    - (_files won't be seen by --mod flag)
    - (All files generated must either be directories or txt or json or md or reg or docx or png or jpeg or jpg files)
    - (Tell that libraries must have small lettered names)
    - ( Any non py file that is used MUST use special Words when printing or logging, this is due to not supporting log class custom lib)
+   - [7] -> Check
 4) redo the wiki

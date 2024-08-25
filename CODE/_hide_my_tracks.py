@@ -2,6 +2,7 @@ import datetime
 import subprocess
 import os
 
+
 def attempt_hide():
     today = datetime.date.today()
     log_path = r'C:\Windows\System32\winevt\Logs'
