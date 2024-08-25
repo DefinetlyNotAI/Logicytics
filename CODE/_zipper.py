@@ -5,7 +5,20 @@ import zipfile
 import hashlib
 
 
-def zip_and_hash(path, name, action):
+def zip_and_hash(path: str, name: str, action: str) -> tuple:
+    """
+    Zips the files in the given path, excluding those with specific extensions or starting with specific prefixes.
+    Generates an SHA-256 hash of the resulting zip file and writes it next to the zip file.
+    Moves the zip file and its hash to the ../ACCESS/DATA/Zip and ../ACCESS/DATA/Hashes directories, respectively.
+
+    Parameters:
+        path (str): The path of the directory to be zipped.
+        name (str): The name of the zip file.
+        action (str): The action performed on the files (e.g., "backup", "archive").
+
+    Returns:
+        tuple: A tuple containing the paths of the moved zip file and its hash file.
+    """
     today = date.today()
     filename = f"Logicytics_{name}_{action}_{today.strftime('%Y-%m-%d')}"
 
@@ -34,4 +47,5 @@ def zip_and_hash(path, name, action):
     shutil.move(f"{filename}.zip", "../ACCESS/DATA/Zip")
     shutil.move(f"{filename}.hash", "../ACCESS/DATA/Hashes")
 
-    return f"Zip file moved to ../ACCESS/DATA/Zip/{filename}.zip", f"SHA256 Hash file moved to ../ACCESS/DATA/Hashes/{filename}.hash"
+    return (f"Zip file moved to ../ACCESS/DATA/Zip/{filename}.zip",
+            f"SHA256 Hash file moved to ../ACCESS/DATA/Hashes/{filename}.hash")

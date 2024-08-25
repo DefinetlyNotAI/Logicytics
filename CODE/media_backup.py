@@ -7,6 +7,16 @@ from __lib_log import Log
 
 
 def backup_media():
+    """
+    Backs up media files from the default Windows photo and video directories.
+
+    Auto-detects the Windows username and constructs the default paths for photos and videos.
+    Combines both paths for a comprehensive backup and defines the destination directory.
+    Copies files with extensions .jpg, .jpeg, .png, and .mp4 to the destination directory.
+
+    Returns:
+        None
+    """
     # Auto-detect the Windows username
     username = getpass.getuser()
 

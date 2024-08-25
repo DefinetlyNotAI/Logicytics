@@ -79,3 +79,4 @@
    - ( Any non py file that is used MUST use special Words when printing or logging, this is due to not supporting log class custom lib)
    - [7] -> Check
 4) redo the wiki
+5) Add bot for the issues bug where it auto checks the logs and acts upon it

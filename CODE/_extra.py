@@ -3,7 +3,16 @@ import subprocess
 import zipfile
 
 
-def unzip(zip_path):
+def unzip(zip_path: str) -> None:
+    """
+    Unzips a given zip file to a new directory with the same name.
+
+    Args:
+        zip_path (str): The path to the zip file to be unzipped.
+
+    Returns:
+        None
+    """
     # Get the base name of the zip file
     base_name = os.path.splitext(os.path.basename(zip_path))[0]
 
@@ -15,7 +24,14 @@ def unzip(zip_path):
         z.extractall(path=str(output_dir))
 
 
-def menu():
+def menu() -> None:
+    """
+    Displays a menu of available executable scripts in the '../EXTRA/EXTRA' directory,
+    prompts the user to select a script, and runs the selected script using PowerShell.
+
+    Returns:
+        None
+    """
     files = [f for f in os.listdir('../EXTRA/EXTRA') if f.endswith('.exe') or f.endswith('.ps1')]
     print("Available scripts:")
     for i, file in enumerate(files):

@@ -5,11 +5,29 @@ import json
 # Super inefficient - If it works, it works tho ;)
 
 
-def open_file(file):
+def open_file(file: str) -> None:
+    """
+    Opens a specified file using its default application.
+
+    Args:
+        file (str): The path to the file to be opened.
+
+    Returns:
+        None
+    """
     os.startfile(os.path.realpath(file))
 
 
-def check_current_files(directory):
+def check_current_files(directory: str) -> list:
+    """
+    Retrieves a list of files with specific extensions within a specified directory and its subdirectories.
+
+    Args:
+        directory (str): The path to the directory to search for files.
+
+    Returns:
+        list: A list of file paths with the following extensions: .py, .exe, .ps1, .bat.
+    """
     file = []
     for root, _, filenames in os.walk(directory):
         for filename in filenames:
@@ -19,7 +37,17 @@ def check_current_files(directory):
     return file
 
 
-def update_json_file(filename, new_array):
+def update_json_file(filename, new_array: list) -> None:
+    """
+    Updates a JSON file with a new array of current files.
+
+    Args:
+        filename (str): The path to the JSON file to be updated.
+        new_array (list): The list of current files to be written to the JSON file.
+
+    Returns:
+        None
+    """
     with open(filename, 'r+') as f:
         data = json.load(f)
         data['CURRENT_FILES'] = new_array
@@ -28,7 +56,24 @@ def update_json_file(filename, new_array):
         f.truncate()
 
 
-def dev_checks():
+def dev_checks() -> None:
+    """
+    Performs a series of checks to ensure that the developer has followed the required guidelines and best practices.
+
+    This function prompts the developer with a series of questions to ensure that they have followed the required
+    contributing guidelines, added files with a specific naming convention, added the file to the CODE directory,
+    added docstrings and comments to their code, tested their code, ensured that each file contains only one feature,
+    and has included the proper flags in their code.
+
+    Returns:
+        None
+
+    Raises:
+        None
+
+    Example usage:
+        dev_checks()
+    """
     # Checks
     answer = input("Have you made sure you read the required contributing guidlines? (yes or no):- ")
     if answer != "yes":
@@ -53,7 +98,7 @@ def dev_checks():
 
     answer = input("Have you made sure you tested your code? (yes or no):- ")
     if answer != "yes":
-        open_file("../_Test.py")
+        open_file("__Test__.py")
         exit("You did not select yes to the question, please try again after fixing your issue")
 
     answer = input(

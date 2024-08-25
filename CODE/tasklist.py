@@ -3,6 +3,15 @@ from __lib_log import Log
 
 
 def tasklist():
+    """
+    Retrieves a list of running tasks on the system and exports the result to a CSV file.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
     try:
         result = subprocess.run(
             "tasklist /v /fo csv",

@@ -6,7 +6,7 @@ from subprocess import CompletedProcess
 
 class Actions:
     @staticmethod
-    def run_command(command: str) -> CompletedProcess.stdout:
+    def run_command(command: str) -> str:
         """
         Runs a command in a subprocess and returns the output as a string.
 
@@ -24,11 +24,14 @@ class Actions:
         """
         A static method that defines and parses command-line flags for the Logicytics application.
 
-        The flags method uses the argparse library to define a range of flags that can be used to customize the behavior of the application.
+        The flags method uses the argparse library to define a range of flags that can be used to customize the
+        behavior of the application.
 
-        The method checks for exclusivity rules and ensures that only one flag is used, unless the --reboot, --shutdown, or --webhook flags are used, in which case only two flags are allowed.
+        The method checks for exclusivity rules and ensures that only one flag is used, unless the --reboot,
+        --shutdown, or --webhook flags are used, in which case only two flags are allowed.
 
-        The method returns a tuple of the keys of the flags that were used, or exits the application if the flags are invalid.
+        The method returns a tuple of the keys of the flags that were used, or exits the application if the flags are
+        invalid.
 
         Parameters:
         None

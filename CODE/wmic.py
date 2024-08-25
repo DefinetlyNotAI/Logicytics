@@ -3,6 +3,18 @@ from __lib_log import Log
 
 
 def wmic():
+    """
+    Retrieves system information using WMIC commands.
+
+    This function runs a series of WMIC commands to gather information about the system's BIOS, operating system, computer system, and disk drives.
+    The output of each command is written to a file named "wmic_output.txt".
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
     data = Actions.run_command("wmic BIOS get Manufacturer,Name,Version /format:htable")
     open("WMIC.html", "w").write(data)
     wmic_commands = [

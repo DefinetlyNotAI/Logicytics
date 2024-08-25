@@ -9,6 +9,26 @@ from __lib_log import Log
 
 class SystemInfo:
     def __init__(self):
+        """
+        Initializes a new instance of the SystemInfo class.
+
+        This constructor sets various system properties, including:
+        - device_model: The machine type of the device.
+        - python_version: The version of the Python interpreter.
+        - current_path: The absolute path of the current file.
+        - is_vm: A boolean indicating whether the environment is a virtual environment.
+        - is_admin: A boolean indicating whether the process is running with administrative privileges.
+        - execution_policy: The execution policy of the system.
+        - os_name: The name of the operating system.
+        - os_version: The version of the operating system.
+        - manufacturer: The processor manufacturer.
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         self.device_model = platform.machine()
         self.python_version = sys.version.split()[0]
         self.current_path = os.path.dirname(os.path.abspath(__file__))
@@ -20,22 +40,52 @@ class SystemInfo:
         self.manufacturer = platform.processor()
 
     @staticmethod
-    def get_date_time():
+    def get_date_time() -> str:
+        """
+        Get the current date and time in the format 'YYYY-MM-DD HH:MM:SS'.
+
+        Returns:
+            str: The current date and time in the format 'YYYY-MM-DD HH:MM:SS'.
+        """
         now = datetime.now()
         return f"{now.strftime('%Y-%m-%d %H:%M:%S')}"
 
     @property
-    def is_admin(self):
+    def is_admin(self) -> bool:
+        """
+        Checks if the current process is running with administrative privileges.
+
+        Returns:
+            bool: True if the process is running as an administrator, False otherwise.
+        """
         return os.environ.get('PROCESSOR_ARCH') == 'x86_64'
 
     @is_admin.setter
-    def is_admin(self, value):
+    def is_admin(self, value: bool):
+        """
+        Sets the value of the is_admin property.
+
+        Parameters:
+        value (bool): The new value for the is_admin property.
+
+        Returns:
+        None
+        """
         self._is_admin = value
 
 
 class JSON:
     @staticmethod
-    def check_current_files(directory):
+    def check_current_files(directory: str) -> list:
+        """
+        Checks the specified directory and its subdirectories for files with extensions '.py', '.exe', '.ps1', or '.bat'.
+
+        Parameters:
+            directory (str): The path to the directory to search.
+
+        Returns:
+            list: A list of file paths with the specified extensions. The paths are relative to the directory and do not include the directory prefix.
+        """
         file = []
         for root, _, filenames in os.walk(directory):
             for filename in filenames:
@@ -45,7 +95,17 @@ class JSON:
         return file
 
     @staticmethod
-    def update_json_file(filename, new_array):
+    def update_json_file(filename: str, new_array: list):
+        """
+        Updates a JSON file with a new array of current files.
+
+        Parameters:
+            filename (str): The path to the JSON file to update.
+            new_array (list): The new array of current files to write to the JSON file.
+
+        Returns:
+            None
+        """
         with open(filename, 'r+') as f:
             data = json.load(f)
             data['CURRENT_FILES'] = new_array
@@ -54,7 +114,16 @@ class JSON:
             f.truncate()
 
     @staticmethod
-    def get_json_data(URL):
+    def get_json_data(URL: str) -> dict:
+        """
+        Retrieves data from a specified URL and returns it as a dictionary.
+
+        Parameters:
+        URL (str): The URL to retrieve data from.
+
+        Returns:
+        dict: A dictionary containing the retrieved data.
+        """
         response = requests.get(URL)
         return response.json()
 
