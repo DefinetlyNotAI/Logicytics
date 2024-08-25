@@ -11,7 +11,7 @@ $time = Get-Date -Format HH:mm:ss
 $date = Get-Date -Format dd/MM/yyyy
 $rootDrive = $env:SystemDrive
 
-# Prepare the data to be written to the file
+# Prepare the data to be written to the File
 $data = @"
 Property(C): Windows Build = $buildNumber
 Property(C): Physical Memory = $($physicalMemory -as [int])
@@ -27,7 +27,7 @@ Property(C): Username = $userName
 Property(C): Root Drive = $rootDrive
 "@
 
-# Write the data to a text file
+# Write the data to a text File
 $data | Out-File -FilePath ".\Extra_Data.txt"
 
 # Optionally, display a message indicating success

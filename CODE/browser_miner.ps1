@@ -52,7 +52,7 @@ continue
 }
 
 
-# Extract the identifier from the source path using the corresponding index from the $identifiers array
+# Extract the identifier from the source path using the corresponding Index from the $identifiers array
 try
     {
 $index = [Array]::IndexOf($identifiers, $sourcePath.Split('\')[-1].Split('\\')[-1])

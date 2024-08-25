@@ -27,7 +27,7 @@ class Actions:
         parser.add_argument(
             "--unzip-extra",
             action="store_true",
-            help="Unzip the extra directory zip file - Use on your own device only -.",
+            help="Unzip the extra directory zip File - Use on your own device only -.",
         )
         parser.add_argument(
             "--backup",
@@ -67,17 +67,17 @@ class Actions:
         parser.add_argument(
             "--modded",
             action="store_true",
-            help="Runs the normal Logicytics, as well as any file in the MODS directory, Useful for custom scripts",
+            help="Runs the normal Logicytics, as well as any File in the MODS directory, Useful for custom scripts",
         )
         parser.add_argument(
-            "--speedy",
+            "--threaded",
             action="store_true",
-            help="Runs Logicytics Speedy mode, where it runs in parallel only fast files",
+            help="Runs Logicytics using threads, where it runs in parallel",
         )
         parser.add_argument(
             "--webhook",
             action="store_true",
-            help="Special Flag that will send zip file via webhook",
+            help="Special Flag that will send zip File via webhook",
         )
         parser.add_argument(
             "--reboot",
@@ -182,7 +182,7 @@ class Actions:
 
                 return webhook_url, debug, version, api_key
         except FileNotFoundError:
-            print("The config.json file is not found.")
+            print("The config.json File is not found.")
             exit(1)
 
 

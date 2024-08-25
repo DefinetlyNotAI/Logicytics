@@ -1,4 +1,5 @@
 import ctypes
+import threading
 from __lib_actions import *
 from __lib_log import *
 
@@ -20,75 +21,58 @@ class Checks:
         )
         return int(value.strip("\n")) == 1
 
+
+class Special:
+    @staticmethod
+    def get_files_with_extensions(directory, List):
+        for filename in os.listdir(directory):
+            if filename.endswith(('.py', '.exe', '.ps1', '.bat')):
+                List.append(filename)
+        return List
+
+    def execute_file(self, Index):
+        self.execute(execution_list[Index])
+        log.info(f"{execution_list[Index]} executed")
+
     @staticmethod
     def execute(script):
-        if script.endswith(".ps1"):
-            try:
-                unblock_command = (
-                    f'powershell.exe -Command "Unblock-File -Path {script}"'
+            if script.endswith(".ps1"):
+                try:
+                    unblock_command = (
+                        f'powershell.exe -Command "Unblock-File -Path {script}"'
+                    )
+                    subprocess.run(unblock_command, shell=True, check=True)
+                    log.info("PS1 Script unblocked.")
+                except Exception as err:
+                    log.critical(f"Failed to unblock script: {err}", "_W", "G", "E")
+
+            if script.endswith(".py"):
+                result = subprocess.Popen(
+                    ["python", script], stdout=subprocess.PIPE
+                ).communicate()[0]
+                print(result.decode())
+            else:
+                result = subprocess.Popen(
+                    ["powershell.exe", ".\\" + script], stdout=subprocess.PIPE
+                ).communicate()[0]
+                lines = result.decode().splitlines()
+                ID = next(
+                    (line.split(":")[0].strip() for line in lines if ":" in line), None
                 )
-                subprocess.run(unblock_command, shell=True, check=True)
-                log.info("PS1 Script unblocked.")
-            except Exception as err:
-                log.critical(f"Failed to unblock script: {err}")
-
-        if script.endswith(".py"):
-            result = subprocess.Popen(
-                ["python", script], stdout=subprocess.PIPE
-            ).communicate()[0]
-            print(result.decode())
-        else:
-            result = subprocess.Popen(
-                ["powershell.exe", ".\\" + script], stdout=subprocess.PIPE
-            ).communicate()[0]
-            lines = result.decode().splitlines()
-            ID = next(
-                (line.split(":")[0].strip() for line in lines if ":" in line), None
-            )
-            if ID == "INFO":
-                log.info("\n".join(lines))
-            if ID == "WARNING":
-                log.warning("\n".join(lines))
-            if ID == "ERROR":
-                log.error("\n".join(lines))
-            if ID == "CRITICAL":
-                log.critical("\n".join(lines))
-            else:
-                log.debug("\n".join(lines))
-
-    @staticmethod
-    def set_execution_policy():
-        # Define the command to set the execution policy
-        command = 'powershell.exe -Command "Set-ExecutionPolicy Unrestricted -Scope Process -Force"'
-
-        if DEBUG:
-            log.debug("Command: " + command)
-
-        try:
-            # Execute the command
-            result = subprocess.run(
-                command,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-
-            if DEBUG:
-                log.debug(f"Result: {result}")
-
-            # Check the output for success
-            if "SUCCESS" in result.stdout:
-                if DEBUG:
-                    log.info("Execution policy has been set to Unrestricted.")
-            else:
-                log.error("An error occurred while trying to set the execution policy.")
-
-        except subprocess.CalledProcessError as err:
-            log.error(
-                f"An error occurred while trying to set the execution policy: {err}"
-            )
-
+                if ID == "INFO":
+                    log.info("\n".join(lines))
+                if ID == "WARNING":
+                    log.warning("\n".join(lines))
+                if ID == "ERROR":
+                    log.error("\n".join(lines))
+                if ID == "CRITICAL":
+                    if script[0] == "_":
+                        fcode = '_'+script[1]
+                    else:
+                        fcode = script[0]
+                    log.critical("\n".join(lines), fcode, "U", "X")
+                else:
+                    log.debug("\n".join(lines))
 
 # Initialization
 os.makedirs("../ACCESS/LOGS/", exist_ok=True)
@@ -99,7 +83,8 @@ try:
     action, sub_action = Actions().flags()
     log.info("2 actions detected")
 except Exception as e:
-    log.info("YOU MAY SAFELY IGNORE THIS ERROR (Its expected): " + str(e))
+    log.debug(str(e))
+    log.info("1 action detected")
     action = Actions().flags()
     action = action[0]
     sub_action = None
@@ -139,14 +124,10 @@ if action == "unzip-extra":
 
 # Checks for privileges and errors
 if not check_status.admin():
-    log.critical("Please run this script with admin privileges")
+    log.critical("Please run this script with admin privileges", "_W", "P", "BA")
     exit(1)
 if check_status.uac():
     log.warning("UAC is enabled, this may cause issues")
-try:
-    check_status.set_execution_policy()
-except Exception as e:
-    log.warning("Failed to set execution policy: " + str(e))
 
 # Create execution list
 execution_list = [
@@ -185,18 +166,35 @@ if action == "exe":
     )
     execution_list = ["sys_internal.py", "wmic.py"]
 if action == "modded":
-    pass
-    # TODO Function to read modded files and add them to the list
-if action == "speedy":
-    pass
-    # TODO Run them in parallel
+    execution_list = Special().get_files_with_extensions('../MODS', execution_list)
 
 # Add final action
 execution_list.append("_zipper.py")
+log.debug(execution_list)
 
-for file in range(len(execution_list)):  # Loop through execution_list
-    check_status.execute(execution_list[file])
-    log.info(f"{execution_list[file]} executed")
+# Check weather to use threading or not
+if action == "threaded":
+    threads = []
+    for index, file in enumerate(execution_list):
+        thread = threading.Thread(target=Special().execute_file, args=(index,))
+        threads.append(thread)
+        thread.start()
 
-# TODO Use sub-action to decide what to do afterwards
+    for thread in threads:
+        thread.join()
+else:
+    for file in range(len(execution_list)):  # Loop through List
+        Special().execute(execution_list[file])
+        log.info(f"{execution_list[file]} executed")
+
+# Finish with sub actions
 log.info("Completed successfully")
+if sub_action == "shutdown":
+    log.info("Shutting down...")
+    os.system("shutdown /s /t 0")
+if sub_action == "reboot":
+    log.info("Rebooting...")
+    os.system("shutdown /r /t 0")
+if sub_action == "webhook":
+    log.info("Sending webhook...")
+    # TODO Implement
