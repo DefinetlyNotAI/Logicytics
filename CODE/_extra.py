@@ -1,4 +1,5 @@
 import os
+import subprocess
 import zipfile
 
 
@@ -13,3 +14,19 @@ def unzip(zip_path):
     with zipfile.ZipFile(zip_path, 'r') as z:
         z.extractall(path=str(output_dir))
 
+
+def menu():
+    files = [f for f in os.listdir('../EXTRA/EXTRA') if f.endswith('.exe') or f.endswith('.ps1')]
+    print("Available scripts:")
+    for i, file in enumerate(files):
+        print(f"{i+1}. {file}")
+
+    choice = int(input("Enter the number of your chosen script: "))
+    if files[choice-1] == "CMD.ps1":
+        print("Redirecting to CMD.ps1...")
+        subprocess.run(['powershell.exe', '../EXTRA/EXTRA/CMD.ps1'], check=True)
+        command = input("Type the flags you want to execute: ")
+        subprocess.run(['powershell.exe', '../EXTRA/EXTRA/CMD.ps1', command.removeprefix('.\\CMD.ps1 ')], check=True)
+    selected_file = files[choice-1]
+    subprocess.run(['powershell.exe', '../EXTRA/EXTRA/' + selected_file], check=True)
+    exit(0)

@@ -45,13 +45,13 @@
 7) Errors must be in following format ✅
     - FILECODE-ERRORCODE-FUNCTIONCODE ✅
       - Filecode: First letter of file EXCEPT _files where its first 2 letters
-      - Errorcode: U -> Unknown, G -> General (exception as e), P -> Privileges error
+      - Errorcode: U -> Unknown, G -> General (exception as e), P -> Privileges error, C -> Corruption
       - Functioncode: X -> Unknown, ANY-OTHER-LETTER -> The first letter of the function, BA -> Base code, not function
     - Each code is the first letters of the name ✅
 8) Zips any made data and files ✅
 9) When a zip file is made, a HASH is supplied with it of the zip file✅
 10) Delete all logs in event viewer ⚙️
-11) Incorporate the _files fully
+11) Incorporate the _files fully ✅
 ---
 
 1) Make .structure and .version into 1 file JSON ✅
@@ -72,7 +72,7 @@
 
 1) REDO README.
 2) Add requirements.txt ✅
-3) Add rules to contributing.md
+3) Add rules to contributing.md / remove others
    - (_files won't be seen by --mod flag)
    - (All files generated must either be directories or txt or json or md or reg or docx or png or jpeg or jpg files)
    - (Tell that libraries must have small lettered names)
