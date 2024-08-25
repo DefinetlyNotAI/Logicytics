@@ -50,19 +50,15 @@ Optionally, use the `exe` installer to download and install Logicytics and all r
 3. **Setup Logicytics**: Navigate to the `SETUP` folder and run the `setup.py` script using the following command,
    This will install the required dependencies and create any necessary files for full functionality.
    ```powershell
-   pip install -e .
+   pip install -r requirements.txt
    ```
 
-4. **Run Logicytics**: Navigate to the `CODE` folder and run `./Logicytics.py` more info below.
+4. **Run Logicytics**: Navigate to the `CODE` folder and run `python _wrapper.py` more info below.
 
 ### Basic Usage
 
 1. **CLI**: The most preferred method, all in your command line! More feedback can be given, to use it just open `CMD`
-   in the `CODE` directory, and run `./Logicytics.py`
-
-2. **GUI**: Still in beta, GUI is not recommended unless you are unfamiliar with CLI, the GUI automatically constructs
-   your command and executes it from a basic window. To use this feature, go to the `CODE` directory and run
-   the `GUI.py` file, or type in the terminal `./GUI.py`.
+   in the `CODE` directory, and run `python _wrapper.py`.
 
 ## 🔧 Configuration 🔧
 
@@ -74,16 +70,14 @@ These flags allow you to:
 - Exclude certain files/data from the data collection process.
 - Adjust logging levels for detailed insights.
 
-More info about the flags on the wiki.
-
 ## 🚀 Advanced Usage 🚀
 
 ### Custom Scripts
 
 Extend Logicytics' functionality by creating custom Python scripts.
-Place these scripts in the `CODE` directory.
+Place these scripts in the `MODS` directory.
 Logicytics will automatically execute these scripts during the data collection process,
-enabling tailored data extraction (When using the `--mods` flag).
+enabling tailored data extraction (When using the `--modded` flag).
 
 ## 🛑 Troubleshooting 🛑
 
@@ -96,7 +90,7 @@ enabling tailored data extraction (When using the `--mods` flag).
 
 ### Support Resources
 
-Consult the `.md` log file in the `ACCESS/LOGS` directory for detailed error logs.
+Consult the `.log` log file in the `ACCESS/LOGS` directory for detailed error logs.
 Engage with the community through GitHub issues for assistance and feedback.
 
 ## 📊 Data Analysis 📊
