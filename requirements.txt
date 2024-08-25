@@ -1,11 +1,4 @@
-future~=1.0.0
-mss~=9.0.1
-pathlib~=1.0.1
-DateTime~=5.5
 requests~=2.32.3
+DateTime~=5.5
+pathlib~=1.0.1
 colorlog~=6.8.2
-PyAutoGUI~=0.9.54
-uuid~=1.30
-WMI~=1.5.1
-setuptools~=73.0.0
-tqdm~=4.66.5
