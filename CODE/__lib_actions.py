@@ -1,16 +1,41 @@
 import subprocess
 import argparse
 import json
+from subprocess import CompletedProcess
 
 
 class Actions:
     @staticmethod
-    def run_command(command):
+    def run_command(command: str) -> CompletedProcess.stdout:
+        """
+        Runs a command in a subprocess and returns the output as a string.
+
+        Parameters:
+            command (str): The command to be executed.
+
+        Returns:
+            CompletedProcess.stdout: The output of the command as a string.
+        """
         process = subprocess.run(command, capture_output=True, text=True)
         return process.stdout
 
     @staticmethod
-    def flags():
+    def flags() -> tuple[str, ...]:
+        """
+        A static method that defines and parses command-line flags for the Logicytics application.
+
+        The flags method uses the argparse library to define a range of flags that can be used to customize the behavior of the application.
+
+        The method checks for exclusivity rules and ensures that only one flag is used, unless the --reboot, --shutdown, or --webhook flags are used, in which case only two flags are allowed.
+
+        The method returns a tuple of the keys of the flags that were used, or exits the application if the flags are invalid.
+
+        Parameters:
+        None
+
+        Returns:
+        tuple: A tuple of the keys of the flags that were used.
+        """
         # Define the argument parser
         parser = argparse.ArgumentParser(
             description="Logicytics, The most powerful tool for system data analysis."
@@ -164,7 +189,23 @@ class Actions:
             exit(1)
 
     @staticmethod
-    def read_config():
+    def read_config() -> tuple[str, bool, str, str, list[str]]:
+        """
+        Reads the configuration from the config.json file.
+
+        Returns:
+            A tuple containing the webhook URL, debug mode, version, API key, and a list of current files.
+            The types of the returned values are:
+                - webhook_url: str
+                - debug: bool
+                - version: str
+                - api_key: str
+                - files: list[str]
+
+        Raises:
+            FileNotFoundError: If the config.json file is not found.
+            SystemExit: If the config.json file has an invalid format.
+        """
         try:
             with open("config.json", "r") as file:
                 data = json.load(file)
