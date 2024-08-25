@@ -1,14 +1,14 @@
 import ctypes
-import threading
 import os
+import threading
 from __lib_actions import *
 from __lib_log import Log
-from _zipper import zip_and_hash
-from _hide_my_tracks import attempt_hide
-from _dev import dev_checks, open_file
-from _health import backup, update
-from _extra import unzip, menu
 from _debug import debug
+from _dev import dev_checks, open_file
+from _extra import unzip, menu
+from _health import backup, update
+from _hide_my_tracks import attempt_hide
+from _zipper import zip_and_hash
 
 
 class Checks:
@@ -269,8 +269,8 @@ else:
 
 # Zip generated files
 if action == "modded":
-    zip_loc, hash_loc = zip_and_hash('../MODS', 'MODS', action)
-    log.info(zip_loc)
+    zip_loc_mod, hash_loc = zip_and_hash('../MODS', 'MODS', action)
+    log.info(zip_loc_mod)
     log.debug(hash_loc)
 zip_loc, hash_loc = zip_and_hash('../CODE', 'CODE', action)
 log.info(zip_loc)
@@ -288,11 +288,13 @@ if sub_action == "reboot":
     log.info("Rebooting...")
     os.system("shutdown /r /t 0")
 if sub_action == "webhook":
+    log.warning("This feature is not fully implemented yet")
+    """
     log.info("Sending webhook...")
     if WEBHOOK is None or WEBHOOK == "":
         log.critical("WEBHOOK URL not set and the request action was webhook", "_W", "P", "BA")
         exit(1)
-    # TODO Implement
+    """
 
 log.info("Exiting...")
 exit(0)

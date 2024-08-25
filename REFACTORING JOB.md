@@ -66,8 +66,8 @@
        - is it running as admin
        - execution policy
        - does it have the dependencies installed ✅
-3) Add more logs to the files (debug especially)
-4) Docstring and refactor functions (:type , -> output)
+3) Add more logs to the files (debug especially) ⚙️
+4) Docstring and refactor functions (:type , -> output) ✅
 ---
 
 1) REDO README.
