@@ -4,6 +4,21 @@ from __lib_log import Log
 
 
 def sys_internal():
+    """
+    This function runs a series of system internal executables and logs their output.
+
+    It iterates over a list of executable names, constructs the command to run each one,
+    captures the output, and writes it to a file named 'SysInternal.txt'.
+
+    The function also logs information and warning messages for each executable,
+    including any errors that occur during execution.
+
+    Parameters:
+        None
+
+    Returns:
+        None
+    """
     executables = [
         "psfile.exe",
         "PsGetsid.exe",

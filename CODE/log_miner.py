@@ -3,6 +3,16 @@ from __lib_log import *
 
 
 def backup_windows_logs():
+    """
+    Backs up Windows system logs to a CSV file.
+
+    This function constructs a PowerShell command to retrieve system logs and export them to a CSV file.
+    It then executes the command using subprocess.Popen and handles any errors that may occur.
+    The function logs the result of the backup operation and any errors that occur.
+
+    Returns:
+        None
+    """
     try:
         log_type = "System"
         backup_file = "Logs_backup.csv"

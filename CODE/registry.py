@@ -3,6 +3,17 @@ from __lib_log import *
 
 
 def backup_registry():
+    """
+    Backs up the Windows registry to a file named RegistryBackup.reg in the current working directory.
+
+    This function uses the reg export command to export the entire registry (HKEY_LOCAL_MACHINE) and logs the result.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
     # Define the path where the registry will be exported
     export_path = os.path.join(os.getcwd(), "RegistryBackup.reg")
 

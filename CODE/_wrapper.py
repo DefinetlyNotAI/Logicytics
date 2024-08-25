@@ -1,7 +1,8 @@
 import ctypes
 import threading
+import os
 from __lib_actions import *
-from __lib_log import *
+from __lib_log import Log
 from _zipper import zip_and_hash
 from _hide_my_tracks import attempt_hide
 from _dev import dev_checks, open_file
@@ -12,16 +13,36 @@ from _debug import debug
 
 class Checks:
     def __init__(self):
+        """
+        Initializes an instance of the class.
+
+        Sets the Actions attribute to an instance of the Actions class.
+        """
         self.Actions = Actions()
 
     @staticmethod
     def admin() -> bool:
+        """
+        Checks if the current user has administrative privileges.
+
+        Returns:
+            bool: True if the user is an admin, False otherwise.
+        """
         try:
             return ctypes.windll.shell32.IsUserAnAdmin()
         except AttributeError:
             return False
 
     def uac(self) -> bool:
+        """
+        Checks if User Account Control (UAC) is enabled on the system.
+
+        This function runs a PowerShell command to retrieve the value of the EnableLUA registry key,
+        which indicates whether UAC is enabled. It then returns True if UAC is enabled, False otherwise.
+
+        Returns:
+            bool: True if UAC is enabled, False otherwise.
+        """
         value = self.Actions.run_command(
             r"powershell (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA"
         )
@@ -30,18 +51,46 @@ class Checks:
 
 class Do:
     @staticmethod
-    def get_files_with_extensions(directory, List):
+    def get_files_with_extensions(directory: str, List: list) -> list:
+        """
+        Retrieves a list of files in the specified directory that have the specified extensions.
+
+        Parameters:
+            directory (str): The path of the directory to search.
+            List (list): The list to append the filenames to.
+
+        Returns:
+            list: The list of filenames with the specified extensions.
+        """
         for filename in os.listdir(directory):
             if filename.endswith(('.py', '.exe', '.ps1', '.bat')) and not filename.startswith('_'):
                 List.append(filename)
         return List
 
-    def execute_file(self, Index):
+    def execute_file(self, Index: int) -> None:
+        """
+        Executes a file from the execution list at the specified index.
+
+        Parameters:
+            Index (int): The index of the file to be executed in the execution list.
+
+        Returns:
+            None
+        """
         self.execute(execution_list[Index])
         log.info(f"{execution_list[Index]} executed")
 
     @staticmethod
-    def execute(script):
+    def execute(script: str) -> None:
+        """
+        Executes a script file and handles its output based on the file extension.
+
+        Parameters:
+            script (str): The path of the script file to be executed.
+
+        Returns:
+            None
+        """
         if script.endswith(".ps1"):
             try:
                 unblock_command = (
@@ -80,6 +129,24 @@ class Do:
             else:
                 log.debug("\n".join(lines))
 
+
+"""
+This python script is the main entry point for the tool called Logicytics.
+The script performs various actions based on command-line flags and configuration settings.
+
+Here's a high-level overview of what the script does:
+
+1. Initializes directories and checks for admin privileges.
+2. Parses command-line flags and sets up logging.
+3. Performs special actions based on flags, such as debugging, updating, or restoring backups.
+4. Creates an execution list of files to run, which can be filtered based on flags.
+5. Runs the files in the execution list, either sequentially or in parallel using threading.
+6. Zips generated files and attempts to delete event logs.
+7. Performs sub-actions, such as shutting down or rebooting the system, or sending a webhook.
+
+The script appears to be designed to be highly configurable and modular, 
+with many options and flags that can be used to customize its behavior.
+"""
 
 # Initialization
 os.makedirs("../ACCESS/LOGS/", exist_ok=True)
