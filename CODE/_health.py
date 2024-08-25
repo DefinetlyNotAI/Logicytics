@@ -20,12 +20,9 @@ def backup(directory, name):
     shutil.move('backup.zip', '../Access/Backup')
 
 
-def update_repo():
+def update():
     current_dir = os.getcwd()
-    parent_dir = os.path.dirname(os.path.dirname(current_dir))
+    parent_dir = os.path.dirname(current_dir)
     os.chdir(parent_dir)
     subprocess.run(['git', 'pull'])
     os.chdir(current_dir)
-
-
-update_repo()
