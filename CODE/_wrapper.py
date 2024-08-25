@@ -4,6 +4,9 @@ from __lib_actions import *
 from __lib_log import *
 from _zipper import zip_and_hash
 from _hide_my_tracks import attempt_hide
+from _dev import dev_checks, open_file
+from _health import backup, update
+
 
 class Checks:
     def __init__(self):
@@ -18,7 +21,7 @@ class Checks:
 
     def uac(self) -> bool:
         value = self.Actions.run_command(
-            "powershell (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA"
+            r"powershell (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA"
         )
         return int(value.strip("\n")) == 1
 
@@ -37,43 +40,44 @@ class Do:
 
     @staticmethod
     def execute(script):
-            if script.endswith(".ps1"):
-                try:
-                    unblock_command = (
-                        f'powershell.exe -Command "Unblock-File -Path {script}"'
-                    )
-                    subprocess.run(unblock_command, shell=True, check=True)
-                    log.info("PS1 Script unblocked.")
-                except Exception as err:
-                    log.critical(f"Failed to unblock script: {err}", "_W", "G", "E")
-
-            if script.endswith(".py"):
-                result = subprocess.Popen(
-                    ["python", script], stdout=subprocess.PIPE
-                ).communicate()[0]
-                print(result.decode())
-            else:
-                result = subprocess.Popen(
-                    ["powershell.exe", ".\\" + script], stdout=subprocess.PIPE
-                ).communicate()[0]
-                lines = result.decode().splitlines()
-                ID = next(
-                    (line.split(":")[0].strip() for line in lines if ":" in line), None
+        if script.endswith(".ps1"):
+            try:
+                unblock_command = (
+                    f'powershell.exe -Command "Unblock-File -Path {script}"'
                 )
-                if ID == "INFO":
-                    log.info("\n".join(lines))
-                if ID == "WARNING":
-                    log.warning("\n".join(lines))
-                if ID == "ERROR":
-                    log.error("\n".join(lines))
-                if ID == "CRITICAL":
-                    if script[0] == "_":
-                        fcode = '_'+script[1]
-                    else:
-                        fcode = script[0]
-                    log.critical("\n".join(lines), fcode, "U", "X")
+                subprocess.run(unblock_command, shell=True, check=True)
+                log.info("PS1 Script unblocked.")
+            except Exception as err:
+                log.critical(f"Failed to unblock script: {err}", "_W", "G", "E")
+
+        if script.endswith(".py"):
+            result = subprocess.Popen(
+                ["python", script], stdout=subprocess.PIPE
+            ).communicate()[0]
+            print(result.decode())
+        else:
+            result = subprocess.Popen(
+                ["powershell.exe", ".\\" + script], stdout=subprocess.PIPE
+            ).communicate()[0]
+            lines = result.decode().splitlines()
+            ID = next(
+                (line.split(":")[0].strip() for line in lines if ":" in line), None
+            )
+            if ID == "INFO":
+                log.info("\n".join(lines))
+            if ID == "WARNING":
+                log.warning("\n".join(lines))
+            if ID == "ERROR":
+                log.error("\n".join(lines))
+            if ID == "CRITICAL":
+                if script[0] == "_":
+                    fcode = '_' + script[1]
                 else:
-                    log.debug("\n".join(lines))
+                    fcode = script[0]
+                log.critical("\n".join(lines), fcode, "U", "X")
+            else:
+                log.debug("\n".join(lines))
+
 
 # Initialization
 os.makedirs("../ACCESS/LOGS/", exist_ok=True)
@@ -93,37 +97,39 @@ except Exception as e:
     sub_action = None
 check_status = Checks()
 
-"""
-# TODO Quick run actions
 if action == "debug":
     import _debug
 
     exit(0)
 if action == "dev":
-    import _dev
-
+    dev_checks()
     exit(0)
 if action == "extra":
     import _extra
 
     exit(0)
 if action == "update":
-    import _health
-
+    log.info("Updating...")
+    update()
+    log.info("Update complete!")
     exit(0)
 if action == "restore":
-    import _health
-
-    exit(0)
+    log.warning("Sorry, this feature is yet to be implemented. You can manually Restore your backups, We will open "
+                "the location for you")
+    open_file("../ACCESS/BACKUP/")
+    exit(1)
 if action == "backup":
-    import _health
-
+    log.info("Backing up...")
+    backup(".", "Default_Backup")
+    log.debug("Backup complete -> CODE dir")
+    backup(".", "Mods_Backup")
+    log.debug("Backup complete -> MODS dir")
+    log.info("Backup complete!")
     exit(0)
 if action == "unzip-extra":
     import _extra
 
     exit(0)
-"""
 
 # Checks for privileges and errors
 if not check_status.admin():
@@ -210,6 +216,9 @@ if sub_action == "reboot":
     os.system("shutdown /r /t 0")
 if sub_action == "webhook":
     log.info("Sending webhook...")
+    if WEBHOOK is None or WEBHOOK == "":
+        log.critical("WEBHOOK URL not set and the request action was webhook", "_W", "P", "BA")
+        exit(1)
     # TODO Implement
 
 log.info("Exiting...")
