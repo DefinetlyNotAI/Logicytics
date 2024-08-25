@@ -17,5 +17,6 @@ def backup_registry():
         log.error(f"Failed to back up the registry: {e}")
     log.info(f"Registry back-up executed")
 
+
 log = Log(debug=DEBUG)
 backup_registry()

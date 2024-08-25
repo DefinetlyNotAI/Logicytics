@@ -1,13 +1,14 @@
 from pathlib import Path
 import shutil
 from __lib_actions import *
-from __lib_log import * 
+from __lib_log import *
+
 
 class Miner:
     @staticmethod
     def __search_and_copy_files(keyword):
         drives_root = Path("C:\\")
-        destination = Path("Password Files")
+        destination = Path("Password_Files")
 
         # List of allowed extensions
         allowed_extensions = [
@@ -38,9 +39,11 @@ class Miner:
                             dst_file_path = destination / filename
 
                             shutil.copy(src_file_path, dst_file_path)
-                            log.info(
-                                f"Copied {src_file_path} to {dst_file_path}"
-                            )
+                            log.debug(f"Copied {src_file_path} to {dst_file_path}")
+                    except FileExistsError as e:
+                        log.warning(
+                            f"Failed to copy file due to it already existing: {e}"
+                        )
                     except Exception as e:
                         log.error(f"Failed to copy file: {e}")
             except Exception as e:
@@ -55,6 +58,7 @@ class Miner:
         for word in keywords:
             self.__search_and_copy_files(word)
         log.info("Sensitive Data Miner Completed")
+
 
 log = Log(debug=DEBUG)
 Miner().passwords()

@@ -1,5 +1,6 @@
 from __lib_actions import *
-from __lib_log import * 
+from __lib_log import *
+
 
 def backup_windows_logs():
     try:
@@ -26,6 +27,7 @@ def backup_windows_logs():
         log.error(f"Failed to backup logs: {str(e)}")
 
     log.info("Log Miner completed.")
+
 
 log = Log(debug=DEBUG)
 backup_windows_logs()
