@@ -7,6 +7,7 @@ from _hide_my_tracks import attempt_hide
 from _dev import dev_checks, open_file
 from _health import backup, update
 from _extra import unzip, menu
+from _debug import debug
 
 
 class Checks:
@@ -86,23 +87,20 @@ os.makedirs("../ACCESS/LOGS/DEBUG", exist_ok=True)
 os.makedirs("../ACCESS/BACKUP/", exist_ok=True)
 os.makedirs("../ACCESS/DATA/Hashes", exist_ok=True)
 os.makedirs("../ACCESS/DATA/Zip", exist_ok=True)
-log = Log(debug=DEBUG)
-log.info("Starting...")
+check_status = Checks()
+
 try:
     action, sub_action = Actions().flags()
-    log.info("2 actions detected")
-except Exception as e:
-    log.debug(str(e))
-    log.info("1 action detected")
+except Exception:
     action = Actions().flags()
     action = action[0]
     sub_action = None
-check_status = Checks()
 
+# Special actions -> Quit
 if action == "debug":
-    import _debug
-
+    debug()
     exit(0)
+log = Log(debug=DEBUG)
 if action == "dev":
     dev_checks()
     exit(0)
@@ -135,6 +133,8 @@ if action == "unzip-extra":
     unzip("..\\EXTRA\\EXTRA.zip")
     log.info("Unzip complete!")
     exit(0)
+
+log.info("Starting Logicytics...")
 
 # Checks for privileges and errors
 if not check_status.admin():
