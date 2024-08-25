@@ -254,6 +254,7 @@ log.debug(execution_list)
 
 # Check weather to use threading or not
 if action == "threaded":
+    execution_list.remove("sensitive_data_miner.py")
     threads = []
     for index, file in enumerate(execution_list):
         thread = threading.Thread(target=Do().execute_file, args=(index,))
@@ -269,10 +270,10 @@ else:
 
 # Zip generated files
 if action == "modded":
-    zip_loc_mod, hash_loc = zip_and_hash('../MODS', 'MODS', action)
+    zip_loc_mod, hash_loc = zip_and_hash('..\\MODS', 'MODS', action)
     log.info(zip_loc_mod)
     log.debug(hash_loc)
-zip_loc, hash_loc = zip_and_hash('../CODE', 'CODE', action)
+zip_loc, hash_loc = zip_and_hash('..\\CODE', 'CODE', action)
 log.info(zip_loc)
 log.debug(hash_loc)
 
