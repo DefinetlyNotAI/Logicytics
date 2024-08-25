@@ -52,6 +52,7 @@
 9) When a zip file is made, a HASH is supplied with it of the zip file✅
 10) Delete all logs in event viewer ⚙️
 11) Incorporate the _files fully ✅
+12) Webhook ❌
 ---
 
 1) Make .structure and .version into 1 file JSON ✅
