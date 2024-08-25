@@ -24,7 +24,7 @@ def sys_internal():
                     command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                 )
 
-                # Write the output to the file
+                # Write the output to the File
                 outfile.write("-" * 190)
                 outfile.write(f"{executable} Output:\n{result.stdout.decode()}")
                 log.info(f"{executable}: Successfully executed")

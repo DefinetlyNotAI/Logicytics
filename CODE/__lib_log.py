@@ -21,11 +21,11 @@ class Log:
         """
         Initializes a new instance of the LOG class.
 
-        The log class logs every interaction when called in both colorlog and in the log file
+        The log class logs every interaction when called in both colorlog and in the log File
 
         Best to only modify filename, and DEBUG.
 
-        Only if you are planning to use the dual-log parameter that allows you to both log unto the shell and the log file:
+        Only if you are planning to use the dual-log parameter that allows you to both log unto the shell and the log File:
             IMPORTANT: This class requires colorlog to be installed and also uses it in the INFO level,
             To use the DEBUG level, set DEBUG to True.
 
@@ -33,7 +33,7 @@ class Log:
             Sorry for any inconvenience that may arise.
 
         Args:
-            filename (str, optional): The name of the log file. Defaults to "Server.log".
+            filename (str, optional): The name of the log File. Defaults to "Server.log".
             use_colorlog (bool, optional): Whether to use colorlog. Defaults to True.
             debug (bool, optional): Whether to use the DEBUG level. Defaults to False (which uses the INFO level).
             debug_color (str, optional): The color of the DEBUG level. Defaults to "cyan".
@@ -107,7 +107,7 @@ class Log:
 
     def __only(self, message):
         """
-        Logs a quick message to the log file.
+        Logs a quick message to the log File.
 
         Args:
             message: The message to be logged.
@@ -158,7 +158,7 @@ class Log:
 
     def info(self, message):
         """
-        Logs an informational message to the log file.
+        Logs an informational message to the log File.
 
         Args:
             message: The message to be logged.
@@ -175,7 +175,7 @@ class Log:
 
     def warning(self, message):
         """
-        Logs a warning message to the log file.
+        Logs a warning message to the log File.
 
         Args:
             message: The warning message to be logged.
@@ -192,7 +192,7 @@ class Log:
 
     def error(self, message):
         """
-        Logs an error message to the log file.
+        Logs an error message to the log File.
 
         Args:
             message: The error message to be logged.
@@ -207,12 +207,15 @@ class Log:
                 f"[{self.__timestamp()}] > ERROR:    | {self.__pad_message(str(message))}\n"
             )
 
-    def critical(self, message):
+    def critical(self, message, FILECODE, ERRCODE, FUNCODE):
         """
-        Writes a critical message to the log file.
+        Logs a critical message to the error log File.
 
         Args:
             message: The critical message to be logged.
+            FILECODE: The File code associated with the critical message.
+            ERRCODE: The error code associated with the critical message.
+            FUNCODE: The function code associated with the critical message.
 
         Returns:
             None
@@ -221,5 +224,5 @@ class Log:
             colorlog.critical(message)
         with open(self.err_filename, "a") as f:
             f.write(
-                f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message))}\n"
+                f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message) + str(FILECODE) + str(ERRCODE) + str(FUNCODE))}\n"
             )

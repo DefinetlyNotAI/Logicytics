@@ -40,19 +40,21 @@
    - disklist (and its subcommands) ❌
    - Property✅
    - (USE LOG CLASS FROM ALGOPY)✅
-5) Make it know work all together
-6) In case of crashes it places the errors in ERROR.log
-7) Errors must be in following format
-    - FILECODE-ERRORCODE-FUNCTIONCODE
-    - Each code is the first letters of the name
+5) Make it know work all together✅
+6) In case of crashes it places the errors in ERROR.log ❌
+7) Errors must be in following format✅
+    - FILECODE-ERRORCODE-FUNCTIONCODE✅
+      - Filecode: First letter of file EXCEPT _files where its first 2 letters
+      - Errorcode: U -> Unknown, G -> General (exception as e), P -> Privileges error
+      - Functioncode: X -> Unknown, ANY-OTHER-LETTER -> The first letter of the function, BA -> Base code, not function
+      - Each code is the first letters of the name
 8) Zips any made data and files
 9) When a zip file is made, a HASH is supplied with it of the zip file
 10) Delete all logs in event viewer
-
+11) Incorporate the _files
 ---
 
 1) Make .structure and .version into 1 file JSON ✅
-
 2) Make a debugger.py file that if run will attempt to debug Logicytics,
    - Check:
        - date and time
@@ -64,7 +66,8 @@
        - is it running as admin
        - execution policy
        - does it have the dependencies installed
-
+3) Add more logs to the files (debug especially)
+4) Docstring and refactor functions (:type , -> output)
 ---
 
 1) REDO README.
