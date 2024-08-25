@@ -1,8 +1,7 @@
 import os
 from pathlib import Path
 import shutil
-from __lib_log import Log
-from __lib_actions import *
+from Libs.__lib_actions import *
 
 
 class Miner:

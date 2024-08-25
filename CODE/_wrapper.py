@@ -1,5 +1,4 @@
-from __lib_log import *
-from __lib_actions import *
+from Libs.__lib_actions import *
 import ctypes
 import os
 

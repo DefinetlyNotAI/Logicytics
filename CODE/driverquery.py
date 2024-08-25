@@ -1,5 +1,5 @@
-from __lib_actions import *
-from __lib_log import Log
+from Libs.__lib_actions import *
+from Libs.__lib_log import Log
 
 
 def driverquery():

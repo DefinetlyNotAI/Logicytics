@@ -1,5 +1,5 @@
-from __lib_actions import *
-from __lib_log import Log
+from Libs.__lib_actions import *
+from Libs.__lib_log import Log
 
 
 def wmic():
@@ -23,3 +23,5 @@ def wmic():
         file.write("-" * 190)
 
     Log(debug=DEBUG).info("WMIC Executed")
+
+wmic()
