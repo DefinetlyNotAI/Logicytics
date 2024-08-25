@@ -77,7 +77,7 @@ fabric.properties
 # Editor-based Rest Client
 .idea/httpRequests
 
-# Android studio 3.1+ serialized cache file
+# Android studio 3.1+ serialized cache File
 .idea/caches/build_file_checksums.ser
 
 ### PyCharm Patch ###
@@ -102,7 +102,7 @@ fabric.properties
 .idea/**/markdown-navigator-enh.xml
 .idea/**/markdown-navigator/
 
-# Cache file creation bug
+# Cache File creation bug
 # See https://youtrack.jetbrains.com/issue/JBR-2257
 .idea/$CACHE_FILE$
 
@@ -262,18 +262,18 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
-# Cython debug symbols
+# Cython DEBUG symbols
 cython_debug/
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+#  and can be added to the global gitignore or merged into this File.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
 ### Python Patch ###
-# Poetry local configuration file - https://python-poetry.org/docs/configuration/#local-configuration
+# Poetry local configuration File - https://python-poetry.org/docs/configuration/#local-configuration
 poetry.toml
 
 # ruff
@@ -289,13 +289,13 @@ Thumbs.db:encryptable
 ehthumbs.db
 ehthumbs_vista.db
 
-# Dump file
+# Dump File
 *.stackdump
 
-# Folder config file
+# Folder config File
 [Dd]esktop.ini
 
-# Recycle Bin used on file shares
+# Recycle Bin used on File shares
 $RECYCLE.BIN/
 
 # Windows Installer files
@@ -309,3 +309,5 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,pycharm,python
+/SYSTEM/secret
+/CODE/secret

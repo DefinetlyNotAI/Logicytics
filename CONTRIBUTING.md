@@ -17,10 +17,10 @@ the preferred channel for bug reports and features requests
 and submitting pull requests, but please respect the following
 restrictions:
 
-- Please **do not** derail or troll issues. Keep the discussion on topic and
+- Please **Do not** derail or troll issues. Keep the discussion on topic and
   respect the opinions of others.
 
-- Please **do not** post comments consisting solely of "+1" or "👍 ".
+- Please **Do not** post comments consisting solely of "+1" or "👍 ".
   Use [GitHub's "reactions" feature](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/)
   instead. We reserve the right to delete comments which violate this rule.
 
