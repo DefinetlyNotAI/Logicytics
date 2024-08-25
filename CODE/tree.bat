@@ -1,4 +1,7 @@
 @echo off
+
+echo INFO: Starting Tree Command
+
 setlocal enabledelayedexpansion
 :: Define the output file name as Tree.txt
 set "outputFile=Tree.txt"

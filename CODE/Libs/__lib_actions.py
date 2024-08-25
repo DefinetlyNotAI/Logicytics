@@ -1,7 +1,7 @@
 import subprocess
 import argparse
 import json
-from __lib_log import Log
+from Libs.__lib_log import Log
 
 
 class Actions:
@@ -163,7 +163,7 @@ class Actions:
     @staticmethod
     def read_config():
         try:
-            with open("config.json", "r") as file:
+            with open("Libs/config.json", "r") as file:
                 data = json.load(file)
 
                 webhook_url = data.get("WEBHOOK_URL", "")
