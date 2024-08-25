@@ -55,7 +55,7 @@
 ---
 
 1) Make .structure and .version into 1 file JSON ✅
-2) [11] Make a debugger.py file that if run will attempt to debug Logicytics,
+2) [11] Make a debugger.py file that if run will attempt to debug Logicytics, ✅
    - Check:
        - date and time
        - device model
