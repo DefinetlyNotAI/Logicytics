@@ -32,8 +32,12 @@ def zip_and_hash(path: str, name: str, action: str) -> tuple:
             zip_file.write(os.path.join(path, file))
 
     for file in files_to_zip:
-        os.remove(os.path.join(path, file))
-
+        try:
+            shutil.rmtree(os.path.join(path, file))
+        except OSError:
+            os.remove(os.path.join(path, file))
+        except Exception as e:
+            print(e)
     # Generate SHA-256 hash of the zip file
     with open(f"{filename}.zip", 'rb') as zip_file:
         zip_data = zip_file.read()
