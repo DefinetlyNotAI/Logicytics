@@ -35,8 +35,6 @@ Ensure your system meets these requirements:
 
 ### Step-by-Step Installation
 
-Optionally, use the `exe` installer to download and install Logicytics and all requirements with a simple GUI interface.
-
 1. **Clone the Repository**: Use Git to clone Logicytics to your local machine. Open Command Prompt as an administrator
    and run:
    ```powershell
