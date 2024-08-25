@@ -6,6 +6,7 @@ from _zipper import zip_and_hash
 from _hide_my_tracks import attempt_hide
 from _dev import dev_checks, open_file
 from _health import backup, update
+from _extra import unzip, menu
 
 
 class Checks:
@@ -105,8 +106,8 @@ if action == "dev":
     dev_checks()
     exit(0)
 if action == "extra":
-    import _extra
-
+    log.info("Opening extra tools menu...")
+    menu()
     exit(0)
 if action == "update":
     log.info("Updating...")
@@ -127,8 +128,11 @@ if action == "backup":
     log.info("Backup complete!")
     exit(0)
 if action == "unzip-extra":
-    import _extra
-
+    log.warning("The contents of this directory can be flagged as malicious and enter quarantine, please use with "
+                "caution")
+    log.info("Unzipping...")
+    unzip("..\\EXTRA\\EXTRA.zip")
+    log.info("Unzip complete!")
     exit(0)
 
 # Checks for privileges and errors
@@ -137,6 +141,7 @@ if not check_status.admin():
     exit(1)
 if check_status.uac():
     log.warning("UAC is enabled, this may cause issues")
+    log.warning("Please disable UAC if possible")
 
 # Create execution list
 execution_list = [
