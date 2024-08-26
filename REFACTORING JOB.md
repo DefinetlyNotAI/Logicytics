@@ -46,7 +46,7 @@
     - FILECODE-ERRORCODE-FUNCTIONCODE ✅
       - Filecode: First letter of file EXCEPT _files where its first 2 letters
       - Errorcode: U -> Unknown, G -> General (exception as e), P -> Privileges error, C -> Corruption
-      - Functioncode: X -> Unknown, ANY-OTHER-LETTER -> The first letter of the function, BA -> Base code, not function
+      - Functioncode: X -> Unknown, ANY-OTHER-LETTER -> The first letter of the function, BA -> Base code, not function, C# -> Class + Function letter
     - Each code is the first letters of the name ✅
 8) Zips any made data and files ✅
 9) When a zip file is made, a HASH is supplied with it of the zip file✅

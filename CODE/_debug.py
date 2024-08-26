@@ -80,13 +80,15 @@ class JSON:
     @staticmethod
     def check_current_files(directory: str) -> list:
         """
-        Checks the specified directory and its subdirectories for files with extensions '.py', '.exe', '.ps1', or '.bat'.
+        Checks the specified directory and its subdirectories for files
+        with extensions '.py', '.exe', '.ps1', or '.bat'.
 
         Parameters:
             directory (str): The path to the directory to search.
 
         Returns:
-            list: A list of file paths with the specified extensions. The paths are relative to the directory and do not include the directory prefix.
+            list: A list of file paths with the specified extensions.
+            The paths are relative to the directory and do not include the directory prefix.
         """
         file = []
         for root, _, filenames in os.walk(directory):
