@@ -63,7 +63,11 @@ class Do:
             list: The list of filenames with the specified extensions.
         """
         for filename in os.listdir(directory):
-            if filename.endswith(('.py', '.exe', '.ps1', '.bat')) and not filename.startswith('_'):
+            if (
+                filename.endswith((".py", ".exe", ".ps1", ".bat"))
+                and not filename.startswith("_")
+                and not filename == "Logicytics.py"
+            ):
                 List.append(filename)
         return List
 
@@ -122,7 +126,7 @@ class Do:
                 log.error("\n".join(lines))
             if ID == "CRITICAL":
                 if script[0] == "_":
-                    fcode = '_' + script[1]
+                    fcode = "_" + script[1]
                 else:
                     fcode = script[0]
                 log.critical("\n".join(lines), fcode, "U", "X")
@@ -181,8 +185,10 @@ if action == "update":
     log.info("Update complete!")
     exit(0)
 if action == "restore":
-    log.warning("Sorry, this feature is yet to be implemented. You can manually Restore your backups, We will open "
-                "the location for you")
+    log.warning(
+        "Sorry, this feature is yet to be implemented. You can manually Restore your backups, We will open "
+        "the location for you"
+    )
     open_file("../ACCESS/BACKUP/")
     exit(1)
 if action == "backup":
@@ -194,8 +200,10 @@ if action == "backup":
     log.info("Backup complete!")
     exit(0)
 if action == "unzip-extra":
-    log.warning("The contents of this directory can be flagged as malicious and enter quarantine, please use with "
-                "caution")
+    log.warning(
+        "The contents of this directory can be flagged as malicious and enter quarantine, please use with "
+        "caution"
+    )
     log.info("Unzipping...")
     unzip("..\\EXTRA\\EXTRA.zip")
     log.info("Unzip complete!")
@@ -248,7 +256,7 @@ if action == "exe":
     )
     execution_list = ["sys_internal.py", "wmic.py"]
 if action == "modded":
-    execution_list = Do().get_files_with_extensions('../MODS', execution_list)
+    execution_list = Do().get_files_with_extensions("../MODS", execution_list)
 
 log.debug(execution_list)
 
@@ -270,10 +278,10 @@ else:
 
 # Zip generated files
 if action == "modded":
-    zip_loc_mod, hash_loc = zip_and_hash('..\\MODS', 'MODS', action)
+    zip_loc_mod, hash_loc = zip_and_hash("..\\MODS", "MODS", action)
     log.info(zip_loc_mod)
     log.debug(hash_loc)
-zip_loc, hash_loc = zip_and_hash('..\\CODE', 'CODE', action)
+zip_loc, hash_loc = zip_and_hash("..\\CODE", "CODE", action)
 log.info(zip_loc)
 log.debug(hash_loc)
 
