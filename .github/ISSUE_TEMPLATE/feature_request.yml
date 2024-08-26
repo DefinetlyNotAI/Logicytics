@@ -2,7 +2,7 @@ name: Feature request
 description: Suggest new or updated features to include in Logicytics.
 title: "Suggest a new feature"
 labels: [ feature ]
-assignees: [ ]
+assignees: "DefinetlyNotAI"
 body:
   - type: checkboxes
     attributes:
@@ -13,6 +13,8 @@ body:
           required: true
         - label: I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md)
           required: true
+        - label: I would like to contribute this request.
+          required: false
   - type: textarea
     id: proposal
     attributes:
@@ -25,7 +27,6 @@ body:
     attributes:
       label: Motivation and context
       description: Tell us why this change is needed or helpful, and what problems it may help solve.
-
   - type: dropdown
     id: importance
     attributes:
@@ -35,5 +36,6 @@ body:
         - High
         - Normal
         - Low
+        - Unknown
     validations:
       required: true
