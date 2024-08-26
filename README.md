@@ -91,6 +91,10 @@ If you have an idea or want to contribute to the project, you can submit an issu
 After running and successfully collecting data, you may traverse the ACCESS directory as much as you like,
 Remove add and delete files, it's the safest directory where your backups, hashes, data zips and logs are found.
 
+Also watch this video for a better understanding of Logicytics:
+
+[![Logicytics Tutorial](IMG/ClickMe.jpg)](https://www.youtube.com/watch?v=XVTBmdTQqOs)
+
 ## 🔧 Configuration 🔧
 
 Logicytics uses a config.json file to store configurations. The config.json is located in the CODE directory.
@@ -214,13 +218,13 @@ If there is a specific piece of data that you would like to see extracted by Log
 please let us know. We are constantly working to improve the project and adding new features.
 
 ![Extra Tools](IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
+
 Other than mods, some prefixed tools are in the `EXTRA` directory, use the `--extra` flag to traverse these
 special tools
 
 ### Want to create your own mod?
 
 Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
-
 
 ## 🌟 Conclusion 🌟
 
