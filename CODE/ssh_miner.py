@@ -5,7 +5,9 @@ from __lib_actions import *
 
 def ssh_miner():
     """
-    This function backs up SSH keys and configuration by copying them from the default SSH directory to a subdirectory named 'ssh_backup' in the current working directory.
+    This function backs up SSH keys and configuration
+    by copying them from the default SSH directory to a subdirectory
+    named 'ssh_backup' in the current working directory.
 
     Returns:
         None

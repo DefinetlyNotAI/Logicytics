@@ -12,12 +12,6 @@ def sys_internal():
 
     The function also logs information and warning messages for each executable,
     including any errors that occur during execution.
-
-    Parameters:
-        None
-
-    Returns:
-        None
     """
     executables = [
         "psfile.exe",

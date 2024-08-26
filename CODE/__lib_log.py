@@ -221,6 +221,7 @@ class Log:
         if self.color:
             colorlog.critical(message)
         with open(self.err_filename, "a") as f:
+            code = str(FILECODE) + ':' + str(ERRCODE) + ':' + str(FUNCODE)
             f.write(
-                f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message) + str(FILECODE) + ':' + str(ERRCODE) + ':' + str(FUNCODE))}\n"
+                f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message) + ' --> ' + code)}\n"
             )
