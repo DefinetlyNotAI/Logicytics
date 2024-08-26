@@ -41,6 +41,7 @@ To install and setup Logicytics, follow these steps:
 
 - **Dependencies**: The project requires certain Python modules to be installed. You can install all the required modules by running the following command in your terminal: `pip install -r requirements.txt`.
 
+![Admin Error](IMG/NeedAdmin.png "Not using admin will result in a soft crash")
 - **Administrative Privileges**: To be able to run the program using certain features of the project, like registry modification, you must run the program with administrative privileges.
 
 - **System Requirements**: The project has been tested on Windows 10 and 11. It will not work on other operating systems.
@@ -57,7 +58,7 @@ Make sure to select the option to "Add Python to PATH" during installation.
 
 2) Install Dependencies 📦
 Logicytics requires Python modules. You can install all the required modules by running the following command in your terminal:
-<code>pip install -r requirements.txt</code>
+`pip install -r requirements.txt`
 
 3) Run Logicytics 🚀
 To run Logicytics, simply run the following command in your terminal:
@@ -66,8 +67,9 @@ This opens a help menu.
 
 4) Run the Program 👾
 Once you have run the program, you can run the program with the following command:
-<code>python Logicytics.py</code>
+`python Logicytics.py -h`
 Replace the flags with the ones you want to use.
+You Must use Admin!
 
 5) Wait for magic to happen 🧙‍♀️
 Logicytics will now run and gather data according to the flags you used.
@@ -84,10 +86,12 @@ If you have an idea or want to contribute to the project, you can submit an issu
 
 ### Basic Usage
 
-TODO add images of usage etc
+![The flag options](IMG/Flag%20Options.png "Here are the options Logicytics has")
+
+After running and successfully collecting data, you may traverse the ACCESS directory as much as you like,
+Remove add and delete files, it's the safest directory where your backups, hashes, data zips and logs are found.
 
 ## 🔧 Configuration 🔧
-
 
 Logicytics uses a config.json file to store configurations. The config.json is located in the CODE directory.
 
@@ -119,7 +123,7 @@ Do not modify CURRENT_FILES and VERSION unless you are developing extra add-ons
 
 ## 🚀 Advanced Usage 🚀
 
-TODO add images of usage etc
+![Main 3 Directories](IMG/3dir.png "The 3 Main Directories")
 
 ### Mods
 
@@ -200,7 +204,7 @@ Here are some of the data points that Logicytics extracts:
 - **Drivers Information**: Drivers, Drivers Files, Drivers Certificates, Drivers Registry Keys, Drivers Registry Keys (with values)
 - **Files Information**: Files, Files Certificates, Files Registry Keys, Files Registry Keys (with values)
 - **Processes Information**: Processes, Processes Files, Processes Registry Keys, Processes Registry Keys (with values)
-- 
+
 This is not an exhaustive list, 
 but it should give you a good idea of what data Logicytics is capable of extracting.
 
@@ -208,6 +212,10 @@ but it should give you a good idea of what data Logicytics is capable of extract
 
 If there is a specific piece of data that you would like to see extracted by Logicytics,
 please let us know. We are constantly working to improve the project and adding new features.
+
+![Extra Tools](IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
+Other than mods, some prefixed tools are in the `EXTRA` directory, use the `--extra` flag to traverse these
+special tools
 
 ### Want to create your own mod?
 

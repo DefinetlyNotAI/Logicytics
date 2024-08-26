@@ -199,7 +199,7 @@ if action == "backup":
     log.debug("Backup complete -> MODS dir")
     log.info("Backup complete!")
     exit(0)
-if action == "unzip-extra":
+if action == "unzip_extra":
     log.warning(
         "The contents of this directory can be flagged as malicious and enter quarantine, please use with "
         "caution"

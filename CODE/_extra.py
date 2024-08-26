@@ -32,14 +32,18 @@ def menu() -> None:
     Returns:
         None
     """
-    files = [
-        f
-        for f in os.listdir("../EXTRA/EXTRA")
-        if f.endswith(".exe") or f.endswith(".ps1")
-    ]
-    print("Available scripts:")
-    for i, file in enumerate(files):
-        print(f"{i+1}. {file}")
+    try:
+        files = [
+            f
+            for f in os.listdir("../EXTRA/EXTRA")
+            if f.endswith(".exe") or f.endswith(".ps1")
+        ]
+        print("Available scripts:")
+        for i, file in enumerate(files):
+            print(f"{i+1}. {file}")
+    except FileNotFoundError:
+        print("Error: ../EXTRA/EXTRA directory not found - Did you unzip it using --unzip-extra flag?")
+        exit(1)
 
     choice = int(input("Enter the number of your chosen script: "))
     if files[choice - 1] == "CMD.ps1":
