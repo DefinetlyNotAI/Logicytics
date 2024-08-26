@@ -49,7 +49,7 @@
       - Functioncode: X -> Unknown, ANY-OTHER-LETTER -> The first letter of the function, BA -> Base code, not function, C# -> Class + Function letter
     - Each code is the first letters of the name ✅
 8) Zips any made data and files ✅
-9) When a zip file is made, a HASH is supplied with it of the zip file✅
+9) When a zip file is made, a HASH is supplied with it of the zip file ✅
 10) Delete all logs in event viewer ⚙️
 11) Incorporate the _files fully ✅
 12) Webhook ❌
@@ -71,7 +71,7 @@
 4) Docstring and refactor functions (:type , -> output) ✅
 ---
 
-1) REDO README.
+1) REDO README. ✅
 2) Add requirements.txt ✅
 3) Add rules to contributing.md / remove others
    - (_files won't be seen by --mod flag)
