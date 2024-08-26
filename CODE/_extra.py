@@ -20,7 +20,7 @@ def unzip(zip_path: str) -> None:
     output_dir = os.path.join(os.path.dirname(zip_path), base_name)
     os.makedirs(output_dir, exist_ok=True)
 
-    with zipfile.ZipFile(zip_path, 'r') as z:
+    with zipfile.ZipFile(zip_path, "r") as z:
         z.extractall(path=str(output_dir))
 
 
@@ -32,17 +32,28 @@ def menu() -> None:
     Returns:
         None
     """
-    files = [f for f in os.listdir('../EXTRA/EXTRA') if f.endswith('.exe') or f.endswith('.ps1')]
+    files = [
+        f
+        for f in os.listdir("../EXTRA/EXTRA")
+        if f.endswith(".exe") or f.endswith(".ps1")
+    ]
     print("Available scripts:")
     for i, file in enumerate(files):
         print(f"{i+1}. {file}")
 
     choice = int(input("Enter the number of your chosen script: "))
-    if files[choice-1] == "CMD.ps1":
+    if files[choice - 1] == "CMD.ps1":
         print("Redirecting to CMD.ps1...")
-        subprocess.run(['powershell.exe', '../EXTRA/EXTRA/CMD.ps1'], check=True)
+        subprocess.run(["powershell.exe", "../EXTRA/EXTRA/CMD.ps1"], check=True)
         command = input("Type the flags you want to execute: ")
-        subprocess.run(['powershell.exe', '../EXTRA/EXTRA/CMD.ps1', command.removeprefix('.\\CMD.ps1 ')], check=True)
-    selected_file = files[choice-1]
-    subprocess.run(['powershell.exe', '../EXTRA/EXTRA/' + selected_file], check=True)
+        subprocess.run(
+            [
+                "powershell.exe",
+                "../EXTRA/EXTRA/CMD.ps1",
+                command.removeprefix(".\\CMD.ps1 "),
+            ],
+            check=True,
+        )
+    selected_file = files[choice - 1]
+    subprocess.run(["powershell.exe", "../EXTRA/EXTRA/" + selected_file], check=True)
     exit(0)
