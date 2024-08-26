@@ -21,7 +21,7 @@ restrictions:
   respect the opinions of others.
 
 - Please **Do not** post comments consisting solely of "+1" or "👍 ".
-  Use [GitHub's "reactions" feature](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/)
+  Use [GitHub's "reactions" feature](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments)
   instead. We reserve the right to delete comments which violate this rule.
 
 ## Issues assignment
@@ -47,63 +47,19 @@ leave the Explain.md file and the updating of the structure file to me.
 When making modifications to the Logicytics project,
 please adhere to the following guidelines to ensure consistency and maintainability:
 
-### Basic Check Functions
+- Use a consistent indentation.
+- Add yourself to the [credits](CREDITS.md).
+- Make sure you have done all the necessary steps in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
+- Make sure you have tested your code.
+- Make sure you have followed the instructions in the `--dev` flag.
+- Make sure the coding style is similar to previous code
+- Code is only written in `python, ps1 or batch` or is an `EXE` file
+- You have not modified or changed the wrapper [`Logicytics.py`](CODE/Logicytics.py)
+- All your code follows a strict logging system
+  - If python, imports the [logger](CODE/__lib_log.py) class and uses it, with adhering to the critical code policy in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
+    - For critical code you adhere to the `FILECODE-ERRORCODE-FUNCTIONCODE` formatting
+  - If non-python, each print statement starts with either `INFO:` `WARNING:` or `ERROR:` to allow the wrapper to inject the [logger](CODE/__lib_log.py) class.
 
-- **Limitations on Modifications**: Avoid making extreme modifications to the basic check functions in
-  the `Logicytics.py` file. Specifically, refrain from altering the fundamental operations related to flags and file
-  access mechanisms.
-
-- **Restrictions**: Do not remove core features and program files, especially example files like `CEC` or code in
-  the `sys` or `local_libraries` directories
-
-### Documentation and Credit
-
-- **Comments and Docstrings**: Ensure that all additions and modifications are well-documented through comments and
-  docstrings. Your contributions should be easy to understand and use, adhering to proper programming etiquette.
-
-- **Credit**: Properly credit your work in the `CREDIT.md` file, following the credit rules outlined in the
-  project's [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki/2-‐-Contribution-Guidelines#credits). Include your
-  name and a brief description of your contributions under the appropriate section.
-
-### Debugging and Proof of Work
-
-- **Debugging**: When modifying existing files, demonstrate thorough debugging efforts. Provide evidence of testing and
-  debugging processes to ensure the reliability of your changes.
-
-- **Proof of Work**: Include proof of work with your contributions, showcasing the effectiveness and necessity of your
-  modifications or additions.
-
-### Adding Features
-
-- **New Files for New Features**: When adding new features, create a separate file for each feature. Each new file must
-  contain at least one function and adhere to the project's print rules as specified in
-  the [Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki/2-‐-Contribution-Guidelines#printing-rules). While any
-  programming language may be used, adherence to
-  the [wiki's](https://github.com/DefinetlyNotAI/Logicytics/wiki/2-‐-Contribution-Guidelines) guidelines is mandatory.
-
-- **Integration**: Do not integrate new features directly into the `Logicytics.py` file, neither to the
-  local `Flags_Lists.py` library. Leave the integration process to the project maintainers to ensure cohesive project
-  structure.
-
-- **Root Folders**: Refrain from modifying root folders such as `.github` or `.git`. Maintain the integrity of the
-  project's directory structure.
-
-### Dependencies
-
-- **Requirement File**: Any new libraries introduced as part of your contributions should be listed in
-  the `requirements.txt` file. This ensures that the project's dependencies are accurately tracked and managed.
-
-### Must Do's
-
-- **Final Steps**: Ensure that you have run `Logicytics.py --dev` and completed all steps required given to you
-
-- **CREDIT.md**: Ensure that the `CREDIT.md` file has been properly updated. We respect the credit guidelines in the
-  project's [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki/2-‐-Contribution-Guidelines#credits).
-
-- **WiKi**: Ensure that you have followed the project's structure guidelines found in
-  the [Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki).
-
-- **ReadMe**: When modifying specific code in special directories/subdirectories, read their `ReadMe.md` files
 
 ## Issues and labels 🛠️
 
@@ -182,6 +138,6 @@ the [Creative Commons Attribution 3.0 Unported License](https://creativecommons.
 - **Issues**: Use GitHub issues for bug reports and feature requests. Keep the discussion focused and relevant.
 - **Pull Requests**: Use pull requests to propose changes. Be prepared to discuss your changes and address any feedback.
 
-If you have any questions or need further clarification, please feel free to contact us at Nirt_12023@outlook.com.
+If you have any questions or need further clarification, please feel free to contact [us](mailto:Nirt_12023@outlook.com)
 
 Thank you for your contributions!
