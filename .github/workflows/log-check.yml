@@ -14,11 +14,23 @@ jobs:
         run: |
           DEBUG_LOG=$(echo "${{ github.event.issue.body }}" | grep -A1000 "Debugger Log")
           BASIC_LOG=$(echo "${{ github.event.issue.body }}" | grep -A1000 "Basic Log")
-          echo "DEBUG_LOG=${DEBUG_LOG}" >> $GITHUB_ENV
-          echo "BASIC_LOG=${BASIC_LOG}" >> $GITHUB_ENV
-      - uses: craigloewen-msft/GitGudSimilarIssues@main
+          if [ -z "$DEBUG_LOG" ] && [ -z "$BASIC_LOG" ]; then
+            echo "NO_LOGS=true" >> $GITHUB_ENV
+          fi
+      - name: Add comment
+        if: $NO_LOGS != true
+        run: |
+          echo "::set-output name=comment::These are the extracted logs:"
+          echo "::set-output name=similar_issues::$(craigloewen-msft/GitGudSimilarIssues@main --issue-title ${{ github.event.issue.title }} --issue-body ${{ github.event.issue.body }} --repository ${{ github.repository }} --similarity-tolerance 0.7)"
+      - name: Add label
+        if: $NO_LOGS != true
+        uses: actions/github-script@v6
         with:
-          issueTitle: ${{ github.event.issue.title }}
-          issueBody: ${{ github.event.issue.body }}
-          repository: ${{ github.repository }}
-          similarityTolerance: "0.7"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              name: "Valid"
+            })
