@@ -1,6 +1,7 @@
 import datetime
 import subprocess
 import os
+import sys
 
 
 def attempt_hide():

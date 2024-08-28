@@ -2,6 +2,7 @@ import subprocess
 import argparse
 import json
 from subprocess import CompletedProcess
+import sys
 
 
 class Actions:
@@ -22,28 +23,28 @@ class Actions:
     @staticmethod
     def flags() -> tuple[str, ...]:
         """
-        A static method that defines and parses command-line flags for the Logicytics application.
+        A static method that defines and parses command-line Flags for the Logicytics application.
 
-        The flags method uses the argparse library to define a range of flags that can be used to customize the
+        The Flags method uses the argparse library to define a range of Flags that can be used to customize the
         behavior of the application.
 
         The method checks for exclusivity rules and ensures that only one flag is used, unless the --reboot,
-        --shutdown, or --webhook flags are used, in which case only two flags are allowed.
+        --shutdown, or --webhook Flags are used, in which case only two Flags are allowed.
 
-        The method returns a tuple of the keys of the flags that were used, or exits the application if the flags are
+        The method returns a tuple of the keys of the Flags that were used, or exits the application if the Flags are
         invalid.
 
         Parameters:
         None
 
         Returns:
-        tuple: A tuple of the keys of the flags that were used.
+        tuple: A tuple of the keys of the Flags that were used.
         """
         # Define the argument parser
         parser = argparse.ArgumentParser(
             description="Logicytics, The most powerful tool for system data analysis."
         )
-        # Define flags
+        # Define Flags
         parser.add_argument(
             "--default", action="store_true", help="Runs Logicytics default"
         )
@@ -81,13 +82,13 @@ class Actions:
             "--dev",
             action="store_true",
             help="Run Logicytics developer mod, this is only for people who want to register their contributions "
-            "properly. - Use on your own device only -.",
+                 "properly. - Use on your own device only -.",
         )
         parser.add_argument(
             "--exe",
             action="store_true",
             help="Run Logicytics using its precompiled exe's, These may be outdated and not the best, use only if the "
-            "device doesnt have python installed.",
+                 "device doesnt have python installed.",
         )
         parser.add_argument(
             "--debug",
@@ -137,15 +138,14 @@ class Actions:
         # Check for exclusivity rules
         if args.reboot or args.shutdown or args.webhook:
             if not (
-                args.basic
-                or args.speedy
-                or args.modded
-                or args.silent
-                or args.minimal
-                or args.exe
+                    args.default
+                    or args.threaded
+                    or args.modded
+                    or args.minimal
+                    or args.exe
             ):
                 print(
-                    "--reboot and --shutdown and --webhook flags require at least one of the following flags: "
+                    "--reboot and --shutdown and --webhook Flags require at least one of the following Flags: "
                     "--default, --threaded, --modded, --minimal, --exe."
                 )
                 exit(1)
@@ -159,22 +159,22 @@ class Actions:
                 print("Only one flag is allowed.")
                 exit(1)
         else:
-            # Ensure only 2 flags is used
+            # Ensure only 2 Flags is used
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
             if len(used_flags) > 2:
                 print(
-                    "Only one flag is allowed with the --reboot and --shutdown and --webhook flags."
+                    "Only one flag is allowed with the --reboot and --shutdown and --webhook Flags."
                 )
                 exit(1)
 
-        # Set flags to True or False based on whether they were used
-        flags = {key: getattr(args, key) for key in vars(args)}
+        # Set Flags to True or False based on whether they were used
+        Flags = {key: getattr(args, key) for key in vars(args)}
 
         # Initialize an empty list to store the keys with values set to True
         true_keys = []
 
-        # Iterate through the flags dictionary
-        for key, value in flags.items():
+        # Iterate through the Flags dictionary
+        for key, value in Flags.items():
             # Check if the value is True and add the key to the list
             if value:
                 true_keys.append(key)
@@ -187,7 +187,7 @@ class Actions:
             return tuple(true_keys)
         else:
             print(
-                "Only one flag is allowed with the --reboot and --shutdown and --webhook flags."
+                "Only one flag is allowed with the --reboot and --shutdown and --webhook Flags."
             )
             exit(1)
 
