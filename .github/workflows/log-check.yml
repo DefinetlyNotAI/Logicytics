@@ -9,7 +9,7 @@ jobs:
   analyze_issue:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Extract logs
         run: |
           DEBUG_LOG=$(echo "${{ github.event.issue.body }}" | grep -A1000 "Debugger Log")
