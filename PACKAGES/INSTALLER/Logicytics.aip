@@ -1,0 +1,1241 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<DOCUMENT Type="Advanced Installer" CreateVersion="21.8.2" version="21.8.2" Modules="professional" RootPath="." Language="en_GB" Id="{927E3545-3C4F-4120-9142-05105289B241}">
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiPropsComponent">
+    <ROW Property="AI_BITMAP_DISPLAY_MODE" Value="0"/>
+    <ROW Property="AI_FINDEXE_TITLE" Value="Select the installation package for [|ProductName]" ValueLocId="AI.Property.FindExeTitle"/>
+    <ROW Property="ALLUSERS" Value="1"/>
+    <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
+    <ROW Property="ARPCONTACT" Value="Nirt_12023@outlook.com"/>
+    <ROW Property="ARPHELPLINK" Value="https://github.com/DefinetlyNotAI/Logicytics/issues"/>
+    <ROW Property="ARPNOMODIFY" MultiBuildValue="DefaultBuild:1"/>
+    <ROW Property="ARPNOREPAIR" MultiBuildValue="DefaultBuild:1"/>
+    <ROW Property="ARPPRODUCTICON" Value="datausage_iconicons.com_52837.exe" Type="8"/>
+    <ROW Property="ARPURLINFOABOUT" Value="https://github.com/DefinetlyNotAI/Logicytics/wiki"/>
+    <ROW Property="ARPURLUPDATEINFO" Value="https://github.com/DefinetlyNotAI/Logicytics/releases"/>
+    <ROW Property="AiLicenseAgreementLink" Value="https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE" Type="4"/>
+    <ROW Property="Manufacturer" Value="DefinetlyNotAI"/>
+    <ROW Property="MsiLogging" MultiBuildValue="DefaultBuild:vp"/>
+    <ROW Property="ProductCode" Value="2057:{67E58606-8246-4DC8-B4C8-BF4BCED3D291} " Type="16"/>
+    <ROW Property="ProductLanguage" Value="1033"/>
+    <ROW Property="ProductName" Value="Logicytics"/>
+    <ROW Property="ProductVersion" Value="2.1.0" Options="32"/>
+    <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND;AI_SETUPEXEPATH;SETUPEXEDIR"/>
+    <ROW Property="UpgradeCode" Value="{3C26573D-B89D-4B30-9E0F-37024D0F5BBB}"/>
+    <ROW Property="WindowsType9X" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
+    <ROW Property="WindowsType9XDisplay" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT40" MultiBuildValue="DefaultBuild:Windows NT 4.0" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT40Display" MultiBuildValue="DefaultBuild:Windows NT 4.0" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT50" MultiBuildValue="DefaultBuild:Windows 2000" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT50Display" MultiBuildValue="DefaultBuild:Windows 2000" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT5X" MultiBuildValue="DefaultBuild:Windows XP/2003" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT5XDisplay" MultiBuildValue="DefaultBuild:Windows XP/2003" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT60" MultiBuildValue="DefaultBuild:Windows Vista/Server 2008" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT60Display" MultiBuildValue="DefaultBuild:Windows Vista/Server 2008" ValueLocId="-"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiDirsComponent">
+    <ROW Directory="ACCESS_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="ACCESS"/>
+    <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1"/>
+    <ROW Directory="CODE_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="CODE"/>
+    <ROW Directory="EXTRA_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="EXTRA"/>
+    <ROW Directory="IMG_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="IMG"/>
+    <ROW Directory="ISSUE_TEMPLATE_Dir" Directory_Parent="github_Dir" DefaultDir="ISSUE_~1|ISSUE_TEMPLATE"/>
+    <ROW Directory="LOGS_Dir" Directory_Parent="ACCESS_Dir" DefaultDir="LOGS"/>
+    <ROW Directory="Logicytics_Dir" Directory_Parent="APPDIR" DefaultDir="LOGICY~1|Logicytics"/>
+    <ROW Directory="MODS_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="MODS"/>
+    <ROW Directory="PACKAGES_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="PACKAGES"/>
+    <ROW Directory="SysInternal_Suite_Dir" Directory_Parent="CODE_Dir" DefaultDir="SYSINT~1|SysInternal_Suite"/>
+    <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
+    <ROW Directory="__10_Dir" Directory_Parent="objects_Dir" DefaultDir="16"/>
+    <ROW Directory="__11_Dir" Directory_Parent="objects_Dir" DefaultDir="17"/>
+    <ROW Directory="__12_Dir" Directory_Parent="objects_Dir" DefaultDir="25"/>
+    <ROW Directory="__13_Dir" Directory_Parent="objects_Dir" DefaultDir="26"/>
+    <ROW Directory="__14_Dir" Directory_Parent="objects_Dir" DefaultDir="27"/>
+    <ROW Directory="__15_Dir" Directory_Parent="objects_Dir" DefaultDir="32"/>
+    <ROW Directory="__16_Dir" Directory_Parent="objects_Dir" DefaultDir="33"/>
+    <ROW Directory="__17_Dir" Directory_Parent="objects_Dir" DefaultDir="34"/>
+    <ROW Directory="__18_Dir" Directory_Parent="objects_Dir" DefaultDir="35"/>
+    <ROW Directory="__19_Dir" Directory_Parent="objects_Dir" DefaultDir="36"/>
+    <ROW Directory="__1_Dir" Directory_Parent="objects_Dir" DefaultDir="01"/>
+    <ROW Directory="__20_Dir" Directory_Parent="objects_Dir" DefaultDir="37"/>
+    <ROW Directory="__21_Dir" Directory_Parent="objects_Dir" DefaultDir="38"/>
+    <ROW Directory="__22_Dir" Directory_Parent="objects_Dir" DefaultDir="40"/>
+    <ROW Directory="__23_Dir" Directory_Parent="objects_Dir" DefaultDir="41"/>
+    <ROW Directory="__24_Dir" Directory_Parent="objects_Dir" DefaultDir="43"/>
+    <ROW Directory="__25_Dir" Directory_Parent="objects_Dir" DefaultDir="44"/>
+    <ROW Directory="__26_Dir" Directory_Parent="objects_Dir" DefaultDir="45"/>
+    <ROW Directory="__27_Dir" Directory_Parent="objects_Dir" DefaultDir="46"/>
+    <ROW Directory="__28_Dir" Directory_Parent="objects_Dir" DefaultDir="47"/>
+    <ROW Directory="__29_Dir" Directory_Parent="objects_Dir" DefaultDir="48"/>
+    <ROW Directory="__2_Dir" Directory_Parent="objects_Dir" DefaultDir="03"/>
+    <ROW Directory="__30_Dir" Directory_Parent="objects_Dir" DefaultDir="49"/>
+    <ROW Directory="__31_Dir" Directory_Parent="objects_Dir" DefaultDir="50"/>
+    <ROW Directory="__32_Dir" Directory_Parent="objects_Dir" DefaultDir="51"/>
+    <ROW Directory="__33_Dir" Directory_Parent="objects_Dir" DefaultDir="52"/>
+    <ROW Directory="__34_Dir" Directory_Parent="objects_Dir" DefaultDir="53"/>
+    <ROW Directory="__35_Dir" Directory_Parent="objects_Dir" DefaultDir="54"/>
+    <ROW Directory="__36_Dir" Directory_Parent="objects_Dir" DefaultDir="55"/>
+    <ROW Directory="__37_Dir" Directory_Parent="objects_Dir" DefaultDir="56"/>
+    <ROW Directory="__38_Dir" Directory_Parent="objects_Dir" DefaultDir="59"/>
+    <ROW Directory="__39_Dir" Directory_Parent="objects_Dir" DefaultDir="60"/>
+    <ROW Directory="__3_Dir" Directory_Parent="objects_Dir" DefaultDir="08"/>
+    <ROW Directory="__40_Dir" Directory_Parent="objects_Dir" DefaultDir="62"/>
+    <ROW Directory="__41_Dir" Directory_Parent="objects_Dir" DefaultDir="63"/>
+    <ROW Directory="__42_Dir" Directory_Parent="objects_Dir" DefaultDir="66"/>
+    <ROW Directory="__43_Dir" Directory_Parent="objects_Dir" DefaultDir="69"/>
+    <ROW Directory="__44_Dir" Directory_Parent="objects_Dir" DefaultDir="70"/>
+    <ROW Directory="__45_Dir" Directory_Parent="objects_Dir" DefaultDir="72"/>
+    <ROW Directory="__46_Dir" Directory_Parent="objects_Dir" DefaultDir="73"/>
+    <ROW Directory="__47_Dir" Directory_Parent="objects_Dir" DefaultDir="74"/>
+    <ROW Directory="__48_Dir" Directory_Parent="objects_Dir" DefaultDir="75"/>
+    <ROW Directory="__49_Dir" Directory_Parent="objects_Dir" DefaultDir="78"/>
+    <ROW Directory="__4_Dir" Directory_Parent="objects_Dir" DefaultDir="09"/>
+    <ROW Directory="__50_Dir" Directory_Parent="objects_Dir" DefaultDir="79"/>
+    <ROW Directory="__51_Dir" Directory_Parent="objects_Dir" DefaultDir="80"/>
+    <ROW Directory="__52_Dir" Directory_Parent="objects_Dir" DefaultDir="81"/>
+    <ROW Directory="__53_Dir" Directory_Parent="objects_Dir" DefaultDir="82"/>
+    <ROW Directory="__54_Dir" Directory_Parent="objects_Dir" DefaultDir="83"/>
+    <ROW Directory="__55_Dir" Directory_Parent="objects_Dir" DefaultDir="84"/>
+    <ROW Directory="__56_Dir" Directory_Parent="objects_Dir" DefaultDir="86"/>
+    <ROW Directory="__57_Dir" Directory_Parent="objects_Dir" DefaultDir="87"/>
+    <ROW Directory="__58_Dir" Directory_Parent="objects_Dir" DefaultDir="89"/>
+    <ROW Directory="__59_Dir" Directory_Parent="objects_Dir" DefaultDir="90"/>
+    <ROW Directory="__5_Dir" Directory_Parent="objects_Dir" DefaultDir="10"/>
+    <ROW Directory="__60_Dir" Directory_Parent="objects_Dir" DefaultDir="91"/>
+    <ROW Directory="__61_Dir" Directory_Parent="objects_Dir" DefaultDir="92"/>
+    <ROW Directory="__62_Dir" Directory_Parent="objects_Dir" DefaultDir="93"/>
+    <ROW Directory="__63_Dir" Directory_Parent="objects_Dir" DefaultDir="94"/>
+    <ROW Directory="__64_Dir" Directory_Parent="objects_Dir" DefaultDir="95"/>
+    <ROW Directory="__65_Dir" Directory_Parent="objects_Dir" DefaultDir="97"/>
+    <ROW Directory="__66_Dir" Directory_Parent="objects_Dir" DefaultDir="98"/>
+    <ROW Directory="__6_Dir" Directory_Parent="objects_Dir" DefaultDir="11"/>
+    <ROW Directory="__7_Dir" Directory_Parent="objects_Dir" DefaultDir="12"/>
+    <ROW Directory="__8_Dir" Directory_Parent="objects_Dir" DefaultDir="13"/>
+    <ROW Directory="__9_Dir" Directory_Parent="objects_Dir" DefaultDir="15"/>
+    <ROW Directory="__Dir" Directory_Parent="objects_Dir" DefaultDir="00"/>
+    <ROW Directory="__pycache___Dir" Directory_Parent="CODE_Dir" DefaultDir="__PYCA~1|__pycache__"/>
+    <ROW Directory="_internal_Dir" Directory_Parent="CODE_Dir" DefaultDir="_INTER~1|_internal"/>
+    <ROW Directory="a0_Dir" Directory_Parent="objects_Dir" DefaultDir="a0"/>
+    <ROW Directory="a2_Dir" Directory_Parent="objects_Dir" DefaultDir="a2"/>
+    <ROW Directory="a3_Dir" Directory_Parent="objects_Dir" DefaultDir="a3"/>
+    <ROW Directory="a4_Dir" Directory_Parent="objects_Dir" DefaultDir="a4"/>
+    <ROW Directory="a5_Dir" Directory_Parent="objects_Dir" DefaultDir="a5"/>
+    <ROW Directory="a7_Dir" Directory_Parent="objects_Dir" DefaultDir="a7"/>
+    <ROW Directory="a8_Dir" Directory_Parent="objects_Dir" DefaultDir="a8"/>
+    <ROW Directory="a9_Dir" Directory_Parent="objects_Dir" DefaultDir="a9"/>
+    <ROW Directory="a_1_Dir" Directory_Parent="objects_Dir" DefaultDir="3a"/>
+    <ROW Directory="a_2_Dir" Directory_Parent="objects_Dir" DefaultDir="4a"/>
+    <ROW Directory="a_3_Dir" Directory_Parent="objects_Dir" DefaultDir="5a"/>
+    <ROW Directory="a_4_Dir" Directory_Parent="objects_Dir" DefaultDir="6a"/>
+    <ROW Directory="a_5_Dir" Directory_Parent="objects_Dir" DefaultDir="9a"/>
+    <ROW Directory="a_Dir" Directory_Parent="objects_Dir" DefaultDir="1a"/>
+    <ROW Directory="ac_Dir" Directory_Parent="objects_Dir" DefaultDir="ac"/>
+    <ROW Directory="ad_Dir" Directory_Parent="objects_Dir" DefaultDir="ad"/>
+    <ROW Directory="ae_Dir" Directory_Parent="objects_Dir" DefaultDir="ae"/>
+    <ROW Directory="af_Dir" Directory_Parent="objects_Dir" DefaultDir="af"/>
+    <ROW Directory="b0_Dir" Directory_Parent="objects_Dir" DefaultDir="b0"/>
+    <ROW Directory="b2_Dir" Directory_Parent="objects_Dir" DefaultDir="b2"/>
+    <ROW Directory="b4_Dir" Directory_Parent="objects_Dir" DefaultDir="b4"/>
+    <ROW Directory="b6_Dir" Directory_Parent="objects_Dir" DefaultDir="b6"/>
+    <ROW Directory="b8_Dir" Directory_Parent="objects_Dir" DefaultDir="b8"/>
+    <ROW Directory="b9_Dir" Directory_Parent="objects_Dir" DefaultDir="b9"/>
+    <ROW Directory="b_1_Dir" Directory_Parent="objects_Dir" DefaultDir="7b"/>
+    <ROW Directory="b_2_Dir" Directory_Parent="objects_Dir" DefaultDir="9b"/>
+    <ROW Directory="b_Dir" Directory_Parent="objects_Dir" DefaultDir="2b"/>
+    <ROW Directory="ba_Dir" Directory_Parent="objects_Dir" DefaultDir="ba"/>
+    <ROW Directory="bb_Dir" Directory_Parent="objects_Dir" DefaultDir="bb"/>
+    <ROW Directory="bc_Dir" Directory_Parent="objects_Dir" DefaultDir="bc"/>
+    <ROW Directory="bf_Dir" Directory_Parent="objects_Dir" DefaultDir="bf"/>
+    <ROW Directory="c1_Dir" Directory_Parent="objects_Dir" DefaultDir="c1"/>
+    <ROW Directory="c3_Dir" Directory_Parent="objects_Dir" DefaultDir="c3"/>
+    <ROW Directory="c6_Dir" Directory_Parent="objects_Dir" DefaultDir="c6"/>
+    <ROW Directory="c8_Dir" Directory_Parent="objects_Dir" DefaultDir="c8"/>
+    <ROW Directory="c_1_Dir" Directory_Parent="objects_Dir" DefaultDir="8c"/>
+    <ROW Directory="c_Dir" Directory_Parent="objects_Dir" DefaultDir="1c"/>
+    <ROW Directory="ca_Dir" Directory_Parent="objects_Dir" DefaultDir="ca"/>
+    <ROW Directory="cd_Dir" Directory_Parent="objects_Dir" DefaultDir="cd"/>
+    <ROW Directory="ce_Dir" Directory_Parent="objects_Dir" DefaultDir="ce"/>
+    <ROW Directory="cf_Dir" Directory_Parent="objects_Dir" DefaultDir="cf"/>
+    <ROW Directory="d2_Dir" Directory_Parent="objects_Dir" DefaultDir="d2"/>
+    <ROW Directory="d3_Dir" Directory_Parent="objects_Dir" DefaultDir="d3"/>
+    <ROW Directory="d4_Dir" Directory_Parent="objects_Dir" DefaultDir="d4"/>
+    <ROW Directory="d6_Dir" Directory_Parent="objects_Dir" DefaultDir="d6"/>
+    <ROW Directory="d8_Dir" Directory_Parent="objects_Dir" DefaultDir="d8"/>
+    <ROW Directory="d9_Dir" Directory_Parent="objects_Dir" DefaultDir="d9"/>
+    <ROW Directory="d_1_Dir" Directory_Parent="objects_Dir" DefaultDir="4d"/>
+    <ROW Directory="d_2_Dir" Directory_Parent="objects_Dir" DefaultDir="5d"/>
+    <ROW Directory="d_3_Dir" Directory_Parent="objects_Dir" DefaultDir="9d"/>
+    <ROW Directory="d_Dir" Directory_Parent="objects_Dir" DefaultDir="1d"/>
+    <ROW Directory="dc_Dir" Directory_Parent="objects_Dir" DefaultDir="dc"/>
+    <ROW Directory="dd_Dir" Directory_Parent="objects_Dir" DefaultDir="dd"/>
+    <ROW Directory="de_Dir" Directory_Parent="objects_Dir" DefaultDir="de"/>
+    <ROW Directory="e0_Dir" Directory_Parent="objects_Dir" DefaultDir="e0"/>
+    <ROW Directory="e2_Dir" Directory_Parent="objects_Dir" DefaultDir="e2"/>
+    <ROW Directory="e3_Dir" Directory_Parent="objects_Dir" DefaultDir="e3"/>
+    <ROW Directory="e7_Dir" Directory_Parent="objects_Dir" DefaultDir="e7"/>
+    <ROW Directory="e8_Dir" Directory_Parent="objects_Dir" DefaultDir="e8"/>
+    <ROW Directory="e9_Dir" Directory_Parent="objects_Dir" DefaultDir="e9"/>
+    <ROW Directory="e_1_Dir" Directory_Parent="objects_Dir" DefaultDir="2e"/>
+    <ROW Directory="e_2_Dir" Directory_Parent="objects_Dir" DefaultDir="4e"/>
+    <ROW Directory="e_3_Dir" Directory_Parent="objects_Dir" DefaultDir="5e"/>
+    <ROW Directory="e_4_Dir" Directory_Parent="objects_Dir" DefaultDir="8e"/>
+    <ROW Directory="e_Dir" Directory_Parent="objects_Dir" DefaultDir="1e"/>
+    <ROW Directory="ea_Dir" Directory_Parent="objects_Dir" DefaultDir="ea"/>
+    <ROW Directory="eb_Dir" Directory_Parent="objects_Dir" DefaultDir="eb"/>
+    <ROW Directory="ed_Dir" Directory_Parent="objects_Dir" DefaultDir="ed"/>
+    <ROW Directory="f0_Dir" Directory_Parent="objects_Dir" DefaultDir="f0"/>
+    <ROW Directory="f2_Dir" Directory_Parent="objects_Dir" DefaultDir="f2"/>
+    <ROW Directory="f3_Dir" Directory_Parent="objects_Dir" DefaultDir="f3"/>
+    <ROW Directory="f4_Dir" Directory_Parent="objects_Dir" DefaultDir="f4"/>
+    <ROW Directory="f5_Dir" Directory_Parent="objects_Dir" DefaultDir="f5"/>
+    <ROW Directory="f9_Dir" Directory_Parent="objects_Dir" DefaultDir="f9"/>
+    <ROW Directory="f_1_Dir" Directory_Parent="objects_Dir" DefaultDir="2f"/>
+    <ROW Directory="f_2_Dir" Directory_Parent="objects_Dir" DefaultDir="7f"/>
+    <ROW Directory="f_3_Dir" Directory_Parent="objects_Dir" DefaultDir="9f"/>
+    <ROW Directory="f_Dir" Directory_Parent="objects_Dir" DefaultDir="1f"/>
+    <ROW Directory="fa_Dir" Directory_Parent="objects_Dir" DefaultDir="fa"/>
+    <ROW Directory="fb_Dir" Directory_Parent="objects_Dir" DefaultDir="fb"/>
+    <ROW Directory="fc_Dir" Directory_Parent="objects_Dir" DefaultDir="fc"/>
+    <ROW Directory="fe_Dir" Directory_Parent="objects_Dir" DefaultDir="fe"/>
+    <ROW Directory="git_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="GIT~1|.git"/>
+    <ROW Directory="github_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="GITHUB~1|.github"/>
+    <ROW Directory="heads_1_Dir" Directory_Parent="refs_1_Dir" DefaultDir="heads"/>
+    <ROW Directory="heads_Dir" Directory_Parent="refs_Dir" DefaultDir="heads"/>
+    <ROW Directory="hooks_Dir" Directory_Parent="git_Dir" DefaultDir="hooks"/>
+    <ROW Directory="idea_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="IDEA~1|.idea"/>
+    <ROW Directory="info_Dir" Directory_Parent="git_Dir" DefaultDir="info"/>
+    <ROW Directory="inspectionProfiles_Dir" Directory_Parent="idea_Dir" DefaultDir="INSPEC~1|inspectionProfiles"/>
+    <ROW Directory="logs_Dir" Directory_Parent="git_Dir" DefaultDir="logs"/>
+    <ROW Directory="objects_Dir" Directory_Parent="git_Dir" DefaultDir="objects"/>
+    <ROW Directory="origin_1_Dir" Directory_Parent="remotes_1_Dir" DefaultDir="origin"/>
+    <ROW Directory="origin_Dir" Directory_Parent="remotes_Dir" DefaultDir="origin"/>
+    <ROW Directory="pack_Dir" Directory_Parent="objects_Dir" DefaultDir="pack"/>
+    <ROW Directory="refs_1_Dir" Directory_Parent="git_Dir" DefaultDir="refs"/>
+    <ROW Directory="refs_Dir" Directory_Parent="logs_Dir" DefaultDir="refs"/>
+    <ROW Directory="remotes_1_Dir" Directory_Parent="refs_1_Dir" DefaultDir="remotes"/>
+    <ROW Directory="remotes_Dir" Directory_Parent="refs_Dir" DefaultDir="remotes"/>
+    <ROW Directory="tags_Dir" Directory_Parent="refs_1_Dir" DefaultDir="tags"/>
+    <ROW Directory="workflows_Dir" Directory_Parent="github_Dir" DefaultDir="WORKFL~1|workflows"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.SideBySideGuidComponent">
+    <ROW Component="APPDIR" Value="{044FE930-A7FD-44F4-893F-19111C9E4952}"/>
+    <ROW Component="ProductInformation" Value="{4D748929-CE7A-47E3-A3FE-C24D2A64F7FC}"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
+    <ROW Component="AI_ExePath" ComponentId="{68C24BB0-9654-4F08-952C-5451982F5583}" Directory_="APPDIR" Attributes="260" KeyPath="AI_ExePath"/>
+    <ROW Component="APPDIR" ComponentId="{044FE930-A7FD-44F4-893F-19111C9E4952}" Directory_="APPDIR" Attributes="0"/>
+    <ROW Component="COMMIT_EDITMSG" ComponentId="{8D89DD54-2338-4D92-BAC5-A7B799A2D62E}" Directory_="git_Dir" Attributes="0" KeyPath="COMMIT_EDITMSG" Type="0"/>
+    <ROW Component="EXTRA.zip" ComponentId="{1FDADA1B-4027-4EF1-A999-7A1849973A5A}" Directory_="EXTRA_Dir" Attributes="0" KeyPath="EXTRA.zip" Type="0"/>
+    <ROW Component="HEAD" ComponentId="{E5C62AA6-44F7-407C-BCAE-DA5709FD1B6F}" Directory_="logs_Dir" Attributes="0" KeyPath="HEAD_1" Type="0"/>
+    <ROW Component="HEAD_1" ComponentId="{6AF28848-F0C4-4817-86F9-8B82E6A31BCB}" Directory_="origin_Dir" Attributes="0" KeyPath="HEAD_2" Type="0"/>
+    <ROW Component="HEAD_2" ComponentId="{2C6C4198-D9D4-4B45-805D-73ED6A41C454}" Directory_="origin_1_Dir" Attributes="0" KeyPath="HEAD_3" Type="0"/>
+    <ROW Component="Logicytics.cpython311.pyc" ComponentId="{815322A9-9514-494D-8B8F-CD3E532C89CF}" Directory_="__pycache___Dir" Attributes="0" KeyPath="Logicytics.cpython311.pyc" Type="0"/>
+    <ROW Component="Logicytics.exe" ComponentId="{4D30CDBA-BFD8-4BFB-84A7-9B58FDA15C80}" Directory_="CODE_Dir" Attributes="256" KeyPath="Logicytics.exe"/>
+    <ROW Component="Logicytics.log" ComponentId="{3493BA41-D909-4BB5-B864-CC0B9E83D1DE}" Directory_="LOGS_Dir" Attributes="0" KeyPath="Logicytics.log" Type="0"/>
+    <ROW Component="ProductInformation" ComponentId="{4D748929-CE7A-47E3-A3FE-C24D2A64F7FC}" Directory_="APPDIR" Attributes="260" KeyPath="Version"/>
+    <ROW Component="PsGetsid.exe" ComponentId="{71CB396E-45AC-445F-9276-B74F21803FA9}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="PsGetsid.exe"/>
+    <ROW Component="PsInfo.exe" ComponentId="{F96EC7AD-0FB8-4554-AFB2-4AEB7AF268AA}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="PsInfo.exe"/>
+    <ROW Component="PsLoggedon.exe" ComponentId="{A15DABBC-1828-4549-87B0-751EB9D4AA3B}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="PsLoggedon.exe"/>
+    <ROW Component="README.md" ComponentId="{6E0EF050-B314-4F33-849B-22E38959C9F7}" Directory_="PACKAGES_Dir" Attributes="0" KeyPath="README.md" Type="0"/>
+    <ROW Component="RemoveMe.txt" ComponentId="{B9FF142C-BE3D-43FF-8E2C-739EB3949C6B}" Directory_="MODS_Dir" Attributes="0" KeyPath="RemoveMe.txt" Type="0"/>
+    <ROW Component="VCRUNTIME140.dll" ComponentId="{E2AD2529-F72F-4746-B770-7E98CE220D82}" Directory_="_internal_Dir" Attributes="256" KeyPath="VCRUNTIME140.dll"/>
+    <ROW Component="a089e367e3dd9105f01983bc7de7b84233994" ComponentId="{3714E159-6735-434E-A490-4C78C97FA810}" Directory_="a_3_Dir" Attributes="0" KeyPath="a089e367e3dd9105f01983bc7de7b84233994" Type="0"/>
+    <ROW Component="a120fa7b15f916fc1932b9a0fa3c945a4a" ComponentId="{248743E9-FC6F-4947-8372-143001934D23}" Directory_="c8_Dir" Attributes="0" KeyPath="a120fa7b15f916fc1932b9a0fa3c945a4a" Type="0"/>
+    <ROW Component="a19f3048058229e7d0ead68489da700416db6" ComponentId="{527D5E1F-4478-40F1-8772-4B83546B4DDB}" Directory_="__40_Dir" Attributes="0" KeyPath="a19f3048058229e7d0ead68489da700416db6" Type="0"/>
+    <ROW Component="a1e6feaaadcf4fca68cef9004b40dac258" ComponentId="{B49A5790-6247-412C-BB1F-5DF80A507002}" Directory_="__25_Dir" Attributes="0" KeyPath="a1e6feaaadcf4fca68cef9004b40dac258" Type="0"/>
+    <ROW Component="a2db24ececbcd2e5295decf64e8344e3fd" ComponentId="{B630615D-068A-40A9-BFE7-2EE2E3CFE2C9}" Directory_="e3_Dir" Attributes="0" KeyPath="a2db24ececbcd2e5295decf64e8344e3fd" Type="0"/>
+    <ROW Component="a2f53f24ecf9607a94076f34b34f56aa" ComponentId="{2A840673-5F42-4572-B2F8-14239D7F64D7}" Directory_="c_Dir" Attributes="0" KeyPath="a2f53f24ecf9607a94076f34b34f56aa" Type="0"/>
+    <ROW Component="a30685c07965f01db931c7a27d593bf0828715" ComponentId="{0F263029-E321-484F-996F-F616D589806B}" Directory_="e_Dir" Attributes="0" KeyPath="a30685c07965f01db931c7a27d593bf0828715" Type="0"/>
+    <ROW Component="a37be8c6642033450266746ea632d966ce79e2" ComponentId="{6D4D4357-441D-439C-A8B0-81513FBAF1EA}" Directory_="ce_Dir" Attributes="0" KeyPath="a37be8c6642033450266746ea632d966ce79e2" Type="0"/>
+    <ROW Component="a4705fcfc3e2ce8111f2299ef4e69872e48ca4" ComponentId="{BBA8BF9F-76E0-432A-B277-2A467232D465}" Directory_="f4_Dir" Attributes="0" KeyPath="a4705fcfc3e2ce8111f2299ef4e69872e48ca4" Type="0"/>
+    <ROW Component="a488bdecb91151e52c40fddf12e2b3ac573a3f" ComponentId="{338BFBC7-88CC-4D38-96C9-F0D592067F48}" Directory_="a_2_Dir" Attributes="0" KeyPath="a488bdecb91151e52c40fddf12e2b3ac573a3f" Type="0"/>
+    <ROW Component="a4f4fa1fb98e6c9b029c5fec12ed010ab3b" ComponentId="{B9BA5861-B579-463A-BA59-4025B3655175}" Directory_="__49_Dir" Attributes="0" KeyPath="a4f4fa1fb98e6c9b029c5fec12ed010ab3b" Type="0"/>
+    <ROW Component="a511cdc15a30aa6bd08a01aa3b25f6def8c" ComponentId="{11B9FBC0-31EB-4CCC-A438-A30F58A64DC4}" Directory_="__18_Dir" Attributes="0" KeyPath="a511cdc15a30aa6bd08a01aa3b25f6def8c" Type="0"/>
+    <ROW Component="a52d3a41d2a95661b5125091a59e0138d532d1" ComponentId="{2BB22753-A1BC-4233-87C2-9D83D7F807F4}" Directory_="__6_Dir" Attributes="0" KeyPath="a52d3a41d2a95661b5125091a59e0138d532d1" Type="0"/>
+    <ROW Component="a54013c3560e67dc794eff64d2725d28e72136" ComponentId="{D41D88A1-E69F-4DC3-87D5-3901E6BA1ED7}" Directory_="ae_Dir" Attributes="0" KeyPath="a54013c3560e67dc794eff64d2725d28e72136" Type="0"/>
+    <ROW Component="a5812043668db133286a625cb91fc6f307c7a7" ComponentId="{9CD08167-7341-4D26-8C75-FCB729470E30}" Directory_="__28_Dir" Attributes="0" KeyPath="a5812043668db133286a625cb91fc6f307c7a7" Type="0"/>
+    <ROW Component="a5db56f1301b3f2257a768515a889d0692a21" ComponentId="{41DFB363-AAA4-4C70-976D-E885BA82BF84}" Directory_="__39_Dir" Attributes="0" KeyPath="a5db56f1301b3f2257a768515a889d0692a21" Type="0"/>
+    <ROW Component="a6136e1ead964960c021a86ed4fa48470ac045" ComponentId="{84BA9922-A7E2-45F2-9136-6D062C99E013}" Directory_="__7_Dir" Attributes="0" KeyPath="a6136e1ead964960c021a86ed4fa48470ac045" Type="0"/>
+    <ROW Component="a6e5832e29a8f0c4d106315fbf9c537bf063fa" ComponentId="{55FE0CF6-51F5-4C35-82FA-C23A99674A3E}" Directory_="fa_Dir" Attributes="0" KeyPath="a6e5832e29a8f0c4d106315fbf9c537bf063fa" Type="0"/>
+    <ROW Component="a79a5543a351771a1152f80eb345ea64a53e" ComponentId="{97A2BDE2-7965-4138-A265-D855B1433CB9}" Directory_="__1_Dir" Attributes="0" KeyPath="a79a5543a351771a1152f80eb345ea64a53e" Type="0"/>
+    <ROW Component="a7c1f5e8e213abfc53c201fdad11856db3" ComponentId="{7ADC847E-2ABB-48F2-9E97-EBEBC0DBEE2C}" Directory_="__4_Dir" Attributes="0" KeyPath="a7c1f5e8e213abfc53c201fdad11856db3" Type="0"/>
+    <ROW Component="a80abd8f2e3bcfa31fff467b67fd9bc7a7d" ComponentId="{DBAE6552-A633-43B0-9629-CBA9E05D9BA5}" Directory_="__12_Dir" Attributes="0" KeyPath="a80abd8f2e3bcfa31fff467b67fd9bc7a7d" Type="0"/>
+    <ROW Component="a99ec373e173f8757c077269ec18ea496a863" ComponentId="{02E49087-3218-4E06-950D-0266D508D959}" Directory_="d_Dir" Attributes="0" KeyPath="a99ec373e173f8757c077269ec18ea496a863" Type="0"/>
+    <ROW Component="a9f6620d69e4d214b0440a32e88bfbe11f" ComponentId="{F5765D96-E780-4B1B-A17F-DEB70FEA6892}" Directory_="f_2_Dir" Attributes="0" KeyPath="a9f6620d69e4d214b0440a32e88bfbe11f" Type="0"/>
+    <ROW Component="aa5c2328f587e0641e3078d0c1b23f28f3c06" ComponentId="{7C8DB547-DA52-4BB5-8BBD-9B791858CE6F}" Directory_="e8_Dir" Attributes="0" KeyPath="aa5c2328f587e0641e3078d0c1b23f28f3c06" Type="0"/>
+    <ROW Component="aa991aa70bf1a62f46c70ff2263c44bae837" ComponentId="{4958450E-637F-45DC-BE2D-A7B344A26F52}" Directory_="__11_Dir" Attributes="0" KeyPath="aa991aa70bf1a62f46c70ff2263c44bae837" Type="0"/>
+    <ROW Component="ab723bb7b43e7a336065bfa5d8c3e28f75301" ComponentId="{98936FEA-1028-4418-8758-6ED15734AEAE}" Directory_="__55_Dir" Attributes="0" KeyPath="ab723bb7b43e7a336065bfa5d8c3e28f75301" Type="0"/>
+    <ROW Component="abed66507812cb7707200423cba67741" ComponentId="{F5C9676A-0D0F-47AB-8969-302A3393C1C8}" Directory_="d_2_Dir" Attributes="0" KeyPath="abed66507812cb7707200423cba67741" Type="0"/>
+    <ROW Component="acad22c7df55eb9403b480c0e3da6bfee9131d" ComponentId="{0D9942CE-4976-4E9D-98E2-759B40C5CCDD}" Directory_="e2_Dir" Attributes="0" KeyPath="acad22c7df55eb9403b480c0e3da6bfee9131d" Type="0"/>
+    <ROW Component="acd67583573493c6c4241c6932452034ecad" ComponentId="{982965F2-0968-4098-B123-BD42E85B378E}" Directory_="b_1_Dir" Attributes="0" KeyPath="acd67583573493c6c4241c6932452034ecad" Type="0"/>
+    <ROW Component="af1597bb77e37657fa06beeee67f8fa503f895" ComponentId="{59B1B62F-30E7-450B-8EBA-67DFC398E906}" Directory_="eb_Dir" Attributes="0" KeyPath="af1597bb77e37657fa06beeee67f8fa503f895" Type="0"/>
+    <ROW Component="af24244a403e987dbbd1e8f6bfab68b89a568" ComponentId="{02083CFD-ED3F-4A43-B645-5FB13CD96961}" Directory_="__32_Dir" Attributes="0" KeyPath="af24244a403e987dbbd1e8f6bfab68b89a568" Type="0"/>
+    <ROW Component="af6dfb38c873031ba87383a29334309727584" ComponentId="{156BC28E-EFFF-48D4-9D80-CF025F34F3A4}" Directory_="__16_Dir" Attributes="0" KeyPath="af6dfb38c873031ba87383a29334309727584" Type="0"/>
+    <ROW Component="apimswincoreconsolel110.dll" ComponentId="{130BA40E-66BF-4C6A-8F01-E754E30FD7F7}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreconsolel110.dll"/>
+    <ROW Component="apimswincoredatetimel110.dll" ComponentId="{8E18FD57-711C-4268-B3E1-5D1855C78758}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoredatetimel110.dll"/>
+    <ROW Component="apimswincoredebugl110.dll" ComponentId="{D980CE42-879E-4612-AAC9-C28E4BB23515}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoredebugl110.dll"/>
+    <ROW Component="apimswincoreerrorhandlingl110.dll" ComponentId="{5D63F927-B7A3-48C9-AE30-B29304D351F8}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreerrorhandlingl110.dll"/>
+    <ROW Component="apimswincorefilel110.dll" ComponentId="{91C9BFDC-967F-481A-A759-C0779707B25F}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorefilel110.dll"/>
+    <ROW Component="apimswincorefilel120.dll" ComponentId="{F156FCBF-CA3F-4B95-9927-E2A264E701D9}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorefilel120.dll"/>
+    <ROW Component="apimswincorefilel210.dll" ComponentId="{DDEF6C25-754E-4AFE-AB43-598209554C53}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorefilel210.dll"/>
+    <ROW Component="apimswincorehandlel110.dll" ComponentId="{6F402FF5-B194-4E42-BFE3-F874938FA05C}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorehandlel110.dll"/>
+    <ROW Component="apimswincoreheapl110.dll" ComponentId="{07D4CF36-62C0-48CE-9439-1EEC17051E32}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreheapl110.dll"/>
+    <ROW Component="apimswincoreinterlockedl110.dll" ComponentId="{FCC59D9B-79C0-4DE6-B12C-80F7BFA33792}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreinterlockedl110.dll"/>
+    <ROW Component="apimswincorelibraryloaderl110.dll" ComponentId="{BA94DEC6-1D03-47A2-90DC-77C8FF5D10CD}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorelibraryloaderl110.dll"/>
+    <ROW Component="apimswincorelocalizationl120.dll" ComponentId="{E759BB1C-12C3-405F-9624-7C273C29D8F0}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorelocalizationl120.dll"/>
+    <ROW Component="apimswincorememoryl110.dll" ComponentId="{7F4E8B07-4DC0-42CF-A527-288776827156}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorememoryl110.dll"/>
+    <ROW Component="apimswincorenamedpipel110.dll" ComponentId="{0CEB44E7-32E4-476D-8D43-1AF4F1235B12}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorenamedpipel110.dll"/>
+    <ROW Component="apimswincoreprocessenvironmentl110.dll" ComponentId="{BF277606-C18E-4D07-BF40-397AB9CF499F}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreprocessenvironmentl110.dll"/>
+    <ROW Component="apimswincoreprocessthreadsl110.dll" ComponentId="{9044CE5D-DE46-4A28-ACE7-43A2F4906329}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreprocessthreadsl110.dll"/>
+    <ROW Component="apimswincoreprocessthreadsl111.dll" ComponentId="{AFE2C1FD-C47F-41A4-B5B5-E95BB52B4E56}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreprocessthreadsl111.dll"/>
+    <ROW Component="apimswincoreprofilel110.dll" ComponentId="{669502A1-6610-47D9-BA84-EB614C29FE1A}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreprofilel110.dll"/>
+    <ROW Component="apimswincorertlsupportl110.dll" ComponentId="{3DAEF998-9F07-4247-829B-5496082924BC}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorertlsupportl110.dll"/>
+    <ROW Component="apimswincorestringl110.dll" ComponentId="{AA9C6811-3D27-4B41-8908-DB2D545B782C}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorestringl110.dll"/>
+    <ROW Component="apimswincoresynchl110.dll" ComponentId="{94ED629E-DCFA-43D0-A380-EAAC3BF0120E}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoresynchl110.dll"/>
+    <ROW Component="apimswincoresynchl120.dll" ComponentId="{03316D5F-7A2C-44C3-A782-E1599CEDEF4C}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoresynchl120.dll"/>
+    <ROW Component="apimswincoresysinfol110.dll" ComponentId="{377BD0BB-0406-4FFC-8508-E44B6EE86CB4}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoresysinfol110.dll"/>
+    <ROW Component="apimswincoretimezonel110.dll" ComponentId="{0D3E64A8-92A2-4957-BDFB-83953C384F86}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoretimezonel110.dll"/>
+    <ROW Component="apimswincoreutill110.dll" ComponentId="{1D627E03-2E26-46FE-9C4B-B8C98330E5F7}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreutill110.dll"/>
+    <ROW Component="apimswincrtconiol110.dll" ComponentId="{A2ABBCBC-193F-49E3-AB4E-EE4DFCD560B0}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtconiol110.dll"/>
+    <ROW Component="apimswincrtconvertl110.dll" ComponentId="{31DB1A02-A9DA-43A9-AD00-7DB9739E73F8}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtconvertl110.dll"/>
+    <ROW Component="apimswincrtenvironmentl110.dll" ComponentId="{65479552-CE57-4035-9468-FB3BEE7215D4}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtenvironmentl110.dll"/>
+    <ROW Component="apimswincrtfilesysteml110.dll" ComponentId="{E00B17CE-8936-429A-BD5C-0BDD3DD1C4CF}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtfilesysteml110.dll"/>
+    <ROW Component="apimswincrtheapl110.dll" ComponentId="{E3AF4D3C-5641-440D-8283-4AC911A079A0}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtheapl110.dll"/>
+    <ROW Component="apimswincrtlocalel110.dll" ComponentId="{35D44BBA-3E61-4F4C-8CE5-2E13D3F6E532}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtlocalel110.dll"/>
+    <ROW Component="apimswincrtmathl110.dll" ComponentId="{3F9B73B5-74F4-4871-91C9-C37F2038F75F}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtmathl110.dll"/>
+    <ROW Component="apimswincrtprocessl110.dll" ComponentId="{E19FB323-B91A-448E-8B8A-349D85DC3F2D}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtprocessl110.dll"/>
+    <ROW Component="apimswincrtruntimel110.dll" ComponentId="{044F6B71-87B8-4173-BE91-AD524B5FE41F}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtruntimel110.dll"/>
+    <ROW Component="apimswincrtstdiol110.dll" ComponentId="{2B7415A2-9259-4D18-88CB-FD2489351DB6}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtstdiol110.dll"/>
+    <ROW Component="apimswincrtstringl110.dll" ComponentId="{CC3F27D4-C0C8-432F-B176-103389308271}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtstringl110.dll"/>
+    <ROW Component="apimswincrttimel110.dll" ComponentId="{D573AF23-A42C-4402-9387-A6C8EEB4F923}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrttimel110.dll"/>
+    <ROW Component="apimswincrtutilityl110.dll" ComponentId="{E96EF972-466C-4F62-9DD0-6E1BE3A2E45F}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtutilityl110.dll"/>
+    <ROW Component="applypatchmsg.sample" ComponentId="{C403B273-1D3C-455F-A649-037EF269D000}" Directory_="hooks_Dir" Attributes="0" KeyPath="applypatchmsg.sample" Type="0"/>
+    <ROW Component="b3509dcfa221da58f2ffa325c1fc90003d82a4" ComponentId="{DE74DCA8-CD70-44AA-9B42-878A9EA7833A}" Directory_="b8_Dir" Attributes="0" KeyPath="b3509dcfa221da58f2ffa325c1fc90003d82a4" Type="0"/>
+    <ROW Component="b3e6ed51256a1bacd847788a86cc8d" ComponentId="{75B34555-E91B-45CA-B027-4795159F5E06}" Directory_="__27_Dir" Attributes="0" KeyPath="b3e6ed51256a1bacd847788a86cc8d" Type="0"/>
+    <ROW Component="b447a2a22b46c471bdf0b59056de3197cf090" ComponentId="{9D2AD67E-6E9C-4B29-88E6-7F03F8D3F674}" Directory_="a_1_Dir" Attributes="0" KeyPath="b447a2a22b46c471bdf0b59056de3197cf090" Type="0"/>
+    <ROW Component="b44db327b8e42d5725e79fbc1b87b24b13cddb" ComponentId="{6304BA76-0B20-46A6-B721-F0FCE72E9B0F}" Directory_="__34_Dir" Attributes="0" KeyPath="b44db327b8e42d5725e79fbc1b87b24b13cddb" Type="0"/>
+    <ROW Component="b635ca961b8a0d6455beb230c983e291a5051" ComponentId="{E6B065D3-30B2-43DC-A1E8-F88D675DE3E7}" Directory_="__22_Dir" Attributes="0" KeyPath="b635ca961b8a0d6455beb230c983e291a5051" Type="0"/>
+    <ROW Component="b74417bc75fbbe3a286bbb72b2cde07e304c90" ComponentId="{E6642256-87F6-4147-9FEB-953CB196C91C}" Directory_="fc_Dir" Attributes="0" KeyPath="b74417bc75fbbe3a286bbb72b2cde07e304c90" Type="0"/>
+    <ROW Component="b7f2799836742172110c4321f07e759978b9a1" ComponentId="{6651DD3B-BEA6-4FF2-B1C7-03AF4DA3A736}" Directory_="e_4_Dir" Attributes="0" KeyPath="b7f2799836742172110c4321f07e759978b9a1" Type="0"/>
+    <ROW Component="b865290b81016ef6bd68ece9b99fbcf5b4f7cf" ComponentId="{2F7FB5C0-4353-4D82-A6EB-4F1255E961D5}" Directory_="__13_Dir" Attributes="0" KeyPath="b865290b81016ef6bd68ece9b99fbcf5b4f7cf" Type="0"/>
+    <ROW Component="b8b7da3421ab0b01f0b89c3242863275e" ComponentId="{20EEBB2E-47DC-41C0-9472-18A720B91BA1}" Directory_="a3_Dir" Attributes="0" KeyPath="b8b7da3421ab0b01f0b89c3242863275e" Type="0"/>
+    <ROW Component="b97fcc60bf8f47f3de2e3d46efdd005" ComponentId="{9BE64F29-EF3A-45E6-9B71-64570CC03BD9}" Directory_="d2_Dir" Attributes="0" KeyPath="b97fcc60bf8f47f3de2e3d46efdd005" Type="0"/>
+    <ROW Component="baf0f25c27a611d419a11def1f86288d7055a6" ComponentId="{8C489A45-D563-42BF-9DD1-2F968367C64C}" Directory_="a7_Dir" Attributes="0" KeyPath="baf0f25c27a611d419a11def1f86288d7055a6" Type="0"/>
+    <ROW Component="base_library.zip" ComponentId="{20EAFA71-750F-4057-A4F8-C9D4A5B1834B}" Directory_="_internal_Dir" Attributes="0" KeyPath="base_library.zip" Type="0"/>
+    <ROW Component="bd467dd196d2d950ebcda904e96dc63f6e5de1" ComponentId="{769A1B42-19EA-4FC2-B392-A4285F45A9B4}" Directory_="__59_Dir" Attributes="0" KeyPath="bd467dd196d2d950ebcda904e96dc63f6e5de1" Type="0"/>
+    <ROW Component="bd738cfc8e2a0114e3cef65fb0032d9b8351" ComponentId="{D80DCB8F-6C3F-4668-80B8-B39E916EAFAC}" Directory_="bf_Dir" Attributes="0" KeyPath="bd738cfc8e2a0114e3cef65fb0032d9b8351" Type="0"/>
+    <ROW Component="be0c9fb50be6f0ea576682e5b5286a0f98aa8" ComponentId="{DF4783D6-C62F-4D90-A9E0-AD23C5CA1FB3}" Directory_="a_5_Dir" Attributes="0" KeyPath="be0c9fb50be6f0ea576682e5b5286a0f98aa8" Type="0"/>
+    <ROW Component="be1aa520877726cdeaa7a6cf582a9e0d26a9ab" ComponentId="{B020DCC7-50CB-425C-B548-F6BE900A1377}" Directory_="a_Dir" Attributes="0" KeyPath="be1aa520877726cdeaa7a6cf582a9e0d26a9ab" Type="0"/>
+    <ROW Component="be25a497986e570a42fd2bc0fe1e02bf573534" ComponentId="{EE02D2FD-9C95-47C6-BE0B-CE4106078EE6}" Directory_="ad_Dir" Attributes="0" KeyPath="be25a497986e570a42fd2bc0fe1e02bf573534" Type="0"/>
+    <ROW Component="bed86b0858b9ad0c4d696f0b7fd7e810933dc" ComponentId="{778F0DAF-1277-4C74-BD96-40338338C661}" Directory_="__46_Dir" Attributes="0" KeyPath="bed86b0858b9ad0c4d696f0b7fd7e810933dc" Type="0"/>
+    <ROW Component="bf1cca05e176c569caf785b8e8af675706a2ce" ComponentId="{115AA4FA-1AF9-4839-904E-572C2A8AE929}" Directory_="f0_Dir" Attributes="0" KeyPath="bf1cca05e176c569caf785b8e8af675706a2ce" Type="0"/>
+    <ROW Component="bfdc7366a341fbd3750bcb73d94f953ec2a54c" ComponentId="{7B5C8A18-E818-4E7F-89EB-10B7743453D4}" Directory_="f2_Dir" Attributes="0" KeyPath="bfdc7366a341fbd3750bcb73d94f953ec2a54c" Type="0"/>
+    <ROW Component="browser_miner.ps1" ComponentId="{82216C41-0B37-49DF-BCB6-34744E18973A}" Directory_="CODE_Dir" Attributes="0" KeyPath="browser_miner.ps1" Type="0"/>
+    <ROW Component="bug_report.yml" ComponentId="{08B9CFBF-74F5-40FC-A9BE-F41DBF76BBC6}" Directory_="ISSUE_TEMPLATE_Dir" Attributes="0" KeyPath="bug_report.yml" Type="0"/>
+    <ROW Component="c035a84ff87589c7f39a52737da766aee866ea" ComponentId="{CF2049AC-9E9D-4A03-9493-73182DF3298E}" Directory_="e7_Dir" Attributes="0" KeyPath="c035a84ff87589c7f39a52737da766aee866ea" Type="0"/>
+    <ROW Component="c06ac2e217bd0094a921a01187e9146720b78" ComponentId="{6CD9C2D4-A34B-4ED9-8279-6D0F259C952F}" Directory_="__10_Dir" Attributes="0" KeyPath="c06ac2e217bd0094a921a01187e9146720b78" Type="0"/>
+    <ROW Component="c1141e0f2de79ab29c9d98e5a51ecb0ffc6b8" ComponentId="{D4FF4E6E-5ECE-4922-995C-82C5061FE465}" Directory_="d3_Dir" Attributes="0" KeyPath="c1141e0f2de79ab29c9d98e5a51ecb0ffc6b8" Type="0"/>
+    <ROW Component="c11daf96a8e7e4835f340d045cc5b947c87d07" ComponentId="{531FB96B-798F-44ED-A274-5F6804ACAAA8}" Directory_="__54_Dir" Attributes="0" KeyPath="c11daf96a8e7e4835f340d045cc5b947c87d07" Type="0"/>
+    <ROW Component="c172123dd333866f0f7a72f4ab14be48b" ComponentId="{497F3C53-E7F9-456B-B7DE-B1827744B13A}" Directory_="__64_Dir" Attributes="0" KeyPath="c172123dd333866f0f7a72f4ab14be48b" Type="0"/>
+    <ROW Component="c181b1b0c0d6eeda4e73769" ComponentId="{F814FBFE-F16F-4084-A8EC-C1BDB83FEED4}" Directory_="__47_Dir" Attributes="0" KeyPath="c181b1b0c0d6eeda4e73769" Type="0"/>
+    <ROW Component="c343d77d9db0aa77322d7ec519941278f5" ComponentId="{350D7905-DDA8-429A-A758-A182253E7E41}" Directory_="e_1_Dir" Attributes="0" KeyPath="c343d77d9db0aa77322d7ec519941278f5" Type="0"/>
+    <ROW Component="c3f929501127099d153ed83df541f308d75e" ComponentId="{0BABAECC-8514-4680-8810-5F08C7AD2F75}" Directory_="b0_Dir" Attributes="0" KeyPath="c3f929501127099d153ed83df541f308d75e" Type="0"/>
+    <ROW Component="c425e5e7b5e0ea26bb54c6617ffa966c5150db" ComponentId="{15688B8B-A33C-44AD-80C5-E8715C67B9EF}" Directory_="__53_Dir" Attributes="0" KeyPath="c425e5e7b5e0ea26bb54c6617ffa966c5150db" Type="0"/>
+    <ROW Component="c63c318b557d843469b3343c8f0734" ComponentId="{A6FF9AEC-369A-4B07-8C34-507E4718DF71}" Directory_="ca_Dir" Attributes="0" KeyPath="c63c318b557d843469b3343c8f0734" Type="0"/>
+    <ROW Component="c957f402ebf5360bad3b0ea46257a90a8b755e" ComponentId="{37D9CE6B-D3ED-4820-B7CC-094C24DDF84C}" Directory_="__56_Dir" Attributes="0" KeyPath="c957f402ebf5360bad3b0ea46257a90a8b755e" Type="0"/>
+    <ROW Component="ca5d6168dd94dd9e8023658f90494d4ac" ComponentId="{46A9622B-8359-4722-89F2-9EEDBC20E4FD}" Directory_="__35_Dir" Attributes="0" KeyPath="ca5d6168dd94dd9e8023658f90494d4ac" Type="0"/>
+    <ROW Component="cba60a42b1fbe74d7eb7ef25d0a0274412aba" ComponentId="{E57C0628-4AB3-4939-9D81-B4D41B41E01F}" Directory_="c6_Dir" Attributes="0" KeyPath="cba60a42b1fbe74d7eb7ef25d0a0274412aba" Type="0"/>
+    <ROW Component="cc0e918f61e049fea27f2f402483cd6a782" ComponentId="{5F2C6B84-7AB3-4C63-BB5A-9499D816EF40}" Directory_="b4_Dir" Attributes="0" KeyPath="cc0e918f61e049fea27f2f402483cd6a782" Type="0"/>
+    <ROW Component="cc16c7b47636f145dd965c7b054033265d" ComponentId="{F38E30E8-791E-430A-A951-3572E1B3AC49}" Directory_="__9_Dir" Attributes="0" KeyPath="cc16c7b47636f145dd965c7b054033265d" Type="0"/>
+    <ROW Component="ccfdd08dc768622d908fac31cbcf2d43601" ComponentId="{39056F5A-AAF6-4ECB-B639-DD0929B37461}" Directory_="d4_Dir" Attributes="0" KeyPath="ccfdd08dc768622d908fac31cbcf2d43601" Type="0"/>
+    <ROW Component="ce062c0182929291a900fe98a3d9853f0817a" ComponentId="{58E59D33-8850-4E4B-A22C-E84B0549E01C}" Directory_="d_1_Dir" Attributes="0" KeyPath="ce062c0182929291a900fe98a3d9853f0817a" Type="0"/>
+    <ROW Component="ce28959b4146ea3528da0f0636f592d" ComponentId="{5CA9CF5F-EA2D-4FAC-BB07-6DBE036338BB}" Directory_="__26_Dir" Attributes="0" KeyPath="ce28959b4146ea3528da0f0636f592d" Type="0"/>
+    <ROW Component="ceac00ec3826ee91984d3d4558a3f95f9d71" ComponentId="{F01A2A79-DE49-4CD4-BF0B-6198DB9F3A12}" Directory_="__60_Dir" Attributes="0" KeyPath="ceac00ec3826ee91984d3d4558a3f95f9d71" Type="0"/>
+    <ROW Component="ceb2115502fb067273d08613c540cae758b01" ComponentId="{23186EE6-AAED-4AD5-BAFB-1E41A5884160}" Directory_="__45_Dir" Attributes="0" KeyPath="ceb2115502fb067273d08613c540cae758b01" Type="0"/>
+    <ROW Component="cec1adddd0f9ce13e493189f667e3ebacb255" ComponentId="{20CDA50D-6A31-4948-879E-76329CC2535D}" Directory_="b_Dir" Attributes="0" KeyPath="cec1adddd0f9ce13e493189f667e3ebacb255" Type="0"/>
+    <ROW Component="config.yml" ComponentId="{52ED2888-FE44-41C7-A043-C9161D28B6E2}" Directory_="github_Dir" Attributes="0" KeyPath="config.yml" Type="0"/>
+    <ROW Component="d092a8c9410af3e754b0e63c7a5b95b63c0ab0" ComponentId="{6DB735FA-FA80-4AEE-9FAF-0ADD86023CD8}" Directory_="__31_Dir" Attributes="0" KeyPath="d092a8c9410af3e754b0e63c7a5b95b63c0ab0" Type="0"/>
+    <ROW Component="d09dbb4a0642afc69d5c20e1b67aaa339ce" ComponentId="{FB01D481-A0BB-4427-9748-C9380B68D9CD}" Directory_="b_2_Dir" Attributes="0" KeyPath="d09dbb4a0642afc69d5c20e1b67aaa339ce" Type="0"/>
+    <ROW Component="d1983cc070129c91fa603c27350192d3ac9d9" ComponentId="{8FA289C8-AFCD-4345-9CA5-642C5FE1B8F3}" Directory_="cf_Dir" Attributes="0" KeyPath="d1983cc070129c91fa603c27350192d3ac9d9" Type="0"/>
+    <ROW Component="d2a221b87d76d9790d2e7f8cfdde4a6b04a7" ComponentId="{E91940D7-8DBA-46FF-ACC2-8A103BD1D662}" Directory_="ac_Dir" Attributes="0" KeyPath="d2a221b87d76d9790d2e7f8cfdde4a6b04a7" Type="0"/>
+    <ROW Component="d2c0cc74a325da6c5d3946de0c0b6b3de0" ComponentId="{8DEE344C-A0D2-47BD-8497-2FD7EA6E70B9}" Directory_="ea_Dir" Attributes="0" KeyPath="d2c0cc74a325da6c5d3946de0c0b6b3de0" Type="0"/>
+    <ROW Component="d37381acb1531647e25cf7c9e47cf3ff612000" ComponentId="{7996D1FC-38CD-4CA6-86B8-9DAC73B0F5BA}" Directory_="__5_Dir" Attributes="0" KeyPath="d37381acb1531647e25cf7c9e47cf3ff612000" Type="0"/>
+    <ROW Component="d3a3753fb7d2854afe585884ea0b90c35b2bf3" ComponentId="{EEB79AC8-DB6C-4112-A7D5-4DF9265E2EDF}" Directory_="f3_Dir" Attributes="0" KeyPath="d3a3753fb7d2854afe585884ea0b90c35b2bf3" Type="0"/>
+    <ROW Component="d3fe9c46651705a1235dda6cf1df27aab" ComponentId="{5E053B6C-F694-4AE4-9B47-DD983B81D9F4}" Directory_="a0_Dir" Attributes="0" KeyPath="d3fe9c46651705a1235dda6cf1df27aab" Type="0"/>
+    <ROW Component="d4d9ecf01b04b7a2969771044573780f11d43" ComponentId="{4FAF971D-E8C3-400D-9017-EB1051B493E5}" Directory_="d_3_Dir" Attributes="0" KeyPath="d4d9ecf01b04b7a2969771044573780f11d43" Type="0"/>
+    <ROW Component="d59f117e1720f8d509113fa2275dfd66c" ComponentId="{85CB8C10-FE29-48EE-ADA7-5963DA9E4F49}" Directory_="b6_Dir" Attributes="0" KeyPath="d59f117e1720f8d509113fa2275dfd66c" Type="0"/>
+    <ROW Component="d5a98a9d0ff56f064bf982bbe593d760edc800" ComponentId="{8EF6DB9A-22E7-4087-B7EC-0A066F6D66A4}" Directory_="__57_Dir" Attributes="0" KeyPath="d5a98a9d0ff56f064bf982bbe593d760edc800" Type="0"/>
+    <ROW Component="d6470ace1547c1ce0f0cbfa3d07e21677" ComponentId="{3D9DF51E-663E-4E23-A822-592FE2787C8A}" Directory_="__50_Dir" Attributes="0" KeyPath="d6470ace1547c1ce0f0cbfa3d07e21677" Type="0"/>
+    <ROW Component="d7ca6da7195f8afe6e54663573fed227d3" ComponentId="{946766C3-647A-4125-9A01-E30C4CB0EE9B}" Directory_="ba_Dir" Attributes="0" KeyPath="d7ca6da7195f8afe6e54663573fed227d3" Type="0"/>
+    <ROW Component="d80681494ed86f7dcb8cbac8d3c333" ComponentId="{2B2580C5-618E-46DC-BF70-287A3A15E63A}" Directory_="__66_Dir" Attributes="0" KeyPath="d80681494ed86f7dcb8cbac8d3c333" Type="0"/>
+    <ROW Component="d83efa8efa6511aeb5240b648311b98e7d91df" ComponentId="{8B0D35EC-4FF3-4DF8-A798-D966FA6A7A57}" Directory_="fb_Dir" Attributes="0" KeyPath="d83efa8efa6511aeb5240b648311b98e7d91df" Type="0"/>
+    <ROW Component="d864f63ed06a55b5f560d76d6a4302e208e50" ComponentId="{A50B8A3E-DB0E-4662-8AE3-E89C3C7AD4DB}" Directory_="e_2_Dir" Attributes="0" KeyPath="d864f63ed06a55b5f560d76d6a4302e208e50" Type="0"/>
+    <ROW Component="d8663eb97d5530b1b19805806f2b0bc8d2a3" ComponentId="{3E3D69A6-EEC4-4077-973C-24D737BC5A9F}" Directory_="__24_Dir" Attributes="0" KeyPath="d8663eb97d5530b1b19805806f2b0bc8d2a3" Type="0"/>
+    <ROW Component="d90671a0c924b007d9b4f28d8d5bcc8ca6" ComponentId="{A80DEC2B-2D6B-44BF-9288-B4918BDF33E4}" Directory_="a_4_Dir" Attributes="0" KeyPath="d90671a0c924b007d9b4f28d8d5bcc8ca6" Type="0"/>
+    <ROW Component="d943b7b058814ec0b68fc7df23d17ca6deaa1" ComponentId="{D5BD2F9C-CFB5-4149-AF43-FDBE25018AEE}" Directory_="__44_Dir" Attributes="0" KeyPath="d943b7b058814ec0b68fc7df23d17ca6deaa1" Type="0"/>
+    <ROW Component="d96514908f82f6b2d9da474378791780e2960f" ComponentId="{07068F7E-EB93-4D19-977E-501617B3F0F9}" Directory_="f9_Dir" Attributes="0" KeyPath="d96514908f82f6b2d9da474378791780e2960f" Type="0"/>
+    <ROW Component="d97dc5fbdbbed3c330b7c1ce5541a" ComponentId="{B4FC6F69-63DA-4129-AFA7-516475E07651}" Directory_="__51_Dir" Attributes="0" KeyPath="d97dc5fbdbbed3c330b7c1ce5541a" Type="0"/>
+    <ROW Component="d9a79d7bf16d698da13ccb4b1673a70fdc045" ComponentId="{F6E2FDCC-D8FB-484A-A8C1-BADEEFC0E940}" Directory_="e_3_Dir" Attributes="0" KeyPath="d9a79d7bf16d698da13ccb4b1673a70fdc045" Type="0"/>
+    <ROW Component="d9b8bd9aee7fc22dca55a9bf9120d9a64ae433" ComponentId="{02455982-76CF-428B-95B6-43DAEF887A41}" Directory_="d6_Dir" Attributes="0" KeyPath="d9b8bd9aee7fc22dca55a9bf9120d9a64ae433" Type="0"/>
+    <ROW Component="d9efbef2ef249a8e3a5c3717f3b6dea0477526" ComponentId="{382B1DD9-AF73-4A31-9BB2-32371DA07E9C}" Directory_="cd_Dir" Attributes="0" KeyPath="d9efbef2ef249a8e3a5c3717f3b6dea0477526" Type="0"/>
+    <ROW Component="db5befdc12d123c749370880c0e43614e1036" ComponentId="{49E2CE6A-0549-4FDE-B7CC-0787EC64601F}" Directory_="d8_Dir" Attributes="0" KeyPath="db5befdc12d123c749370880c0e43614e1036" Type="0"/>
+    <ROW Component="dca4b80ff9773e57c8d87b293ae9950959598" ComponentId="{B557D298-1F53-4904-869A-2840EAFC9917}" Directory_="bb_Dir" Attributes="0" KeyPath="dca4b80ff9773e57c8d87b293ae9950959598" Type="0"/>
+    <ROW Component="dcbaace7eac0f5db0f863d68e948157554fd" ComponentId="{D826E29D-B9F9-4DB5-821D-978BD5831FA0}" Directory_="b9_Dir" Attributes="0" KeyPath="dcbaace7eac0f5db0f863d68e948157554fd" Type="0"/>
+    <ROW Component="ddc35b2f00e5b43b86aa137c576baf5061b5" ComponentId="{BEF20611-ED38-4C32-8242-555D58CEE54A}" Directory_="c_1_Dir" Attributes="0" KeyPath="ddc35b2f00e5b43b86aa137c576baf5061b5" Type="0"/>
+    <ROW Component="ddd32a34d057d405a46b7a72ce888e95948320" ComponentId="{2D619C6A-F3E4-40EB-B13B-C0BBF454D095}" Directory_="__36_Dir" Attributes="0" KeyPath="ddd32a34d057d405a46b7a72ce888e95948320" Type="0"/>
+    <ROW Component="ddf23794d4d32f2434bd194a29f2f88bcb0" ComponentId="{C4AA0788-29BE-4210-A7A1-929B0E1A3FB1}" Directory_="__33_Dir" Attributes="0" KeyPath="ddf23794d4d32f2434bd194a29f2f88bcb0" Type="0"/>
+    <ROW Component="dfe997da9c5ca099e36ec1a1dff61ca139c29e" ComponentId="{0BE54429-ED27-4806-9204-5F4028F47477}" Directory_="de_Dir" Attributes="0" KeyPath="dfe997da9c5ca099e36ec1a1dff61ca139c29e" Type="0"/>
+    <ROW Component="dir.png" ComponentId="{2FDF0698-7FAB-4B5F-ACF2-789729BB64FA}" Directory_="IMG_Dir" Attributes="0" KeyPath="dir.png" Type="0"/>
+    <ROW Component="dockerfile" ComponentId="{709DA3BA-BF56-4DEF-AC0B-7141896E1388}" Directory_="Logicytics_Dir" Attributes="0" KeyPath="dockerfile" Type="0"/>
+    <ROW Component="e0a909db1c762dd33b6d0d758b0b80e6d" ComponentId="{A4B0895A-4DB0-4BB4-B105-5E214F123CF1}" Directory_="__20_Dir" Attributes="0" KeyPath="e0a909db1c762dd33b6d0d758b0b80e6d" Type="0"/>
+    <ROW Component="e159f5e66ae41f91782eacbc8d67ec9f1ab792" ComponentId="{BD9ECEC2-8419-49E6-84E2-4A890E913180}" Directory_="e9_Dir" Attributes="0" KeyPath="e159f5e66ae41f91782eacbc8d67ec9f1ab792" Type="0"/>
+    <ROW Component="e429be740a71a2cb9f785c5f0b5a550c3570d" ComponentId="{2BF8F07C-B4FE-40A5-A833-ACAC140C9E07}" Directory_="__62_Dir" Attributes="0" KeyPath="e429be740a71a2cb9f785c5f0b5a550c3570d" Type="0"/>
+    <ROW Component="e49f93f9f2e7fa955e3725014ef0627778d9a8" ComponentId="{1533FC69-4DD9-4DC5-B7A1-99D08B24BE11}" Directory_="ed_Dir" Attributes="0" KeyPath="e49f93f9f2e7fa955e3725014ef0627778d9a8" Type="0"/>
+    <ROW Component="e4c43d0c8e53149eb0ca0570d068ef4275a" ComponentId="{2ED5759E-7A53-4B4B-B035-2451F7AF6F94}" Directory_="__43_Dir" Attributes="0" KeyPath="e4c43d0c8e53149eb0ca0570d068ef4275a" Type="0"/>
+    <ROW Component="e806b9c69909c9523caaa56ddde79063c41668" ComponentId="{47E1D0A5-2F9D-4F12-9277-82746CF57EB1}" Directory_="af_Dir" Attributes="0" KeyPath="e806b9c69909c9523caaa56ddde79063c41668" Type="0"/>
+    <ROW Component="e80778cabacecb960c8749ef27a4c1bacfde" ComponentId="{4F5EA5F7-54AB-4356-BBF8-DA8D0E874784}" Directory_="__65_Dir" Attributes="0" KeyPath="e80778cabacecb960c8749ef27a4c1bacfde" Type="0"/>
+    <ROW Component="e83ac5ee33d1039fd3897dc26555c32a30e7c3" ComponentId="{277B8A84-79B9-4F52-A2C3-9BAB42327AF2}" Directory_="a2_Dir" Attributes="0" KeyPath="e83ac5ee33d1039fd3897dc26555c32a30e7c3" Type="0"/>
+    <ROW Component="e976dd058fd74675c0256d5888c4f86f74ea" ComponentId="{8E79D5EF-595B-481D-96B2-702109468A22}" Directory_="f_1_Dir" Attributes="0" KeyPath="e976dd058fd74675c0256d5888c4f86f74ea" Type="0"/>
+    <ROW Component="e9c9e13ff389456c1ee79ceced19e959521000" ComponentId="{89AA43B3-C7A5-4084-A6B9-3D2620218008}" Directory_="b2_Dir" Attributes="0" KeyPath="e9c9e13ff389456c1ee79ceced19e959521000" Type="0"/>
+    <ROW Component="ea0142fa2fc1adf3891710b4374773c9497" ComponentId="{2B48CE29-3721-4781-82B0-0CF97D14E9E7}" Directory_="bc_Dir" Attributes="0" KeyPath="ea0142fa2fc1adf3891710b4374773c9497" Type="0"/>
+    <ROW Component="ea04ef5d4e801b39db4a402700ea975c6a5a" ComponentId="{6ED104F9-6C76-439B-956C-BB505967CCF8}" Directory_="__58_Dir" Attributes="0" KeyPath="ea04ef5d4e801b39db4a402700ea975c6a5a" Type="0"/>
+    <ROW Component="ea1d3c77dbfcb462c2a0835eaf2487bd05403f" ComponentId="{6B9598A7-27ED-44A7-9262-6FFD8540FAED}" Directory_="__15_Dir" Attributes="0" KeyPath="ea1d3c77dbfcb462c2a0835eaf2487bd05403f" Type="0"/>
+    <ROW Component="ebb5a52cca88bd9f29f7726d999e7eced4d7b6" ComponentId="{CAAFDE04-BEC3-4C60-99C6-815147C6CD91}" Directory_="e0_Dir" Attributes="0" KeyPath="ebb5a52cca88bd9f29f7726d999e7eced4d7b6" Type="0"/>
+    <ROW Component="ec1316c7de977e9843f649c14175ad0a576" ComponentId="{AB4DF49E-2336-4996-A155-E1AE2268B03C}" Directory_="__14_Dir" Attributes="0" KeyPath="ec1316c7de977e9843f649c14175ad0a576" Type="0"/>
+    <ROW Component="ed56d017cf54d5942cfffae746cc4a5ef836a" ComponentId="{7E1E1C87-4116-44D5-B22C-204A1D8537E9}" Directory_="__52_Dir" Attributes="0" KeyPath="ed56d017cf54d5942cfffae746cc4a5ef836a" Type="0"/>
+    <ROW Component="ed5c4ca4fc8757543c7e35da2843795257e01c" ComponentId="{FB6E92C8-5C88-440F-A004-472DDEE49318}" Directory_="a9_Dir" Attributes="0" KeyPath="ed5c4ca4fc8757543c7e35da2843795257e01c" Type="0"/>
+    <ROW Component="ee33ef18ecf0e251c5514517d4517dbc76e9" ComponentId="{EF66487D-F85A-490C-8310-5E17E21DC881}" Directory_="a4_Dir" Attributes="0" KeyPath="ee33ef18ecf0e251c5514517d4517dbc76e9" Type="0"/>
+    <ROW Component="ee5eefc18dd6925ab344e57ff117ccf156bd3" ComponentId="{F98D7C7F-FF7C-4E35-ADE7-A88DEE52BCEE}" Directory_="__61_Dir" Attributes="0" KeyPath="ee5eefc18dd6925ab344e57ff117ccf156bd3" Type="0"/>
+    <ROW Component="eedb8386e765001b8b0d4d297cfa14edf7db" ComponentId="{01C5CCDB-3CD1-4CC4-B07C-CB86BB170537}" Directory_="__21_Dir" Attributes="0" KeyPath="eedb8386e765001b8b0d4d297cfa14edf7db" Type="0"/>
+    <ROW Component="eff21f129d689483904e44988b880146edb" ComponentId="{12D56FAE-74EC-406C-8874-EFAF129816C4}" Directory_="__17_Dir" Attributes="0" KeyPath="eff21f129d689483904e44988b880146edb" Type="0"/>
+    <ROW Component="exclude" ComponentId="{773AF8BA-12CB-4E62-9FA1-8E476E905877}" Directory_="info_Dir" Attributes="0" KeyPath="exclude" Type="0"/>
+    <ROW Component="f08929f92ff0fc355ee06dfbdb1a2a0a45e" ComponentId="{B2A6CB1D-BEF5-4EF2-8772-F3D0EA353DA6}" Directory_="__3_Dir" Attributes="0" KeyPath="f08929f92ff0fc355ee06dfbdb1a2a0a45e" Type="0"/>
+    <ROW Component="f10c9185d8d738e3523b98870284e1a2f10b" ComponentId="{5A942616-261A-4E0B-9E96-9A9C4793C702}" Directory_="__29_Dir" Attributes="0" KeyPath="f10c9185d8d738e3523b98870284e1a2f10b" Type="0"/>
+    <ROW Component="f1e554441cc924b69222d49c2af0496b11f36" ComponentId="{39182A25-F8C0-42E9-B401-2069594E52E6}" Directory_="f5_Dir" Attributes="0" KeyPath="f1e554441cc924b69222d49c2af0496b11f36" Type="0"/>
+    <ROW Component="f2407af1135230822a6e962a90f355ff386" ComponentId="{A22F8C2E-9B5E-4276-A9F7-77EC3020D4CC}" Directory_="__63_Dir" Attributes="0" KeyPath="f2407af1135230822a6e962a90f355ff386" Type="0"/>
+    <ROW Component="f25bb94dd4803877ae9990422a2f4ba774" ComponentId="{886264E9-1983-488C-9EA2-191D17A19FCD}" Directory_="dc_Dir" Attributes="0" KeyPath="f25bb94dd4803877ae9990422a2f4ba774" Type="0"/>
+    <ROW Component="f37fa37ddc1ced0401a79527985a287e5f" ComponentId="{419DEA4B-5578-4DE0-8DDF-2D67B60C3A25}" Directory_="a5_Dir" Attributes="0" KeyPath="f37fa37ddc1ced0401a79527985a287e5f" Type="0"/>
+    <ROW Component="f3d4f0baed82901cf71a1eb532355a568e0ebb" ComponentId="{30D18326-CE12-4B0D-9A58-739A66D840CE}" Directory_="__19_Dir" Attributes="0" KeyPath="f3d4f0baed82901cf71a1eb532355a568e0ebb" Type="0"/>
+    <ROW Component="f3f33f71937b5ef16cc9dfe1336bda955fa" ComponentId="{77C8467D-7487-4C39-96BB-5472FF5E87BC}" Directory_="__41_Dir" Attributes="0" KeyPath="f3f33f71937b5ef16cc9dfe1336bda955fa" Type="0"/>
+    <ROW Component="f502b60c39dca2d5612db93e5a8b7497e00fda" ComponentId="{BCE134A6-9F25-4D21-9556-583CDAA00F18}" Directory_="c3_Dir" Attributes="0" KeyPath="f502b60c39dca2d5612db93e5a8b7497e00fda" Type="0"/>
+    <ROW Component="f554e4743f9b0256e3358e20cfdd75a480861" ComponentId="{7C0B6683-B237-41FB-A71A-3ED5A8ABE303}" Directory_="__23_Dir" Attributes="0" KeyPath="f554e4743f9b0256e3358e20cfdd75a480861" Type="0"/>
+    <ROW Component="f5c818bd8f22c9c9179e3f8e93c944d44bb" ComponentId="{51AD2D03-C632-4508-BB47-4A63FC388A1D}" Directory_="__30_Dir" Attributes="0" KeyPath="f5c818bd8f22c9c9179e3f8e93c944d44bb" Type="0"/>
+    <ROW Component="f6390dcf9a2ccbdd5fd6971c8b3532ad023623" ComponentId="{6E021335-5B52-422C-A006-DFBBD4952B2D}" Directory_="f_Dir" Attributes="0" KeyPath="f6390dcf9a2ccbdd5fd6971c8b3532ad023623" Type="0"/>
+    <ROW Component="f8606b5214d8d76dcf0dcc9f8ad7390ba2479" ComponentId="{C3FC7CC5-2063-4E58-8148-C01093A091E1}" Directory_="d9_Dir" Attributes="0" KeyPath="f8606b5214d8d76dcf0dcc9f8ad7390ba2479" Type="0"/>
+    <ROW Component="f8a0f9da04f28ed18a84fdd00ffe674f6" ComponentId="{4948E005-4A38-4CDC-B981-F38518E5A911}" Directory_="__48_Dir" Attributes="0" KeyPath="f8a0f9da04f28ed18a84fdd00ffe674f6" Type="0"/>
+    <ROW Component="f8e3ad5ab60cf1e9d17674f997a809d3b0dcf" ComponentId="{CD5CBCEA-7CA0-4C1C-9D6E-1AFA995AB1BB}" Directory_="f_3_Dir" Attributes="0" KeyPath="f8e3ad5ab60cf1e9d17674f997a809d3b0dcf" Type="0"/>
+    <ROW Component="f985ccb5cdf98c6e573d2985ab8a1f7aa484" ComponentId="{DAC30FA4-B815-4E24-A557-CC0C170F83A4}" Directory_="__8_Dir" Attributes="0" KeyPath="f985ccb5cdf98c6e573d2985ab8a1f7aa484" Type="0"/>
+    <ROW Component="fa8e374b786a2753196b68df8e0d39eeaa5c86" ComponentId="{40E33D49-D1A5-4704-A1D7-481700915AF3}" Directory_="__37_Dir" Attributes="0" KeyPath="fa8e374b786a2753196b68df8e0d39eeaa5c86" Type="0"/>
+    <ROW Component="fb26119f5d61c1225fb98ad3e3ded63de00" ComponentId="{849755E8-5A16-4202-97B5-4BF2484AA599}" Directory_="dd_Dir" Attributes="0" KeyPath="fb26119f5d61c1225fb98ad3e3ded63de00" Type="0"/>
+    <ROW Component="fbc980713110d666b970022e81a8ee3aa01" ComponentId="{B3410CA9-7AC1-4408-9E9F-72CBE34297BC}" Directory_="fe_Dir" Attributes="0" KeyPath="fbc980713110d666b970022e81a8ee3aa01" Type="0"/>
+    <ROW Component="fcfe9350a80e0cfaff019326e9a642868d2cc" ComponentId="{D7AC7115-A351-4D60-80B0-A12F7466A20B}" Directory_="__2_Dir" Attributes="0" KeyPath="fcfe9350a80e0cfaff019326e9a642868d2cc" Type="0"/>
+    <ROW Component="fd686a647103d17f6357c35c4776655d714bf" ComponentId="{C7E55C33-098F-4E8E-A7B7-186F522F8038}" Directory_="__38_Dir" Attributes="0" KeyPath="fd686a647103d17f6357c35c4776655d714bf" Type="0"/>
+    <ROW Component="fd9dece4b103a67e444290a76fb4cb937" ComponentId="{A680A3D2-7B68-43AF-9A18-9B41C24B5616}" Directory_="__Dir" Attributes="0" KeyPath="fd9dece4b103a67e444290a76fb4cb937" Type="0"/>
+    <ROW Component="fe618bb1871a2b4e43c169052a85def40dc98" ComponentId="{F5FE7FCD-252B-412F-83F2-8FD144485E5D}" Directory_="c1_Dir" Attributes="0" KeyPath="fe618bb1871a2b4e43c169052a85def40dc98" Type="0"/>
+    <ROW Component="ff20d25112a3bc3d668ec3d37eee444aa81a8" ComponentId="{7B945175-1363-4DB9-B659-0E09FA945DFD}" Directory_="__42_Dir" Attributes="0" KeyPath="ff20d25112a3bc3d668ec3d37eee444aa81a8" Type="0"/>
+    <ROW Component="ff57d2478948c2e9d6c116745371451b40a80" ComponentId="{60B39EE6-7A82-444F-9EAB-FD335A3D4DF8}" Directory_="a8_Dir" Attributes="0" KeyPath="ff57d2478948c2e9d6c116745371451b40a80" Type="0"/>
+    <ROW Component="gitignore" ComponentId="{628906D4-C0C6-4927-A5C5-94935AA2CB8C}" Directory_="idea_Dir" Attributes="0" KeyPath="gitignore_1" Type="0"/>
+    <ROW Component="issuedocker" ComponentId="{8FD846C2-90B3-4C87-90C1-92341DAD24B0}" Directory_="heads_Dir" Attributes="0" KeyPath="issuedocker" Type="0"/>
+    <ROW Component="issuedocker_1" ComponentId="{E000CC32-3A8D-459E-B5A0-992930029794}" Directory_="heads_1_Dir" Attributes="0" KeyPath="issuedocker_2" Type="0"/>
+    <ROW Component="labeler.yml" ComponentId="{864E0682-9FAA-4437-87B3-BE4F67B26688}" Directory_="workflows_Dir" Attributes="0" KeyPath="labeler.yml" Type="0"/>
+    <ROW Component="libcrypto3.dll" ComponentId="{31A01EED-2530-4398-AA94-37B4A2AE46E6}" Directory_="_internal_Dir" Attributes="256" KeyPath="libcrypto3.dll"/>
+    <ROW Component="pack3cc19678d6699faf11af2c9f1c2c89a669522846.idx" ComponentId="{BD9A94AD-64B2-4BEC-9310-A7A969105843}" Directory_="pack_Dir" Attributes="0" KeyPath="pack3cc19678d6699faf11af2c9f1c2c89a669522846.idx" Type="0"/>
+    <ROW Component="profiles_settings.xml" ComponentId="{46B68ABA-4F9B-4D81-AB26-DDA68564FB8A}" Directory_="inspectionProfiles_Dir" Attributes="0" KeyPath="profiles_settings.xml" Type="0"/>
+    <ROW Component="psfile.exe" ComponentId="{D7DAF242-F4BD-461F-836A-29BD9F8ABCCB}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="psfile.exe"/>
+    <ROW Component="pslist.exe" ComponentId="{234B0581-67CC-4F58-84B3-AD00B64E82DC}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="pslist.exe"/>
+    <ROW Component="psloglist.exe" ComponentId="{DE48CD3D-F7AF-48C8-8C2A-2D31F94B4EEF}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="psloglist.exe"/>
+    <ROW Component="python311.dll" ComponentId="{5A8269EA-B510-4C32-8F9F-38C8D1773516}" Directory_="_internal_Dir" Attributes="256" KeyPath="python311.dll"/>
+    <ROW Component="ucrtbase.dll" ComponentId="{FC6999B4-426F-403D-80B8-61F8235C8525}" Directory_="_internal_Dir" Attributes="256" KeyPath="ucrtbase.dll"/>
+    <ROW Component="v2.0.1" ComponentId="{658A23CD-CC3F-460F-B24D-7801DEAA1B57}" Directory_="tags_Dir" Attributes="0" KeyPath="v2.0.1" Type="0"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
+    <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0"/>
+    <ATTRIBUTE name="CurrentFeature" value="MainFeature"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
+    <ROW File="dockerfile" Component_="dockerfile" FileName="DOCKER~1|.dockerfile" Attributes="0" SourcePath="Logicytics\.dockerfile" SelfReg="false"/>
+    <ROW File="COMMIT_EDITMSG" Component_="COMMIT_EDITMSG" FileName="COMMIT~1|COMMIT_EDITMSG" Attributes="0" SourcePath="Logicytics\.git\COMMIT_EDITMSG" SelfReg="false"/>
+    <ROW File="config" Component_="COMMIT_EDITMSG" FileName="config" Attributes="0" SourcePath="Logicytics\.git\config" SelfReg="false"/>
+    <ROW File="description" Component_="COMMIT_EDITMSG" FileName="DESCRI~1|description" Attributes="0" SourcePath="Logicytics\.git\description" SelfReg="false"/>
+    <ROW File="FETCH_HEAD" Component_="COMMIT_EDITMSG" FileName="FETCH_~1|FETCH_HEAD" Attributes="0" SourcePath="Logicytics\.git\FETCH_HEAD" SelfReg="false"/>
+    <ROW File="HEAD" Component_="COMMIT_EDITMSG" FileName="HEAD" Attributes="0" SourcePath="Logicytics\.git\HEAD" SelfReg="false"/>
+    <ROW File="applypatchmsg.sample" Component_="applypatchmsg.sample" FileName="APPLYP~1.SAM|applypatch-msg.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\applypatch-msg.sample" SelfReg="false"/>
+    <ROW File="commitmsg.sample" Component_="applypatchmsg.sample" FileName="COMMIT~1.SAM|commit-msg.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\commit-msg.sample" SelfReg="false"/>
+    <ROW File="fsmonitorwatchman.sample" Component_="applypatchmsg.sample" FileName="FSMONI~1.SAM|fsmonitor-watchman.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\fsmonitor-watchman.sample" SelfReg="false"/>
+    <ROW File="postupdate.sample" Component_="applypatchmsg.sample" FileName="POST-U~1.SAM|post-update.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\post-update.sample" SelfReg="false"/>
+    <ROW File="preapplypatch.sample" Component_="applypatchmsg.sample" FileName="PRE-AP~1.SAM|pre-applypatch.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\pre-applypatch.sample" SelfReg="false"/>
+    <ROW File="precommit.sample" Component_="applypatchmsg.sample" FileName="PRE-CO~1.SAM|pre-commit.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\pre-commit.sample" SelfReg="false"/>
+    <ROW File="premergecommit.sample" Component_="applypatchmsg.sample" FileName="PRE-ME~1.SAM|pre-merge-commit.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\pre-merge-commit.sample" SelfReg="false"/>
+    <ROW File="prepush.sample" Component_="applypatchmsg.sample" FileName="PRE-PU~1.SAM|pre-push.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\pre-push.sample" SelfReg="false"/>
+    <ROW File="prerebase.sample" Component_="applypatchmsg.sample" FileName="PRE-RE~1.SAM|pre-rebase.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\pre-rebase.sample" SelfReg="false"/>
+    <ROW File="prereceive.sample" Component_="applypatchmsg.sample" FileName="PRE-RE~2.SAM|pre-receive.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\pre-receive.sample" SelfReg="false"/>
+    <ROW File="preparecommitmsg.sample" Component_="applypatchmsg.sample" FileName="PREPAR~1.SAM|prepare-commit-msg.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\prepare-commit-msg.sample" SelfReg="false"/>
+    <ROW File="pushtocheckout.sample" Component_="applypatchmsg.sample" FileName="PUSH-T~1.SAM|push-to-checkout.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\push-to-checkout.sample" SelfReg="false"/>
+    <ROW File="sendemailvalidate.sample" Component_="applypatchmsg.sample" FileName="SENDEM~1.SAM|sendemail-validate.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\sendemail-validate.sample" SelfReg="false"/>
+    <ROW File="update.sample" Component_="applypatchmsg.sample" FileName="UPDATE~1.SAM|update.sample" Attributes="0" SourcePath="Logicytics\.git\hooks\update.sample" SelfReg="false"/>
+    <ROW File="index" Component_="COMMIT_EDITMSG" FileName="index" Attributes="0" SourcePath="Logicytics\.git\index" SelfReg="false"/>
+    <ROW File="exclude" Component_="exclude" FileName="exclude" Attributes="0" SourcePath="Logicytics\.git\info\exclude" SelfReg="false"/>
+    <ROW File="HEAD_1" Component_="HEAD" FileName="HEAD" Attributes="0" SourcePath="Logicytics\.git\logs\HEAD" SelfReg="false"/>
+    <ROW File="issuedocker" Component_="issuedocker" FileName="ISSUE-~1|issue-docker" Attributes="0" SourcePath="Logicytics\.git\logs\refs\heads\issue-docker" SelfReg="false"/>
+    <ROW File="main" Component_="issuedocker" FileName="main" Attributes="0" SourcePath="Logicytics\.git\logs\refs\heads\main" SelfReg="false"/>
+    <ROW File="HEAD_2" Component_="HEAD_1" FileName="HEAD" Attributes="0" SourcePath="Logicytics\.git\logs\refs\remotes\origin\HEAD" SelfReg="false"/>
+    <ROW File="issuedocker_1" Component_="HEAD_1" FileName="ISSUE-~1|issue-docker" Attributes="0" SourcePath="Logicytics\.git\logs\refs\remotes\origin\issue-docker" SelfReg="false"/>
+    <ROW File="main_1" Component_="HEAD_1" FileName="main" Attributes="0" SourcePath="Logicytics\.git\logs\refs\remotes\origin\main" SelfReg="false"/>
+    <ROW File="fd9dece4b103a67e444290a76fb4cb937" Component_="fd9dece4b103a67e444290a76fb4cb937" FileName="19227F~1|19227fd9dece4b103a67e444290a76fb4cb937" Attributes="1" SourcePath="Logicytics\.git\objects\00\19227fd9dece4b103a67e444290a76fb4cb937" SelfReg="false"/>
+    <ROW File="a79a5543a351771a1152f80eb345ea64a53e" Component_="a79a5543a351771a1152f80eb345ea64a53e" FileName="73A79A~1|73a79a5543a351771a1152f80eb345ea64a53e" Attributes="1" SourcePath="Logicytics\.git\objects\01\73a79a5543a351771a1152f80eb345ea64a53e" SelfReg="false"/>
+    <ROW File="fcfe9350a80e0cfaff019326e9a642868d2cc" Component_="fcfe9350a80e0cfaff019326e9a642868d2cc" FileName="2FCFE9~1|2fcfe9350a80e0cfaff019326e9a642868d2cc" Attributes="1" SourcePath="Logicytics\.git\objects\03\2fcfe9350a80e0cfaff019326e9a642868d2cc" SelfReg="false"/>
+    <ROW File="b55dfe2b9c7ac736f06565fba317cb6623f40" Component_="fcfe9350a80e0cfaff019326e9a642868d2cc" FileName="4B55DF~1|4b55dfe2b9c7ac736f06565fba317cb6623f40" Attributes="1" SourcePath="Logicytics\.git\objects\03\4b55dfe2b9c7ac736f06565fba317cb6623f40" SelfReg="false"/>
+    <ROW File="f08929f92ff0fc355ee06dfbdb1a2a0a45e" Component_="f08929f92ff0fc355ee06dfbdb1a2a0a45e" FileName="930F08~1|930f08929f92ff0fc355ee06dfbdb1a2a0a45e" Attributes="1" SourcePath="Logicytics\.git\objects\08\930f08929f92ff0fc355ee06dfbdb1a2a0a45e" SelfReg="false"/>
+    <ROW File="a7c1f5e8e213abfc53c201fdad11856db3" Component_="a7c1f5e8e213abfc53c201fdad11856db3" FileName="4098A7~1|4098a7c1f5e8e213abfc53c201fdad11856db3" Attributes="1" SourcePath="Logicytics\.git\objects\09\4098a7c1f5e8e213abfc53c201fdad11856db3" SelfReg="false"/>
+    <ROW File="d37381acb1531647e25cf7c9e47cf3ff612000" Component_="d37381acb1531647e25cf7c9e47cf3ff612000" FileName="D37381~1|d37381acb1531647e25cf7c9e47cf3ff612000" Attributes="1" SourcePath="Logicytics\.git\objects\10\d37381acb1531647e25cf7c9e47cf3ff612000" SelfReg="false"/>
+    <ROW File="a52d3a41d2a95661b5125091a59e0138d532d1" Component_="a52d3a41d2a95661b5125091a59e0138d532d1" FileName="A52D3A~1|a52d3a41d2a95661b5125091a59e0138d532d1" Attributes="1" SourcePath="Logicytics\.git\objects\11\a52d3a41d2a95661b5125091a59e0138d532d1" SelfReg="false"/>
+    <ROW File="a6136e1ead964960c021a86ed4fa48470ac045" Component_="a6136e1ead964960c021a86ed4fa48470ac045" FileName="A6136E~1|a6136e1ead964960c021a86ed4fa48470ac045" Attributes="1" SourcePath="Logicytics\.git\objects\12\a6136e1ead964960c021a86ed4fa48470ac045" SelfReg="false"/>
+    <ROW File="ca498ea03985feb807ff3a3432cee2b2dd6696" Component_="a6136e1ead964960c021a86ed4fa48470ac045" FileName="CA498E~1|ca498ea03985feb807ff3a3432cee2b2dd6696" Attributes="1" SourcePath="Logicytics\.git\objects\12\ca498ea03985feb807ff3a3432cee2b2dd6696" SelfReg="false"/>
+    <ROW File="f985ccb5cdf98c6e573d2985ab8a1f7aa484" Component_="f985ccb5cdf98c6e573d2985ab8a1f7aa484" FileName="43F985~1|43f985ccb5cdf98c6e573d2985ab8a1f7aa484" Attributes="1" SourcePath="Logicytics\.git\objects\13\43f985ccb5cdf98c6e573d2985ab8a1f7aa484" SelfReg="false"/>
+    <ROW File="a5cf7160c4b367650bb0458b4935247a08f" Component_="f985ccb5cdf98c6e573d2985ab8a1f7aa484" FileName="930A5C~1|930a5cf7160c4b367650bb0458b4935247a08f" Attributes="1" SourcePath="Logicytics\.git\objects\13\930a5cf7160c4b367650bb0458b4935247a08f" SelfReg="false"/>
+    <ROW File="ae2a2eccd067accaaa287971188969c765691f" Component_="f985ccb5cdf98c6e573d2985ab8a1f7aa484" FileName="AE2A2E~1|ae2a2eccd067accaaa287971188969c765691f" Attributes="1" SourcePath="Logicytics\.git\objects\13\ae2a2eccd067accaaa287971188969c765691f" SelfReg="false"/>
+    <ROW File="d74467135e0570eabaf4de1eae93b1bc86f8d4" Component_="f985ccb5cdf98c6e573d2985ab8a1f7aa484" FileName="D74467~1|d74467135e0570eabaf4de1eae93b1bc86f8d4" Attributes="1" SourcePath="Logicytics\.git\objects\13\d74467135e0570eabaf4de1eae93b1bc86f8d4" SelfReg="false"/>
+    <ROW File="cc16c7b47636f145dd965c7b054033265d" Component_="cc16c7b47636f145dd965c7b054033265d" FileName="6473CC~1|6473cc16c7b47636f145dd965c7b054033265d" Attributes="1" SourcePath="Logicytics\.git\objects\15\6473cc16c7b47636f145dd965c7b054033265d" SelfReg="false"/>
+    <ROW File="c06ac2e217bd0094a921a01187e9146720b78" Component_="c06ac2e217bd0094a921a01187e9146720b78" FileName="6C06AC~1|6c06ac2e217bd0094a921a01187e9146720b78" Attributes="1" SourcePath="Logicytics\.git\objects\16\6c06ac2e217bd0094a921a01187e9146720b78" SelfReg="false"/>
+    <ROW File="b6be662e5282517717abcda03002a1c962d89" Component_="c06ac2e217bd0094a921a01187e9146720b78" FileName="7B6BE6~1|7b6be662e5282517717abcda03002a1c962d89" Attributes="1" SourcePath="Logicytics\.git\objects\16\7b6be662e5282517717abcda03002a1c962d89" SelfReg="false"/>
+    <ROW File="aa991aa70bf1a62f46c70ff2263c44bae837" Component_="aa991aa70bf1a62f46c70ff2263c44bae837" FileName="24AA99~1|24aa991aa70bf1a62f46c70ff2263c44bae837" Attributes="1" SourcePath="Logicytics\.git\objects\17\24aa991aa70bf1a62f46c70ff2263c44bae837" SelfReg="false"/>
+    <ROW File="be1aa520877726cdeaa7a6cf582a9e0d26a9ab" Component_="be1aa520877726cdeaa7a6cf582a9e0d26a9ab" FileName="BE1AA5~1|be1aa520877726cdeaa7a6cf582a9e0d26a9ab" Attributes="1" SourcePath="Logicytics\.git\objects\1a\be1aa520877726cdeaa7a6cf582a9e0d26a9ab" SelfReg="false"/>
+    <ROW File="a2f53f24ecf9607a94076f34b34f56aa" Component_="a2f53f24ecf9607a94076f34b34f56aa" FileName="063486~1|063486a2f53f24ecf9607a94076f34b34f56aa" Attributes="1" SourcePath="Logicytics\.git\objects\1c\063486a2f53f24ecf9607a94076f34b34f56aa" SelfReg="false"/>
+    <ROW File="a99ec373e173f8757c077269ec18ea496a863" Component_="a99ec373e173f8757c077269ec18ea496a863" FileName="3A99EC~1|3a99ec373e173f8757c077269ec18ea496a863" Attributes="1" SourcePath="Logicytics\.git\objects\1d\3a99ec373e173f8757c077269ec18ea496a863" SelfReg="false"/>
+    <ROW File="a30685c07965f01db931c7a27d593bf0828715" Component_="a30685c07965f01db931c7a27d593bf0828715" FileName="A30685~1|a30685c07965f01db931c7a27d593bf0828715" Attributes="1" SourcePath="Logicytics\.git\objects\1e\a30685c07965f01db931c7a27d593bf0828715" SelfReg="false"/>
+    <ROW File="f6390dcf9a2ccbdd5fd6971c8b3532ad023623" Component_="f6390dcf9a2ccbdd5fd6971c8b3532ad023623" FileName="F6390D~1|f6390dcf9a2ccbdd5fd6971c8b3532ad023623" Attributes="1" SourcePath="Logicytics\.git\objects\1f\f6390dcf9a2ccbdd5fd6971c8b3532ad023623" SelfReg="false"/>
+    <ROW File="a80abd8f2e3bcfa31fff467b67fd9bc7a7d" Component_="a80abd8f2e3bcfa31fff467b67fd9bc7a7d" FileName="025A80~1|025a80abd8f2e3bcfa31fff467b67fd9bc7a7d" Attributes="1" SourcePath="Logicytics\.git\objects\25\025a80abd8f2e3bcfa31fff467b67fd9bc7a7d" SelfReg="false"/>
+    <ROW File="a01792105dc80f57baed7d186b2a24264" Component_="a80abd8f2e3bcfa31fff467b67fd9bc7a7d" FileName="27475A~1|27475a01792105dc80f57baed7d186b2a24264" Attributes="1" SourcePath="Logicytics\.git\objects\25\27475a01792105dc80f57baed7d186b2a24264" SelfReg="false"/>
+    <ROW File="b865290b81016ef6bd68ece9b99fbcf5b4f7cf" Component_="b865290b81016ef6bd68ece9b99fbcf5b4f7cf" FileName="B86529~1|b865290b81016ef6bd68ece9b99fbcf5b4f7cf" Attributes="1" SourcePath="Logicytics\.git\objects\26\b865290b81016ef6bd68ece9b99fbcf5b4f7cf" SelfReg="false"/>
+    <ROW File="ec1316c7de977e9843f649c14175ad0a576" Component_="ec1316c7de977e9843f649c14175ad0a576" FileName="269EC1~1|269ec1316c7de977e9843f649c14175ad0a576" Attributes="1" SourcePath="Logicytics\.git\objects\27\269ec1316c7de977e9843f649c14175ad0a576" SelfReg="false"/>
+    <ROW File="cec1adddd0f9ce13e493189f667e3ebacb255" Component_="cec1adddd0f9ce13e493189f667e3ebacb255" FileName="3CEC1A~1|3cec1adddd0f9ce13e493189f667e3ebacb255" Attributes="1" SourcePath="Logicytics\.git\objects\2b\3cec1adddd0f9ce13e493189f667e3ebacb255" SelfReg="false"/>
+    <ROW File="c343d77d9db0aa77322d7ec519941278f5" Component_="c343d77d9db0aa77322d7ec519941278f5" FileName="2745C3~1|2745c343d77d9db0aa77322d7ec519941278f5" Attributes="1" SourcePath="Logicytics\.git\objects\2e\2745c343d77d9db0aa77322d7ec519941278f5" SelfReg="false"/>
+    <ROW File="fb517fbd33600f8032b9444a1fa755a21503" Component_="c343d77d9db0aa77322d7ec519941278f5" FileName="48FB51~1|48fb517fbd33600f8032b9444a1fa755a21503" Attributes="1" SourcePath="Logicytics\.git\objects\2e\48fb517fbd33600f8032b9444a1fa755a21503" SelfReg="false"/>
+    <ROW File="e976dd058fd74675c0256d5888c4f86f74ea" Component_="e976dd058fd74675c0256d5888c4f86f74ea" FileName="47E976~1|47e976dd058fd74675c0256d5888c4f86f74ea" Attributes="1" SourcePath="Logicytics\.git\objects\2f\47e976dd058fd74675c0256d5888c4f86f74ea" SelfReg="false"/>
+    <ROW File="ea1d3c77dbfcb462c2a0835eaf2487bd05403f" Component_="ea1d3c77dbfcb462c2a0835eaf2487bd05403f" FileName="EA1D3C~1|ea1d3c77dbfcb462c2a0835eaf2487bd05403f" Attributes="1" SourcePath="Logicytics\.git\objects\32\ea1d3c77dbfcb462c2a0835eaf2487bd05403f" SelfReg="false"/>
+    <ROW File="af6dfb38c873031ba87383a29334309727584" Component_="af6dfb38c873031ba87383a29334309727584" FileName="7AF6DF~1|7af6dfb38c873031ba87383a29334309727584" Attributes="1" SourcePath="Logicytics\.git\objects\33\7af6dfb38c873031ba87383a29334309727584" SelfReg="false"/>
+    <ROW File="eff21f129d689483904e44988b880146edb" Component_="eff21f129d689483904e44988b880146edb" FileName="821EFF~1|821eff21f129d689483904e44988b880146edb" Attributes="1" SourcePath="Logicytics\.git\objects\34\821eff21f129d689483904e44988b880146edb" SelfReg="false"/>
+    <ROW File="a511cdc15a30aa6bd08a01aa3b25f6def8c" Component_="a511cdc15a30aa6bd08a01aa3b25f6def8c" FileName="306A51~1|306a511cdc15a30aa6bd08a01aa3b25f6def8c" Attributes="1" SourcePath="Logicytics\.git\objects\35\306a511cdc15a30aa6bd08a01aa3b25f6def8c" SelfReg="false"/>
+    <ROW File="b50500d8d332db6faff5b89bdae6e83f103a7" Component_="a511cdc15a30aa6bd08a01aa3b25f6def8c" FileName="8B5050~1|8b50500d8d332db6faff5b89bdae6e83f103a7" Attributes="1" SourcePath="Logicytics\.git\objects\35\8b50500d8d332db6faff5b89bdae6e83f103a7" SelfReg="false"/>
+    <ROW File="f3487f76e57513e3f7ed342664bc011ca52b1" Component_="a511cdc15a30aa6bd08a01aa3b25f6def8c" FileName="9F3487~1|9f3487f76e57513e3f7ed342664bc011ca52b1" Attributes="1" SourcePath="Logicytics\.git\objects\35\9f3487f76e57513e3f7ed342664bc011ca52b1" SelfReg="false"/>
+    <ROW File="f3d4f0baed82901cf71a1eb532355a568e0ebb" Component_="f3d4f0baed82901cf71a1eb532355a568e0ebb" FileName="F3D4F0~1|f3d4f0baed82901cf71a1eb532355a568e0ebb" Attributes="1" SourcePath="Logicytics\.git\objects\36\f3d4f0baed82901cf71a1eb532355a568e0ebb" SelfReg="false"/>
+    <ROW File="e0a909db1c762dd33b6d0d758b0b80e6d" Component_="e0a909db1c762dd33b6d0d758b0b80e6d" FileName="54832E~1|54832e0a909db1c762dd33b6d0d758b0b80e6d" Attributes="1" SourcePath="Logicytics\.git\objects\37\54832e0a909db1c762dd33b6d0d758b0b80e6d" SelfReg="false"/>
+    <ROW File="d23a2071b9d8dabc5ad489b39eb5290f8e8f" Component_="e0a909db1c762dd33b6d0d758b0b80e6d" FileName="63D23A~1|63d23a2071b9d8dabc5ad489b39eb5290f8e8f" Attributes="1" SourcePath="Logicytics\.git\objects\37\63d23a2071b9d8dabc5ad489b39eb5290f8e8f" SelfReg="false"/>
+    <ROW File="eedb8386e765001b8b0d4d297cfa14edf7db" Component_="eedb8386e765001b8b0d4d297cfa14edf7db" FileName="70EEDB~1|70eedb8386e765001b8b0d4d297cfa14edf7db" Attributes="1" SourcePath="Logicytics\.git\objects\38\70eedb8386e765001b8b0d4d297cfa14edf7db" SelfReg="false"/>
+    <ROW File="b447a2a22b46c471bdf0b59056de3197cf090" Component_="b447a2a22b46c471bdf0b59056de3197cf090" FileName="0B447A~1|0b447a2a22b46c471bdf0b59056de3197cf090" Attributes="1" SourcePath="Logicytics\.git\objects\3a\0b447a2a22b46c471bdf0b59056de3197cf090" SelfReg="false"/>
+    <ROW File="bacbdfe6fa3668e05807be3818c4e7b99af8dc" Component_="b447a2a22b46c471bdf0b59056de3197cf090" FileName="BACBDF~1|bacbdfe6fa3668e05807be3818c4e7b99af8dc" Attributes="1" SourcePath="Logicytics\.git\objects\3a\bacbdfe6fa3668e05807be3818c4e7b99af8dc" SelfReg="false"/>
+    <ROW File="b635ca961b8a0d6455beb230c983e291a5051" Component_="b635ca961b8a0d6455beb230c983e291a5051" FileName="8B635C~1|8b635ca961b8a0d6455beb230c983e291a5051" Attributes="1" SourcePath="Logicytics\.git\objects\40\8b635ca961b8a0d6455beb230c983e291a5051" SelfReg="false"/>
+    <ROW File="f554e4743f9b0256e3358e20cfdd75a480861" Component_="f554e4743f9b0256e3358e20cfdd75a480861" FileName="1F554E~1|1f554e4743f9b0256e3358e20cfdd75a480861" Attributes="1" SourcePath="Logicytics\.git\objects\41\1f554e4743f9b0256e3358e20cfdd75a480861" SelfReg="false"/>
+    <ROW File="b252471aad8dfcf5eb1ef70f4358b76a4a80d" Component_="f554e4743f9b0256e3358e20cfdd75a480861" FileName="7B2524~1|7b252471aad8dfcf5eb1ef70f4358b76a4a80d" Attributes="1" SourcePath="Logicytics\.git\objects\41\7b252471aad8dfcf5eb1ef70f4358b76a4a80d" SelfReg="false"/>
+    <ROW File="e1f69ccf103af715de51087819998c29c9de41" Component_="f554e4743f9b0256e3358e20cfdd75a480861" FileName="E1F69C~1|e1f69ccf103af715de51087819998c29c9de41" Attributes="1" SourcePath="Logicytics\.git\objects\41\e1f69ccf103af715de51087819998c29c9de41" SelfReg="false"/>
+    <ROW File="d8663eb97d5530b1b19805806f2b0bc8d2a3" Component_="d8663eb97d5530b1b19805806f2b0bc8d2a3" FileName="34D866~1|34d8663eb97d5530b1b19805806f2b0bc8d2a3" Attributes="1" SourcePath="Logicytics\.git\objects\43\34d8663eb97d5530b1b19805806f2b0bc8d2a3" SelfReg="false"/>
+    <ROW File="ea1e50d5ec113f79b5cf63780be1c166a429c" Component_="d8663eb97d5530b1b19805806f2b0bc8d2a3" FileName="3EA1E5~1|3ea1e50d5ec113f79b5cf63780be1c166a429c" Attributes="1" SourcePath="Logicytics\.git\objects\43\3ea1e50d5ec113f79b5cf63780be1c166a429c" SelfReg="false"/>
+    <ROW File="b333c1fd09f2deae0bb8d5b42dbb3cab683052" Component_="d8663eb97d5530b1b19805806f2b0bc8d2a3" FileName="B333C1~1|b333c1fd09f2deae0bb8d5b42dbb3cab683052" Attributes="1" SourcePath="Logicytics\.git\objects\43\b333c1fd09f2deae0bb8d5b42dbb3cab683052" SelfReg="false"/>
+    <ROW File="a1e6feaaadcf4fca68cef9004b40dac258" Component_="a1e6feaaadcf4fca68cef9004b40dac258" FileName="1903A1~1|1903a1e6feaaadcf4fca68cef9004b40dac258" Attributes="1" SourcePath="Logicytics\.git\objects\44\1903a1e6feaaadcf4fca68cef9004b40dac258" SelfReg="false"/>
+    <ROW File="ce28959b4146ea3528da0f0636f592d" Component_="ce28959b4146ea3528da0f0636f592d" FileName="180361~1|1803611ce28959b4146ea3528da0f0636f592d" Attributes="1" SourcePath="Logicytics\.git\objects\45\1803611ce28959b4146ea3528da0f0636f592d" SelfReg="false"/>
+    <ROW File="e44c6dea319ac123c103be5df22e5a0ea6538" Component_="ce28959b4146ea3528da0f0636f592d" FileName="1E44C6~1|1e44c6dea319ac123c103be5df22e5a0ea6538" Attributes="1" SourcePath="Logicytics\.git\objects\45\1e44c6dea319ac123c103be5df22e5a0ea6538" SelfReg="false"/>
+    <ROW File="e0fbce8c228692a381439ac0d859a05393" Component_="ce28959b4146ea3528da0f0636f592d" FileName="7499E0~1|7499e0fbce8c228692a381439ac0d859a05393" Attributes="1" SourcePath="Logicytics\.git\objects\45\7499e0fbce8c228692a381439ac0d859a05393" SelfReg="false"/>
+    <ROW File="b3e6ed51256a1bacd847788a86cc8d" Component_="b3e6ed51256a1bacd847788a86cc8d" FileName="135690~1|13569074b3e6ed51256a1bacd847788a86cc8d" Attributes="1" SourcePath="Logicytics\.git\objects\46\13569074b3e6ed51256a1bacd847788a86cc8d" SelfReg="false"/>
+    <ROW File="a5812043668db133286a625cb91fc6f307c7a7" Component_="a5812043668db133286a625cb91fc6f307c7a7" FileName="A58120~1|a5812043668db133286a625cb91fc6f307c7a7" Attributes="1" SourcePath="Logicytics\.git\objects\47\a5812043668db133286a625cb91fc6f307c7a7" SelfReg="false"/>
+    <ROW File="f10c9185d8d738e3523b98870284e1a2f10b" Component_="f10c9185d8d738e3523b98870284e1a2f10b" FileName="69F10C~1|69f10c9185d8d738e3523b98870284e1a2f10b" Attributes="1" SourcePath="Logicytics\.git\objects\48\69f10c9185d8d738e3523b98870284e1a2f10b" SelfReg="false"/>
+    <ROW File="de97b7b2850523c4dace3991fcaf2cdb02325" Component_="f10c9185d8d738e3523b98870284e1a2f10b" FileName="8DE97B~1|8de97b7b2850523c4dace3991fcaf2cdb02325" Attributes="1" SourcePath="Logicytics\.git\objects\48\8de97b7b2850523c4dace3991fcaf2cdb02325" SelfReg="false"/>
+    <ROW File="d7c0be3aecdb43e4c44ae6c98832d79b2e8338" Component_="f10c9185d8d738e3523b98870284e1a2f10b" FileName="D7C0BE~1|d7c0be3aecdb43e4c44ae6c98832d79b2e8338" Attributes="1" SourcePath="Logicytics\.git\objects\48\d7c0be3aecdb43e4c44ae6c98832d79b2e8338" SelfReg="false"/>
+    <ROW File="f5c818bd8f22c9c9179e3f8e93c944d44bb" Component_="f5c818bd8f22c9c9179e3f8e93c944d44bb" FileName="486F5C~1|486f5c818bd8f22c9c9179e3f8e93c944d44bb" Attributes="1" SourcePath="Logicytics\.git\objects\49\486f5c818bd8f22c9c9179e3f8e93c944d44bb" SelfReg="false"/>
+    <ROW File="e38cbdfb01f759a9b3146b1c7dd18c611de6" Component_="f5c818bd8f22c9c9179e3f8e93c944d44bb" FileName="48E38C~1|48e38cbdfb01f759a9b3146b1c7dd18c611de6" Attributes="1" SourcePath="Logicytics\.git\objects\49\48e38cbdfb01f759a9b3146b1c7dd18c611de6" SelfReg="false"/>
+    <ROW File="a3052722508f2817b4fa7d404e21209a" Component_="f5c818bd8f22c9c9179e3f8e93c944d44bb" FileName="685221~1|685221a3052722508f2817b4fa7d404e21209a" Attributes="1" SourcePath="Logicytics\.git\objects\49\685221a3052722508f2817b4fa7d404e21209a" SelfReg="false"/>
+    <ROW File="a488bdecb91151e52c40fddf12e2b3ac573a3f" Component_="a488bdecb91151e52c40fddf12e2b3ac573a3f" FileName="A488BD~1|a488bdecb91151e52c40fddf12e2b3ac573a3f" Attributes="1" SourcePath="Logicytics\.git\objects\4a\a488bdecb91151e52c40fddf12e2b3ac573a3f" SelfReg="false"/>
+    <ROW File="ce062c0182929291a900fe98a3d9853f0817a" Component_="ce062c0182929291a900fe98a3d9853f0817a" FileName="0CE062~1|0ce062c0182929291a900fe98a3d9853f0817a" Attributes="1" SourcePath="Logicytics\.git\objects\4d\0ce062c0182929291a900fe98a3d9853f0817a" SelfReg="false"/>
+    <ROW File="d864f63ed06a55b5f560d76d6a4302e208e50" Component_="d864f63ed06a55b5f560d76d6a4302e208e50" FileName="3D864F~1|3d864f63ed06a55b5f560d76d6a4302e208e50" Attributes="1" SourcePath="Logicytics\.git\objects\4e\3d864f63ed06a55b5f560d76d6a4302e208e50" SelfReg="false"/>
+    <ROW File="a5aeabf522534e85b4b33df6ac8d4828f" Component_="d864f63ed06a55b5f560d76d6a4302e208e50" FileName="47559A~1|47559a5aeabf522534e85b4b33df6ac8d4828f" Attributes="1" SourcePath="Logicytics\.git\objects\4e\47559a5aeabf522534e85b4b33df6ac8d4828f" SelfReg="false"/>
+    <ROW File="e3695b7e931d5fc1718d4c71e541966c3ad724" Component_="d864f63ed06a55b5f560d76d6a4302e208e50" FileName="E3695B~1|e3695b7e931d5fc1718d4c71e541966c3ad724" Attributes="1" SourcePath="Logicytics\.git\objects\4e\e3695b7e931d5fc1718d4c71e541966c3ad724" SelfReg="false"/>
+    <ROW File="d092a8c9410af3e754b0e63c7a5b95b63c0ab0" Component_="d092a8c9410af3e754b0e63c7a5b95b63c0ab0" FileName="D092A8~1|d092a8c9410af3e754b0e63c7a5b95b63c0ab0" Attributes="1" SourcePath="Logicytics\.git\objects\50\d092a8c9410af3e754b0e63c7a5b95b63c0ab0" SelfReg="false"/>
+    <ROW File="af24244a403e987dbbd1e8f6bfab68b89a568" Component_="af24244a403e987dbbd1e8f6bfab68b89a568" FileName="4AF242~1|4af24244a403e987dbbd1e8f6bfab68b89a568" Attributes="1" SourcePath="Logicytics\.git\objects\51\4af24244a403e987dbbd1e8f6bfab68b89a568" SelfReg="false"/>
+    <ROW File="ddf23794d4d32f2434bd194a29f2f88bcb0" Component_="ddf23794d4d32f2434bd194a29f2f88bcb0" FileName="266DDF~1|266ddf23794d4d32f2434bd194a29f2f88bcb0" Attributes="1" SourcePath="Logicytics\.git\objects\52\266ddf23794d4d32f2434bd194a29f2f88bcb0" SelfReg="false"/>
+    <ROW File="b44db327b8e42d5725e79fbc1b87b24b13cddb" Component_="b44db327b8e42d5725e79fbc1b87b24b13cddb" FileName="B44DB3~1|b44db327b8e42d5725e79fbc1b87b24b13cddb" Attributes="1" SourcePath="Logicytics\.git\objects\53\b44db327b8e42d5725e79fbc1b87b24b13cddb" SelfReg="false"/>
+    <ROW File="ca5d6168dd94dd9e8023658f90494d4ac" Component_="ca5d6168dd94dd9e8023658f90494d4ac" FileName="56167C~1|56167ca5d6168dd94dd9e8023658f90494d4ac" Attributes="1" SourcePath="Logicytics\.git\objects\54\56167ca5d6168dd94dd9e8023658f90494d4ac" SelfReg="false"/>
+    <ROW File="ddd32a34d057d405a46b7a72ce888e95948320" Component_="ddd32a34d057d405a46b7a72ce888e95948320" FileName="DDD32A~1|ddd32a34d057d405a46b7a72ce888e95948320" Attributes="1" SourcePath="Logicytics\.git\objects\55\ddd32a34d057d405a46b7a72ce888e95948320" SelfReg="false"/>
+    <ROW File="fa8e374b786a2753196b68df8e0d39eeaa5c86" Component_="fa8e374b786a2753196b68df8e0d39eeaa5c86" FileName="FA8E37~1|fa8e374b786a2753196b68df8e0d39eeaa5c86" Attributes="1" SourcePath="Logicytics\.git\objects\56\fa8e374b786a2753196b68df8e0d39eeaa5c86" SelfReg="false"/>
+    <ROW File="fd686a647103d17f6357c35c4776655d714bf" Component_="fd686a647103d17f6357c35c4776655d714bf" FileName="9FD686~1|9fd686a647103d17f6357c35c4776655d714bf" Attributes="1" SourcePath="Logicytics\.git\objects\59\9fd686a647103d17f6357c35c4776655d714bf" SelfReg="false"/>
+    <ROW File="a089e367e3dd9105f01983bc7de7b84233994" Component_="a089e367e3dd9105f01983bc7de7b84233994" FileName="5A089E~1|5a089e367e3dd9105f01983bc7de7b84233994" Attributes="1" SourcePath="Logicytics\.git\objects\5a\5a089e367e3dd9105f01983bc7de7b84233994" SelfReg="false"/>
+    <ROW File="abed66507812cb7707200423cba67741" Component_="abed66507812cb7707200423cba67741" FileName="277103~1|277103abed66507812cb7707200423cba67741" Attributes="1" SourcePath="Logicytics\.git\objects\5d\277103abed66507812cb7707200423cba67741" SelfReg="false"/>
+    <ROW File="fac112568f51a7e5a4f9549f0485a677ed" Component_="abed66507812cb7707200423cba67741" FileName="4568FA~1|4568fac112568f51a7e5a4f9549f0485a677ed" Attributes="1" SourcePath="Logicytics\.git\objects\5d\4568fac112568f51a7e5a4f9549f0485a677ed" SelfReg="false"/>
+    <ROW File="d4c44beb34a63d2692ff8f0d1f3e8ef6a89243" Component_="abed66507812cb7707200423cba67741" FileName="D4C44B~1|d4c44beb34a63d2692ff8f0d1f3e8ef6a89243" Attributes="1" SourcePath="Logicytics\.git\objects\5d\d4c44beb34a63d2692ff8f0d1f3e8ef6a89243" SelfReg="false"/>
+    <ROW File="d9a79d7bf16d698da13ccb4b1673a70fdc045" Component_="d9a79d7bf16d698da13ccb4b1673a70fdc045" FileName="7D9A79~1|7d9a79d7bf16d698da13ccb4b1673a70fdc045" Attributes="1" SourcePath="Logicytics\.git\objects\5e\7d9a79d7bf16d698da13ccb4b1673a70fdc045" SelfReg="false"/>
+    <ROW File="a5db56f1301b3f2257a768515a889d0692a21" Component_="a5db56f1301b3f2257a768515a889d0692a21" FileName="1A5DB5~1|1a5db56f1301b3f2257a768515a889d0692a21" Attributes="1" SourcePath="Logicytics\.git\objects\60\1a5db56f1301b3f2257a768515a889d0692a21" SelfReg="false"/>
+    <ROW File="e8acf982526a8f2cffa046cc34f6c46cc6d962" Component_="a5db56f1301b3f2257a768515a889d0692a21" FileName="E8ACF9~1|e8acf982526a8f2cffa046cc34f6c46cc6d962" Attributes="1" SourcePath="Logicytics\.git\objects\60\e8acf982526a8f2cffa046cc34f6c46cc6d962" SelfReg="false"/>
+    <ROW File="a19f3048058229e7d0ead68489da700416db6" Component_="a19f3048058229e7d0ead68489da700416db6" FileName="5A19F3~1|5a19f3048058229e7d0ead68489da700416db6" Attributes="1" SourcePath="Logicytics\.git\objects\62\5a19f3048058229e7d0ead68489da700416db6" SelfReg="false"/>
+    <ROW File="f3f33f71937b5ef16cc9dfe1336bda955fa" Component_="f3f33f71937b5ef16cc9dfe1336bda955fa" FileName="787F3F~1|787f3f33f71937b5ef16cc9dfe1336bda955fa" Attributes="1" SourcePath="Logicytics\.git\objects\63\787f3f33f71937b5ef16cc9dfe1336bda955fa" SelfReg="false"/>
+    <ROW File="ff20d25112a3bc3d668ec3d37eee444aa81a8" Component_="ff20d25112a3bc3d668ec3d37eee444aa81a8" FileName="1FF20D~1|1ff20d25112a3bc3d668ec3d37eee444aa81a8" Attributes="1" SourcePath="Logicytics\.git\objects\66\1ff20d25112a3bc3d668ec3d37eee444aa81a8" SelfReg="false"/>
+    <ROW File="fa0ea49284d5d91f13e5d3fab45829" Component_="ff20d25112a3bc3d668ec3d37eee444aa81a8" FileName="401551~1|40155186fa0ea49284d5d91f13e5d3fab45829" Attributes="1" SourcePath="Logicytics\.git\objects\66\40155186fa0ea49284d5d91f13e5d3fab45829" SelfReg="false"/>
+    <ROW File="e4c43d0c8e53149eb0ca0570d068ef4275a" Component_="e4c43d0c8e53149eb0ca0570d068ef4275a" FileName="471E4C~1|471e4c43d0c8e53149eb0ca0570d068ef4275a" Attributes="1" SourcePath="Logicytics\.git\objects\69\471e4c43d0c8e53149eb0ca0570d068ef4275a" SelfReg="false"/>
+    <ROW File="d90671a0c924b007d9b4f28d8d5bcc8ca6" Component_="d90671a0c924b007d9b4f28d8d5bcc8ca6" FileName="0184D9~1|0184d90671a0c924b007d9b4f28d8d5bcc8ca6" Attributes="1" SourcePath="Logicytics\.git\objects\6a\0184d90671a0c924b007d9b4f28d8d5bcc8ca6" SelfReg="false"/>
+    <ROW File="d943b7b058814ec0b68fc7df23d17ca6deaa1" Component_="d943b7b058814ec0b68fc7df23d17ca6deaa1" FileName="1D943B~1|1d943b7b058814ec0b68fc7df23d17ca6deaa1" Attributes="1" SourcePath="Logicytics\.git\objects\70\1d943b7b058814ec0b68fc7df23d17ca6deaa1" SelfReg="false"/>
+    <ROW File="ceb2115502fb067273d08613c540cae758b01" Component_="ceb2115502fb067273d08613c540cae758b01" FileName="3CEB21~1|3ceb2115502fb067273d08613c540cae758b01" Attributes="1" SourcePath="Logicytics\.git\objects\72\3ceb2115502fb067273d08613c540cae758b01" SelfReg="false"/>
+    <ROW File="c96dd015c060f257a48f7973fa566043c345c6" Component_="ceb2115502fb067273d08613c540cae758b01" FileName="C96DD0~1|c96dd015c060f257a48f7973fa566043c345c6" Attributes="1" SourcePath="Logicytics\.git\objects\72\c96dd015c060f257a48f7973fa566043c345c6" SelfReg="false"/>
+    <ROW File="bed86b0858b9ad0c4d696f0b7fd7e810933dc" Component_="bed86b0858b9ad0c4d696f0b7fd7e810933dc" FileName="2BED86~1|2bed86b0858b9ad0c4d696f0b7fd7e810933dc" Attributes="1" SourcePath="Logicytics\.git\objects\73\2bed86b0858b9ad0c4d696f0b7fd7e810933dc" SelfReg="false"/>
+    <ROW File="f9fb68beb32d5d75546274b7103bd" Component_="bed86b0858b9ad0c4d696f0b7fd7e810933dc" FileName="379963~1|379963072f9fb68beb32d5d75546274b7103bd" Attributes="1" SourcePath="Logicytics\.git\objects\73\379963072f9fb68beb32d5d75546274b7103bd" SelfReg="false"/>
+    <ROW File="ea04ba38f70d17552badde5ed4c0efbb488437" Component_="bed86b0858b9ad0c4d696f0b7fd7e810933dc" FileName="EA04BA~1|ea04ba38f70d17552badde5ed4c0efbb488437" Attributes="1" SourcePath="Logicytics\.git\objects\73\ea04ba38f70d17552badde5ed4c0efbb488437" SelfReg="false"/>
+    <ROW File="c181b1b0c0d6eeda4e73769" Component_="c181b1b0c0d6eeda4e73769" FileName="733733~1|733733853983252c181b1b0c0d6eeda4e73769" Attributes="1" SourcePath="Logicytics\.git\objects\74\733733853983252c181b1b0c0d6eeda4e73769" SelfReg="false"/>
+    <ROW File="f8a0f9da04f28ed18a84fdd00ffe674f6" Component_="f8a0f9da04f28ed18a84fdd00ffe674f6" FileName="87558F~1|87558f8a0f9da04f28ed18a84fdd00ffe674f6" Attributes="1" SourcePath="Logicytics\.git\objects\75\87558f8a0f9da04f28ed18a84fdd00ffe674f6" SelfReg="false"/>
+    <ROW File="a4f4fa1fb98e6c9b029c5fec12ed010ab3b" Component_="a4f4fa1fb98e6c9b029c5fec12ed010ab3b" FileName="076A4F~1|076a4f4fa1fb98e6c9b029c5fec12ed010ab3b" Attributes="1" SourcePath="Logicytics\.git\objects\78\076a4f4fa1fb98e6c9b029c5fec12ed010ab3b" SelfReg="false"/>
+    <ROW File="d6470ace1547c1ce0f0cbfa3d07e21677" Component_="d6470ace1547c1ce0f0cbfa3d07e21677" FileName="56793D~1|56793d6470ace1547c1ce0f0cbfa3d07e21677" Attributes="1" SourcePath="Logicytics\.git\objects\79\56793d6470ace1547c1ce0f0cbfa3d07e21677" SelfReg="false"/>
+    <ROW File="acd67583573493c6c4241c6932452034ecad" Component_="acd67583573493c6c4241c6932452034ecad" FileName="33ACD6~1|33acd67583573493c6c4241c6932452034ecad" Attributes="1" SourcePath="Logicytics\.git\objects\7b\33acd67583573493c6c4241c6932452034ecad" SelfReg="false"/>
+    <ROW File="a9f6620d69e4d214b0440a32e88bfbe11f" Component_="a9f6620d69e4d214b0440a32e88bfbe11f" FileName="4830A9~1|4830a9f6620d69e4d214b0440a32e88bfbe11f" Attributes="1" SourcePath="Logicytics\.git\objects\7f\4830a9f6620d69e4d214b0440a32e88bfbe11f" SelfReg="false"/>
+    <ROW File="ad20952173556b4ac7503ca2592bf9be8f39db" Component_="a9f6620d69e4d214b0440a32e88bfbe11f" FileName="AD2095~1|ad20952173556b4ac7503ca2592bf9be8f39db" Attributes="1" SourcePath="Logicytics\.git\objects\7f\ad20952173556b4ac7503ca2592bf9be8f39db" SelfReg="false"/>
+    <ROW File="def0a9ed970e3213ea1f935eb7b20107496ffa" Component_="a9f6620d69e4d214b0440a32e88bfbe11f" FileName="DEF0A9~1|def0a9ed970e3213ea1f935eb7b20107496ffa" Attributes="1" SourcePath="Logicytics\.git\objects\7f\def0a9ed970e3213ea1f935eb7b20107496ffa" SelfReg="false"/>
+    <ROW File="d97dc5fbdbbed3c330b7c1ce5541a" Component_="d97dc5fbdbbed3c330b7c1ce5541a" FileName="216699~1|216699835d97dc5fbdbbed3c330b7c1ce5541a" Attributes="1" SourcePath="Logicytics\.git\objects\80\216699835d97dc5fbdbbed3c330b7c1ce5541a" SelfReg="false"/>
+    <ROW File="a8098a419eb7b7c80acf88b7c7d217e9742b71" Component_="d97dc5fbdbbed3c330b7c1ce5541a" FileName="A8098A~1|a8098a419eb7b7c80acf88b7c7d217e9742b71" Attributes="1" SourcePath="Logicytics\.git\objects\80\a8098a419eb7b7c80acf88b7c7d217e9742b71" SelfReg="false"/>
+    <ROW File="bbc1a255d14f0a60c6527d8353a34bea55f3b2" Component_="d97dc5fbdbbed3c330b7c1ce5541a" FileName="BBC1A2~1|bbc1a255d14f0a60c6527d8353a34bea55f3b2" Attributes="1" SourcePath="Logicytics\.git\objects\80\bbc1a255d14f0a60c6527d8353a34bea55f3b2" SelfReg="false"/>
+    <ROW File="f890d84ce93329ff4a09abd444119bcfcb2416" Component_="d97dc5fbdbbed3c330b7c1ce5541a" FileName="F890D8~1|f890d84ce93329ff4a09abd444119bcfcb2416" Attributes="1" SourcePath="Logicytics\.git\objects\80\f890d84ce93329ff4a09abd444119bcfcb2416" SelfReg="false"/>
+    <ROW File="ed56d017cf54d5942cfffae746cc4a5ef836a" Component_="ed56d017cf54d5942cfffae746cc4a5ef836a" FileName="2ED56D~1|2ed56d017cf54d5942cfffae746cc4a5ef836a" Attributes="1" SourcePath="Logicytics\.git\objects\81\2ed56d017cf54d5942cfffae746cc4a5ef836a" SelfReg="false"/>
+    <ROW File="a0db4736aba730ff848c02dd476db4f21107e9" Component_="ed56d017cf54d5942cfffae746cc4a5ef836a" FileName="A0DB47~1|a0db4736aba730ff848c02dd476db4f21107e9" Attributes="1" SourcePath="Logicytics\.git\objects\81\a0db4736aba730ff848c02dd476db4f21107e9" SelfReg="false"/>
+    <ROW File="c425e5e7b5e0ea26bb54c6617ffa966c5150db" Component_="c425e5e7b5e0ea26bb54c6617ffa966c5150db" FileName="C425E5~1|c425e5e7b5e0ea26bb54c6617ffa966c5150db" Attributes="1" SourcePath="Logicytics\.git\objects\82\c425e5e7b5e0ea26bb54c6617ffa966c5150db" SelfReg="false"/>
+    <ROW File="c11daf96a8e7e4835f340d045cc5b947c87d07" Component_="c11daf96a8e7e4835f340d045cc5b947c87d07" FileName="C11DAF~1|c11daf96a8e7e4835f340d045cc5b947c87d07" Attributes="1" SourcePath="Logicytics\.git\objects\83\c11daf96a8e7e4835f340d045cc5b947c87d07" SelfReg="false"/>
+    <ROW File="ab723bb7b43e7a336065bfa5d8c3e28f75301" Component_="ab723bb7b43e7a336065bfa5d8c3e28f75301" FileName="9AB723~1|9ab723bb7b43e7a336065bfa5d8c3e28f75301" Attributes="1" SourcePath="Logicytics\.git\objects\84\9ab723bb7b43e7a336065bfa5d8c3e28f75301" SelfReg="false"/>
+    <ROW File="c957f402ebf5360bad3b0ea46257a90a8b755e" Component_="c957f402ebf5360bad3b0ea46257a90a8b755e" FileName="C957F4~1|c957f402ebf5360bad3b0ea46257a90a8b755e" Attributes="1" SourcePath="Logicytics\.git\objects\86\c957f402ebf5360bad3b0ea46257a90a8b755e" SelfReg="false"/>
+    <ROW File="d5a98a9d0ff56f064bf982bbe593d760edc800" Component_="d5a98a9d0ff56f064bf982bbe593d760edc800" FileName="D5A98A~1|d5a98a9d0ff56f064bf982bbe593d760edc800" Attributes="1" SourcePath="Logicytics\.git\objects\87\d5a98a9d0ff56f064bf982bbe593d760edc800" SelfReg="false"/>
+    <ROW File="ea04ef5d4e801b39db4a402700ea975c6a5a" Component_="ea04ef5d4e801b39db4a402700ea975c6a5a" FileName="40EA04~1|40ea04ef5d4e801b39db4a402700ea975c6a5a" Attributes="1" SourcePath="Logicytics\.git\objects\89\40ea04ef5d4e801b39db4a402700ea975c6a5a" SelfReg="false"/>
+    <ROW File="c905ec1caaaf63752dd76ef322d2923a246" Component_="ea04ef5d4e801b39db4a402700ea975c6a5a" FileName="818C90~1|818c905ec1caaaf63752dd76ef322d2923a246" Attributes="1" SourcePath="Logicytics\.git\objects\89\818c905ec1caaaf63752dd76ef322d2923a246" SelfReg="false"/>
+    <ROW File="f305f29758f0a6fd9b530ee7069c8c8caa9e73" Component_="ea04ef5d4e801b39db4a402700ea975c6a5a" FileName="F305F2~1|f305f29758f0a6fd9b530ee7069c8c8caa9e73" Attributes="1" SourcePath="Logicytics\.git\objects\89\f305f29758f0a6fd9b530ee7069c8c8caa9e73" SelfReg="false"/>
+    <ROW File="ddc35b2f00e5b43b86aa137c576baf5061b5" Component_="ddc35b2f00e5b43b86aa137c576baf5061b5" FileName="33DDC3~1|33ddc35b2f00e5b43b86aa137c576baf5061b5" Attributes="1" SourcePath="Logicytics\.git\objects\8c\33ddc35b2f00e5b43b86aa137c576baf5061b5" SelfReg="false"/>
+    <ROW File="b7f2799836742172110c4321f07e759978b9a1" Component_="b7f2799836742172110c4321f07e759978b9a1" FileName="B7F279~1|b7f2799836742172110c4321f07e759978b9a1" Attributes="1" SourcePath="Logicytics\.git\objects\8e\b7f2799836742172110c4321f07e759978b9a1" SelfReg="false"/>
+    <ROW File="bd467dd196d2d950ebcda904e96dc63f6e5de1" Component_="bd467dd196d2d950ebcda904e96dc63f6e5de1" FileName="BD467D~1|bd467dd196d2d950ebcda904e96dc63f6e5de1" Attributes="1" SourcePath="Logicytics\.git\objects\90\bd467dd196d2d950ebcda904e96dc63f6e5de1" SelfReg="false"/>
+    <ROW File="ceab583871b5d23943bdd573525566308b3669" Component_="bd467dd196d2d950ebcda904e96dc63f6e5de1" FileName="CEAB58~1|ceab583871b5d23943bdd573525566308b3669" Attributes="1" SourcePath="Logicytics\.git\objects\90\ceab583871b5d23943bdd573525566308b3669" SelfReg="false"/>
+    <ROW File="e46b085c40b09cf5dbc9a796d66d722b48a3aa" Component_="bd467dd196d2d950ebcda904e96dc63f6e5de1" FileName="E46B08~1|e46b085c40b09cf5dbc9a796d66d722b48a3aa" Attributes="1" SourcePath="Logicytics\.git\objects\90\e46b085c40b09cf5dbc9a796d66d722b48a3aa" SelfReg="false"/>
+    <ROW File="ceac00ec3826ee91984d3d4558a3f95f9d71" Component_="ceac00ec3826ee91984d3d4558a3f95f9d71" FileName="95CEAC~1|95ceac00ec3826ee91984d3d4558a3f95f9d71" Attributes="1" SourcePath="Logicytics\.git\objects\91\95ceac00ec3826ee91984d3d4558a3f95f9d71" SelfReg="false"/>
+    <ROW File="ee5eefc18dd6925ab344e57ff117ccf156bd3" Component_="ee5eefc18dd6925ab344e57ff117ccf156bd3" FileName="2EE5EE~1|2ee5eefc18dd6925ab344e57ff117ccf156bd3" Attributes="1" SourcePath="Logicytics\.git\objects\92\2ee5eefc18dd6925ab344e57ff117ccf156bd3" SelfReg="false"/>
+    <ROW File="a04ed58c3103ddd0ec919da2ea0cdb457" Component_="ee5eefc18dd6925ab344e57ff117ccf156bd3" FileName="34729A~1|34729a04ed58c3103ddd0ec919da2ea0cdb457" Attributes="1" SourcePath="Logicytics\.git\objects\92\34729a04ed58c3103ddd0ec919da2ea0cdb457" SelfReg="false"/>
+    <ROW File="e429be740a71a2cb9f785c5f0b5a550c3570d" Component_="e429be740a71a2cb9f785c5f0b5a550c3570d" FileName="0E429B~1|0e429be740a71a2cb9f785c5f0b5a550c3570d" Attributes="1" SourcePath="Logicytics\.git\objects\93\0e429be740a71a2cb9f785c5f0b5a550c3570d" SelfReg="false"/>
+    <ROW File="f2407af1135230822a6e962a90f355ff386" Component_="f2407af1135230822a6e962a90f355ff386" FileName="105F24~1|105f2407af1135230822a6e962a90f355ff386" Attributes="1" SourcePath="Logicytics\.git\objects\94\105f2407af1135230822a6e962a90f355ff386" SelfReg="false"/>
+    <ROW File="c172123dd333866f0f7a72f4ab14be48b" Component_="c172123dd333866f0f7a72f4ab14be48b" FileName="51479C~1|51479c172123dd333866f0f7a72f4ab14be48b" Attributes="1" SourcePath="Logicytics\.git\objects\95\51479c172123dd333866f0f7a72f4ab14be48b" SelfReg="false"/>
+    <ROW File="e80778cabacecb960c8749ef27a4c1bacfde" Component_="e80778cabacecb960c8749ef27a4c1bacfde" FileName="44E807~1|44e80778cabacecb960c8749ef27a4c1bacfde" Attributes="1" SourcePath="Logicytics\.git\objects\97\44e80778cabacecb960c8749ef27a4c1bacfde" SelfReg="false"/>
+    <ROW File="d2ccadc7148853439539eb50d6f1f27fec71f7" Component_="e80778cabacecb960c8749ef27a4c1bacfde" FileName="D2CCAD~1|d2ccadc7148853439539eb50d6f1f27fec71f7" Attributes="1" SourcePath="Logicytics\.git\objects\97\d2ccadc7148853439539eb50d6f1f27fec71f7" SelfReg="false"/>
+    <ROW File="d80681494ed86f7dcb8cbac8d3c333" Component_="d80681494ed86f7dcb8cbac8d3c333" FileName="435687~1|43568743d80681494ed86f7dcb8cbac8d3c333" Attributes="1" SourcePath="Logicytics\.git\objects\98\43568743d80681494ed86f7dcb8cbac8d3c333" SelfReg="false"/>
+    <ROW File="e34bc04dca08965a8537efb40376df5fb785d0" Component_="d80681494ed86f7dcb8cbac8d3c333" FileName="E34BC0~1|e34bc04dca08965a8537efb40376df5fb785d0" Attributes="1" SourcePath="Logicytics\.git\objects\98\e34bc04dca08965a8537efb40376df5fb785d0" SelfReg="false"/>
+    <ROW File="be0c9fb50be6f0ea576682e5b5286a0f98aa8" Component_="be0c9fb50be6f0ea576682e5b5286a0f98aa8" FileName="7BE0C9~1|7be0c9fb50be6f0ea576682e5b5286a0f98aa8" Attributes="1" SourcePath="Logicytics\.git\objects\9a\7be0c9fb50be6f0ea576682e5b5286a0f98aa8" SelfReg="false"/>
+    <ROW File="d09dbb4a0642afc69d5c20e1b67aaa339ce" Component_="d09dbb4a0642afc69d5c20e1b67aaa339ce" FileName="068D09~1|068d09dbb4a0642afc69d5c20e1b67aaa339ce" Attributes="1" SourcePath="Logicytics\.git\objects\9b\068d09dbb4a0642afc69d5c20e1b67aaa339ce" SelfReg="false"/>
+    <ROW File="cd664521eaac8ff2e3b408d063579b9fd32666" Component_="d09dbb4a0642afc69d5c20e1b67aaa339ce" FileName="CD6645~1|cd664521eaac8ff2e3b408d063579b9fd32666" Attributes="1" SourcePath="Logicytics\.git\objects\9b\cd664521eaac8ff2e3b408d063579b9fd32666" SelfReg="false"/>
+    <ROW File="d4d9ecf01b04b7a2969771044573780f11d43" Component_="d4d9ecf01b04b7a2969771044573780f11d43" FileName="7D4D9E~1|7d4d9ecf01b04b7a2969771044573780f11d43" Attributes="1" SourcePath="Logicytics\.git\objects\9d\7d4d9ecf01b04b7a2969771044573780f11d43" SelfReg="false"/>
+    <ROW File="f8e3ad5ab60cf1e9d17674f997a809d3b0dcf" Component_="f8e3ad5ab60cf1e9d17674f997a809d3b0dcf" FileName="3F8E3A~1|3f8e3ad5ab60cf1e9d17674f997a809d3b0dcf" Attributes="1" SourcePath="Logicytics\.git\objects\9f\3f8e3ad5ab60cf1e9d17674f997a809d3b0dcf" SelfReg="false"/>
+    <ROW File="d7dca090459a4102ee9fbeee6137da3fa4d36c" Component_="f8e3ad5ab60cf1e9d17674f997a809d3b0dcf" FileName="D7DCA0~1|d7dca090459a4102ee9fbeee6137da3fa4d36c" Attributes="1" SourcePath="Logicytics\.git\objects\9f\d7dca090459a4102ee9fbeee6137da3fa4d36c" SelfReg="false"/>
+    <ROW File="d3fe9c46651705a1235dda6cf1df27aab" Component_="d3fe9c46651705a1235dda6cf1df27aab" FileName="04025D~1|04025d3fe9c46651705a1235dda6cf1df27aab" Attributes="1" SourcePath="Logicytics\.git\objects\a0\04025d3fe9c46651705a1235dda6cf1df27aab" SelfReg="false"/>
+    <ROW File="e83ac5ee33d1039fd3897dc26555c32a30e7c3" Component_="e83ac5ee33d1039fd3897dc26555c32a30e7c3" FileName="E83AC5~1|e83ac5ee33d1039fd3897dc26555c32a30e7c3" Attributes="1" SourcePath="Logicytics\.git\objects\a2\e83ac5ee33d1039fd3897dc26555c32a30e7c3" SelfReg="false"/>
+    <ROW File="b8b7da3421ab0b01f0b89c3242863275e" Component_="b8b7da3421ab0b01f0b89c3242863275e" FileName="00600B~1|00600b8b7da3421ab0b01f0b89c3242863275e" Attributes="1" SourcePath="Logicytics\.git\objects\a3\00600b8b7da3421ab0b01f0b89c3242863275e" SelfReg="false"/>
+    <ROW File="ee33ef18ecf0e251c5514517d4517dbc76e9" Component_="ee33ef18ecf0e251c5514517d4517dbc76e9" FileName="56EE33~1|56ee33ef18ecf0e251c5514517d4517dbc76e9" Attributes="1" SourcePath="Logicytics\.git\objects\a4\56ee33ef18ecf0e251c5514517d4517dbc76e9" SelfReg="false"/>
+    <ROW File="eef4300dfe7020b9c809fad8b2a16019e32" Component_="ee33ef18ecf0e251c5514517d4517dbc76e9" FileName="682EEF~1|682eef4300dfe7020b9c809fad8b2a16019e32" Attributes="1" SourcePath="Logicytics\.git\objects\a4\682eef4300dfe7020b9c809fad8b2a16019e32" SelfReg="false"/>
+    <ROW File="f37fa37ddc1ced0401a79527985a287e5f" Component_="f37fa37ddc1ced0401a79527985a287e5f" FileName="5333F3~1|5333f37fa37ddc1ced0401a79527985a287e5f" Attributes="1" SourcePath="Logicytics\.git\objects\a5\5333f37fa37ddc1ced0401a79527985a287e5f" SelfReg="false"/>
+    <ROW File="b2763d0782b1fa5d9c07110fec2bd8841224" Component_="f37fa37ddc1ced0401a79527985a287e5f" FileName="99B276~1|99b2763d0782b1fa5d9c07110fec2bd8841224" Attributes="1" SourcePath="Logicytics\.git\objects\a5\99b2763d0782b1fa5d9c07110fec2bd8841224" SelfReg="false"/>
+    <ROW File="baf0f25c27a611d419a11def1f86288d7055a6" Component_="baf0f25c27a611d419a11def1f86288d7055a6" FileName="BAF0F2~1|baf0f25c27a611d419a11def1f86288d7055a6" Attributes="1" SourcePath="Logicytics\.git\objects\a7\baf0f25c27a611d419a11def1f86288d7055a6" SelfReg="false"/>
+    <ROW File="ff57d2478948c2e9d6c116745371451b40a80" Component_="ff57d2478948c2e9d6c116745371451b40a80" FileName="5FF57D~1|5ff57d2478948c2e9d6c116745371451b40a80" Attributes="1" SourcePath="Logicytics\.git\objects\a8\5ff57d2478948c2e9d6c116745371451b40a80" SelfReg="false"/>
+    <ROW File="c3c7b2264802bc8d67288dc7e89a0d3a360f4e" Component_="ff57d2478948c2e9d6c116745371451b40a80" FileName="C3C7B2~1|c3c7b2264802bc8d67288dc7e89a0d3a360f4e" Attributes="1" SourcePath="Logicytics\.git\objects\a8\c3c7b2264802bc8d67288dc7e89a0d3a360f4e" SelfReg="false"/>
+    <ROW File="ed5c4ca4fc8757543c7e35da2843795257e01c" Component_="ed5c4ca4fc8757543c7e35da2843795257e01c" FileName="ED5C4C~1|ed5c4ca4fc8757543c7e35da2843795257e01c" Attributes="1" SourcePath="Logicytics\.git\objects\a9\ed5c4ca4fc8757543c7e35da2843795257e01c" SelfReg="false"/>
+    <ROW File="d2a221b87d76d9790d2e7f8cfdde4a6b04a7" Component_="d2a221b87d76d9790d2e7f8cfdde4a6b04a7" FileName="25D2A2~1|25d2a221b87d76d9790d2e7f8cfdde4a6b04a7" Attributes="1" SourcePath="Logicytics\.git\objects\ac\25d2a221b87d76d9790d2e7f8cfdde4a6b04a7" SelfReg="false"/>
+    <ROW File="be25a497986e570a42fd2bc0fe1e02bf573534" Component_="be25a497986e570a42fd2bc0fe1e02bf573534" FileName="BE25A4~1|be25a497986e570a42fd2bc0fe1e02bf573534" Attributes="1" SourcePath="Logicytics\.git\objects\ad\be25a497986e570a42fd2bc0fe1e02bf573534" SelfReg="false"/>
+    <ROW File="a54013c3560e67dc794eff64d2725d28e72136" Component_="a54013c3560e67dc794eff64d2725d28e72136" FileName="A54013~1|a54013c3560e67dc794eff64d2725d28e72136" Attributes="1" SourcePath="Logicytics\.git\objects\ae\a54013c3560e67dc794eff64d2725d28e72136" SelfReg="false"/>
+    <ROW File="e806b9c69909c9523caaa56ddde79063c41668" Component_="e806b9c69909c9523caaa56ddde79063c41668" FileName="E806B9~1|e806b9c69909c9523caaa56ddde79063c41668" Attributes="1" SourcePath="Logicytics\.git\objects\af\e806b9c69909c9523caaa56ddde79063c41668" SelfReg="false"/>
+    <ROW File="c3f929501127099d153ed83df541f308d75e" Component_="c3f929501127099d153ed83df541f308d75e" FileName="08C3F9~1|08c3f929501127099d153ed83df541f308d75e" Attributes="1" SourcePath="Logicytics\.git\objects\b0\08c3f929501127099d153ed83df541f308d75e" SelfReg="false"/>
+    <ROW File="e9c9e13ff389456c1ee79ceced19e959521000" Component_="e9c9e13ff389456c1ee79ceced19e959521000" FileName="E9C9E1~1|e9c9e13ff389456c1ee79ceced19e959521000" Attributes="1" SourcePath="Logicytics\.git\objects\b2\e9c9e13ff389456c1ee79ceced19e959521000" SelfReg="false"/>
+    <ROW File="cc0e918f61e049fea27f2f402483cd6a782" Component_="cc0e918f61e049fea27f2f402483cd6a782" FileName="627CC0~1|627cc0e918f61e049fea27f2f402483cd6a782" Attributes="1" SourcePath="Logicytics\.git\objects\b4\627cc0e918f61e049fea27f2f402483cd6a782" SelfReg="false"/>
+    <ROW File="fdcf48e816466304f2586038fa0273e50f3d93" Component_="cc0e918f61e049fea27f2f402483cd6a782" FileName="FDCF48~1|fdcf48e816466304f2586038fa0273e50f3d93" Attributes="1" SourcePath="Logicytics\.git\objects\b4\fdcf48e816466304f2586038fa0273e50f3d93" SelfReg="false"/>
+    <ROW File="d59f117e1720f8d509113fa2275dfd66c" Component_="d59f117e1720f8d509113fa2275dfd66c" FileName="22141D~1|22141d59f117e1720f8d509113fa2275dfd66c" Attributes="1" SourcePath="Logicytics\.git\objects\b6\22141d59f117e1720f8d509113fa2275dfd66c" SelfReg="false"/>
+    <ROW File="b44c0d71d317dc3be72c4dd9a5842f1a4b5" Component_="d59f117e1720f8d509113fa2275dfd66c" FileName="537B44~1|537b44c0d71d317dc3be72c4dd9a5842f1a4b5" Attributes="1" SourcePath="Logicytics\.git\objects\b6\537b44c0d71d317dc3be72c4dd9a5842f1a4b5" SelfReg="false"/>
+    <ROW File="b3509dcfa221da58f2ffa325c1fc90003d82a4" Component_="b3509dcfa221da58f2ffa325c1fc90003d82a4" FileName="B3509D~1|b3509dcfa221da58f2ffa325c1fc90003d82a4" Attributes="1" SourcePath="Logicytics\.git\objects\b8\b3509dcfa221da58f2ffa325c1fc90003d82a4" SelfReg="false"/>
+    <ROW File="dcbaace7eac0f5db0f863d68e948157554fd" Component_="dcbaace7eac0f5db0f863d68e948157554fd" FileName="09DCBA~1|09dcbaace7eac0f5db0f863d68e948157554fd" Attributes="1" SourcePath="Logicytics\.git\objects\b9\09dcbaace7eac0f5db0f863d68e948157554fd" SelfReg="false"/>
+    <ROW File="dbc4768ce81d1e014aca61893ec3b0792cf3a" Component_="dcbaace7eac0f5db0f863d68e948157554fd" FileName="9DBC47~1|9dbc4768ce81d1e014aca61893ec3b0792cf3a" Attributes="1" SourcePath="Logicytics\.git\objects\b9\9dbc4768ce81d1e014aca61893ec3b0792cf3a" SelfReg="false"/>
+    <ROW File="d7ca6da7195f8afe6e54663573fed227d3" Component_="d7ca6da7195f8afe6e54663573fed227d3" FileName="4374D7~1|4374d7ca6da7195f8afe6e54663573fed227d3" Attributes="1" SourcePath="Logicytics\.git\objects\ba\4374d7ca6da7195f8afe6e54663573fed227d3" SelfReg="false"/>
+    <ROW File="b59f68c6f38c48d89815e2190edfaf88d644" Component_="d7ca6da7195f8afe6e54663573fed227d3" FileName="59B59F~1|59b59f68c6f38c48d89815e2190edfaf88d644" Attributes="1" SourcePath="Logicytics\.git\objects\ba\59b59f68c6f38c48d89815e2190edfaf88d644" SelfReg="false"/>
+    <ROW File="dca4b80ff9773e57c8d87b293ae9950959598" Component_="dca4b80ff9773e57c8d87b293ae9950959598" FileName="3DCA4B~1|3dca4b80ff9773e57c8d87b293ae9950959598" Attributes="1" SourcePath="Logicytics\.git\objects\bb\3dca4b80ff9773e57c8d87b293ae9950959598" SelfReg="false"/>
+    <ROW File="c73342d2745b32f0fa95356ad322dc875e1866" Component_="dca4b80ff9773e57c8d87b293ae9950959598" FileName="C73342~1|c73342d2745b32f0fa95356ad322dc875e1866" Attributes="1" SourcePath="Logicytics\.git\objects\bb\c73342d2745b32f0fa95356ad322dc875e1866" SelfReg="false"/>
+    <ROW File="ea0142fa2fc1adf3891710b4374773c9497" Component_="ea0142fa2fc1adf3891710b4374773c9497" FileName="156EA0~1|156ea0142fa2fc1adf3891710b4374773c9497" Attributes="1" SourcePath="Logicytics\.git\objects\bc\156ea0142fa2fc1adf3891710b4374773c9497" SelfReg="false"/>
+    <ROW File="f2313a7020800bada1a0514c12c8148455fd9" Component_="ea0142fa2fc1adf3891710b4374773c9497" FileName="1F2313~1|1f2313a7020800bada1a0514c12c8148455fd9" Attributes="1" SourcePath="Logicytics\.git\objects\bc\1f2313a7020800bada1a0514c12c8148455fd9" SelfReg="false"/>
+    <ROW File="dc9ce2d46da7d048e7cd430fc4a97bcf4f4f30" Component_="ea0142fa2fc1adf3891710b4374773c9497" FileName="DC9CE2~1|dc9ce2d46da7d048e7cd430fc4a97bcf4f4f30" Attributes="1" SourcePath="Logicytics\.git\objects\bc\dc9ce2d46da7d048e7cd430fc4a97bcf4f4f30" SelfReg="false"/>
+    <ROW File="bd738cfc8e2a0114e3cef65fb0032d9b8351" Component_="bd738cfc8e2a0114e3cef65fb0032d9b8351" FileName="86BD73~1|86bd738cfc8e2a0114e3cef65fb0032d9b8351" Attributes="1" SourcePath="Logicytics\.git\objects\bf\86bd738cfc8e2a0114e3cef65fb0032d9b8351" SelfReg="false"/>
+    <ROW File="fe618bb1871a2b4e43c169052a85def40dc98" Component_="fe618bb1871a2b4e43c169052a85def40dc98" FileName="5FE618~1|5fe618bb1871a2b4e43c169052a85def40dc98" Attributes="1" SourcePath="Logicytics\.git\objects\c1\5fe618bb1871a2b4e43c169052a85def40dc98" SelfReg="false"/>
+    <ROW File="f502b60c39dca2d5612db93e5a8b7497e00fda" Component_="f502b60c39dca2d5612db93e5a8b7497e00fda" FileName="F502B6~1|f502b60c39dca2d5612db93e5a8b7497e00fda" Attributes="1" SourcePath="Logicytics\.git\objects\c3\f502b60c39dca2d5612db93e5a8b7497e00fda" SelfReg="false"/>
+    <ROW File="cba60a42b1fbe74d7eb7ef25d0a0274412aba" Component_="cba60a42b1fbe74d7eb7ef25d0a0274412aba" FileName="6CBA60~1|6cba60a42b1fbe74d7eb7ef25d0a0274412aba" Attributes="1" SourcePath="Logicytics\.git\objects\c6\6cba60a42b1fbe74d7eb7ef25d0a0274412aba" SelfReg="false"/>
+    <ROW File="a120fa7b15f916fc1932b9a0fa3c945a4a" Component_="a120fa7b15f916fc1932b9a0fa3c945a4a" FileName="0376A1~1|0376a120fa7b15f916fc1932b9a0fa3c945a4a" Attributes="1" SourcePath="Logicytics\.git\objects\c8\0376a120fa7b15f916fc1932b9a0fa3c945a4a" SelfReg="false"/>
+    <ROW File="c63c318b557d843469b3343c8f0734" Component_="c63c318b557d843469b3343c8f0734" FileName="360508~1|36050804c63c318b557d843469b3343c8f0734" Attributes="1" SourcePath="Logicytics\.git\objects\ca\36050804c63c318b557d843469b3343c8f0734" SelfReg="false"/>
+    <ROW File="d9efbef2ef249a8e3a5c3717f3b6dea0477526" Component_="d9efbef2ef249a8e3a5c3717f3b6dea0477526" FileName="D9EFBE~1|d9efbef2ef249a8e3a5c3717f3b6dea0477526" Attributes="1" SourcePath="Logicytics\.git\objects\cd\d9efbef2ef249a8e3a5c3717f3b6dea0477526" SelfReg="false"/>
+    <ROW File="a37be8c6642033450266746ea632d966ce79e2" Component_="a37be8c6642033450266746ea632d966ce79e2" FileName="A37BE8~1|a37be8c6642033450266746ea632d966ce79e2" Attributes="1" SourcePath="Logicytics\.git\objects\ce\a37be8c6642033450266746ea632d966ce79e2" SelfReg="false"/>
+    <ROW File="ab5a8066994c8b320ee9d0b22ea4b0cfd22cc2" Component_="a37be8c6642033450266746ea632d966ce79e2" FileName="AB5A80~1|ab5a8066994c8b320ee9d0b22ea4b0cfd22cc2" Attributes="1" SourcePath="Logicytics\.git\objects\ce\ab5a8066994c8b320ee9d0b22ea4b0cfd22cc2" SelfReg="false"/>
+    <ROW File="d1983cc070129c91fa603c27350192d3ac9d9" Component_="d1983cc070129c91fa603c27350192d3ac9d9" FileName="4D1983~1|4d1983cc070129c91fa603c27350192d3ac9d9" Attributes="1" SourcePath="Logicytics\.git\objects\cf\4d1983cc070129c91fa603c27350192d3ac9d9" SelfReg="false"/>
+    <ROW File="c64224a45ebd2d8a8951c12b2ac43c51efc5e3" Component_="d1983cc070129c91fa603c27350192d3ac9d9" FileName="C64224~1|c64224a45ebd2d8a8951c12b2ac43c51efc5e3" Attributes="1" SourcePath="Logicytics\.git\objects\cf\c64224a45ebd2d8a8951c12b2ac43c51efc5e3" SelfReg="false"/>
+    <ROW File="cc03e23e59e40b4047f9d330098316120179f0" Component_="d1983cc070129c91fa603c27350192d3ac9d9" FileName="CC03E2~1|cc03e23e59e40b4047f9d330098316120179f0" Attributes="1" SourcePath="Logicytics\.git\objects\cf\cc03e23e59e40b4047f9d330098316120179f0" SelfReg="false"/>
+    <ROW File="b97fcc60bf8f47f3de2e3d46efdd005" Component_="b97fcc60bf8f47f3de2e3d46efdd005" FileName="273179~1|2731794b97fcc60bf8f47f3de2e3d46efdd005" Attributes="1" SourcePath="Logicytics\.git\objects\d2\2731794b97fcc60bf8f47f3de2e3d46efdd005" SelfReg="false"/>
+    <ROW File="c1141e0f2de79ab29c9d98e5a51ecb0ffc6b8" Component_="c1141e0f2de79ab29c9d98e5a51ecb0ffc6b8" FileName="9C1141~1|9c1141e0f2de79ab29c9d98e5a51ecb0ffc6b8" Attributes="1" SourcePath="Logicytics\.git\objects\d3\9c1141e0f2de79ab29c9d98e5a51ecb0ffc6b8" SelfReg="false"/>
+    <ROW File="ccfdd08dc768622d908fac31cbcf2d43601" Component_="ccfdd08dc768622d908fac31cbcf2d43601" FileName="231CCF~1|231ccfdd08dc768622d908fac31cbcf2d43601" Attributes="1" SourcePath="Logicytics\.git\objects\d4\231ccfdd08dc768622d908fac31cbcf2d43601" SelfReg="false"/>
+    <ROW File="f3d3dc39e1bbf67f2a7f8c388c132d629bac" Component_="ccfdd08dc768622d908fac31cbcf2d43601" FileName="60F3D3~1|60f3d3dc39e1bbf67f2a7f8c388c132d629bac" Attributes="1" SourcePath="Logicytics\.git\objects\d4\60f3d3dc39e1bbf67f2a7f8c388c132d629bac" SelfReg="false"/>
+    <ROW File="d9b8bd9aee7fc22dca55a9bf9120d9a64ae433" Component_="d9b8bd9aee7fc22dca55a9bf9120d9a64ae433" FileName="D9B8BD~1|d9b8bd9aee7fc22dca55a9bf9120d9a64ae433" Attributes="1" SourcePath="Logicytics\.git\objects\d6\d9b8bd9aee7fc22dca55a9bf9120d9a64ae433" SelfReg="false"/>
+    <ROW File="db5befdc12d123c749370880c0e43614e1036" Component_="db5befdc12d123c749370880c0e43614e1036" FileName="6DB5BE~1|6db5befdc12d123c749370880c0e43614e1036" Attributes="1" SourcePath="Logicytics\.git\objects\d8\6db5befdc12d123c749370880c0e43614e1036" SelfReg="false"/>
+    <ROW File="d28379f53552916a353f8e677e6c24164dc712" Component_="db5befdc12d123c749370880c0e43614e1036" FileName="D28379~1|d28379f53552916a353f8e677e6c24164dc712" Attributes="1" SourcePath="Logicytics\.git\objects\d8\d28379f53552916a353f8e677e6c24164dc712" SelfReg="false"/>
+    <ROW File="f8606b5214d8d76dcf0dcc9f8ad7390ba2479" Component_="f8606b5214d8d76dcf0dcc9f8ad7390ba2479" FileName="7F8606~1|7f8606b5214d8d76dcf0dcc9f8ad7390ba2479" Attributes="1" SourcePath="Logicytics\.git\objects\d9\7f8606b5214d8d76dcf0dcc9f8ad7390ba2479" SelfReg="false"/>
+    <ROW File="a4b975582a48d781fc3a5618a45529d8314ab4" Component_="f8606b5214d8d76dcf0dcc9f8ad7390ba2479" FileName="A4B975~1|a4b975582a48d781fc3a5618a45529d8314ab4" Attributes="1" SourcePath="Logicytics\.git\objects\d9\a4b975582a48d781fc3a5618a45529d8314ab4" SelfReg="false"/>
+    <ROW File="f25bb94dd4803877ae9990422a2f4ba774" Component_="f25bb94dd4803877ae9990422a2f4ba774" FileName="7908F2~1|7908f25bb94dd4803877ae9990422a2f4ba774" Attributes="1" SourcePath="Logicytics\.git\objects\dc\7908f25bb94dd4803877ae9990422a2f4ba774" SelfReg="false"/>
+    <ROW File="fb26119f5d61c1225fb98ad3e3ded63de00" Component_="fb26119f5d61c1225fb98ad3e3ded63de00" FileName="511FB2~1|511fb26119f5d61c1225fb98ad3e3ded63de00" Attributes="1" SourcePath="Logicytics\.git\objects\dd\511fb26119f5d61c1225fb98ad3e3ded63de00" SelfReg="false"/>
+    <ROW File="eea00e346c8557a5c17d0b855ebcd0fe3e6167" Component_="fb26119f5d61c1225fb98ad3e3ded63de00" FileName="EEA00E~1|eea00e346c8557a5c17d0b855ebcd0fe3e6167" Attributes="1" SourcePath="Logicytics\.git\objects\dd\eea00e346c8557a5c17d0b855ebcd0fe3e6167" SelfReg="false"/>
+    <ROW File="dfe997da9c5ca099e36ec1a1dff61ca139c29e" Component_="dfe997da9c5ca099e36ec1a1dff61ca139c29e" FileName="DFE997~1|dfe997da9c5ca099e36ec1a1dff61ca139c29e" Attributes="1" SourcePath="Logicytics\.git\objects\de\dfe997da9c5ca099e36ec1a1dff61ca139c29e" SelfReg="false"/>
+    <ROW File="ebb5a52cca88bd9f29f7726d999e7eced4d7b6" Component_="ebb5a52cca88bd9f29f7726d999e7eced4d7b6" FileName="EBB5A5~1|ebb5a52cca88bd9f29f7726d999e7eced4d7b6" Attributes="1" SourcePath="Logicytics\.git\objects\e0\ebb5a52cca88bd9f29f7726d999e7eced4d7b6" SelfReg="false"/>
+    <ROW File="acad22c7df55eb9403b480c0e3da6bfee9131d" Component_="acad22c7df55eb9403b480c0e3da6bfee9131d" FileName="ACAD22~1|acad22c7df55eb9403b480c0e3da6bfee9131d" Attributes="1" SourcePath="Logicytics\.git\objects\e2\acad22c7df55eb9403b480c0e3da6bfee9131d" SelfReg="false"/>
+    <ROW File="bd2f02eafae6e0c9004a8526c2cdff6938603f" Component_="acad22c7df55eb9403b480c0e3da6bfee9131d" FileName="BD2F02~1|bd2f02eafae6e0c9004a8526c2cdff6938603f" Attributes="1" SourcePath="Logicytics\.git\objects\e2\bd2f02eafae6e0c9004a8526c2cdff6938603f" SelfReg="false"/>
+    <ROW File="a2db24ececbcd2e5295decf64e8344e3fd" Component_="a2db24ececbcd2e5295decf64e8344e3fd" FileName="8621A2~1|8621a2db24ececbcd2e5295decf64e8344e3fd" Attributes="1" SourcePath="Logicytics\.git\objects\e3\8621a2db24ececbcd2e5295decf64e8344e3fd" SelfReg="false"/>
+    <ROW File="c035a84ff87589c7f39a52737da766aee866ea" Component_="c035a84ff87589c7f39a52737da766aee866ea" FileName="C035A8~1|c035a84ff87589c7f39a52737da766aee866ea" Attributes="1" SourcePath="Logicytics\.git\objects\e7\c035a84ff87589c7f39a52737da766aee866ea" SelfReg="false"/>
+    <ROW File="aa5c2328f587e0641e3078d0c1b23f28f3c06" Component_="aa5c2328f587e0641e3078d0c1b23f28f3c06" FileName="1AA5C2~1|1aa5c2328f587e0641e3078d0c1b23f28f3c06" Attributes="1" SourcePath="Logicytics\.git\objects\e8\1aa5c2328f587e0641e3078d0c1b23f28f3c06" SelfReg="false"/>
+    <ROW File="e159f5e66ae41f91782eacbc8d67ec9f1ab792" Component_="e159f5e66ae41f91782eacbc8d67ec9f1ab792" FileName="E159F5~1|e159f5e66ae41f91782eacbc8d67ec9f1ab792" Attributes="1" SourcePath="Logicytics\.git\objects\e9\e159f5e66ae41f91782eacbc8d67ec9f1ab792" SelfReg="false"/>
+    <ROW File="d2c0cc74a325da6c5d3946de0c0b6b3de0" Component_="d2c0cc74a325da6c5d3946de0c0b6b3de0" FileName="1530D2~1|1530d2c0cc74a325da6c5d3946de0c0b6b3de0" Attributes="1" SourcePath="Logicytics\.git\objects\ea\1530d2c0cc74a325da6c5d3946de0c0b6b3de0" SelfReg="false"/>
+    <ROW File="af1597bb77e37657fa06beeee67f8fa503f895" Component_="af1597bb77e37657fa06beeee67f8fa503f895" FileName="AF1597~1|af1597bb77e37657fa06beeee67f8fa503f895" Attributes="1" SourcePath="Logicytics\.git\objects\eb\af1597bb77e37657fa06beeee67f8fa503f895" SelfReg="false"/>
+    <ROW File="e49f93f9f2e7fa955e3725014ef0627778d9a8" Component_="e49f93f9f2e7fa955e3725014ef0627778d9a8" FileName="E49F93~1|e49f93f9f2e7fa955e3725014ef0627778d9a8" Attributes="1" SourcePath="Logicytics\.git\objects\ed\e49f93f9f2e7fa955e3725014ef0627778d9a8" SelfReg="false"/>
+    <ROW File="bf1cca05e176c569caf785b8e8af675706a2ce" Component_="bf1cca05e176c569caf785b8e8af675706a2ce" FileName="BF1CCA~1|bf1cca05e176c569caf785b8e8af675706a2ce" Attributes="1" SourcePath="Logicytics\.git\objects\f0\bf1cca05e176c569caf785b8e8af675706a2ce" SelfReg="false"/>
+    <ROW File="bfdc7366a341fbd3750bcb73d94f953ec2a54c" Component_="bfdc7366a341fbd3750bcb73d94f953ec2a54c" FileName="BFDC73~1|bfdc7366a341fbd3750bcb73d94f953ec2a54c" Attributes="1" SourcePath="Logicytics\.git\objects\f2\bfdc7366a341fbd3750bcb73d94f953ec2a54c" SelfReg="false"/>
+    <ROW File="d3a3753fb7d2854afe585884ea0b90c35b2bf3" Component_="d3a3753fb7d2854afe585884ea0b90c35b2bf3" FileName="D3A375~1|d3a3753fb7d2854afe585884ea0b90c35b2bf3" Attributes="1" SourcePath="Logicytics\.git\objects\f3\d3a3753fb7d2854afe585884ea0b90c35b2bf3" SelfReg="false"/>
+    <ROW File="a4705fcfc3e2ce8111f2299ef4e69872e48ca4" Component_="a4705fcfc3e2ce8111f2299ef4e69872e48ca4" FileName="A4705F~1|a4705fcfc3e2ce8111f2299ef4e69872e48ca4" Attributes="1" SourcePath="Logicytics\.git\objects\f4\a4705fcfc3e2ce8111f2299ef4e69872e48ca4" SelfReg="false"/>
+    <ROW File="f1e554441cc924b69222d49c2af0496b11f36" Component_="f1e554441cc924b69222d49c2af0496b11f36" FileName="4F1E55~1|4f1e554441cc924b69222d49c2af0496b11f36" Attributes="1" SourcePath="Logicytics\.git\objects\f5\4f1e554441cc924b69222d49c2af0496b11f36" SelfReg="false"/>
+    <ROW File="d96514908f82f6b2d9da474378791780e2960f" Component_="d96514908f82f6b2d9da474378791780e2960f" FileName="D96514~1|d96514908f82f6b2d9da474378791780e2960f" Attributes="1" SourcePath="Logicytics\.git\objects\f9\d96514908f82f6b2d9da474378791780e2960f" SelfReg="false"/>
+    <ROW File="a6e5832e29a8f0c4d106315fbf9c537bf063fa" Component_="a6e5832e29a8f0c4d106315fbf9c537bf063fa" FileName="A6E583~1|a6e5832e29a8f0c4d106315fbf9c537bf063fa" Attributes="1" SourcePath="Logicytics\.git\objects\fa\a6e5832e29a8f0c4d106315fbf9c537bf063fa" SelfReg="false"/>
+    <ROW File="b362441237bb27bc1738f5314bbda68721ae26" Component_="a6e5832e29a8f0c4d106315fbf9c537bf063fa" FileName="B36244~1|b362441237bb27bc1738f5314bbda68721ae26" Attributes="1" SourcePath="Logicytics\.git\objects\fa\b362441237bb27bc1738f5314bbda68721ae26" SelfReg="false"/>
+    <ROW File="d83efa8efa6511aeb5240b648311b98e7d91df" Component_="d83efa8efa6511aeb5240b648311b98e7d91df" FileName="D83EFA~1|d83efa8efa6511aeb5240b648311b98e7d91df" Attributes="1" SourcePath="Logicytics\.git\objects\fb\d83efa8efa6511aeb5240b648311b98e7d91df" SelfReg="false"/>
+    <ROW File="b74417bc75fbbe3a286bbb72b2cde07e304c90" Component_="b74417bc75fbbe3a286bbb72b2cde07e304c90" FileName="B74417~1|b74417bc75fbbe3a286bbb72b2cde07e304c90" Attributes="1" SourcePath="Logicytics\.git\objects\fc\b74417bc75fbbe3a286bbb72b2cde07e304c90" SelfReg="false"/>
+    <ROW File="f2c3613b5c188cdf93bc14f5a953d41d091766" Component_="b74417bc75fbbe3a286bbb72b2cde07e304c90" FileName="F2C361~1|f2c3613b5c188cdf93bc14f5a953d41d091766" Attributes="1" SourcePath="Logicytics\.git\objects\fc\f2c3613b5c188cdf93bc14f5a953d41d091766" SelfReg="false"/>
+    <ROW File="fbc980713110d666b970022e81a8ee3aa01" Component_="fbc980713110d666b970022e81a8ee3aa01" FileName="502FBC~1|502fbc980713110d666b970022e81a8ee3aa01" Attributes="1" SourcePath="Logicytics\.git\objects\fe\502fbc980713110d666b970022e81a8ee3aa01" SelfReg="false"/>
+    <ROW File="cfd54b8f36404c14b455aa0d6186f7939a2d01" Component_="fbc980713110d666b970022e81a8ee3aa01" FileName="CFD54B~1|cfd54b8f36404c14b455aa0d6186f7939a2d01" Attributes="1" SourcePath="Logicytics\.git\objects\fe\cfd54b8f36404c14b455aa0d6186f7939a2d01" SelfReg="false"/>
+    <ROW File="pack3cc19678d6699faf11af2c9f1c2c89a669522846.idx" Component_="pack3cc19678d6699faf11af2c9f1c2c89a669522846.idx" FileName="PACK-3~1.IDX|pack-3cc19678d6699faf11af2c9f1c2c89a669522846.idx" Attributes="1" SourcePath="Logicytics\.git\objects\pack\pack-3cc19678d6699faf11af2c9f1c2c89a669522846.idx" SelfReg="false"/>
+    <ROW File="pack3cc19678d6699faf11af2c9f1c2c89a669522846.pack" Component_="pack3cc19678d6699faf11af2c9f1c2c89a669522846.idx" FileName="PACK-3~1.PAC|pack-3cc19678d6699faf11af2c9f1c2c89a669522846.pack" Attributes="1" SourcePath="Logicytics\.git\objects\pack\pack-3cc19678d6699faf11af2c9f1c2c89a669522846.pack" SelfReg="false"/>
+    <ROW File="pack3cc19678d6699faf11af2c9f1c2c89a669522846.rev" Component_="pack3cc19678d6699faf11af2c9f1c2c89a669522846.idx" FileName="PACK-3~1.REV|pack-3cc19678d6699faf11af2c9f1c2c89a669522846.rev" Attributes="1" SourcePath="Logicytics\.git\objects\pack\pack-3cc19678d6699faf11af2c9f1c2c89a669522846.rev" SelfReg="false"/>
+    <ROW File="ORIG_HEAD" Component_="COMMIT_EDITMSG" FileName="ORIG_H~1|ORIG_HEAD" Attributes="0" SourcePath="Logicytics\.git\ORIG_HEAD" SelfReg="false"/>
+    <ROW File="packedrefs" Component_="COMMIT_EDITMSG" FileName="PACKED~1|packed-refs" Attributes="0" SourcePath="Logicytics\.git\packed-refs" SelfReg="false"/>
+    <ROW File="issuedocker_2" Component_="issuedocker_1" FileName="ISSUE-~1|issue-docker" Attributes="0" SourcePath="Logicytics\.git\refs\heads\issue-docker" SelfReg="false"/>
+    <ROW File="main_2" Component_="issuedocker_1" FileName="main" Attributes="0" SourcePath="Logicytics\.git\refs\heads\main" SelfReg="false"/>
+    <ROW File="HEAD_3" Component_="HEAD_2" FileName="HEAD" Attributes="0" SourcePath="Logicytics\.git\refs\remotes\origin\HEAD" SelfReg="false"/>
+    <ROW File="issuedocker_3" Component_="HEAD_2" FileName="ISSUE-~1|issue-docker" Attributes="0" SourcePath="Logicytics\.git\refs\remotes\origin\issue-docker" SelfReg="false"/>
+    <ROW File="main_3" Component_="HEAD_2" FileName="main" Attributes="0" SourcePath="Logicytics\.git\refs\remotes\origin\main" SelfReg="false"/>
+    <ROW File="v2.0.1" Component_="v2.0.1" FileName="V20~1.1|v2.0.1" Attributes="0" SourcePath="Logicytics\.git\refs\tags\v2.0.1" SelfReg="false"/>
+    <ROW File="v2.0.2" Component_="v2.0.1" FileName="V20~1.2|v2.0.2" Attributes="0" SourcePath="Logicytics\.git\refs\tags\v2.0.2" SelfReg="false"/>
+    <ROW File="gitattributes" Component_="dockerfile" FileName="GITATT~1|.gitattributes" Attributes="0" SourcePath="Logicytics\.gitattributes" SelfReg="false"/>
+    <ROW File="config.yml" Component_="config.yml" FileName="config.yml" Attributes="0" SourcePath="Logicytics\.github\config.yml" SelfReg="false"/>
+    <ROW File="dependabot.yml" Component_="config.yml" FileName="DEPEND~1.YML|dependabot.yml" Attributes="0" SourcePath="Logicytics\.github\dependabot.yml" SelfReg="false"/>
+    <ROW File="FUNDING.yml" Component_="config.yml" FileName="FUNDING.yml" Attributes="0" SourcePath="Logicytics\.github\FUNDING.yml" SelfReg="false"/>
+    <ROW File="bug_report.yml" Component_="bug_report.yml" FileName="BUG_RE~1.YML|bug_report.yml" Attributes="0" SourcePath="Logicytics\.github\ISSUE_TEMPLATE\bug_report.yml" SelfReg="false"/>
+    <ROW File="config.yml_1" Component_="bug_report.yml" FileName="config.yml" Attributes="0" SourcePath="Logicytics\.github\ISSUE_TEMPLATE\config.yml" SelfReg="false"/>
+    <ROW File="feature_request.yml" Component_="bug_report.yml" FileName="FEATUR~1.YML|feature_request.yml" Attributes="0" SourcePath="Logicytics\.github\ISSUE_TEMPLATE\feature_request.yml" SelfReg="false"/>
+    <ROW File="PULL_REQUEST_TEMPLATE.md" Component_="config.yml" FileName="PULL_R~1.MD|PULL_REQUEST_TEMPLATE.md" Attributes="0" SourcePath="Logicytics\.github\PULL_REQUEST_TEMPLATE.md" SelfReg="false"/>
+    <ROW File="weeklydigest.yml" Component_="config.yml" FileName="WEEKLY~1.YML|weekly-digest.yml" Attributes="0" SourcePath="Logicytics\.github\weekly-digest.yml" SelfReg="false"/>
+    <ROW File="labeler.yml" Component_="labeler.yml" FileName="labeler.yml" Attributes="0" SourcePath="Logicytics\.github\workflows\labeler.yml" SelfReg="false"/>
+    <ROW File="main.yml" Component_="labeler.yml" FileName="main.yml" Attributes="0" SourcePath="Logicytics\.github\workflows\main.yml" SelfReg="false"/>
+    <ROW File="stale.yml" Component_="labeler.yml" FileName="stale.yml" Attributes="0" SourcePath="Logicytics\.github\workflows\stale.yml" SelfReg="false"/>
+    <ROW File="gitignore" Component_="dockerfile" FileName="GITIGN~1|.gitignore" Attributes="0" SourcePath="Logicytics\.gitignore" SelfReg="false"/>
+    <ROW File="gitignore_1" Component_="gitignore" FileName="GITIGN~1|.gitignore" Attributes="0" SourcePath="Logicytics\.idea\.gitignore" SelfReg="false"/>
+    <ROW File="encodings.xml" Component_="gitignore" FileName="ENCODI~1.XML|encodings.xml" Attributes="0" SourcePath="Logicytics\.idea\encodings.xml" SelfReg="false"/>
+    <ROW File="profiles_settings.xml" Component_="profiles_settings.xml" FileName="PROFIL~1.XML|profiles_settings.xml" Attributes="0" SourcePath="Logicytics\.idea\inspectionProfiles\profiles_settings.xml" SelfReg="false"/>
+    <ROW File="Project_Default.xml" Component_="profiles_settings.xml" FileName="PROJEC~1.XML|Project_Default.xml" Attributes="0" SourcePath="Logicytics\.idea\inspectionProfiles\Project_Default.xml" SelfReg="false"/>
+    <ROW File="Logicytics.iml" Component_="gitignore" FileName="LOGICY~1.IML|Logicytics.iml" Attributes="0" SourcePath="Logicytics\.idea\Logicytics.iml" SelfReg="false"/>
+    <ROW File="misc.xml" Component_="gitignore" FileName="misc.xml" Attributes="0" SourcePath="Logicytics\.idea\misc.xml" SelfReg="false"/>
+    <ROW File="modules.xml" Component_="gitignore" FileName="modules.xml" Attributes="0" SourcePath="Logicytics\.idea\modules.xml" SelfReg="false"/>
+    <ROW File="vcs.xml" Component_="gitignore" FileName="vcs.xml" Attributes="0" SourcePath="Logicytics\.idea\vcs.xml" SelfReg="false"/>
+    <ROW File="workspace.xml" Component_="gitignore" FileName="WORKSP~1.XML|workspace.xml" Attributes="0" SourcePath="Logicytics\.idea\workspace.xml" SelfReg="false"/>
+    <ROW File="Logicytics.log" Component_="Logicytics.log" FileName="LOGICY~1.LOG|Logicytics.log" Attributes="0" SourcePath="Logicytics\ACCESS\LOGS\Logicytics.log" SelfReg="false"/>
+    <ROW File="browser_miner.ps1" Component_="browser_miner.ps1" FileName="BROWSE~1.PS1|browser_miner.ps1" Attributes="0" SourcePath="Logicytics\CODE\browser_miner.ps1" SelfReg="false"/>
+    <ROW File="config.json" Component_="browser_miner.ps1" FileName="CONFIG~1.JSO|config.json" Attributes="0" SourcePath="Logicytics\CODE\config.json" SelfReg="false"/>
+    <ROW File="driverquery.py" Component_="browser_miner.ps1" FileName="DRIVER~1.PY|driverquery.py" Attributes="0" SourcePath="Logicytics\CODE\driverquery.py" SelfReg="false"/>
+    <ROW File="Logicytics.exe" Component_="Logicytics.exe" FileName="LOGICY~1.EXE|Logicytics.exe" Attributes="0" SourcePath="Logicytics\CODE\Logicytics.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="Logicytics.py" Component_="browser_miner.ps1" FileName="LOGICY~1.PY|Logicytics.py" Attributes="0" SourcePath="Logicytics\CODE\Logicytics.py" SelfReg="false"/>
+    <ROW File="log_miner.py" Component_="browser_miner.ps1" FileName="LOG_MI~1.PY|log_miner.py" Attributes="0" SourcePath="Logicytics\CODE\log_miner.py" SelfReg="false"/>
+    <ROW File="media_backup.py" Component_="browser_miner.ps1" FileName="MEDIA_~1.PY|media_backup.py" Attributes="0" SourcePath="Logicytics\CODE\media_backup.py" SelfReg="false"/>
+    <ROW File="netadapter.ps1" Component_="browser_miner.ps1" FileName="NETADA~1.PS1|netadapter.ps1" Attributes="0" SourcePath="Logicytics\CODE\netadapter.ps1" SelfReg="false"/>
+    <ROW File="online_ip_scraper.py" Component_="browser_miner.ps1" FileName="ONLINE~1.PY|online_ip_scraper.py" Attributes="0" SourcePath="Logicytics\CODE\online_ip_scraper.py" SelfReg="false"/>
+    <ROW File="property_scraper.ps1" Component_="browser_miner.ps1" FileName="PROPER~1.PS1|property_scraper.ps1" Attributes="0" SourcePath="Logicytics\CODE\property_scraper.ps1" SelfReg="false"/>
+    <ROW File="registry.py" Component_="browser_miner.ps1" FileName="registry.py" Attributes="0" SourcePath="Logicytics\CODE\registry.py" SelfReg="false"/>
+    <ROW File="sensitive_data_miner.py" Component_="browser_miner.ps1" FileName="SENSIT~1.PY|sensitive_data_miner.py" Attributes="0" SourcePath="Logicytics\CODE\sensitive_data_miner.py" SelfReg="false"/>
+    <ROW File="ssh_miner.py" Component_="browser_miner.ps1" FileName="SSH_MI~1.PY|ssh_miner.py" Attributes="0" SourcePath="Logicytics\CODE\ssh_miner.py" SelfReg="false"/>
+    <ROW File="sysinfo.py" Component_="browser_miner.ps1" FileName="sysinfo.py" Attributes="0" SourcePath="Logicytics\CODE\sysinfo.py" SelfReg="false"/>
+    <ROW File="psfile.exe" Component_="psfile.exe" FileName="psfile.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\psfile.exe" SelfReg="false"/>
+    <ROW File="PsGetsid.exe" Component_="PsGetsid.exe" FileName="PsGetsid.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\PsGetsid.exe" SelfReg="false"/>
+    <ROW File="PsInfo.exe" Component_="PsInfo.exe" FileName="PsInfo.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\PsInfo.exe" SelfReg="false"/>
+    <ROW File="pslist.exe" Component_="pslist.exe" FileName="pslist.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\pslist.exe" SelfReg="false"/>
+    <ROW File="PsLoggedon.exe" Component_="PsLoggedon.exe" FileName="PSLOGG~1.EXE|PsLoggedon.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\PsLoggedon.exe" SelfReg="false"/>
+    <ROW File="psloglist.exe" Component_="psloglist.exe" FileName="PSLOGL~1.EXE|psloglist.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\psloglist.exe" SelfReg="false"/>
+    <ROW File="sys_internal.py" Component_="browser_miner.ps1" FileName="SYS_IN~1.PY|sys_internal.py" Attributes="0" SourcePath="Logicytics\CODE\sys_internal.py" SelfReg="false"/>
+    <ROW File="tasklist.py" Component_="browser_miner.ps1" FileName="tasklist.py" Attributes="0" SourcePath="Logicytics\CODE\tasklist.py" SelfReg="false"/>
+    <ROW File="tree.bat" Component_="browser_miner.ps1" FileName="tree.bat" Attributes="0" SourcePath="Logicytics\CODE\tree.bat" SelfReg="false"/>
+    <ROW File="window_feature_miner.ps1" Component_="browser_miner.ps1" FileName="WINDOW~1.PS1|window_feature_miner.ps1" Attributes="0" SourcePath="Logicytics\CODE\window_feature_miner.ps1" SelfReg="false"/>
+    <ROW File="wmic.py" Component_="browser_miner.ps1" FileName="wmic.py" Attributes="0" SourcePath="Logicytics\CODE\wmic.py" SelfReg="false"/>
+    <ROW File="_debug.py" Component_="browser_miner.ps1" FileName="_debug.py" Attributes="0" SourcePath="Logicytics\CODE\_debug.py" SelfReg="false"/>
+    <ROW File="_dev.py" Component_="browser_miner.ps1" FileName="_dev.py" Attributes="0" SourcePath="Logicytics\CODE\_dev.py" SelfReg="false"/>
+    <ROW File="_extra.py" Component_="browser_miner.ps1" FileName="_extra.py" Attributes="0" SourcePath="Logicytics\CODE\_extra.py" SelfReg="false"/>
+    <ROW File="_health.py" Component_="browser_miner.ps1" FileName="_health.py" Attributes="0" SourcePath="Logicytics\CODE\_health.py" SelfReg="false"/>
+    <ROW File="_hide_my_tracks.py" Component_="browser_miner.ps1" FileName="_HIDE_~1.PY|_hide_my_tracks.py" Attributes="0" SourcePath="Logicytics\CODE\_hide_my_tracks.py" SelfReg="false"/>
+    <ROW File="apimswincoreconsolel110.dll" Component_="apimswincoreconsolel110.dll" FileName="API-MS~1.DLL|api-ms-win-core-console-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-console-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoredatetimel110.dll" Component_="apimswincoredatetimel110.dll" FileName="API-MS~2.DLL|api-ms-win-core-datetime-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-datetime-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoredebugl110.dll" Component_="apimswincoredebugl110.dll" FileName="API-MS~3.DLL|api-ms-win-core-debug-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-debug-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoreerrorhandlingl110.dll" Component_="apimswincoreerrorhandlingl110.dll" FileName="API-MS~4.DLL|api-ms-win-core-errorhandling-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-errorhandling-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincorefilel110.dll" Component_="apimswincorefilel110.dll" FileName="API-MS~5.DLL|api-ms-win-core-file-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-file-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincorefilel120.dll" Component_="apimswincorefilel120.dll" FileName="API-MS~6.DLL|api-ms-win-core-file-l1-2-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-file-l1-2-0.dll" SelfReg="false"/>
+    <ROW File="apimswincorefilel210.dll" Component_="apimswincorefilel210.dll" FileName="API-MS~7.DLL|api-ms-win-core-file-l2-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-file-l2-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincorehandlel110.dll" Component_="apimswincorehandlel110.dll" FileName="API-MS~8.DLL|api-ms-win-core-handle-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-handle-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoreheapl110.dll" Component_="apimswincoreheapl110.dll" FileName="API-MS~9.DLL|api-ms-win-core-heap-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-heap-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoreinterlockedl110.dll" Component_="apimswincoreinterlockedl110.dll" FileName="API-M~10.DLL|api-ms-win-core-interlocked-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-interlocked-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincorelibraryloaderl110.dll" Component_="apimswincorelibraryloaderl110.dll" FileName="API-M~11.DLL|api-ms-win-core-libraryloader-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-libraryloader-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincorelocalizationl120.dll" Component_="apimswincorelocalizationl120.dll" FileName="API-M~12.DLL|api-ms-win-core-localization-l1-2-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-localization-l1-2-0.dll" SelfReg="false"/>
+    <ROW File="apimswincorememoryl110.dll" Component_="apimswincorememoryl110.dll" FileName="API-M~13.DLL|api-ms-win-core-memory-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-memory-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincorenamedpipel110.dll" Component_="apimswincorenamedpipel110.dll" FileName="API-M~14.DLL|api-ms-win-core-namedpipe-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-namedpipe-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoreprocessenvironmentl110.dll" Component_="apimswincoreprocessenvironmentl110.dll" FileName="API-M~15.DLL|api-ms-win-core-processenvironment-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-processenvironment-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoreprocessthreadsl110.dll" Component_="apimswincoreprocessthreadsl110.dll" FileName="API-M~16.DLL|api-ms-win-core-processthreads-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-processthreads-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoreprocessthreadsl111.dll" Component_="apimswincoreprocessthreadsl111.dll" FileName="API-M~17.DLL|api-ms-win-core-processthreads-l1-1-1.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-processthreads-l1-1-1.dll" SelfReg="false"/>
+    <ROW File="apimswincoreprofilel110.dll" Component_="apimswincoreprofilel110.dll" FileName="API-M~18.DLL|api-ms-win-core-profile-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-profile-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincorertlsupportl110.dll" Component_="apimswincorertlsupportl110.dll" FileName="API-M~19.DLL|api-ms-win-core-rtlsupport-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-rtlsupport-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincorestringl110.dll" Component_="apimswincorestringl110.dll" FileName="API-M~20.DLL|api-ms-win-core-string-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-string-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoresynchl110.dll" Component_="apimswincoresynchl110.dll" FileName="API-M~21.DLL|api-ms-win-core-synch-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-synch-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoresynchl120.dll" Component_="apimswincoresynchl120.dll" FileName="API-M~22.DLL|api-ms-win-core-synch-l1-2-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-synch-l1-2-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoresysinfol110.dll" Component_="apimswincoresysinfol110.dll" FileName="API-M~23.DLL|api-ms-win-core-sysinfo-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-sysinfo-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoretimezonel110.dll" Component_="apimswincoretimezonel110.dll" FileName="API-M~24.DLL|api-ms-win-core-timezone-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-timezone-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincoreutill110.dll" Component_="apimswincoreutill110.dll" FileName="API-M~25.DLL|api-ms-win-core-util-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-core-util-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtconiol110.dll" Component_="apimswincrtconiol110.dll" FileName="API-M~26.DLL|api-ms-win-crt-conio-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-conio-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtconvertl110.dll" Component_="apimswincrtconvertl110.dll" FileName="API-M~27.DLL|api-ms-win-crt-convert-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-convert-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtenvironmentl110.dll" Component_="apimswincrtenvironmentl110.dll" FileName="API-M~28.DLL|api-ms-win-crt-environment-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-environment-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtfilesysteml110.dll" Component_="apimswincrtfilesysteml110.dll" FileName="API-M~29.DLL|api-ms-win-crt-filesystem-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-filesystem-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtheapl110.dll" Component_="apimswincrtheapl110.dll" FileName="API-M~30.DLL|api-ms-win-crt-heap-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-heap-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtlocalel110.dll" Component_="apimswincrtlocalel110.dll" FileName="API-M~31.DLL|api-ms-win-crt-locale-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-locale-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtmathl110.dll" Component_="apimswincrtmathl110.dll" FileName="API-M~32.DLL|api-ms-win-crt-math-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-math-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtprocessl110.dll" Component_="apimswincrtprocessl110.dll" FileName="API-M~33.DLL|api-ms-win-crt-process-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-process-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtruntimel110.dll" Component_="apimswincrtruntimel110.dll" FileName="API-M~34.DLL|api-ms-win-crt-runtime-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-runtime-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtstdiol110.dll" Component_="apimswincrtstdiol110.dll" FileName="API-M~35.DLL|api-ms-win-crt-stdio-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-stdio-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtstringl110.dll" Component_="apimswincrtstringl110.dll" FileName="API-M~36.DLL|api-ms-win-crt-string-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-string-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrttimel110.dll" Component_="apimswincrttimel110.dll" FileName="API-M~37.DLL|api-ms-win-crt-time-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-time-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="apimswincrtutilityl110.dll" Component_="apimswincrtutilityl110.dll" FileName="API-M~38.DLL|api-ms-win-crt-utility-l1-1-0.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\api-ms-win-crt-utility-l1-1-0.dll" SelfReg="false"/>
+    <ROW File="base_library.zip" Component_="base_library.zip" FileName="BASE_L~1.ZIP|base_library.zip" Attributes="0" SourcePath="Logicytics\CODE\_internal\base_library.zip" SelfReg="false"/>
+    <ROW File="libcrypto3.dll" Component_="libcrypto3.dll" FileName="LIBCRY~1.DLL|libcrypto-3.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\libcrypto-3.dll" SelfReg="false"/>
+    <ROW File="python311.dll" Component_="python311.dll" FileName="PYTHON~1.DLL|python311.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\python311.dll" SelfReg="false"/>
+    <ROW File="select.pyd" Component_="base_library.zip" FileName="select.pyd" Attributes="0" SourcePath="Logicytics\CODE\_internal\select.pyd" SelfReg="false"/>
+    <ROW File="ucrtbase.dll" Component_="ucrtbase.dll" FileName="ucrtbase.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\ucrtbase.dll" SelfReg="false"/>
+    <ROW File="unicodedata.pyd" Component_="base_library.zip" FileName="UNICOD~1.PYD|unicodedata.pyd" Attributes="0" SourcePath="Logicytics\CODE\_internal\unicodedata.pyd" SelfReg="false"/>
+    <ROW File="VCRUNTIME140.dll" Component_="VCRUNTIME140.dll" FileName="VCRUNT~1.DLL|VCRUNTIME140.dll" Attributes="0" SourcePath="Logicytics\CODE\_internal\VCRUNTIME140.dll" SelfReg="false"/>
+    <ROW File="_bz2.pyd" Component_="base_library.zip" FileName="_bz2.pyd" Attributes="0" SourcePath="Logicytics\CODE\_internal\_bz2.pyd" SelfReg="false"/>
+    <ROW File="_decimal.pyd" Component_="base_library.zip" FileName="_decimal.pyd" Attributes="0" SourcePath="Logicytics\CODE\_internal\_decimal.pyd" SelfReg="false"/>
+    <ROW File="_hashlib.pyd" Component_="base_library.zip" FileName="_hashlib.pyd" Attributes="0" SourcePath="Logicytics\CODE\_internal\_hashlib.pyd" SelfReg="false"/>
+    <ROW File="_lzma.pyd" Component_="base_library.zip" FileName="_lzma.pyd" Attributes="0" SourcePath="Logicytics\CODE\_internal\_lzma.pyd" SelfReg="false"/>
+    <ROW File="_socket.pyd" Component_="base_library.zip" FileName="_socket.pyd" Attributes="0" SourcePath="Logicytics\CODE\_internal\_socket.pyd" SelfReg="false"/>
+    <ROW File="_zipper.py" Component_="browser_miner.ps1" FileName="_zipper.py" Attributes="0" SourcePath="Logicytics\CODE\_zipper.py" SelfReg="false"/>
+    <ROW File="__lib_actions.py" Component_="browser_miner.ps1" FileName="__LIB_~1.PY|__lib_actions.py" Attributes="0" SourcePath="Logicytics\CODE\__lib_actions.py" SelfReg="false"/>
+    <ROW File="__lib_log.py" Component_="browser_miner.ps1" FileName="__LIB_~2.PY|__lib_log.py" Attributes="0" SourcePath="Logicytics\CODE\__lib_log.py" SelfReg="false"/>
+    <ROW File="Logicytics.cpython311.pyc" Component_="Logicytics.cpython311.pyc" FileName="LOGICY~1.PYC|Logicytics.cpython-311.pyc" Attributes="0" SourcePath="Logicytics\CODE\__pycache__\Logicytics.cpython-311.pyc" SelfReg="false"/>
+    <ROW File="_debug.cpython311.pyc" Component_="Logicytics.cpython311.pyc" FileName="_DEBUG~1.PYC|_debug.cpython-311.pyc" Attributes="0" SourcePath="Logicytics\CODE\__pycache__\_debug.cpython-311.pyc" SelfReg="false"/>
+    <ROW File="_dev.cpython311.pyc" Component_="Logicytics.cpython311.pyc" FileName="_DEVCP~1.PYC|_dev.cpython-311.pyc" Attributes="0" SourcePath="Logicytics\CODE\__pycache__\_dev.cpython-311.pyc" SelfReg="false"/>
+    <ROW File="_extra.cpython311.pyc" Component_="Logicytics.cpython311.pyc" FileName="_EXTRA~1.PYC|_extra.cpython-311.pyc" Attributes="0" SourcePath="Logicytics\CODE\__pycache__\_extra.cpython-311.pyc" SelfReg="false"/>
+    <ROW File="_health.cpython311.pyc" Component_="Logicytics.cpython311.pyc" FileName="_HEALT~1.PYC|_health.cpython-311.pyc" Attributes="0" SourcePath="Logicytics\CODE\__pycache__\_health.cpython-311.pyc" SelfReg="false"/>
+    <ROW File="_hide_my_tracks.cpython311.pyc" Component_="Logicytics.cpython311.pyc" FileName="_HIDE_~1.PYC|_hide_my_tracks.cpython-311.pyc" Attributes="0" SourcePath="Logicytics\CODE\__pycache__\_hide_my_tracks.cpython-311.pyc" SelfReg="false"/>
+    <ROW File="_zipper.cpython311.pyc" Component_="Logicytics.cpython311.pyc" FileName="_ZIPPE~1.PYC|_zipper.cpython-311.pyc" Attributes="0" SourcePath="Logicytics\CODE\__pycache__\_zipper.cpython-311.pyc" SelfReg="false"/>
+    <ROW File="__lib_actions.cpython311.pyc" Component_="Logicytics.cpython311.pyc" FileName="__LIB_~1.PYC|__lib_actions.cpython-311.pyc" Attributes="0" SourcePath="Logicytics\CODE\__pycache__\__lib_actions.cpython-311.pyc" SelfReg="false"/>
+    <ROW File="__lib_log.cpython311.pyc" Component_="Logicytics.cpython311.pyc" FileName="__LIB_~2.PYC|__lib_log.cpython-311.pyc" Attributes="0" SourcePath="Logicytics\CODE\__pycache__\__lib_log.cpython-311.pyc" SelfReg="false"/>
+    <ROW File="__Test__.py" Component_="browser_miner.ps1" FileName="__Test__.py" Attributes="0" SourcePath="Logicytics\CODE\__Test__.py" SelfReg="false"/>
+    <ROW File="__wrapper__.py" Component_="browser_miner.ps1" FileName="__WRAP~1.PY|__wrapper__.py" Attributes="0" SourcePath="Logicytics\CODE\__wrapper__.py" SelfReg="false"/>
+    <ROW File="CODE_OF_CONDUCT.md" Component_="dockerfile" FileName="CODE_O~1.MD|CODE_OF_CONDUCT.md" Attributes="0" SourcePath="Logicytics\CODE_OF_CONDUCT.md" SelfReg="false"/>
+    <ROW File="CONTRIBUTING.md" Component_="dockerfile" FileName="CONTRI~1.MD|CONTRIBUTING.md" Attributes="0" SourcePath="Logicytics\CONTRIBUTING.md" SelfReg="false"/>
+    <ROW File="CREDITS.md" Component_="dockerfile" FileName="CREDITS.md" Attributes="0" SourcePath="Logicytics\CREDITS.md" SelfReg="false"/>
+    <ROW File="EXTRA.zip" Component_="EXTRA.zip" FileName="EXTRA.zip" Attributes="0" SourcePath="Logicytics\EXTRA\EXTRA.zip" SelfReg="false"/>
+    <ROW File="dir.png" Component_="dir.png" FileName="3dir.png" Attributes="0" SourcePath="Logicytics\IMG\3dir.png" SelfReg="false"/>
+    <ROW File="ClickMe.jpg" Component_="dir.png" FileName="ClickMe.jpg" Attributes="0" SourcePath="Logicytics\IMG\ClickMe.jpg" SelfReg="false"/>
+    <ROW File="ExtraTools.png" Component_="dir.png" FileName="EXTRAT~1.PNG|ExtraTools.png" Attributes="0" SourcePath="Logicytics\IMG\ExtraTools.png" SelfReg="false"/>
+    <ROW File="FlagOptions.png" Component_="dir.png" FileName="FLAGOP~1.PNG|Flag Options.png" Attributes="0" SourcePath="Logicytics\IMG\Flag Options.png" SelfReg="false"/>
+    <ROW File="NeedAdmin.png" Component_="dir.png" FileName="NEEDAD~1.PNG|NeedAdmin.png" Attributes="0" SourcePath="Logicytics\IMG\NeedAdmin.png" SelfReg="false"/>
+    <ROW File="LICENSE" Component_="dockerfile" FileName="LICENSE" Attributes="0" SourcePath="Logicytics\LICENSE" SelfReg="false"/>
+    <ROW File="RemoveMe.txt" Component_="RemoveMe.txt" FileName="RemoveMe.txt" Attributes="0" SourcePath="Logicytics\MODS\RemoveMe.txt" SelfReg="false"/>
+    <ROW File="README.md" Component_="README.md" FileName="README.md" Attributes="0" SourcePath="Logicytics\PACKAGES\README.md" SelfReg="false"/>
+    <ROW File="README.md_1" Component_="dockerfile" FileName="README.md" Attributes="0" SourcePath="Logicytics\README.md" SelfReg="false"/>
+    <ROW File="requirements.txt" Component_="dockerfile" FileName="REQUIR~1.TXT|requirements.txt" Attributes="0" SourcePath="Logicytics\requirements.txt" SelfReg="false"/>
+    <ROW File="SECURITY.md" Component_="dockerfile" FileName="SECURITY.md" Attributes="0" SourcePath="Logicytics\SECURITY.md" SelfReg="false"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.BootstrOptComponent">
+    <ROW BootstrOptKey="GlobalOptions" DownloadFolder="[AppDataFolder][|Manufacturer]\[|ProductName]\prerequisites" Options="2"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.BootstrapperUISequenceComponent">
+    <ROW Action="AI_BACKUP_AI_SETUPEXEPATH" Sequence="249"/>
+    <ROW Action="AI_RESTORE_AI_SETUPEXEPATH" Condition="AI_SETUPEXEPATH_ORIGINAL" Sequence="251"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.BuildComponent">
+    <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFileName="Logicytics_Installer" Languages="en_GB" InstallationType="4" CabsLocation="1" PackageType="1" FilesInsideExe="true" ExeIconPath="..\Downloads\data-usage_icon-icons.com_52837.ico" SummInfoMetadata="Page Count:500" ExtractionFolder="[AppDataFolder][|Manufacturer]\[|ProductName] [|ProductVersion]\install" ExtUI="true" Options="8" UseLargeSchema="true" ExeName="Logicytics_Installer" MsiPackageType="Arm64" UACExecutionLevel="2"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.DictionaryComponent">
+    <ROW Path="&lt;AI_DICTS&gt;ui.ail"/>
+    <ROW Path="&lt;AI_DICTS&gt;ui_en_GB.ail"/>
+    <ROW Path="&lt;AI_DICTS&gt;ui_en.ail"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.FragmentComponent">
+    <ROW Fragment="CommonUI.aip" Path="&lt;AI_FRAGS&gt;CommonUI.aip"/>
+    <ROW Fragment="FolderDlg.aip" Path="&lt;AI_THEMES&gt;serene\fragments\FolderDlg.aip"/>
+    <ROW Fragment="InstallDlg.aip" Path="&lt;AI_THEMES&gt;serene\fragments\InstallDlg.aip"/>
+    <ROW Fragment="MaintenanceTypeDlg.aip" Path="&lt;AI_THEMES&gt;serene\fragments\MaintenanceTypeDlg.aip"/>
+    <ROW Fragment="MaintenanceWelcomeDlg.aip" Path="&lt;AI_THEMES&gt;serene\fragments\MaintenanceWelcomeDlg.aip"/>
+    <ROW Fragment="SequenceDialogs.aip" Path="&lt;AI_THEMES&gt;serene\fragments\SequenceDialogs.aip"/>
+    <ROW Fragment="Sequences.aip" Path="&lt;AI_FRAGS&gt;Sequences.aip"/>
+    <ROW Fragment="StaticUIStrings.aip" Path="&lt;AI_FRAGS&gt;StaticUIStrings.aip"/>
+    <ROW Fragment="Themes.aip" Path="&lt;AI_FRAGS&gt;Themes.aip"/>
+    <ROW Fragment="UI.aip" Path="&lt;AI_THEMES&gt;serene\fragments\UI.aip"/>
+    <ROW Fragment="Validation.aip" Path="&lt;AI_FRAGS&gt;Validation.aip"/>
+    <ROW Fragment="VerifyRemoveDlg.aip" Path="&lt;AI_THEMES&gt;serene\fragments\VerifyRemoveDlg.aip"/>
+    <ROW Fragment="VerifyRepairDlg.aip" Path="&lt;AI_THEMES&gt;serene\fragments\VerifyRepairDlg.aip"/>
+    <ROW Fragment="WelcomeDlg.aip" Path="&lt;AI_THEMES&gt;serene\fragments\WelcomeDlg.aip"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiActionTextComponent">
+    <ROW Action="AI_DeleteLzma" Description="Deleting files extracted from archive" DescriptionLocId="ActionText.Description.AI_DeleteLzma" TemplateLocId="-"/>
+    <ROW Action="AI_DeleteRLzma" Description="Deleting files extracted from archive" DescriptionLocId="ActionText.Description.AI_DeleteLzma" TemplateLocId="-"/>
+    <ROW Action="AI_ExtractFiles" Description="Extracting files from archive" DescriptionLocId="ActionText.Description.AI_ExtractLzma" TemplateLocId="-"/>
+    <ROW Action="AI_ExtractLzma" Description="Extracting files from archive" DescriptionLocId="ActionText.Description.AI_ExtractLzma" TemplateLocId="-"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiAppSearchComponent">
+    <ROW Property="AI_SETUPEXEPATH" Signature_="AI_EXE_PATH_LM" Builds="DefaultBuild"/>
+    <ROW Property="AI_SETUPEXEPATH" Signature_="AI_EXE_PATH_CU" Builds="DefaultBuild"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiBinaryComponent">
+    <ROW Name="Prereq.dll" SourcePath="&lt;AI_CUSTACTS&gt;Prereq.dll"/>
+    <ROW Name="aicustact.dll" SourcePath="&lt;AI_CUSTACTS&gt;aicustact.dll"/>
+    <ROW Name="lzmaextractor.dll" SourcePath="&lt;AI_CUSTACTS&gt;lzmaextractor.dll"/>
+    <ROW Name="viewer.exe" SourcePath="&lt;AI_CUSTACTS&gt;viewer.exe" DigSign="true"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiControlEventComponent">
+    <ROW Dialog_="InstallDlg" Control_="Next" Event="NewDialog" Argument="FolderDlg" Condition="AI_INSTALL" Ordering="1"/>
+    <ROW Dialog_="MaintenanceWelcomeDlg" Control_="Next" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT" Ordering="99"/>
+    <ROW Dialog_="CustomizeDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_MAINT" Ordering="101"/>
+    <ROW Dialog_="CustomizeDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT" Ordering="1"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_MAINT" Ordering="197"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="CustomizeDlg" Condition="AI_MAINT" Ordering="201"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="ChangeButton" Event="NewDialog" Argument="CustomizeDlg" Condition="AI_MAINT" Ordering="501"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceWelcomeDlg" Condition="AI_MAINT" Ordering="1"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="RemoveButton" Event="NewDialog" Argument="VerifyRemoveDlg" Condition="AI_MAINT AND InstallMode=&quot;Remove&quot;" Ordering="601"/>
+    <ROW Dialog_="VerifyRemoveDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT AND InstallMode=&quot;Remove&quot;" Ordering="1"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="RepairButton" Event="NewDialog" Argument="VerifyRepairDlg" Condition="AI_MAINT AND InstallMode=&quot;Repair&quot;" Ordering="601"/>
+    <ROW Dialog_="VerifyRepairDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT AND InstallMode=&quot;Repair&quot;" Ordering="1"/>
+    <ROW Dialog_="VerifyRepairDlg" Control_="Repair" Event="EndDialog" Argument="Return" Condition="AI_MAINT AND InstallMode=&quot;Repair&quot;" Ordering="399" Options="1"/>
+    <ROW Dialog_="VerifyRemoveDlg" Control_="Remove" Event="EndDialog" Argument="Return" Condition="AI_MAINT AND InstallMode=&quot;Remove&quot;" Ordering="299" Options="1"/>
+    <ROW Dialog_="PatchWelcomeDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_PATCH" Ordering="201"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_PATCH" Ordering="198"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="PatchWelcomeDlg" Condition="AI_PATCH" Ordering="202"/>
+    <ROW Dialog_="ResumeDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_RESUME" Ordering="299"/>
+    <ROW Dialog_="WelcomeDlg" Control_="Next" Event="NewDialog" Argument="InstallDlg" Condition="AI_INSTALL" Ordering="1"/>
+    <ROW Dialog_="InstallDlg" Control_="Back" Event="NewDialog" Argument="WelcomeDlg" Condition="AI_INSTALL" Ordering="2"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_INSTALL" Ordering="199"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="FolderDlg" Condition="AI_INSTALL" Ordering="203"/>
+    <ROW Dialog_="FolderDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_INSTALL" Ordering="201"/>
+    <ROW Dialog_="FolderDlg" Control_="Back" Event="NewDialog" Argument="InstallDlg" Condition="AI_INSTALL" Ordering="1"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiCreateFolderComponent">
+    <ROW Directory_="APPDIR" Component_="APPDIR" ManualDelete="true"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiCustActComponent">
+    <ROW Action="AI_BACKUP_AI_SETUPEXEPATH" Type="51" Source="AI_SETUPEXEPATH_ORIGINAL" Target="[AI_SETUPEXEPATH]"/>
+    <ROW Action="AI_DATA_SETTER" Type="51" Source="CustomActionData" Target="[AI_SETUPEXEPATH]"/>
+    <ROW Action="AI_DOWNGRADE" Type="19" Target="4010"/>
+    <ROW Action="AI_DeleteCadLzma" Type="51" Source="AI_DeleteLzma" Target="[AI_SETUPEXEPATH]"/>
+    <ROW Action="AI_DeleteLzma" Type="1025" Source="lzmaextractor.dll" Target="DeleteLZMAFiles"/>
+    <ROW Action="AI_DeleteRCadLzma" Type="51" Source="AI_DeleteRLzma" Target="[AI_SETUPEXEPATH]"/>
+    <ROW Action="AI_DeleteRLzma" Type="1281" Source="lzmaextractor.dll" Target="DeleteLZMAFiles"/>
+    <ROW Action="AI_DpiContentScale" Type="1" Source="aicustact.dll" Target="DpiContentScale"/>
+    <ROW Action="AI_EnableDebugLog" Type="321" Source="aicustact.dll" Target="EnableDebugLog"/>
+    <ROW Action="AI_ExtractCadLzma" Type="51" Source="AI_ExtractLzma" Target="[AI_SETUPEXEPATH]"/>
+    <ROW Action="AI_ExtractFiles" Type="1" Source="Prereq.dll" Target="ExtractSourceFiles" AdditionalSeq="AI_DATA_SETTER"/>
+    <ROW Action="AI_ExtractLzma" Type="1025" Source="lzmaextractor.dll" Target="ExtractLZMAFiles"/>
+    <ROW Action="AI_FindExeLzma" Type="1" Source="lzmaextractor.dll" Target="FindEXE"/>
+    <ROW Action="AI_InstallModeCheck" Type="1" Source="aicustact.dll" Target="UpdateInstallMode" WithoutSeq="true"/>
+    <ROW Action="AI_PREPARE_UPGRADE" Type="65" Source="aicustact.dll" Target="PrepareUpgrade"/>
+    <ROW Action="AI_PRESERVE_INSTALL_TYPE" Type="65" Source="aicustact.dll" Target="PreserveInstallType"/>
+    <ROW Action="AI_RESTORE_AI_SETUPEXEPATH" Type="51" Source="AI_SETUPEXEPATH" Target="[AI_SETUPEXEPATH_ORIGINAL]"/>
+    <ROW Action="AI_RESTORE_LOCATION" Type="65" Source="aicustact.dll" Target="RestoreLocation"/>
+    <ROW Action="AI_ResolveKnownFolders" Type="1" Source="aicustact.dll" Target="AI_ResolveKnownFolders"/>
+    <ROW Action="AI_SHOW_LOG" Type="65" Source="aicustact.dll" Target="LaunchLogFile" WithoutSeq="true"/>
+    <ROW Action="AI_STORE_LOCATION" Type="51" Source="ARPINSTALLLOCATION" Target="[APPDIR]"/>
+    <ROW Action="Logicytics.exe" Type="1042" Source="Logicytics.exe" Target=".\Logicytics.exe -h"/>
+    <ROW Action="OpenUrl" Type="2" Source="viewer.exe" Target="https://github.com/DefinetlyNotAI/Logicytics/blob/main/README.md" Options="1"/>
+    <ROW Action="SET_APPDIR" Type="307" Source="APPDIR" Target="[ProgramFilesFolder][Manufacturer]\[ProductName]" MultiBuildTarget="DefaultBuild:[ProgramFiles64Folder][Manufacturer]\[ProductName]"/>
+    <ROW Action="SET_SHORTCUTDIR" Type="307" Source="SHORTCUTDIR" Target="[ProgramMenuFolder][ProductName]"/>
+    <ROW Action="SET_TARGETDIR_TO_APPDIR" Type="51" Source="TARGETDIR" Target="[APPDIR]"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatCompsComponent">
+    <ROW Feature_="MainFeature" Component_="APPDIR"/>
+    <ROW Feature_="MainFeature" Component_="ProductInformation"/>
+    <ROW Feature_="MainFeature" Component_="dockerfile"/>
+    <ROW Feature_="MainFeature" Component_="COMMIT_EDITMSG"/>
+    <ROW Feature_="MainFeature" Component_="applypatchmsg.sample"/>
+    <ROW Feature_="MainFeature" Component_="exclude"/>
+    <ROW Feature_="MainFeature" Component_="HEAD"/>
+    <ROW Feature_="MainFeature" Component_="issuedocker"/>
+    <ROW Feature_="MainFeature" Component_="HEAD_1"/>
+    <ROW Feature_="MainFeature" Component_="fd9dece4b103a67e444290a76fb4cb937"/>
+    <ROW Feature_="MainFeature" Component_="a79a5543a351771a1152f80eb345ea64a53e"/>
+    <ROW Feature_="MainFeature" Component_="fcfe9350a80e0cfaff019326e9a642868d2cc"/>
+    <ROW Feature_="MainFeature" Component_="f08929f92ff0fc355ee06dfbdb1a2a0a45e"/>
+    <ROW Feature_="MainFeature" Component_="a7c1f5e8e213abfc53c201fdad11856db3"/>
+    <ROW Feature_="MainFeature" Component_="d37381acb1531647e25cf7c9e47cf3ff612000"/>
+    <ROW Feature_="MainFeature" Component_="a52d3a41d2a95661b5125091a59e0138d532d1"/>
+    <ROW Feature_="MainFeature" Component_="a6136e1ead964960c021a86ed4fa48470ac045"/>
+    <ROW Feature_="MainFeature" Component_="f985ccb5cdf98c6e573d2985ab8a1f7aa484"/>
+    <ROW Feature_="MainFeature" Component_="cc16c7b47636f145dd965c7b054033265d"/>
+    <ROW Feature_="MainFeature" Component_="c06ac2e217bd0094a921a01187e9146720b78"/>
+    <ROW Feature_="MainFeature" Component_="aa991aa70bf1a62f46c70ff2263c44bae837"/>
+    <ROW Feature_="MainFeature" Component_="be1aa520877726cdeaa7a6cf582a9e0d26a9ab"/>
+    <ROW Feature_="MainFeature" Component_="a2f53f24ecf9607a94076f34b34f56aa"/>
+    <ROW Feature_="MainFeature" Component_="a99ec373e173f8757c077269ec18ea496a863"/>
+    <ROW Feature_="MainFeature" Component_="a30685c07965f01db931c7a27d593bf0828715"/>
+    <ROW Feature_="MainFeature" Component_="f6390dcf9a2ccbdd5fd6971c8b3532ad023623"/>
+    <ROW Feature_="MainFeature" Component_="a80abd8f2e3bcfa31fff467b67fd9bc7a7d"/>
+    <ROW Feature_="MainFeature" Component_="b865290b81016ef6bd68ece9b99fbcf5b4f7cf"/>
+    <ROW Feature_="MainFeature" Component_="ec1316c7de977e9843f649c14175ad0a576"/>
+    <ROW Feature_="MainFeature" Component_="cec1adddd0f9ce13e493189f667e3ebacb255"/>
+    <ROW Feature_="MainFeature" Component_="c343d77d9db0aa77322d7ec519941278f5"/>
+    <ROW Feature_="MainFeature" Component_="e976dd058fd74675c0256d5888c4f86f74ea"/>
+    <ROW Feature_="MainFeature" Component_="ea1d3c77dbfcb462c2a0835eaf2487bd05403f"/>
+    <ROW Feature_="MainFeature" Component_="af6dfb38c873031ba87383a29334309727584"/>
+    <ROW Feature_="MainFeature" Component_="eff21f129d689483904e44988b880146edb"/>
+    <ROW Feature_="MainFeature" Component_="a511cdc15a30aa6bd08a01aa3b25f6def8c"/>
+    <ROW Feature_="MainFeature" Component_="f3d4f0baed82901cf71a1eb532355a568e0ebb"/>
+    <ROW Feature_="MainFeature" Component_="e0a909db1c762dd33b6d0d758b0b80e6d"/>
+    <ROW Feature_="MainFeature" Component_="eedb8386e765001b8b0d4d297cfa14edf7db"/>
+    <ROW Feature_="MainFeature" Component_="b447a2a22b46c471bdf0b59056de3197cf090"/>
+    <ROW Feature_="MainFeature" Component_="b635ca961b8a0d6455beb230c983e291a5051"/>
+    <ROW Feature_="MainFeature" Component_="f554e4743f9b0256e3358e20cfdd75a480861"/>
+    <ROW Feature_="MainFeature" Component_="d8663eb97d5530b1b19805806f2b0bc8d2a3"/>
+    <ROW Feature_="MainFeature" Component_="a1e6feaaadcf4fca68cef9004b40dac258"/>
+    <ROW Feature_="MainFeature" Component_="ce28959b4146ea3528da0f0636f592d"/>
+    <ROW Feature_="MainFeature" Component_="b3e6ed51256a1bacd847788a86cc8d"/>
+    <ROW Feature_="MainFeature" Component_="a5812043668db133286a625cb91fc6f307c7a7"/>
+    <ROW Feature_="MainFeature" Component_="f10c9185d8d738e3523b98870284e1a2f10b"/>
+    <ROW Feature_="MainFeature" Component_="f5c818bd8f22c9c9179e3f8e93c944d44bb"/>
+    <ROW Feature_="MainFeature" Component_="a488bdecb91151e52c40fddf12e2b3ac573a3f"/>
+    <ROW Feature_="MainFeature" Component_="ce062c0182929291a900fe98a3d9853f0817a"/>
+    <ROW Feature_="MainFeature" Component_="d864f63ed06a55b5f560d76d6a4302e208e50"/>
+    <ROW Feature_="MainFeature" Component_="d092a8c9410af3e754b0e63c7a5b95b63c0ab0"/>
+    <ROW Feature_="MainFeature" Component_="af24244a403e987dbbd1e8f6bfab68b89a568"/>
+    <ROW Feature_="MainFeature" Component_="ddf23794d4d32f2434bd194a29f2f88bcb0"/>
+    <ROW Feature_="MainFeature" Component_="b44db327b8e42d5725e79fbc1b87b24b13cddb"/>
+    <ROW Feature_="MainFeature" Component_="ca5d6168dd94dd9e8023658f90494d4ac"/>
+    <ROW Feature_="MainFeature" Component_="ddd32a34d057d405a46b7a72ce888e95948320"/>
+    <ROW Feature_="MainFeature" Component_="fa8e374b786a2753196b68df8e0d39eeaa5c86"/>
+    <ROW Feature_="MainFeature" Component_="fd686a647103d17f6357c35c4776655d714bf"/>
+    <ROW Feature_="MainFeature" Component_="a089e367e3dd9105f01983bc7de7b84233994"/>
+    <ROW Feature_="MainFeature" Component_="abed66507812cb7707200423cba67741"/>
+    <ROW Feature_="MainFeature" Component_="d9a79d7bf16d698da13ccb4b1673a70fdc045"/>
+    <ROW Feature_="MainFeature" Component_="a5db56f1301b3f2257a768515a889d0692a21"/>
+    <ROW Feature_="MainFeature" Component_="a19f3048058229e7d0ead68489da700416db6"/>
+    <ROW Feature_="MainFeature" Component_="f3f33f71937b5ef16cc9dfe1336bda955fa"/>
+    <ROW Feature_="MainFeature" Component_="ff20d25112a3bc3d668ec3d37eee444aa81a8"/>
+    <ROW Feature_="MainFeature" Component_="e4c43d0c8e53149eb0ca0570d068ef4275a"/>
+    <ROW Feature_="MainFeature" Component_="d90671a0c924b007d9b4f28d8d5bcc8ca6"/>
+    <ROW Feature_="MainFeature" Component_="d943b7b058814ec0b68fc7df23d17ca6deaa1"/>
+    <ROW Feature_="MainFeature" Component_="ceb2115502fb067273d08613c540cae758b01"/>
+    <ROW Feature_="MainFeature" Component_="bed86b0858b9ad0c4d696f0b7fd7e810933dc"/>
+    <ROW Feature_="MainFeature" Component_="c181b1b0c0d6eeda4e73769"/>
+    <ROW Feature_="MainFeature" Component_="f8a0f9da04f28ed18a84fdd00ffe674f6"/>
+    <ROW Feature_="MainFeature" Component_="a4f4fa1fb98e6c9b029c5fec12ed010ab3b"/>
+    <ROW Feature_="MainFeature" Component_="d6470ace1547c1ce0f0cbfa3d07e21677"/>
+    <ROW Feature_="MainFeature" Component_="acd67583573493c6c4241c6932452034ecad"/>
+    <ROW Feature_="MainFeature" Component_="a9f6620d69e4d214b0440a32e88bfbe11f"/>
+    <ROW Feature_="MainFeature" Component_="d97dc5fbdbbed3c330b7c1ce5541a"/>
+    <ROW Feature_="MainFeature" Component_="ed56d017cf54d5942cfffae746cc4a5ef836a"/>
+    <ROW Feature_="MainFeature" Component_="c425e5e7b5e0ea26bb54c6617ffa966c5150db"/>
+    <ROW Feature_="MainFeature" Component_="c11daf96a8e7e4835f340d045cc5b947c87d07"/>
+    <ROW Feature_="MainFeature" Component_="ab723bb7b43e7a336065bfa5d8c3e28f75301"/>
+    <ROW Feature_="MainFeature" Component_="c957f402ebf5360bad3b0ea46257a90a8b755e"/>
+    <ROW Feature_="MainFeature" Component_="d5a98a9d0ff56f064bf982bbe593d760edc800"/>
+    <ROW Feature_="MainFeature" Component_="ea04ef5d4e801b39db4a402700ea975c6a5a"/>
+    <ROW Feature_="MainFeature" Component_="ddc35b2f00e5b43b86aa137c576baf5061b5"/>
+    <ROW Feature_="MainFeature" Component_="b7f2799836742172110c4321f07e759978b9a1"/>
+    <ROW Feature_="MainFeature" Component_="bd467dd196d2d950ebcda904e96dc63f6e5de1"/>
+    <ROW Feature_="MainFeature" Component_="ceac00ec3826ee91984d3d4558a3f95f9d71"/>
+    <ROW Feature_="MainFeature" Component_="ee5eefc18dd6925ab344e57ff117ccf156bd3"/>
+    <ROW Feature_="MainFeature" Component_="e429be740a71a2cb9f785c5f0b5a550c3570d"/>
+    <ROW Feature_="MainFeature" Component_="f2407af1135230822a6e962a90f355ff386"/>
+    <ROW Feature_="MainFeature" Component_="c172123dd333866f0f7a72f4ab14be48b"/>
+    <ROW Feature_="MainFeature" Component_="e80778cabacecb960c8749ef27a4c1bacfde"/>
+    <ROW Feature_="MainFeature" Component_="d80681494ed86f7dcb8cbac8d3c333"/>
+    <ROW Feature_="MainFeature" Component_="be0c9fb50be6f0ea576682e5b5286a0f98aa8"/>
+    <ROW Feature_="MainFeature" Component_="d09dbb4a0642afc69d5c20e1b67aaa339ce"/>
+    <ROW Feature_="MainFeature" Component_="d4d9ecf01b04b7a2969771044573780f11d43"/>
+    <ROW Feature_="MainFeature" Component_="f8e3ad5ab60cf1e9d17674f997a809d3b0dcf"/>
+    <ROW Feature_="MainFeature" Component_="d3fe9c46651705a1235dda6cf1df27aab"/>
+    <ROW Feature_="MainFeature" Component_="e83ac5ee33d1039fd3897dc26555c32a30e7c3"/>
+    <ROW Feature_="MainFeature" Component_="b8b7da3421ab0b01f0b89c3242863275e"/>
+    <ROW Feature_="MainFeature" Component_="ee33ef18ecf0e251c5514517d4517dbc76e9"/>
+    <ROW Feature_="MainFeature" Component_="f37fa37ddc1ced0401a79527985a287e5f"/>
+    <ROW Feature_="MainFeature" Component_="baf0f25c27a611d419a11def1f86288d7055a6"/>
+    <ROW Feature_="MainFeature" Component_="ff57d2478948c2e9d6c116745371451b40a80"/>
+    <ROW Feature_="MainFeature" Component_="ed5c4ca4fc8757543c7e35da2843795257e01c"/>
+    <ROW Feature_="MainFeature" Component_="d2a221b87d76d9790d2e7f8cfdde4a6b04a7"/>
+    <ROW Feature_="MainFeature" Component_="be25a497986e570a42fd2bc0fe1e02bf573534"/>
+    <ROW Feature_="MainFeature" Component_="a54013c3560e67dc794eff64d2725d28e72136"/>
+    <ROW Feature_="MainFeature" Component_="e806b9c69909c9523caaa56ddde79063c41668"/>
+    <ROW Feature_="MainFeature" Component_="c3f929501127099d153ed83df541f308d75e"/>
+    <ROW Feature_="MainFeature" Component_="e9c9e13ff389456c1ee79ceced19e959521000"/>
+    <ROW Feature_="MainFeature" Component_="cc0e918f61e049fea27f2f402483cd6a782"/>
+    <ROW Feature_="MainFeature" Component_="d59f117e1720f8d509113fa2275dfd66c"/>
+    <ROW Feature_="MainFeature" Component_="b3509dcfa221da58f2ffa325c1fc90003d82a4"/>
+    <ROW Feature_="MainFeature" Component_="dcbaace7eac0f5db0f863d68e948157554fd"/>
+    <ROW Feature_="MainFeature" Component_="d7ca6da7195f8afe6e54663573fed227d3"/>
+    <ROW Feature_="MainFeature" Component_="dca4b80ff9773e57c8d87b293ae9950959598"/>
+    <ROW Feature_="MainFeature" Component_="ea0142fa2fc1adf3891710b4374773c9497"/>
+    <ROW Feature_="MainFeature" Component_="bd738cfc8e2a0114e3cef65fb0032d9b8351"/>
+    <ROW Feature_="MainFeature" Component_="fe618bb1871a2b4e43c169052a85def40dc98"/>
+    <ROW Feature_="MainFeature" Component_="f502b60c39dca2d5612db93e5a8b7497e00fda"/>
+    <ROW Feature_="MainFeature" Component_="cba60a42b1fbe74d7eb7ef25d0a0274412aba"/>
+    <ROW Feature_="MainFeature" Component_="a120fa7b15f916fc1932b9a0fa3c945a4a"/>
+    <ROW Feature_="MainFeature" Component_="c63c318b557d843469b3343c8f0734"/>
+    <ROW Feature_="MainFeature" Component_="d9efbef2ef249a8e3a5c3717f3b6dea0477526"/>
+    <ROW Feature_="MainFeature" Component_="a37be8c6642033450266746ea632d966ce79e2"/>
+    <ROW Feature_="MainFeature" Component_="d1983cc070129c91fa603c27350192d3ac9d9"/>
+    <ROW Feature_="MainFeature" Component_="b97fcc60bf8f47f3de2e3d46efdd005"/>
+    <ROW Feature_="MainFeature" Component_="c1141e0f2de79ab29c9d98e5a51ecb0ffc6b8"/>
+    <ROW Feature_="MainFeature" Component_="ccfdd08dc768622d908fac31cbcf2d43601"/>
+    <ROW Feature_="MainFeature" Component_="d9b8bd9aee7fc22dca55a9bf9120d9a64ae433"/>
+    <ROW Feature_="MainFeature" Component_="db5befdc12d123c749370880c0e43614e1036"/>
+    <ROW Feature_="MainFeature" Component_="f8606b5214d8d76dcf0dcc9f8ad7390ba2479"/>
+    <ROW Feature_="MainFeature" Component_="f25bb94dd4803877ae9990422a2f4ba774"/>
+    <ROW Feature_="MainFeature" Component_="fb26119f5d61c1225fb98ad3e3ded63de00"/>
+    <ROW Feature_="MainFeature" Component_="dfe997da9c5ca099e36ec1a1dff61ca139c29e"/>
+    <ROW Feature_="MainFeature" Component_="ebb5a52cca88bd9f29f7726d999e7eced4d7b6"/>
+    <ROW Feature_="MainFeature" Component_="acad22c7df55eb9403b480c0e3da6bfee9131d"/>
+    <ROW Feature_="MainFeature" Component_="a2db24ececbcd2e5295decf64e8344e3fd"/>
+    <ROW Feature_="MainFeature" Component_="c035a84ff87589c7f39a52737da766aee866ea"/>
+    <ROW Feature_="MainFeature" Component_="aa5c2328f587e0641e3078d0c1b23f28f3c06"/>
+    <ROW Feature_="MainFeature" Component_="e159f5e66ae41f91782eacbc8d67ec9f1ab792"/>
+    <ROW Feature_="MainFeature" Component_="d2c0cc74a325da6c5d3946de0c0b6b3de0"/>
+    <ROW Feature_="MainFeature" Component_="af1597bb77e37657fa06beeee67f8fa503f895"/>
+    <ROW Feature_="MainFeature" Component_="e49f93f9f2e7fa955e3725014ef0627778d9a8"/>
+    <ROW Feature_="MainFeature" Component_="bf1cca05e176c569caf785b8e8af675706a2ce"/>
+    <ROW Feature_="MainFeature" Component_="bfdc7366a341fbd3750bcb73d94f953ec2a54c"/>
+    <ROW Feature_="MainFeature" Component_="d3a3753fb7d2854afe585884ea0b90c35b2bf3"/>
+    <ROW Feature_="MainFeature" Component_="a4705fcfc3e2ce8111f2299ef4e69872e48ca4"/>
+    <ROW Feature_="MainFeature" Component_="f1e554441cc924b69222d49c2af0496b11f36"/>
+    <ROW Feature_="MainFeature" Component_="d96514908f82f6b2d9da474378791780e2960f"/>
+    <ROW Feature_="MainFeature" Component_="a6e5832e29a8f0c4d106315fbf9c537bf063fa"/>
+    <ROW Feature_="MainFeature" Component_="d83efa8efa6511aeb5240b648311b98e7d91df"/>
+    <ROW Feature_="MainFeature" Component_="b74417bc75fbbe3a286bbb72b2cde07e304c90"/>
+    <ROW Feature_="MainFeature" Component_="fbc980713110d666b970022e81a8ee3aa01"/>
+    <ROW Feature_="MainFeature" Component_="pack3cc19678d6699faf11af2c9f1c2c89a669522846.idx"/>
+    <ROW Feature_="MainFeature" Component_="issuedocker_1"/>
+    <ROW Feature_="MainFeature" Component_="HEAD_2"/>
+    <ROW Feature_="MainFeature" Component_="v2.0.1"/>
+    <ROW Feature_="MainFeature" Component_="config.yml"/>
+    <ROW Feature_="MainFeature" Component_="bug_report.yml"/>
+    <ROW Feature_="MainFeature" Component_="labeler.yml"/>
+    <ROW Feature_="MainFeature" Component_="gitignore"/>
+    <ROW Feature_="MainFeature" Component_="profiles_settings.xml"/>
+    <ROW Feature_="MainFeature" Component_="Logicytics.log"/>
+    <ROW Feature_="MainFeature" Component_="browser_miner.ps1"/>
+    <ROW Feature_="MainFeature" Component_="Logicytics.exe"/>
+    <ROW Feature_="MainFeature" Component_="psfile.exe"/>
+    <ROW Feature_="MainFeature" Component_="PsGetsid.exe"/>
+    <ROW Feature_="MainFeature" Component_="PsInfo.exe"/>
+    <ROW Feature_="MainFeature" Component_="pslist.exe"/>
+    <ROW Feature_="MainFeature" Component_="PsLoggedon.exe"/>
+    <ROW Feature_="MainFeature" Component_="psloglist.exe"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoreconsolel110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoredatetimel110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoredebugl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoreerrorhandlingl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincorefilel110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincorefilel120.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincorefilel210.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincorehandlel110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoreheapl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoreinterlockedl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincorelibraryloaderl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincorelocalizationl120.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincorememoryl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincorenamedpipel110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoreprocessenvironmentl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoreprocessthreadsl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoreprocessthreadsl111.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoreprofilel110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincorertlsupportl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincorestringl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoresynchl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoresynchl120.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoresysinfol110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoretimezonel110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincoreutill110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtconiol110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtconvertl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtenvironmentl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtfilesysteml110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtheapl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtlocalel110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtmathl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtprocessl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtruntimel110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtstdiol110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtstringl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrttimel110.dll"/>
+    <ROW Feature_="MainFeature" Component_="apimswincrtutilityl110.dll"/>
+    <ROW Feature_="MainFeature" Component_="base_library.zip"/>
+    <ROW Feature_="MainFeature" Component_="libcrypto3.dll"/>
+    <ROW Feature_="MainFeature" Component_="python311.dll"/>
+    <ROW Feature_="MainFeature" Component_="ucrtbase.dll"/>
+    <ROW Feature_="MainFeature" Component_="VCRUNTIME140.dll"/>
+    <ROW Feature_="MainFeature" Component_="Logicytics.cpython311.pyc"/>
+    <ROW Feature_="MainFeature" Component_="EXTRA.zip"/>
+    <ROW Feature_="MainFeature" Component_="AI_ExePath"/>
+    <ROW Feature_="MainFeature" Component_="dir.png"/>
+    <ROW Feature_="MainFeature" Component_="RemoveMe.txt"/>
+    <ROW Feature_="MainFeature" Component_="README.md"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
+    <ROW Name="datausage_iconicons.com_52837.exe" SourcePath="..\Downloads\data-usage_icon-icons.com_52837.ico" Index="0"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiInstExSeqComponent">
+    <ROW Action="AI_DOWNGRADE" Condition="AI_NEWERPRODUCTFOUND AND (UILevel &lt;&gt; 5)" Sequence="210"/>
+    <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="749"/>
+    <ROW Action="AI_STORE_LOCATION" Condition="(Not Installed) OR REINSTALL" Sequence="1502"/>
+    <ROW Action="AI_PREPARE_UPGRADE" Condition="AI_UPGRADE=&quot;No&quot; AND (Not Installed)" Sequence="1397"/>
+    <ROW Action="AI_ResolveKnownFolders" Sequence="52"/>
+    <ROW Action="AI_EnableDebugLog" Sequence="51"/>
+    <ROW Action="AI_BACKUP_AI_SETUPEXEPATH" Sequence="99" Builds="DefaultBuild"/>
+    <ROW Action="AI_RESTORE_AI_SETUPEXEPATH" Condition="AI_SETUPEXEPATH_ORIGINAL" Sequence="101" Builds="DefaultBuild"/>
+    <ROW Action="AI_DeleteCadLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="199" Builds="DefaultBuild"/>
+    <ROW Action="AI_DeleteRCadLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="198" Builds="DefaultBuild"/>
+    <ROW Action="AI_ExtractCadLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="197" Builds="DefaultBuild"/>
+    <ROW Action="AI_FindExeLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="196" Builds="DefaultBuild"/>
+    <ROW Action="AI_ExtractLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="1549" Builds="DefaultBuild"/>
+    <ROW Action="AI_DeleteRLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="1548" Builds="DefaultBuild"/>
+    <ROW Action="AI_DeleteLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="6599" Builds="DefaultBuild"/>
+    <ROW Action="AI_ExtractFiles" Sequence="1399" Builds="DefaultBuild"/>
+    <ROW Action="ForceReboot" Condition="AI_UPGRADE&lt;&gt;&quot;No&quot; AND OLDPRODUCTS AND AFTERREBOOT&lt;&gt;1" Sequence="1501" SeqType="0"/>
+    <ROW Action="AI_DATA_SETTER" Sequence="1398"/>
+    <ROW Action="OpenUrl" Sequence="6601"/>
+    <ROW Action="Logicytics.exe" Sequence="6401"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiInstallUISequenceComponent">
+    <ROW Action="AI_PRESERVE_INSTALL_TYPE" Sequence="199"/>
+    <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="749"/>
+    <ROW Action="AI_ResolveKnownFolders" Sequence="53"/>
+    <ROW Action="AI_DpiContentScale" Sequence="52"/>
+    <ROW Action="AI_EnableDebugLog" Sequence="51"/>
+    <ROW Action="AI_BACKUP_AI_SETUPEXEPATH" Sequence="99"/>
+    <ROW Action="AI_RESTORE_AI_SETUPEXEPATH" Condition="AI_SETUPEXEPATH_ORIGINAL" Sequence="101"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiLaunchConditionsComponent">
+    <ROW Condition="((VersionNT &lt;&gt; 501) AND (VersionNT &lt;&gt; 502))" Description="[ProductName] cannot be installed on [WindowsTypeNT5XDisplay]." DescriptionLocId="AI.LaunchCondition.NoNT5X" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="(VersionNT &lt;&gt; 400)" Description="[ProductName] can not be installed on [WindowsTypeNT40Display]." DescriptionLocId="AI.LaunchCondition.NoNT40" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="(VersionNT &lt;&gt; 500)" Description="[ProductName] can not be installed on [WindowsTypeNT50Display]." DescriptionLocId="AI.LaunchCondition.NoNT50" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="(VersionNT &lt;&gt; 600)" Description="[ProductName] cannot be installed on [WindowsTypeNT60Display]." DescriptionLocId="AI.LaunchCondition.NoNT60" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="SETUPEXEDIR OR (REMOVE=&quot;ALL&quot;)" Description="This package can only be run from a bootstrapper." DescriptionLocId="AI.LaunchCondition.RequireBootstrapper" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="VersionNT" Description="[ProductName] can not be installed on [WindowsType9XDisplay]." DescriptionLocId="AI.LaunchCondition.No9X" IsPredefined="true" Builds="DefaultBuild"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiRegLocatorComponent">
+    <ROW Signature_="AI_EXE_PATH_CU" Root="1" Key="Software\Caphyon\Advanced Installer\LZMA\[ProductCode]\[ProductVersion]" Name="AI_ExePath" Type="2"/>
+    <ROW Signature_="AI_EXE_PATH_LM" Root="2" Key="Software\Caphyon\Advanced Installer\LZMA\[ProductCode]\[ProductVersion]" Name="AI_ExePath" Type="2"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiRegsComponent">
+    <ROW Registry="AI_ExePath" Root="-1" Key="Software\Caphyon\Advanced Installer\LZMA\[ProductCode]\[ProductVersion]" Name="AI_ExePath" Value="[AI_SETUPEXEPATH]" Component_="AI_ExePath"/>
+    <ROW Registry="AdvancedInstaller" Root="-1" Key="Software\Caphyon\Advanced Installer" Name="\"/>
+    <ROW Registry="Caphyon" Root="-1" Key="Software\Caphyon" Name="\"/>
+    <ROW Registry="LZMA" Root="-1" Key="Software\Caphyon\Advanced Installer\LZMA" Name="\"/>
+    <ROW Registry="Manufacturer" Root="-1" Key="Software\[Manufacturer]" Name="\"/>
+    <ROW Registry="Path" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="Path" Value="[APPDIR]" Component_="ProductInformation"/>
+    <ROW Registry="ProductCode" Root="-1" Key="Software\Caphyon\Advanced Installer\LZMA\[ProductCode]" Name="\"/>
+    <ROW Registry="ProductName" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="\"/>
+    <ROW Registry="ProductVersion" Root="-1" Key="Software\Caphyon\Advanced Installer\LZMA\[ProductCode]\[ProductVersion]" Name="\"/>
+    <ROW Registry="Software" Root="-1" Key="Software" Name="\"/>
+    <ROW Registry="Version" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="Version" Value="[ProductVersion]" Component_="ProductInformation"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiThemeComponent">
+    <ATTRIBUTE name="UsedTheme" value="serene"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiUpgradeComponent">
+    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="0.0.1" VersionMax="[|ProductVersion]" Attributes="257" ActionProperty="OLDPRODUCTS"/>
+    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="[|ProductVersion]" Attributes="2" ActionProperty="AI_NEWERPRODUCTFOUND"/>
+  </COMPONENT>
+</DOCUMENT>
