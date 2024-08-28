@@ -11,11 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Extract logs
-        env:
-          DEBUG_LOG: ${{ github.event.issue.body | regex '(?<=Debugger Log\n\n)(.*?)(?=###)' }}
-          BASIC_LOG: ${{ github.event.issue.body | regex '(?<=Basic Log\n\n)(.*?)(?=###)' }}
-      - name: Check similar issues
-        uses: craigloewen-msft/GitGudSimilarIssues@main
+        run: |
+          DEBUG_LOG=$(echo "${{ github.event.issue.body }}" | grep -A1000 "Debugger Log")
+          BASIC_LOG=$(echo "${{ github.event.issue.body }}" | grep -A1000 "Basic Log")
+          echo "DEBUG_LOG=${DEBUG_LOG}" >> $GITHUB_ENV
+          echo "BASIC_LOG=${BASIC_LOG}" >> $GITHUB_ENV
+      - uses: craigloewen-msft/GitGudSimilarIssues@main
         with:
           issueTitle: ${{ github.event.issue.title }}
           issueBody: ${{ github.event.issue.body }}
