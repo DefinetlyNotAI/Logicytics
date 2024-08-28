@@ -1,0 +1,23 @@
+name: Auto-Log Extraction and Similar Issue Check
+
+on:
+  workflow_dispatch:
+  issues:
+    types: [opened, reopened]
+
+jobs:
+  analyze_issue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Extract logs
+        env:
+          DEBUG_LOG: ${{ github.event.issue.body | regex '(?<=Debugger Log\n\n)(.*?)(?=###)' }}
+          BASIC_LOG: ${{ github.event.issue.body | regex '(?<=Basic Log\n\n)(.*?)(?=###)' }}
+      - name: Check similar issues
+        uses: craigloewen-msft/GitGudSimilarIssues@main
+        with:
+          issueTitle: ${{ github.event.issue.title }}
+          issueBody: ${{ github.event.issue.body }}
+          repository: ${{ github.repository }}
+          similarityTolerance: "0.7"
