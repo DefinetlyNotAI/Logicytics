@@ -171,19 +171,23 @@ except Exception:
 # Special actions -> Quit
 if action == "debug":
     debug()
+    input("Press Enter to exit...")
     exit(0)
 log = Log(debug=DEBUG)
 if action == "dev":
     dev_checks()
+    input("Press Enter to exit...")
     exit(0)
 if action == "extra":
     log.info("Opening extra tools menu...")
     menu()
+    input("Press Enter to exit...")
     exit(0)
 if action == "update":
     log.info("Updating...")
     update()
     log.info("Update complete!")
+    input("Press Enter to exit...")
     exit(0)
 if action == "restore":
     log.warning(
@@ -191,6 +195,7 @@ if action == "restore":
         "the location for you"
     )
     open_file("../ACCESS/BACKUP/")
+    input("Press Enter to exit...")
     exit(1)
 if action == "backup":
     log.info("Backing up...")
@@ -199,6 +204,7 @@ if action == "backup":
     backup(".", "Mods_Backup")
     log.debug("Backup complete -> MODS dir")
     log.info("Backup complete!")
+    input("Press Enter to exit...")
     exit(0)
 if action == "unzip_extra":
     log.warning(
@@ -208,6 +214,7 @@ if action == "unzip_extra":
     log.info("Unzipping...")
     unzip("..\\EXTRA\\EXTRA.zip")
     log.info("Unzip complete!")
+    input("Press Enter to exit...")
     exit(0)
 
 log.info("Starting Logicytics...")
@@ -215,6 +222,7 @@ log.info("Starting Logicytics...")
 # Checks for privileges and errors
 if not check_status.admin():
     log.critical("Please run this script with admin privileges", "_W", "P", "BA")
+    input("Press Enter to exit...")
     exit(1)
 if check_status.uac():
     log.warning("UAC is enabled, this may cause issues")
@@ -303,8 +311,10 @@ if sub_action == "webhook":
     log.info("Sending webhook...")
     if WEBHOOK is None or WEBHOOK == "":
         log.critical("WEBHOOK URL not set and the request action was webhook", "_W", "P", "BA")
+        input("Press Enter to exit...")
         exit(1)
     """
 
 log.info("Exiting...")
+input("Press Enter to exit...")
 exit(0)

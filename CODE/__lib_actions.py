@@ -133,6 +133,7 @@ class Actions:
         )
         if "True" not in empty_check:
             parser.print_help()
+            input("Press Enter to exit...")
             exit(1)
 
         # Check for exclusivity rules
@@ -148,6 +149,7 @@ class Actions:
                     "--reboot and --shutdown and --webhook Flags require at least one of the following Flags: "
                     "--default, --threaded, --modded, --minimal, --exe."
                 )
+                input("Press Enter to exit...")
                 exit(1)
             else:
                 special_flag_used = True
@@ -157,6 +159,7 @@ class Actions:
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
             if len(used_flags) > 1:
                 print("Only one flag is allowed.")
+                input("Press Enter to exit...")
                 exit(1)
         else:
             # Ensure only 2 Flags is used
@@ -165,6 +168,7 @@ class Actions:
                 print(
                     "Only one flag is allowed with the --reboot and --shutdown and --webhook Flags."
                 )
+                input("Press Enter to exit...")
                 exit(1)
 
         # Set Flags to True or False based on whether they were used
@@ -189,6 +193,7 @@ class Actions:
             print(
                 "Only one flag is allowed with the --reboot and --shutdown and --webhook Flags."
             )
+            input("Press Enter to exit...")
             exit(1)
 
     @staticmethod
@@ -227,11 +232,13 @@ class Actions:
                     and isinstance(files, list)
                 ):
                     print("Invalid config.json format.")
+                    input("Press Enter to exit...")
                     exit(1)
 
                 return webhook_url, debug, version, api_key, files
         except FileNotFoundError:
             print("The config.json File is not found.")
+            input("Press Enter to exit...")
             exit(1)
 
 
