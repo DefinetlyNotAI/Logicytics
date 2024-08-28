@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/MODS" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CODE/SysInternal_Suite" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CODE/libs" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CODE/_internal" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/ACCESS" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.11" jdkType="Python SDK" />
