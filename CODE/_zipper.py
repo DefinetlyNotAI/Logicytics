@@ -3,6 +3,8 @@ import shutil
 from datetime import date
 import zipfile
 import hashlib
+import sys
+
 
 
 def zip_and_hash(path: str, name: str, action: str) -> tuple:
