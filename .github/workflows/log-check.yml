@@ -14,8 +14,9 @@ jobs:
         run: |
           DEBUG_LOG=$(echo "${{ github.event.issue.body }}" | grep -A1000 "Debugger Log")
           BASIC_LOG=$(echo "${{ github.event.issue.body }}" | grep -A1000 "Basic Log")
+          NO_LOGS=false
           if [ -z "$DEBUG_LOG" ] && [ -z "$BASIC_LOG" ]; then
-            echo "NO_LOGS=true" >> $GITHUB_ENV
+            NO_LOGS=true
           fi
       - name: Add comment
         if: $NO_LOGS != true
