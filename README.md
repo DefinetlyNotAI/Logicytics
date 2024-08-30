@@ -41,7 +41,8 @@ To install and setup Logicytics, follow these steps:
 
 - **Dependencies**: The project requires certain Python modules to be installed. You can install all the required modules by running the following command in your terminal: `pip install -r requirements.txt`.
 
-![Admin Error](IMG/NeedAdmin.png "Not using admin will result in a soft crash")
+![Admin Error](https://github.com/DefinetlyNotAI/Logicytics/blob/main/IMG/NeedAdmin.png "Not using admin will result in a soft crash")
+
 - **Administrative Privileges**: To be able to run the program using certain features of the project, like registry modification, you must run the program with administrative privileges.
 
 - **System Requirements**: The project has been tested on Windows 10 and 11. It will not work on other operating systems.
@@ -86,14 +87,14 @@ If you have an idea or want to contribute to the project, you can submit an issu
 
 ### Basic Usage
 
-![The flag options](IMG/Flag%20Options.png "Here are the options Logicytics has")
+![The flag options](https://github.com/DefinetlyNotAI/Logicytics/blob/main/IMG/Flag%20Options.png "Here are the options Logicytics has")
 
 After running and successfully collecting data, you may traverse the ACCESS directory as much as you like,
 Remove add and delete files, it's the safest directory where your backups, hashes, data zips and logs are found.
 
 Also watch this video for a better understanding of Logicytics:
 
-[![Logicytics Tutorial](IMG/ClickMe.jpg)](https://www.youtube.com/watch?v=XVTBmdTQqOs)
+[![Logicytics Tutorial](https://github.com/DefinetlyNotAI/Logicytics/blob/main/IMG/ClickMe.jpg)](https://www.youtube.com/watch?v=XVTBmdTQqOs)
 
 ## 🔧 Configuration 🔧
 
@@ -127,7 +128,7 @@ Do not modify CURRENT_FILES and VERSION unless you are developing extra add-ons
 
 ## 🚀 Advanced Usage 🚀
 
-![Main 3 Directories](IMG/3dir.png "The 3 Main Directories")
+![Main 3 Directories](https://github.com/DefinetlyNotAI/Logicytics/blob/main/IMG/3dir.png "The 3 Main Directories")
 
 ### Mods
 
@@ -217,7 +218,7 @@ but it should give you a good idea of what data Logicytics is capable of extract
 If there is a specific piece of data that you would like to see extracted by Logicytics,
 please let us know. We are constantly working to improve the project and adding new features.
 
-![Extra Tools](IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
+![Extra Tools](https://github.com/DefinetlyNotAI/Logicytics/blob/main/IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
 
 Other than mods, some prefixed tools are in the `EXTRA` directory, use the `--extra` flag to traverse these
 special tools
