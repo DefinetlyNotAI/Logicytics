@@ -90,6 +90,20 @@ of our project by their SysInternal Project:
 
 - [SysInternal](https://learn.microsoft.com/en-us/sysinternals/)
 
+### Nmap
+
+We appreciate Nmap and their contributors for Npcap, which has significantly contributed to the development
+of our project by their npcap Project which was used in the extra's folder:
+
+- [Npcap](https://npcap.com)
+
+### TheWindowsClub
+
+We appreciate TheWindowsClub and their contributors for FixWin, which has significantly contributed to the development
+of our project by their FixWin Project which was used in the extra's folder:
+
+- [FixWin](https://www.thewindowsclub.com/fixwin-for-windows-10)
+  
 # Acknowledgments
 
 This project would not be possible without the contributions and inspirations from the above-mentioned individuals and
