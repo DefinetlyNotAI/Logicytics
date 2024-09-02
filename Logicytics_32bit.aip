@@ -100,9 +100,9 @@
     <ROW Component="ProductInformation" Value="{85D11776-2C66-4FB4-898A-D1861003C289}"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
-    <ROW Component="AI_CustomARPName" ComponentId="{364CBD19-E767-47CD-9E65-033EA3E20974}" Directory_="APPDIR" Attributes="4" KeyPath="DisplayName" Options="1"/>
-    <ROW Component="AI_DisableModify" ComponentId="{F0D8E758-C67D-44F6-90E2-0271DDACC083}" Directory_="APPDIR" Attributes="4" KeyPath="NoModify" Options="1"/>
-    <ROW Component="AI_ExePath" ComponentId="{0DF1BA4C-1B10-43B0-BB88-12CD16F30331}" Directory_="APPDIR" Attributes="4" KeyPath="AI_ExePath"/>
+    <ROW Component="AI_CustomARPName" ComponentId="{364CBD19-E767-47CD-9E65-033EA3E20974}" Directory_="APPDIR" Attributes="260" KeyPath="DisplayName" Options="1"/>
+    <ROW Component="AI_DisableModify" ComponentId="{F0D8E758-C67D-44F6-90E2-0271DDACC083}" Directory_="APPDIR" Attributes="260" KeyPath="NoModify" Options="1"/>
+    <ROW Component="AI_ExePath" ComponentId="{0DF1BA4C-1B10-43B0-BB88-12CD16F30331}" Directory_="APPDIR" Attributes="260" KeyPath="AI_ExePath"/>
     <ROW Component="APPDIR" ComponentId="{BCBBE7CD-B151-4DDE-85D6-4E22A8919A56}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="EXTRA.zip" ComponentId="{2D62147C-4323-4E7B-A89E-77C738845BB9}" Directory_="EXTRA_Dir" Attributes="0" KeyPath="EXTRA.zip" Type="0"/>
     <ROW Component="HEAD" ComponentId="{E1166589-4C5F-4D06-AC04-AC462E9B5E73}" Directory_="logs_Dir" Attributes="0" KeyPath="HEAD_1" Type="0"/>
@@ -111,7 +111,7 @@
     <ROW Component="Lists_and_variables.cpython311.pyc" ComponentId="{472BA43F-1181-40E9-9B2B-D570583C5E4B}" Directory_="__pycache___Dir" Attributes="0" KeyPath="Lists_and_variables.cpython311.pyc" Type="0"/>
     <ROW Component="Logicytics.cpython311.pyc" ComponentId="{1703FC4E-E3B9-479F-ABD8-C11D2B3C52D5}" Directory_="__pycache___1_Dir" Attributes="0" KeyPath="Logicytics.cpython311.pyc" Type="0"/>
     <ROW Component="Logicytics.exe" ComponentId="{73ACBCA7-9F62-4CA6-A470-14D96BCA8C8F}" Directory_="CODE_Dir" Attributes="256" KeyPath="Logicytics.exe"/>
-    <ROW Component="ProductInformation" ComponentId="{85D11776-2C66-4FB4-898A-D1861003C289}" Directory_="APPDIR" Attributes="4" KeyPath="Version"/>
+    <ROW Component="ProductInformation" ComponentId="{85D11776-2C66-4FB4-898A-D1861003C289}" Directory_="APPDIR" Attributes="260" KeyPath="Version"/>
     <ROW Component="PsGetsid.exe" ComponentId="{77DEB78B-7B1D-40B6-850E-29C5B1B7B537}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="PsGetsid.exe"/>
     <ROW Component="PsInfo.exe" ComponentId="{8155E20B-E2B0-4820-ABC9-E02AACA53B69}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="PsInfo.exe"/>
     <ROW Component="PsLoggedon.exe" ComponentId="{362186CA-D5CC-4F64-8F61-853627355669}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="PsLoggedon.exe"/>
@@ -355,7 +355,7 @@
     <ROW Action="AI_DetectSoftware" Sequence="151"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BuildComponent">
-    <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="." PackageFileName="Logicytics" Languages="en_GB" InstallationType="3" CabsLocation="1" PackageType="1" FilesInsideExe="true" ExeIconPath="..\Downloads\data-usage_icon-icons.com_52837.ico" CreateMd5="true" ExtractionFolder="[AppDataFolder][|Manufacturer]\[|ProductName] [|ProductVersion]\install" ExtUI="true" Options="8" UseLargeSchema="true" ExeName="Logicytics" UACExecutionLevel="2"/>
+    <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="." PackageFileName="Logicytics" Languages="en_GB" InstallationType="3" CabsLocation="1" PackageType="1" FilesInsideExe="true" ExeIconPath="..\Downloads\data-usage_icon-icons.com_52837.ico" SummInfoMetadata="Page Count:450" CreateMd5="true" ExtractionFolder="[AppDataFolder][|Manufacturer]\[|ProductName] [|ProductVersion]\install" ExtUI="true" Options="8" UseLargeSchema="true" ExeName="Logicytics" UACExecutionLevel="2"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.DictionaryComponent">
     <ROW Path="&lt;AI_DICTS&gt;ui.ail"/>

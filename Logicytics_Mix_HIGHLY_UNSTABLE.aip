@@ -47,32 +47,49 @@
     <ROW Property="WindowsTypeNTDisplay" MultiBuildValue="DefaultBuild:Windows 7 x86, Windows 8 x86, Windows 8.1 x86" ValueLocId="-"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiDirsComponent">
+    <ROW Directory="AI_Bin32_Dir" Directory_Parent="APPDIR" DefaultDir="32-bit"/>
     <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1"/>
+    <ROW Directory="CODE_1_Dir" Directory_Parent="AI_Bin32_Dir" DefaultDir="CODE"/>
     <ROW Directory="CODE_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="CODE"/>
     <ROW Directory="EXTRA_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="EXTRA"/>
     <ROW Directory="IMG_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="IMG"/>
     <ROW Directory="ISSUE_TEMPLATE_Dir" Directory_Parent="github_Dir" DefaultDir="ISSUE_~1|ISSUE_TEMPLATE"/>
     <ROW Directory="Logicytics_Dir" Directory_Parent="APPDIR" DefaultDir="LOGICY~1|Logicytics"/>
     <ROW Directory="MODS_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="MODS"/>
+    <ROW Directory="SHORTCUTDIR" Directory_Parent="TARGETDIR" DefaultDir="SHORTC~1|SHORTCUTDIR" IsPseudoRoot="1"/>
+    <ROW Directory="SysInternal_Suite_1_Dir" Directory_Parent="CODE_1_Dir" DefaultDir="SYSINT~1|SysInternal_Suite"/>
     <ROW Directory="SysInternal_Suite_Dir" Directory_Parent="CODE_Dir" DefaultDir="SYSINT~1|SysInternal_Suite"/>
     <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
+    <ROW Directory="__10_Dir" Directory_Parent="ed_1_Dir" DefaultDir="05"/>
     <ROW Directory="__1_Dir" Directory_Parent="__Dir" DefaultDir="43"/>
     <ROW Directory="__2_Dir" Directory_Parent="objects_Dir" DefaultDir="92"/>
     <ROW Directory="__3_Dir" Directory_Parent="objects_Dir" DefaultDir="95"/>
     <ROW Directory="__4_Dir" Directory_Parent="d6_Dir" DefaultDir="89"/>
     <ROW Directory="__5_Dir" Directory_Parent="ed_Dir" DefaultDir="05"/>
+    <ROW Directory="__6_Dir" Directory_Parent="objects_2_Dir" DefaultDir="42"/>
+    <ROW Directory="__7_Dir" Directory_Parent="__6_Dir" DefaultDir="43"/>
+    <ROW Directory="__8_Dir" Directory_Parent="objects_2_Dir" DefaultDir="95"/>
+    <ROW Directory="__9_Dir" Directory_Parent="d6_1_Dir" DefaultDir="89"/>
     <ROW Directory="__Dir" Directory_Parent="objects_Dir" DefaultDir="42"/>
     <ROW Directory="__pycache___1_Dir" Directory_Parent="CODE_Dir" DefaultDir="__PYCA~1|__pycache__"/>
     <ROW Directory="__pycache___Dir" Directory_Parent="local_libraries_Dir" DefaultDir="__PYCA~1|__pycache__"/>
     <ROW Directory="_internal_Dir" Directory_Parent="CODE_Dir" DefaultDir="_INTER~1|_internal"/>
+    <ROW Directory="a4_1_Dir" Directory_Parent="objects_2_Dir" DefaultDir="a4"/>
     <ROW Directory="a4_Dir" Directory_Parent="objects_Dir" DefaultDir="a4"/>
+    <ROW Directory="a_1_Dir" Directory_Parent="a4_1_Dir" DefaultDir="8a"/>
     <ROW Directory="a_Dir" Directory_Parent="a4_Dir" DefaultDir="8a"/>
+    <ROW Directory="b_1_Dir" Directory_Parent="__8_Dir" DefaultDir="1b"/>
     <ROW Directory="b_Dir" Directory_Parent="__3_Dir" DefaultDir="1b"/>
+    <ROW Directory="d6_1_Dir" Directory_Parent="objects_2_Dir" DefaultDir="d6"/>
     <ROW Directory="d6_Dir" Directory_Parent="objects_Dir" DefaultDir="d6"/>
+    <ROW Directory="db_1_Dir" Directory_Parent="dc_1_Dir" DefaultDir="db"/>
     <ROW Directory="db_Dir" Directory_Parent="dc_Dir" DefaultDir="db"/>
+    <ROW Directory="dc_1_Dir" Directory_Parent="objects_2_Dir" DefaultDir="dc"/>
     <ROW Directory="dc_Dir" Directory_Parent="objects_Dir" DefaultDir="dc"/>
+    <ROW Directory="ed_1_Dir" Directory_Parent="objects_2_Dir" DefaultDir="ed"/>
     <ROW Directory="ed_Dir" Directory_Parent="objects_Dir" DefaultDir="ed"/>
     <ROW Directory="f_Dir" Directory_Parent="__2_Dir" DefaultDir="1f"/>
+    <ROW Directory="git_1_Dir" Directory_Parent="AI_Bin32_Dir" DefaultDir="GIT~1|.git"/>
     <ROW Directory="git_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="GIT~1|.git"/>
     <ROW Directory="github_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="GITHUB~1|.github"/>
     <ROW Directory="heads_1_Dir" Directory_Parent="refs_1_Dir" DefaultDir="heads"/>
@@ -81,10 +98,12 @@
     <ROW Directory="idea_Dir" Directory_Parent="Logicytics_Dir" DefaultDir="IDEA~1|.idea"/>
     <ROW Directory="info_Dir" Directory_Parent="git_Dir" DefaultDir="info"/>
     <ROW Directory="inspectionProfiles_Dir" Directory_Parent="idea_Dir" DefaultDir="INSPEC~1|inspectionProfiles"/>
+    <ROW Directory="lfs_1_Dir" Directory_Parent="git_1_Dir" DefaultDir="lfs"/>
     <ROW Directory="lfs_Dir" Directory_Parent="git_Dir" DefaultDir="lfs"/>
     <ROW Directory="local_libraries_Dir" Directory_Parent="CODE_Dir" DefaultDir="LOCAL_~1|local_libraries"/>
     <ROW Directory="logs_Dir" Directory_Parent="git_Dir" DefaultDir="logs"/>
     <ROW Directory="objects_1_Dir" Directory_Parent="git_Dir" DefaultDir="objects"/>
+    <ROW Directory="objects_2_Dir" Directory_Parent="lfs_1_Dir" DefaultDir="objects"/>
     <ROW Directory="objects_Dir" Directory_Parent="lfs_Dir" DefaultDir="objects"/>
     <ROW Directory="origin_1_Dir" Directory_Parent="remotes_1_Dir" DefaultDir="origin"/>
     <ROW Directory="origin_Dir" Directory_Parent="remotes_Dir" DefaultDir="origin"/>
@@ -100,9 +119,9 @@
     <ROW Component="ProductInformation" Value="{85D11776-2C66-4FB4-898A-D1861003C289}"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
-    <ROW Component="AI_CustomARPName" ComponentId="{364CBD19-E767-47CD-9E65-033EA3E20974}" Directory_="APPDIR" Attributes="4" KeyPath="DisplayName" Options="1"/>
-    <ROW Component="AI_DisableModify" ComponentId="{F0D8E758-C67D-44F6-90E2-0271DDACC083}" Directory_="APPDIR" Attributes="4" KeyPath="NoModify" Options="1"/>
-    <ROW Component="AI_ExePath" ComponentId="{0DF1BA4C-1B10-43B0-BB88-12CD16F30331}" Directory_="APPDIR" Attributes="4" KeyPath="AI_ExePath"/>
+    <ROW Component="AI_CustomARPName" ComponentId="{364CBD19-E767-47CD-9E65-033EA3E20974}" Directory_="APPDIR" Attributes="260" KeyPath="DisplayName" Options="1"/>
+    <ROW Component="AI_DisableModify" ComponentId="{F0D8E758-C67D-44F6-90E2-0271DDACC083}" Directory_="APPDIR" Attributes="260" KeyPath="NoModify" Options="1"/>
+    <ROW Component="AI_ExePath" ComponentId="{0DF1BA4C-1B10-43B0-BB88-12CD16F30331}" Directory_="APPDIR" Attributes="260" KeyPath="AI_ExePath"/>
     <ROW Component="APPDIR" ComponentId="{BCBBE7CD-B151-4DDE-85D6-4E22A8919A56}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="EXTRA.zip" ComponentId="{2D62147C-4323-4E7B-A89E-77C738845BB9}" Directory_="EXTRA_Dir" Attributes="0" KeyPath="EXTRA.zip" Type="0"/>
     <ROW Component="HEAD" ComponentId="{E1166589-4C5F-4D06-AC04-AC462E9B5E73}" Directory_="logs_Dir" Attributes="0" KeyPath="HEAD_1" Type="0"/>
@@ -110,54 +129,59 @@
     <ROW Component="HEAD_2" ComponentId="{99AC341B-DE1E-4C78-BC3B-AC24FA0355DE}" Directory_="origin_1_Dir" Attributes="0" KeyPath="HEAD_3" Type="0"/>
     <ROW Component="Lists_and_variables.cpython311.pyc" ComponentId="{472BA43F-1181-40E9-9B2B-D570583C5E4B}" Directory_="__pycache___Dir" Attributes="0" KeyPath="Lists_and_variables.cpython311.pyc" Type="0"/>
     <ROW Component="Logicytics.cpython311.pyc" ComponentId="{1703FC4E-E3B9-479F-ABD8-C11D2B3C52D5}" Directory_="__pycache___1_Dir" Attributes="0" KeyPath="Logicytics.cpython311.pyc" Type="0"/>
-    <ROW Component="Logicytics.exe" ComponentId="{73ACBCA7-9F62-4CA6-A470-14D96BCA8C8F}" Directory_="CODE_Dir" Attributes="256" KeyPath="Logicytics.exe"/>
-    <ROW Component="ProductInformation" ComponentId="{85D11776-2C66-4FB4-898A-D1861003C289}" Directory_="APPDIR" Attributes="4" KeyPath="Version"/>
+    <ROW Component="Logicytics.exe" ComponentId="{73ACBCA7-9F62-4CA6-A470-14D96BCA8C8F}" Directory_="CODE_Dir" Attributes="256" Condition="VersionNT64" KeyPath="Logicytics.exe"/>
+    <ROW Component="ProductInformation" ComponentId="{85D11776-2C66-4FB4-898A-D1861003C289}" Directory_="APPDIR" Attributes="260" KeyPath="Version"/>
     <ROW Component="PsGetsid.exe" ComponentId="{77DEB78B-7B1D-40B6-850E-29C5B1B7B537}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="PsGetsid.exe"/>
+    <ROW Component="PsGetsid.exe_1" ComponentId="{45ED90EA-19B2-4C76-9F4C-4AFCE2C050EF}" Directory_="SysInternal_Suite_1_Dir" Attributes="0" KeyPath="PsGetsid.exe_1"/>
     <ROW Component="PsInfo.exe" ComponentId="{8155E20B-E2B0-4820-ABC9-E02AACA53B69}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="PsInfo.exe"/>
+    <ROW Component="PsInfo.exe_1" ComponentId="{4262367E-5A02-442E-8E37-A8AD68E66387}" Directory_="SysInternal_Suite_1_Dir" Attributes="0" KeyPath="PsInfo.exe_1"/>
     <ROW Component="PsLoggedon.exe" ComponentId="{362186CA-D5CC-4F64-8F61-853627355669}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="PsLoggedon.exe"/>
+    <ROW Component="PsLoggedon.exe_1" ComponentId="{0EEB2056-0743-4206-AAC8-C0928CAAEB66}" Directory_="SysInternal_Suite_1_Dir" Attributes="0" KeyPath="PsLoggedon.exe_1"/>
     <ROW Component="RemoveMe.txt" ComponentId="{FB15DFDD-D6CF-48CA-A29C-47D87B46D98C}" Directory_="MODS_Dir" Attributes="0" KeyPath="RemoveMe.txt" Type="0"/>
-    <ROW Component="VCRUNTIME140.dll" ComponentId="{41B414F9-48A1-426D-B49B-1C52429CC6D6}" Directory_="_internal_Dir" Attributes="256" KeyPath="VCRUNTIME140.dll"/>
+    <ROW Component="VCRUNTIME140.dll" ComponentId="{41B414F9-48A1-426D-B49B-1C52429CC6D6}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="VCRUNTIME140.dll"/>
     <ROW Component="a48ac157609888471bf8578fb8b2aef6b0068f7e0742fccf2e0e288b0b2cfdfb" ComponentId="{3899E8B2-6125-4B56-85D7-3B3BC7E73CD3}" Directory_="a_Dir" Attributes="0" KeyPath="a48ac157609888471bf8578fb8b2aef6b0068f7e0742fccf2e0e288b0b2cfdfb" Type="0"/>
-    <ROW Component="apimswincoreconsolel110.dll" ComponentId="{730B22A9-A4A6-49AE-AC38-778F1C6AEA53}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreconsolel110.dll"/>
-    <ROW Component="apimswincoredatetimel110.dll" ComponentId="{E9DA101D-7745-430F-BF93-FBBC3B00BA10}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoredatetimel110.dll"/>
-    <ROW Component="apimswincoredebugl110.dll" ComponentId="{84D683B4-D96F-42FE-9A47-F5337E5A649A}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoredebugl110.dll"/>
-    <ROW Component="apimswincoreerrorhandlingl110.dll" ComponentId="{5985D420-DC0F-48F6-87D4-8DCDDDDD7B08}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreerrorhandlingl110.dll"/>
-    <ROW Component="apimswincorefilel110.dll" ComponentId="{1614C176-F6C7-4D5D-9FF9-895C45D29415}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorefilel110.dll"/>
-    <ROW Component="apimswincorefilel120.dll" ComponentId="{06A7E490-6C4D-461C-9EA3-D4114944F537}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorefilel120.dll"/>
-    <ROW Component="apimswincorefilel210.dll" ComponentId="{C5750619-3E6E-4910-884A-B522040FF513}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorefilel210.dll"/>
-    <ROW Component="apimswincorehandlel110.dll" ComponentId="{C75C5039-26D9-46AB-B8DE-DDFCC4633450}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorehandlel110.dll"/>
-    <ROW Component="apimswincoreheapl110.dll" ComponentId="{D6F940E1-CFEA-41B5-8415-55C4021767E3}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreheapl110.dll"/>
-    <ROW Component="apimswincoreinterlockedl110.dll" ComponentId="{DAA6EC7A-77A2-45A3-AF20-215F333DFB4F}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreinterlockedl110.dll"/>
-    <ROW Component="apimswincorelibraryloaderl110.dll" ComponentId="{3940FDDB-5645-419D-87BD-61C9AA4287C1}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorelibraryloaderl110.dll"/>
-    <ROW Component="apimswincorelocalizationl120.dll" ComponentId="{30487B38-9CFF-4DB0-92AC-6E6CA4B57AD7}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorelocalizationl120.dll"/>
-    <ROW Component="apimswincorememoryl110.dll" ComponentId="{2EF87822-B743-4BED-98D6-E9D22DFC2580}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorememoryl110.dll"/>
-    <ROW Component="apimswincorenamedpipel110.dll" ComponentId="{5DBE6FDD-2762-41A3-9B46-7D5A15C6948F}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorenamedpipel110.dll"/>
-    <ROW Component="apimswincoreprocessenvironmentl110.dll" ComponentId="{B0CCD46F-A1B0-44BD-B3DD-F059382AB91D}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreprocessenvironmentl110.dll"/>
-    <ROW Component="apimswincoreprocessthreadsl110.dll" ComponentId="{5919A3DA-FB36-400E-974F-6822B104C1B2}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreprocessthreadsl110.dll"/>
-    <ROW Component="apimswincoreprocessthreadsl111.dll" ComponentId="{EC9214B1-574A-4023-A55B-16C6F63E9CE2}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreprocessthreadsl111.dll"/>
-    <ROW Component="apimswincoreprofilel110.dll" ComponentId="{DC65D120-0420-4CD2-BB03-F3A5413B7FD5}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreprofilel110.dll"/>
-    <ROW Component="apimswincorertlsupportl110.dll" ComponentId="{2975F51F-ED8B-42D5-8D9D-EF21FEA9F4C2}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorertlsupportl110.dll"/>
-    <ROW Component="apimswincorestringl110.dll" ComponentId="{4A7D9C0C-3D2A-434A-BE2C-994C1BBE2175}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincorestringl110.dll"/>
-    <ROW Component="apimswincoresynchl110.dll" ComponentId="{46AAF2B5-A621-49AE-A348-28193DFEA21C}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoresynchl110.dll"/>
-    <ROW Component="apimswincoresynchl120.dll" ComponentId="{56BCBDA4-1E42-4414-BA1C-2C36F326AE53}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoresynchl120.dll"/>
-    <ROW Component="apimswincoresysinfol110.dll" ComponentId="{F49776CF-19B4-42BE-9697-D57103E0D34B}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoresysinfol110.dll"/>
-    <ROW Component="apimswincoretimezonel110.dll" ComponentId="{7C3B1BB5-9F8C-42FD-B49A-9BB4E221CF98}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoretimezonel110.dll"/>
-    <ROW Component="apimswincoreutill110.dll" ComponentId="{8DF461F3-D80D-4BFA-88C0-06B4D4AE3463}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincoreutill110.dll"/>
-    <ROW Component="apimswincrtconiol110.dll" ComponentId="{2A6E8AD9-28FB-4930-B651-A59AB4D468E4}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtconiol110.dll"/>
-    <ROW Component="apimswincrtconvertl110.dll" ComponentId="{5C4C078D-DAE9-4AC3-8735-468182834F8A}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtconvertl110.dll"/>
-    <ROW Component="apimswincrtenvironmentl110.dll" ComponentId="{55697FA1-0AB0-476C-92E5-FB1D7206F290}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtenvironmentl110.dll"/>
-    <ROW Component="apimswincrtfilesysteml110.dll" ComponentId="{66C80C50-2645-4A99-A681-2D209AE66DAF}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtfilesysteml110.dll"/>
-    <ROW Component="apimswincrtheapl110.dll" ComponentId="{E0672CB2-78D0-4470-85E6-46613A2F053E}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtheapl110.dll"/>
-    <ROW Component="apimswincrtlocalel110.dll" ComponentId="{05AE6DFE-CF51-42D5-9411-4B59DCC2D155}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtlocalel110.dll"/>
-    <ROW Component="apimswincrtmathl110.dll" ComponentId="{C26B29C6-93CC-453C-8858-3A27C2E8F18A}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtmathl110.dll"/>
-    <ROW Component="apimswincrtprocessl110.dll" ComponentId="{E7D06D3A-841E-4DC2-9321-0AC8B513E52A}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtprocessl110.dll"/>
-    <ROW Component="apimswincrtruntimel110.dll" ComponentId="{7A897462-EC35-43F4-997C-B6586BB14BB1}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtruntimel110.dll"/>
-    <ROW Component="apimswincrtstdiol110.dll" ComponentId="{D6C4879D-49B1-4A3C-997A-700769B21478}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtstdiol110.dll"/>
-    <ROW Component="apimswincrtstringl110.dll" ComponentId="{54B35FE5-BDC9-4550-BA59-AE0501408EB6}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtstringl110.dll"/>
-    <ROW Component="apimswincrttimel110.dll" ComponentId="{029DBCFF-8122-4AA5-8AB2-960737A70A0C}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrttimel110.dll"/>
-    <ROW Component="apimswincrtutilityl110.dll" ComponentId="{44728102-ECE6-4F9B-8FCB-0A3A035751AB}" Directory_="_internal_Dir" Attributes="256" KeyPath="apimswincrtutilityl110.dll"/>
+    <ROW Component="a48ac157609888471bf8578fb8b2aef6b0_1_068f7e0742fccf2e0e288b0b2cfdfb" ComponentId="{AD614943-287B-4DDF-AC49-D1E71A32B279}" Directory_="a_1_Dir" Attributes="0" KeyPath="a48ac157609888471bf8578fb8b2aef6b0_1_068f7e0742fccf2e0e288b0b2cfdfb" Type="0"/>
+    <ROW Component="apimswincoreconsolel110.dll" ComponentId="{730B22A9-A4A6-49AE-AC38-778F1C6AEA53}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoreconsolel110.dll"/>
+    <ROW Component="apimswincoredatetimel110.dll" ComponentId="{E9DA101D-7745-430F-BF93-FBBC3B00BA10}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoredatetimel110.dll"/>
+    <ROW Component="apimswincoredebugl110.dll" ComponentId="{84D683B4-D96F-42FE-9A47-F5337E5A649A}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoredebugl110.dll"/>
+    <ROW Component="apimswincoreerrorhandlingl110.dll" ComponentId="{5985D420-DC0F-48F6-87D4-8DCDDDDD7B08}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoreerrorhandlingl110.dll"/>
+    <ROW Component="apimswincorefilel110.dll" ComponentId="{1614C176-F6C7-4D5D-9FF9-895C45D29415}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincorefilel110.dll"/>
+    <ROW Component="apimswincorefilel120.dll" ComponentId="{06A7E490-6C4D-461C-9EA3-D4114944F537}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincorefilel120.dll"/>
+    <ROW Component="apimswincorefilel210.dll" ComponentId="{C5750619-3E6E-4910-884A-B522040FF513}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincorefilel210.dll"/>
+    <ROW Component="apimswincorehandlel110.dll" ComponentId="{C75C5039-26D9-46AB-B8DE-DDFCC4633450}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincorehandlel110.dll"/>
+    <ROW Component="apimswincoreheapl110.dll" ComponentId="{D6F940E1-CFEA-41B5-8415-55C4021767E3}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoreheapl110.dll"/>
+    <ROW Component="apimswincoreinterlockedl110.dll" ComponentId="{DAA6EC7A-77A2-45A3-AF20-215F333DFB4F}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoreinterlockedl110.dll"/>
+    <ROW Component="apimswincorelibraryloaderl110.dll" ComponentId="{3940FDDB-5645-419D-87BD-61C9AA4287C1}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincorelibraryloaderl110.dll"/>
+    <ROW Component="apimswincorelocalizationl120.dll" ComponentId="{30487B38-9CFF-4DB0-92AC-6E6CA4B57AD7}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincorelocalizationl120.dll"/>
+    <ROW Component="apimswincorememoryl110.dll" ComponentId="{2EF87822-B743-4BED-98D6-E9D22DFC2580}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincorememoryl110.dll"/>
+    <ROW Component="apimswincorenamedpipel110.dll" ComponentId="{5DBE6FDD-2762-41A3-9B46-7D5A15C6948F}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincorenamedpipel110.dll"/>
+    <ROW Component="apimswincoreprocessenvironmentl110.dll" ComponentId="{B0CCD46F-A1B0-44BD-B3DD-F059382AB91D}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoreprocessenvironmentl110.dll"/>
+    <ROW Component="apimswincoreprocessthreadsl110.dll" ComponentId="{5919A3DA-FB36-400E-974F-6822B104C1B2}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoreprocessthreadsl110.dll"/>
+    <ROW Component="apimswincoreprocessthreadsl111.dll" ComponentId="{EC9214B1-574A-4023-A55B-16C6F63E9CE2}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoreprocessthreadsl111.dll"/>
+    <ROW Component="apimswincoreprofilel110.dll" ComponentId="{DC65D120-0420-4CD2-BB03-F3A5413B7FD5}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoreprofilel110.dll"/>
+    <ROW Component="apimswincorertlsupportl110.dll" ComponentId="{2975F51F-ED8B-42D5-8D9D-EF21FEA9F4C2}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincorertlsupportl110.dll"/>
+    <ROW Component="apimswincorestringl110.dll" ComponentId="{4A7D9C0C-3D2A-434A-BE2C-994C1BBE2175}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincorestringl110.dll"/>
+    <ROW Component="apimswincoresynchl110.dll" ComponentId="{46AAF2B5-A621-49AE-A348-28193DFEA21C}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoresynchl110.dll"/>
+    <ROW Component="apimswincoresynchl120.dll" ComponentId="{56BCBDA4-1E42-4414-BA1C-2C36F326AE53}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoresynchl120.dll"/>
+    <ROW Component="apimswincoresysinfol110.dll" ComponentId="{F49776CF-19B4-42BE-9697-D57103E0D34B}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoresysinfol110.dll"/>
+    <ROW Component="apimswincoretimezonel110.dll" ComponentId="{7C3B1BB5-9F8C-42FD-B49A-9BB4E221CF98}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoretimezonel110.dll"/>
+    <ROW Component="apimswincoreutill110.dll" ComponentId="{8DF461F3-D80D-4BFA-88C0-06B4D4AE3463}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincoreutill110.dll"/>
+    <ROW Component="apimswincrtconiol110.dll" ComponentId="{2A6E8AD9-28FB-4930-B651-A59AB4D468E4}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtconiol110.dll"/>
+    <ROW Component="apimswincrtconvertl110.dll" ComponentId="{5C4C078D-DAE9-4AC3-8735-468182834F8A}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtconvertl110.dll"/>
+    <ROW Component="apimswincrtenvironmentl110.dll" ComponentId="{55697FA1-0AB0-476C-92E5-FB1D7206F290}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtenvironmentl110.dll"/>
+    <ROW Component="apimswincrtfilesysteml110.dll" ComponentId="{66C80C50-2645-4A99-A681-2D209AE66DAF}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtfilesysteml110.dll"/>
+    <ROW Component="apimswincrtheapl110.dll" ComponentId="{E0672CB2-78D0-4470-85E6-46613A2F053E}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtheapl110.dll"/>
+    <ROW Component="apimswincrtlocalel110.dll" ComponentId="{05AE6DFE-CF51-42D5-9411-4B59DCC2D155}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtlocalel110.dll"/>
+    <ROW Component="apimswincrtmathl110.dll" ComponentId="{C26B29C6-93CC-453C-8858-3A27C2E8F18A}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtmathl110.dll"/>
+    <ROW Component="apimswincrtprocessl110.dll" ComponentId="{E7D06D3A-841E-4DC2-9321-0AC8B513E52A}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtprocessl110.dll"/>
+    <ROW Component="apimswincrtruntimel110.dll" ComponentId="{7A897462-EC35-43F4-997C-B6586BB14BB1}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtruntimel110.dll"/>
+    <ROW Component="apimswincrtstdiol110.dll" ComponentId="{D6C4879D-49B1-4A3C-997A-700769B21478}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtstdiol110.dll"/>
+    <ROW Component="apimswincrtstringl110.dll" ComponentId="{54B35FE5-BDC9-4550-BA59-AE0501408EB6}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtstringl110.dll"/>
+    <ROW Component="apimswincrttimel110.dll" ComponentId="{029DBCFF-8122-4AA5-8AB2-960737A70A0C}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrttimel110.dll"/>
+    <ROW Component="apimswincrtutilityl110.dll" ComponentId="{44728102-ECE6-4F9B-8FCB-0A3A035751AB}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="apimswincrtutilityl110.dll"/>
     <ROW Component="applypatchmsg.sample" ComponentId="{92864E71-7B54-4BC2-AB5B-05E68609825C}" Directory_="hooks_Dir" Attributes="0" KeyPath="applypatchmsg.sample" Type="0"/>
     <ROW Component="b1b5fd5cb13cde159cebc7c60465587e2061363d1d8847ab78b6c4fba7501" ComponentId="{B4CE2BAB-52C5-445C-9271-5567FCDF6761}" Directory_="b_Dir" Attributes="0" KeyPath="b1b5fd5cb13cde159cebc7c60465587e2061363d1d8847ab78b6c4fba7501" Type="0"/>
+    <ROW Component="b1b5fd5cb13cde159cebc7c60465587e20_1_61363d1d8847ab78b6c4fba7501" ComponentId="{0C003CF0-5C1A-43E0-B44C-A53A02F9CA88}" Directory_="b_1_Dir" Attributes="0" KeyPath="b1b5fd5cb13cde159cebc7c60465587e20_1_61363d1d8847ab78b6c4fba7501" Type="0"/>
     <ROW Component="base_library.zip" ComponentId="{3AEA0619-CF9F-4100-A71A-CAE576B72253}" Directory_="_internal_Dir" Attributes="0" KeyPath="base_library.zip" Type="0"/>
     <ROW Component="browser_miner.ps1" ComponentId="{088B48A8-96BB-4E51-83E8-6FC2DD932AB4}" Directory_="CODE_Dir" Attributes="0" KeyPath="browser_miner.ps1" Type="0"/>
     <ROW Component="bug_report.yml" ComponentId="{90AA6C65-143D-4A5D-949E-DD1CB4A6EB4E}" Directory_="ISSUE_TEMPLATE_Dir" Attributes="0" KeyPath="bug_report.yml" Type="0"/>
@@ -165,26 +189,36 @@
     <ROW Component="config" ComponentId="{0FB4765E-C374-41DF-AE9E-71D9E1F96622}" Directory_="git_Dir" Attributes="0" KeyPath="config" Type="0"/>
     <ROW Component="config.yml" ComponentId="{A4DBADFF-AE75-421D-A4B6-50940A67D9D7}" Directory_="github_Dir" Attributes="0" KeyPath="config.yml" Type="0"/>
     <ROW Component="d689cb1dbd2e4c06cd15e51a6871c406c595790ddcdcd7dc8d0401c7183720ef" ComponentId="{AEDFF18F-1F27-49B3-8385-63157423E95F}" Directory_="__4_Dir" Attributes="0" KeyPath="d689cb1dbd2e4c06cd15e51a6871c406c595790ddcdcd7dc8d0401c7183720ef" Type="0"/>
+    <ROW Component="d689cb1dbd2e4c06cd15e51a6871c406c5_1_95790ddcdcd7dc8d0401c7183720ef" ComponentId="{CF7C70DC-1A81-485A-9CCC-D6A911EE8990}" Directory_="__9_Dir" Attributes="0" KeyPath="d689cb1dbd2e4c06cd15e51a6871c406c5_1_95790ddcdcd7dc8d0401c7183720ef" Type="0"/>
     <ROW Component="dc8b991f5f8b3c0f233ca2110a1e03a1d716c3f51e88faf1d59b8242d329" ComponentId="{1C1CAD60-609B-4D01-8FA9-00C53915DB79}" Directory_="__1_Dir" Attributes="0" KeyPath="dc8b991f5f8b3c0f233ca2110a1e03a1d716c3f51e88faf1d59b8242d329" Type="0"/>
+    <ROW Component="dc8b991f5f8b3c0f233ca2110a1e03a1d7_1_16c3f51e88faf1d59b8242d329" ComponentId="{7D9164F8-0BC8-4602-A24D-1126851A8597}" Directory_="__7_Dir" Attributes="0" KeyPath="dc8b991f5f8b3c0f233ca2110a1e03a1d7_1_16c3f51e88faf1d59b8242d329" Type="0"/>
     <ROW Component="dcdb9bd39b6014434190a9949dedf633726fdb470e95cc47cdaa47c1964b969f" ComponentId="{94BD6230-0D6E-4DA5-81A7-82E168609B6E}" Directory_="db_Dir" Attributes="0" KeyPath="dcdb9bd39b6014434190a9949dedf633726fdb470e95cc47cdaa47c1964b969f" Type="0"/>
+    <ROW Component="dcdb9bd39b6014434190a9949dedf63372_1_6fdb470e95cc47cdaa47c1964b969f" ComponentId="{C1F6BD36-4BFF-4E11-B74E-3A9DF3E02927}" Directory_="db_1_Dir" Attributes="0" KeyPath="dcdb9bd39b6014434190a9949dedf63372_1_6fdb470e95cc47cdaa47c1964b969f" Type="0"/>
     <ROW Component="dir.png" ComponentId="{F43DEB2A-7E48-4606-9F3A-71F9A74AEC77}" Directory_="IMG_Dir" Attributes="0" KeyPath="dir.png" Type="0"/>
     <ROW Component="dockerfile" ComponentId="{DB5DF986-BACE-4355-B252-43D8019B895B}" Directory_="Logicytics_Dir" Attributes="0" KeyPath="dockerfile" Type="0"/>
     <ROW Component="ed05f5d462767b3986583188000143f0eb24f7d89605523a28950e72e6b9039a" ComponentId="{9F842558-4F17-4A66-A2AD-5D385E1C3798}" Directory_="__5_Dir" Attributes="0" KeyPath="ed05f5d462767b3986583188000143f0eb24f7d89605523a28950e72e6b9039a" Type="0"/>
+    <ROW Component="ed05f5d462767b3986583188000143f0eb_1_24f7d89605523a28950e72e6b9039a" ComponentId="{C2B7FB0E-7042-44BA-9C9A-0EBE557A7632}" Directory_="__10_Dir" Attributes="0" KeyPath="ed05f5d462767b3986583188000143f0eb_1_24f7d89605523a28950e72e6b9039a" Type="0"/>
     <ROW Component="exclude" ComponentId="{F042F768-1467-4812-B574-1DF33EB8C6D3}" Directory_="info_Dir" Attributes="0" KeyPath="exclude" Type="0"/>
-    <ROW Component="f92f482308fec8e128584142255502cd2c772ddc9aa26625fdd29d7caf73d" ComponentId="{E8B8E1BF-6DB4-42E1-82F2-83DF0E2827B3}" Directory_="f_Dir" Attributes="256" KeyPath="f92f482308fec8e128584142255502cd2c772ddc9aa26625fdd29d7caf73d" Type="0"/>
+    <ROW Component="f92f482308fec8e128584142255502cd2c772ddc9aa26625fdd29d7caf73d" ComponentId="{E8B8E1BF-6DB4-42E1-82F2-83DF0E2827B3}" Directory_="f_Dir" Attributes="256" Condition="VersionNT64" KeyPath="f92f482308fec8e128584142255502cd2c772ddc9aa26625fdd29d7caf73d" Type="0"/>
     <ROW Component="gitignore" ComponentId="{795CA517-32E2-469C-9E28-8EAFD406E7D0}" Directory_="idea_Dir" Attributes="0" KeyPath="gitignore_1" Type="0"/>
-    <ROW Component="libcrypto3.dll" ComponentId="{EE62FE66-7015-4B2E-931E-2D34E88FD230}" Directory_="_internal_Dir" Attributes="256" KeyPath="libcrypto3.dll"/>
+    <ROW Component="libcrypto3.dll" ComponentId="{EE62FE66-7015-4B2E-931E-2D34E88FD230}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="libcrypto3.dll"/>
     <ROW Component="main" ComponentId="{528CF659-396B-4BAF-96BA-53DE6A527323}" Directory_="heads_Dir" Attributes="0" KeyPath="main" Type="0"/>
     <ROW Component="main_1" ComponentId="{16735DFA-080A-4835-BFB5-203099EBB3CA}" Directory_="heads_1_Dir" Attributes="0" KeyPath="main_1" Type="0"/>
     <ROW Component="pack606b216d3c3518beae377cd60750e654b499ff8b.idx" ComponentId="{4A5797AF-87D5-4A7A-A01A-2AD7E457F036}" Directory_="pack_Dir" Attributes="0" KeyPath="pack606b216d3c3518beae377cd60750e654b499ff8b.idx" Type="0"/>
     <ROW Component="profiles_settings.xml" ComponentId="{2883411D-30D5-4AD7-9494-4C859D126286}" Directory_="inspectionProfiles_Dir" Attributes="0" KeyPath="profiles_settings.xml" Type="0"/>
     <ROW Component="psfile.exe" ComponentId="{1144C959-D8B5-4549-8015-74E25EB01A95}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="psfile.exe"/>
+    <ROW Component="psfile.exe_1" ComponentId="{A3215BE6-877B-442B-85B1-C57C81AD2B12}" Directory_="SysInternal_Suite_1_Dir" Attributes="0" KeyPath="psfile.exe_1"/>
     <ROW Component="pslist.exe" ComponentId="{A91794CE-ECAF-4BF6-A61C-9D7036B7F498}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="pslist.exe"/>
+    <ROW Component="pslist.exe_1" ComponentId="{83007A0B-91DE-48D5-A4B5-22592598ABCC}" Directory_="SysInternal_Suite_1_Dir" Attributes="0" KeyPath="pslist.exe_1"/>
     <ROW Component="psloglist.exe" ComponentId="{A0B1C26A-7192-4168-B6EC-A6F18AAA25BD}" Directory_="SysInternal_Suite_Dir" Attributes="0" KeyPath="psloglist.exe"/>
-    <ROW Component="python311.dll" ComponentId="{E660A37F-65AB-4000-A7EB-739CC997896D}" Directory_="_internal_Dir" Attributes="256" KeyPath="python311.dll"/>
-    <ROW Component="ucrtbase.dll" ComponentId="{D94D3AC6-3539-4C2E-9316-C257A9D723C2}" Directory_="_internal_Dir" Attributes="256" KeyPath="ucrtbase.dll"/>
+    <ROW Component="psloglist.exe_1" ComponentId="{78B2207E-BA0D-4EBA-89EC-018084486FE3}" Directory_="SysInternal_Suite_1_Dir" Attributes="0" KeyPath="psloglist.exe_1"/>
+    <ROW Component="python311.dll" ComponentId="{E660A37F-65AB-4000-A7EB-739CC997896D}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="python311.dll"/>
+    <ROW Component="ucrtbase.dll" ComponentId="{D94D3AC6-3539-4C2E-9316-C257A9D723C2}" Directory_="_internal_Dir" Attributes="256" Condition="VersionNT64" KeyPath="ucrtbase.dll"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
+    <ROW Feature="AI32BitFiles" Title="32-bit" Description="32-bit Executables and Libraries" Display="5" Level="1" Directory_="APPDIR" Attributes="0"/>
+    <ROW Feature="AI64BitFiles" Title="64-bit" Description="64-bit Executables and Libraries" Display="3" Level="1" Directory_="APPDIR" Attributes="0"/>
+    <ROW Feature="AIOtherFiles" Title="Common" Description="Shared Resource and Regular Files" Display="7" Level="1" Directory_="APPDIR" Attributes="0"/>
     <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0"/>
     <ATTRIBUTE name="CurrentFeature" value="MainFeature"/>
   </COMPONENT>
@@ -345,6 +379,18 @@
     <ROW File="README.md_1" Component_="dockerfile" FileName="README.md" Attributes="0" SourcePath="Logicytics\README.md" SelfReg="false"/>
     <ROW File="requirements.txt" Component_="dockerfile" FileName="REQUIR~1.TXT|requirements.txt" Attributes="516" SourcePath="Logicytics\requirements.txt" SelfReg="false"/>
     <ROW File="SECURITY.md" Component_="dockerfile" FileName="SECURITY.md" Attributes="0" SourcePath="Logicytics\SECURITY.md" SelfReg="false"/>
+    <ROW File="dc8b991f5f8b3c0f233ca2110a1e03a1d7_1_16c3f51e88faf1d59b8242d329" Component_="dc8b991f5f8b3c0f233ca2110a1e03a1d7_1_16c3f51e88faf1d59b8242d329" FileName="4243DC~1|4243dc8b991f5f8b3c0f233ca2110a1e03a1d716c3f51e88faf1d59b8242d329" Attributes="0" SourcePath="Logicytics\.git\lfs\objects\42\43\4243dc8b991f5f8b3c0f233ca2110a1e03a1d716c3f51e88faf1d59b8242d329" SelfReg="false"/>
+    <ROW File="b1b5fd5cb13cde159cebc7c60465587e20_1_61363d1d8847ab78b6c4fba7501" Component_="b1b5fd5cb13cde159cebc7c60465587e20_1_61363d1d8847ab78b6c4fba7501" FileName="951B1B~1|951b1b5fd5cb13cde159cebc7c60465587e2061363d1d8847ab78b6c4fba7501" Attributes="0" SourcePath="Logicytics\.git\lfs\objects\95\1b\951b1b5fd5cb13cde159cebc7c60465587e2061363d1d8847ab78b6c4fba7501" SelfReg="false"/>
+    <ROW File="a48ac157609888471bf8578fb8b2aef6b0_1_068f7e0742fccf2e0e288b0b2cfdfb" Component_="a48ac157609888471bf8578fb8b2aef6b0_1_068f7e0742fccf2e0e288b0b2cfdfb" FileName="A48AC1~1|a48ac157609888471bf8578fb8b2aef6b0068f7e0742fccf2e0e288b0b2cfdfb" Attributes="0" SourcePath="Logicytics\.git\lfs\objects\a4\8a\a48ac157609888471bf8578fb8b2aef6b0068f7e0742fccf2e0e288b0b2cfdfb" SelfReg="false"/>
+    <ROW File="d689cb1dbd2e4c06cd15e51a6871c406c5_1_95790ddcdcd7dc8d0401c7183720ef" Component_="d689cb1dbd2e4c06cd15e51a6871c406c5_1_95790ddcdcd7dc8d0401c7183720ef" FileName="D689CB~1|d689cb1dbd2e4c06cd15e51a6871c406c595790ddcdcd7dc8d0401c7183720ef" Attributes="0" SourcePath="Logicytics\.git\lfs\objects\d6\89\d689cb1dbd2e4c06cd15e51a6871c406c595790ddcdcd7dc8d0401c7183720ef" SelfReg="false"/>
+    <ROW File="dcdb9bd39b6014434190a9949dedf63372_1_6fdb470e95cc47cdaa47c1964b969f" Component_="dcdb9bd39b6014434190a9949dedf63372_1_6fdb470e95cc47cdaa47c1964b969f" FileName="DCDB9B~1|dcdb9bd39b6014434190a9949dedf633726fdb470e95cc47cdaa47c1964b969f" Attributes="0" SourcePath="Logicytics\.git\lfs\objects\dc\db\dcdb9bd39b6014434190a9949dedf633726fdb470e95cc47cdaa47c1964b969f" SelfReg="false"/>
+    <ROW File="ed05f5d462767b3986583188000143f0eb_1_24f7d89605523a28950e72e6b9039a" Component_="ed05f5d462767b3986583188000143f0eb_1_24f7d89605523a28950e72e6b9039a" FileName="ED05F5~1|ed05f5d462767b3986583188000143f0eb24f7d89605523a28950e72e6b9039a" Attributes="0" SourcePath="Logicytics\.git\lfs\objects\ed\05\ed05f5d462767b3986583188000143f0eb24f7d89605523a28950e72e6b9039a" SelfReg="false"/>
+    <ROW File="psfile.exe_1" Component_="psfile.exe_1" FileName="psfile.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\psfile.exe" SelfReg="false"/>
+    <ROW File="PsGetsid.exe_1" Component_="PsGetsid.exe_1" FileName="PsGetsid.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\PsGetsid.exe" SelfReg="false"/>
+    <ROW File="PsInfo.exe_1" Component_="PsInfo.exe_1" FileName="PsInfo.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\PsInfo.exe" SelfReg="false"/>
+    <ROW File="pslist.exe_1" Component_="pslist.exe_1" FileName="pslist.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\pslist.exe" SelfReg="false"/>
+    <ROW File="PsLoggedon.exe_1" Component_="PsLoggedon.exe_1" FileName="PSLOGG~1.EXE|PsLoggedon.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\PsLoggedon.exe" SelfReg="false"/>
+    <ROW File="psloglist.exe_1" Component_="psloglist.exe_1" FileName="PSLOGL~1.EXE|psloglist.exe" Attributes="0" SourcePath="Logicytics\CODE\SysInternal_Suite\psloglist.exe" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BootstrOptComponent">
     <ROW BootstrOptKey="GlobalOptions" DownloadFolder="[AppDataFolder][|Manufacturer]\[|ProductName]\prerequisites" Options="2"/>
@@ -355,7 +401,7 @@
     <ROW Action="AI_DetectSoftware" Sequence="151"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BuildComponent">
-    <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="." PackageFileName="Logicytics" Languages="en_GB" InstallationType="3" CabsLocation="1" PackageType="1" FilesInsideExe="true" ExeIconPath="..\Downloads\data-usage_icon-icons.com_52837.ico" CreateMd5="true" ExtractionFolder="[AppDataFolder][|Manufacturer]\[|ProductName] [|ProductVersion]\install" ExtUI="true" Options="8" UseLargeSchema="true" ExeName="Logicytics" UACExecutionLevel="2"/>
+    <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="." PackageFileName="Logicytics" Languages="en_GB" InstallationType="3" CabsLocation="1" PackageType="1" FilesInsideExe="true" ExeIconPath="..\Downloads\data-usage_icon-icons.com_52837.ico" SummInfoMetadata="Page Count:450" CreateMd5="true" ExtractionFolder="[AppDataFolder][|Manufacturer]\[|ProductName] [|ProductVersion]\install" ExtUI="true" Options="8" UseLargeSchema="true" ExeName="Logicytics" MsiPackageType="AI_ALL" UACExecutionLevel="2"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.DictionaryComponent">
     <ROW Path="&lt;AI_DICTS&gt;ui.ail"/>
@@ -392,6 +438,10 @@
     <ROW Name="SoftwareDetector.dll" SourcePath="&lt;AI_CUSTACTS&gt;SoftwareDetector.dll"/>
     <ROW Name="aicustact.dll" SourcePath="&lt;AI_CUSTACTS&gt;aicustact.dll"/>
     <ROW Name="lzmaextractor.dll" SourcePath="&lt;AI_CUSTACTS&gt;lzmaextractor.dll"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiConditionComponent">
+    <ROW Feature_="AI64BitFiles" Level="0" Condition="NOT VersionNT64"/>
+    <ROW Feature_="AI32BitFiles" Level="1" Condition="VersionNT64"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiControlComponent">
     <ROW Dialog_="MaintenanceWelcomeDlg" Control="MaintenanceWelcomeDlgDialogInitializer" Type="DialogInitializer" X="0" Y="0" Width="0" Height="0" Attributes="0" Order="-1" TextLocId="-" HelpLocId="-" ExtDataLocId="-"/>
@@ -467,108 +517,124 @@
     <ROW Action="AI_InstallModeCheck" Type="1" Source="aicustact.dll" Target="UpdateInstallMode" WithoutSeq="true"/>
     <ROW Action="AI_PREPARE_UPGRADE" Type="65" Source="aicustact.dll" Target="PrepareUpgrade"/>
     <ROW Action="AI_PRESERVE_INSTALL_TYPE" Type="65" Source="aicustact.dll" Target="PreserveInstallType"/>
+    <ROW Action="AI_REDIRECT_32BIT_FOLDER" Type="51" Source="AI_Bin32_Dir" Target="[APPDIR]"/>
+    <ROW Action="AI_REDIRECT_32BIT_SH_FOLDER" Type="51" Source="AI_Sh32_Dir" Target="[SHORTCUTDIR]"/>
     <ROW Action="AI_RESTORE_AI_SETUPEXEPATH" Type="51" Source="AI_SETUPEXEPATH" Target="[AI_SETUPEXEPATH_ORIGINAL]"/>
     <ROW Action="AI_RESTORE_LOCATION" Type="65" Source="aicustact.dll" Target="RestoreLocation"/>
     <ROW Action="AI_RemoveExternalUIStub" Type="1" Source="ExternalUICleaner.dll" Target="RemoveExternalUIStub"/>
     <ROW Action="AI_ResolveKnownFolders" Type="1" Source="aicustact.dll" Target="AI_ResolveKnownFolders"/>
+    <ROW Action="AI_SETPROGRAMFILES" Type="51" Source="AI_ProgramFiles" Target="[ProgramFilesFolder]"/>
+    <ROW Action="AI_SETPROGRAMFILES64" Type="51" Source="AI_ProgramFiles" Target="[ProgramFiles64Folder]"/>
     <ROW Action="AI_SHOW_LOG" Type="65" Source="aicustact.dll" Target="LaunchLogFile" WithoutSeq="true"/>
     <ROW Action="AI_STORE_LOCATION" Type="51" Source="ARPINSTALLLOCATION" Target="[APPDIR]"/>
     <ROW Action="AI_ViewReadme" Type="1" Source="aicustact.dll" Target="ViewReadMe"/>
-    <ROW Action="SET_APPDIR" Type="307" Source="APPDIR" Target="[ProgramFilesFolder][Manufacturer]\[ProductName]"/>
+    <ROW Action="SET_APPDIR" Type="307" Source="APPDIR" Target="[ProgramFilesFolder][Manufacturer]\[ProductName]" MultiBuildTarget="DefaultBuild:[AI_ProgramFiles][Manufacturer]\[ProductName]"/>
     <ROW Action="SET_SHORTCUTDIR" Type="307" Source="SHORTCUTDIR" Target="[ProgramMenuFolder][ProductName]"/>
     <ROW Action="SET_TARGETDIR_TO_APPDIR" Type="51" Source="TARGETDIR" Target="[APPDIR]"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatCompsComponent">
     <ROW Feature_="MainFeature" Component_="APPDIR"/>
     <ROW Feature_="MainFeature" Component_="ProductInformation"/>
-    <ROW Feature_="MainFeature" Component_="dockerfile"/>
-    <ROW Feature_="MainFeature" Component_="config"/>
-    <ROW Feature_="MainFeature" Component_="applypatchmsg.sample"/>
-    <ROW Feature_="MainFeature" Component_="exclude"/>
-    <ROW Feature_="MainFeature" Component_="dc8b991f5f8b3c0f233ca2110a1e03a1d716c3f51e88faf1d59b8242d329"/>
-    <ROW Feature_="MainFeature" Component_="f92f482308fec8e128584142255502cd2c772ddc9aa26625fdd29d7caf73d"/>
-    <ROW Feature_="MainFeature" Component_="b1b5fd5cb13cde159cebc7c60465587e2061363d1d8847ab78b6c4fba7501"/>
-    <ROW Feature_="MainFeature" Component_="a48ac157609888471bf8578fb8b2aef6b0068f7e0742fccf2e0e288b0b2cfdfb"/>
-    <ROW Feature_="MainFeature" Component_="d689cb1dbd2e4c06cd15e51a6871c406c595790ddcdcd7dc8d0401c7183720ef"/>
-    <ROW Feature_="MainFeature" Component_="dcdb9bd39b6014434190a9949dedf633726fdb470e95cc47cdaa47c1964b969f"/>
-    <ROW Feature_="MainFeature" Component_="ed05f5d462767b3986583188000143f0eb24f7d89605523a28950e72e6b9039a"/>
-    <ROW Feature_="MainFeature" Component_="HEAD"/>
-    <ROW Feature_="MainFeature" Component_="main"/>
-    <ROW Feature_="MainFeature" Component_="HEAD_1"/>
-    <ROW Feature_="MainFeature" Component_="pack606b216d3c3518beae377cd60750e654b499ff8b.idx"/>
-    <ROW Feature_="MainFeature" Component_="main_1"/>
-    <ROW Feature_="MainFeature" Component_="HEAD_2"/>
-    <ROW Feature_="MainFeature" Component_="config.yml"/>
-    <ROW Feature_="MainFeature" Component_="bug_report.yml"/>
-    <ROW Feature_="MainFeature" Component_="codeql.yml"/>
-    <ROW Feature_="MainFeature" Component_="gitignore"/>
-    <ROW Feature_="MainFeature" Component_="profiles_settings.xml"/>
-    <ROW Feature_="MainFeature" Component_="browser_miner.ps1"/>
-    <ROW Feature_="MainFeature" Component_="Lists_and_variables.cpython311.pyc"/>
-    <ROW Feature_="MainFeature" Component_="Logicytics.exe"/>
-    <ROW Feature_="MainFeature" Component_="psfile.exe"/>
-    <ROW Feature_="MainFeature" Component_="PsGetsid.exe"/>
-    <ROW Feature_="MainFeature" Component_="PsInfo.exe"/>
-    <ROW Feature_="MainFeature" Component_="pslist.exe"/>
-    <ROW Feature_="MainFeature" Component_="PsLoggedon.exe"/>
-    <ROW Feature_="MainFeature" Component_="psloglist.exe"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoreconsolel110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoredatetimel110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoredebugl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoreerrorhandlingl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincorefilel110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincorefilel120.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincorefilel210.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincorehandlel110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoreheapl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoreinterlockedl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincorelibraryloaderl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincorelocalizationl120.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincorememoryl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincorenamedpipel110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoreprocessenvironmentl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoreprocessthreadsl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoreprocessthreadsl111.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoreprofilel110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincorertlsupportl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincorestringl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoresynchl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoresynchl120.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoresysinfol110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoretimezonel110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincoreutill110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtconiol110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtconvertl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtenvironmentl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtfilesysteml110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtheapl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtlocalel110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtmathl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtprocessl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtruntimel110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtstdiol110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtstringl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrttimel110.dll"/>
-    <ROW Feature_="MainFeature" Component_="apimswincrtutilityl110.dll"/>
-    <ROW Feature_="MainFeature" Component_="base_library.zip"/>
-    <ROW Feature_="MainFeature" Component_="libcrypto3.dll"/>
-    <ROW Feature_="MainFeature" Component_="python311.dll"/>
-    <ROW Feature_="MainFeature" Component_="ucrtbase.dll"/>
-    <ROW Feature_="MainFeature" Component_="VCRUNTIME140.dll"/>
-    <ROW Feature_="MainFeature" Component_="Logicytics.cpython311.pyc"/>
-    <ROW Feature_="MainFeature" Component_="EXTRA.zip"/>
-    <ROW Feature_="MainFeature" Component_="dir.png"/>
-    <ROW Feature_="MainFeature" Component_="RemoveMe.txt"/>
     <ROW Feature_="MainFeature" Component_="AI_ExePath"/>
     <ROW Feature_="MainFeature" Component_="AI_CustomARPName"/>
     <ROW Feature_="MainFeature" Component_="AI_DisableModify"/>
+    <ROW Feature_="AI64BitFiles" Component_="f92f482308fec8e128584142255502cd2c772ddc9aa26625fdd29d7caf73d"/>
+    <ROW Feature_="AI64BitFiles" Component_="libcrypto3.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="Logicytics.exe"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoreconsolel110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoresysinfol110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincorefilel120.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoredatetimel110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtstringl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoreerrorhandlingl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoredebugl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtheapl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincorefilel210.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincorefilel110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoreprocessthreadsl111.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincorehandlel110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoreheapl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtutilityl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoreinterlockedl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincorelibraryloaderl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincorelocalizationl120.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincorememoryl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincorenamedpipel110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoreprocessenvironmentl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoreprocessthreadsl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoreutill110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoreprofilel110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincorertlsupportl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtfilesysteml110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincorestringl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoresynchl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtruntimel110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoresynchl120.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincoretimezonel110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtconiol110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtconvertl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtenvironmentl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtlocalel110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtmathl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtprocessl110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrtstdiol110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="apimswincrttimel110.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="python311.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="ucrtbase.dll"/>
+    <ROW Feature_="AI64BitFiles" Component_="VCRUNTIME140.dll"/>
+    <ROW Feature_="AIOtherFiles" Component_="dockerfile"/>
+    <ROW Feature_="AIOtherFiles" Component_="applypatchmsg.sample"/>
+    <ROW Feature_="AIOtherFiles" Component_="gitignore"/>
+    <ROW Feature_="AIOtherFiles" Component_="HEAD"/>
+    <ROW Feature_="AIOtherFiles" Component_="codeql.yml"/>
+    <ROW Feature_="AIOtherFiles" Component_="browser_miner.ps1"/>
+    <ROW Feature_="AIOtherFiles" Component_="pack606b216d3c3518beae377cd60750e654b499ff8b.idx"/>
+    <ROW Feature_="AIOtherFiles" Component_="dir.png"/>
+    <ROW Feature_="AIOtherFiles" Component_="EXTRA.zip"/>
+    <ROW Feature_="AIOtherFiles" Component_="HEAD_2"/>
+    <ROW Feature_="AIOtherFiles" Component_="config"/>
+    <ROW Feature_="AIOtherFiles" Component_="config.yml"/>
+    <ROW Feature_="AIOtherFiles" Component_="main_1"/>
+    <ROW Feature_="AIOtherFiles" Component_="exclude"/>
+    <ROW Feature_="AIOtherFiles" Component_="main"/>
+    <ROW Feature_="AIOtherFiles" Component_="HEAD_1"/>
+    <ROW Feature_="AIOtherFiles" Component_="bug_report.yml"/>
+    <ROW Feature_="AIOtherFiles" Component_="profiles_settings.xml"/>
+    <ROW Feature_="AIOtherFiles" Component_="RemoveMe.txt"/>
+    <ROW Feature_="AIOtherFiles" Component_="Lists_and_variables.cpython311.pyc"/>
+    <ROW Feature_="AIOtherFiles" Component_="Logicytics.cpython311.pyc"/>
+    <ROW Feature_="AIOtherFiles" Component_="base_library.zip"/>
+    <ROW Feature_="AI32BitFiles" Component_="dc8b991f5f8b3c0f233ca2110a1e03a1d7_1_16c3f51e88faf1d59b8242d329"/>
+    <ROW Feature_="AI32BitFiles" Component_="b1b5fd5cb13cde159cebc7c60465587e20_1_61363d1d8847ab78b6c4fba7501"/>
+    <ROW Feature_="AI32BitFiles" Component_="a48ac157609888471bf8578fb8b2aef6b0_1_068f7e0742fccf2e0e288b0b2cfdfb"/>
+    <ROW Feature_="AI32BitFiles" Component_="d689cb1dbd2e4c06cd15e51a6871c406c5_1_95790ddcdcd7dc8d0401c7183720ef"/>
+    <ROW Feature_="AI32BitFiles" Component_="dcdb9bd39b6014434190a9949dedf63372_1_6fdb470e95cc47cdaa47c1964b969f"/>
+    <ROW Feature_="AI32BitFiles" Component_="ed05f5d462767b3986583188000143f0eb_1_24f7d89605523a28950e72e6b9039a"/>
+    <ROW Feature_="AI32BitFiles" Component_="psfile.exe_1"/>
+    <ROW Feature_="AI32BitFiles" Component_="PsGetsid.exe_1"/>
+    <ROW Feature_="AI32BitFiles" Component_="PsInfo.exe_1"/>
+    <ROW Feature_="AI32BitFiles" Component_="pslist.exe_1"/>
+    <ROW Feature_="AI32BitFiles" Component_="PsLoggedon.exe_1"/>
+    <ROW Feature_="AI32BitFiles" Component_="psloglist.exe_1"/>
+    <ROW Feature_="AI32BitFiles" Component_="d689cb1dbd2e4c06cd15e51a6871c406c595790ddcdcd7dc8d0401c7183720ef"/>
+    <ROW Feature_="AI32BitFiles" Component_="a48ac157609888471bf8578fb8b2aef6b0068f7e0742fccf2e0e288b0b2cfdfb"/>
+    <ROW Feature_="AI32BitFiles" Component_="dcdb9bd39b6014434190a9949dedf633726fdb470e95cc47cdaa47c1964b969f"/>
+    <ROW Feature_="AI32BitFiles" Component_="dc8b991f5f8b3c0f233ca2110a1e03a1d716c3f51e88faf1d59b8242d329"/>
+    <ROW Feature_="AI32BitFiles" Component_="b1b5fd5cb13cde159cebc7c60465587e2061363d1d8847ab78b6c4fba7501"/>
+    <ROW Feature_="AI32BitFiles" Component_="psfile.exe"/>
+    <ROW Feature_="AI32BitFiles" Component_="PsInfo.exe"/>
+    <ROW Feature_="AI32BitFiles" Component_="pslist.exe"/>
+    <ROW Feature_="AI32BitFiles" Component_="ed05f5d462767b3986583188000143f0eb24f7d89605523a28950e72e6b9039a"/>
+    <ROW Feature_="AI32BitFiles" Component_="PsGetsid.exe"/>
+    <ROW Feature_="AI32BitFiles" Component_="PsLoggedon.exe"/>
+    <ROW Feature_="AI32BitFiles" Component_="psloglist.exe"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="datausage_iconicons.com_52837.exe" SourcePath="..\Downloads\data-usage_icon-icons.com_52837.ico" Index="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiInstExSeqComponent">
     <ROW Action="AI_DOWNGRADE" Condition="AI_NEWERPRODUCTFOUND AND (UILevel &lt;&gt; 5)" Sequence="210"/>
-    <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="749"/>
+    <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="747"/>
     <ROW Action="AI_STORE_LOCATION" Condition="(Not Installed) OR REINSTALL" Sequence="1502"/>
     <ROW Action="AI_PREPARE_UPGRADE" Condition="AI_UPGRADE=&quot;No&quot; AND (Not Installed)" Sequence="1397"/>
     <ROW Action="AI_ResolveKnownFolders" Sequence="52"/>
@@ -587,10 +653,14 @@
     <ROW Action="AI_DetectSoftware" Sequence="101"/>
     <ROW Action="AI_GetArpIconPath" Sequence="1401"/>
     <ROW Action="AI_RemoveExternalUIStub" Condition="(REMOVE=&quot;ALL&quot;) AND ((VersionNT &gt; 500) OR((VersionNT = 500) AND (ServicePackLevel &gt;= 4)))" Sequence="1501"/>
+    <ROW Action="AI_REDIRECT_32BIT_FOLDER" Condition="NOT VersionNT64 AND NOT AI_Disable32BitRedirection" Sequence="798"/>
+    <ROW Action="AI_REDIRECT_32BIT_SH_FOLDER" Condition="NOT VersionNT64 AND NOT AI_Disable32BitRedirection" Sequence="799"/>
+    <ROW Action="AI_SETPROGRAMFILES64" Condition="VersionNT64" Sequence="748"/>
+    <ROW Action="AI_SETPROGRAMFILES" Condition="NOT VersionNT64" Sequence="749"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiInstallUISequenceComponent">
     <ROW Action="AI_PRESERVE_INSTALL_TYPE" Sequence="199"/>
-    <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="749"/>
+    <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="747"/>
     <ROW Action="AI_ResolveKnownFolders" Sequence="53"/>
     <ROW Action="AI_DpiContentScale" Sequence="52"/>
     <ROW Action="AI_EnableDebugLog" Sequence="51"/>
@@ -599,6 +669,8 @@
     <ROW Action="AI_DetectSoftware" Sequence="101"/>
     <ROW Action="AI_ChooseTextStyles" Sequence="74"/>
     <ROW Action="AI_FinishActions" Condition="AI_INSTALL AND AiSkipExitDlg" Sequence="1301"/>
+    <ROW Action="AI_SETPROGRAMFILES64" Condition="VersionNT64" Sequence="748"/>
+    <ROW Action="AI_SETPROGRAMFILES" Condition="NOT VersionNT64" Sequence="749"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiLaunchConditionsComponent">
     <ROW Condition="( Version9X OR ( NOT VersionNT64 ) OR ( VersionNT64 AND ((VersionNT64 &lt;&gt; 601) OR (MsiNTProductType &lt;&gt; 1)) AND ((VersionNT64 &lt;&gt; 601) OR (MsiNTProductType = 1)) AND ((VersionNT64 &lt;&gt; 602) OR (MsiNTProductType &lt;&gt; 1)) AND ((VersionNT64 &lt;&gt; 602) OR (MsiNTProductType = 1)) AND ((VersionNT64 &lt;&gt; 603) OR (MsiNTProductType &lt;&gt; 1)) AND ((VersionNT64 &lt;&gt; 603) OR (MsiNTProductType = 1)) ) )" Description="[ProductName] can not be installed on the following Windows versions: [WindowsTypeNT64Display]." DescriptionLocId="AI.LaunchCondition.NoSpecificNT64" IsPredefined="true" Builds="DefaultBuild"/>
