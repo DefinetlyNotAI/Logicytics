@@ -1,0 +1,55 @@
+body:
+  - type: checkboxes
+    attributes:
+      label: Prerequisites
+      description: Take a couple minutes to help our maintainers work faster by checking of the pre-requisites.
+      options:
+        - label: I have [searched](https://github.com/DefinetlyNotAI/Logicytics/pulls) for duplicate or closed issues.
+          required: true
+        - label: I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md).
+          required: true
+        - label: I have followed the instructions in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) about contributions.
+          required: true
+        - label: I have updated the documentation accordingly, if required (If not leave this unchecked)
+          required: false
+        - label: I have added tests to cover my changes, and they have passed, if required (If not leave this unchecked)
+          required: false
+        - label: I have tested my code with the `--dev` flag, if required (If not leave this unchecked)
+          required: false
+        - label: I have followed the instructions in the `--dev` flag, if required (If not leave this unchecked)
+          required: false
+  - type: checkboxes
+    attributes:
+      label: PR_Type
+      description: Take a couple minutes to help our maintainers work faster by telling us what is the PR guided on.
+      options:
+        - label: Bug fix (non-breaking change which fixes an issue)
+          required: false
+        - label: New feature (non-breaking change which adds functionality)
+          required: false
+        - label: Refactoring (non-breaking change)
+          required: false
+        - label: Breaking change (fix or feature that would change existing functionality)
+          required: false
+        - label: My change introduces changes to the documentation (only docs are affected)
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the PR
+      description: Provide a summary of the pr and what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: motivation-context
+    attributes:
+      label: Motivation and Context
+      description: Why is this PR required? What problem does it solve?
+    validations:
+      required: true
+  - type: input
+    id: issues
+    attributes:
+      label: What issues will be fixed?
+      placeholder: "Please link any related issues here. Give them in this format `#50, #23` etc"
+    validations:
+      required: true
