@@ -1,3 +1,0 @@
-{"conditions": [{"field": "labels", "value": "Issues"}], "actions": [{"action": "add", "label_name": "Needs_attention"}]},
-{"conditions": [{"field": "labels", "value": "PR"}], "actions": [{"action": "add", "label_name": "Needs_attention"}, {"action": "add", "label_name": "WIP"}]},
-
