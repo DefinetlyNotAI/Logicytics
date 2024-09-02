@@ -92,9 +92,7 @@ If you have an idea or want to contribute to the project, you can submit an issu
 After running and successfully collecting data, you may traverse the ACCESS directory as much as you like,
 Remove add and delete files, it's the safest directory where your backups, hashes, data zips and logs are found.
 
-Also watch this video for a better understanding of Logicytics:
-
-[![Logicytics Tutorial](https://github.com/DefinetlyNotAI/Logicytics/blob/main/IMG/ClickMe.jpg)](https://www.youtube.com/watch?v=XVTBmdTQqOs)
+Also watch this [video](https://www.youtube.com/watch?v=XVTBmdTQqOs) for a better understanding of Logicytics
 
 ## 🔧 Configuration 🔧
 
