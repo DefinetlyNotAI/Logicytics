@@ -245,3 +245,15 @@ Always obtain proper authorization before extracting any data from a system.
 - [Project's GitHub Repository](https://github.com/DefinetlyNotAI/Logicytics)
 - [Project's Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
 - [Project's License](https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE)
+
+### 📃 GitHub Actions Status
+
+
+[![CodeQL](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql)
+[![Codespaces Prebuilds](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds)
+[![Dependabot Updates](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates)
+[![Docker Image CI](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml)
+[![Greetings](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml)
+[![Mark stale issues and pull requests](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml)
+[![Pages build deployment](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment)
+
