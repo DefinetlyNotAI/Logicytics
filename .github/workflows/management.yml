@@ -1,9 +1,9 @@
-name: Get Logs and Check Issues Template
+name: Issues Similarity Analysis
 
 on:
   issues:
     types: [opened, edited]
-    
+
 jobs:
   similarity-analysis:
     runs-on: ubuntu-latest
@@ -11,8 +11,8 @@ jobs:
       - name: analysis
         uses: actions-cool/issues-similarity-analysis@v1
         with:
-          filter-threshold: 0.7
-          title-excludes: 'ignore'
+          filter-threshold: 0.5
+          title-excludes: '(exclude), (ignore), WIP'
           comment-title: '## Issues Similarity Analysis:'
-          comment-body: '[#${number}][${title}][${similarity}]'
-          show-mentioned: true
+          comment-body: '${index}. ${similarity} #${number}'
+          # comment-body: '[#${number}][${title}][${similarity}]'
