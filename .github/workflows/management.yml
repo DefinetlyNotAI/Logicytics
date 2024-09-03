@@ -1,18 +1,17 @@
-name: Issues Similarity Analysis
+name: Issue similarity
 
 on:
   issues:
-    types: [opened, edited]
-
+    types: [opened, reopened, edited]
+    
 jobs:
-  similarity-analysis:
+  similarity:
     runs-on: ubuntu-latest
     steps:
-      - name: analysis
-        uses: actions-cool/issues-similarity-analysis@v1
+      - uses: actions-cool/issues-similarity-analysis@main
         with:
           filter-threshold: 0.5
-          title-excludes: '(exclude), (ignore), WIP'
-          comment-title: '## Issues Similarity Analysis:'
+          title-excludes: '🐛[BUG], 👑 [需求]'
+          comment-title: '### See'
           comment-body: '${index}. ${similarity} #${number}'
           # comment-body: '[#${number}][${title}][${similarity}]'
