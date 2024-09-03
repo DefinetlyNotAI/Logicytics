@@ -254,4 +254,4 @@ Always obtain proper authorization before extracting any data from a system.
 [![Greetings](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml)
 [![Mark stale issues and pull requests](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml)
 [![Pages build deployment](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment)
-
+[![Get Logs and Check Issues Template](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/Management.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/Management.yml)
