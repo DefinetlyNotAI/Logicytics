@@ -1,0 +1,29 @@
+name: Get Logs and Check Issues Template
+
+
+eventResponderTasks:
+- if:
+  - payloadType: Issue_Comment
+  - commentContains:
+      pattern: '\/template'
+      isRegex: True
+  then:
+  - addReply:
+      reply: >-
+        Hi! We've closed your issue since you haven't used the template. Could you please provide all the requested info in the bug template and resubmit?
+      actions:
+        - closeIssue
+        - lockIssue
+      description: 
+
+- if:
+  - payloadType: Issue_Comment
+  - commentContains:
+      pattern: '\/dump?'
+      isRegex: True
+  then:
+  - addReply:
+      reply: >-
+        Hello! Could you please provide logs and process dumps to help us diagnose your issue?
+      addLabel: Invalid
+      description: 
