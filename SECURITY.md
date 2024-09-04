@@ -7,6 +7,7 @@ This section outlines the versions of our project that are currently supported w
 | Version | Supported |
 |---------|-----------|
 | 2.0.x   | ✅         |
+| 2.0.x   | ✅         |
 | 1.6.x   | ❌         |
 | 1.5.x   | ❌         |
 | 1.4.x   | ❌         |
