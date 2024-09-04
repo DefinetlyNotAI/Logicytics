@@ -1,7 +1,5 @@
 # Logicytics: System Data Harvester 📎
 
-## 🌐 Logicytics: System Data Harvester 📎
-
 Logicytics is a cutting-edge tool designed to 
 meticulously harvest and collect a vast array of Windows system data for forensic analysis.
 Crafted with Python 🐍, it's an actively developed project that is dedicated
@@ -241,18 +239,17 @@ Always obtain proper authorization before extracting any data from a system.
 
 ### 🔗 Links
 
-- [Project's GitHub Repository](https://github.com/DefinetlyNotAI/Logicytics)
 - [Project's Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
 - [Project's License](https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE)
 
 ### 📃 GitHub Actions Status
 
-
-[![CodeQL](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql)
-[![Codespaces Prebuilds](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds)
-[![Dependabot Updates](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates)
-[![Docker Image CI](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml)
-[![Greetings](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml)
-[![Mark stale issues and pull requests](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml)
-[![Pages build deployment](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment)
-[![Get Logs and Check Issues Template](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/Management.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/Management.yml)
+<div align="center">
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql/badge.svg" alt="CodeQL"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds/badge.svg" alt="Codespaces Prebuilds"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates/badge.svg" alt="Dependabot Updates"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml/badge.svg" alt="Docker Image CI"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml/badge.svg" alt="Greetings"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml/badge.svg" alt="Mark stale issues and pull requests"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment/badge.svg" alt="Pages build deployment"></a>
+</div>
