@@ -14,7 +14,9 @@ This comprehensive guide is here to equip you with everything you need to use Lo
     <a href="https://github.com/DefinetlyNotAI/Logicytics/actions"><img src="https://img.shields.io/github/check-runs/DefinetlyNotAI/Logicytics/main" alt="GitHub Branch Check Runs"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics"><img src="https://img.shields.io/github/repo-size/DefinetlyNotAI/Logicytics" alt="GitHub Repo Size"></a>
     <a href="https://www.codefactor.io/repository/github/definetlynotai/logicytics"><img src="https://www.codefactor.io/repository/github/definetlynotai/logicytics/badge" alt="GitHub Repo CodeFactor Rating"></a>
+    <a href="https://codecov.io/gh/DefinetlyNotAI/Logicytics" ><img src="https://codecov.io/gh/DefinetlyNotAI/Logicytics/graph/badge.svg?token=1D0E3PDBWF"/></a>
 </div>
+
 
 ## ❤️ Support Me ❤️
 
