@@ -6,6 +6,7 @@ Crafted with Python 🐍, it's an actively developed project that is dedicated
 to gathering as much sensitive data as possible and packaging it neatly into a ZIP file 📦.
 This comprehensive guide is here to equip you with everything you need to use Logicytics effectively.
 
+
 <div align="center">
     <a href="https://github.com/DefinetlyNotAI/Logicytics/issues"><img src="https://img.shields.io/github/issues/DefinetlyNotAI/Logicytics" alt="GitHub Issues"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics/tags"><img src="https://img.shields.io/github/v/tag/DefinetlyNotAI/Logicytics" alt="GitHub Tag"></a>
