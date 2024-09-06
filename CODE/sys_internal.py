@@ -1,11 +1,21 @@
 import os
+
 from __lib_actions import *
 from __lib_log import Log
+
+sys_internal_executables = [
+    "psfile.exe",
+    "PsGetsid.exe",
+    "PsInfo.exe",
+    "pslist.exe",
+    "PsLoggedon.exe",
+    "psloglist.exe",
+]
 
 
 def sys_internal():
     """
-    This function runs a series of system internal executables and logs their output.
+    This function runs a series of system internal sys_internal_executables and logs their output.
 
     It iterates over a list of executable names, constructs the command to run each one,
     captures the output, and writes it to a file named 'SysInternal.txt'.
@@ -13,17 +23,9 @@ def sys_internal():
     The function also logs information and warning messages for each executable,
     including any errors that occur during execution.
     """
-    executables = [
-        "psfile.exe",
-        "PsGetsid.exe",
-        "PsInfo.exe",
-        "pslist.exe",
-        "PsLoggedon.exe",
-        "psloglist.exe",
-    ]
     with open("SysInternal.txt", "a") as outfile:
         # Iterate over each executable
-        for executable in executables:
+        for executable in sys_internal_executables:
             try:
                 # Construct the command to run the executable
                 command = f"{os.path.join('SysInternal_Suite', executable)}"
