@@ -127,7 +127,7 @@ def dev_checks() -> None:
         )
 
     # Usage
-    files = Actions().check_current_files(".")
+    files = Actions.check_current_files(".")
     print(files)
     answer = input(
         "Nearly there! Does the list above include your added files? (yes or no):- "
