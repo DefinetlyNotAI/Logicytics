@@ -1,5 +1,4 @@
 import ctypes
-import os
 import threading
 
 from __lib_actions import *
@@ -12,7 +11,7 @@ from _hide_my_tracks import attempt_hide
 from _zipper import zip_and_hash
 
 
-class Checks:
+class Check:
     def __init__(self):
         """
         Initializes an instance of the class.
@@ -24,7 +23,7 @@ class Checks:
     @staticmethod
     def admin() -> bool:
         """
-        Checks if the current user has administrative privileges.
+        Check if the current user has administrative privileges.
 
         Returns:
             bool: True if the user is an admin, False otherwise.
@@ -36,7 +35,7 @@ class Checks:
 
     def uac(self) -> bool:
         """
-        Checks if User Account Control (UAC) is enabled on the system.
+        Check if User Account Control (UAC) is enabled on the system.
 
         This function runs a PowerShell command to retrieve the value of the EnableLUA registry key,
         which indicates whether UAC is enabled. It then returns True if UAC is enabled, False otherwise.
@@ -50,89 +49,101 @@ class Checks:
         return int(value.strip("\n")) == 1
 
 
-class Do:
+class Execute:
     @staticmethod
-    def get_files_with_extensions(directory: str, List: list) -> list:
+    def get_files(directory: str, file_list: list) -> list:
         """
         Retrieves a list of files in the specified directory that have the specified extensions.
-
         Parameters:
             directory (str): The path of the directory to search.
-            List (list): The list to append the filenames to.
-
+            file_list (list): The list to append the filenames to.
         Returns:
             list: The list of filenames with the specified extensions.
         """
         for filename in os.listdir(directory):
-            if (
-                filename.endswith((".py", ".exe", ".ps1", ".bat"))
-                and not filename.startswith("_")
-                and not filename == "Logicytics.py"
-            ):
-                List.append(filename)
-        return List
+            if filename.endswith((".py", ".exe", ".ps1", ".bat")) and not filename.startswith(
+                    "_") and filename != "Logicytics.py":
+                file_list.append(filename)
+        return file_list
 
-    def execute_file(self, Index: int) -> None:
+    def file(self, Index: int) -> None:
         """
         Executes a file from the execution list at the specified index.
-
         Parameters:
             Index (int): The index of the file to be executed in the execution list.
-
         Returns:
             None
         """
-        self.execute(execution_list[Index])
+        self.execute_script(execution_list[Index])
         log.info(f"{execution_list[Index]} executed")
 
-    @staticmethod
-    def execute(script: str) -> None:
+    def execute_script(self, script: str) -> None:
         """
         Executes a script file and handles its output based on the file extension.
-
         Parameters:
             script (str): The path of the script file to be executed.
-
         Returns:
             None
         """
         if script.endswith(".ps1"):
-            try:
-                unblock_command = (
-                    f'powershell.exe -Command "Unblock-File -Path {script}"'
-                )
-                subprocess.run(unblock_command, shell=True, check=True)
-                log.info("PS1 Script unblocked.")
-            except Exception as err:
-                log.critical(f"Failed to unblock script: {err}", "_W", "G", "E")
-
-        if script.endswith(".py"):
-            result = subprocess.Popen(
-                ["python", script], stdout=subprocess.PIPE
-            ).communicate()[0]
-            print(result.decode())
+            self.__run_ps1_script(script)
+            self.__run_other_script(script)
+        elif script.endswith(".py"):
+            self.__run_python_script(script)
         else:
-            result = subprocess.Popen(
-                ["powershell.exe", ".\\" + script], stdout=subprocess.PIPE
-            ).communicate()[0]
-            lines = result.decode().splitlines()
-            ID = next(
-                (line.split(":")[0].strip() for line in lines if ":" in line), None
-            )
-            if ID == "INFO":
-                log.info("\n".join(lines))
-            if ID == "WARNING":
-                log.warning("\n".join(lines))
-            if ID == "ERROR":
-                log.error("\n".join(lines))
-            if ID == "CRITICAL":
-                if script[0] == "_":
-                    fcode = "_" + script[1]
-                else:
-                    fcode = script[0]
-                log.critical("\n".join(lines), fcode, "U", "X")
-            else:
-                log.debug("\n".join(lines))
+            self.__run_other_script(script)
+
+    @staticmethod
+    def __run_ps1_script(script: str) -> None:
+        """
+        Unblocks and runs a PowerShell (.ps1) script.
+        Parameters:
+            script (str): The path of the PowerShell script.
+        Returns:
+            None
+        """
+        try:
+            unblock_command = f'powershell.exe -Command "Unblock-File -Path {script}"'
+            subprocess.run(unblock_command, shell=True, check=True)
+            log.info("PS1 Script unblocked.")
+        except Exception as err:
+            log.critical(f"Failed to unblock script: {err}", "_W", "G", "E")
+
+    @staticmethod
+    def __run_python_script(script: str) -> None:
+        """
+        Runs a Python (.py) script.
+        Parameters:
+            script (str): The path of the Python script.
+        Returns:
+            None
+        """
+        result = subprocess.Popen(["python", script], stdout=subprocess.PIPE).communicate()[0]
+        print(result.decode())
+
+    @staticmethod
+    def __run_other_script(script: str) -> None:
+        """
+        Runs a script with other extensions and logs output based on its content.
+        Parameters:
+            script (str): The path of the script.
+        Returns:
+            None
+        """
+        result = subprocess.Popen(["powershell.exe", ".\\" + script], stdout=subprocess.PIPE).communicate()[0]
+        lines = result.decode().splitlines()
+        ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
+
+        log_funcs = {
+            "INFO": log.info,
+            "WARNING": log.warning,
+            "ERROR": log.error,
+            "CRITICAL": log.critical,
+            None: log.debug
+        }
+
+        log_func = log_funcs.get(ID, log.debug)
+        log_func("\n".join(lines))
 
 
 """
@@ -159,7 +170,7 @@ os.makedirs("../ACCESS/LOGS/DEBUG", exist_ok=True)
 os.makedirs("../ACCESS/BACKUP/", exist_ok=True)
 os.makedirs("../ACCESS/DATA/Hashes", exist_ok=True)
 os.makedirs("../ACCESS/DATA/Zip", exist_ok=True)
-check_status = Checks()
+check_status = Check()
 
 try:
     action, sub_action = Actions().flags()
@@ -219,7 +230,7 @@ if action == "unzip_extra":
 
 log.info("Starting Logicytics...")
 
-# Checks for privileges and errors
+# Check for privileges and errors
 if not check_status.admin():
     log.critical("Please run this script with admin privileges", "_W", "P", "BA")
     input("Press Enter to exit...")
@@ -267,7 +278,7 @@ if action == "exe":
 
 if action == "modded":
     # Add all files in MODS to execution list
-    execution_list = Do().get_files_with_extensions("../MODS", execution_list)
+    execution_list = Execute.get_files("../MODS", execution_list)
 
 log.debug(execution_list)
 
@@ -276,7 +287,7 @@ if action == "threaded":
     execution_list.remove("sensitive_data_miner.py")
     threads = []
     for index, file in enumerate(execution_list):
-        thread = threading.Thread(target=Do().execute_file, args=(index,))
+        thread = threading.Thread(target=Execute().file, args=(index,))
         threads.append(thread)
         thread.start()
 
@@ -284,7 +295,7 @@ if action == "threaded":
         thread.join()
 else:
     for file in range(len(execution_list)):  # Loop through List
-        Do().execute(execution_list[file])
+        Execute().execute_script(execution_list[file])
         log.info(f"{execution_list[file]} executed")
 
 # Zip generated files

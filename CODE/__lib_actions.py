@@ -108,17 +108,17 @@ class Actions:
         parser.add_argument(
             "--webhook",
             action="store_true",
-            help="Do Flag that will send zip File via webhook",
+            help="Execute Flag that will send zip File via webhook",
         )
         parser.add_argument(
             "--reboot",
             action="store_true",
-            help="Do Flag that will reboot the device afterward",
+            help="Execute Flag that will reboot the device afterward",
         )
         parser.add_argument(
             "--shutdown",
             action="store_true",
-            help="Do Flag that will shutdown the device afterward",
+            help="Execute Flag that will shutdown the device afterward",
         )
         args = parser.parse_args()
         special_flag_used = False
