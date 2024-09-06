@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import subprocess
 from subprocess import CompletedProcess
 
@@ -239,6 +240,25 @@ class Actions:
             print("The config.json File is not found.")
             input("Press Enter to exit...")
             exit(1)
+
+    @staticmethod
+    def check_current_files(directory: str) -> list:
+        """
+        Retrieves a list of files with specific extensions within a specified directory and its subdirectories.
+
+        Args:
+            directory (str): The path to the directory to search for files.
+
+        Returns:
+            list: A list of file paths with the following extensions: .py, .exe, .ps1, .bat.
+        """
+        file = []
+        for root, _, filenames in os.walk(directory):
+            for filename in filenames:
+                if filename.endswith((".py", ".exe", ".ps1", ".bat")):
+                    files_path = os.path.join(root, filename)
+                    file.append(files_path.removeprefix(".\\"))
+        return file
 
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions().read_config()

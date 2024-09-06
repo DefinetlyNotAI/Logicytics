@@ -1,4 +1,3 @@
-import os
 import platform
 import sys
 from datetime import datetime
@@ -80,27 +79,6 @@ class SystemInfo:
 
 class JSON:
     @staticmethod
-    def check_current_files(directory: str) -> list:
-        """
-        Checks the specified directory and its subdirectories for files
-        with extensions '.py', '.exe', '.ps1', or '.bat'.
-
-        Parameters:
-            directory (str): The path to the directory to search.
-
-        Returns:
-            list: A list of file paths with the specified extensions.
-            The paths are relative to the directory and do not include the directory prefix.
-        """
-        file = []
-        for root, _, filenames in os.walk(directory):
-            for filename in filenames:
-                if filename.endswith((".py", ".exe", ".ps1", ".bat")):
-                    files_path = os.path.join(root, filename)
-                    file.append(files_path.removeprefix(".\\"))
-        return file
-
-    @staticmethod
     def update_json_file(filename: str, new_array: list):
         """
         Updates a JSON file with a new array of current files.
@@ -138,7 +116,7 @@ def debug():
     # Set required variables
     info = SystemInfo()
     log = Log(debug=True, filename="../ACCESS/LOGS/DEBUG/Logicytics_Debug.log")
-    JSON.update_json_file("config.json", JSON.check_current_files("."))
+    JSON.update_json_file("config.json", Actions.check_current_files("."))
     data = JSON.get_json_data(
         "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/CODE/config.json"
     )
