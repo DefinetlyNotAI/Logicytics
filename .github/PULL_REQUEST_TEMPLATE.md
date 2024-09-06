@@ -2,7 +2,7 @@
 
 ### Prerequisites
 
-<!-- Take a couple minutes to help our maintainers work faster by checking of the pre-requisites. -->
+<!-- Take a couple of minutes to help our maintainers work faster by checking of the pre-requisites. -->
 
 - [ ] I have [searched](https://github.com/DefinetlyNotAI/Logicytics/pulls) for duplicate or closed issues.
 - [ ] I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md).
@@ -13,12 +13,13 @@
 
 ### PR Type
 
-<!-- Take a couple minutes to help our maintainers work faster by telling us what is the PR guided on. -->
+<!-- Take a couple of minutes to help our maintainers work faster by telling us what is the PR guided on. -->
 
 - [ ] Bug fix <!-- Non-Breaking Bug Fix - Usually relates to fixing an issue -->
 - [ ] New feature <!-- Non-Breaking Change that adds a new feature -->
 - [ ] Refactoring <!-- Non-Breaking Change that modifies existing code to refactor it to become more organised -->
-- [ ] Documentation update <!-- Non-Breaking Change that modifies existing documentation to refactor it or add extra commentation - either wiki, md files or code is included here -->
+- [ ] Documentation
+  update <!-- Non-Breaking Change that modifies existing documentation to refactor it or add extra comments - either wiki, md files or code is included here -->
 - [ ] ⚠️ Breaking change ⚠️ <!-- ⚠️ Breaking Bug Fix / New Addition that changes how Logicytics works ⚠️-->
 
 ### Description

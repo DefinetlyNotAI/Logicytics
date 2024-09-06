@@ -1,8 +1,8 @@
-import subprocess
 import argparse
 import json
+import os
+import subprocess
 from subprocess import CompletedProcess
-import sys
 
 
 class Actions:
@@ -108,17 +108,17 @@ class Actions:
         parser.add_argument(
             "--webhook",
             action="store_true",
-            help="Do Flag that will send zip File via webhook",
+            help="Execute Flag that will send zip File via webhook",
         )
         parser.add_argument(
             "--reboot",
             action="store_true",
-            help="Do Flag that will reboot the device afterward",
+            help="Execute Flag that will reboot the device afterward",
         )
         parser.add_argument(
             "--shutdown",
             action="store_true",
-            help="Do Flag that will shutdown the device afterward",
+            help="Execute Flag that will shutdown the device afterward",
         )
         args = parser.parse_args()
         special_flag_used = False
@@ -139,11 +139,7 @@ class Actions:
         # Check for exclusivity rules
         if args.reboot or args.shutdown or args.webhook:
             if not (
-                    args.default
-                    or args.threaded
-                    or args.modded
-                    or args.minimal
-                    or args.exe
+                    args.default or args.threaded or args.modded or args.minimal or args.exe
             ):
                 print(
                     "--reboot and --shutdown and --webhook Flags require at least one of the following Flags: "
@@ -240,6 +236,25 @@ class Actions:
             print("The config.json File is not found.")
             input("Press Enter to exit...")
             exit(1)
+
+    @staticmethod
+    def check_current_files(directory: str) -> list:
+        """
+        Retrieves a list of files with specific extensions within a specified directory and its subdirectories.
+
+        Args:
+            directory (str): The path to the directory to search for files.
+
+        Returns:
+            list: A list of file paths with the following extensions: .py, .exe, .ps1, .bat.
+        """
+        file = []
+        for root, _, filenames in os.walk(directory):
+            for filename in filenames:
+                if filename.endswith((".py", ".exe", ".ps1", ".bat")):
+                    files_path = os.path.join(root, filename)
+                    file.append(files_path.removeprefix(".\\"))
+        return file
 
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions().read_config()
