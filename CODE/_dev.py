@@ -1,6 +1,8 @@
 import json
 import os
 
+from __lib_actions import Actions
+
 
 # Super inefficient - If it works, it works tho ;)
 
@@ -16,25 +18,6 @@ def open_file(file: str) -> None:
         None
     """
     os.startfile(os.path.realpath(file))
-
-
-def check_current_files(directory: str) -> list:
-    """
-    Retrieves a list of files with specific extensions within a specified directory and its subdirectories.
-
-    Args:
-        directory (str): The path to the directory to search for files.
-
-    Returns:
-        list: A list of file paths with the following extensions: .py, .exe, .ps1, .bat.
-    """
-    file = []
-    for root, _, filenames in os.walk(directory):
-        for filename in filenames:
-            if filename.endswith((".py", ".exe", ".ps1", ".bat")):
-                files_path = os.path.join(root, filename)
-                file.append(files_path.removeprefix(".\\"))
-    return file
 
 
 def update_json_file(filename, new_array: list) -> None:
@@ -144,7 +127,7 @@ def dev_checks() -> None:
         )
 
     # Usage
-    files = check_current_files(".")
+    files = Actions().check_current_files(".")
     print(files)
     answer = input(
         "Nearly there! Does the list above include your added files? (yes or no):- "
