@@ -1,10 +1,8 @@
+import hashlib
 import os
 import shutil
-from datetime import date
 import zipfile
-import hashlib
-import sys
-
+from datetime import date
 
 
 def zip_and_hash(path: str, name: str, action: str) -> tuple:

@@ -1,8 +1,7 @@
 import os
 import shutil
-import zipfile
 import subprocess
-import sys
+import zipfile
 
 
 def backup(directory: str, name: str) -> None:
