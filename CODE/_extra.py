@@ -42,7 +42,9 @@ def menu() -> None:
         for i, file in enumerate(files):
             print(f"{i+1}. {file}")
     except FileNotFoundError:
-        print("Error: ../EXTRA/EXTRA directory not found - Did you unzip it using --unzip-extra flag?")
+        print(
+            "Error: ../EXTRA/EXTRA directory not found - Did you unzip it using --unzip-extra flag?"
+        )
         exit(1)
 
     choice = int(input("Enter the number of your chosen script: "))

@@ -19,9 +19,9 @@ def open_file(file: str) -> None:
         if platform.system() == "Windows":
             os.startfile(file_path)
         elif platform.system() == "Darwin":  # macOS
-            subprocess.call(('open', file_path))
+            subprocess.call(("open", file_path))
         else:  # Linux variants
-            subprocess.call(('xdg-open', file_path))
+            subprocess.call(("xdg-open", file_path))
     except Exception as e:
         print(f"Error opening file: {e}")
 
@@ -63,7 +63,9 @@ def prompt_user(question: str, file_to_open: str = None) -> bool:
     if answer.lower() != "yes":
         if file_to_open:
             open_file(file_to_open)
-        print("Please ensure you fix the issues/problem and try again with the checklist.")
+        print(
+            "Please ensure you fix the issues/problem and try again with the checklist."
+        )
         return False
     return True
 
@@ -86,7 +88,7 @@ def dev_checks() -> None:
         ("Have you tested your code?", "__Test__.py"),
         ("Is each file containing no more than 1 feature?", "../CONTRIBUTING.md"),
         ("Have you added flags comment?", "../CONTRIBUTING.md"),
-        ("Have you NOT modified _wrapper.py without authorization?", "Logicytics.py")
+        ("Have you NOT modified _wrapper.py without authorization?", "Logicytics.py"),
     ]
 
     for question, file_to_open in checks:
@@ -100,7 +102,9 @@ def dev_checks() -> None:
         return
 
     update_json_file("config.json", files)
-    print("Great Job! Please tick the box in the GitHub PR request for completing steps in --dev")
+    print(
+        "Great Job! Please tick the box in the GitHub PR request for completing steps in --dev"
+    )
 
 
 if __name__ == "__main__":

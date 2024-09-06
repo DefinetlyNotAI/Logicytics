@@ -139,11 +139,7 @@ class Actions:
         # Check for exclusivity rules
         if args.reboot or args.shutdown or args.webhook:
             if not (
-                    args.default
-                    or args.threaded
-                    or args.modded
-                    or args.minimal
-                    or args.exe
+                    args.default or args.threaded or args.modded or args.minimal or args.exe
             ):
                 print(
                     "--reboot and --shutdown and --webhook Flags require at least one of the following Flags: "

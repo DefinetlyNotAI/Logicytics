@@ -61,8 +61,11 @@ class Execute:
             list: The list of filenames with the specified extensions.
         """
         for filename in os.listdir(directory):
-            if filename.endswith((".py", ".exe", ".ps1", ".bat")) and not filename.startswith(
-                    "_") and filename != "Logicytics.py":
+            if (
+                    filename.endswith((".py", ".exe", ".ps1", ".bat"))
+                    and not filename.startswith("_")
+                    and filename != "Logicytics.py"
+            ):
                 file_list.append(filename)
         return file_list
 
@@ -118,7 +121,9 @@ class Execute:
         Returns:
             None
         """
-        result = subprocess.Popen(["python", script], stdout=subprocess.PIPE).communicate()[0]
+        result = subprocess.Popen(
+            ["python", script], stdout=subprocess.PIPE
+        ).communicate()[0]
         print(result.decode())
 
     @staticmethod
@@ -130,7 +135,9 @@ class Execute:
         Returns:
             None
         """
-        result = subprocess.Popen(["powershell.exe", ".\\" + script], stdout=subprocess.PIPE).communicate()[0]
+        result = subprocess.Popen(
+            ["powershell.exe", ".\\" + script], stdout=subprocess.PIPE
+        ).communicate()[0]
         lines = result.decode().splitlines()
         ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
 
@@ -139,7 +146,7 @@ class Execute:
             "WARNING": log.warning,
             "ERROR": log.error,
             "CRITICAL": log.critical,
-            None: log.debug
+            None: log.debug,
         }
 
         log_func = log_funcs.get(ID, log.debug)
