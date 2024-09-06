@@ -19,7 +19,7 @@ def backup_windows_logs():
         # Construct the PowerShell command as a single string
         cmd = f'Get-EventLog -LogName "{log_type}" | Export-Csv -Path "{backup_file}" -NoTypeInformation'
 
-        # Use subprocess.Popen to execute the PowerShell command
+        # Use subprocess.Popen to Execute the PowerShell command
         process = subprocess.Popen(
             ["powershell.exe", "-Command", cmd],
             stdin=subprocess.PIPE,

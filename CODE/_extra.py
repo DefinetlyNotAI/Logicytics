@@ -49,7 +49,7 @@ def menu() -> None:
     if files[choice - 1] == "CMD.ps1":
         print("Redirecting to CMD.ps1...")
         subprocess.run(["powershell.exe", "../EXTRA/EXTRA/CMD.ps1"], check=True)
-        command = input("Type the flags you want to execute: ")
+        command = input("Type the flags you want to Execute: ")
         subprocess.run(
             [
                 "powershell.exe",

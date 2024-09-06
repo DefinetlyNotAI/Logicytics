@@ -56,7 +56,7 @@ class SystemInfo:
     @property
     def is_admin(self) -> bool:
         """
-        Checks if the current process is running with administrative privileges.
+        Check if the current process is running with administrative privileges.
 
         Returns:
             bool: True if the process is running as an administrator, False otherwise.
