@@ -1,8 +1,7 @@
-import subprocess
 import argparse
 import json
+import subprocess
 from subprocess import CompletedProcess
-import sys
 
 
 class Actions:

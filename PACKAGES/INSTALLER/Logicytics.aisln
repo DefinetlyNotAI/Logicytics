@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<DOCUMENT Type="Advanced Installer Solution" CreateVersion="21.8.2" version="21.8.2" Id="{E93E6363-1CDB-43C3-821C-C2D1E03AB35D}">
-  <PROJECT Path="Logicytics.aip" Id="{A2542CC0-5E99-4F23-8D1F-6865FFEC41D9}" Startup="true"/>
-  <PROJECT Path="Logicytics\PACKAGES\INSTALLER\Logicytics.aip" Id="{927E3545-3C4F-4120-9142-05105289B241}" Startup="false"/>
-</DOCUMENT>

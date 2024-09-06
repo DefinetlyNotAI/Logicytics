@@ -3,8 +3,8 @@
 This directory houses special scripts that don't directly interact with Logicytics.
 These scripts are designed to be used outside Logicytics and are meant for use with other dev tools. 
 
-The scripts located here are designed to be used by Developers and are meant for external use. 
-They are designed to interact with Logicytics from a outside perspective like generating `msi` installers 
+The scripts located here are designed to be used by Developers and are meant for external use.
+They are designed to interact with Logicytics from an outside perspective like generating `msi` installers
 and are not designed to be run independently or run by the main scripts. 
 
 ## What can be found in this directory?
@@ -29,4 +29,4 @@ If you would like to contribute to this directory, please follow these guideline
 
 ## License
 
-This directory is licensed under the [MIT License](../LICENSE).
+This directory is licensed under the [MIT License](https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE).

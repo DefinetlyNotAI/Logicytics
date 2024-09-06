@@ -1,8 +1,8 @@
 import os
 import pathlib
 from datetime import datetime
+
 import colorlog
-import sys
 
 
 class Log:

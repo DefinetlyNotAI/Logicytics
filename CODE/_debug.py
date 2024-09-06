@@ -1,8 +1,10 @@
 import os
-import sys
 import platform
+import sys
 from datetime import datetime
+
 import requests
+
 from __lib_actions import *
 from __lib_log import Log
 
