@@ -1,8 +1,8 @@
 import os
 import pathlib
 from datetime import datetime
+
 import colorlog
-import sys
 
 
 class Log:
@@ -222,7 +222,7 @@ class Log:
         if self.color:
             colorlog.critical(message)
         with open(self.err_filename, "a") as f:
-            code = str(FILECODE) + ':' + str(ERRCODE) + ':' + str(FUNCODE)
+            code = str(FILECODE) + ":" + str(ERRCODE) + ":" + str(FUNCODE)
             f.write(
                 f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message) + ' --> ' + code)}\n"
             )

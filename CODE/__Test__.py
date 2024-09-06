@@ -1,5 +1,4 @@
 import unittest
-import sys  #  MUST-USE FOR ALL CODE TO WORK WITH EXE
 
 
 class MyTestCase(unittest.TestCase):

@@ -1,53 +1,59 @@
-import shutil
-import os
-from datetime import datetime
 import getpass
+import shutil
+from datetime import datetime
+
 from __lib_actions import *
 from __lib_log import Log
 
 
-def backup_media():
-    """
-    Backs up media files from the default Windows photo and video directories.
-
-    Auto-detects the Windows username and constructs the default paths for photos and videos.
-    Combines both paths for a comprehensive backup and defines the destination directory.
-    Copies files with extensions .jpg, .jpeg, .png, and .mp4 to the destination directory.
-
-    Returns:
-        None
-    """
-    # Auto-detect the Windows username
+def get_default_paths():
+    """Returns the default paths for photos and videos based on the Windows username."""
     username = getpass.getuser()
-
-    # Default paths for photos and videos on Windows
     default_photo_path = os.path.expanduser(f"C:\\Users\\{username}\\Pictures")
     default_video_path = os.path.expanduser(f"C:\\Users\\{username}\\Videos")
+    return [default_photo_path, default_video_path]
 
-    # Combine both paths for a comprehensive backup
-    source_dirs = [default_photo_path, default_video_path]
 
-    # Define the destination directory
-    backup_directory = f"MediaBackup"
-
+def ensure_backup_directory_exists(backup_directory):
+    """Ensures the backup directory exists; creates it if not."""
     if not os.path.exists(backup_directory):
         os.makedirs(backup_directory)
 
+
+def collect_media_files(source_dirs):
+    """Collects all media files from the source directories."""
+    media_files = []
     for source_dir in source_dirs:
-        for root, dirs, files in os.walk(source_dir):
+        for root, _, files in os.walk(source_dir):
             for file in files:
                 if file.endswith((".jpg", ".jpeg", ".png", ".mp4")):
-                    src_file = os.path.join(root, file)
-                    dst_file = os.path.join(
-                        backup_directory,
-                        datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + "_" + file,
-                    )
-                    try:
-                        shutil.copy2(src_file, dst_file)
-                        log.info(f"Copied {file} to {dst_file}")
-                    except Exception as e:
-                        log.error(f"Failed to copy {file}: {str(e)}")
+                    media_files.append(os.path.join(root, file))
+    return media_files
 
+
+def backup_files(media_files, backup_directory):
+    """Backs up media files to the backup directory."""
+    for src_file in media_files:
+        dst_file = os.path.join(
+            backup_directory,
+            datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            + "_"
+            + os.path.basename(src_file),
+        )
+        try:
+            shutil.copy2(str(src_file), str(dst_file))
+            log.info(f"Copied {os.path.basename(src_file)} to {dst_file}")
+        except Exception as e:
+            log.error(f"Failed to copy {src_file}: {str(e)}")
+
+
+def backup_media():
+    """Backs up media files from the default Windows photo and video directories."""
+    source_dirs = get_default_paths()
+    backup_directory = "MediaBackup"
+    ensure_backup_directory_exists(backup_directory)
+    media_files = collect_media_files(source_dirs)
+    backup_files(media_files, backup_directory)
     log.info("Media backup script completed.")
 
 

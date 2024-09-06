@@ -1,0 +1,20 @@
+name: Verify Files modified
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: verify-less
+        uses: actions-cool/verify-files-modify@main
+        with:
+          forbid-files: 'README.md, CODE/Logicytics.exe, CODE/Logicytics.py'
+          forbid-paths: '.github/, CODE/SysInternal_Suite/, CODE/_internal/'
+          assignees: 'DefinetlyNotAI'
+          comment: |
+            🚨 Hi @${{ github.event.pull_request.user.login }}. Thanks for your contribution, as the `default.less` file is currently being upgraded or is locked from contribution, changes will not be accepted for the time being.🚨
+          close: true
+          set-failed: false

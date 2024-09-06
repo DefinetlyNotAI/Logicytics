@@ -6,6 +6,7 @@
         <entryData>
           <resourceRoots>
             <path value="file://$PROJECT_DIR$/PACKAGES/INSTALLER" />
+            <path value="file://$PROJECT_DIR$/PACKAGES" />
           </resourceRoots>
         </entryData>
       </entry>

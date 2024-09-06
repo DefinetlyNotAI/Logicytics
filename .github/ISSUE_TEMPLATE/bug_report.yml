@@ -33,7 +33,7 @@ body:
     id: b_log
     attributes:
       label: Basic Log
-      description: If possible, delete the default log, and attempt to run `.\Logicytics` again with the steps you have higlighted, upload the new log here.
+      description: If possible, delete the default log, and attempt to run `.\Logicytics` again with the steps you have highlighted, upload the new log here.
     validations:
       required: false
   - type: textarea
