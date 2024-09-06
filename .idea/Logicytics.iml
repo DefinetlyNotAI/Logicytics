@@ -21,8 +21,8 @@
     <option name="format" value="PLAIN" />
     <option name="myDocStringFormat" value="Plain" />
   </component>
-  <component name="PyNamespacePackagesService">
-    <option name="namespacePackageFolders">
+  <component name="TemplatesService">
+    <option name="TEMPLATE_FOLDERS">
       <list>
         <option value="$MODULE_DIR$/PACKAGES" />
       </list>

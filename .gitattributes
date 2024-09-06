@@ -1,7 +1,4 @@
-WEB/** linguist-detectable=false
-*.html linguist-vendored
-*.rtf linguist-vendored
 .build/** linguist-detectable=false
 .dist/** linguist-detectable=false
-*.exe filter=lfs diff=lfs merge=lfs -text
-*.cab filter=lfs diff=lfs merge=lfs -text
+*.html linguist-vendored
+*.rtf linguist-vendored
