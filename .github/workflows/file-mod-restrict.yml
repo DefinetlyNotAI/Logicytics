@@ -4,12 +4,22 @@ on:
   pull_request_target:
     types: [opened, edited, reopened, synchronize, ready_for_review]
 
+permissions:
+  contents: read
+
 jobs:
   verify:
+    permissions:
+      pull-requests: write  # for actions-cool/verify-files-modify to update status of PRs
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
       - name: verify-less
-        uses: actions-cool/verify-files-modify@main
+        uses: actions-cool/verify-files-modify@080c71272de20d858edaca58eac6dea270cf890e # main
         with:
           forbid-files: 'README.md, CODE/Logicytics.exe, CODE/Logicytics.py'
           forbid-paths: '.github/, CODE/SysInternal_Suite/, CODE/_internal/'
