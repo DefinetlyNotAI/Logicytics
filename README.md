@@ -258,4 +258,5 @@ Always obtain proper authorization before extracting any data from a system.
     <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codecov.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codecov.yml/badge.svg" alt="Coverage Report"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/powershell.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/powershell.yml/badge.svg" alt="PSScriptAnalyzer"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/scorecard.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/scorecard.yml/badge.svg" alt="Scorecard supply-chain security"></a>
+    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/file-mod-restrict.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/file-mod-restrict.yml/badge.svg" alt="Verify Files modified"></a>
 </div>
