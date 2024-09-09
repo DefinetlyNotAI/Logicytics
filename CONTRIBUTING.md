@@ -51,6 +51,7 @@ please adhere to the following guidelines to ensure consistency and maintainabil
 - Add yourself to the [credits](CREDITS.md).
 - Make sure you have done all the necessary steps in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
 - Make sure you have tested your code.
+  - Keep all tests in the test directory
 - Make sure you have followed the instructions in the `--dev` flag.
 - Make sure the coding style is similar to previous code
 - Code is only written in `python, ps1 or batch` or is an `EXE` file

@@ -4,6 +4,7 @@ import platform
 import subprocess
 
 from __lib_actions import Actions
+from __lib_log import Log
 
 
 def open_file(file: str) -> None:
@@ -85,7 +86,7 @@ def dev_checks() -> None:
         ("Have you made files you don't want to be run start with '_'?", "."),
         ("Have you added the file to CODE dir?", "."),
         ("Have you added docstrings and comments?", "../CONTRIBUTING.md"),
-        ("Have you tested your code?", "__Test__.py"),
+        ("Have you tested your code?", "../TESTS/TEST.py"),
         ("Is each file containing no more than 1 feature?", "../CONTRIBUTING.md"),
         ("Have you added flags comment?", "../CONTRIBUTING.md"),
         ("Have you NOT modified _wrapper.py without authorization?", "Logicytics.py"),
@@ -108,4 +109,15 @@ def dev_checks() -> None:
 
 
 if __name__ == "__main__":
-    dev_checks()
+    Actions().mkdir()
+    log = Log("../ACCESS/LOGS/DEV_TOOL.log", debug=True)
+    # dev_checks()
+    log.info("Completed manual checks")
+    test_files = []
+    for item in os.listdir("../TESTS"):
+        if item.lower().endswith('.py') and item.lower() != '__init__.py' and item.lower() != 'test.py':
+            full_path = os.path.abspath(os.path.join("../TESTS", item))
+            test_files.append(full_path)
+            log.debug(f"Found test file: {item} - Full path: {full_path}")
+    for item in test_files:
+        Actions().run_command(f"python {item}")
