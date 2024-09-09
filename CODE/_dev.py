@@ -15,16 +15,17 @@ def open_file(file: str) -> None:
     Returns:
         None
     """
-    file_path = os.path.realpath(file)
-    try:
-        if platform.system() == "Windows":
-            os.startfile(file_path)
-        elif platform.system() == "Darwin":  # macOS
-            subprocess.call(("open", file_path))
-        else:  # Linux variants
-            subprocess.call(("xdg-open", file_path))
-    except Exception as e:
-        print(f"Error opening file: {e}")
+    if not file == "":
+        file_path = os.path.realpath(file)
+        try:
+            if platform.system() == "Windows":
+                os.startfile(file_path)
+            elif platform.system() == "Darwin":  # macOS
+                subprocess.call(("open", file_path))
+            else:  # Linux variants
+                subprocess.call(("xdg-open", file_path))
+        except Exception as e:
+            print(f"Error opening file: {e}")
 
 
 def update_json_file(filename: str, new_array: list) -> None:
@@ -96,6 +97,13 @@ def dev_checks() -> None:
         if not prompt_user(question, file_to_open):
             return
 
+    remind = False
+    if prompt_user("Is the update a major or minor upgrade (non-patch update)?", ""):
+        if not prompt_user("Did You Build the EXE with Advanced Installer?", "../PACKAGES/INSTALLER/TODO.md"):
+            return
+        else:
+            remind = True
+
     files = Actions.check_current_files(".")
     print(files)
     if not prompt_user("Does the list above include your added files?"):
@@ -106,6 +114,8 @@ def dev_checks() -> None:
     print(
         "Great Job! Please tick the box in the GitHub PR request for completing steps in --dev"
     )
+    if remind:
+        print("Remember to upload the EXE files on the PR!")
 
 
 if __name__ == "__main__":
