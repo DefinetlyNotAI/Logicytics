@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 from subprocess import CompletedProcess
+from pathlib import Path
 
 
 class Actions:
@@ -211,7 +212,9 @@ class Actions:
             SystemExit: If the config.json file has an invalid format.
         """
         try:
-            with open("config.json", "r") as file:
+            script_dir = Path(__file__).parent.absolute()
+            config_path = script_dir / "config.json"
+            with open(config_path, "r") as file:
                 data = json.load(file)
 
                 webhook_url = data.get("WEBHOOK_URL", "")
@@ -255,6 +258,14 @@ class Actions:
                     files_path = os.path.join(root, filename)
                     file.append(files_path.removeprefix(".\\"))
         return file
+
+    @staticmethod
+    def mkdir():
+        os.makedirs("../ACCESS/LOGS/", exist_ok=True)
+        os.makedirs("../ACCESS/LOGS/DEBUG", exist_ok=True)
+        os.makedirs("../ACCESS/BACKUP/", exist_ok=True)
+        os.makedirs("../ACCESS/DATA/Hashes", exist_ok=True)
+        os.makedirs("../ACCESS/DATA/Zip", exist_ok=True)
 
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions().read_config()
