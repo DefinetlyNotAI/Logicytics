@@ -1,4 +1,10 @@
-# Special wrapper that the exe is made out of
+# Special wrapper that the exe Logicytics is made out of.
+
+# If you modify please run this command:
+# pyinstaller --noconfirm --onefile --console --icon "C:\Users\Hp\Desktop\Logicytics\IMG\EXE.ico"  "C:\Users\Hp\Desktop\Logicytics\CODE\__wrapper__.py"
+# Assuming Logicytics is in the Desktop, and the paths are correct
+# Then rename from __wrapper__.exe to Logicytics.exe
+
 import subprocess
 import sys
 
@@ -10,10 +16,8 @@ if len(FLAG) == 0:
 
 elif len(FLAG) == 2:
     flag1, flag2 = FLAG
-    flag1 = "--" + flag1
-    flag2 = "--" + flag2
     subprocess.run(["python", "Logicytics.py", flag1, flag2], shell=True)
 
 else:
-    flag1 = "--" + sys.argv[1]
+    flag1 = sys.argv[1]
     subprocess.run(["python", "Logicytics.py", flag1], shell=True)

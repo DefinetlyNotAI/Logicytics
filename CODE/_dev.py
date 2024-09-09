@@ -4,6 +4,7 @@ import platform
 import subprocess
 
 from __lib_actions import Actions
+from __lib_log import Log
 
 
 def open_file(file: str) -> None:
@@ -14,16 +15,17 @@ def open_file(file: str) -> None:
     Returns:
         None
     """
-    file_path = os.path.realpath(file)
-    try:
-        if platform.system() == "Windows":
-            os.startfile(file_path)
-        elif platform.system() == "Darwin":  # macOS
-            subprocess.call(("open", file_path))
-        else:  # Linux variants
-            subprocess.call(("xdg-open", file_path))
-    except Exception as e:
-        print(f"Error opening file: {e}")
+    if not file == "":
+        file_path = os.path.realpath(file)
+        try:
+            if platform.system() == "Windows":
+                os.startfile(file_path)
+            elif platform.system() == "Darwin":  # macOS
+                subprocess.call(("open", file_path))
+            else:  # Linux variants
+                subprocess.call(("xdg-open", file_path))
+        except Exception as e:
+            print(f"Error opening file: {e}")
 
 
 def update_json_file(filename: str, new_array: list) -> None:
@@ -85,7 +87,7 @@ def dev_checks() -> None:
         ("Have you made files you don't want to be run start with '_'?", "."),
         ("Have you added the file to CODE dir?", "."),
         ("Have you added docstrings and comments?", "../CONTRIBUTING.md"),
-        ("Have you tested your code?", "__Test__.py"),
+        ("Have you tested your code?", "../TESTS/TEST.py"),
         ("Is each file containing no more than 1 feature?", "../CONTRIBUTING.md"),
         ("Have you added flags comment?", "../CONTRIBUTING.md"),
         ("Have you NOT modified _wrapper.py without authorization?", "Logicytics.py"),
@@ -94,6 +96,13 @@ def dev_checks() -> None:
     for question, file_to_open in checks:
         if not prompt_user(question, file_to_open):
             return
+
+    remind = False
+    if prompt_user("Is the update a major or minor upgrade (non-patch update)?", ""):
+        if not prompt_user("Did You Build the EXE with Advanced Installer?", "../PACKAGES/INSTALLER/TODO.md"):
+            return
+        else:
+            remind = True
 
     files = Actions.check_current_files(".")
     print(files)
@@ -105,7 +114,20 @@ def dev_checks() -> None:
     print(
         "Great Job! Please tick the box in the GitHub PR request for completing steps in --dev"
     )
+    if remind:
+        print("Remember to upload the EXE files on the PR!")
 
 
 if __name__ == "__main__":
+    Actions().mkdir()
+    log = Log("../ACCESS/LOGS/DEV_TOOL.log", debug=True)
     dev_checks()
+    log.info("Completed manual checks")
+    test_files = []
+    for item in os.listdir("../TESTS"):
+        if item.lower().endswith('.py') and item.lower() != '__init__.py' and item.lower() != 'test.py':
+            full_path = os.path.abspath(os.path.join("../TESTS", item))
+            test_files.append(full_path)
+            log.debug(f"Found test file: {item} - Full path: {full_path}")
+    for item in test_files:
+        Actions().run_command(f"python {item}")
