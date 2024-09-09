@@ -30,6 +30,10 @@
 
 <!--Why is this PR required? What problem does it solve? -->
 
+### Binaries
+
+<!--If you have any binaries built from the AIP, Upload them here -->
+
 ### Issues Fixed
 
 <!--What issues will be fixed? (Format: "#50, #23" etc)  -->
