@@ -250,16 +250,15 @@ Always obtain proper authorization before extracting any data from a system.
 
 ### 📃 GitHub Actions Status
 
-<div align="center">
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql/badge.svg" alt="CodeQL"></a>
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds/badge.svg" alt="Codespaces Prebuilds"></a>
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates/badge.svg" alt="Dependabot Updates"></a>
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml/badge.svg" alt="Docker Image CI"></a>
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml/badge.svg" alt="Greetings"></a>
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml/badge.svg" alt="Mark stale issues and pull requests"></a>
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment/badge.svg" alt="Pages build deployment"></a>
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codecov.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codecov.yml/badge.svg" alt="Coverage Report"></a>
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/powershell.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/powershell.yml/badge.svg" alt="PSScriptAnalyzer"></a>
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/scorecard.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/scorecard.yml/badge.svg" alt="Scorecard supply-chain security"></a>
-    <a href="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/file-mod-restrict.yml"><img src="https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/file-mod-restrict.yml/badge.svg" alt="Verify Files modified"></a>
-</div>
+[![CodeQL](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql)
+[![Codespaces Prebuilds](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds)
+[![Dependabot Updates](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates)
+[![Dependency Review](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependency-review.yml)
+[![Docker Image CI](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml)
+[![Greetings](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml)
+[![Mark stale issues and pull requests](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml)
+[![pages-build-deployment](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment)
+[![PSScriptAnalyzer](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/powershell.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/powershell.yml)
+[![Scorecard supply-chain security](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/scorecard.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/scorecard.yml)
+[![Verify Files modified](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/file-mod-restrict.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/file-mod-restrict.yml)
+[![Coverage Report](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codecov.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codecov.yml)
