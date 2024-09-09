@@ -111,7 +111,7 @@ def dev_checks() -> None:
 if __name__ == "__main__":
     Actions().mkdir()
     log = Log("../ACCESS/LOGS/DEV_TOOL.log", debug=True)
-    # dev_checks()
+    dev_checks()
     log.info("Completed manual checks")
     test_files = []
     for item in os.listdir("../TESTS"):
