@@ -13,8 +13,12 @@ This comprehensive guide is here to equip you with everything you need to use Lo
     <a href="https://github.com/DefinetlyNotAI/Logicytics/languages"><img src="https://img.shields.io/github/languages/count/DefinetlyNotAI/Logicytics" alt="GitHub Language Count"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics/actions"><img src="https://img.shields.io/github/check-runs/DefinetlyNotAI/Logicytics/main" alt="GitHub Branch Check Runs"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics"><img src="https://img.shields.io/github/repo-size/DefinetlyNotAI/Logicytics" alt="GitHub Repo Size"></a>
+</div>
+
+<div align="center">
     <a href="https://www.codefactor.io/repository/github/definetlynotai/logicytics"><img src="https://www.codefactor.io/repository/github/definetlynotai/logicytics/badge" alt="GitHub Repo CodeFactor Rating"></a>
     <a href="https://codeclimate.com/github/DefinetlyNotAI/Logicytics/maintainability"><img src="https://api.codeclimate.com/v1/badges/ae2c436af07d00aabf00/maintainability"  alt="GitHub Repo CodeClimate Rating"/></a>
+    <a href="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics"><img src="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics/badge"  alt="OpenSSF Scorecard"/></a>
     <!--    <a href="https://codecov.io/gh/DefinetlyNotAI/Logicytics" ><img src="https://codecov.io/gh/DefinetlyNotAI/Logicytics/graph/badge.svg?token=1D0E3PDBWF"/></a> -->
 </div>
 
