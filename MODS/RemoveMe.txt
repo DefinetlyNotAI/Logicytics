@@ -1,1 +1,0 @@
-Placed cause GitHub doesn't allow empty directories
