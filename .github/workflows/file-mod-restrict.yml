@@ -2,7 +2,7 @@ name: Verify Files modified
 
 on:
   pull_request_target:
-    types: [opened, edited, synchronize, ready_for_review]
+    types: [opened, edited]
 
 permissions:
   contents: read
@@ -25,6 +25,6 @@ jobs:
           forbid-paths: '.github/ISSUE_TEMPLATE/, CODE/SysInternal_Suite/, CODE/_internal/'
           assignees: 'DefinetlyNotAI'
           comment: |
-            🚨 Hi @${{ github.event.pull_request.user.login }}. Thanks for your contribution, as the `default.less` file is currently being upgraded or is locked from contribution, changes will not be accepted for the time being.🚨
+            🚨 Hi @${{ github.event.pull_request.user.login }}. Thanks for your contribution, as the `default.less` file is currently being upgraded or is locked from contribution, changes will not be accepted for the time being. To ignore this message please reopen the PR without editing any files!🚨
           close: true
           set-failed: false
