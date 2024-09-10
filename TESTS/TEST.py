@@ -1,3 +1,5 @@
+# To use this, make a copy, the name it TEST_{FILENAME} where {FILENAME} is replaced
+
 import unittest
 
 

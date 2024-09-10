@@ -54,13 +54,17 @@ please adhere to the following guidelines to ensure consistency and maintainabil
   - Keep all tests in the test directory
 - Make sure you have followed the instructions in the `--dev` flag.
 - Make sure the coding style is similar to previous code
-- Code is only written in `python, ps1 or batch` or is an `EXE` file
+- Code is only written in `python, ps1 or batch` or is an `EXE` file (Highly Unadvised).
 - You have not modified or changed the wrapper [`Logicytics.py`](CODE/Logicytics.py)
 - All your code follows a strict logging system
   - If python, imports the [logger](CODE/__lib_log.py) class and uses it, with adhering to the critical code policy in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
     - For critical code you adhere to the `FILECODE-ERRORCODE-FUNCTIONCODE` formatting
   - If non-python, each print statement starts with either `INFO:` `WARNING:` or `ERROR:` to allow the wrapper to inject the [logger](CODE/__lib_log.py) class.
-
+- Naming the code should follow these conventions:
+  - File is either a `.py`, `.exe`, `.ps1`, `.bat` file
+  - If it's a file to be run, shouldn't start with `_`
+  - If it's a extra file/extra library, to make sure it isn't run, should start with `_`
+- No code is allowed to have `if __name__ == '__main__'` or a similar functioning code
 
 ## Issues and labels 🛠️
 

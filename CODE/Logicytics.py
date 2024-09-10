@@ -1,4 +1,5 @@
 import ctypes
+import os.path
 import threading
 
 from __lib_actions import *
@@ -47,6 +48,19 @@ class Check:
             r"powershell (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA"
         )
         return int(value.strip("\n")) == 1
+
+    @staticmethod
+    def sysinternal_zip():
+        ignore = os.path.exists("SysInternal_Suite/.ignore")
+        if not ignore:
+            dir_path = "SysInternal_Suite"
+            files = os.listdir(dir_path)
+
+            if len(files) == 1 and files[0].endswith(".zip"):
+                zip_path = os.path.join(dir_path, files[0])
+                unzip(zip_path)
+
+            os.remove(os.path.join(dir_path, files[0]))
 
 
 class Execute:
