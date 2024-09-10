@@ -1,6 +1,7 @@
 import ctypes
 import os.path
 import threading
+import zipfile
 
 from __lib_actions import *
 from __lib_log import Log
@@ -51,23 +52,24 @@ class Check:
 
     @staticmethod
     def sys_internal_zip():
+        # TODO Test me
         try:
-            ignore = os.path.exists("SysInternal_Suite/.ignore")
-            if os.path.exists("SysInternal_Suite/SysInternal_Suite.zip"):
-                if not ignore:
-                    log.info("Extracting SysInternal_Suite zip")
-                    dir_path = "SysInternal_Suite"
-                    files = os.listdir(dir_path)
+            ignore_file = os.path.exists("SysInternal_Suite/.ignore")
+            zip_file = os.path.exists("SysInternal_Suite/SysInternal_Suite.zip")
 
-                    if len(files) == 1 and files[0].endswith(".zip"):
-                        zip_path = os.path.join(dir_path, files[0])
-                        unzip(zip_path)
+            if zip_file and not ignore_file:
+                log.info("Extracting SysInternal_Suite zip")
+                with zipfile.ZipFile("SysInternal_Suite/SysInternal_Suite.zip") as zip_ref:
+                    zip_ref.extractall("SysInternal_Suite")
 
-                    os.remove(os.path.join(dir_path, files[0]))
-                else:
-                    log.info("Found .ignore file, skipping SysInternal_Suite zip extraction, ZIP still remains for future use")
+                # Remove the original zip file
+                os.remove("SysInternal_Suite/SysInternal_Suite.zip")
+
+            elif ignore_file:
+                log.info("Found .ignore file, skipping SysInternal_Suite zip extraction")
+
         except Exception as err:
-            log.critical(f"Failed to unzip SysInternal_Suite: {err}", "_W", "G", "E")
+            log.critical(f"Failed to unzip SysInternal_Suite: {err}", "_L", "G", "CS")
             exit(f"Failed to unzip SysInternal_Suite: {err}")
 
 
@@ -132,7 +134,7 @@ class Execute:
             subprocess.run(unblock_command, shell=True, check=True)
             log.info("PS1 Script unblocked.")
         except Exception as err:
-            log.critical(f"Failed to unblock script: {err}", "_W", "G", "E")
+            log.critical(f"Failed to unblock script: {err}", "_L", "G", "E")
 
     @staticmethod
     def __run_python_script(script: str) -> None:
@@ -268,7 +270,7 @@ log.info("Starting Logicytics...")
 
 # Check for privileges and errors
 if not check_status.admin():
-    log.critical("Please run this script with admin privileges", "_W", "P", "BA")
+    log.critical("Please run this script with admin privileges", "_L", "P", "BA")
     input("Press Enter to exit...")
     exit(1)
 
@@ -363,7 +365,7 @@ if sub_action == "webhook":
     """
     log.info("Sending webhook...")
     if WEBHOOK is None or WEBHOOK == "":
-        log.critical("WEBHOOK URL not set and the request action was webhook", "_W", "P", "BA")
+        log.critical("WEBHOOK URL not set and the request action was webhook", "_L", "P", "BA")
         input("Press Enter to exit...")
         exit(1)
     """
