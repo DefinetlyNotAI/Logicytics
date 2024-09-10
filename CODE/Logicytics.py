@@ -50,17 +50,25 @@ class Check:
         return int(value.strip("\n")) == 1
 
     @staticmethod
-    def sysinternal_zip():
-        ignore = os.path.exists("SysInternal_Suite/.ignore")
-        if not ignore:
-            dir_path = "SysInternal_Suite"
-            files = os.listdir(dir_path)
+    def sys_internal_zip():
+        try:
+            ignore = os.path.exists("SysInternal_Suite/.ignore")
+            if os.path.exists("SysInternal_Suite/SysInternal_Suite.zip"):
+                if not ignore:
+                    log.info("Extracting SysInternal_Suite zip")
+                    dir_path = "SysInternal_Suite"
+                    files = os.listdir(dir_path)
 
-            if len(files) == 1 and files[0].endswith(".zip"):
-                zip_path = os.path.join(dir_path, files[0])
-                unzip(zip_path)
+                    if len(files) == 1 and files[0].endswith(".zip"):
+                        zip_path = os.path.join(dir_path, files[0])
+                        unzip(zip_path)
 
-            os.remove(os.path.join(dir_path, files[0]))
+                    os.remove(os.path.join(dir_path, files[0]))
+                else:
+                    log.info("Found .ignore file, skipping SysInternal_Suite zip extraction, ZIP still remains for future use")
+        except Exception as err:
+            log.critical(f"Failed to unzip SysInternal_Suite: {err}", "_W", "G", "E")
+            exit(f"Failed to unzip SysInternal_Suite: {err}")
 
 
 class Execute:
@@ -188,6 +196,7 @@ with many options and flags that can be used to customize its behavior.
 # Initialization
 Actions().mkdir()
 check_status = Check()
+check_status.sys_internal_zip()
 
 try:
     # Get flags
