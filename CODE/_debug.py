@@ -161,6 +161,9 @@ def debug():
     log.info(f"Running as admin: {info.is_admin}")
     log.info(f"Execution policy: {info.execution_policy}")
     log.info(f"Date and time: {info.get_date_time()}")
+
+    # TODO Fix Me
+    """    
     if diff != set():
         log.warning(f"Differences: {diff}")
     if missing_in_config != set():
@@ -176,6 +179,7 @@ def debug():
         log.warning(f"Not up to date: {VERSION}")
     else:
         log.warning(f"Modified: {VERSION}")
+    """
 
     csid = check_sys_internal_dir()
 

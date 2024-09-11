@@ -4,30 +4,6 @@
     "DEBUG": false,
     "VERSION": "2.2.0",
     "CURRENT_FILES": [
-        "browser_miner.ps1",
-        "driverquery+sysinfo.py",
-        "Logicytics.py",
-        "log_miner.py",
-        "media_backup.py",
-        "netadapter.ps1",
-        "online_ip_scraper.py",
-        "property_scraper.ps1",
-        "registry.py",
-        "sensitive_data_miner.py",
-        "ssh_miner.py",
-        "sys_internal.py",
-        "tasklist.py",
-        "tree.bat",
-        "window_feature_miner.ps1",
-        "wmic.py",
-        "_debug.py",
-        "_dev.py",
-        "_extra.py",
-        "_health.py",
-        "_hide_my_tracks.py",
-        "_zipper.py",
-        "__lib_actions.py",
-        "__lib_log.py",
-        "__wrapper__.py"
+        "WIP - BROKEN"
     ]
 }
