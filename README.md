@@ -19,7 +19,7 @@ This comprehensive guide is here to equip you with everything you need to use Lo
     <a href="https://www.codefactor.io/repository/github/definetlynotai/logicytics"><img src="https://www.codefactor.io/repository/github/definetlynotai/logicytics/badge" alt="GitHub Repo CodeFactor Rating"></a>
     <a href="https://codeclimate.com/github/DefinetlyNotAI/Logicytics/maintainability"><img src="https://api.codeclimate.com/v1/badges/ae2c436af07d00aabf00/maintainability"  alt="GitHub Repo CodeClimate Rating"/></a>
     <a href="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics"><img src="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics/badge"  alt="OpenSSF Scorecard"/></a>
-    <!--    <a href="https://codecov.io/gh/DefinetlyNotAI/Logicytics" ><img src="https://codecov.io/gh/DefinetlyNotAI/Logicytics/graph/badge.svg?token=1D0E3PDBWF"/></a> -->
+    <!-- <a href="https://codecov.io/gh/DefinetlyNotAI/Logicytics" ><img src="https://codecov.io/gh/DefinetlyNotAI/Logicytics/graph/badge.svg?token=1D0E3PDBWF"/></a> -->
 </div>
 
 ## ❤️ Support Me ❤️
@@ -46,7 +46,7 @@ To install and setup Logicytics, follow these steps:
 
 - **Dependencies**: The project requires certain Python modules to be installed. You can install all the required modules by running the following command in your terminal: `pip install -r requirements.txt`.
 
-![Admin Error](https://github.com/DefinetlyNotAI/Logicytics/blob/main/IMG/NeedAdmin.png "Not using admin will result in a soft crash")
+![Admin Error](IMG/NeedAdmin.png "Not using admin will result in a soft crash")
 
 - **Administrative Privileges**: To be able to run the program using certain features of the project, like registry modification, you must run the program with administrative privileges.
 
@@ -54,7 +54,7 @@ To install and setup Logicytics, follow these steps:
 
 - **Knowledge of Command Line**: The project uses command line options for the user to interact with the program. It is recommended to have a basic understanding of command line options.
 
-- **Optional**: Have a USB drive or an external HDD available to store the gathered data, This project is best when stored in a USB and used on the root C:\ drive later on.
+- **Optional**: Create a `.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the ZIP file (This is done for the OpenSSF score), if the `.ignore` file is not found, it will auto extract the details
 
 ## Step-by-Step Installation</h2>
 
@@ -92,7 +92,7 @@ If you have an idea or want to contribute to the project, you can submit an issu
 
 ### Basic Usage
 
-![The flag options](https://github.com/DefinetlyNotAI/Logicytics/blob/main/IMG/Flag%20Options.png "Here are the options Logicytics has")
+![The flag options](IMG/Flag%20Options.png "Here are the options Logicytics has")
 
 After running and successfully collecting data, you may traverse the ACCESS directory as much as you like,
 Remove add and delete files, it's the safest directory where your backups, hashes, data zips and logs are found.
@@ -131,7 +131,7 @@ Do not modify CURRENT_FILES and VERSION unless you are developing extra add-ons
 
 ## 🚀 Advanced Usage 🚀
 
-![Main 3 Directories](https://github.com/DefinetlyNotAI/Logicytics/blob/main/IMG/3dir.png "The 3 Main Directories")
+![Main 3 Directories](IMG/3dir.png "The 3 Main Directories")
 
 ### Mods
 
@@ -221,7 +221,7 @@ but it should give you a good idea of what data Logicytics is capable of extract
 If there is a specific piece of data that you would like to see extracted by Logicytics,
 please let us know. We are constantly working to improve the project and adding new features.
 
-![Extra Tools](https://github.com/DefinetlyNotAI/Logicytics/blob/main/IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
+![Extra Tools](IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
 
 Other than mods, some prefixed tools are in the `EXTRA` directory, use the `--extra` flag to traverse these
 special tools
@@ -246,7 +246,7 @@ Always obtain proper authorization before extracting any data from a system.
 ### 🔗 Links
 
 - [Project's Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
-- [Project's License](https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE)
+- [Project's License](LICENSE)
 
 ### 📃 GitHub Actions Status
 
