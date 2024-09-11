@@ -59,7 +59,9 @@ class Check:
 
             if zip_file and not ignore_file:
                 print("Extracting SysInternal_Suite zip")
-                with zipfile.ZipFile("SysInternal_Suite/SysInternal_Suite.zip") as zip_ref:
+                with zipfile.ZipFile(
+                    "SysInternal_Suite/SysInternal_Suite.zip"
+                ) as zip_ref:
                     zip_ref.extractall("SysInternal_Suite")
 
             elif ignore_file:
@@ -83,9 +85,9 @@ class Execute:
         """
         for filename in os.listdir(directory):
             if (
-                    filename.endswith((".py", ".exe", ".ps1", ".bat"))
-                    and not filename.startswith("_")
-                    and filename != "Logicytics.py"
+                filename.endswith((".py", ".exe", ".ps1", ".bat"))
+                and not filename.startswith("_")
+                and filename != "Logicytics.py"
             ):
                 file_list.append(filename)
         return file_list
@@ -193,10 +195,8 @@ with many options and flags that can be used to customize its behavior.
 """
 
 # Initialization
-log = Log(debug=DEBUG)
 Actions().mkdir()
 check_status = Check()
-check_status.sys_internal_zip()
 
 try:
     # Get flags
@@ -211,6 +211,9 @@ if action == "debug":
     debug()
     input("Press Enter to exit...")
     exit(0)
+
+log = Log(debug=DEBUG)
+check_status.sys_internal_zip()
 
 if action == "dev":
     dev_checks()

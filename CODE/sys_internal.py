@@ -40,9 +40,9 @@ def sys_internal():
 
                 # Optionally, handle errors if any
                 if (
-                        result.stderr.decode() != ""
-                        and result.returncode != 0
-                        and result.stderr.decode() is not None
+                    result.stderr.decode() != ""
+                    and result.returncode != 0
+                    and result.stderr.decode() is not None
                 ):
                     log.warning(f"{executable}: {result.stderr.decode()}")
                     outfile.write(f"{executable}:\n{result.stderr.decode()}")
@@ -55,11 +55,14 @@ def sys_internal():
 
 def check_sys_internal_dir() -> tuple[bool, bool]:
     if os.path.exists("SysInternal_Suite"):
-        return any(os.path.exists(f"SysInternal_Suite/{file}") for file in sys_internal_executables), os.path.exists(
-            "SysInternal_Suite/SysInternal_Suite.zip")
+        return any(
+            os.path.exists(f"SysInternal_Suite/{file}")
+            for file in sys_internal_executables
+        ), os.path.exists("SysInternal_Suite/SysInternal_Suite.zip")
     else:
         log.error(
-            "SysInternal_Suite cannot be found as a directory, force closing the sys_internal.py program, continuing Logicytics")
+            "SysInternal_Suite cannot be found as a directory, force closing the sys_internal.py program, continuing Logicytics"
+        )
         return False, False
 
 
@@ -68,6 +71,9 @@ if check_sys_internal_dir()[0]:
     sys_internal()
 elif check_sys_internal_dir()[0] is False and check_sys_internal_dir()[1] is True:
     log.warning(
-        "Files are not found, They are still zipped, most likely due to a .ignore file being present, continuing Logicytics")
+        "Files are not found, They are still zipped, most likely due to a .ignore file being present, continuing Logicytics"
+    )
 elif check_sys_internal_dir()[0] is False and check_sys_internal_dir()[1] is False:
-    log.error("Files are not found, The zip file is also missing!, continuing Logicytics")
+    log.error(
+        "Files are not found, The zip file is also missing!, continuing Logicytics"
+    )

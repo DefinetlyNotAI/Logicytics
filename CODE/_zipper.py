@@ -10,7 +10,7 @@ def get_files_to_zip(path: str) -> list:
         f
         for f in os.listdir(path)
         if not f.endswith((".py", ".exe", ".bat", ".ps1"))
-           and not f.startswith(("config.", "SysInternal_Suite", "__pycache__"))
+        and not f.startswith(("config.", "SysInternal_Suite", "__pycache__"))
     ]
 
 

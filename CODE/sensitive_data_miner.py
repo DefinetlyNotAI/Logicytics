@@ -36,9 +36,9 @@ class Miner:
         for filename in os.listdir(root):
             file_path = root / filename
             if (
-                    keyword.lower() in filename.lower()
-                    and file_path.is_file()
-                    and file_path.suffix in allowed_extensions
+                keyword.lower() in filename.lower()
+                and file_path.is_file()
+                and file_path.suffix in allowed_extensions
             ):
                 matching_files.append(file_path)
         return matching_files

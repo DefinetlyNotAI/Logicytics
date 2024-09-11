@@ -25,7 +25,7 @@ def open_file(file: str) -> None:
             else:  # Linux variants
                 subprocess.call(("xdg-open", file_path))
         except Exception as e:
-            print(f"Error opening file: {e}")
+            log.error(f"Error opening file: {e}")
 
 
 def update_json_file(filename: str, new_array: list) -> None:
@@ -45,11 +45,11 @@ def update_json_file(filename: str, new_array: list) -> None:
             json.dump(data, f, indent=4)
             f.truncate()
     except FileNotFoundError:
-        print(f"File not found: {filename}")
+        log.error(f"File not found: {filename}")
     except json.JSONDecodeError:
-        print(f"Error decoding JSON in the file: {filename}")
+        log.error(f"Error decoding JSON in the file: {filename}")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        log.error(f"An error occurred: {e}")
 
 
 def prompt_user(question: str, file_to_open: str = None) -> bool:
@@ -65,7 +65,7 @@ def prompt_user(question: str, file_to_open: str = None) -> bool:
     if answer.lower() != "yes":
         if file_to_open:
             open_file(file_to_open)
-        print(
+        log.warning(
             "Please ensure you fix the issues/problem and try again with the checklist."
         )
         return False
@@ -89,8 +89,7 @@ def dev_checks() -> None:
         ("Have you added docstrings and comments?", "../CONTRIBUTING.md"),
         ("Have you tested your code?", "../TESTS/TEST.py"),
         ("Is each file containing no more than 1 feature?", "../CONTRIBUTING.md"),
-        ("Have you added flags comment?", "../CONTRIBUTING.md"),
-        ("Have you NOT modified _wrapper.py without authorization?", "Logicytics.py"),
+        ("Have you NOT modified __wrapper__.py without authorization?", "Logicytics.py"),
     ]
 
     for question, file_to_open in checks:
@@ -98,8 +97,11 @@ def dev_checks() -> None:
             return
 
     remind = False
-    if prompt_user("Is the update a major or minor upgrade (non-patch update)?", ""):
-        if not prompt_user("Did You Build the EXE with Advanced Installer?", "../PACKAGES/INSTALLER/TODO.md"):
+    if prompt_user("Is the update a major or minor upgrade (non-patch update)?"):
+        if not prompt_user(
+            "Did You Build the EXE with Advanced Installer?",
+            "../Logicytics.aip",
+        ):
             return
         else:
             remind = True
@@ -107,15 +109,15 @@ def dev_checks() -> None:
     files = Actions.check_current_files(".")
     print(files)
     if not prompt_user("Does the list above include your added files?"):
-        print("Something went wrong! Please contact support.")
+        log.error("Something went wrong! Please contact support.")
         return
 
     update_json_file("config.json", files)
-    print(
+    log.info(
         "Great Job! Please tick the box in the GitHub PR request for completing steps in --dev"
     )
     if remind:
-        print("Remember to upload the EXE files on the PR!")
+        log.info("Remember to upload the EXE files on the PR!")
 
 
 if __name__ == "__main__":
@@ -125,7 +127,11 @@ if __name__ == "__main__":
     log.info("Completed manual checks")
     test_files = []
     for item in os.listdir("../TESTS"):
-        if item.lower().endswith('.py') and item.lower() != '__init__.py' and item.lower() != 'test.py':
+        if (
+            item.lower().endswith(".py")
+            and item.lower() != "__init__.py"
+            and item.lower() != "test.py"
+        ):
             full_path = os.path.abspath(os.path.join("../TESTS", item))
             test_files.append(full_path)
             log.debug(f"Found test file: {item} - Full path: {full_path}")
