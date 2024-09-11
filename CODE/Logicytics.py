@@ -58,18 +58,15 @@ class Check:
             zip_file = os.path.exists("SysInternal_Suite/SysInternal_Suite.zip")
 
             if zip_file and not ignore_file:
-                log.info("Extracting SysInternal_Suite zip")
+                print("Extracting SysInternal_Suite zip")
                 with zipfile.ZipFile("SysInternal_Suite/SysInternal_Suite.zip") as zip_ref:
                     zip_ref.extractall("SysInternal_Suite")
 
-                # Remove the original zip file
-                os.remove("SysInternal_Suite/SysInternal_Suite.zip")
-
             elif ignore_file:
-                log.info("Found .ignore file, skipping SysInternal_Suite zip extraction")
+                print("Found .ignore file, skipping SysInternal_Suite zip extraction")
 
         except Exception as err:
-            log.critical(f"Failed to unzip SysInternal_Suite: {err}", "_L", "G", "CS")
+            print(f"Failed to unzip SysInternal_Suite: {err}", "_L", "G", "CS")
             exit(f"Failed to unzip SysInternal_Suite: {err}")
 
 
@@ -196,6 +193,7 @@ with many options and flags that can be used to customize its behavior.
 """
 
 # Initialization
+log = Log(debug=DEBUG)
 Actions().mkdir()
 check_status = Check()
 check_status.sys_internal_zip()
@@ -213,8 +211,6 @@ if action == "debug":
     debug()
     input("Press Enter to exit...")
     exit(0)
-
-log = Log(debug=DEBUG)
 
 if action == "dev":
     dev_checks()
