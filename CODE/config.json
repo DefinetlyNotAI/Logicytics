@@ -5,7 +5,8 @@
     "VERSION": "2.0.0",
     "CURRENT_FILES": [
         "browser_miner.ps1",
-        "driverquery.py",
+        "driverquery+sysinfo.py",
+        "Logicytics.py",
         "log_miner.py",
         "media_backup.py",
         "netadapter.ps1",
@@ -14,10 +15,8 @@
         "registry.py",
         "sensitive_data_miner.py",
         "ssh_miner.py",
-        "sysinfo.py",
         "sys_internal.py",
         "tasklist.py",
-        "test.py",
         "tree.bat",
         "window_feature_miner.ps1",
         "wmic.py",
@@ -26,16 +25,9 @@
         "_extra.py",
         "_health.py",
         "_hide_my_tracks.py",
-        "_wrapper.py",
         "_zipper.py",
         "__lib_actions.py",
         "__lib_log.py",
-        "__Test__.py",
-        "SysInternal_Suite\\psfile.exe",
-        "SysInternal_Suite\\PsGetsid.exe",
-        "SysInternal_Suite\\PsInfo.exe",
-        "SysInternal_Suite\\pslist.exe",
-        "SysInternal_Suite\\PsLoggedon.exe",
-        "SysInternal_Suite\\psloglist.exe"
+        "__wrapper__.py"
     ]
 }

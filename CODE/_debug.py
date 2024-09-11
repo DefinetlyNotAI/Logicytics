@@ -1,11 +1,21 @@
-import platform
-import sys
-from datetime import datetime
-
-import requests
-
+from __future__ import annotations
 from __lib_actions import *
 from __lib_log import Log
+
+import platform
+import sys
+import requests
+from datetime import datetime
+
+
+sys_internal_executables = [
+    "psfile.exe",
+    "PsGetsid.exe",
+    "PsInfo.exe",
+    "pslist.exe",
+    "PsLoggedon.exe",
+    "psloglist.exe",
+]
 
 
 class SystemInfo:
@@ -112,6 +122,14 @@ class JSON:
         return response.json()
 
 
+def check_sys_internal_dir() -> tuple[bool, bool] | None:
+    if os.path.exists("SysInternal_Suite"):
+        return any(os.path.exists(f"SysInternal_Suite/{file}") for file in sys_internal_executables), os.path.exists(
+            "SysInternal_Suite/SysInternal_Suite.zip")
+    else:
+        return None
+
+
 def debug():
     # Set required variables
     info = SystemInfo()
@@ -156,3 +174,15 @@ def debug():
         log.warning(f"Not up to date: {VERSION}")
     else:
         log.warning(f"Modified: {VERSION}")
+
+    csid = check_sys_internal_dir()
+
+    if isinstance(csid, tuple):
+        if csid[0]:
+            log.info("SysInternal Binaries Found: Unzipped")
+        elif csid[0] is False and csid[1]:
+            log.warning("SysInternal Binaries Not Found: Zipped")
+        else:
+            log.error("SysInternal Files Not found: Missing")
+    else:
+        log.error("SysInternal Directory Not found: Missing | Signifies minor corruption")
