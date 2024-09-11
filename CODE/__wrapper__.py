@@ -1,4 +1,4 @@
-# Special wrapper that the exe Logicytics is made out of.
+# Special wrapper that the exe Logicytics is made out of, not compulsory, just to ignore some restrictions of python.
 
 # If you modify please run this command:
 # pyinstaller --noconfirm --onefile --console --icon "C:\Users\Hp\Desktop\Logicytics\IMG\EXE.ico"  "C:\Users\Hp\Desktop\Logicytics\CODE\__wrapper__.py"

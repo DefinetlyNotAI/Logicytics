@@ -124,8 +124,10 @@ class JSON:
 
 def check_sys_internal_dir() -> tuple[bool, bool] | None:
     if os.path.exists("SysInternal_Suite"):
-        return any(os.path.exists(f"SysInternal_Suite/{file}") for file in sys_internal_executables), os.path.exists(
-            "SysInternal_Suite/SysInternal_Suite.zip")
+        return any(
+            os.path.exists(f"SysInternal_Suite/{file}")
+            for file in sys_internal_executables
+        ), os.path.exists("SysInternal_Suite/SysInternal_Suite.zip")
     else:
         return None
 
@@ -185,4 +187,6 @@ def debug():
         else:
             log.error("SysInternal Files Not found: Missing")
     else:
-        log.error("SysInternal Directory Not found: Missing | Signifies minor corruption")
+        log.error(
+            "SysInternal Directory Not found: Missing | Signifies minor corruption"
+        )
