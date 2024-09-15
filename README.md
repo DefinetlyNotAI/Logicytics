@@ -230,6 +230,78 @@ special tools
 
 Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
 
+#### Ideas Already made:
+Dont recreate these:
+
+<table>
+  <tr>
+    <th>File Name</th>
+    <th>About</th>
+  </tr>
+  <tr>
+    <td>browser_miner.ps1</td>
+    <td>Mines all data related to browsers [Would love to be updated]</td>
+  </tr>
+  <tr>
+    <td>driverquery+sysinfo.py</td>
+    <td>Gets data from driverquery and sysinfo command</td>
+  </tr>
+  <tr>
+    <td>log_miner.py</td>
+    <td>Gets all logs from the windows device</td>
+  </tr>
+  <tr>
+    <td>media_backup.py</td>
+    <td>Gets all media of the device in a neat folder</td>
+  </tr>
+  <tr>
+    <td>netadapter.ps1</td>
+    <td>Runs Get-NetAdapter Command with many flags</td>
+  </tr>
+  <tr>
+    <td>online_ip_scraper.py</td>
+    <td>Uses https://api.ipify.org to get your IP [May not be of much use]</td>
+  </tr>
+  <tr>
+    <td>property_scraper.ps1</td>
+    <td>Gets all of the windows properties</td>
+  </tr>
+  <tr>
+    <td>registry.py</td>
+    <td>Backups the registry</td>
+  </tr>
+  <tr>
+    <td>sensitive_data_miner.py</td>
+    <td>Copies all files that can be considered sensitive in a neat folder [Must be worked on - Super Janky]</td>
+  </tr>
+  <tr>
+    <td>ssh_miner.py</td>
+    <td>Gets as much ssh private data as possible</td>
+  </tr>
+  <tr>
+    <td>sys_internal.py</td>
+    <td>Attempts to use the Sys_Internal Suite from microsoft</td>
+  </tr>
+  <tr>
+    <td>tasklist.py</td>
+    <td>Gets all running tasks, PID and info/data</td>
+  </tr>
+  <tr>
+    <td>tree.bat</td>
+    <td>Runs and logs the tree.bat command</td>
+  </tr>
+  <tr>
+    <td>window_feature_miner.ps1</td>
+    <td>Logs all the windows features enabled</td>
+  </tr>
+  <tr>
+    <td>wmic.py</td>
+    <td>Logs and runs many wmic commands to gain sensitive data and information</td>
+  </tr>
+</table>
+
+**Any file with `_` is not counted here**
+
 ## 🌟 Conclusion 🌟
 
 Logicytics is a powerful tool that can extract a wide variety of data from a Windows system.
