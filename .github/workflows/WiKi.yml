@@ -1,0 +1,25 @@
+name: Wiki to HTML PR
+
+on:
+  wiki:
+    branches: [main]
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: 'wiki'
+    - name: Generate HTML
+      run: |
+        cd wiki
+        python -c "import markdown; print(markdown.markdown(open('Home.md').read()))" > Home.html
+    - name: Create PR
+      uses: peter-evans/create-pull-request@v3
+      with:
+        title: Update WEB/wiki.html
+        body: Auto-generated HTML version of wiki
+        branch: update-wiki-html
+        commit-message: Update WEB/wiki.html
+        path: /WEB/wiki.html
