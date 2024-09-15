@@ -4,17 +4,28 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   create-pr:
+    permissions:
+      contents: write  # for peter-evans/create-pull-request to create branch
+      pull-requests: write  # for peter-evans/create-pull-request to create a PR
     runs-on: ubuntu-latest
     steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      with:
+        egress-policy: audit
+
     - name: Checkout repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
     - name: Clone wiki
       run: |
         git clone https://github.com/DefinetlyNotAI/Logicytics.wiki.git wiki
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@e9aba2c848f5ebd159c070c61ea2c4e2b122355e # v2.3.4
       with:
         python-version: '3.x'
     - name: Install dependencies
@@ -31,7 +42,7 @@ jobs:
         git add .
         git commit -m "Auto-generated HTML versions of wiki pages"
     - name: Create PR
-      uses: peter-evans/create-pull-request@v3
+      uses: peter-evans/create-pull-request@18f7dc018cc2cd597073088f7c7591b9d1c02672 # v3.14.0
       with:
         title: Update wiki HTML versions
         body: Auto-generated HTML versions of wiki pages
