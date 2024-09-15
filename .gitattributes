@@ -1,4 +1,1 @@
-.build/** linguist-detectable=false
-.dist/** linguist-detectable=false
 *.html linguist-vendored
-*.rtf linguist-vendored
