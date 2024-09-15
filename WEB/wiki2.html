@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contribution Guidelines</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="wiki.html">Home</a></li>
+                    <li><a href="wiki1.html">What Is Logicytics</a></li>
+                    <li><a href="wiki2.html">Contribution Guidelines</a></li>
+                    <li><a href="wiki3.html">Usage</a></li>
+                    <li><a href="wiki4.html">Debugging & Diagnostics</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="wiki">
+            <h1>How to Contribute</h1>
+
+            <section class="section">
+                <h2>Getting Started</h2>
+                <p>Contributing to open-source projects is a rewarding way to give back to the community while enhancing your skills. Here's how you can get started:</p>
+                <ol>
+                    <li><strong>Fork the Repository:</strong> Visit the project's GitHub page and click on the 'Fork' button in the top right corner. This creates a copy of the repository in your GitHub account.</li>
+                    <li><strong>Clone the Repository:</strong> Clone the forked repository to your local machine using Git. Open your terminal or command prompt and run:<br>
+                        <code style="color: black; font-weight: 800;">git clone https://github.com/DefinetlyNotAI/Logicytics.git</code>
+                    </li>
+                    <li><strong>Create a New Branch:</strong> Create a new branch for your changes. This keeps the main branch clean and makes merging easier. Run:<br>
+                        <code>git checkout -b feature/your-feature-description</code><br>
+                        Replace 
+                        <code  style="color: black; font-weight: 800;">your-feature-description</code> with your feature description.
+                    </li>
+                    <li><strong>Make Your Changes:</strong> Navigate through the files and make your contributions. Remember to adhere to the project's coding standards and practices outlined below.</li>
+                    <li><strong>Commit Your Changes:</strong> After making your changes, stage them for commit. Then, commit with a meaningful message:<br>
+                        <code style="color: black; font-weight: 800;">git add .</code><br>
+                        <code style="color: black; font-weight: 800;">git commit -m "Your descriptive commit message"</code>
+                    </li>
+                    <li><strong>Push Your Changes:</strong> Push your committed changes to your forked repository on GitHub:<br>
+                        <code style="color: black; font-weight: 800;">git push origin feature/your-feature-description</code>
+                    </li>
+                    <li><strong>Open a Pull Request (PR):</strong> Go to your forked repository on GitHub, switch to your feature branch, and click 'New pull request'. Fill out the form, describing your changes and why they should be included. Submit the PR for review.</li>
+                </ol>
+            </section>
+
+            <section class="section">
+                <h2>Contributors</h2>
+                <p>Contributors play a vital role in the growth and success of open-source projects. They come in various forms, each contributing uniquely:</p>
+                <ul>
+                    <li><strong>Functionality Adders:</strong> Introduce new features and functionalities to the project, expanding the software's capabilities.</li>
+                    <li><strong>Code Cleaners:</strong> Focus on improving the existing codebase by refactoring, optimizing performance, and simplifying complex logic.</li>
+                    <li><strong>QoL Enhancers:</strong> Improve the usability and enjoyment of the software without necessarily adding new features. This includes UI improvements, documentation updates, or bug fixes.</li>
+                    <li><strong>Bug Hunters:</strong> Find and fix bugs of all sizes, contributing to both minor fixes and major stability improvements.</li>
+                </ul>
+            </section>
+
+            <section class="section">
+                <h2>Basic Code Practices</h2>
+                <ul>
+                    <li><strong>Coding Style:</strong> Align your code with the project's established coding style, including consistent indentation and naming conventions.</li>
+                    <li><strong>Docstrings and Comments:</strong> Include comprehensive docstrings for functions and classes, explaining their purpose, parameters, and return values. Use comments sparingly for clarity.</li>
+                    <li><strong>Functions and Modularity:</strong> Break down your code into reusable functions and modules for enhanced readability and maintainability.</li>
+                </ul>
+            </section>
+
+            <section class="section">
+                <h2>File Adding</h2>
+                <ul>
+                    <li><strong>Language Preference:</strong> Prefer Python, Batch, or PowerShell for compatibility and ease of maintenance. Ensure any other language used is well-documented and easily maintainable.</li>
+                    <li><strong>File Naming and Organization:</strong> Follow the project's directory structure and naming conventions for logical organization.</li>
+                </ul>
+            </section>
+
+            <section class="section">
+                <h2>Coding Rules</h2>
+                <h3>Printing Rules</h3>
+                <ul>
+                    <li><strong>Python Users:</strong> Utilize the built-in class <code>CODE/__lib_log.py</code> for colored output and structured logging. Avoid using <code>print()</code> directly.</li>
+                    <li><strong>Other Languages:</strong> Start messages with appropriate keywords (INFO:, WARNING:, ERROR:) followed by the message, e.g., "INFO: Your Message".</li>
+                </ul>
+
+                <h3>For Python's CRITICAL Method:</h3>
+                <ul>
+                    <li><strong>Filecode:</strong> First letter of the filename, except if the file starts with an underscore, then use the first two letters.</li>
+                    <li><strong>Error-code:</strong> U for Unknown, G for General (exceptions), P for Privileges error, C for Corruption, O for OS errors, L for Library Errors.</li>
+                    <li><strong>Function-code:</strong> X for Unknown, first letter of the function name, BA for base code, C# for class and first function letter, CC# for nested class in a method.</li>
+                </ul>
+            </section>
+
+            <section class="section">
+                <h2>Credits</h2>
+                <p>Acknowledge your contributions appropriately in the <code>CREDITS.md</code> file. Use the following template:</p>
+                <pre>
+### File-Created by Your-Username
+What you did, created, removed, or refactored.
+- [Your GitHub Username](Your GitHub Link)
+                </pre>
+                <p>This ensures proper attribution and recognition for your efforts.</p>
+            </section>
+
+            <a href="index.html" class="install-link">Back to Home</a>
+        </div>
+    </div>
+</body>
+</html>
