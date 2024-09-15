@@ -1,7 +1,7 @@
 name: Wiki to HTML PR
 
 on:
-  wiki:
+  push:
     branches: [main]
 
 jobs:
