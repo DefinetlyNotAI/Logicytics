@@ -8,25 +8,32 @@ jobs:
   create-pr:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        path: 'wiki'
+    - name: Checkout repo
+      uses: actions/checkout@v2
+    - name: Clone wiki
+      run: git clone https://github.com/${{ github.repository }}.wiki.git wiki
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
     - name: Install dependencies
-      run: |
-        pip install markdown
+      run: pip install markdown
     - name: Generate HTML
       run: |
         cd wiki
-        python -c "import markdown; print(markdown.markdown(open('Home.md').read()))" > Home.html
+        python -c "import markdown; import os; for f in os.listdir('.'): if f.endswith('.md'): open(f[:-3]+'.html', 'w').write(markdown.markdown(open(f).read()))"
+    - name: Commit changes
+      run: |
+        cd ..
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        git add .
+        git commit -m "Auto-generated HTML versions of wiki pages"
     - name: Create PR
       uses: peter-evans/create-pull-request@v3
       with:
-        title: Update WEB/wiki.html
-        body: Auto-generated HTML version of wiki
+        title: Update wiki HTML versions
+        body: Auto-generated HTML versions of wiki pages
         branch: update-wiki-html
-        commit-message: Update WEB/wiki.html
-        path: /WEB/wiki.html
+        commit-message: Update wiki HTML versions
+        path: /wiki/
