@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/CODE" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/EXTRA" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MODS" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CODE/SysInternal_Suite" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CODE/libs" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CODE/_internal" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/TESTS" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/ACCESS" />
+    </content>
     <orderEntry type="jdk" jdkName="Python 3.11" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
