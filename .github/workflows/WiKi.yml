@@ -21,7 +21,7 @@ jobs:
     - name: Generate HTML
       run: |
         cd wiki
-        python -c "[open(f[:-3]+'.html', 'w').write(markdown.markdown(open(f).read())) for f in os.listdir('.') if f.endswith('.md')]"
+        python -c "import markdown; import os; [open(f[:-3]+'.html', 'w').write(markdown.markdown(open(f).read())) for f in os.listdir('.') if f.endswith('.md')]"
         cd ..
     - name: Commit changes
       run: |
