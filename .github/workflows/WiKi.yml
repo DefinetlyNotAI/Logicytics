@@ -11,7 +11,8 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v2
     - name: Clone wiki
-      run: git clone https://github.com/${{ github.repository }}.wiki.git wiki
+      run: |
+        git clone https://github.com/DefinetlyNotAI/Logicytics.wiki.git wiki
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
