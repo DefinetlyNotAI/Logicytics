@@ -1,37 +1,39 @@
+## Pull Request Template
+
+### Prerequisites
+
+<!-- Take a couple of minutes to help our maintainers work faster by checking of the pre-requisites. -->
+
+- [ ] I have [searched](https://github.com/DefinetlyNotAI/Logicytics/pulls) for duplicate or closed issues.
+- [ ] I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md).
+- [ ] I have followed the instructions in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) about contributions.
+- [ ] I have updated the documentation accordingly, if required.
+- [ ] I have added tests to cover my changes, and they have passed, if required.
+- [ ] I have tested my code with the `--dev` flag, if required.
+
+### PR Type
+
+<!-- Take a couple of minutes to help our maintainers work faster by telling us what is the PR guided on. -->
+
+- [ ] Bug fix <!-- Non-Breaking Bug Fix - Usually relates to fixing an issue -->
+- [ ] New feature <!-- Non-Breaking Change that adds a new feature -->
+- [ ] Refactoring <!-- Non-Breaking Change that modifies existing code to refactor it to become more organised -->
+- [ ] Documentation
+  update <!-- Non-Breaking Change that modifies existing documentation to refactor it or add extra comments - either wiki, md files or code is included here -->
+- [ ] ⚠️ Breaking change ⚠️ <!-- ⚠️ Breaking Bug Fix / New Addition that changes how Logicytics works ⚠️-->
+
 ### Description
 
-<!-- Describe your changes in detail -->
+<!--Provide a summary of the PR and what you expected to happen. -->
 
-### Motivation & Context
+### Motivation and Context
 
-<!-- Why is this change required? What problem does it solve? -->
+<!--Why is this PR required? What problem does it solve? -->
 
-### Type of changes
+### Binaries
 
-<!-- What types of changes does your code introduce? Put an `x` in all the boxes that apply. -->
+<!--If you have any binaries built from the AIP, Upload them here -->
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Refactoring (non-breaking change)
-- [ ] Breaking change (fix or feature that would change existing functionality)
+### Issues Fixed
 
-### Checklist
-
-<!-- Go over all the following points, and put an `x` in all the boxes that apply. -->
-<!-- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
-
-- [ ] I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md)
-- [ ] My change introduces changes to the documentation
-- [ ] I have updated the documentation accordingly
-- [ ] I have added tests to cover my changes
-- [ ] All new and existing tests passed
-
-#### Live previews
-
-<!-- Please add direct links where your modifications can be seen in the documentation -->
-
-- <https://deploy-preview-{your_pr_number}--twbs-bootstrap.netlify.app/>
-
-### Related issues
-
-<!-- Please link any related issues here. -->
+<!--What issues will be fixed? (Format: "#50, #23" etc)  -->

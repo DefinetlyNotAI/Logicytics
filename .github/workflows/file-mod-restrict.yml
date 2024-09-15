@@ -1,0 +1,30 @@
+name: Verify Files modified
+
+on:
+  pull_request_target:
+    types: [opened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    permissions:
+      pull-requests: write  # for actions-cool/verify-files-modify to update status of PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        with:
+          egress-policy: audit
+
+      - name: verify-less
+        uses: actions-cool/verify-files-modify@080c71272de20d858edaca58eac6dea270cf890e # main
+        with:
+          forbid-files: 'README.md, CODE/Logicytics.exe, CODE/Logicytics.py'
+          forbid-paths: '.github/ISSUE_TEMPLATE/, CODE/SysInternal_Suite/, CODE/_internal/'
+          assignees: 'DefinetlyNotAI'
+          comment: |
+            🚨 Hi @${{ github.event.pull_request.user.login }}. Thanks for your contribution, as the `default.less` file is currently being upgraded or is locked from contribution, changes will not be accepted for the time being. To ignore this message please reopen the PR without editing any files!🚨
+          close: true
+          set-failed: false
