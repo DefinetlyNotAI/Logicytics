@@ -21,10 +21,10 @@ jobs:
     - name: Generate HTML
       run: |
         cd wiki
-        python -c "import markdown; import os; [open(f[:-3]+'.html', 'w').write(markdown.markdown(open(f).read())) for f in os.listdir('.') if f.endswith('.md')]"
+        python -c "[open(f[:-3]+'.html', 'w').write(markdown.markdown(open(f).read())) for f in os.listdir('.') if f.endswith('.md')]"
+        cd ..
     - name: Commit changes
       run: |
-        cd ..
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         git add .
