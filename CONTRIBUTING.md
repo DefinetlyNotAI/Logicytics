@@ -138,6 +138,8 @@ the [MIT License](https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE
 By contributing to the documentation, you agree to license your contribution under
 the [Creative Commons Attribution 3.0 Unported License](https://creativecommons.org/licenses/by/3.0/).
 
+You also agree to the [Developer Certificate of Origin](DCO.md).
+
 ## Communication 🗣️
 
 - **Issues**: Use GitHub issues for bug reports and feature requests. Keep the discussion focused and relevant.
