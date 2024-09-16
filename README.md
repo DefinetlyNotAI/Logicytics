@@ -170,15 +170,9 @@ but other OS related faults like files not existing,
 or files not being modified, or files not being created.
 
 Some tips are:
-- Check if the script is running as admin
-- Check if the script is not running in a VM
-- Check if the script has the correct permissions to run
-- Check if the script has the correct dependencies installed
-- Check if the script is not being blocked by a firewall or antivirus
-- Check if the script is not being blocked by a VPN
-- Check if the script is not being blocked by a proxy
-- Check if any of the scripts are not being modified or created
-- Check if the script is not being removed
+- Check if the script is running as admin and not in a VM
+- Check if the script has the correct permissions and correct dependencies to run
+- Check if the script is not being blocked by a firewall or antivirus or by a VPN or proxy
 - Check if the script is not being blocked by any other software or service
 
 If those don't work attempt:
@@ -186,6 +180,7 @@ If those don't work attempt:
 - Try running the script in a different directory
 - Try running the script in a different computer
 - Try running the script with a different python version above 3.8
+- Try running the `--debug` flag and check the logs
 
 ### Support Resources
 
