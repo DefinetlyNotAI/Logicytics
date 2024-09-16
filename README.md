@@ -315,6 +315,12 @@ Always obtain proper authorization before extracting any data from a system.
 - [Project's Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
 - [Project's License](LICENSE)
 
+### License
+
+[Developer Certificate of Origin](DCO.md)
+[MIT License](LICENSE.md)
+
+
 ### 📃 GitHub Actions Status
 
 [![CodeQL](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql)
