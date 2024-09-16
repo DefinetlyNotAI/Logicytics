@@ -42,7 +42,7 @@ jobs:
         git add .
         git commit -m "Auto-generated HTML versions of wiki pages"
     - name: Create PR
-      uses: peter-evans/create-pull-request@18f7dc018cc2cd597073088f7c7591b9d1c02672 # v3.14.0
+      uses: peter-evans/create-pull-request@d121e62763d8cc35b5fb1710e887d6e69a52d3a4 # v7.0.2
       with:
         title: Update wiki HTML versions
         body: Auto-generated HTML versions of wiki pages
