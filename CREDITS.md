@@ -9,8 +9,10 @@ Until Now, no one. Please think of sparing a dollar ❤️
 
 ## 👨‍💻 Coders Credits 👨‍💻
 
-Until Now, no one. Become a contributor and help us spread the word.
-
+### WEB directory & index.html by iamthgeawsomboi2099
+Created the Website of Logicytics
+- [iamthgeawsomboi2099](https://github.com/iamthgeawsomboi2099)
+  
 ## 🛠️ Refactorers Credits 🛠️
 
 Until Now, no one. Become a contributor and help us spread the word.
