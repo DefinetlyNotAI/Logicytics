@@ -328,5 +328,3 @@ Always obtain proper authorization before extracting any data from a system.
 [![PSScriptAnalyzer](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/powershell.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/powershell.yml)
 [![Scorecard supply-chain security](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/scorecard.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/scorecard.yml)
 [![Verify Files modified](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/file-mod-restrict.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/file-mod-restrict.yml)
-[![Coverage Report](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codecov.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codecov.yml)
-[![Lint](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/black.yml/badge.svg?event=push)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/black.yml)
