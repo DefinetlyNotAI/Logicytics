@@ -1,22 +1,21 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <!-- saved from url=(0033)https://developercertificate.org/ -->
 <html><!--
-    File:   index.html
+    File:   Developer_Certificate_of_Origin.md
     Editor: None, you wimpy wysiwyg people...this is hand crafted!
-            What are you doing reading this anyway???
+            What are you doing reading this anyway??? - Original Authors message
 --><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-# Developer Certificate of Origin
-
+    
 <pre>Developer Certificate of Origin
 Version 1.1
 
-Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
+Copyright (C) 2024 Logicytics and its contributors.
 
 Everyone is permitted to copy and distribute verbatim copies of this
 license document, but changing it is not allowed.
 
 
-Developer's Certificate of Origin 1.1
+Developer's Certificate of Origin 1.0
 
 By making a contribution to this project, I certify that:
 
