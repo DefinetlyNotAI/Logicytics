@@ -193,40 +193,7 @@ Check out the [python stackexchange](https://stackoverflow.com/questions/tagged/
 
 
 ## Data Extraction
-
-Logicytics extracts a wide range of data points on a Windows system.
-
-Here are some of the data points that Logicytics extracts:
-
-- **System Information**: System Specs, Local Admins, System Logs, Scheduled Tasks
-- **User Information**: User Profiles, User Logins, User Profiles, User Groups, User Sessions, User Activity
-- **Network Information**: Network Connections, Network History, Network Drivers, Network Drivers Information, Network Drivers Files, Network Drivers Certificates, Network Drivers Registry Keys, Network Adapters, Network Adapters Information, Network Adapters Files, Network Adapters Certificates, Network Adapters Registry Keys, Network Adapters Registry Keys (with values)
-- **Software Information**: Installed Programs, Installed Programs Files, Installed Programs Registry Keys, Installed Programs Certificates, Installed Programs Registry Keys (with values), Installed Programs Services, Installed Programs Services Files, Installed Programs Services Certificates, Installed Programs Services Registry Keys, Installed Programs Services Registry Keys (with values), Installed Programs Drivers, Installed Programs Drivers Files, Installed Programs Drivers Certificates, Installed Programs Drivers Registry Keys, Installed Programs Drivers Registry Keys (with values)
-- **Service Information**: Services, Services Files, Services Registry Keys, Services Registry Keys (with values), Services Drivers, Services Drivers Files, Services Drivers Certificates, Services Drivers Registry Keys, Services Drivers Registry Keys (with values)
-- **Registry Information**: Registry Keys, Registry Keys (with values), Registry Values, Registry Values (with data)
-- **Drivers Information**: Drivers, Drivers Files, Drivers Certificates, Drivers Registry Keys, Drivers Registry Keys (with values)
-- **Files Information**: Files, Files Certificates, Files Registry Keys, Files Registry Keys (with values)
-- **Processes Information**: Processes, Processes Files, Processes Registry Keys, Processes Registry Keys (with values)
-
-This is not an exhaustive list, 
-but it should give you a good idea of what data Logicytics is capable of extracting.
-
-### Want More?
-
-If there is a specific piece of data that you would like to see extracted by Logicytics,
-please let us know. We are constantly working to improve the project and adding new features.
-
-![Extra Tools](IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
-
-Other than mods, some prefixed tools are in the `EXTRA` directory, use the `--extra` flag to traverse these
-special tools
-
-### Want to create your own mod?
-
-Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
-
-#### Ideas Already made:
-Dont recreate these:
+Dont recreate these as they are already done:
 
 <table>
   <tr>
@@ -297,6 +264,20 @@ Dont recreate these:
 
 **Any file with `_` is not counted here**
 
+### Want More?
+
+If there is a specific piece of data that you would like to see extracted by Logicytics,
+please let us know. We are constantly working to improve the project and adding new features.
+
+![Extra Tools](IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
+
+Other than mods, some prefixed tools are in the `EXTRA` directory, use the `--extra` flag to traverse these
+special tools
+
+### Want to create your own mod?
+
+Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
+
 ## 🌟 Conclusion 🌟
 
 Logicytics is a powerful tool that can extract a wide variety of data from a Windows system.
@@ -317,8 +298,8 @@ Always obtain proper authorization before extracting any data from a system.
 
 ### License
 
-[Developer Certificate of Origin](DCO.md)
-[MIT License](LICENSE.md)
+- [Developer Certificate of Origin](DCO.md)
+- [MIT License](LICENSE.md)
 
 
 ### 📃 GitHub Actions Status
