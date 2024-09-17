@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usage - Logicytics</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="wiki.html">Home</a></li>
+                    <li><a href="wiki1.html">What Is Logicytics</a></li>
+                    <li><a href="wiki2.html">Contribution Guidelines</a></li>
+                    <li><a href="wiki3.html">Usage</a></li>
+                    <li><a href="wiki4.html">Debugging & Diagnostics</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="wiki">
+            <h1>Introduction</h1>
+            <p>Logicytics.py is a comprehensive tool designed to streamline and automate various tasks related to software development, system management, and data processing. It offers a wide range of functionalities through command-line flags, allowing users to customize their experience according to their needs.</p>
+
+            <section class="section">
+                <h2>Flags</h2>
+
+                <h3>General Usage</h3>
+                <p>Flags are command-line arguments that modify the behaviour of the Logicytics.py script. They provide a flexible way to execute specific parts of the program or alter its default behaviour. To use a flag, include it after the script name when running it from the command line, preceded by two hyphens (--). For example:</p>
+                <pre><code>.\Logicytics.py -h</code></pre>
+                <p>This command would run the help menu of Logicytics.</p>
+
+                <h3>Specific Flags</h3>
+                <p>Below is a list of specific flags you can use with Logicytics.py:</p>
+                <pre>
+Logicytics.py [-h] [--default] [--minimal] [--unzip-extra] [--backup]
+                     [--restore] [--update] [--extra] [--dev] [--exe]
+                     [--debug] [--modded] [--threaded] [--webhook] [--reboot]
+                     [--shutdown]
+
+-h: Show this help message and exit
+--default: Runs Logicytics default
+--minimal: Run Logicytics in minimal mode. Just bare essential scraping
+
+--unzip-extra: Unzip the extra directory zip File - Use on your own device <br>only
+--backup: Backup Logicytics files to the ACCESS/BACKUPS directory - Use on your own device <br> only
+--restore: Restore Logicytics files from the ACCESS/BACKUPS directory - Use on your own device<br> only
+--update: Update Logicytics from GitHub - Use on your own device only
+--extra: Open the extra directory for more tools
+--dev: Run Logicytics developer mode, only for registering contributions properly - Use on your <br>own device only
+--exe: Run Logicytics using its precompiled EXE files. These may be outdated and not optimal,<br> use only if the device doesn't have Python installed
+--debug: Runs the Debugger, checks for any issues, warnings, etc. Useful for debugging and <br> issue reporting
+--modded: Runs the normal Logicytics, as well as any file in the MODS directory. Useful for <br>custom scripts
+--threaded: Runs Logicytics using threads, allowing it to run in parallel
+--webhook: Sends the output ZIP file via webhook
+--reboot: Reboots the device after execution
+--shutdown: Shuts down the device after execution
+                </pre>
+            </section>
+
+            <section class="section">
+                <h3>Flags Compatibility and Restrictions</h3>
+                <p>Certain flags can only be used by themselves, while others can be combined. It's important to understand the compatibility and restrictions of these flags:</p>
+                <ul>
+                    <li><strong>Flags that must be used alone:</strong></li>
+                    <ul>
+                        <li>--unzip-extra</li>
+                        <li>--backup</li>
+                        <li>--restore</li>
+                        <li>--update</li>
+                        <li>--extra</li>
+                        <li>--dev</li>
+                        <li>--debug</li>
+                    </ul>
+                    <li><strong>Unique flags that can't be used with each other but can be used with sub-action flags:</strong></li>
+                    <ul>
+                        <li>--default</li>
+                        <li>--minimal</li>
+                        <li>--extra</li>
+                        <li>--exe</li>
+                        <li>--modded</li>
+                        <li>--threaded</li>
+                    </ul>
+                    <li><strong>Sub-action flags that can't be used with each other and must be paired with a primary action flag:</strong></li>
+                    <ul>
+                        <li>--webhook</li>
+                        <li>--reboot</li>
+                        <li>--shutdown</li>
+                    </ul>
+                </ul>
+                <p>Choosing multiple incompatible flags will result in an error, emphasizing the need for specificity in how you wish to execute the script. Understanding the nuances of flag compatibility and the strict requirement for a single run flag is crucial for effectively leveraging the full potential of Logicytics.py.</p>
+            </section>
+
+            <section class="section">
+                <h2>File Structure</h2>
+                <p>The Logicytics project is organized into several directories, each serving a distinct purpose:</p>
+                <pre>
+/Logicytics
+├─── /.github [You may ignore this]
+│    ├─── /ISSUE_TEMPLATE
+│    └─── /workflows
+├─── /.idea [You may ignore this]
+│    └─── inspectionProfiles
+├─── /ACCESS [Generated files output]
+│    ├─── /BACKUP
+│    ├─── /DATA
+│    │    ├─── /Hashes
+│    │    └─── /Zip
+│    └─── /LOGS
+│         └─── /DEBUG
+├─── /CODE
+│    ├─── /SysInternal_Suite
+│    │    └─── # SYS INTERNAL EXE #
+│    ├─── # THE CODE #
+│    └─── /__pycache__ [You may ignore this]
+├─── /EXTRA
+│    └─── # ZIPPED EXTRA FEATURES #
+├─── /IMG [You may ignore this]
+└─── /MODS [You add your own mods]
+                </pre>
+
+                <h3>Access Directory</h3>
+                <p>The ACCESS directory is crucial for monitoring the progress and results of Logicytics operations. The LOGS subdirectory contains the most recent debugger logs, which can be invaluable for diagnosing issues or understanding the behaviour of the script. The DATA subdirectory holds all compressed files produced by Logicytics as well as hashes. Finally, the BACKUP subdirectory contains the necessary backups, providing a centralized location for managing these resources.</p>
+
+                <p>By thoroughly understanding and utilizing these sections and flags, users can maximize the efficiency and effectiveness of Logicytics.py, tailoring its capabilities to meet their specific needs and workflows.</p>
+            </section>
+
+            <a href="index.html" class="install-link">Back to Home</a>
+        </div>
+    </div>
+</body>
+</html>
