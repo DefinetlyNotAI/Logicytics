@@ -340,13 +340,17 @@ else:
     # Zip generated files
 
 if action == "modded":
-    zip_loc_mod, hash_loc = zip_and_hash("..\\MODS", "MODS", action)
+    zip_loc_mod, hash_loc, deleted_files_zip, deleted_files_hash = zip_and_hash("..\\MODS", "MODS", action)
     log.info(zip_loc_mod)
     log.debug(hash_loc)
+    log.debug(deleted_files_zip)
+    log.debug(deleted_files_hash)
 
-zip_loc, hash_loc = zip_and_hash("..\\CODE", "CODE", action)
+zip_loc, hash_loc, deleted_files_zip, deleted_files_hash = zip_and_hash("..\\CODE", "CODE", action)
 log.info(zip_loc)
 log.debug(hash_loc)
+log.debug(deleted_files_zip)
+log.debug(deleted_files_hash)
 
 # Attempt event log deletion
 attempt_hide()
