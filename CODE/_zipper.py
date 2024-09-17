@@ -46,7 +46,19 @@ def move_files(filename: str):
     shutil.move(f"{filename}.hash", "../ACCESS/DATA/Hashes")
 
 
+def check_and_delete_files_with_suffix(directory: str, suffix: str):
+    deleted_files = []
+    for filename in os.listdir(directory):
+        if filename.endswith(suffix):
+            file_path = os.path.join(directory, filename)
+            os.remove(file_path)
+            deleted_files.append(file_path)
+    return deleted_files
+
+
 def zip_and_hash(path: str, name: str, action: str) -> tuple:
+    deleted_files_hash = check_and_delete_files_with_suffix('../ACCESS/DATA/Hashes', '.hash')
+    deleted_files_zip = check_and_delete_files_with_suffix('../ACCESS/DATA/Zip', '.zip')
     today = date.today()
     filename = f"Logicytics_{name}_{action}_{today.strftime('%Y-%m-%d')}"
     files_to_zip = get_files_to_zip(path)
@@ -58,4 +70,6 @@ def zip_and_hash(path: str, name: str, action: str) -> tuple:
     return (
         f"Zip file moved to ../ACCESS/DATA/Zip/{filename}.zip",
         f"SHA256 Hash file moved to ../ACCESS/DATA/Hashes/{filename}.hash",
+        deleted_files_zip,
+        deleted_files_hash
     )
