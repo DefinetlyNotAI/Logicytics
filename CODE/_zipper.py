@@ -2,7 +2,7 @@ import hashlib
 import os
 import shutil
 import zipfile
-from datetime import date
+from datetime import datetime
 
 
 def get_files_to_zip(path: str) -> list:
@@ -47,7 +47,7 @@ def move_files(filename: str):
 
 
 def zip_and_hash(path: str, name: str, action: str) -> tuple:
-    today = date.today()
+    today = datetime.now()
     filename = f"Logicytics_{name}_{action}_{today.strftime('%Y-%m-%d_%H-%M-%S')}"
     files_to_zip = get_files_to_zip(path)
     create_zip_file(path, files_to_zip, filename)
