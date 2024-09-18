@@ -1,5 +1,4 @@
 from __lib_actions import *
-from __lib_log import *
 
 
 def backup_windows_logs():
@@ -39,5 +38,4 @@ def backup_windows_logs():
     log.info("Log Miner completed.")
 
 
-log = Log(debug=DEBUG)
 backup_windows_logs()

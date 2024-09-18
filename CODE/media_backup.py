@@ -1,9 +1,7 @@
 import getpass
 import shutil
 from datetime import datetime
-
 from __lib_actions import *
-from __lib_log import Log
 
 
 def get_default_paths():
@@ -57,5 +55,4 @@ def backup_media():
     log.info("Media backup script completed.")
 
 
-log = Log(debug=DEBUG)
 backup_media()

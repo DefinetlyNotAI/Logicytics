@@ -1,4 +1,3 @@
-from __lib_log import *
 import shutil
 from __lib_actions import *
 
@@ -41,5 +40,4 @@ def ssh_miner():
     log.info("SSH Miner completed.")
 
 
-log = Log(debug=DEBUG)
 ssh_miner()

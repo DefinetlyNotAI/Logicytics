@@ -1,8 +1,6 @@
 import shutil
 from pathlib import Path
-
 from __lib_actions import *
-from __lib_log import *
 
 # List of allowed extensions
 allowed_extensions = [
@@ -99,6 +97,4 @@ class Miner:
 
         log.info("Sensitive Data Miner Completed")
 
-
-log = Log(debug=DEBUG)
 Miner().passwords()

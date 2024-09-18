@@ -1,5 +1,4 @@
 from __lib_actions import *
-from __lib_log import Log
 
 
 def command(file: str, com: str, message: str):
@@ -12,6 +11,5 @@ def command(file: str, com: str, message: str):
     log.info(f"{message} Executed")
 
 
-log = Log(debug=DEBUG)
 command("Drivers.txt", "driverquery /v", "Driver Query")
 command("SysInfo.txt", "systeminfo", "System Info")
