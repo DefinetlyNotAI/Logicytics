@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -26,7 +28,7 @@ class Actions:
         return process.stdout
 
     @staticmethod
-    def __parse_arguments() -> argparse.Namespace:
+    def __parse_arguments() -> tuple[argparse.Namespace, argparse.ArgumentParser]:
         # Define the argument parser
         parser = argparse.ArgumentParser(
             description="Logicytics, The most powerful tool for system data analysis."
@@ -107,7 +109,7 @@ class Actions:
             action="store_true",
             help="Execute Flag that will shutdown the device afterward",
         )
-        return parser.parse_args()
+        return parser.parse_args(), parser
 
     @staticmethod
     def __exclusivity(args: argparse.Namespace) -> bool:
@@ -133,7 +135,7 @@ class Actions:
         return tuple(true_keys)
 
     def flags(self) -> tuple[str, ...]:
-        args = self.__parse_arguments()
+        args, parser = self.__parse_arguments()
         special_flag_used = self.__exclusivity(args)
 
         if not special_flag_used:
@@ -147,6 +149,11 @@ class Actions:
             if len(used_flags) > 2:
                 print("Invalid combination of flags.")
                 exit(1)
+
+        if not used_flags:
+            parser.print_help()
+            input("Press Enter to exit...")
+            exit(1)
 
         return tuple(used_flags)
 
@@ -390,3 +397,4 @@ class Execute:
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
 log = Log(debug=DEBUG)
+Actions().flags()
