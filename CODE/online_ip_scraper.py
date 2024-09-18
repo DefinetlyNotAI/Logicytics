@@ -1,6 +1,5 @@
 import requests
 from __lib_actions import *
-from __lib_log import Log
 
 
 class IP:
@@ -59,5 +58,4 @@ class IP:
         log.info("IP Scraper Executed")
 
 
-log = Log(debug=DEBUG)
 IP().scraper()

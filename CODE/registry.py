@@ -1,5 +1,4 @@
 from __lib_actions import *
-from __lib_log import *
 
 
 def backup_registry():
@@ -29,5 +28,4 @@ def backup_registry():
     log.info(f"Registry back-up executed")
 
 
-log = Log(debug=DEBUG)
 backup_registry()

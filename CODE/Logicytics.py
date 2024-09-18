@@ -1,179 +1,12 @@
-import ctypes
-import os.path
 import threading
-import zipfile
 
 from __lib_actions import *
-from __lib_log import Log
 from _debug import debug
 from _dev import dev_checks, open_file
 from _extra import unzip, menu
 from _health import backup, update
 from _hide_my_tracks import attempt_hide
 from _zipper import zip_and_hash
-
-
-class Check:
-    def __init__(self):
-        """
-        Initializes an instance of the class.
-
-        Sets the Actions attribute to an instance of the Actions class.
-        """
-        self.Actions = Actions()
-
-    @staticmethod
-    def admin() -> bool:
-        """
-        Check if the current user has administrative privileges.
-
-        Returns:
-            bool: True if the user is an admin, False otherwise.
-        """
-        try:
-            return ctypes.windll.shell32.IsUserAnAdmin()
-        except AttributeError:
-            return False
-
-    def uac(self) -> bool:
-        """
-        Check if User Account Control (UAC) is enabled on the system.
-
-        This function runs a PowerShell command to retrieve the value of the EnableLUA registry key,
-        which indicates whether UAC is enabled. It then returns True if UAC is enabled, False otherwise.
-
-        Returns:
-            bool: True if UAC is enabled, False otherwise.
-        """
-        value = self.Actions.run_command(
-            r"powershell (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA"
-        )
-        return int(value.strip("\n")) == 1
-
-    @staticmethod
-    def sys_internal_zip():
-        # TODO Test me
-        try:
-            ignore_file = os.path.exists("SysInternal_Suite/.ignore")
-            zip_file = os.path.exists("SysInternal_Suite/SysInternal_Suite.zip")
-
-            if zip_file and not ignore_file:
-                print("Extracting SysInternal_Suite zip")
-                with zipfile.ZipFile(
-                    "SysInternal_Suite/SysInternal_Suite.zip"
-                ) as zip_ref:
-                    zip_ref.extractall("SysInternal_Suite")
-
-            elif ignore_file:
-                print("Found .ignore file, skipping SysInternal_Suite zip extraction")
-
-        except Exception as err:
-            print(f"Failed to unzip SysInternal_Suite: {err}", "_L", "G", "CS")
-            exit(f"Failed to unzip SysInternal_Suite: {err}")
-
-
-class Execute:
-    @staticmethod
-    def get_files(directory: str, file_list: list) -> list:
-        """
-        Retrieves a list of files in the specified directory that have the specified extensions.
-        Parameters:
-            directory (str): The path of the directory to search.
-            file_list (list): The list to append the filenames to.
-        Returns:
-            list: The list of filenames with the specified extensions.
-        """
-        for filename in os.listdir(directory):
-            if (
-                filename.endswith((".py", ".exe", ".ps1", ".bat"))
-                and not filename.startswith("_")
-                and filename != "Logicytics.py"
-            ):
-                file_list.append(filename)
-        return file_list
-
-    def file(self, Index: int) -> None:
-        """
-        Executes a file from the execution list at the specified index.
-        Parameters:
-            Index (int): The index of the file to be executed in the execution list.
-        Returns:
-            None
-        """
-        self.execute_script(execution_list[Index])
-        log.info(f"{execution_list[Index]} executed")
-
-    def execute_script(self, script: str) -> None:
-        """
-        Executes a script file and handles its output based on the file extension.
-        Parameters:
-            script (str): The path of the script file to be executed.
-        Returns:
-            None
-        """
-        if script.endswith(".ps1"):
-            self.__run_ps1_script(script)
-            self.__run_other_script(script)
-        elif script.endswith(".py"):
-            self.__run_python_script(script)
-        else:
-            self.__run_other_script(script)
-
-    @staticmethod
-    def __run_ps1_script(script: str) -> None:
-        """
-        Unblocks and runs a PowerShell (.ps1) script.
-        Parameters:
-            script (str): The path of the PowerShell script.
-        Returns:
-            None
-        """
-        try:
-            unblock_command = f'powershell.exe -Command "Unblock-File -Path {script}"'
-            subprocess.run(unblock_command, shell=True, check=True)
-            log.info("PS1 Script unblocked.")
-        except Exception as err:
-            log.critical(f"Failed to unblock script: {err}", "_L", "G", "E")
-
-    @staticmethod
-    def __run_python_script(script: str) -> None:
-        """
-        Runs a Python (.py) script.
-        Parameters:
-            script (str): The path of the Python script.
-        Returns:
-            None
-        """
-        result = subprocess.Popen(
-            ["python", script], stdout=subprocess.PIPE
-        ).communicate()[0]
-        print(result.decode())
-
-    @staticmethod
-    def __run_other_script(script: str) -> None:
-        """
-        Runs a script with other extensions and logs output based on its content.
-        Parameters:
-            script (str): The path of the script.
-        Returns:
-            None
-        """
-        result = subprocess.Popen(
-            ["powershell.exe", ".\\" + script], stdout=subprocess.PIPE
-        ).communicate()[0]
-        lines = result.decode().splitlines()
-        ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
-
-        log_funcs = {
-            "INFO": log.info,
-            "WARNING": log.warning,
-            "ERROR": log.error,
-            "CRITICAL": log.critical,
-            None: log.debug,
-        }
-
-        log_func = log_funcs.get(ID, log.debug)
-        log_func("\n".join(lines))
 
 
 """
@@ -212,7 +45,6 @@ if action == "debug":
     input("Press Enter to exit...")
     exit(0)
 
-log = Log(debug=DEBUG)
 check_status.sys_internal_zip()
 
 if action == "dev":
@@ -326,7 +158,8 @@ if action == "threaded":
     execution_list.remove("sensitive_data_miner.py")
     threads = []
     for index, file in enumerate(execution_list):
-        thread = threading.Thread(target=Execute().file, args=(index,))
+        # TODO Test threading as new change added
+        thread = threading.Thread(target=Execute().file, args=(execution_list, index,))
         threads.append(thread)
         thread.start()
 

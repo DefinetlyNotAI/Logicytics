@@ -1,5 +1,4 @@
 from __lib_actions import *
-from __lib_log import Log
 
 
 def tasklist():
@@ -27,5 +26,4 @@ def tasklist():
         log.error(f"Error: {e}")
 
 
-log = Log(debug=DEBUG)
 tasklist()
