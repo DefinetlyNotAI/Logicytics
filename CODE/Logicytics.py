@@ -7,6 +7,7 @@ from _health import backup, update
 from _hide_my_tracks import attempt_hide
 from _zipper import zip_and_hash
 
+# TODO Make sure all functions have a docstring and specific data types for parameters and return values
 
 """
 This python script is the main entry point for the tool called Logicytics.
@@ -32,9 +33,9 @@ check_status = Check()
 
 try:
     # Get flags
-    action, sub_action = Actions.flags()
+    action, sub_action = Actions().flags()
 except Exception:
-    action = Actions.flags()
+    action = Actions().flags()
     action = action[0]
     sub_action = None
 
