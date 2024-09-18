@@ -31,4 +31,4 @@ Property(C): Root Drive = $rootDrive
 $data | Out-File -FilePath ".\Extra_Data.txt"
 
 # Optionally, display a message indicating success
-Write-Host "Data successfully written to Extra_Data.txt"
+Write-Host "INFO: Data successfully written to Extra_Data.txt"
