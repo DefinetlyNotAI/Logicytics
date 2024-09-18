@@ -159,7 +159,6 @@ if action == "threaded":
     execution_list.remove("sensitive_data_miner.py")
     threads = []
     for index, file in enumerate(execution_list):
-        # TODO Test threading as new change added
         thread = threading.Thread(
             target=Execute().file,
             args=(
