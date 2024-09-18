@@ -28,6 +28,7 @@ def get_password(ssid: str) -> str or None:
     except Exception as e:
         log.error(e)
 
+
 def get_wifi_names() -> list:
     """
     Retrieves the names of all Wi-Fi profiles on the system.
@@ -53,6 +54,7 @@ def get_wifi_names() -> list:
         return wifi_names
     except Exception as e:
         log.error(e)
+
 
 with open("WiFi.txt", "w") as file:
     for name in get_wifi_names():
