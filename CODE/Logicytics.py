@@ -1,8 +1,7 @@
 import threading
-
 from __lib_actions import *
 from _debug import debug
-from _dev import dev_checks, open_file
+from _dev import open_file, run_dev
 from _extra import unzip, menu
 from _health import backup, update
 from _hide_my_tracks import attempt_hide
@@ -48,7 +47,7 @@ if action == "debug":
 check_status.sys_internal_zip()
 
 if action == "dev":
-    dev_checks()
+    run_dev()
     input("Press Enter to exit...")
     exit(0)
 

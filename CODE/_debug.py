@@ -1,11 +1,10 @@
 from __future__ import annotations
-from __lib_actions import Actions, os, json
+from __lib_actions import Actions, os, json, VERSION
 from __lib_log import Log
 import platform
 import sys
 import requests
 from datetime import datetime
-
 
 sys_internal_executables = [
     "psfile.exe",
@@ -161,8 +160,6 @@ def debug():
     log.info(f"Execution policy: {info.execution_policy}")
     log.info(f"Date and time: {info.get_date_time()}")
 
-    # TODO Fix Me for v2.3.0
-    """    
     if diff != set():
         log.warning(f"Differences: {diff}")
     if missing_in_config != set():
@@ -178,7 +175,6 @@ def debug():
         log.warning(f"Not up to date: {VERSION}")
     else:
         log.warning(f"Modified: {VERSION}")
-    """
 
     csid = check_sys_internal_dir()
 

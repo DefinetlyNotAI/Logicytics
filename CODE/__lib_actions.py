@@ -330,7 +330,6 @@ class Check:
             exit(f"Failed to unzip SysInternal_Suite: {err}")
 
 
-# TODO Make sure it removes the info, error etc from batch and ps1 etc
 class Execute:
     @staticmethod
     def get_files(directory: str, file_list: list) -> list:
@@ -372,7 +371,7 @@ class Execute:
             None
         """
         if script.endswith(".ps1"):
-            self.__run_ps1_script(script)
+            self.__unblock_ps1_script(script)
             self.__run_other_script(script)
         elif script.endswith(".py"):
             self.__run_python_script(script)
@@ -380,7 +379,7 @@ class Execute:
             self.__run_other_script(script)
 
     @staticmethod
-    def __run_ps1_script(script: str) -> None:
+    def __unblock_ps1_script(script: str) -> None:
         """
         Unblocks and runs a PowerShell (.ps1) script.
         Parameters:
