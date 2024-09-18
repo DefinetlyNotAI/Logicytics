@@ -349,7 +349,7 @@ class Execute:
         """
         try:
             unblock_command = f'powershell.exe -Command "Unblock-File -Path {script}"'
-            subprocess.run(unblock_command, check=True)
+            subprocess.run(unblock_command, shell=False, check=True)
             log.info("PS1 Script unblocked.")
         except Exception as err:
             log.critical(f"Failed to unblock script: {err}", "_L", "G", "E")
