@@ -193,19 +193,12 @@ attempt_hide()
 log.info("Completed successfully")
 if sub_action == "shutdown":
     log.info("Shutting down...")
-    os.system("shutdown /s /t 0")
+    subprocess.call("shutdown /s /t 3", shell=False)
 if sub_action == "reboot":
     log.info("Rebooting...")
-    os.system("shutdown /r /t 0")
+    subprocess.call("shutdown /r /t 3", shell=False)
 if sub_action == "webhook":
-    log.warning("This feature is not fully implemented yet")
-    """
-    log.info("Sending webhook...")
-    if WEBHOOK is None or WEBHOOK == "":
-        log.critical("WEBHOOK URL not set and the request action was webhook", "_L", "P", "BA")
-        input("Press Enter to exit...")
-        exit(1)
-    """
+    log.warning("This feature is not fully implemented yet! Sorry")
 
 log.info("Exiting...")
 input("Press Enter to exit...")
