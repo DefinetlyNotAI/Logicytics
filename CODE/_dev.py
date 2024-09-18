@@ -1,10 +1,5 @@
-import json
-import os
 import platform
-import subprocess
-
-from __lib_actions import Actions
-from __lib_log import Log
+from __lib_actions import *
 
 
 def open_file(file: str) -> None:
@@ -25,7 +20,7 @@ def open_file(file: str) -> None:
             else:  # Linux variants
                 subprocess.call(("xdg-open", file_path))
         except Exception as e:
-            log.error(f"Error opening file: {e}")
+            print(f"Error opening file: {e}")
 
 
 def update_json_file(filename: str, new_array: list) -> None:
@@ -45,11 +40,11 @@ def update_json_file(filename: str, new_array: list) -> None:
             json.dump(data, f, indent=4)
             f.truncate()
     except FileNotFoundError:
-        log.error(f"File not found: {filename}")
+        print(f"File not found: {filename}")
     except json.JSONDecodeError:
-        log.error(f"Error decoding JSON in the file: {filename}")
+        print(f"Error decoding JSON in the file: {filename}")
     except Exception as e:
-        log.error(f"An error occurred: {e}")
+        print(f"An error occurred: {e}")
 
 
 def prompt_user(question: str, file_to_open: str = None) -> bool:
@@ -66,13 +61,13 @@ def prompt_user(question: str, file_to_open: str = None) -> bool:
         if answer.lower() != "yes":
             if file_to_open:
                 open_file(file_to_open)
-            log.warning(
+            print(
                 "Please ensure you fix the issues/problem and try again with the checklist."
             )
             return False
         return True
     except Exception as e:
-        log.error(e)
+        print(e)
 
 
 def dev_checks() -> None:
@@ -115,33 +110,30 @@ def dev_checks() -> None:
         files = Actions.check_current_files(".")
         print(files)
         if not prompt_user("Does the list above include your added files?"):
-            log.error("Something went wrong! Please contact support.")
+            print("Something went wrong! Please contact support.")
             return
 
         update_json_file("config.json", files)
-        log.info(
+        print(
             "Great Job! Please tick the box in the GitHub PR request for completing steps in --dev"
         )
         if remind:
-            log.info("Remember to upload the EXE files on the PR!")
+            print("Remember to upload the EXE files on the PR!")
     except Exception as e:
-        log.error(e)
+        print(e)
 
 
-if __name__ == "__main__":
-    Actions().mkdir()
-    log = Log("../ACCESS/LOGS/DEV_TOOL.log", debug=True)
-    dev_checks()
-    log.info("Completed manual checks")
-    test_files = []
-    for item in os.listdir("../TESTS"):
-        if (
-            item.lower().endswith(".py")
-            and item.lower() != "__init__.py"
-            and item.lower() != "test.py"
-        ):
-            full_path = os.path.abspath(os.path.join("../TESTS", item))
-            test_files.append(full_path)
-            log.debug(f"Found test file: {item} - Full path: {full_path}")
-    for item in test_files:
-        Actions().run_command(f"python {item}")
+Actions().mkdir()
+dev_checks()
+test_files = []
+for item in os.listdir("../TESTS"):
+    if (
+        item.lower().endswith(".py")
+        and item.lower() != "__init__.py"
+        and item.lower() != "test.py"
+    ):
+        full_path = os.path.abspath(os.path.join("../TESTS", item))
+        test_files.append(full_path)
+        print(f"Found test file: {item} - Full path: {full_path}")
+for item in test_files:
+    Actions().run_command(f"python {item}")
