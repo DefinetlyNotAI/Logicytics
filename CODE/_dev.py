@@ -1,4 +1,3 @@
-import platform
 from __lib_class import *
 
 
@@ -13,12 +12,7 @@ def open_file(file: str) -> None:
     if not file == "":
         file_path = os.path.realpath(file)
         try:
-            if platform.system() == "Windows":
-                os.startfile(file_path)
-            elif platform.system() == "Darwin":  # macOS
-                subprocess.call(("open", file_path))
-            else:  # Linux variants
-                subprocess.call(("xdg-open", file_path))
+            subprocess.call(file_path, shell=False)
         except Exception as e:
             print(f"Error opening file: {e}")
 
