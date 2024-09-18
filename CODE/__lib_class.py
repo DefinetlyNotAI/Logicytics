@@ -396,7 +396,8 @@ class Execute:
 
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
-log = Log(debug=DEBUG)
+if not os.path.exists("CUSTOM.LOG.MECHANISM"):
+    log = Log(debug=DEBUG)
 try:
     # Get flags
     action, sub_action = Actions().flags()
