@@ -1,8 +1,4 @@
 from __lib_class import *
-from __lib_log import Log
-
-act = Actions()
-log = Log(debug=DEBUG)
 
 
 def get_password(ssid: str) -> str or None:
@@ -19,7 +15,7 @@ def get_password(ssid: str) -> str or None:
         Exception: If an error occurs while executing the command.
     """
     try:
-        command_output = act.run_command(
+        command_output = Actions().run_command(
             f'netsh wlan show profile name="{ssid}" key=clear'
         )
         key_content = command_output.splitlines()
@@ -37,14 +33,14 @@ def get_wifi_names() -> list:
 
     This function executes the command "netsh wlan show profile" to retrieve the list of Wi-Fi profiles.
     It then iterates over each line of the command output and checks if the line contains the string "All User Profile".
-    If it does, it extracts the Wi-Fi profile name and appends it to the list of Wi-Fi names.
+    If it does, it extrActions()s the Wi-Fi profile name and appends it to the list of Wi-Fi names.
 
     Returns:
         list: A list of Wi-Fi profile names.
     """
     try:
         log.info("Retrieving Wi-Fi names...")
-        command_output = act.run_command("netsh wlan show profile")
+        command_output = Actions().run_command("netsh wlan show profile")
         wifi_names = []
 
         for line in command_output.split("\n"):
