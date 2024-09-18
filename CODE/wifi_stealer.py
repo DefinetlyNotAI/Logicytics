@@ -19,7 +19,9 @@ def get_password(ssid: str) -> str or None:
         Exception: If an error occurs while executing the command.
     """
     try:
-        command_output = act.run_command(f'netsh wlan show profile name="{ssid}" key=clear')
+        command_output = act.run_command(
+            f'netsh wlan show profile name="{ssid}" key=clear'
+        )
         key_content = command_output.splitlines()
         for line in key_content:
             if "Key Content" in line:
@@ -59,4 +61,6 @@ def get_wifi_names() -> list:
 with open("WiFi.txt", "w") as file:
     for name in get_wifi_names():
         log.info(f"Retrieving password for {name.removeprefix(': ')}")
-        file.write(f"Name: {name.removeprefix(': ')}, Password: {get_password(name.removeprefix(': '))}\n")
+        file.write(
+            f"Name: {name.removeprefix(': ')}, Password: {get_password(name.removeprefix(': '))}\n"
+        )

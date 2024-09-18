@@ -71,13 +71,13 @@ class Actions:
             "--dev",
             action="store_true",
             help="Run Logicytics developer mod, this is only for people who want to register their contributions "
-                 "properly. - Use on your own device only -.",
+            "properly. - Use on your own device only -.",
         )
         parser.add_argument(
             "--exe",
             action="store_true",
             help="Run Logicytics using its precompiled exe's, These may be outdated and not the best, use only if the "
-                 "device doesnt have python installed.",
+            "device doesnt have python installed.",
         )
         parser.add_argument(
             "--debug",
@@ -116,7 +116,7 @@ class Actions:
         special_flag_used = False
         if args.reboot or args.shutdown or args.webhook:
             if not (
-                    args.default or args.threaded or args.modded or args.minimal or args.exe
+                args.default or args.threaded or args.modded or args.minimal or args.exe
             ):
                 print("Invalid combination of flags.")
                 exit(1)
