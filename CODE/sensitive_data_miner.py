@@ -97,4 +97,5 @@ class Miner:
 
         log.info("Sensitive Data Miner Completed")
 
+
 Miner().passwords()
