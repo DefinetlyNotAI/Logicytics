@@ -70,7 +70,7 @@ def prompt_user(question: str, file_to_open: str = None) -> bool:
         print(e)
 
 
-def dev_checks() -> None:
+def dev_checks() -> bool:
     """
     Performs a series of checks to ensure that the developer has followed the required guidelines and best practices.
     This function prompts the developer with a series of questions to ensure that they have followed the required
@@ -95,7 +95,7 @@ def dev_checks() -> None:
     try:
         for question, file_to_open in checks:
             if not prompt_user(question, file_to_open):
-                return
+                return False
 
         remind = False
         if prompt_user("Is the update a major or minor upgrade (non-patch update)?"):
@@ -103,7 +103,7 @@ def dev_checks() -> None:
                 "Did You Build the EXE with Advanced Installer?",
                 "../Logicytics.aip",
             ):
-                return
+                return False
             else:
                 remind = True
 
@@ -111,7 +111,7 @@ def dev_checks() -> None:
         print(files)
         if not prompt_user("Does the list above include your added files?"):
             print("Something went wrong! Please contact support.")
-            return
+            return False
 
         update_json_file("config.json", files)
         print(
@@ -119,21 +119,24 @@ def dev_checks() -> None:
         )
         if remind:
             print("Remember to upload the EXE files on the PR!")
+        return True
     except Exception as e:
         print(e)
+        return False
 
 
-Actions().mkdir()
-dev_checks()
-test_files = []
-for item in os.listdir("../TESTS"):
-    if (
-        item.lower().endswith(".py")
-        and item.lower() != "__init__.py"
-        and item.lower() != "test.py"
-    ):
-        full_path = os.path.abspath(os.path.join("../TESTS", item))
-        test_files.append(full_path)
-        print(f"Found test file: {item} - Full path: {full_path}")
-for item in test_files:
-    Actions().run_command(f"python {item}")
+def run_dev():
+    Actions().mkdir()
+    if dev_checks():
+        test_files = []
+        for item in os.listdir("../TESTS"):
+            if (
+                item.lower().endswith(".py")
+                and item.lower() != "__init__.py"
+                and item.lower() != "test.py"
+            ):
+                full_path = os.path.abspath(os.path.join("../TESTS", item))
+                test_files.append(full_path)
+                print(f"Found test file: {item} - Full path: {full_path}")
+        for item in test_files:
+            Actions().run_command(f"python {item}")
