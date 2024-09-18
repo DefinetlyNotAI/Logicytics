@@ -312,7 +312,7 @@ class Check:
     @staticmethod
     def sys_internal_zip():
         try:
-            ignore_file = os.path.exists("SysInternal_Suite/.ignore")
+            ignore_file = os.path.exists("SysInternal_Suite/.sys.ignore")
             zip_file = os.path.exists("SysInternal_Suite/SysInternal_Suite.zip")
 
             if zip_file and not ignore_file:
@@ -389,7 +389,7 @@ class Execute:
         """
         try:
             unblock_command = f'powershell.exe -Command "Unblock-File -Path {script}"'
-            subprocess.run(unblock_command, shell=True, check=True)
+            subprocess.run(unblock_command, check=True)
             log.info("PS1 Script unblocked.")
         except Exception as err:
             log.critical(f"Failed to unblock script: {err}", "_L", "G", "E")

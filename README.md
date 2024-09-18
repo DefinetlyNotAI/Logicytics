@@ -54,7 +54,7 @@ To install and setup Logicytics, follow these steps:
 
 - **Knowledge of Command Line**: The project uses command line options for the user to interact with the program. It is recommended to have a basic understanding of command line options.
 
-- **Optional**: Create a `.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the ZIP file (This is done for the OpenSSF score), if the `.ignore` file is not found, it will auto extract the details
+- **Optional**: Create a `.sys.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the ZIP file (This is done for the OpenSSF score), if the `.sys.ignore` file is not found, it will auto extract the details
 
 ## Step-by-Step Installation</h2>
 
