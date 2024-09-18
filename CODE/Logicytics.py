@@ -160,7 +160,13 @@ if action == "threaded":
     threads = []
     for index, file in enumerate(execution_list):
         # TODO Test threading as new change added
-        thread = threading.Thread(target=Execute().file, args=(execution_list, index,))
+        thread = threading.Thread(
+            target=Execute().file,
+            args=(
+                execution_list,
+                index,
+            ),
+        )
         threads.append(thread)
         thread.start()
 
