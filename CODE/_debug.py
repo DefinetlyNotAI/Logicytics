@@ -6,6 +6,8 @@ import sys
 import requests
 from datetime import datetime
 
+open("CUSTOM.LOG.MECHANISM", "w").close()
+
 sys_internal_executables = [
     "psfile.exe",
     "PsGetsid.exe",
@@ -193,3 +195,4 @@ def debug():
 
 if __name__ == "__main__":
     debug()
+    os.remove("CUSTOM.LOG.MECHANISM")
