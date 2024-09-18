@@ -162,7 +162,7 @@ def debug():
     log.info(f"Execution policy: {info.execution_policy}")
     log.info(f"Date and time: {info.get_date_time()}")
 
-    # TODO Fix Me
+    # TODO Fix Me for v2.3.0
     """    
     if diff != set():
         log.warning(f"Differences: {diff}")
