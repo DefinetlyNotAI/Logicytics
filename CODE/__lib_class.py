@@ -397,4 +397,10 @@ class Execute:
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
 log = Log(debug=DEBUG)
-Actions().flags()
+try:
+    # Get flags
+    action, sub_action = Actions().flags()
+except Exception:
+    action = Actions().flags()
+    action = action[0]
+    sub_action = None
