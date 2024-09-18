@@ -4,7 +4,7 @@ from __lib_log import Log
 act = Actions()
 log = Log(debug=DEBUG)
 
-def get_password(ssid):
+def get_password(ssid: str) -> str or None:
     """
     Retrieves the password associated with a given Wi-Fi SSID.
 
@@ -27,7 +27,7 @@ def get_password(ssid):
     except Exception as e:
         log.error(e)
 
-def get_wifi_names():
+def get_wifi_names() -> list:
     """
     Retrieves the names of all Wi-Fi profiles on the system.
 
@@ -56,4 +56,4 @@ def get_wifi_names():
 with open("WiFi.txt", "w") as file:
     for name in get_wifi_names():
         log.info(f"Retrieving password for {name.removeprefix(': ')}")
-        file.write(f"Name: {name.removeprefix(": ")}, Password: {get_password(name.removeprefix(": "))}\n")
+        file.write(f"Name: {name.removeprefix(': ')}, Password: {get_password(name.removeprefix(': '))}\n")
