@@ -31,14 +31,6 @@ with many options and flags that can be used to customize its behavior.
 Actions.mkdir()
 check_status = Check()
 
-try:
-    # Get flags
-    action, sub_action = Actions().flags()
-except Exception:
-    action = Actions().flags()
-    action = action[0]
-    sub_action = None
-
 # Special actions -> Quit
 if action == "debug":
     debug()
