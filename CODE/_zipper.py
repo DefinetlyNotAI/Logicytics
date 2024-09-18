@@ -48,7 +48,7 @@ def move_files(filename: str):
 
 def zip_and_hash(path: str, name: str, action: str) -> tuple:
     today = date.today()
-    filename = f"Logicytics_{name}_{action}_{today.strftime('%Y-%m-%d_%H:%M:%S')}"
+    filename = f"Logicytics_{name}_{action}_{today.strftime('%Y-%m-%d_%H-%M-%S')}"
     files_to_zip = get_files_to_zip(path)
     create_zip_file(path, files_to_zip, filename)
     remove_files(path, files_to_zip)
