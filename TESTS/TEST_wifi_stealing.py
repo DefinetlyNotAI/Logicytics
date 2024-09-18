@@ -11,5 +11,5 @@ class WiFi(unittest.TestCase):
         print("Test completed.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
