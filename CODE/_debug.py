@@ -1,5 +1,5 @@
 from __future__ import annotations
-from __lib_actions import Actions, os, json, VERSION
+from __lib_class import Actions, os, json, VERSION
 from __lib_log import Log
 import platform
 import sys

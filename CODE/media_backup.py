@@ -1,7 +1,7 @@
 import getpass
 import shutil
 from datetime import datetime
-from __lib_actions import *
+from __lib_class import *
 
 
 def get_default_paths():

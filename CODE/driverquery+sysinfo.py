@@ -1,4 +1,4 @@
-from __lib_actions import *
+from __lib_class import *
 
 
 def command(file: str, com: str, message: str):

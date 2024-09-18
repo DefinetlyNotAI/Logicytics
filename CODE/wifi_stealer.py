@@ -1,8 +1,9 @@
-from __lib_actions import *
+from __lib_class import *
 from __lib_log import Log
 
 act = Actions()
 log = Log(debug=DEBUG)
+
 
 def get_password(ssid: str) -> str or None:
     """

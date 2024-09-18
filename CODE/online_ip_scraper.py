@@ -1,5 +1,5 @@
 import requests
-from __lib_actions import *
+from __lib_class import *
 
 
 class IP:

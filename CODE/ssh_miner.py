@@ -1,5 +1,5 @@
 import shutil
-from __lib_actions import *
+from __lib_class import *
 
 
 def ssh_miner():

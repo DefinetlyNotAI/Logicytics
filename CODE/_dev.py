@@ -1,5 +1,5 @@
 import platform
-from __lib_actions import *
+from __lib_class import *
 
 
 def open_file(file: str) -> None:

@@ -435,5 +435,5 @@ class Execute:
         log_func("\n".join(lines))
 
 
-WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions().read_config()
+WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
 log = Log(debug=DEBUG)

@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from __lib_actions import *
+from __lib_class import *
 
 # List of allowed extensions
 allowed_extensions = [
