@@ -311,7 +311,6 @@ class Check:
 
     @staticmethod
     def sys_internal_zip():
-        # TODO Test me
         try:
             ignore_file = os.path.exists("SysInternal_Suite/.ignore")
             zip_file = os.path.exists("SysInternal_Suite/SysInternal_Suite.zip")
@@ -331,6 +330,7 @@ class Check:
             exit(f"Failed to unzip SysInternal_Suite: {err}")
 
 
+# TODO Make sure it removes the info, error etc from batch and ps1 etc
 class Execute:
     @staticmethod
     def get_files(directory: str, file_list: list) -> list:
