@@ -1,4 +1,4 @@
-from __lib_actions import *
+from __lib_class import *
 
 sys_internal_executables = [
     "psfile.exe",

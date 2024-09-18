@@ -1,5 +1,5 @@
 import threading
-from __lib_actions import *
+from __lib_class import *
 from _debug import debug
 from _dev import open_file, run_dev
 from _extra import unzip, menu
@@ -27,14 +27,14 @@ with many options and flags that can be used to customize its behavior.
 """
 
 # Initialization
-Actions().mkdir()
+Actions.mkdir()
 check_status = Check()
 
 try:
     # Get flags
-    action, sub_action = Actions().flags()
+    action, sub_action = Actions.flags()
 except Exception:
-    action = Actions().flags()
+    action = Actions.flags()
     action = action[0]
     sub_action = None
 
