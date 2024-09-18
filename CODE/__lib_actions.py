@@ -319,7 +319,7 @@ class Check:
             if zip_file and not ignore_file:
                 print("Extracting SysInternal_Suite zip")
                 with zipfile.ZipFile(
-                        "SysInternal_Suite/SysInternal_Suite.zip"
+                    "SysInternal_Suite/SysInternal_Suite.zip"
                 ) as zip_ref:
                     zip_ref.extractall("SysInternal_Suite")
 
@@ -344,9 +344,9 @@ class Execute:
         """
         for filename in os.listdir(directory):
             if (
-                    filename.endswith((".py", ".exe", ".ps1", ".bat"))
-                    and not filename.startswith("_")
-                    and filename != "Logicytics.py"
+                filename.endswith((".py", ".exe", ".ps1", ".bat"))
+                and not filename.startswith("_")
+                and filename != "Logicytics.py"
             ):
                 file_list.append(filename)
         return file_list

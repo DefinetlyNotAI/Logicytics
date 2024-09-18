@@ -92,7 +92,10 @@ def dev_checks() -> None:
         ("Have you added docstrings and comments?", "../CONTRIBUTING.md"),
         ("Have you tested your code?", "../TESTS/TEST.py"),
         ("Is each file containing no more than 1 feature?", "../CONTRIBUTING.md"),
-        ("Have you NOT modified __wrapper__.py without authorization?", "Logicytics.py"),
+        (
+            "Have you NOT modified __wrapper__.py without authorization?",
+            "Logicytics.py",
+        ),
     ]
     try:
         for question, file_to_open in checks:
