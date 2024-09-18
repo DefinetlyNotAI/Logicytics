@@ -189,3 +189,7 @@ def debug():
         log.error(
             "SysInternal Directory Not found: Missing | Signifies minor corruption"
         )
+
+
+if __name__ == "__main__":
+    debug()
