@@ -47,7 +47,7 @@ $fullSourcePath = $sourcePath -replace '\{\}', $currentUser
 # Enhanced error checking for source path existence and accessibility
 if (-not (Test-PathAndAccess $fullSourcePath))
 {
-    Write-Host "Source path $fullSourcePath does not exist or cannot be accessed."
+    Write-Host "ERROR: Source path $fullSourcePath does not exist or cannot be accessed."
 continue
 }
 
@@ -60,7 +60,7 @@ $identifier = $identifiers[$index]
 }
 catch
 {
-    Write-Host "Failed to extract identifier from source path $fullSourcePath."
+    Write-Host "ERROR: Failed to extract identifier from source path $fullSourcePath."
 continue
 }
 
@@ -79,13 +79,12 @@ try
     {
         Copy-Item -Path $fullSourcePath -Destination $destinationPath -Recurse -Force -ErrorAction SilentlyContinue
 # Print the success message to the console
-Write-Host "Successfully copied $fullSourcePath to $destinationPath"
+Write-Host "INFO: Successfully copied $fullSourcePath to $destinationPath"
 }
 catch
 {
     # Detailed error handling
-    Write-Host "An error occurred while copying $fullSourcePath to $destinationPath. Error: $_"
-Invoke-CrashReport -ErrorId "OGE" -FunctionNo "fun93" -ErrorContent $_ -Type "crash"
+    Write-Host "ERROR: An error occurred while copying $fullSourcePath to $destinationPath. Error: $_"
 exit
 }
 }
