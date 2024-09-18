@@ -61,15 +61,18 @@ def prompt_user(question: str, file_to_open: str = None) -> bool:
     Returns:
         bool: True if the user's answer is 'yes', otherwise False.
     """
-    answer = input(question + " (yes or no):- ")
-    if answer.lower() != "yes":
-        if file_to_open:
-            open_file(file_to_open)
-        log.warning(
-            "Please ensure you fix the issues/problem and try again with the checklist."
-        )
-        return False
-    return True
+    try:
+        answer = input(question + " (yes or no):- ")
+        if answer.lower() != "yes":
+            if file_to_open:
+                open_file(file_to_open)
+            log.warning(
+                "Please ensure you fix the issues/problem and try again with the checklist."
+            )
+            return False
+        return True
+    except Exception as e:
+        log.error(e)
 
 
 def dev_checks() -> None:
@@ -91,33 +94,35 @@ def dev_checks() -> None:
         ("Is each file containing no more than 1 feature?", "../CONTRIBUTING.md"),
         ("Have you NOT modified __wrapper__.py without authorization?", "Logicytics.py"),
     ]
+    try:
+        for question, file_to_open in checks:
+            if not prompt_user(question, file_to_open):
+                return
 
-    for question, file_to_open in checks:
-        if not prompt_user(question, file_to_open):
+        remind = False
+        if prompt_user("Is the update a major or minor upgrade (non-patch update)?"):
+            if not prompt_user(
+                "Did You Build the EXE with Advanced Installer?",
+                "../Logicytics.aip",
+            ):
+                return
+            else:
+                remind = True
+
+        files = Actions.check_current_files(".")
+        print(files)
+        if not prompt_user("Does the list above include your added files?"):
+            log.error("Something went wrong! Please contact support.")
             return
 
-    remind = False
-    if prompt_user("Is the update a major or minor upgrade (non-patch update)?"):
-        if not prompt_user(
-            "Did You Build the EXE with Advanced Installer?",
-            "../Logicytics.aip",
-        ):
-            return
-        else:
-            remind = True
-
-    files = Actions.check_current_files(".")
-    print(files)
-    if not prompt_user("Does the list above include your added files?"):
-        log.error("Something went wrong! Please contact support.")
-        return
-
-    update_json_file("config.json", files)
-    log.info(
-        "Great Job! Please tick the box in the GitHub PR request for completing steps in --dev"
-    )
-    if remind:
-        log.info("Remember to upload the EXE files on the PR!")
+        update_json_file("config.json", files)
+        log.info(
+            "Great Job! Please tick the box in the GitHub PR request for completing steps in --dev"
+        )
+        if remind:
+            log.info("Remember to upload the EXE files on the PR!")
+    except Exception as e:
+        log.error(e)
 
 
 if __name__ == "__main__":
