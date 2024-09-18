@@ -15,7 +15,12 @@ Until Now, no one. Please think of sparing a dollar ❤️
 Created the Website of [Logicytics](index.html) as well as maintained it and fixed security headers
 The sole creator of WEB directory
 - [iamthgeawsomboi2099](https://github.com/iamthgeawsomboi2099)
-  
+
+### Wifi-Stealer.py by ski-sketch
+Created Wi-Fi Password Stealer using python
+The sole creator of the code of wifi-stealer
+- [ski-sketch](https://github.com/ski-sketch)
+
 ## 🛠️ Refactorers Credits 🛠️
 
 Until Now, no one. Become a contributor and help us spread the word.
@@ -26,7 +31,9 @@ Until Now, no one. Become a contributor and help us spread the word.
 
 ## 🐛 Bug bounty credits 🐛
 
-Until Now, no one. Become a contributor and help us spread the word.
+### Found development bug
+Found and attempted fix of 2 bugs: Zipping name error - `--dev` flag loop
+- [ski-sketch](https://github.com/ski-sketch)
 
 ## 🏢 Third Party Credits 🏢
 
