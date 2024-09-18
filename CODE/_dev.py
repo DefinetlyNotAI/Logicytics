@@ -128,20 +128,19 @@ def dev_checks() -> None:
         log.error(e)
 
 
-if __name__ == "__main__":
-    Actions().mkdir()
-    log = Log("../ACCESS/LOGS/DEV_TOOL.log", debug=True)
-    dev_checks()
-    log.info("Completed manual checks")
-    test_files = []
-    for item in os.listdir("../TESTS"):
-        if (
-            item.lower().endswith(".py")
-            and item.lower() != "__init__.py"
-            and item.lower() != "test.py"
-        ):
-            full_path = os.path.abspath(os.path.join("../TESTS", item))
-            test_files.append(full_path)
-            log.debug(f"Found test file: {item} - Full path: {full_path}")
-    for item in test_files:
-        Actions().run_command(f"python {item}")
+Actions().mkdir()
+log = Log("../ACCESS/LOGS/DEV_TOOL.log", debug=True)
+dev_checks()
+log.info("Completed manual checks")
+test_files = []
+for item in os.listdir("../TESTS"):
+    if (
+        item.lower().endswith(".py")
+        and item.lower() != "__init__.py"
+        and item.lower() != "test.py"
+    ):
+        full_path = os.path.abspath(os.path.join("../TESTS", item))
+        test_files.append(full_path)
+        log.debug(f"Found test file: {item} - Full path: {full_path}")
+for item in test_files:
+    Actions().run_command(f"python {item}")
