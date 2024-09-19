@@ -45,7 +45,7 @@ class Zip:
         shutil.move(f"{filename}.zip", "../ACCESS/DATA/Zip")
         shutil.move(f"{filename}.hash", "../ACCESS/DATA/Hashes")
 
-    def zip_and_hash(self, path: str, name: str, flag: str) -> tuple:
+    def and_hash(self, path: str, name: str, flag: str) -> tuple:
         today = datetime.now()
         filename = f"Logicytics_{name}_{flag}_{today.strftime('%Y-%m-%d_%H-%M-%S')}"
         files_to_zip = self.__get_files_to_zip(path)
