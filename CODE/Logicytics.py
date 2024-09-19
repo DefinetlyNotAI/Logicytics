@@ -6,7 +6,14 @@ from _health import backup, update
 from _hide_my_tracks import attempt_hide
 from _zipper import Zip
 from __lib_class import *
-
+log = Log(debug=DEBUG)
+log_funcs = {
+    "INFO": log.info,
+    "WARNING": log.warning,
+    "ERROR": log.error,
+    "CRITICAL": log.critical,
+    None: log.debug,
+}
 
 # TODO Make sure all functions have a docstring and specific data types for parameters and return values
 
@@ -109,8 +116,11 @@ log.info("Starting Logicytics...")
 # Check for privileges and errors
 if not check_status.admin():
     log.critical("Please run this script with admin privileges", "_L", "P", "BA")
-    input("Press Enter to exit...")
-    exit(1)
+    if not DEBUG:
+        input("Press Enter to exit...")
+        exit(1)
+    else:
+        log.warning("Running in debug mode, continuing without admin privileges")
 
 if check_status.uac():
     log.warning("UAC is enabled, this may cause issues")

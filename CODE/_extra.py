@@ -1,5 +1,12 @@
 from __lib_class import *
-
+log_extra = Log(debug=DEBUG)
+log_extra_funcs = {
+    "INFO": log_extra.info,
+    "WARNING": log_extra.warning,
+    "ERROR": log_extra.error,
+    "CRITICAL": log_extra.critical,
+    None: log_extra.debug,
+}
 
 def unzip(zip_path: str) -> None:
     """
@@ -36,18 +43,18 @@ def menu() -> None:
             for f in os.listdir("../EXTRA/EXTRA")
             if f.endswith(".exe") or f.endswith(".ps1")
         ]
-        log.info("Available scripts:")
+        log_extra.info("Available scripts:")
         for i, file in enumerate(files):
             print(f"{i+1}. {file}")
     except FileNotFoundError:
-        log.error(
+        log_extra.error(
             "Error: ../EXTRA/EXTRA directory not found - Did you unzip it using --unzip-extra flag?"
         )
         exit(1)
 
     choice = int(input("Enter the number of your chosen script: "))
     if files[choice - 1] == "CMD.ps1":
-        log.info("Redirecting to CMD.ps1...")
+        log_extra.info("Redirecting to CMD.ps1...")
         subprocess.run(["powershell.exe", "../EXTRA/EXTRA/CMD.ps1"], check=True)
         command = input("Type the flags you want to Execute: ")
         subprocess.run(

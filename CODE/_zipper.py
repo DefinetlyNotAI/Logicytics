@@ -2,7 +2,14 @@ import hashlib
 import shutil
 from datetime import datetime
 from __lib_class import *
-
+log_zipper = Log(debug=DEBUG)
+log_zipper_funcs = {
+    "INFO": log_zipper.info,
+    "WARNING": log_zipper.warning,
+    "ERROR": log_zipper.error,
+    "CRITICAL": log_zipper.critical,
+    None: log_zipper.debug,
+}
 
 class Zip:
     @staticmethod
@@ -27,7 +34,7 @@ class Zip:
             except OSError:
                 os.remove(os.path.join(path, file))
             except Exception as e:
-                log.error(e)
+                log_zipper.error(e)
 
     @staticmethod
     def __generate_sha256_hash(filename: str) -> str:

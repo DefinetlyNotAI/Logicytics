@@ -1,26 +1,19 @@
 # If using the future annotations, it should be ontop of the file
 # from __future__ import annotations
 
-# Check the WiKi [Section 2, Coding Rules and Tips, Custom LOG Mechanism] for more information
-# OPTIONAL - Only if using the Custom LOG Mechanism feature
-# open("CUSTOM.LOG.MECHANISM", "w").close()
-
-# This imports everything needed including the unique logger called by log- It is not optional
-# To know more check the WiKi [Section 2, Coding Rules and Tips, Custom Libraries, __lib_class.py]
-# from __lib_class import *
-
 # Other Imports if needed or necessary go here
 
-# Check the WiKi [Section 2, Coding Rules and Tips, Custom LOG Mechanism & Text based logging]
-# OPTIONAL - Only if either one of the 2 special features
-# log = Log(# PUT YOUR CUSTOM PARAMS IN HERE #)
-# log_funcs = {
-#     "INFO": log.info,
-#     "WARNING": log.warning,
-#     "ERROR": log.error,
-#     "CRITICAL": log.critical,
-#     None: log.debug,
-# }
+# This imports everything needed including the unique logger called by log - It is not optional
+# To know more check the WiKi [Section 2, Coding Rules and Tips, Custom Libraries, __lib_class.py]
+from __lib_class import *
+log = Log(debug=DEBUG)
+log_funcs = {
+    "INFO": log.info,
+    "WARNING": log.warning,
+    "ERROR": log.error,
+    "CRITICAL": log.critical,
+    None: log.debug,
+}
 
 # Your actual code, must be able to run without any interference by outside actions
 # USE log.info, log.error, log.warning and log.debug as well
@@ -47,7 +40,3 @@
 #
 #
 # MOD_EXAMPLE()
-
-# Check the WiKi [Section 2, Coding Rules and Tips, Custom LOG Mechanism] for more information
-# OPTIONAL - Only if using the Custom LOG Mechanism feature
-# os.remove("CUSTOM.LOG.MECHANISM")
