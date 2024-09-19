@@ -134,7 +134,7 @@ class Actions:
                     break
         return tuple(true_keys)
 
-    def flags(self) -> tuple[str, ...]:
+    def flags(self) -> tuple[str, ...] | argparse.ArgumentParser:
         args, parser = self.__parse_arguments()
         special_flag_used = self.__exclusivity(args)
 
@@ -150,12 +150,10 @@ class Actions:
                 print("Invalid combination of flags.")
                 exit(1)
 
-        if not used_flags:
-            parser.print_help()
-            input("Press Enter to exit...")
-            exit(1)
-
-        return tuple(used_flags)
+        if not tuple(used_flags):
+            return parser
+        else:
+            return tuple(used_flags)
 
     @staticmethod
     def read_config() -> tuple[str, bool, str, str, list[str]]:
@@ -383,25 +381,19 @@ class Execute:
         lines = result.decode().splitlines()
         ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
 
-        log_funcs = {
-            "INFO": log.info,
-            "WARNING": log.warning,
-            "ERROR": log.error,
-            "CRITICAL": log.critical,
-            None: log.debug,
-        }
-
         log_func = log_funcs.get(ID, log.debug)
-        log_func("\n".join(lines))
+        log_func("\n".join(lines))  # Try test .removeprefix(ID)
 
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
+
 if not os.path.exists("CUSTOM.LOG.MECHANISM"):
     log = Log(debug=DEBUG)
-try:
-    # Get flags
-    action, sub_action = Actions().flags()
-except Exception:
-    action = Actions().flags()
-    action = action[0]
-    sub_action = None
+
+log_funcs = {
+    "INFO": log.info,
+    "WARNING": log.warning,
+    "ERROR": log.error,
+    "CRITICAL": log.critical,
+    None: log.debug,
+}
