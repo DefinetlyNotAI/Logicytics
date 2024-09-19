@@ -392,15 +392,15 @@ if not os.path.exists("CUSTOM.LOG.MECHANISM"):
     log = Log(debug=DEBUG)
     log.debug("CUSTOM.LOG.MECHANISM not found, using default logging mechanism.")
 
-try:
-    log_funcs = {
-        "INFO": log.info,
-        "WARNING": log.warning,
-        "ERROR": log.error,
-        "CRITICAL": log.critical,
-        None: log.debug,
-    }
-except NameError:
-    log.debug(f"NameError - Passing on to importer -> {log_funcs}")
-    log.debug(f"CUSTOM.LOG.MECHANISM mechanism is {os.path.exists('CUSTOM.LOG.MECHANISM')}")
-    pass
+    try:
+        log_funcs = {
+            "INFO": log.info,
+            "WARNING": log.warning,
+            "ERROR": log.error,
+            "CRITICAL": log.critical,
+            None: log.debug,
+        }
+    except NameError:
+        log.debug(f"NameError - Passing on to importer -> {log_funcs}")
+        log.debug(f"CUSTOM.LOG.MECHANISM mechanism is {os.path.exists('CUSTOM.LOG.MECHANISM')}")
+        pass
