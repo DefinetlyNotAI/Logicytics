@@ -1,4 +1,2 @@
-from __lib_class import *
-log_funcs.get("YOUR STRING", log.debug)("\n".join("YOUR TEXT").replace('\n', ''))
-
-Very important to add to wiki, string manipulates the log type
+black .
+--dev
