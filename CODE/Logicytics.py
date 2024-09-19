@@ -183,6 +183,9 @@ else:
     for file in range(len(execution_list)):  # Loop through List
         Execute().execute_script(execution_list[file])
         log.info(f"{execution_list[file]} executed")
+        # Error mitigation on forgetting to remove the CUSTOM.LOG.MECHANISM file
+        if os.path.exists("CUSTOM.LOG.MECHANISM"):
+            os.remove("CUSTOM.LOG.MECHANISM")
 
     # Zip generated files
 
