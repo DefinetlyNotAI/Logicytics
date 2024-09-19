@@ -280,7 +280,7 @@ class Check:
                     zip_ref.extractall("SysInternal_Suite")
 
             elif ignore_file:
-                print("Found .ignore file, skipping SysInternal_Suite zip extraction")
+                print("Found .sys.ignore file, skipping SysInternal_Suite zip extraction")
 
         except Exception as err:
             print(f"Failed to unzip SysInternal_Suite: {err}", "_L", "G", "CS")
@@ -308,6 +308,7 @@ class Execute:
         return file_list
 
     def file(self, execution_list: list, Index: int) -> None:
+        # IT IS USED, DO NOT REMOVE
         """
         Executes a file from the execution list at the specified index.
         Parameters:
