@@ -1,6 +1,10 @@
 from __future__ import annotations
 open("CUSTOM.LOG.MECHANISM", "w").close()
+import platform
+import os.path
 import requests
+import psutil
+import sys
 from __lib_class import *
 log = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
 log_funcs = {
@@ -10,19 +14,6 @@ log_funcs = {
     "CRITICAL": log.critical,
     None: log.debug,
 }
-
-# TODO - Add a debug to do the following to the project
-# [2024-09-18 12:50:00] > INFO:     | AMD64 Windows 10 Intel64 Family 6 Model 186 Stepping 2, GenuineIntel                                                                                   |
-# [2024-09-18 12:50:00] > INFO:     | 3.11.9                                                                                                                                                 |
-# [2024-09-18 12:50:00] > INFO:     | C:\Users\Hp\Desktop\Repositories\Logicytics\CODE                                                                                                       |
-# [2024-09-18 12:50:00] > INFO:     | Is VM: False                                                                                                                                           |
-# [2024-09-18 12:50:00] > INFO:     | Running as admin: False                                                                                                                                |
-# [2024-09-18 12:50:00] > INFO:     | Execution policy: Unrestricted                                                                                                                         |
-# [2024-09-18 12:50:00] > WARNING:  | Extra in your config.json: {'property_scraper.ps1', 'window_feature_miner.ps1', '_debug.py', '_hide_my_tracks.py', 'tree.bat', '__lib_class.py', 'ss...|
-# [2024-09-18 12:50:00] > WARNING:  | SysInternal Binaries Not Found: Zipped
-
-def debug():
-    pass
 
 
 class HealthCheck:
@@ -56,9 +47,87 @@ class HealthCheck:
             return "You have missing files.", f"You are missing the following files: {missing_files}", "ERROR"
 
 
-if HealthCheck().get_config_data():
-    version_tuple, file_tuple = HealthCheck().get_config_data()
-    log_funcs.get(version_tuple[2], log.debug)("\n".join(version_tuple[0]).replace('\n', ''))
-    log_funcs.get(file_tuple[2], log.debug)("\n".join(file_tuple[0]).replace('\n', ''))
+class DebugCheck:
+    @staticmethod
+    def SysInternal_Binaries(path):
+        try:
+            contents = os.listdir(path)
+            log.debug(contents)
+            if any(file.endswith('.ignore') for file in contents):
+                return "A `.sys.ignore` file was found - Ignoring", "WARNING"
+            if any(file.endswith('.zip') for file in contents) and not any(file.endswith('.exe') for file in contents):
+                return "Only zip files - Missing EXE's due to no `ignore` file", "ERROR"
+            elif any(file.endswith('.zip') for file in contents) and any(file.endswith('.exe') for file in contents):
+                return "Both zip and exe files - All good", "INFO"
+            else:
+                return "SysInternal Binaries Not Found: Missing Files - Corruption detected", "ERROR"
+        except FileNotFoundError:
+            return "SysInternal Binaries Not Found: Missing Directory- Corruption detected", "ERROR"
+        except Exception as e:
+            return f"An Unexpected error occurred: {e}", "ERROR"
+
+    @staticmethod
+    def execution_policy():
+        result = subprocess.run(['powershell', '-Command', 'Get-ExecutionPolicy'], capture_output=True, text=True)
+        return result.stdout.strip().lower() == 'unrestricted'
+
+    @staticmethod
+    def cpu_info():
+        return 'CPU Architecture: ' + platform.machine(), 'CPU Vendor Id: ' + platform.system(), 'CPU Model: ' + f"{platform.release()} {platform.version()}"
+
+
+def debug():
+    # Clear Debug Log
+    if os.path.exists("../ACCESS/LOGS/DEBUG/DEBUG.LOG"):
+        os.remove("../ACCESS/LOGS/DEBUG/DEBUG.LOG")
+
+    # Check File integrity (Online)
+    if HealthCheck().get_config_data():
+        version_tuple, file_tuple = HealthCheck().get_config_data()
+        log_funcs.get(version_tuple[2], log.debug)("\n".join(version_tuple[0]).replace('\n', ''))
+        log_funcs.get(file_tuple[2], log.debug)("\n".join(file_tuple[0]).replace('\n', ''))
+    message, type = DebugCheck.SysInternal_Binaries("SysInternal_Suite")
+    log_funcs.get(type, log.debug)("\n".join(message).replace('\n', ''))
+
+    # Check Admin
+    if Check().admin():
+        log.info("Admin privileges found")
+    else:
+        log.warning("Admin privileges not found")
+
+    # Check UAC
+    if Check().uac():
+        log.info("UAC enabled")
+    else:
+        log.warning("UAC disabled")
+
+    # Check Execution Path
+    log.info(f"Execution path: {psutil.__file__}")
+    log.info(f"Global execution path: {sys.executable}")
+    log.info(f"Local execution path: {sys.prefix}")
+
+    # Check if running in a virtual environment
+    if sys.prefix != sys.base_prefix:
+        log.info("Running in a virtual environment")
+    else:
+        log.warning("Not running in a virtual environment")
+
+    # Check Execution Policy
+    if DebugCheck.execution_policy():
+        log.info("Execution policy is unrestricted")
+    else:
+        log.warning("Execution policy is not unrestricted")
+
+    # Get Python Version
+    log.info(f"Python Version Used: {sys.version.split()[0]} - Recommended Version is: ~")
+
+    # Get Repo Path
+    log.info(os.path.abspath(__file__).removesuffix("\\CODE\\_debug.py"))
+
+    architecture, vID, cpuModel = DebugCheck.cpu_info()
+    log.info(architecture)
+    log.info(vID)
+    log.info(cpuModel)
+
 
 os.remove("CUSTOM.LOG.MECHANISM")
