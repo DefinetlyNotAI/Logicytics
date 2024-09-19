@@ -163,6 +163,7 @@ log.debug(execution_list)
 
 # Check weather to use threading or not
 if action == "threaded":
+    log.warning("Threading does not support the error check for any special files that may result in crashes!")
     execution_list.remove("sensitive_data_miner.py")
     threads = []
     for index, file in enumerate(execution_list):
