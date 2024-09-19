@@ -1,10 +1,12 @@
 import threading
 from _debug import debug
 from _dev import open_file, run_dev
-from _extra import *
+from _extra import menu, unzip
 from _health import backup, update
 from _hide_my_tracks import attempt_hide
 from _zipper import Zip
+from __lib_class import *
+
 
 # TODO Make sure all functions have a docstring and specific data types for parameters and return values
 
@@ -29,6 +31,20 @@ with many options and flags that can be used to customize its behavior.
 # Initialization
 Actions.mkdir()
 check_status = Check()
+
+if isinstance(Actions().flags(), tuple):
+    try:
+        # Get flags
+        action, sub_action = Actions().flags()
+    except Exception:
+        action = Actions().flags()
+        action = action[0]
+        sub_action = None
+else:
+    parser = Actions().flags()
+    parser.print_help()
+    input("Press Enter to exit...")
+    exit(1)
 
 # Special actions -> Quit
 if action == "debug":
