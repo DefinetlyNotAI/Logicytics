@@ -6,13 +6,13 @@ import requests
 import psutil
 import sys
 from __lib_class import *
-log = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
-log_funcs = {
-    "INFO": log.info,
-    "WARNING": log.warning,
-    "ERROR": log.error,
-    "CRITICAL": log.critical,
-    None: log.debug,
+log_debug = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
+log_debug_funcs = {
+    "INFO": log_debug.info,
+    "WARNING": log_debug.warning,
+    "ERROR": log_debug.error,
+    "CRITICAL": log_debug.critical,
+    None: log_debug.debug,
 }
 
 
@@ -22,7 +22,7 @@ class HealthCheck:
             url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/CODE/config.json"
             config = json.loads(requests.get(url).text)
         except requests.exceptions.ConnectionError:
-            log.warning("No connection found")
+            log_debug.warning("No connection found")
             return False
         version_check = self.__compare_versions(VERSION, config['VERSION'])
         file_check = self.__check_files(CURRENT_FILES, config['CURRENT_FILES'])
@@ -52,7 +52,7 @@ class DebugCheck:
     def SysInternal_Binaries(path):
         try:
             contents = os.listdir(path)
-            log.debug(contents)
+            log_debug.debug(contents)
             if any(file.endswith('.ignore') for file in contents):
                 return "A `.sys.ignore` file was found - Ignoring", "WARNING"
             if any(file.endswith('.zip') for file in contents) and not any(file.endswith('.exe') for file in contents):
@@ -84,50 +84,51 @@ def debug():
     # Check File integrity (Online)
     if HealthCheck().get_config_data():
         version_tuple, file_tuple = HealthCheck().get_config_data()
-        log_funcs.get(version_tuple[2], log.debug)("\n".join(version_tuple[0]).replace('\n', ''))
-        log_funcs.get(file_tuple[2], log.debug)("\n".join(file_tuple[0]).replace('\n', ''))
+        log_debug_funcs.get(version_tuple[2], log_debug.debug)("\n".join(version_tuple[0]).replace('\n', ''))
+        log_debug_funcs.get(file_tuple[2], log_debug.debug)("\n".join(file_tuple[0]).replace('\n', ''))
     message, type = DebugCheck.SysInternal_Binaries("SysInternal_Suite")
-    log_funcs.get(type, log.debug)("\n".join(message).replace('\n', ''))
+    log_debug_funcs.get(type, log_debug.debug)("\n".join(message).replace('\n', ''))
 
     # Check Admin
     if Check().admin():
-        log.info("Admin privileges found")
+        log_debug.info("Admin privileges found")
     else:
-        log.warning("Admin privileges not found")
+        log_debug.warning("Admin privileges not found")
 
     # Check UAC
     if Check().uac():
-        log.info("UAC enabled")
+        log_debug.info("UAC enabled")
     else:
-        log.warning("UAC disabled")
+        log_debug.warning("UAC disabled")
 
     # Check Execution Path
-    log.info(f"Execution path: {psutil.__file__}")
-    log.info(f"Global execution path: {sys.executable}")
-    log.info(f"Local execution path: {sys.prefix}")
+    log_debug.info(f"Execution path: {psutil.__file__}")
+    log_debug.info(f"Global execution path: {sys.executable}")
+    log_debug.info(f"Local execution path: {sys.prefix}")
 
     # Check if running in a virtual environment
     if sys.prefix != sys.base_prefix:
-        log.info("Running in a virtual environment")
+        log_debug.info("Running in a virtual environment")
     else:
-        log.warning("Not running in a virtual environment")
+        log_debug.warning("Not running in a virtual environment")
 
     # Check Execution Policy
     if DebugCheck.execution_policy():
-        log.info("Execution policy is unrestricted")
+        log_debug.info("Execution policy is unrestricted")
     else:
-        log.warning("Execution policy is not unrestricted")
+        log_debug.warning("Execution policy is not unrestricted")
 
     # Get Python Version
-    log.info(f"Python Version Used: {sys.version.split()[0]} - Recommended Version is: ~")
+    log_debug.info(f"Python Version Used: {sys.version.split()[0]} - Recommended Version is: ~")
 
     # Get Repo Path
-    log.info(os.path.abspath(__file__).removesuffix("\\CODE\\_debug.py"))
+    log_debug.info(os.path.abspath(__file__).removesuffix("\\CODE\\_debug.py"))
 
+    # Get CPU Info
     architecture, vID, cpuModel = DebugCheck.cpu_info()
-    log.info(architecture)
-    log.info(vID)
-    log.info(cpuModel)
+    log_debug.info(architecture)
+    log_debug.info(vID)
+    log_debug.info(cpuModel)
 
-
-os.remove("CUSTOM.LOG.MECHANISM")
+    # Get config data
+    log_debug.info("Debug: " + DEBUG)

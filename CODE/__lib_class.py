@@ -318,7 +318,7 @@ class Execute:
             None
         """
         self.execute_script(execution_list[Index])
-        log.info(f"{execution_list[Index]} executed")
+        Log().info(f"{execution_list[Index]} executed")
 
     def execute_script(self, script: str) -> None:
         """
@@ -348,9 +348,9 @@ class Execute:
         try:
             unblock_command = f'powershell.exe -Command "Unblock-File -Path {script}"'
             subprocess.run(unblock_command, shell=False, check=True)
-            log.info("PS1 Script unblocked.")
+            Log().info("PS1 Script unblocked.")
         except Exception as err:
-            log.critical(f"Failed to unblock script: {err}", "_L", "G", "E")
+            Log().critical(f"Failed to unblock script: {err}", "_L", "G", "E")
 
     @staticmethod
     def __run_python_script(script: str) -> None:
@@ -381,26 +381,16 @@ class Execute:
         lines = result.decode().splitlines()
         ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
 
-        log_func = log_funcs.get(ID, log.debug)
+        log_funcs = {
+            "INFO": Log().info,
+            "WARNING": Log().warning,
+            "ERROR": Log().error,
+            "CRITICAL": Log().critical,
+            None: Log().debug,
+        }
+
+        log_func = log_funcs.get(ID, Log().debug)
         log_func("\n".join(lines).removeprefix(ID or ""))
-        # TODO Try test
 
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
-
-if not os.path.exists("CUSTOM.LOG.MECHANISM"):
-    log = Log(debug=DEBUG)
-    log.debug("CUSTOM.LOG.MECHANISM not found, using default logging mechanism.")
-
-    try:
-        log_funcs = {
-            "INFO": log.info,
-            "WARNING": log.warning,
-            "ERROR": log.error,
-            "CRITICAL": log.critical,
-            None: log.debug,
-        }
-    except NameError:
-        log.debug(f"NameError - Passing on to importer -> {log_funcs}")
-        log.debug(f"CUSTOM.LOG.MECHANISM mechanism is {os.path.exists('CUSTOM.LOG.MECHANISM')}")
-        pass

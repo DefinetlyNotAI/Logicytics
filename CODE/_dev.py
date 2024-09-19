@@ -1,7 +1,13 @@
 from __future__ import annotations
-
 from __lib_class import *
-
+log_dev = Log(debug=DEBUG)
+log_dev_funcs = {
+    "INFO": log_dev.info,
+    "WARNING": log_dev.warning,
+    "ERROR": log_dev.error,
+    "CRITICAL": log_dev.critical,
+    None: log_dev.debug,
+}
 
 def open_file(file: str) -> None:
     """
@@ -37,11 +43,11 @@ def update_json_file(filename: str, new_data: list | str, key: str) -> None:
             json.dump(data, f, indent=4)
             f.truncate()
     except FileNotFoundError:
-        log.error(f"File not found: {filename}")
+        log_dev.error(f"File not found: {filename}")
     except json.JSONDecodeError:
-        log.error(f"Error decoding JSON in the file: {filename}")
+        log_dev.error(f"Error decoding JSON in the file: {filename}")
     except Exception as e:
-        log.error(f"An error occurred: {e}")
+        log_dev.error(f"An error occurred: {e}")
 
 
 def prompt_user(question: str, file_to_open: str = None) -> bool:
@@ -64,7 +70,7 @@ def prompt_user(question: str, file_to_open: str = None) -> bool:
             return False
         return True
     except Exception as e:
-        log.error(e)
+        log_dev.error(e)
 
 
 def dev_checks() -> bool:
@@ -107,7 +113,7 @@ def dev_checks() -> bool:
         files = Actions.check_current_files(".")
         print(files)
         if not prompt_user("Does the list above include your added files?"):
-            log.error("Something went wrong! Please contact support.")
+            log_dev.error("Something went wrong! Please contact support.")
             return False
 
         update_json_file("config.json", files, "CURRENT_FILES")
@@ -119,7 +125,7 @@ def dev_checks() -> bool:
             print("Remember to upload the EXE files on the PR!")
         return True
     except Exception as e:
-        log.error(e)
+        log_dev.error(e)
         return False
 
 
@@ -135,6 +141,6 @@ def run_dev():
             ):
                 full_path = os.path.abspath(os.path.join("../TESTS", item))
                 test_files.append(full_path)
-                log.info(f"Found test file: {item} - Full path: {full_path}")
+                log_dev.info(f"Found test file: {item} - Full path: {full_path}")
         for item in test_files:
-            log.info(Actions().run_command(f"python {item}"))
+            log_dev.info(Actions().run_command(f"python {item}"))
