@@ -1,8 +1,15 @@
 from __future__ import annotations
-
+open("CUSTOM.LOG.MECHANISM", "w").close()
 import requests
 from __lib_class import *
-
+log = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
+log_funcs = {
+    "INFO": log.info,
+    "WARNING": log.warning,
+    "ERROR": log.error,
+    "CRITICAL": log.critical,
+    None: log.debug,
+}
 
 # TODO - Add a debug to do the following to the project
 # [2024-09-18 12:50:00] > INFO:     | AMD64 Windows 10 Intel64 Family 6 Model 186 Stepping 2, GenuineIntel                                                                                   |
@@ -51,5 +58,7 @@ class HealthCheck:
 
 if HealthCheck().get_config_data():
     version_tuple, file_tuple = HealthCheck().get_config_data()
-    log_funcs.get(version_tuple[3], log.debug)("\n".join(version_tuple[1]).replace('\n', ''))
-    log_funcs.get(file_tuple[3], log.debug)("\n".join(file_tuple[1]).replace('\n', ''))
+    log_funcs.get(version_tuple[2], log.debug)("\n".join(version_tuple[0]).replace('\n', ''))
+    log_funcs.get(file_tuple[2], log.debug)("\n".join(file_tuple[0]).replace('\n', ''))
+
+os.remove("CUSTOM.LOG.MECHANISM")

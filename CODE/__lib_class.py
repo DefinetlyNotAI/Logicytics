@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import argparse
 import json
 import os
@@ -71,13 +70,13 @@ class Actions:
             "--dev",
             action="store_true",
             help="Run Logicytics developer mod, this is only for people who want to register their contributions "
-            "properly. - Use on your own device only -.",
+                 "properly. - Use on your own device only -.",
         )
         parser.add_argument(
             "--exe",
             action="store_true",
             help="Run Logicytics using its precompiled exe's, These may be outdated and not the best, use only if the "
-            "device doesnt have python installed.",
+                 "device doesnt have python installed.",
         )
         parser.add_argument(
             "--debug",
@@ -116,7 +115,7 @@ class Actions:
         special_flag_used = False
         if args.reboot or args.shutdown or args.webhook:
             if not (
-                args.default or args.threaded or args.modded or args.minimal or args.exe
+                    args.default or args.threaded or args.modded or args.minimal or args.exe
             ):
                 print("Invalid combination of flags.")
                 exit(1)
@@ -186,11 +185,11 @@ class Actions:
                 files = data.get("CURRENT_FILES", [])
 
                 if not (
-                    isinstance(webhook_url, str)
-                    and isinstance(debug, bool)
-                    and isinstance(version, str)
-                    and isinstance(api_key, str)
-                    and isinstance(files, list)
+                        isinstance(webhook_url, str)
+                        and isinstance(debug, bool)
+                        and isinstance(version, str)
+                        and isinstance(api_key, str)
+                        and isinstance(files, list)
                 ):
                     print("Invalid config.json format.")
                     input("Press Enter to exit...")
@@ -276,7 +275,7 @@ class Check:
             if zip_file and not ignore_file:
                 print("Extracting SysInternal_Suite zip")
                 with zipfile.ZipFile(
-                    "SysInternal_Suite/SysInternal_Suite.zip"
+                        "SysInternal_Suite/SysInternal_Suite.zip"
                 ) as zip_ref:
                     zip_ref.extractall("SysInternal_Suite")
 
@@ -301,9 +300,9 @@ class Execute:
         """
         for filename in os.listdir(directory):
             if (
-                filename.endswith((".py", ".exe", ".ps1", ".bat"))
-                and not filename.startswith("_")
-                and filename != "Logicytics.py"
+                    filename.endswith((".py", ".exe", ".ps1", ".bat"))
+                    and not filename.startswith("_")
+                    and filename != "Logicytics.py"
             ):
                 file_list.append(filename)
         return file_list
@@ -382,18 +381,25 @@ class Execute:
         ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
 
         log_func = log_funcs.get(ID, log.debug)
-        log_func("\n".join(lines))  # Try test .removeprefix(ID)
+        log_func("\n".join(lines).removeprefix(ID or ""))
+        # TODO Try test
 
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
 
 if not os.path.exists("CUSTOM.LOG.MECHANISM"):
     log = Log(debug=DEBUG)
+    log.debug("CUSTOM.LOG.MECHANISM not found, using default logging mechanism.")
 
-log_funcs = {
-    "INFO": log.info,
-    "WARNING": log.warning,
-    "ERROR": log.error,
-    "CRITICAL": log.critical,
-    None: log.debug,
-}
+try:
+    log_funcs = {
+        "INFO": log.info,
+        "WARNING": log.warning,
+        "ERROR": log.error,
+        "CRITICAL": log.critical,
+        None: log.debug,
+    }
+except NameError:
+    log.debug(f"NameError - Passing on to importer -> {log_funcs}")
+    log.debug(f"CUSTOM.LOG.MECHANISM mechanism is {os.path.exists('CUSTOM.LOG.MECHANISM')}")
+    pass
