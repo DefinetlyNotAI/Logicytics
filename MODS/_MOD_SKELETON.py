@@ -1,3 +1,6 @@
+# If using the future annotations, it should be ontop of the file
+# from __future__ import annotations
+
 # Check the WiKi [Section 2, Coding Rules and Tips, Custom LOG Mechanism] for more information
 # OPTIONAL - Only if using the Custom LOG Mechanism feature
 # open("CUSTOM.LOG.MECHANISM", "w").close()
