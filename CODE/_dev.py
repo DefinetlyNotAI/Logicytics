@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from __lib_class import *
 
 
@@ -17,28 +19,29 @@ def open_file(file: str) -> None:
             print(f"Error opening file: {e}")
 
 
-def update_json_file(filename: str, new_array: list) -> None:
+def update_json_file(filename: str, new_data: list | str, key: str) -> None:
     """
     Updates a JSON file with a new array of current files.
     Args:
         filename (str): The path to the JSON file to be updated.
-        new_array (list): The list of current files to be written to the JSON file.
+        new_data (list | str): The list of current files to be written to the JSON file.
+        key (str): The key in the JSON file to be updated.
     Returns:
         None
     """
     try:
         with open(filename, "r+") as f:
             data = json.load(f)
-            data["CURRENT_FILES"] = new_array
+            data[key] = new_data
             f.seek(0)
             json.dump(data, f, indent=4)
             f.truncate()
     except FileNotFoundError:
-        print(f"File not found: {filename}")
+        log.error(f"File not found: {filename}")
     except json.JSONDecodeError:
-        print(f"Error decoding JSON in the file: {filename}")
+        log.error(f"Error decoding JSON in the file: {filename}")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        log.error(f"An error occurred: {e}")
 
 
 def prompt_user(question: str, file_to_open: str = None) -> bool:
@@ -61,7 +64,7 @@ def prompt_user(question: str, file_to_open: str = None) -> bool:
             return False
         return True
     except Exception as e:
-        print(e)
+        log.error(e)
 
 
 def dev_checks() -> bool:
@@ -104,10 +107,11 @@ def dev_checks() -> bool:
         files = Actions.check_current_files(".")
         print(files)
         if not prompt_user("Does the list above include your added files?"):
-            print("Something went wrong! Please contact support.")
+            log.error("Something went wrong! Please contact support.")
             return False
 
-        update_json_file("config.json", files)
+        update_json_file("config.json", files, "CURRENT_FILES")
+        update_json_file("config.json", input(f"Enter the new version of the project (Old version is {VERSION}):"), "VERSION")
         print(
             "Great Job! Please tick the box in the GitHub PR request for completing steps in --dev"
         )
@@ -115,7 +119,7 @@ def dev_checks() -> bool:
             print("Remember to upload the EXE files on the PR!")
         return True
     except Exception as e:
-        print(e)
+        log.error(e)
         return False
 
 
@@ -131,6 +135,6 @@ def run_dev():
             ):
                 full_path = os.path.abspath(os.path.join("../TESTS", item))
                 test_files.append(full_path)
-                print(f"Found test file: {item} - Full path: {full_path}")
+                log.info(f"Found test file: {item} - Full path: {full_path}")
         for item in test_files:
-            Actions().run_command(f"python {item}")
+            log.info(Actions().run_command(f"python {item}"))
