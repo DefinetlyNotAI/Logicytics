@@ -1,11 +1,10 @@
 import threading
-from __lib_class import *
 from _debug import debug
 from _dev import open_file, run_dev
-from _extra import unzip, menu
+from _extra import *
 from _health import backup, update
 from _hide_my_tracks import attempt_hide
-from _zipper import zip_and_hash
+from _zipper import Zip
 
 # TODO Make sure all functions have a docstring and specific data types for parameters and return values
 
@@ -52,7 +51,7 @@ if action == "extra":
 
 if action == "update":
     log.info("Updating...")
-    update()
+    log.info(update())
     log.info("Update complete!")
     input("Press Enter to exit...")
     exit(0)
@@ -70,7 +69,7 @@ if action == "backup":
     log.info("Backing up...")
     backup(".", "Default_Backup")
     log.debug("Backup complete -> CODE dir")
-    backup(".", "Mods_Backup")
+    backup("../MODS", "Mods_Backup")
     log.debug("Backup complete -> MODS dir")
     log.info("Backup complete!")
     input("Press Enter to exit...")
@@ -171,11 +170,11 @@ else:
     # Zip generated files
 
 if action == "modded":
-    zip_loc_mod, hash_loc = zip_and_hash("..\\MODS", "MODS", action)
+    zip_loc_mod, hash_loc = Zip().and_hash("..\\MODS", "MODS", action)
     log.info(zip_loc_mod)
     log.debug(hash_loc)
 
-zip_loc, hash_loc = zip_and_hash("..\\CODE", "CODE", action)
+zip_loc, hash_loc = Zip().and_hash("..\\CODE", "CODE", action)
 log.info(zip_loc)
 log.debug(hash_loc)
 
