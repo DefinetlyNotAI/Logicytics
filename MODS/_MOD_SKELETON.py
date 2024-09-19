@@ -8,12 +8,9 @@
 
 # Other Imports if needed or necessary go here
 
-# Check the WiKi [Section 2, Coding Rules and Tips, Custom LOG Mechanism]
-# OPTIONAL - Only if using the Custom LOG Mechanism feature
-# log = Log(# PUT YOUR CUSTOM PARAMS IN HERE #)
-
 # Check the WiKi [Section 2, Coding Rules and Tips, Custom LOG Mechanism & Text based logging]
-# OPTIONAL - Only if using the 2 special features together at the same time
+# OPTIONAL - Only if either one of the 2 special features
+# log = Log(# PUT YOUR CUSTOM PARAMS IN HERE #)
 # log_funcs = {
 #     "INFO": log.info,
 #     "WARNING": log.warning,
