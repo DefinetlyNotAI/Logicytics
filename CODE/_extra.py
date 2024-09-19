@@ -1,6 +1,4 @@
-import os
-import subprocess
-import zipfile
+from __lib_class import *
 
 
 def unzip(zip_path: str) -> None:
@@ -38,18 +36,18 @@ def menu() -> None:
             for f in os.listdir("../EXTRA/EXTRA")
             if f.endswith(".exe") or f.endswith(".ps1")
         ]
-        print("Available scripts:")
+        log.info("Available scripts:")
         for i, file in enumerate(files):
             print(f"{i+1}. {file}")
     except FileNotFoundError:
-        print(
+        log.error(
             "Error: ../EXTRA/EXTRA directory not found - Did you unzip it using --unzip-extra flag?"
         )
         exit(1)
 
     choice = int(input("Enter the number of your chosen script: "))
     if files[choice - 1] == "CMD.ps1":
-        print("Redirecting to CMD.ps1...")
+        log.info("Redirecting to CMD.ps1...")
         subprocess.run(["powershell.exe", "../EXTRA/EXTRA/CMD.ps1"], check=True)
         command = input("Type the flags you want to Execute: ")
         subprocess.run(
