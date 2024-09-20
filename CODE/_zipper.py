@@ -47,8 +47,8 @@ class Zip:
         return [
             f
             for f in os.listdir(path)
-            if not f.endswith((".py", ".exe", ".bat", ".ps1")) and not f.startswith(
-                ("config.", "SysInternal_Suite", "__pycache__"))
+            if not f.endswith((".py", ".exe", ".bat", ".ps1"))
+            and not f.startswith(("config.", "SysInternal_Suite", "__pycache__"))
         ]
 
     @staticmethod

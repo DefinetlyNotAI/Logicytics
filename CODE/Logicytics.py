@@ -5,6 +5,7 @@ from _health import backup, update
 from _hide_my_tracks import attempt_hide
 from _zipper import Zip
 from __lib_class import *
+
 log = Log(debug=DEBUG)
 log_funcs = {
     "INFO": log.info,
