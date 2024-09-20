@@ -62,7 +62,10 @@ class Dev:
             None
         """
         checks = [
-            ("Have you read the required contributing guidelines?", "../CONTRIBUTING.md"),
+            (
+                "Have you read the required contributing guidelines?",
+                "../CONTRIBUTING.md",
+            ),
             ("Have you made files you don't want to be run start with '_'?", "."),
             ("Have you added the file to CODE dir?", "."),
             ("Have you added docstrings and comments?", "../CONTRIBUTING.md"),
@@ -79,8 +82,13 @@ class Dev:
                     return False
 
             remind = False
-            if self.__prompt_user("Is the update a major or minor upgrade (non-patch update)?"):
-                if not self.__prompt_user("Did You Build the EXE with Advanced Installer?", "../Logicytics.aip"):
+            if self.__prompt_user(
+                "Is the update a major or minor upgrade (non-patch update)?"
+            ):
+                if not self.__prompt_user(
+                    "Did You Build the EXE with Advanced Installer?",
+                    "../Logicytics.aip",
+                ):
                     return False
                 else:
                     remind = True
@@ -92,9 +100,13 @@ class Dev:
                 return False
 
             self.__update_json_file("config.json", files, "CURRENT_FILES")
-            self.__update_json_file("config.json",
-                                    input(f"Enter the new version of the project (Old version is {VERSION}):"),
-                                    "VERSION")
+            self.__update_json_file(
+                "config.json",
+                input(
+                    f"Enter the new version of the project (Old version is {VERSION}):"
+                ),
+                "VERSION",
+            )
             print(
                 "Great Job! Please tick the box in the GitHub PR request for completing steps in --dev"
             )
@@ -122,9 +134,9 @@ class Dev:
             test_files = []
             for item in os.listdir("../TESTS"):
                 if (
-                        item.lower().endswith(".py")
-                        and item.lower() != "__init__.py"
-                        and item.lower() != "test.py"
+                    item.lower().endswith(".py")
+                    and item.lower() != "__init__.py"
+                    and item.lower() != "test.py"
                 ):
                     full_path = os.path.abspath(os.path.join("../TESTS", item))
                     test_files.append(full_path)

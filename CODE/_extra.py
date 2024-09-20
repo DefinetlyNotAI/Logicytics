@@ -1,4 +1,5 @@
 from __lib_class import *
+
 if __name__ == "__main__":
     log = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
     log_funcs = {
