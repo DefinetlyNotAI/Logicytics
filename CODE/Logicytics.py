@@ -204,6 +204,7 @@ if action == "modded":
 
 zip_values = Zip().and_hash(".", "CODE", action)
 if isinstance(zip_values, str):
+    # If error, log it
     log.error(zip_values)
 else:
     zip_loc, hash_loc = zip_values
@@ -222,6 +223,7 @@ if sub_action == "reboot":
     log.info("Rebooting...")
     subprocess.call("shutdown /r /t 3", shell=False)
 if sub_action == "webhook":
+    # Implement this in future
     log.warning("This feature is not fully implemented yet! Sorry")
 
 log.info("Exiting...")

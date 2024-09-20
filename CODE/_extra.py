@@ -10,7 +10,7 @@ if __name__ == "__main__":
     }
 
 
-def unzip(zip_path: str) -> None:
+def unzip(zip_path: str):
     """
     Unzips a given zip file to a new directory with the same name.
 
@@ -31,7 +31,7 @@ def unzip(zip_path: str) -> None:
         z.extractall(path=str(output_dir))
 
 
-def menu() -> None:
+def menu():
     """
     Displays a menu of available executable scripts in the '../EXTRA/EXTRA' directory,
     prompts the user to select a script, and runs the selected script using PowerShell.

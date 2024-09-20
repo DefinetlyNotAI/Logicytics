@@ -9,6 +9,7 @@ log_funcs = {
     "CRITICAL": log.critical,
     None: log.debug,
 }
+
 # List of allowed extensions
 allowed_extensions = [
     ".png",
@@ -23,12 +24,15 @@ allowed_extensions = [
     ".text",
     ".docx",
     ".doc",
+    ".xls",
+    ".xlsx",
+    ".csv",
 ]
 
 
-class Miner:
+class Mine:
     @staticmethod
-    def __search_files_by_keyword(root, keyword):
+    def __search_files_by_keyword(root: Path, keyword: str) -> list:
         """
         Searches for files containing the specified keyword in their names.
         Args:
@@ -49,7 +53,7 @@ class Miner:
         return matching_files
 
     @staticmethod
-    def __copy_file(src_file_path, dst_file_path):
+    def __copy_file(src_file_path: Path, dst_file_path: Path):
         """
         Copies a file to the destination directory.
         Args:
@@ -66,7 +70,7 @@ class Miner:
         except Exception as e:
             log.error(f"Failed to copy file: {e}")
 
-    def __search_and_copy_files(self, keyword):
+    def __search_and_copy_files(self, keyword: str):
         """
         Searches for files containing the specified keyword in their names and copies them to a destination directory.
         Args:
@@ -105,4 +109,4 @@ class Miner:
         log.info("Sensitive Data Miner Completed")
 
 
-Miner().passwords()
+Mine().passwords()

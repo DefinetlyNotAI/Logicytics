@@ -7,6 +7,7 @@ log_funcs = {
     "CRITICAL": log.critical,
     None: log.debug,
 }
+
 sys_internal_executables = [
     "psfile.exe",
     "PsGetsid.exe",

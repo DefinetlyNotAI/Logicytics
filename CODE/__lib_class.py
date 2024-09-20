@@ -13,7 +13,7 @@ from __lib_log import Log
 
 class Actions:
     @staticmethod
-    def open_file(file: str) -> None:
+    def open_file(file: str):
         """
         Opens a specified file using its default application in a cross-platform manner.
         Args:
@@ -44,6 +44,18 @@ class Actions:
 
     @staticmethod
     def __parse_arguments() -> tuple[argparse.Namespace, argparse.ArgumentParser]:
+        """
+        A static method used to parse command-line arguments for the Logicytics application.
+
+        It defines various flags that can be used to customize the behavior of the application,
+        including options for running in default or minimal mode, unzipping extra files,
+        backing up or restoring data, updating from GitHub, and more.
+
+        The method returns a tuple containing the parsed arguments and the argument parser object.
+
+        Returns:
+            tuple[argparse.Namespace, argparse.ArgumentParser]: A tuple containing the parsed arguments and the argument parser object.
+        """
         # Define the argument parser
         parser = argparse.ArgumentParser(
             description="Logicytics, The most powerful tool for system data analysis."
@@ -128,6 +140,15 @@ class Actions:
 
     @staticmethod
     def __exclusivity(args: argparse.Namespace) -> bool:
+        """
+        Checks if exclusive flags are used in the provided arguments.
+
+        Args:
+            args (argparse.Namespace): The arguments to be checked.
+
+        Returns:
+            bool: True if exclusive flags are used, False otherwise.
+        """
         special_flag_used = False
         if args.reboot or args.shutdown or args.webhook:
             if not (
@@ -140,6 +161,15 @@ class Actions:
 
     @staticmethod
     def __set_flags(args: argparse.Namespace) -> tuple[str, ...]:
+        """
+        Sets flags based on the provided arguments.
+
+        Args:
+            args (argparse.Namespace): The arguments to be checked for flags.
+
+        Returns:
+            tuple[str, ...]: A tuple of flag names that are set to True.
+        """
         Flags = {key: getattr(args, key) for key in vars(args)}
         true_keys = []
         for key, value in Flags.items():
@@ -150,6 +180,11 @@ class Actions:
         return tuple(true_keys)
 
     def flags(self) -> tuple[str, ...] | argparse.ArgumentParser:
+        """
+        Handles the parsing and validation of command-line flags.
+
+        Returns either a tuple of used flag names or an ArgumentParser instance.
+        """
         args, parser = self.__parse_arguments()
         special_flag_used = self.__exclusivity(args)
 
@@ -238,6 +273,12 @@ class Actions:
 
     @staticmethod
     def mkdir():
+        """
+        Creates the necessary directories for storing logs, backups, and data.
+
+        Returns:
+            None
+        """
         os.makedirs("../ACCESS/LOGS/", exist_ok=True)
         os.makedirs("../ACCESS/LOGS/DEBUG", exist_ok=True)
         os.makedirs("../ACCESS/BACKUP/", exist_ok=True)
@@ -284,6 +325,17 @@ class Check:
 
     @staticmethod
     def sys_internal_zip():
+        """
+        Extracts the SysInternal_Suite zip file if it exists and is not ignored.
+
+        This function checks if the SysInternal_Suite zip file exists and if it is not ignored.
+         If the zip file exists and is not ignored,
+         it extracts its contents to the SysInternal_Suite directory.
+         If the zip file is ignored, it prints a message indicating that it is skipping the extraction.
+
+        Raises:
+            Exception: If there is an error during the extraction process. The error message is printed to the console and the program exits.
+        """
         try:
             ignore_file = os.path.exists("SysInternal_Suite/.sys.ignore")
             zip_file = os.path.exists("SysInternal_Suite/SysInternal_Suite.zip")
@@ -323,7 +375,7 @@ class Execute:
                 file_list.append(filename)
         return file_list
 
-    def file(self, execution_list: list, Index: int) -> None:
+    def file(self, execution_list: list, Index: int):
         # IT IS USED, DO NOT REMOVE
         """
         Executes a file from the execution list at the specified index.
@@ -336,7 +388,7 @@ class Execute:
         self.execute_script(execution_list[Index])
         Log().info(f"{execution_list[Index]} executed")
 
-    def execute_script(self, script: str) -> None:
+    def execute_script(self, script: str):
         """
         Executes a script file and handles its output based on the file extension.
         Parameters:
@@ -353,7 +405,7 @@ class Execute:
             self.__run_other_script(script)
 
     @staticmethod
-    def __unblock_ps1_script(script: str) -> None:
+    def __unblock_ps1_script(script: str):
         """
         Unblocks and runs a PowerShell (.ps1) script.
         Parameters:
@@ -369,7 +421,7 @@ class Execute:
             Log().critical(f"Failed to unblock script: {err}", "_L", "G", "E")
 
     @staticmethod
-    def __run_python_script(script: str) -> None:
+    def __run_python_script(script: str):
         """
         Runs a Python (.py) script.
         Parameters:
@@ -383,7 +435,7 @@ class Execute:
         print(result.decode())
 
     @staticmethod
-    def __run_other_script(script: str) -> None:
+    def __run_other_script(script: str):
         """
         Runs a script with other extensions and logs output based on its content.
         Parameters:
