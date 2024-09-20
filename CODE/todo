@@ -1,7 +1,0 @@
-search for errors in file search
-test code
-Make sure all functions have a docstring and specific data types for parameters and return values
-black .
---dev
-Then update readme, wiki and contributing guidelines
-Finally after all, create a pr, and a  release, then the release should contain the commit history etc

@@ -13,6 +13,22 @@ from __lib_log import Log
 
 class Actions:
     @staticmethod
+    def open_file(file: str) -> None:
+        """
+        Opens a specified file using its default application in a cross-platform manner.
+        Args:
+            file (str): The path to the file to be opened.
+        Returns:
+            None
+        """
+        if not file == "":
+            file_path = os.path.realpath(file)
+            try:
+                subprocess.call(file_path, shell=False)
+            except Exception as e:
+                print(f"Error opening file: {e}")
+
+    @staticmethod
     def run_command(command: str) -> str:
         """
         Runs a command in a subprocess and returns the output as a string.

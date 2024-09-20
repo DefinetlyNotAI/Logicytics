@@ -1,19 +1,19 @@
 from __future__ import annotations
-open("CUSTOM.LOG.MECHANISM", "w").close()
 import platform
 import os.path
 import requests
 import psutil
 import sys
 from __lib_class import *
-log_debug = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
-log_debug_funcs = {
-    "INFO": log_debug.info,
-    "WARNING": log_debug.warning,
-    "ERROR": log_debug.error,
-    "CRITICAL": log_debug.critical,
-    None: log_debug.debug,
-}
+if __name__ == "__main__":
+    log_debug = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
+    log_debug_funcs = {
+        "INFO": log_debug.info,
+        "WARNING": log_debug.warning,
+        "ERROR": log_debug.error,
+        "CRITICAL": log_debug.critical,
+        None: log_debug.debug,
+    }
 
 
 class HealthCheck:

@@ -1,6 +1,5 @@
 import threading
 from _debug import debug
-from _dev import open_file, run_dev
 from _extra import menu, unzip
 from _health import backup, update
 from _hide_my_tracks import attempt_hide
@@ -61,7 +60,7 @@ if action == "debug":
 check_status.sys_internal_zip()
 
 if action == "dev":
-    run_dev()
+    Execute().execute_script("dev.py")
     input("Press Enter to exit...")
     exit(0)
 
@@ -83,7 +82,7 @@ if action == "restore":
         "Sorry, this feature is yet to be implemented. You can manually Restore your backups, We will open "
         "the location for you"
     )
-    open_file("../ACCESS/BACKUP/")
+    Actions().open_file("../ACCESS/BACKUP/")
     input("Press Enter to exit...")
     exit(1)
 
@@ -172,7 +171,7 @@ log.debug(execution_list)
 
 # Check weather to use threading or not
 if action == "threaded":
-    log.warning("Threading does not support the error check for any special files that may result in crashes!")
+    log.warning("Threading does not support sensitive data miner yet, ignoring")
     execution_list.remove("sensitive_data_miner.py")
     threads = []
     for index, file in enumerate(execution_list):
@@ -192,20 +191,24 @@ else:
     for file in range(len(execution_list)):  # Loop through List
         Execute().execute_script(execution_list[file])
         log.info(f"{execution_list[file]} executed")
-        # Error mitigation on forgetting to remove the CUSTOM.LOG.MECHANISM file
-        if os.path.exists("CUSTOM.LOG.MECHANISM"):
-            os.remove("CUSTOM.LOG.MECHANISM")
 
-    # Zip generated files
-
+# Zip generated files
 if action == "modded":
-    zip_loc_mod, hash_loc = Zip().and_hash("..\\MODS", "MODS", action)
-    log.info(zip_loc_mod)
-    log.debug(hash_loc)
+    zip_values = Zip().and_hash("..\\MODS", "MODS", action)
+    if isinstance(zip_values, str):
+        log.error(zip_values)
+    else:
+        zip_loc_mod, hash_loc = zip_values
+        log.info(zip_loc_mod)
+        log.debug(hash_loc)
 
-zip_loc, hash_loc = Zip().and_hash("..\\CODE", "CODE", action)
-log.info(zip_loc)
-log.debug(hash_loc)
+zip_values = Zip().and_hash(".", "CODE", action)
+if isinstance(zip_values, str):
+    log.error(zip_values)
+else:
+    zip_loc, hash_loc = zip_values
+    log.info(zip_loc)
+    log.debug(hash_loc)
 
 # Attempt event log deletion
 attempt_hide()

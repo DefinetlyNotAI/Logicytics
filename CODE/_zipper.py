@@ -1,16 +1,9 @@
+from __future__ import annotations
 import hashlib
 import shutil
 from datetime import datetime
-from __lib_class import *
-
-log_zipper = Log(debug=DEBUG)
-log_zipper_funcs = {
-    "INFO": log_zipper.info,
-    "WARNING": log_zipper.warning,
-    "ERROR": log_zipper.error,
-    "CRITICAL": log_zipper.critical,
-    None: log_zipper.debug,
-}
+import os
+import zipfile
 
 
 class Zip:
@@ -37,7 +30,7 @@ class Zip:
             except OSError:
                 os.remove(os.path.join(path, file))
             except Exception as e:
-                log_zipper.error(e)
+                return f"Error: {e}"
 
     @staticmethod
     def __generate_sha256_hash(filename: str) -> str:
@@ -55,16 +48,19 @@ class Zip:
         shutil.move(f"{filename}.zip", "../ACCESS/DATA/Zip")
         shutil.move(f"{filename}.hash", "../ACCESS/DATA/Hashes")
 
-    def and_hash(self, path: str, name: str, flag: str) -> tuple:
+    def and_hash(self, path: str, name: str, flag: str) -> tuple | str:
         today = datetime.now()
         filename = f"Logicytics_{name}_{flag}_{today.strftime('%Y-%m-%d_%H-%M-%S')}"
         files_to_zip = self.__get_files_to_zip(path)
         self.__create_zip_file(path, files_to_zip, filename)
-        self.__remove_files(path, files_to_zip)
-        sha256_hash = self.__generate_sha256_hash(filename)
-        self.__write_hash_to_file(filename, sha256_hash)
-        self.__move_files(filename)
-        return (
-            f"Zip file moved to ../ACCESS/DATA/Zip/{filename}.zip",
-            f"SHA256 Hash file moved to ../ACCESS/DATA/Hashes/{filename}.hash",
-        )
+        check = self.__remove_files(path, files_to_zip)
+        if isinstance(check, str):
+            return check
+        else:
+            sha256_hash = self.__generate_sha256_hash(filename)
+            self.__write_hash_to_file(filename, sha256_hash)
+            self.__move_files(filename)
+            return (
+                f"Zip file moved to ../ACCESS/DATA/Zip/{filename}.zip",
+                f"SHA256 Hash file moved to ../ACCESS/DATA/Hashes/{filename}.hash",
+            )
