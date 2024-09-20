@@ -1,5 +1,6 @@
 import requests
 from __lib_class import *
+
 log = Log(debug=DEBUG)
 log_funcs = {
     "INFO": log.info,
@@ -8,6 +9,7 @@ log_funcs = {
     "CRITICAL": log.critical,
     None: log.debug,
 }
+
 
 class IP:
     @staticmethod

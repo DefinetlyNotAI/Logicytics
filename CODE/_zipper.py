@@ -2,6 +2,7 @@ import hashlib
 import shutil
 from datetime import datetime
 from __lib_class import *
+
 log_zipper = Log(debug=DEBUG)
 log_zipper_funcs = {
     "INFO": log_zipper.info,
@@ -11,13 +12,15 @@ log_zipper_funcs = {
     None: log_zipper.debug,
 }
 
+
 class Zip:
     @staticmethod
     def __get_files_to_zip(path: str) -> list:
         return [
             f
             for f in os.listdir(path)
-            if not f.endswith((".py", ".exe", ".bat", ".ps1")) and not f.startswith(("config.", "SysInternal_Suite", "__pycache__"))
+            if not f.endswith((".py", ".exe", ".bat", ".ps1")) and not f.startswith(
+                ("config.", "SysInternal_Suite", "__pycache__"))
         ]
 
     @staticmethod
