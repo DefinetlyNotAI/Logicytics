@@ -5,6 +5,7 @@ import requests
 import psutil
 import sys
 from __lib_class import *
+
 if __name__ == "__main__":
     log_debug = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
     log_debug_funcs = {
@@ -17,7 +18,9 @@ if __name__ == "__main__":
 
 
 class HealthCheck:
-    def get_online_config(self) -> bool | tuple[tuple[str, str, str], tuple[str, str, str]]:
+    def get_online_config(
+        self,
+    ) -> bool | tuple[tuple[str, str, str], tuple[str, str, str]]:
         """
         Retrieves configuration data from a remote repository and compares it with the local configuration.
 
@@ -31,13 +34,15 @@ class HealthCheck:
         except requests.exceptions.ConnectionError:
             log_debug.warning("No connection found")
             return False
-        version_check = self.__compare_versions(VERSION, config['VERSION'])
-        file_check = self.__check_files(CURRENT_FILES, config['CURRENT_FILES'])
+        version_check = self.__compare_versions(VERSION, config["VERSION"])
+        file_check = self.__check_files(CURRENT_FILES, config["CURRENT_FILES"])
 
         return version_check, file_check
 
     @staticmethod
-    def __compare_versions(local_version: str, remote_version: str) -> tuple[str, str, str]:
+    def __compare_versions(
+        local_version: str, remote_version: str
+    ) -> tuple[str, str, str]:
         """
         Compares the local version with the remote version and returns a tuple containing a comparison result message,
         a version information message, and a severity level.
@@ -52,9 +57,17 @@ class HealthCheck:
         if local_version == remote_version:
             return "Version is up to date.", f"Your Version: {local_version}", "INFO"
         elif local_version > remote_version:
-            return "Version is ahead of the repository.", f"Your Version: {local_version}, Repository Version: {remote_version}", "WARNING"
+            return (
+                "Version is ahead of the repository.",
+                f"Your Version: {local_version}, Repository Version: {remote_version}",
+                "WARNING",
+            )
         else:
-            return "Version is behind the repository.", f"Your Version: {local_version}, Repository Version: {remote_version}", "ERROR"
+            return (
+                "Version is behind the repository.",
+                f"Your Version: {local_version}, Repository Version: {remote_version}",
+                "ERROR",
+            )
 
     @staticmethod
     def __check_files(local_files: list, remote_files: list) -> tuple[str, str, str]:
@@ -71,9 +84,17 @@ class HealthCheck:
         """
         missing_files = set(remote_files) - set(local_files)
         if not missing_files:
-            return "All files are present.", f"Your files: {local_files} contain all the files in the repository.", "INFO"
+            return (
+                "All files are present.",
+                f"Your files: {local_files} contain all the files in the repository.",
+                "INFO",
+            )
         else:
-            return "You have missing files.", f"You are missing the following files: {missing_files}", "ERROR"
+            return (
+                "You have missing files.",
+                f"You are missing the following files: {missing_files}",
+                "ERROR",
+            )
 
 
 class DebugCheck:
@@ -97,16 +118,26 @@ class DebugCheck:
         try:
             contents = os.listdir(path)
             log_debug.debug(contents)
-            if any(file.endswith('.ignore') for file in contents):
+            if any(file.endswith(".ignore") for file in contents):
                 return "A `.sys.ignore` file was found - Ignoring", "WARNING"
-            if any(file.endswith('.zip') for file in contents) and not any(file.endswith('.exe') for file in contents):
+            if any(file.endswith(".zip") for file in contents) and not any(
+                file.endswith(".exe") for file in contents
+            ):
                 return "Only zip files - Missing EXE's due to no `ignore` file", "ERROR"
-            elif any(file.endswith('.zip') for file in contents) and any(file.endswith('.exe') for file in contents):
+            elif any(file.endswith(".zip") for file in contents) and any(
+                file.endswith(".exe") for file in contents
+            ):
                 return "Both zip and exe files - All good", "INFO"
             else:
-                return "SysInternal Binaries Not Found: Missing Files - Corruption detected", "ERROR"
+                return (
+                    "SysInternal Binaries Not Found: Missing Files - Corruption detected",
+                    "ERROR",
+                )
         except FileNotFoundError:
-            return "SysInternal Binaries Not Found: Missing Directory- Corruption detected", "ERROR"
+            return (
+                "SysInternal Binaries Not Found: Missing Directory- Corruption detected",
+                "ERROR",
+            )
         except Exception as e:
             return f"An Unexpected error occurred: {e}", "ERROR"
 
@@ -118,8 +149,12 @@ class DebugCheck:
         Returns:
             bool: True if the execution policy is unrestricted, False otherwise.
         """
-        result = subprocess.run(['powershell', '-Command', 'Get-ExecutionPolicy'], capture_output=True, text=True)
-        return result.stdout.strip().lower() == 'unrestricted'
+        result = subprocess.run(
+            ["powershell", "-Command", "Get-ExecutionPolicy"],
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip().lower() == "unrestricted"
 
     @staticmethod
     def cpu_info() -> tuple[str, str, str]:
@@ -129,7 +164,11 @@ class DebugCheck:
         Returns:
             tuple[str, str, str]: A tuple containing the CPU architecture, vendor ID, and model.
         """
-        return 'CPU Architecture: ' + platform.machine(), 'CPU Vendor Id: ' + platform.system(), 'CPU Model: ' + f"{platform.release()} {platform.version()}"
+        return (
+            "CPU Architecture: " + platform.machine(),
+            "CPU Vendor Id: " + platform.system(),
+            "CPU Model: " + f"{platform.release()} {platform.version()}",
+        )
 
 
 def debug():
@@ -160,10 +199,14 @@ def debug():
     # Check File integrity (Online)
     if HealthCheck().get_online_config():
         version_tuple, file_tuple = HealthCheck().get_online_config()
-        log_debug_funcs.get(version_tuple[2], log_debug.debug)("\n".join(version_tuple[0]).replace('\n', ''))
-        log_debug_funcs.get(file_tuple[2], log_debug.debug)("\n".join(file_tuple[0]).replace('\n', ''))
+        log_debug_funcs.get(version_tuple[2], log_debug.debug)(
+            "\n".join(version_tuple[0]).replace("\n", "")
+        )
+        log_debug_funcs.get(file_tuple[2], log_debug.debug)(
+            "\n".join(file_tuple[0]).replace("\n", "")
+        )
     message, type = DebugCheck.SysInternal_Binaries("SysInternal_Suite")
-    log_debug_funcs.get(type, log_debug.debug)("\n".join(message).replace('\n', ''))
+    log_debug_funcs.get(type, log_debug.debug)("\n".join(message).replace("\n", ""))
 
     # Check Admin
     if Check().admin():
@@ -195,7 +238,9 @@ def debug():
         log_debug.warning("Execution policy is not unrestricted")
 
     # Get Python Version
-    log_debug.info(f"Python Version Used: {sys.version.split()[0]} - Recommended Version is: ~")
+    log_debug.info(
+        f"Python Version Used: {sys.version.split()[0]} - Recommended Version is: ~"
+    )
 
     # Get Repo Path
     log_debug.info(os.path.abspath(__file__).removesuffix("\\CODE\\_debug.py"))

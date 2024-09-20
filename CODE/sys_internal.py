@@ -1,4 +1,5 @@
 from __lib_class import *
+
 log = Log(debug=DEBUG)
 log_funcs = {
     "INFO": log.info,
