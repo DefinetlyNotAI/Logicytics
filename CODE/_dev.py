@@ -1,5 +1,6 @@
 from __future__ import annotations
 from __lib_class import *
+
 log_dev = Log(debug=DEBUG)
 log_dev_funcs = {
     "INFO": log_dev.info,
@@ -8,6 +9,7 @@ log_dev_funcs = {
     "CRITICAL": log_dev.critical,
     None: log_dev.debug,
 }
+
 
 def open_file(file: str) -> None:
     """
@@ -103,8 +105,8 @@ def dev_checks() -> bool:
         remind = False
         if prompt_user("Is the update a major or minor upgrade (non-patch update)?"):
             if not prompt_user(
-                "Did You Build the EXE with Advanced Installer?",
-                "../Logicytics.aip",
+                    "Did You Build the EXE with Advanced Installer?",
+                    "../Logicytics.aip",
             ):
                 return False
             else:
@@ -117,7 +119,8 @@ def dev_checks() -> bool:
             return False
 
         update_json_file("config.json", files, "CURRENT_FILES")
-        update_json_file("config.json", input(f"Enter the new version of the project (Old version is {VERSION}):"), "VERSION")
+        update_json_file("config.json", input(f"Enter the new version of the project (Old version is {VERSION}):"),
+                         "VERSION")
         print(
             "Great Job! Please tick the box in the GitHub PR request for completing steps in --dev"
         )
@@ -135,9 +138,9 @@ def run_dev():
         test_files = []
         for item in os.listdir("../TESTS"):
             if (
-                item.lower().endswith(".py")
-                and item.lower() != "__init__.py"
-                and item.lower() != "test.py"
+                    item.lower().endswith(".py")
+                    and item.lower() != "__init__.py"
+                    and item.lower() != "test.py"
             ):
                 full_path = os.path.abspath(os.path.join("../TESTS", item))
                 test_files.append(full_path)

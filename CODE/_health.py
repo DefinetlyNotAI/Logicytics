@@ -1,5 +1,6 @@
 import shutil
 from __lib_class import *
+
 log_health = Log(debug=DEBUG)
 log_health_funcs = {
     "INFO": log_health.info,
@@ -8,6 +9,7 @@ log_health_funcs = {
     "CRITICAL": log_health.critical,
     None: log_health.debug,
 }
+
 
 def backup(directory: str, name: str) -> None:
     """

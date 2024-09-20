@@ -15,7 +15,6 @@ log_funcs = {
     None: log.debug,
 }
 
-# TODO Make sure all functions have a docstring and specific data types for parameters and return values
 
 """
 This python script is the main entry point for the tool called Logicytics.

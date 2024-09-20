@@ -1,4 +1,5 @@
 from __lib_class import *
+
 log_extra = Log(debug=DEBUG)
 log_extra_funcs = {
     "INFO": log_extra.info,
@@ -7,6 +8,7 @@ log_extra_funcs = {
     "CRITICAL": log_extra.critical,
     None: log_extra.debug,
 }
+
 
 def unzip(zip_path: str) -> None:
     """
@@ -45,7 +47,7 @@ def menu() -> None:
         ]
         log_extra.info("Available scripts:")
         for i, file in enumerate(files):
-            print(f"{i+1}. {file}")
+            print(f"{i + 1}. {file}")
     except FileNotFoundError:
         log_extra.error(
             "Error: ../EXTRA/EXTRA directory not found - Did you unzip it using --unzip-extra flag?"
