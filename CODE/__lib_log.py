@@ -207,7 +207,7 @@ class Log:
                 f"[{self.__timestamp()}] > ERROR:    | {self.__pad_message(str(message))}\n"
             )
 
-    def critical(self, message, FILECODE, ERRCODE, FUNCODE):
+    def critical(self, message, FILECODE: str, ERRCODE: str, FUNCODE: str):
         """
         Logs a critical message to the error log File.
 

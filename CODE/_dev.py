@@ -106,6 +106,17 @@ class Dev:
             return False
 
     def run_dev(self):
+        """
+        Executes the development checks and runs the test files.
+
+        This function performs the following steps:
+        1. Creates necessary directories.
+        2. Executes development checks to ensure guidelines and best practices are followed.
+        3. Collects and runs all Python test files in the `../TESTS` directory, excluding `__init__.py` and `test.py`.
+
+        Returns:
+            None
+        """
         Actions().mkdir()
         if self.__dev_checks():
             test_files = []

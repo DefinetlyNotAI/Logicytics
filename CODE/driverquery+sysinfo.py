@@ -11,6 +11,17 @@ log_funcs = {
 
 
 def command(file: str, com: str, message: str):
+    """
+    Executes a command and writes the output to a file.
+
+    Args:
+        file (str): The name of the file to write the command output to.
+        com (str): The command to be executed.
+        message (str): A message to be logged.
+
+    Returns:
+        None
+    """
     try:
         output = Actions.run_command(com)
         open(file, "w").write(output)

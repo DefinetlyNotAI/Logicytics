@@ -1,3 +1,6 @@
+# Optional wrapper that you can build manually, if you want to ignore the restrictions of python in the
+# main Logicytics file. This wrapper is not compulsory, but it is recommended to use it to build the exe.
+
 # Special wrapper that the exe Logicytics is made out of, not compulsory, just to ignore some restrictions of python.
 
 # If you modify please run this command:
