@@ -5,6 +5,7 @@ from _health import backup, update
 from _hide_my_tracks import attempt_hide
 from _zipper import Zip
 from __lib_class import *
+
 log = Log(debug=DEBUG)
 log_funcs = {
     "INFO": log.info,
@@ -60,7 +61,7 @@ if action == "debug":
 check_status.sys_internal_zip()
 
 if action == "dev":
-    Execute().execute_script("dev.py")
+    Execute().execute_script("_dev.py")
     input("Press Enter to exit...")
     exit(0)
 
