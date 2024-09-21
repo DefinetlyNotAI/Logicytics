@@ -195,8 +195,7 @@ else:
 
 # Zip generated files
 if action == "modded":
-
-    zip_loc_mod, hash_loc, deleted_files_zip, deleted_files_hash = zip_and_hash("..\\MODS", "MODS", action)
+    zip_loc_mod, hash_loc = Zip().and_hash("..\\MODS", "MODS", action)
     log.info(zip_loc_mod)
     zip_values = Zip().and_hash("..\\MODS", "MODS", action)
     if isinstance(zip_values, str):
@@ -214,14 +213,6 @@ else:
     zip_loc, hash_loc = zip_values
     log.info(zip_loc)
     log.debug(hash_loc)
-    log.debug(deleted_files_zip)
-    log.debug(deleted_files_hash)
-
-zip_loc, hash_loc, deleted_files_zip, deleted_files_hash = zip_and_hash("..\\CODE", "CODE", action)
-log.info(zip_loc)
-log.debug(hash_loc)
-log.debug(deleted_files_zip)
-log.debug(deleted_files_hash)
 
 # Attempt event log deletion
 attempt_hide()
@@ -240,3 +231,6 @@ if sub_action == "webhook":
 
 log.info("Exiting...")
 input("Press Enter to exit...")
+# Special feature that allows to create a `-` line only
+log.debug("*-*")
+exit(0)

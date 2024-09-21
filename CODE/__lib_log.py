@@ -153,8 +153,11 @@ class Log:
         Returns:
             None
         """
-        if self.level:
-            colorlog.debug(message)
+        if message == "*-*":
+            self.__only("|" + "-" * 19 + "|" + "-" * 13 + "|" + "-" * 152 + "|")
+        else:
+            if self.level:
+                colorlog.debug(message)
 
     def info(self, message):
         """
