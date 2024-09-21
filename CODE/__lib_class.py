@@ -13,16 +13,21 @@ from __lib_log import Log
 
 class Actions:
     @staticmethod
-    def open_file(file: str):
+    def open_file(file: str, use_full_path=False):
         """
         Opens a specified file using its default application in a cross-platform manner.
         Args:
             file (str): The path to the file to be opened.
+            use_full_path (bool): Whether to use the full path of the file or not.
         Returns:
             None
         """
         if not file == "":
-            file_path = os.path.realpath(file)
+            if use_full_path:
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                file_path = os.path.join(current_dir, file)
+            else:
+                file_path = os.path.realpath(file)
             try:
                 subprocess.call(file_path, shell=False)
             except Exception as e:
@@ -348,7 +353,7 @@ class Check:
                     zip_ref.extractall("SysInternal_Suite")
 
             elif ignore_file:
-                print(
+                Log(debug=DEBUG).debug(
                     "Found .sys.ignore file, skipping SysInternal_Suite zip extraction"
                 )
 
@@ -420,7 +425,7 @@ class Execute:
             subprocess.run(unblock_command, shell=False, check=True)
             Log().info("PS1 Script unblocked.")
         except Exception as err:
-            Log().critical(f"Failed to unblock script: {err}", "_L", "G", "E")
+            Log().critical(f"Failed to unblock script: {err}")
 
     @staticmethod
     def __run_python_script(script: str):
@@ -445,22 +450,14 @@ class Execute:
         Returns:
             None
         """
-        result = subprocess.Popen(
-            ["powershell.exe", ".\\" + script], stdout=subprocess.PIPE
-        ).communicate()[0]
-        lines = result.decode().splitlines()
+
+        result = subprocess.run(
+            ["powershell.exe", ".\\" + script], capture_output=True, text=True
+        )
+        lines = result.stdout.splitlines()
         ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
-
-        log_funcs = {
-            "INFO": Log().info,
-            "WARNING": Log().warning,
-            "ERROR": Log().error,
-            "CRITICAL": Log().critical,
-            None: Log().debug,
-        }
-
-        log_func = log_funcs.get(ID, Log().debug)
-        log_func("\n".join(lines).removeprefix(ID or ""))
+        if ID:
+            Log().string(str(lines), ID)
 
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()

@@ -155,13 +155,6 @@
 
 
 /* About Page Styles */
-.wiki-page {
-    padding: 40px;
-    max-width: 800px;
-    margin: auto;
-    text-align: left;
-    color: #333;
-}
 
 .wiki-page h1 {
     font-size: 48px;
@@ -274,7 +267,3 @@
 .install-link:hover {
     background-color: #ff6b81;
 }
-
-/*By Aban Mahmood Ahmed  Github: https://github.com/iamthgeawsomboi2099 */
-
-

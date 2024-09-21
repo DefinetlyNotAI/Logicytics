@@ -1,13 +1,6 @@
 from __lib_class import *
 
 log = Log(debug=DEBUG)
-log_funcs = {
-    "INFO": log.info,
-    "WARNING": log.warning,
-    "ERROR": log.error,
-    "CRITICAL": log.critical,
-    None: log.debug,
-}
 
 
 def command(file: str, com: str, message: str):

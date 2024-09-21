@@ -27,54 +27,28 @@ restrictions:
 ## Issues assignment
 
 I will be looking at the open issues, analyze them, and provide guidance on how to proceed.
-Issues can be assigned to anyone other than me** and contributors are welcome
+
+Issues can be assigned to anyone other than me and contributors are welcome
 to participate in the discussion and provide their input on how to best solve the issue,
 and even submit a PR if they want to.
+
 Please wait that the issue is ready to be worked on before submitting a PR.
 We don't want to waste your time.
 
-Please keep in mind that I am small and have limited resources and am not always able to respond immediately.
+Please keep in mind that I am a human and have limited resources and am not always able to respond immediately.
 I will try to provide feedback as soon as possible, but please be patient.
+
 If you don't get a response immediately,
 it doesn't mean that we are ignoring you or that we don't care about your issue or PR.
 We will get back to you as soon as we can.
 
 If you decide to pull a PR or fork the project, keep in mind that you should only add/edit the scripts you need to,
-leave the Explain.md file and the updating of the structure file to me.
+leave core files alone.
 
 ## Guidelines for Modifications 📃
 
 When making modifications to the Logicytics project,
-please adhere to the following guidelines to ensure consistency and maintainability:
-
-- Use a consistent indentation.
-- Add yourself to the [credits](CREDITS.md).
-- Make sure you have done all the necessary steps in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
-- Make sure you have tested your code.
-  - Keep all tests in the test directory
-- Make sure you have followed the instructions in the `--dev` flag.
-- Make sure the coding style is similar to previous code
-- Code is only written in `python, ps1 or batch` or is an `EXE` file (Highly Unadvised).
-- You have not modified or changed the wrapper [`Logicytics.py`](CODE/Logicytics.py)
-- All your code follows a strict logging system
-  - If python, imports the [logger](CODE/__lib_log.py) class and uses it, with adhering to the critical code policy in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
-    - For critical code you adhere to the `FILECODE-ERRORCODE-FUNCTIONCODE` formatting
-  - If non-python, each print statement starts with either `INFO:` `WARNING:` or `ERROR:` to allow the wrapper to inject the [logger](CODE/__lib_log.py) class.
-- Naming the code should follow these conventions:
-  - File is either a `.py`, `.exe`, `.ps1`, `.bat` file
-  - If it's a file to be run, shouldn't start with `_`
-  - If it's a extra file/extra library, to make sure it isn't run, should start with `_`
-- No code is allowed to have `if __name__ == '__main__'` or a similar functioning code
-- You must start with the following code if using python:
-
-```python
-from __lib_class import *  # This imports everything needed including the unique logger called by log
-
-# Your actual code, must be able to run without any interference by outside actions
-# USE log.info, log.error, log.warning and log.debug as well
-# You can choose to use any other of the code without issues
-
-```
+please adhere to the following guidelines on the WiKi page.
 
 ## Issues and labels 🛠️
 
@@ -108,13 +82,6 @@ Feature requests are welcome. But take a moment to find out whether your idea
 fits with the scope and aims of the project. It's up to _you_ to make a strong
 case to convince the project's developers of the merits of this feature. Please
 provide as much detail and context as possible.
-
-## Coding Standards 👨‍💻
-
-- **Code Style**: Follow the project's existing code style.
-- **Commit Messages**: Write clear and descriptive commit messages. Use the imperative mood (e.g., "Add feature" instead
-  of "Added feature").
-- **Documentation**: Update documentation as necessary to reflect any changes you make.
 
 ## Pull requests 📝
 
@@ -155,6 +122,6 @@ You also agree to the [Developer Certificate of Origin](DCO.md).
 - **Issues**: Use GitHub issues for bug reports and feature requests. Keep the discussion focused and relevant.
 - **Pull Requests**: Use pull requests to propose changes. Be prepared to discuss your changes and address any feedback.
 
-If you have any questions or need further clarification, please feel free to contact [us](mailto:Nirt_12023@outlook.com)
+If you have any questions or need further clarification, please feel free to [contact](mailto:Nirt_12023@outlook.com) me.
 
 Thank you for your contributions!

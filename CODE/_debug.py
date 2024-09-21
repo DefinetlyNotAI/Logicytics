@@ -8,18 +8,11 @@ from __lib_class import *
 
 if __name__ == "__main__":
     log_debug = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
-    log_debug_funcs = {
-        "INFO": log_debug.info,
-        "WARNING": log_debug.warning,
-        "ERROR": log_debug.error,
-        "CRITICAL": log_debug.critical,
-        None: log_debug.debug,
-    }
 
 
 class HealthCheck:
     def get_online_config(
-        self,
+            self,
     ) -> bool | tuple[tuple[str, str, str], tuple[str, str, str]]:
         """
         Retrieves configuration data from a remote repository and compares it with the local configuration.
@@ -41,7 +34,7 @@ class HealthCheck:
 
     @staticmethod
     def __compare_versions(
-        local_version: str, remote_version: str
+            local_version: str, remote_version: str
     ) -> tuple[str, str, str]:
         """
         Compares the local version with the remote version and returns a tuple containing a comparison result message,
@@ -121,11 +114,11 @@ class DebugCheck:
             if any(file.endswith(".ignore") for file in contents):
                 return "A `.sys.ignore` file was found - Ignoring", "WARNING"
             if any(file.endswith(".zip") for file in contents) and not any(
-                file.endswith(".exe") for file in contents
+                    file.endswith(".exe") for file in contents
             ):
                 return "Only zip files - Missing EXE's due to no `ignore` file", "ERROR"
             elif any(file.endswith(".zip") for file in contents) and any(
-                file.endswith(".exe") for file in contents
+                    file.endswith(".exe") for file in contents
             ):
                 return "Both zip and exe files - All good", "INFO"
             else:
@@ -199,14 +192,12 @@ def debug():
     # Check File integrity (Online)
     if HealthCheck().get_online_config():
         version_tuple, file_tuple = HealthCheck().get_online_config()
-        log_debug_funcs.get(version_tuple[2], log_debug.debug)(
-            "\n".join(version_tuple[0]).replace("\n", "")
+        log_debug.string(
+            "\n".join(version_tuple[0]).replace("\n", ""), version_tuple[2]
         )
-        log_debug_funcs.get(file_tuple[2], log_debug.debug)(
-            "\n".join(file_tuple[0]).replace("\n", "")
-        )
+        log_debug.string("\n".join(file_tuple[0]).replace("\n", ""), file_tuple[2])
     message, type = DebugCheck.SysInternal_Binaries("SysInternal_Suite")
-    log_debug_funcs.get(type, log_debug.debug)("\n".join(message).replace("\n", ""))
+    log_debug.string("\n".join(message).replace("\n", ""), type)
 
     # Check Admin
     if Check().admin():
@@ -252,4 +243,7 @@ def debug():
     log_debug.info(cpuModel)
 
     # Get config data
-    log_debug.info("Debug: " + DEBUG)
+    log_debug.info(f"Debug: {DEBUG}")
+
+
+debug()

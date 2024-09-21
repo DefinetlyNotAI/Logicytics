@@ -2,13 +2,6 @@ from __lib_class import *
 
 if __name__ == "__main__":
     log = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
-    log_funcs = {
-        "INFO": log.info,
-        "WARNING": log.warning,
-        "ERROR": log.error,
-        "CRITICAL": log.critical,
-        None: log.debug,
-    }
 
 
 def unzip(zip_path: str):
