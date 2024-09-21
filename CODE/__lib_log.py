@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import pathlib
 from datetime import datetime
@@ -210,15 +212,12 @@ class Log:
                 f"[{self.__timestamp()}] > ERROR:    | {self.__pad_message(str(message))}\n"
             )
 
-    def critical(self, message, FILECODE: str, ERRCODE: str, FUNCODE: str):
+    def critical(self, message):
         """
         Logs a critical message to the error log File.
 
         Args:
             message: The critical message to be logged.
-            FILECODE: The File code associated with the critical message.
-            ERRCODE: The error code associated with the critical message.
-            FUNCODE: The function code associated with the critical message.
 
         Returns:
             None
@@ -226,7 +225,29 @@ class Log:
         if self.color:
             colorlog.critical(message)
         with open(self.err_filename, "a") as f:
-            code = str(FILECODE) + ":" + str(ERRCODE) + ":" + str(FUNCODE)
             f.write(
-                f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message) + ' --> ' + code)}\n"
+                f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message))}\n"
             )
+
+    def string(self, Type: str, Message: str):
+        """
+        Uses the string given to log the message using the correspondent log type,
+        defaults to 'log.debug' if no log type is given.
+
+        Args:
+            Type: The string message to be used to replace XXX in 'log.XXX'.
+            Message: The message to be logged.
+
+        Returns:
+            None
+        """
+        log_funcs = {
+            "INFO": self.info,
+            "WARNING": self.warning,
+            "ERROR": self.error,
+            "DEBUG": self.debug,
+            None: print,
+        }
+
+        log_func = log_funcs.get(Type, Log().debug)
+        log_func("\n".join(Message))

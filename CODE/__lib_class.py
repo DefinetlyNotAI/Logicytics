@@ -13,7 +13,7 @@ from __lib_log import Log
 
 class Actions:
     @staticmethod
-    def open_file(file: str, use_full_path= False):
+    def open_file(file: str, use_full_path=False):
         """
         Opens a specified file using its default application in a cross-platform manner.
         Args:
@@ -425,7 +425,7 @@ class Execute:
             subprocess.run(unblock_command, shell=False, check=True)
             Log().info("PS1 Script unblocked.")
         except Exception as err:
-            Log().critical(f"Failed to unblock script: {err}", "_L", "G", "E")
+            Log().critical(f"Failed to unblock script: {err}")
 
     @staticmethod
     def __run_python_script(script: str):
@@ -450,22 +450,14 @@ class Execute:
         Returns:
             None
         """
-        result = subprocess.Popen(
-            ["powershell.exe", ".\\" + script], stdout=subprocess.PIPE
-        ).communicate()[0]
-        lines = result.decode().splitlines()
+
+        result = subprocess.run(
+            ["powershell.exe", ".\\" + script], capture_output=True, text=True
+        )
+        lines = result.stdout.splitlines()
         ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
-
-        log_funcs = {
-            "INFO": Log().info,
-            "WARNING": Log().warning,
-            "ERROR": Log().error,
-            "CRITICAL": Log().critical,
-            None: Log().debug,
-        }
-
-        log_func = log_funcs.get(ID, Log().debug)
-        log_func("\n".join(lines).removeprefix(ID or ""))
+        if ID:
+            Log().string(ID, str(lines))
 
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
