@@ -1,7 +1,6 @@
 import os
 import pathlib
 from datetime import datetime
-
 import colorlog
 
 
@@ -33,14 +32,16 @@ class Log:
             If you are using colorlog, DO NOT INITIALIZE IT MANUALLY, USE THE LOG CLASS PARAMETER'S INSTEAD.
             Sorry for any inconvenience that may arise.
 
-        Args: filename (str, optional): The name of the log File. Defaults to "Server.log". use_colorlog (bool,
-        optional): Whether to use colorlog. Defaults to True. debug (bool, optional): Whether to use the DEBUG level.
-        Defaults to False (which uses the INFO level). debug_color (str, optional): The color of the DEBUG level.
-        Defaults to "cyan". info_color (str, optional): The color of the info level. Defaults to "green".
-        warning_color (str, optional): The color of the warning level. Defaults to "yellow". error_color (str,
-        optional): The color of the error level. Defaults to "red". critical_color (str, optional): The color of the
-        critical level. Defaults to "red". colorlog_fmt_parameters (str, optional): The format of the log message.
-        Defaults to "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s".
+        Args:
+            filename (str, optional): The name of the log File. Defaults to "Server.log".
+            use_colorlog (bool, optional): Whether to use colorlog. Defaults to True.
+            debug (bool, optional): Whether to use the DEBUG level. Defaults to False (which uses the INFO level).
+            debug_color (str, optional): The color of the DEBUG level. Defaults to "cyan".
+            info_color (str, optional): The color of the info level. Defaults to "green".
+            warning_color (str, optional): The color of the warning level. Defaults to "yellow".
+            error_color (str, optional): The color of the error level. Defaults to "red".
+            critical_color (str, optional): The color of the critical level. Defaults to "red".
+            colorlog_fmt_parameters (str, optional): The format of the log message. Defaults to "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s".
 
         Returns:
             None
@@ -206,7 +207,7 @@ class Log:
                 f"[{self.__timestamp()}] > ERROR:    | {self.__pad_message(str(message))}\n"
             )
 
-    def critical(self, message, FILECODE, ERRCODE, FUNCODE):
+    def critical(self, message, FILECODE: str, ERRCODE: str, FUNCODE: str):
         """
         Logs a critical message to the error log File.
 

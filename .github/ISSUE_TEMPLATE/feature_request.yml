@@ -1,7 +1,7 @@
 name: Feature request
 description: Suggest new or updated features to include in Logicytics.
 title: "Suggest a new feature"
-labels: [ feature ]
+labels: ["progress:Unreviewed"]
 assignees: "DefinetlyNotAI"
 body:
   - type: checkboxes
@@ -13,7 +13,7 @@ body:
           required: true
         - label: I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md)
           required: true
-        - label: I would like to contribute this request.
+        - label: I would like to contribute this request (Optional).
           required: false
   - type: textarea
     id: proposal
@@ -27,6 +27,8 @@ body:
     attributes:
       label: Motivation and context
       description: Tell us why this change is needed or helpful, and what problems it may help solve.
+    validations:
+      required: true
   - type: dropdown
     id: importance
     attributes:
@@ -36,6 +38,6 @@ body:
         - High
         - Normal
         - Low
-        - Unknown
+        - N/A
     validations:
       required: true

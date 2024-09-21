@@ -1,11 +1,21 @@
+from __future__ import annotations
+
 import requests
-from __lib_actions import *
-from __lib_log import Log
+from __lib_class import *
+
+log = Log(debug=DEBUG)
+log_funcs = {
+    "INFO": log.info,
+    "WARNING": log.warning,
+    "ERROR": log.error,
+    "CRITICAL": log.critical,
+    None: log.debug,
+}
 
 
-class IP:
+class Scrape:
     @staticmethod
-    def __get_my_ip():
+    def __get_my_ip() -> str:
         """
         Retrieves the user's current IP address from the ipify API.
 
@@ -20,7 +30,7 @@ class IP:
             log.error(f"Failed to get IP: {e}")
 
     @staticmethod
-    def __get_location_data(ip, api_key=None):
+    def __get_location_data(ip: str, api_key=None) -> dict | None:
         """
         Retrieves location data for a given IP address.
 
@@ -42,7 +52,7 @@ class IP:
         except Exception as e:
             log.error(f"Failed to get location data: {e}")
 
-    def scraper(self):
+    def ip(self):
         """
         Scrapes the user's current IP address and its corresponding location data.
 
@@ -59,5 +69,4 @@ class IP:
         log.info("IP Scraper Executed")
 
 
-log = Log(debug=DEBUG)
-IP().scraper()
+Scrape().ip()

@@ -3,6 +3,7 @@
 ### Prerequisites
 
 <!-- Take a couple of minutes to help our maintainers work faster by checking of the pre-requisites. -->
+<!-- To tick the checkboxes replace the space with an 'x', so [ ] becomes [x] . -->
 
 - [ ] I have [searched](https://github.com/DefinetlyNotAI/Logicytics/pulls) for duplicate or closed issues.
 - [ ] I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md).
@@ -14,26 +15,29 @@
 ### PR Type
 
 <!-- Take a couple of minutes to help our maintainers work faster by telling us what is the PR guided on. -->
+<!-- To tick the checkboxes replace the space with an 'x', so [ ] becomes [x] . -->
 
 - [ ] Bug fix <!-- Non-Breaking Bug Fix - Usually relates to fixing an issue -->
 - [ ] New feature <!-- Non-Breaking Change that adds a new feature -->
 - [ ] Refactoring <!-- Non-Breaking Change that modifies existing code to refactor it to become more organised -->
 - [ ] Documentation
   update <!-- Non-Breaking Change that modifies existing documentation to refactor it or add extra comments - either wiki, md files or code is included here -->
-- [ ] ⚠️ Breaking change ⚠️ <!-- ⚠️ Breaking Bug Fix / New Addition that changes how Logicytics works ⚠️-->
+- [ ] ⚠️ Breaking change ⚠️ <!-- Breaking Bug Fix / New Addition that changes how Logicytics works -->
 
 ### Description
 
-<!--Provide a summary of the PR and what you expected to happen. -->
+<!-- REQUIRED: Provide a summary of the PR and what you expected to happen. -->
 
 ### Motivation and Context
 
-<!--Why is this PR required? What problem does it solve? -->
+<!-- REQUIRED: Why is this PR required? What problem does it solve? Why do you want to do it? -->
 
 ### Binaries
 
-<!--If you have any binaries built from the AIP, Upload them here -->
+<!-- If you have any binaries built from the AIP, Upload them here -->
+<!-- Optional for patch updates - To leave empty just type N/A. -->
+
 
 ### Issues Fixed
 
-<!--What issues will be fixed? (Format: "#50, #23" etc)  -->
+<!-- REQUIRED: What issues will be fixed? (Format: "#50, #23" etc.) if none exist type N/A -->

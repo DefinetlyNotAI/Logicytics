@@ -1,5 +1,13 @@
-from __lib_actions import *
-from __lib_log import *
+from __lib_class import *
+
+log = Log(debug=DEBUG)
+log_funcs = {
+    "INFO": log.info,
+    "WARNING": log.warning,
+    "ERROR": log.error,
+    "CRITICAL": log.critical,
+    None: log.debug,
+}
 
 
 def backup_windows_logs():
@@ -39,5 +47,4 @@ def backup_windows_logs():
     log.info("Log Miner completed.")
 
 
-log = Log(debug=DEBUG)
 backup_windows_logs()

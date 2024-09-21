@@ -1,7 +1,5 @@
-import os
 import shutil
-import subprocess
-import zipfile
+from __lib_class import *
 
 
 def backup(directory: str, name: str) -> None:
@@ -16,8 +14,8 @@ def backup(directory: str, name: str) -> None:
         None
     """
     # Check if backup exists, delete it if so
-    if os.path.exists("../Access/Backup/backup.zip"):
-        os.remove("../Access/Backup/backup.zip")
+    if os.path.exists(f"../ACCESS/BACKUP/{name}.zip"):
+        os.remove(f"../ACCESS/BACKUP/{name}.zip")
 
     # Zip the directory and move it to the backup location
     with zipfile.ZipFile(f"{name}.zip", "w") as zip_file:
@@ -27,10 +25,10 @@ def backup(directory: str, name: str) -> None:
                 relative_path = os.path.relpath(str(file_path), start=os.getcwd())
                 zip_file.write(str(file_path), arcname=relative_path)
 
-    shutil.move("backup.zip", "../Access/Backup")
+    shutil.move(f"{name}.zip", "../ACCESS/BACKUP")
 
 
-def update() -> None:
+def update() -> str:
     """
     Updates the repository by pulling the latest changes from the remote repository.
 
@@ -43,5 +41,6 @@ def update() -> None:
     current_dir = os.getcwd()
     parent_dir = os.path.dirname(current_dir)
     os.chdir(parent_dir)
-    subprocess.run(["git", "pull"])
+    output = subprocess.run(["git", "pull"]).stdout.decode()
     os.chdir(current_dir)
+    return output
