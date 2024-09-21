@@ -193,11 +193,11 @@ def debug():
     if HealthCheck().get_online_config():
         version_tuple, file_tuple = HealthCheck().get_online_config()
         log_debug.string(
-            version_tuple[2], "\n".join(version_tuple[0]).replace("\n", "")
+            "\n".join(version_tuple[0]).replace("\n", ""), version_tuple[2]
         )
-        log_debug.string(file_tuple[2], "\n".join(file_tuple[0]).replace("\n", ""))
+        log_debug.string("\n".join(file_tuple[0]).replace("\n", ""), file_tuple[2])
     message, type = DebugCheck.SysInternal_Binaries("SysInternal_Suite")
-    log_debug.string(type, "\n".join(message).replace("\n", ""))
+    log_debug.string("\n".join(message).replace("\n", ""), type)
 
     # Check Admin
     if Check().admin():
@@ -243,4 +243,6 @@ def debug():
     log_debug.info(cpuModel)
 
     # Get config data
-    log_debug.info("Debug: " + DEBUG)
+    log_debug.info(f"Debug: {DEBUG}")
+
+debug()
