@@ -7,13 +7,6 @@ from _zipper import Zip
 from __lib_class import *
 
 log = Log(debug=DEBUG)
-log_funcs = {
-    "INFO": log.info,
-    "WARNING": log.warning,
-    "ERROR": log.error,
-    "CRITICAL": log.critical,
-    None: log.debug,
-}
 
 
 """
@@ -63,7 +56,7 @@ check_status.sys_internal_zip()
 if action == "dev":
     current_dir = os.path.dirname(os.path.abspath(__file__))
     script_path = os.path.join(current_dir, "_dev.py")
-    process = subprocess.Popen(['cmd.exe', '/c', 'start', 'python', script_path])
+    process = subprocess.Popen(["cmd.exe", "/c", "start", "python", script_path])
     process.wait()
     exit(0)
 
@@ -116,7 +109,7 @@ log.info("Starting Logicytics...")
 
 # Check for privileges and errors
 if not check_status.admin():
-    log.critical("Please run this script with admin privileges", "_L", "P", "BA")
+    log.critical("Please run this script with admin privileges")
     if not DEBUG:
         input("Press Enter to exit...")
         exit(1)

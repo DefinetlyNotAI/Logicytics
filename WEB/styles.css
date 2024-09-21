@@ -155,13 +155,6 @@
 
 
 /* About Page Styles */
-.wiki-page {
-    padding: 40px;
-    max-width: 800px;
-    margin: auto;
-    text-align: left;
-    color: #333;
-}
 
 .wiki-page h1 {
     font-size: 48px;

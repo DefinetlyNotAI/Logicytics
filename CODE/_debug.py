@@ -8,13 +8,6 @@ from __lib_class import *
 
 if __name__ == "__main__":
     log_debug = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
-    log_debug_funcs = {
-        "INFO": log_debug.info,
-        "WARNING": log_debug.warning,
-        "ERROR": log_debug.error,
-        "CRITICAL": log_debug.critical,
-        None: log_debug.debug,
-    }
 
 
 class HealthCheck:
@@ -199,14 +192,12 @@ def debug():
     # Check File integrity (Online)
     if HealthCheck().get_online_config():
         version_tuple, file_tuple = HealthCheck().get_online_config()
-        log_debug_funcs.get(version_tuple[2], log_debug.debug)(
-            "\n".join(version_tuple[0]).replace("\n", "")
+        log_debug.string(
+            version_tuple[2], "\n".join(version_tuple[0]).replace("\n", "")
         )
-        log_debug_funcs.get(file_tuple[2], log_debug.debug)(
-            "\n".join(file_tuple[0]).replace("\n", "")
-        )
+        log_debug.string(file_tuple[2], "\n".join(file_tuple[0]).replace("\n", ""))
     message, type = DebugCheck.SysInternal_Binaries("SysInternal_Suite")
-    log_debug_funcs.get(type, log_debug.debug)("\n".join(message).replace("\n", ""))
+    log_debug.string(type, "\n".join(message).replace("\n", ""))
 
     # Check Admin
     if Check().admin():
