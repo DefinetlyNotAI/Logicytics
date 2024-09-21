@@ -229,7 +229,7 @@ class Log:
                 f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message))}\n"
             )
 
-    def string(self, Type: str, Message: str):
+    def string(self, Message: str, Type="Debug"):
         """
         Uses the string given to log the message using the correspondent log type,
         defaults to 'log.debug' if no log type is given.
@@ -241,13 +241,8 @@ class Log:
         Returns:
             None
         """
-        log_funcs = {
-            "INFO": self.info,
-            "WARNING": self.warning,
-            "ERROR": self.error,
-            "DEBUG": self.debug,
-            None: print,
-        }
-
-        log_func = log_funcs.get(Type, Log().debug)
-        log_func("\n".join(Message))
+        try:
+            getattr(self, Type.lower())(Message)
+        except AttributeError as AE:
+            self.warning(f"A wrong Log Type was called: {Type} not found. -> {AE}")
+            getattr(self, "Debug".lower())(Message)

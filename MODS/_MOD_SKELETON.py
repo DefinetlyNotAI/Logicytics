@@ -10,7 +10,7 @@ from __lib_class import *
 log = Log(debug=DEBUG)
 
 # Your actual code, must be able to run without any interference by outside actions
-# USE log.info, log.error, log.warning and log.debug as well
+# USE log.info, log.error, log.warning and log.debug and log.string as well
 # You can choose to use any other of the code without issues
 # Example of said code:-
 
@@ -32,6 +32,10 @@ def MOD_EXAMPLE() -> None:
     log.info("This is a info message")
     log.debug("This is a debug message")
     log.critical("This is a critical message")
+    # This is special, allows you to use strings to specify the log level, it is not recommended to use this
+    # Options are error, warning, info, debug, critical - It is case-insensitive and can be used with any of the log levels
+    # Defaults with the log level of debug
+    log.string("This is a random message", "ERROR")
     pass  # Your code here with proper logging like the above log options
 
 

@@ -457,7 +457,7 @@ class Execute:
         lines = result.stdout.splitlines()
         ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
         if ID:
-            Log().string(ID, str(lines))
+            Log().string(str(lines), ID)
 
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
