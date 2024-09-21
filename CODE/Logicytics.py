@@ -61,8 +61,10 @@ if action == "debug":
 check_status.sys_internal_zip()
 
 if action == "dev":
-    Execute().execute_script("_dev.py")
-    input("Press Enter to exit...")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    script_path = os.path.join(current_dir, "_dev.py")
+    process = subprocess.Popen(['cmd.exe', '/c', 'start', 'python', script_path])
+    process.wait()
     exit(0)
 
 if action == "extra":
@@ -220,10 +222,10 @@ attempt_hide()
 # Finish with sub actions
 log.info("Completed successfully")
 if sub_action == "shutdown":
-    log.info("Shutting down...")
+    log.info("Shutting down in 3 seconds...")
     subprocess.call("shutdown /s /t 3", shell=False)
 if sub_action == "reboot":
-    log.info("Rebooting...")
+    log.info("Rebooting in 3 seconds...")
     subprocess.call("shutdown /r /t 3", shell=False)
 if sub_action == "webhook":
     # Implement this in future
@@ -233,4 +235,3 @@ log.info("Exiting...")
 input("Press Enter to exit...")
 # Special feature that allows to create a `-` line only
 log.debug("*-*")
-exit(0)

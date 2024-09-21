@@ -42,7 +42,7 @@ class Dev:
             answer = input(question + " (yes or no):- ")
             if answer.lower() != "yes":
                 if file_to_open:
-                    Actions().open_file(file_to_open)
+                    subprocess.run(['start', file_to_open], shell=True)
                 print(
                     "Please ensure you fix the issues/problem and try again with the checklist."
                 )
@@ -134,9 +134,9 @@ class Dev:
             test_files = []
             for item in os.listdir("../TESTS"):
                 if (
-                    item.lower().endswith(".py")
-                    and item.lower() != "__init__.py"
-                    and item.lower() != "test.py"
+                        item.lower().endswith(".py")
+                        and item.lower() != "__init__.py"
+                        and item.lower() != "test.py"
                 ):
                     full_path = os.path.abspath(os.path.join("../TESTS", item))
                     test_files.append(full_path)
