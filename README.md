@@ -287,6 +287,20 @@ special tools
 
 Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
 
+### Want More?
+
+If there is a specific piece of data that you would like to see extracted by Logicytics,
+please let us know. We are constantly working to improve the project and adding new features.
+
+![Extra Tools](IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
+
+Other than mods, some prefixed tools are in the `EXTRA` directory, use the `--extra` flag to traverse these
+special tools
+
+### Want to create your own mod?
+
+Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
+
 ## 🌟 Conclusion 🌟
 
 Logicytics is a powerful tool that can extract a wide variety of data from a Windows system.
@@ -304,6 +318,12 @@ Always obtain proper authorization before extracting any data from a system.
 
 - [Project's Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
 - [Project's License](LICENSE)
+
+### License
+
+- [Developer Certificate of Origin](DCO.md)
+- [MIT License](LICENSE.md)
+
 
 ### 📃 GitHub Actions Status
 
