@@ -1,16 +1,9 @@
 from __lib_class import *
 
 log = Log(debug=DEBUG)
-log_funcs = {
-    "INFO": log.info,
-    "WARNING": log.warning,
-    "ERROR": log.error,
-    "CRITICAL": log.critical,
-    None: log.debug,
-}
 
 
-def get_password(ssid: str) -> str or None:
+def get_password(ssid: str) -> str:
     """
     Retrieves the password associated with a given Wi-Fi SSID.
 
@@ -27,13 +20,19 @@ def get_password(ssid: str) -> str or None:
         command_output = Actions().run_command(
             f'netsh wlan show profile name="{ssid}" key=clear'
         )
+        if command_output is None:
+            return "None"
         key_content = command_output.splitlines()
         for line in key_content:
             if "Key Content" in line:
                 return line.split(":")[1].strip()
-        return None
-    except Exception as e:
-        log.error(e)
+        return "None"
+    except UnicodeDecodeError as err:
+        log.error(err)
+        return "None"
+    except Exception as err:
+        log.error(err)
+        return "None"
 
 
 def get_wifi_names() -> list:
@@ -59,13 +58,16 @@ def get_wifi_names() -> list:
                 wifi_names.append(wifi_name)
         log.info(f"Retrieved {len(wifi_names)} Wi-Fi names.")
         return wifi_names
-    except Exception as e:
-        log.error(e)
+    except Exception as err:
+        log.error(err)
 
 
 with open("WiFi.txt", "w") as file:
     for name in get_wifi_names():
-        log.info(f"Retrieving password for {name.removeprefix(': ')}")
-        file.write(
-            f"Name: {name.removeprefix(': ')}, Password: {get_password(name.removeprefix(': '))}\n"
-        )
+        try:
+            log.info(f"Retrieving password for {name.removeprefix(': ')}")
+            file.write(
+                f"Name: {name.removeprefix(': ')}, Password: {get_password(name.removeprefix(': '))}\n"
+            )
+        except Exception as e:
+            log.error(e)

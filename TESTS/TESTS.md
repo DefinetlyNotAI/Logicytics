@@ -13,22 +13,18 @@ Here, we follow a specific naming convention to keep things organized and easily
     - `TEST_database.py` for testing database interactions.
 
 - **Test Classes and Methods:**
-    - **Test Classes:** Should start with `Test_` followed by the name of the class or functionality being tested. For
-      example:
+    - **Test Classes:** Should start with `Test_` followed by the name of the class or functionality being tested.
+    - **Test Methods:** Should be named with the prefix `test_` followed by a descriptive name that indicates what the
+      test is verifying. 
+    - For example:
       ```python
       import unittest
-      
       class TestLoginFunctionality(unittest.TestCase):
-          ...
-      ```
-    - **Test Methods:** Should be named with the prefix `test_` followed by a descriptive name that indicates what the
-      test is verifying. For example:
-      ```python
-      def test_successful_login(self):
-          ...
-      
-      def test_login_with_invalid_credentials(self):
-          ...
+          def test_successful_login(self):
+              ...
+          
+          def test_login_with_invalid_credentials(self):
+              ...
       ```
 
 Following these conventions helps in quickly identifying and understanding the purpose of each test and makes the
