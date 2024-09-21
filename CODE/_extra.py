@@ -1,9 +1,17 @@
-import os
-import subprocess
-import zipfile
+from __lib_class import *
+
+if __name__ == "__main__":
+    log = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
+    log_funcs = {
+        "INFO": log.info,
+        "WARNING": log.warning,
+        "ERROR": log.error,
+        "CRITICAL": log.critical,
+        None: log.debug,
+    }
 
 
-def unzip(zip_path: str) -> None:
+def unzip(zip_path: str):
     """
     Unzips a given zip file to a new directory with the same name.
 
@@ -24,7 +32,7 @@ def unzip(zip_path: str) -> None:
         z.extractall(path=str(output_dir))
 
 
-def menu() -> None:
+def menu():
     """
     Displays a menu of available executable scripts in the '../EXTRA/EXTRA' directory,
     prompts the user to select a script, and runs the selected script using PowerShell.
@@ -38,18 +46,18 @@ def menu() -> None:
             for f in os.listdir("../EXTRA/EXTRA")
             if f.endswith(".exe") or f.endswith(".ps1")
         ]
-        print("Available scripts:")
+        log.info("Available scripts:")
         for i, file in enumerate(files):
-            print(f"{i+1}. {file}")
+            print(f"{i + 1}. {file}")
     except FileNotFoundError:
-        print(
+        log.error(
             "Error: ../EXTRA/EXTRA directory not found - Did you unzip it using --unzip-extra flag?"
         )
         exit(1)
 
     choice = int(input("Enter the number of your chosen script: "))
     if files[choice - 1] == "CMD.ps1":
-        print("Redirecting to CMD.ps1...")
+        log.info("Redirecting to CMD.ps1...")
         subprocess.run(["powershell.exe", "../EXTRA/EXTRA/CMD.ps1"], check=True)
         command = input("Type the flags you want to Execute: ")
         subprocess.run(

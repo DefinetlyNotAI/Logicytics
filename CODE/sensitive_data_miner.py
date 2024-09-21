@@ -1,8 +1,15 @@
 import shutil
 from pathlib import Path
+from __lib_class import *
 
-from __lib_actions import *
-from __lib_log import *
+log = Log(debug=DEBUG)
+log_funcs = {
+    "INFO": log.info,
+    "WARNING": log.warning,
+    "ERROR": log.error,
+    "CRITICAL": log.critical,
+    None: log.debug,
+}
 
 # List of allowed extensions
 allowed_extensions = [
@@ -18,12 +25,15 @@ allowed_extensions = [
     ".text",
     ".docx",
     ".doc",
+    ".xls",
+    ".xlsx",
+    ".csv",
 ]
 
 
-class Miner:
+class Mine:
     @staticmethod
-    def __search_files_by_keyword(root, keyword):
+    def __search_files_by_keyword(root: Path, keyword: str) -> list:
         """
         Searches for files containing the specified keyword in their names.
         Args:
@@ -44,7 +54,7 @@ class Miner:
         return matching_files
 
     @staticmethod
-    def __copy_file(src_file_path, dst_file_path):
+    def __copy_file(src_file_path: Path, dst_file_path: Path):
         """
         Copies a file to the destination directory.
         Args:
@@ -61,7 +71,7 @@ class Miner:
         except Exception as e:
             log.error(f"Failed to copy file: {e}")
 
-    def __search_and_copy_files(self, keyword):
+    def __search_and_copy_files(self, keyword: str):
         """
         Searches for files containing the specified keyword in their names and copies them to a destination directory.
         Args:
@@ -100,5 +110,4 @@ class Miner:
         log.info("Sensitive Data Miner Completed")
 
 
-log = Log(debug=DEBUG)
-Miner().passwords()
+Mine().passwords()

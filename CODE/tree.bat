@@ -8,4 +8,6 @@ set "outputFile=Tree.txt"
 :: Run the tree command and redirect the output to the file
 powershell.exe -Command "& {tree /f C:\ | Out-File -FilePath '!outputFile!' -Force}"
 
+echo INFO: Saved !outputFile!
+
 endlocal

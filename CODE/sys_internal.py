@@ -1,5 +1,13 @@
-from __lib_actions import *
-from __lib_log import Log
+from __lib_class import *
+
+log = Log(debug=DEBUG)
+log_funcs = {
+    "INFO": log.info,
+    "WARNING": log.warning,
+    "ERROR": log.error,
+    "CRITICAL": log.critical,
+    None: log.debug,
+}
 
 sys_internal_executables = [
     "psfile.exe",
@@ -66,7 +74,6 @@ def check_sys_internal_dir() -> tuple[bool, bool]:
         return False, False
 
 
-log = Log(debug=DEBUG)
 if check_sys_internal_dir()[0]:
     sys_internal()
 elif check_sys_internal_dir()[0] is False and check_sys_internal_dir()[1] is True:

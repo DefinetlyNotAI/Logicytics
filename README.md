@@ -14,7 +14,6 @@ This comprehensive guide is here to equip you with everything you need to use Lo
     <a href="https://github.com/DefinetlyNotAI/Logicytics/actions"><img src="https://img.shields.io/github/check-runs/DefinetlyNotAI/Logicytics/main" alt="GitHub Branch Check Runs"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics"><img src="https://img.shields.io/github/repo-size/DefinetlyNotAI/Logicytics" alt="GitHub Repo Size"></a>
 </div>
-
 <div align="center">
     <a href="https://www.codefactor.io/repository/github/definetlynotai/logicytics"><img src="https://www.codefactor.io/repository/github/definetlynotai/logicytics/badge" alt="GitHub Repo CodeFactor Rating"></a>
     <a href="https://codeclimate.com/github/DefinetlyNotAI/Logicytics/maintainability"><img src="https://api.codeclimate.com/v1/badges/ae2c436af07d00aabf00/maintainability"  alt="GitHub Repo CodeClimate Rating"/></a>
@@ -29,8 +28,6 @@ I am saving for my college funds in MIT, and I need your help!
 Supporters will be placed in the Credits ❤️
 
 ## 🛠️ Installation and Setup 🛠️
-
-### Installation and Setup
 
 To install and setup Logicytics, follow these steps:
 
@@ -54,9 +51,9 @@ To install and setup Logicytics, follow these steps:
 
 - **Knowledge of Command Line**: The project uses command line options for the user to interact with the program. It is recommended to have a basic understanding of command line options.
 
-- **Optional**: Create a `.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the ZIP file (This is done for the OpenSSF score), if the `.ignore` file is not found, it will auto extract the details
+- **Optional**: Create a `.sys.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the ZIP file (This is done for the OpenSSF score), if the `.sys.ignore` file is not found, it will auto extract the details
 
-## Step-by-Step Installation</h2>
+## Step-by-Step Installation and Usage
 
 1) Install Python 🐍
 If you don't have Python installed, you can download it from the <a href="https://www.python.org/downloads/">official website</a>.
@@ -127,8 +124,6 @@ the API key for ipgeolocation.io, the DEBUG flag, the VERSION, and the CURRENT_F
 CURRENT_FILES is an array of strings that contains the names of the files you have, 
 this is used to later check for corruption or bugs.
 
-Do not modify CURRENT_FILES and VERSION unless you are developing extra add-ons
-
 ## 🚀 Advanced Usage 🚀
 
 ![Main 3 Directories](IMG/3dir.png "The 3 Main Directories")
@@ -185,24 +180,28 @@ If those don't work attempt:
 ### Support Resources
 
 Check out the [GitHub wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) for help
-Check out the [python documentation](https://docs.python.org/3/) for help
-Check out the [python subreddit](https://www.reddit.com/r/Python/) for help
-Check out the [python stackexchange](https://stackoverflow.com/questions/tagged/python) for help when developing mods
 
 ## 📊 Data Analysis 📊
 
 
 ## Data Extraction
-Dont recreate these as they are already done:
+
+Logicytics extracts a wide range of data points on a Windows system.
+
+Here are some of the data points that Logicytics extracts:
+
+Don't recreate these:
 
 <table>
   <tr>
     <th>File Name</th>
     <th>About</th>
+    <th>Important Note</th>
   </tr>
   <tr>
     <td>browser_miner.ps1</td>
-    <td>Mines all data related to browsers [Would love to be updated]</td>
+    <td>Mines all data related to browsers</td>
+    <td>Would love to be updated</td>
   </tr>
   <tr>
     <td>driverquery+sysinfo.py</td>
@@ -210,11 +209,12 @@ Dont recreate these as they are already done:
   </tr>
   <tr>
     <td>log_miner.py</td>
-    <td>Gets all logs from the windows device</td>
+    <td>Gets all logs from the Windows device</td>
   </tr>
   <tr>
     <td>media_backup.py</td>
     <td>Gets all media of the device in a neat folder</td>
+    <td>Would love to be updated</td>
   </tr>
   <tr>
     <td>netadapter.ps1</td>
@@ -222,11 +222,12 @@ Dont recreate these as they are already done:
   </tr>
   <tr>
     <td>online_ip_scraper.py</td>
-    <td>Uses https://api.ipify.org to get your IP [May not be of much use]</td>
+    <td>Uses https://api.ipify.org to get your IP</td>
+    <td>May not be of much use</td>
   </tr>
   <tr>
     <td>property_scraper.ps1</td>
-    <td>Gets all of the windows properties</td>
+    <td>Gets all the windows properties</td>
   </tr>
   <tr>
     <td>registry.py</td>
@@ -234,7 +235,8 @@ Dont recreate these as they are already done:
   </tr>
   <tr>
     <td>sensitive_data_miner.py</td>
-    <td>Copies all files that can be considered sensitive in a neat folder [Must be worked on - Super Janky]</td>
+    <td>Copies all files that can be considered sensitive in a neat folder</td>
+    <td>Must be worked on - Pretty inefficient</td>
   </tr>
   <tr>
     <td>ssh_miner.py</td>
@@ -260,9 +262,30 @@ Dont recreate these as they are already done:
     <td>wmic.py</td>
     <td>Logs and runs many wmic commands to gain sensitive data and information</td>
   </tr>
+  <tr>
+    <td>wifi_stealer.py</td>
+    <td>Gets the SSID and Password of all saved Wi-Fi</td>
+  </tr>
 </table>
 
-**Any file with `_` is not counted here**
+This is not an exhaustive list, 
+but it should give you a good idea of what data Logicytics is capable of extracting.
+
+**Any file with `_` is not counted here, do note they may range from custom libraries to special files/wrappers**
+
+### Want More?
+
+If there is a specific piece of data that you would like to see extracted by Logicytics,
+please let us know. We are constantly working to improve the project and adding new features.
+
+![Extra Tools](IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
+
+Other than mods, some prefixed tools are in the `EXTRA` directory, use the `--extra` flag to traverse these
+special tools
+
+### Want to create your own mod?
+
+Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
 
 ### Want More?
 

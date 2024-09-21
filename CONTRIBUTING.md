@@ -65,6 +65,16 @@ please adhere to the following guidelines to ensure consistency and maintainabil
   - If it's a file to be run, shouldn't start with `_`
   - If it's a extra file/extra library, to make sure it isn't run, should start with `_`
 - No code is allowed to have `if __name__ == '__main__'` or a similar functioning code
+- You must start with the following code if using python:
+
+```python
+from __lib_class import *  # This imports everything needed including the unique logger called by log
+
+# Your actual code, must be able to run without any interference by outside actions
+# USE log.info, log.error, log.warning and log.debug as well
+# You can choose to use any other of the code without issues
+
+```
 
 ## Issues and labels 🛠️
 

