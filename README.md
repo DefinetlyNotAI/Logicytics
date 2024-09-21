@@ -107,22 +107,19 @@ The config.json file is a JSON file that contains the following information:
     "WEBHOOK URL": "",
     "ipgeolocation.io API KEY": "",
     "DEBUG": true,
-    "VERSION": "2.0.0",
+    "VERSION": "X.X.X",
     "CURRENT_FILES": [
-        "browser_miner.ps1",
-        "driverquery.py",
-        "log_miner.py",
-        "media_backup.py",
-        "netadapter.ps1"
+      
     ]
 }
 ```
 
 The config.json file is used to store the webhook URL, 
-the API key for ipgeolocation.io, the DEBUG flag, the VERSION, and the CURRENT_FILES.
+the API key for `ipgeolocation.io`, the DEBUG flag, the VERSION, and the CURRENT_FILES.
 
 CURRENT_FILES is an array of strings that contains the names of the files you have, 
 this is used to later check for corruption or bugs.
+VERSION is the version of the project, used to check and pull for updates.
 
 ## 🚀 Advanced Usage 🚀
 
@@ -172,9 +169,8 @@ Some tips are:
 
 If those don't work attempt:
 - Try running the script with powershell instead of cmd, or vice versa
-- Try running the script in a different directory
-- Try running the script in a different computer
-- Try running the script with a different python version above 3.8
+- Try running the script in a different directory, computer or python version above 3.8
+  - Note: The version used to develop, test and run the script is 3.11
 - Try running the `--debug` flag and check the logs
 
 ### Support Resources
@@ -182,7 +178,6 @@ If those don't work attempt:
 Check out the [GitHub wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) for help
 
 ## 📊 Data Analysis 📊
-
 
 ## Data Extraction
 
@@ -272,16 +267,6 @@ This is not an exhaustive list,
 but it should give you a good idea of what data Logicytics is capable of extracting.
 
 **Any file with `_` is not counted here, do note they may range from custom libraries to special files/wrappers**
-
-### Want More?
-
-If there is a specific piece of data that you would like to see extracted by Logicytics,
-please let us know. We are constantly working to improve the project and adding new features.
-
-![Extra Tools](IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
-
-Other than mods, some prefixed tools are in the `EXTRA` directory, use the `--extra` flag to traverse these
-special tools
 
 ### Want to create your own mod?
 
