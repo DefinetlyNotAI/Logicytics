@@ -13,16 +13,21 @@ from __lib_log import Log
 
 class Actions:
     @staticmethod
-    def open_file(file: str):
+    def open_file(file: str, use_full_path= False):
         """
         Opens a specified file using its default application in a cross-platform manner.
         Args:
             file (str): The path to the file to be opened.
+            use_full_path (bool): Whether to use the full path of the file or not.
         Returns:
             None
         """
         if not file == "":
-            file_path = os.path.realpath(file)
+            if use_full_path:
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                file_path = os.path.join(current_dir, file)
+            else:
+                file_path = os.path.realpath(file)
             try:
                 subprocess.call(file_path, shell=False)
             except Exception as e:
@@ -348,7 +353,7 @@ class Check:
                     zip_ref.extractall("SysInternal_Suite")
 
             elif ignore_file:
-                print(
+                Log(debug=DEBUG).debug(
                     "Found .sys.ignore file, skipping SysInternal_Suite zip extraction"
                 )
 
