@@ -3,7 +3,8 @@ from __future__ import annotations
 import requests
 from __lib_class import *
 
-log = Log(debug=DEBUG)
+if __name__ == "__main__":
+    log = Log(debug=DEBUG)
 
 
 class Scrape:

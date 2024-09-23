@@ -1,6 +1,7 @@
 from __lib_class import *
 
-log = Log(debug=DEBUG)
+if __name__ == "__main__":
+    log = Log(debug=DEBUG)
 
 
 def command(file: str, com: str, message: str):

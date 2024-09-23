@@ -4,13 +4,14 @@
 # Other Imports if needed or necessary go here
 
 # This imports everything needed including the unique logger called by log - It is not optional
-# To know more check the WiKi [Section 2, Coding Rules and Tips, Custom Libraries, __lib_class.py]
+# To know more check the WiKi
 from __lib_class import *
 
-log = Log(debug=DEBUG)
+if __name__ == "__main__":
+    log = Log(debug=DEBUG)
 
 # Your actual code, must be able to run without any interference by outside actions
-# USE log.info, log.error, log.warning and log.debug and log.string as well
+# USE log.debug, log.info, log.error, log.warning and log.critical and log.string as well
 # You can choose to use any other of the code without issues
 # Example of said code:-
 

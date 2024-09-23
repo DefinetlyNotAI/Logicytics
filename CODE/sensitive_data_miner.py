@@ -6,7 +6,8 @@ import shutil
 from pathlib import Path
 from __lib_class import *
 
-log = Log(debug=DEBUG)
+if __name__ == "__main__":
+    log = Log(debug=DEBUG)
 
 
 # List of allowed extensions
