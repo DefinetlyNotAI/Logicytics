@@ -35,9 +35,19 @@
 ### Binaries
 
 <!-- If you have any binaries built from the AIP, Upload them here -->
-<!-- Optional for patch updates - To leave empty just type N/A. -->
+<!-- OPTIONAL for patch updates - To leave empty just type _N/A_ -->
 
+### Credit
+
+<!-- If this PR is a contribution, please mention the contributors here using the appropriate syntax. -->
+
+<!--
+### File-Created/CONTRIBUTION by MAIN-Username
+What you did, created, removed, refactored, fixed, or discovered.
+- [Your GitHub Username](https://github.com/YourGitHubLink)
+- [Your GitHub Username](https://github.com/YourGitHubLink) etc...
+-->
 
 ### Issues Fixed
 
-<!-- REQUIRED: What issues will be fixed? (Format: "#50, #23" etc.) if none exist type N/A -->
+<!-- REQUIRED: What issues will be fixed? (Format: "#50, #23" etc.) if none exist type _N/A_ -->
