@@ -350,7 +350,7 @@ class Check:
         return int(value.strip("\n")) == 1
 
     @staticmethod
-    def sys_internal_zip():
+    def sys_internal_zip() -> str:
         """
         Extracts the SysInternal_Suite zip file if it exists and is not ignored.
 
@@ -367,23 +367,30 @@ class Check:
             zip_file = os.path.exists("SysInternal_Suite/SysInternal_Suite.zip")
 
             if zip_file and not ignore_file:
-                print("Extracting SysInternal_Suite zip")
                 with zipfile.ZipFile(
                     "SysInternal_Suite/SysInternal_Suite.zip"
                 ) as zip_ref:
                     zip_ref.extractall("SysInternal_Suite")
+                return "SysInternal_Suite zip extracted"
 
             elif ignore_file:
-                Log(debug=DEBUG).debug(
+                return (
                     "Found .sys.ignore file, skipping SysInternal_Suite zip extraction"
                 )
 
         except Exception as err:
-            print(f"Failed to unzip SysInternal_Suite: {err}", "_L", "G", "CS")
             exit(f"Failed to unzip SysInternal_Suite: {err}")
 
 
 class Execute:
+    def __init__(self, log_variable=None):
+        """
+        Initializes an instance of the class.
+
+        Sets the Actions attribute to an instance of the Actions class.
+        """
+        self.log_variable = log_variable
+
     @staticmethod
     def get_files(directory: str, file_list: list) -> list:
         """
@@ -403,7 +410,7 @@ class Execute:
                 file_list.append(filename)
         return file_list
 
-    def file(self, execution_list: list, Index: int):
+    def file(self, execution_list: list, Index: int) -> tuple[str, str]:
         # IT IS USED, DO NOT REMOVE
         """
         Executes a file from the execution list at the specified index.
@@ -413,27 +420,31 @@ class Execute:
         Returns:
             None
         """
-        self.execute_script(execution_list[Index])
-        Log().info(f"{execution_list[Index]} executed")
+        log_message = self.execute_script(execution_list[Index])
+        return log_message, f"{execution_list[Index]} executed"
 
-    def execute_script(self, script: str):
+    def execute_script(self, script: str, logvar=None) -> str:
         """
         Executes a script file and handles its output based on the file extension.
         Parameters:
             script (str): The path of the script file to be executed.
+            logvar (Log): The log variable to use for logging.
         Returns:
             None
         """
+        if logvar is None:
+            logvar = self.log_variable
         if script.endswith(".ps1"):
-            self.__unblock_ps1_script(script)
-            self.__run_other_script(script)
+            log_message = self.__unblock_ps1_script(script)
+            self.__run_other_script(script, logvar)
         elif script.endswith(".py"):
             self.__run_python_script(script)
         else:
-            self.__run_other_script(script)
+            self.__run_other_script(script, logvar)
+        return log_message
 
     @staticmethod
-    def __unblock_ps1_script(script: str):
+    def __unblock_ps1_script(script: str) -> str:
         """
         Unblocks and runs a PowerShell (.ps1) script.
         Parameters:
@@ -444,9 +455,9 @@ class Execute:
         try:
             unblock_command = f'powershell.exe -Command "Unblock-File -Path {script}"'
             subprocess.run(unblock_command, shell=False, check=True)
-            Log().info("PS1 Script unblocked.")
+            return "PS1 Script unblocked."
         except Exception as err:
-            Log().critical(f"Failed to unblock script: {err}")
+            exit(f"Failed to unblock script: {err}")
 
     @staticmethod
     def __run_python_script(script: str):
@@ -460,10 +471,11 @@ class Execute:
         result = subprocess.Popen(
             ["python", script], stdout=subprocess.PIPE
         ).communicate()[0]
+        # LEAVE AS PRINT
         print(result.decode())
 
     @staticmethod
-    def __run_other_script(script: str):
+    def __run_other_script(script: str, logvar=None):
         """
         Runs a script with other extensions and logs output based on its content.
         Parameters:
@@ -477,8 +489,8 @@ class Execute:
         )
         lines = result.stdout.splitlines()
         ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
-        if ID:
-            Log().string(str(lines), ID)
+        if ID and logvar:
+            logvar.string(str(lines), ID)
 
 
 WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
