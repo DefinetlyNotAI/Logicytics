@@ -7,13 +7,6 @@ from _zipper import Zip
 from __lib_class import *
 
 log = Log(debug=DEBUG)
-log_funcs = {
-    "INFO": log.info,
-    "WARNING": log.warning,
-    "ERROR": log.error,
-    "CRITICAL": log.critical,
-    None: log.debug,
-}
 
 
 """
@@ -61,8 +54,10 @@ if action == "debug":
 check_status.sys_internal_zip()
 
 if action == "dev":
-    Execute().execute_script("_dev.py")
-    input("Press Enter to exit...")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    script_path = os.path.join(current_dir, "_dev.py")
+    process = subprocess.Popen(["cmd.exe", "/c", "start", "python", script_path])
+    process.wait()
     exit(0)
 
 if action == "extra":
@@ -114,7 +109,7 @@ log.info("Starting Logicytics...")
 
 # Check for privileges and errors
 if not check_status.admin():
-    log.critical("Please run this script with admin privileges", "_L", "P", "BA")
+    log.critical("Please run this script with admin privileges")
     if not DEBUG:
         input("Press Enter to exit...")
         exit(1)
@@ -195,8 +190,7 @@ else:
 
 # Zip generated files
 if action == "modded":
-
-    zip_loc_mod, hash_loc, deleted_files_zip, deleted_files_hash = zip_and_hash("..\\MODS", "MODS", action)
+    zip_loc_mod, hash_loc = Zip().and_hash("..\\MODS", "MODS", action)
     log.info(zip_loc_mod)
     zip_values = Zip().and_hash("..\\MODS", "MODS", action)
     if isinstance(zip_values, str):
@@ -214,14 +208,6 @@ else:
     zip_loc, hash_loc = zip_values
     log.info(zip_loc)
     log.debug(hash_loc)
-    log.debug(deleted_files_zip)
-    log.debug(deleted_files_hash)
-
-zip_loc, hash_loc, deleted_files_zip, deleted_files_hash = zip_and_hash("..\\CODE", "CODE", action)
-log.info(zip_loc)
-log.debug(hash_loc)
-log.debug(deleted_files_zip)
-log.debug(deleted_files_hash)
 
 # Attempt event log deletion
 attempt_hide()
@@ -229,10 +215,10 @@ attempt_hide()
 # Finish with sub actions
 log.info("Completed successfully")
 if sub_action == "shutdown":
-    log.info("Shutting down...")
+    log.info("Shutting down in 3 seconds...")
     subprocess.call("shutdown /s /t 3", shell=False)
 if sub_action == "reboot":
-    log.info("Rebooting...")
+    log.info("Rebooting in 3 seconds...")
     subprocess.call("shutdown /r /t 3", shell=False)
 if sub_action == "webhook":
     # Implement this in future
@@ -240,3 +226,5 @@ if sub_action == "webhook":
 
 log.info("Exiting...")
 input("Press Enter to exit...")
+# Special feature that allows to create a `-` line only
+log.debug("*-*")

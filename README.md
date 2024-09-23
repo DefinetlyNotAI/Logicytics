@@ -6,7 +6,7 @@ Crafted with Python 🐍, it's an actively developed project that is dedicated
 to gathering as much sensitive data as possible and packaging it neatly into a ZIP file 📦.
 This comprehensive guide is here to equip you with everything you need to use Logicytics effectively.
 
-<div align="center">
+<div style="text-align:center;" align="center">
     <a href="https://github.com/DefinetlyNotAI/Logicytics/issues"><img src="https://img.shields.io/github/issues/DefinetlyNotAI/Logicytics" alt="GitHub Issues"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics/tags"><img src="https://img.shields.io/github/v/tag/DefinetlyNotAI/Logicytics" alt="GitHub Tag"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics/graphs/commit-activity"><img src="https://img.shields.io/github/commit-activity/t/DefinetlyNotAI/Logicytics" alt="GitHub Commit Activity"></a>
@@ -14,11 +14,11 @@ This comprehensive guide is here to equip you with everything you need to use Lo
     <a href="https://github.com/DefinetlyNotAI/Logicytics/actions"><img src="https://img.shields.io/github/check-runs/DefinetlyNotAI/Logicytics/main" alt="GitHub Branch Check Runs"></a>
     <a href="https://github.com/DefinetlyNotAI/Logicytics"><img src="https://img.shields.io/github/repo-size/DefinetlyNotAI/Logicytics" alt="GitHub Repo Size"></a>
 </div>
-<div align="center">
+<div style="text-align:center;" align="center">
     <a href="https://www.codefactor.io/repository/github/definetlynotai/logicytics"><img src="https://www.codefactor.io/repository/github/definetlynotai/logicytics/badge" alt="GitHub Repo CodeFactor Rating"></a>
     <a href="https://codeclimate.com/github/DefinetlyNotAI/Logicytics/maintainability"><img src="https://api.codeclimate.com/v1/badges/ae2c436af07d00aabf00/maintainability"  alt="GitHub Repo CodeClimate Rating"/></a>
-    <a href="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics"><img src="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics/badge"  alt="OpenSSF Scorecard"/></a>
-    <a href="https://www.bestpractices.dev/projects/9451"><img src="https://www.bestpractices.dev/projects/9451/badge"></a>
+    <a href="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics"><img src="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics/badge"  alt="OpenSSF Best Practices Score"/></a>
+    <a href="https://www.bestpractices.dev/projects/9451"><img src="https://www.bestpractices.dev/projects/9451/badge" alt="OpenSSF Best Practices Badge"></a>
 </div>
 
 ## ❤️ Support Me ❤️
@@ -107,22 +107,19 @@ The config.json file is a JSON file that contains the following information:
     "WEBHOOK URL": "",
     "ipgeolocation.io API KEY": "",
     "DEBUG": true,
-    "VERSION": "2.0.0",
+    "VERSION": "X.X.X",
     "CURRENT_FILES": [
-        "browser_miner.ps1",
-        "driverquery.py",
-        "log_miner.py",
-        "media_backup.py",
-        "netadapter.ps1"
+      
     ]
 }
 ```
 
 The config.json file is used to store the webhook URL, 
-the API key for ipgeolocation.io, the DEBUG flag, the VERSION, and the CURRENT_FILES.
+the API key for `ipgeolocation.io`, the DEBUG flag, the VERSION, and the CURRENT_FILES.
 
 CURRENT_FILES is an array of strings that contains the names of the files you have, 
 this is used to later check for corruption or bugs.
+VERSION is the version of the project, used to check and pull for updates.
 
 ## 🚀 Advanced Usage 🚀
 
@@ -172,9 +169,8 @@ Some tips are:
 
 If those don't work attempt:
 - Try running the script with powershell instead of cmd, or vice versa
-- Try running the script in a different directory
-- Try running the script in a different computer
-- Try running the script with a different python version above 3.8
+- Try running the script in a different directory, computer or python version above 3.8
+  - Note: The version used to develop, test and run the script is 3.11
 - Try running the `--debug` flag and check the logs
 
 ### Support Resources
@@ -182,7 +178,6 @@ If those don't work attempt:
 Check out the [GitHub wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) for help
 
 ## 📊 Data Analysis 📊
-
 
 ## Data Extraction
 
@@ -273,16 +268,6 @@ but it should give you a good idea of what data Logicytics is capable of extract
 
 **Any file with `_` is not counted here, do note they may range from custom libraries to special files/wrappers**
 
-### Want More?
-
-If there is a specific piece of data that you would like to see extracted by Logicytics,
-please let us know. We are constantly working to improve the project and adding new features.
-
-![Extra Tools](IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
-
-Other than mods, some prefixed tools are in the `EXTRA` directory, use the `--extra` flag to traverse these
-special tools
-
 ### Want to create your own mod?
 
 Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
@@ -322,7 +307,7 @@ Always obtain proper authorization before extracting any data from a system.
 ### License
 
 - [Developer Certificate of Origin](DCO.md)
-- [MIT License](LICENSE.md)
+- [MIT License](LICENSE)
 
 
 ### 📃 GitHub Actions Status

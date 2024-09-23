@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import pathlib
 from datetime import datetime
@@ -153,8 +155,11 @@ class Log:
         Returns:
             None
         """
-        if self.level:
-            colorlog.debug(message)
+        if message == "*-*":
+            self.__only("|" + "-" * 19 + "|" + "-" * 13 + "|" + "-" * 152 + "|")
+        else:
+            if self.level:
+                colorlog.debug(message)
 
     def info(self, message):
         """
@@ -207,15 +212,12 @@ class Log:
                 f"[{self.__timestamp()}] > ERROR:    | {self.__pad_message(str(message))}\n"
             )
 
-    def critical(self, message, FILECODE: str, ERRCODE: str, FUNCODE: str):
+    def critical(self, message):
         """
         Logs a critical message to the error log File.
 
         Args:
             message: The critical message to be logged.
-            FILECODE: The File code associated with the critical message.
-            ERRCODE: The error code associated with the critical message.
-            FUNCODE: The function code associated with the critical message.
 
         Returns:
             None
@@ -223,7 +225,24 @@ class Log:
         if self.color:
             colorlog.critical(message)
         with open(self.err_filename, "a") as f:
-            code = str(FILECODE) + ":" + str(ERRCODE) + ":" + str(FUNCODE)
             f.write(
-                f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message) + ' --> ' + code)}\n"
+                f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message))}\n"
             )
+
+    def string(self, Message: str, Type="Debug"):
+        """
+        Uses the string given to log the message using the correspondent log type,
+        defaults to 'log.debug' if no log type is given.
+
+        Args:
+            Type: The string message to be used to replace XXX in 'log.XXX'.
+            Message: The message to be logged.
+
+        Returns:
+            None
+        """
+        try:
+            getattr(self, Type.lower())(Message)
+        except AttributeError as AE:
+            self.warning(f"A wrong Log Type was called: {Type} not found. -> {AE}")
+            getattr(self, "Debug".lower())(Message)
