@@ -290,6 +290,27 @@ class Actions:
         os.makedirs("../ACCESS/DATA/Hashes", exist_ok=True)
         os.makedirs("../ACCESS/DATA/Zip", exist_ok=True)
 
+    @staticmethod
+    def unzip(zip_path: str):
+        """
+        Unzips a given zip file to a new directory with the same name.
+
+        Args:
+            zip_path (str): The path to the zip file to be unzipped.
+
+        Returns:
+            None
+        """
+        # Get the base name of the zip file
+        base_name = os.path.splitext(os.path.basename(zip_path))[0]
+
+        # Create a new directory with the same name as the zip file
+        output_dir = os.path.join(os.path.dirname(zip_path), base_name)
+        os.makedirs(output_dir, exist_ok=True)
+
+        with zipfile.ZipFile(zip_path, "r") as z:
+            z.extractall(path=str(output_dir))
+
 
 class Check:
     def __init__(self):
