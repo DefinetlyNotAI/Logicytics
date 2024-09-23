@@ -21,8 +21,7 @@ jobs:
       - name: verify-less
         uses: actions-cool/verify-files-modify@080c71272de20d858edaca58eac6dea270cf890e # main
         with:
-          forbid-files: 'README.md, CODE/Logicytics.exe, CODE/Logicytics.py'
-          forbid-paths: '.github/ISSUE_TEMPLATE/, CODE/SysInternal_Suite/, CODE/_internal/'
+          forbid-paths: 'CODE/SysInternal_Suite/, CODE/_internal/'
           assignees: 'DefinetlyNotAI'
           comment: |
             🚨 Hi @${{ github.event.pull_request.user.login }}. Thanks for your contribution, as the `default.less` file is currently being upgraded or is locked from contribution, changes will not be accepted for the time being. To ignore this message please reopen the PR without editing any files!🚨
