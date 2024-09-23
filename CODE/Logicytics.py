@@ -1,5 +1,4 @@
 import threading
-from _debug import debug
 from _extra import menu, unzip
 from _health import backup, update
 from _hide_my_tracks import attempt_hide
@@ -47,7 +46,10 @@ else:
 
 # Special actions -> Quit
 if action == "debug":
-    debug()
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    script_path = os.path.join(current_dir, "_debug.py")
+    process = subprocess.Popen(["cmd.exe", "/c", "start", "python", script_path])
+    process.wait()
     input("Press Enter to exit...")
     exit(0)
 
