@@ -5,7 +5,8 @@ from _health import backup, update
 from _hide_my_tracks import attempt_hide
 from _zipper import Zip
 
-log = Log(debug=DEBUG)
+if __name__ == "__main__":
+    log = Log(debug=DEBUG)
 
 """
 This python script is the main entry point for the tool called Logicytics.
