@@ -58,7 +58,9 @@ if action == "debug":
     log.info("Opening debug menu...")
     special_run("_debug.py")
 
-check_status.sys_internal_zip()
+messages = check_status.sys_internal_zip()
+if messages:
+    log.debug(messages)
 
 if action == "dev":
     log.info("Opening developer menu...")
@@ -166,8 +168,11 @@ log.debug(execution_list)
 
 # Check weather to use threading or not
 if action == "threaded":
-    log.warning("Threading does not support sensitive data miner yet, ignoring")
-    execution_list.remove("sensitive_data_miner.py")
+    def threaded_execution(execution_list_thread, index_thread):
+        thread_log = Execute(log_variable=log).file(execution_list_thread, index_thread)
+        if thread_log[0]:
+            log.info(thread_log[0])
+        log.info(thread_log[1])
     threads = []
     for index, file in enumerate(execution_list):
         thread = threading.Thread(
@@ -184,7 +189,7 @@ if action == "threaded":
         thread.join()
 else:
     for file in range(len(execution_list)):  # Loop through List
-        Execute().execute_script(execution_list[file])
+        log.info(Execute(log_variable=log).execute_script(execution_list[file]))
         log.info(f"{execution_list[file]} executed")
 
 # Zip generated files
