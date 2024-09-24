@@ -1,13 +1,12 @@
 import threading
-from _debug import debug
-from _extra import menu, unzip
+
+from __lib_class import *
 from _health import backup, update
 from _hide_my_tracks import attempt_hide
 from _zipper import Zip
-from __lib_class import *
 
-log = Log(debug=DEBUG)
-
+if __name__ == "__main__":
+    log = Log(debug=DEBUG)
 
 """
 This python script is the main entry point for the tool called Logicytics.
@@ -45,26 +44,31 @@ else:
     input("Press Enter to exit...")
     exit(1)
 
+
+def special_run(file_path: str):
+    sr_current_dir = os.path.dirname(os.path.abspath(__file__))
+    sr_script_path = os.path.join(sr_current_dir, file_path)
+    sr_process = subprocess.Popen(["cmd.exe", "/c", "start", "python", sr_script_path])
+    sr_process.wait()
+    exit(0)
+
+
 # Special actions -> Quit
 if action == "debug":
-    debug()
-    input("Press Enter to exit...")
-    exit(0)
+    log.info("Opening debug menu...")
+    special_run("_debug.py")
 
-check_status.sys_internal_zip()
+messages = check_status.sys_internal_zip()
+if messages:
+    log.debug(messages)
 
 if action == "dev":
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    script_path = os.path.join(current_dir, "_dev.py")
-    process = subprocess.Popen(["cmd.exe", "/c", "start", "python", script_path])
-    process.wait()
-    exit(0)
+    log.info("Opening developer menu...")
+    special_run("_dev.py")
 
 if action == "extra":
     log.info("Opening extra tools menu...")
-    menu()
-    input("Press Enter to exit...")
-    exit(0)
+    special_run("_extra.py")
 
 if action == "update":
     log.info("Updating...")
@@ -98,14 +102,12 @@ if action == "unzip_extra":
         "caution"
     )
     log.info("Unzipping...")
-    unzip("..\\EXTRA\\EXTRA.zip")
+    Actions().unzip("..\\EXTRA\\EXTRA.zip")
     log.info("Unzip complete!")
     input("Press Enter to exit...")
     exit(0)
 
-
 log.info("Starting Logicytics...")
-
 
 # Check for privileges and errors
 if not check_status.admin():
@@ -162,13 +164,22 @@ if action == "modded":
     # Add all files in MODS to execution list
     execution_list = Execute.get_files("../MODS", execution_list)
 
-
 log.debug(execution_list)
 
-# Check weather to use threading or not
+# Check weather to use threading or not, as well as execute code
 if action == "threaded":
-    log.warning("Threading does not support sensitive data miner yet, ignoring")
-    execution_list.remove("sensitive_data_miner.py")
+
+    def threaded_execution(execution_list_thread, index_thread):
+        try:
+            thread_log = Execute().file(execution_list_thread, index_thread)
+            if thread_log[0]:
+                log.info(thread_log[0])
+            log.info(thread_log[1])
+        except UnicodeDecodeError as err:
+            log.error(f"Error in thread: {err}")
+        except Exception as err:
+            log.error(f"Error in thread: {err}")
+
     threads = []
     for index, file in enumerate(execution_list):
         thread = threading.Thread(
@@ -184,9 +195,14 @@ if action == "threaded":
     for thread in threads:
         thread.join()
 else:
-    for file in range(len(execution_list)):  # Loop through List
-        Execute().execute_script(execution_list[file])
-        log.info(f"{execution_list[file]} executed")
+    try:
+        for file in range(len(execution_list)):  # Loop through List
+            log.info(Execute().execute_script(execution_list[file]))
+            log.info(f"{execution_list[file]} executed")
+    except UnicodeDecodeError as e:
+        log.error(f"Error in thread: {e}")
+    except Exception as e:
+        log.error(f"Error in thread: {e}")
 
 # Zip generated files
 if action == "modded":
@@ -226,5 +242,4 @@ if sub_action == "webhook":
 
 log.info("Exiting...")
 input("Press Enter to exit...")
-# Special feature that allows to create a `-` line only
 log.debug("*-*")

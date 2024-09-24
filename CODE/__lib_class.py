@@ -290,6 +290,27 @@ class Actions:
         os.makedirs("../ACCESS/DATA/Hashes", exist_ok=True)
         os.makedirs("../ACCESS/DATA/Zip", exist_ok=True)
 
+    @staticmethod
+    def unzip(zip_path: str):
+        """
+        Unzips a given zip file to a new directory with the same name.
+
+        Args:
+            zip_path (str): The path to the zip file to be unzipped.
+
+        Returns:
+            None
+        """
+        # Get the base name of the zip file
+        base_name = os.path.splitext(os.path.basename(zip_path))[0]
+
+        # Create a new directory with the same name as the zip file
+        output_dir = os.path.join(os.path.dirname(zip_path), base_name)
+        os.makedirs(output_dir, exist_ok=True)
+
+        with zipfile.ZipFile(zip_path, "r") as z:
+            z.extractall(path=str(output_dir))
+
 
 class Check:
     def __init__(self):
@@ -346,19 +367,20 @@ class Check:
             zip_file = os.path.exists("SysInternal_Suite/SysInternal_Suite.zip")
 
             if zip_file and not ignore_file:
-                print("Extracting SysInternal_Suite zip")
                 with zipfile.ZipFile(
                     "SysInternal_Suite/SysInternal_Suite.zip"
                 ) as zip_ref:
                     zip_ref.extractall("SysInternal_Suite")
+                if __name__ == "__main__":
+                    Log(debug=DEBUG).debug("SysInternal_Suite zip extracted")
 
             elif ignore_file:
-                Log(debug=DEBUG).debug(
-                    "Found .sys.ignore file, skipping SysInternal_Suite zip extraction"
-                )
+                if __name__ == "__main__":
+                    Log(debug=DEBUG).debug(
+                        "Found .sys.ignore file, skipping SysInternal_Suite zip extraction"
+                    )
 
         except Exception as err:
-            print(f"Failed to unzip SysInternal_Suite: {err}", "_L", "G", "CS")
             exit(f"Failed to unzip SysInternal_Suite: {err}")
 
 
@@ -393,15 +415,14 @@ class Execute:
             None
         """
         self.execute_script(execution_list[Index])
-        Log().info(f"{execution_list[Index]} executed")
+        if __name__ == "__main__":
+            Log().info(f"{execution_list[Index]} executed")
 
     def execute_script(self, script: str):
         """
         Executes a script file and handles its output based on the file extension.
         Parameters:
             script (str): The path of the script file to be executed.
-        Returns:
-            None
         """
         if script.endswith(".ps1"):
             self.__unblock_ps1_script(script)
@@ -423,9 +444,10 @@ class Execute:
         try:
             unblock_command = f'powershell.exe -Command "Unblock-File -Path {script}"'
             subprocess.run(unblock_command, shell=False, check=True)
-            Log().info("PS1 Script unblocked.")
+            if __name__ == "__main__":
+                Log().info("PS1 Script unblocked.")
         except Exception as err:
-            Log().critical(f"Failed to unblock script: {err}")
+            exit(f"Failed to unblock script: {err}")
 
     @staticmethod
     def __run_python_script(script: str):
@@ -439,6 +461,7 @@ class Execute:
         result = subprocess.Popen(
             ["python", script], stdout=subprocess.PIPE
         ).communicate()[0]
+        # LEAVE AS PRINT
         print(result.decode())
 
     @staticmethod
@@ -456,7 +479,7 @@ class Execute:
         )
         lines = result.stdout.splitlines()
         ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
-        if ID:
+        if ID and __name__ == "__main__":
             Log().string(str(lines), ID)
 
 
