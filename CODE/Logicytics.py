@@ -166,13 +166,18 @@ if action == "modded":
 
 log.debug(execution_list)
 
-# Check weather to use threading or not
+# Check weather to use threading or not, as well as execute code
 if action == "threaded":
     def threaded_execution(execution_list_thread, index_thread):
-        thread_log = Execute(log_variable=log).file(execution_list_thread, index_thread)
-        if thread_log[0]:
-            log.info(thread_log[0])
-        log.info(thread_log[1])
+        try:
+            thread_log = Execute().file(execution_list_thread, index_thread)
+            if thread_log[0]:
+                log.info(thread_log[0])
+            log.info(thread_log[1])
+        except UnicodeDecodeError as err:
+            log.error(f"Error in thread: {err}")
+        except Exception as err:
+            log.error(f"Error in thread: {err}")
     threads = []
     for index, file in enumerate(execution_list):
         thread = threading.Thread(
@@ -188,9 +193,14 @@ if action == "threaded":
     for thread in threads:
         thread.join()
 else:
-    for file in range(len(execution_list)):  # Loop through List
-        log.info(Execute(log_variable=log).execute_script(execution_list[file]))
-        log.info(f"{execution_list[file]} executed")
+    try:
+        for file in range(len(execution_list)):  # Loop through List
+            log.info(Execute().execute_script(execution_list[file]))
+            log.info(f"{execution_list[file]} executed")
+    except UnicodeDecodeError as e:
+        log.error(f"Error in thread: {e}")
+    except Exception as e:
+        log.error(f"Error in thread: {e}")
 
 # Zip generated files
 if action == "modded":
@@ -230,5 +240,4 @@ if sub_action == "webhook":
 
 log.info("Exiting...")
 input("Press Enter to exit...")
-# Special feature that allows to create a `-` line only
 log.debug("*-*")

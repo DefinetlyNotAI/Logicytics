@@ -17,9 +17,9 @@ def backup_registry():
 
     try:
         subprocess.run(cmd, check=True)
-        print(f"Registry backed up successfully to {export_path}")
+        log.info(f"Registry backed up successfully to {export_path}")
     except subprocess.CalledProcessError as e:
-        print(f"Failed to back up the registry: {e}")
+        log.error(f"Failed to back up the registry: {e}")
 
 
 backup_registry()

@@ -63,12 +63,25 @@ def get_wifi_names() -> list:
         log.error(err)
 
 
-with open("WiFi.txt", "w") as file:
-    for name in get_wifi_names():
-        try:
-            log.info(f"Retrieving password for {name.removeprefix(': ')}")
-            file.write(
-                f"Name: {name.removeprefix(': ')}, Password: {get_password(name.removeprefix(': '))}\n"
-            )
-        except Exception as e:
-            log.error(e)
+def get_wifi_passwords():
+    """
+    Retrieves the passwords for all Wi-Fi profiles on the system.
+
+    This function retrieves the names of all Wi-Fi profiles on the system using the get_wifi_names() function.
+    It then iterates over each Wi-Fi profile name and retrieves the password associated with the profile using the get_password() function.
+    The Wi-Fi profile names and passwords are stored in a dictionary where the key is the Wi-Fi profile name and the value is the password.
+    """
+    with open("WiFi.txt", "w") as file:
+        for name in get_wifi_names():
+            try:
+                log.info(f"Retrieving password for {name.removeprefix(': ')}")
+                file.write(
+                    f"Name: {name.removeprefix(': ')}, Password: {get_password(name.removeprefix(': '))}\n"
+                )
+            except UnicodeDecodeError as e:
+                log.error(e)
+            except Exception as e:
+                log.error(e)
+
+
+get_wifi_passwords()
