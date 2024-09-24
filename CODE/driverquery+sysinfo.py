@@ -1,6 +1,7 @@
 from __lib_class import *
 
-log = Log(debug=DEBUG)
+if __name__ == "__main__":
+    log = Log(debug=DEBUG)
 
 
 def command(file: str, com: str, message: str):
@@ -26,3 +27,5 @@ def command(file: str, com: str, message: str):
 
 command("Drivers.txt", "driverquery /v", "Driver Query")
 command("SysInfo.txt", "systeminfo", "System Info")
+# WIP
+# command("Dir_S.txt", "dir/s", "Directory Listing")
