@@ -376,7 +376,9 @@ class Check:
 
             elif ignore_file:
                 if __name__ == "__main__":
-                    Log(debug=DEBUG).debug("Found .sys.ignore file, skipping SysInternal_Suite zip extraction")
+                    Log(debug=DEBUG).debug(
+                        "Found .sys.ignore file, skipping SysInternal_Suite zip extraction"
+                    )
 
         except Exception as err:
             exit(f"Failed to unzip SysInternal_Suite: {err}")
