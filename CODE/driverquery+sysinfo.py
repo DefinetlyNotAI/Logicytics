@@ -27,4 +27,5 @@ def command(file: str, com: str, message: str):
 
 command("Drivers.txt", "driverquery /v", "Driver Query")
 command("SysInfo.txt", "systeminfo", "System Info")
-command("Dir_S.txt", "dir/s", "Directory Listing")
+# WIP
+# command("Dir_S.txt", "dir/s", "Directory Listing")
