@@ -168,6 +168,7 @@ log.debug(execution_list)
 
 # Check weather to use threading or not, as well as execute code
 if action == "threaded":
+
     def threaded_execution(execution_list_thread, index_thread):
         try:
             thread_log = Execute().file(execution_list_thread, index_thread)
@@ -178,6 +179,7 @@ if action == "threaded":
             log.error(f"Error in thread: {err}")
         except Exception as err:
             log.error(f"Error in thread: {err}")
+
     threads = []
     for index, file in enumerate(execution_list):
         thread = threading.Thread(
