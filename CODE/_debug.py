@@ -7,7 +7,7 @@ import sys
 from __lib_class import *
 
 if __name__ == "__main__":
-    log_debug = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.LOG")
+    log_debug = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.log")
 
 
 class HealthCheck:
