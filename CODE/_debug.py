@@ -218,9 +218,9 @@ def debug():
 
     # Check if running in a virtual environment
     if sys.prefix != sys.base_prefix:
-        log_debug.info("Running in a virtual environment")
+        log_debug.warning("Running in a virtual environment")
     else:
-        log_debug.warning("Not running in a virtual environment")
+        log_debug.info("Not running in a virtual environment")
 
     # Check Execution Policy
     if DebugCheck.execution_policy():
