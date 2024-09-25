@@ -229,9 +229,24 @@ def debug():
         log_debug.warning("Execution policy is not unrestricted")
 
     # Get Python Version
-    log_debug.info(
-        f"Python Version Used: {sys.version.split()[0]} - Recommended Version is: ~"
-    )
+    try:
+        major_py_version = int(sys.version.split()[0].split(".")[0])
+        minor_py_version = int(sys.version.split()[0].split(".")[1])
+
+        if major_py_version == 3 and minor_py_version == 11:
+            log_debug.info(
+                f"Python Version Used: {sys.version.split()[0]} - Perfect"
+            )
+        elif major_py_version == 3 and minor_py_version != 11:
+            log_debug.warning(
+                f"Python Version Used: {sys.version.split()[0]} - Recommended Version is: 3.11.X"
+            )
+        else:
+            log_debug.error(
+                f"Python Version Used: {sys.version.split()[0]} - Incompatible Version"
+            )
+    except Exception as e:
+        log_debug.error(f"Failed to get Python Version: {e}")
 
     # Get Repo Path
     log_debug.info(os.path.abspath(__file__).removesuffix("\\CODE\\_debug.py"))
