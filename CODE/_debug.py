@@ -234,9 +234,7 @@ def debug():
         minor_py_version = int(sys.version.split()[0].split(".")[1])
 
         if major_py_version == 3 and minor_py_version == 11:
-            log_debug.info(
-                f"Python Version Used: {sys.version.split()[0]} - Perfect"
-            )
+            log_debug.info(f"Python Version Used: {sys.version.split()[0]} - Perfect")
         elif major_py_version == 3 and minor_py_version != 11:
             log_debug.warning(
                 f"Python Version Used: {sys.version.split()[0]} - Recommended Version is: 3.11.X"
