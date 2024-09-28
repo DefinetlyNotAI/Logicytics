@@ -201,10 +201,12 @@ Don't recreate these:
   <tr>
     <td>driverquery+sysinfo.py</td>
     <td>Gets data from driverquery and sysinfo command</td>
+    <td></td>
   </tr>
   <tr>
     <td>log_miner.py</td>
     <td>Gets all logs from the Windows device</td>
+    <td></td>
   </tr>
   <tr>
     <td>media_backup.py</td>
@@ -214,6 +216,7 @@ Don't recreate these:
   <tr>
     <td>netadapter.ps1</td>
     <td>Runs Get-NetAdapter Command with many flags</td>
+    <td></td>
   </tr>
   <tr>
     <td>online_ip_scraper.py</td>
@@ -223,10 +226,12 @@ Don't recreate these:
   <tr>
     <td>property_scraper.ps1</td>
     <td>Gets all the windows properties</td>
+    <td></td>
   </tr>
   <tr>
     <td>registry.py</td>
     <td>Backups the registry</td>
+    <td></td>
   </tr>
   <tr>
     <td>sensitive_data_miner.py</td>
@@ -236,30 +241,37 @@ Don't recreate these:
   <tr>
     <td>ssh_miner.py</td>
     <td>Gets as much ssh private data as possible</td>
+    <td></td>
   </tr>
   <tr>
     <td>sys_internal.py</td>
     <td>Attempts to use the Sys_Internal Suite from microsoft</td>
+    <td></td>
   </tr>
   <tr>
     <td>tasklist.py</td>
     <td>Gets all running tasks, PID and info/data</td>
+    <td></td>
   </tr>
   <tr>
     <td>tree.bat</td>
     <td>Runs and logs the tree.bat command</td>
+    <td></td>
   </tr>
   <tr>
     <td>window_feature_miner.ps1</td>
     <td>Logs all the windows features enabled</td>
+    <td></td>
   </tr>
   <tr>
     <td>wmic.py</td>
     <td>Logs and runs many wmic commands to gain sensitive data and information</td>
+    <td></td>
   </tr>
   <tr>
     <td>wifi_stealer.py</td>
     <td>Gets the SSID and Password of all saved Wi-Fi</td>
+    <td></td>
   </tr>
 </table>
 
@@ -302,6 +314,7 @@ Always obtain proper authorization before extracting any data from a system.
 ### 🔗 Links
 
 - [Project's Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
+- [Project's Future](https://definetlynotai.github.io/Logicytics/WEB/roadmap.html)
 - [Project's License](LICENSE)
 
 ### License
