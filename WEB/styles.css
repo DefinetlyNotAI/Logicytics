@@ -3,7 +3,76 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
+    font-family: "Poppins", sans-serif;
+}
+
+/* Body colors */
+body {
+    font-family: Arial, sans-serif;
+}
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+.section {
+    margin-top: 30px;
+}
+.deliverable {
+    padding-left: 20px;
+}
+
+/* State colors */
+.state {
+    display: inline-block;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    margin-right: 5px;
+}
+.state.TODO {
+    background-color: lightblue;
+    color: black;
+}
+.state.WIP {
+    background-color: lightyellow;
+    color: black;
+}
+.state.DONE {
+    background-color: lightgreen;
+    color: black;
+}
+.state:not(.TODO):not(.WIP):not(.DONE) {
+    color: red;
+}
+
+/* Requirement badges */
+.badge {
+    display: inline-block;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    margin-right: 5px;
+}
+.badge.MAY {
+    background-color: lightblue;
+    color: black;
+}
+.badge.SHOULD {
+    background-color: lightyellow;
+    color: black;
+}
+.badge.MUST {
+    background-color: lightcoral;
+    color: black;
+}
+
+/* Custom styles */
+.status-container {
+    display: flex;
+    align-items: center;
+}
+.status-text {
+    margin-left: 5px;
 }
 
 /* Hero Section */
@@ -12,7 +81,7 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: url('https://images.unsplash.com/photo-1564149508614-9453f0859d7e?fit=crop&w=1920&q=80') no-repeat center center/cover;
+    background: url("https://images.unsplash.com/photo-1564149508614-9453f0859d7e?fit=crop&w=1920&q=80") no-repeat center center/cover;
     color: #fff;
     text-align: center;
     position: relative;
@@ -20,7 +89,7 @@
 
 /* Overlay Effect */
 .hero::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -92,7 +161,7 @@
     color: black;
 }
 
-.wiki-button{
+.wiki-button {
     display: inline-block;
     margin-top: 20px;
     padding: 10px 20px;
@@ -108,9 +177,11 @@
     background-color: blanchedalmond;
 }
 
-.install-link i, .github, .wiki.wiki.button i {
+.install-link i,
+.github,
+.wiki.wiki.button i {
     margin-right: 8px; /* Adjust spacing between icon and text */
-    font-size: 16px;   /* Adjust icon size */
+    font-size: 16px; /* Adjust icon size */
     vertical-align: middle;
 }
 
@@ -139,7 +210,8 @@
     margin-bottom: 20px;
 }
 
-.installation p, .installation ul {
+.installation p,
+.installation ul {
     font-size: 18px;
     line-height: 1.6;
     margin-bottom: 20px;
@@ -152,7 +224,6 @@
 .installation li {
     margin-bottom: 10px;
 }
-
 
 /* About Page Styles */
 
