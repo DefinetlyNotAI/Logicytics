@@ -372,11 +372,11 @@ class Check:
                 ) as zip_ref:
                     zip_ref.extractall("SysInternal_Suite")
                 if __name__ == "__main__":
-                    Log(debug=DEBUG).debug("SysInternal_Suite zip extracted")
+                    Log({"log_level": DEBUG}).debug("SysInternal_Suite zip extracted")
 
             elif ignore_file:
                 if __name__ == "__main__":
-                    Log(debug=DEBUG).debug(
+                    Log({"log_level": DEBUG}).debug(
                         "Found .sys.ignore file, skipping SysInternal_Suite zip extraction"
                     )
 
