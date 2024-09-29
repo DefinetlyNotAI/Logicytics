@@ -6,7 +6,7 @@ from _hide_my_tracks import attempt_hide
 from _zipper import Zip
 
 if __name__ == "__main__":
-    log = Log(debug=DEBUG)
+    log = Log({"log_level": DEBUG})
 
 """
 This python script is the main entry point for the tool called Logicytics.
@@ -242,4 +242,4 @@ if sub_action == "webhook":
 
 log.info("Exiting...")
 input("Press Enter to exit...")
-log.debug("*-*")
+log.newline()

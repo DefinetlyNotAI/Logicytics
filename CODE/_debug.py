@@ -7,7 +7,7 @@ import sys
 from __lib_class import *
 
 if __name__ == "__main__":
-    log_debug = Log(debug=DEBUG, filename="../ACCESS/LOGS/DEBUG/DEBUG.log")
+    log_debug = Log({"log_level": DEBUG, "filename": "../ACCESS/LOGS/DEBUG/DEBUG.log"})
 
 
 class HealthCheck:
@@ -110,7 +110,7 @@ class DebugCheck:
         """
         try:
             contents = os.listdir(path)
-            log_debug.debug(contents)
+            log_debug.debug(str(contents))
             if any(file.endswith(".ignore") for file in contents):
                 return "A `.sys.ignore` file was found - Ignoring", "WARNING"
             if any(file.endswith(".zip") for file in contents) and not any(

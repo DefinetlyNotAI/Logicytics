@@ -1,248 +1,192 @@
 from __future__ import annotations
 
+import inspect
+import logging
 import os
-import pathlib
 from datetime import datetime
 import colorlog
 
 
 class Log:
-    def __init__(
-        self,
-        filename=pathlib.Path("../ACCESS/LOGS/Logicytics.log"),
-        err_filename=None,
-        use_colorlog=True,
-        debug=False,
-        debug_color="cyan",
-        info_color="green",
-        warning_color="yellow",
-        error_color="red",
-        critical_color="red",
-        colorlog_fmt_parameters="%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
-    ):
+    """
+    A logging class that supports colored output using the colorlog library.
+    """
+
+    def __init__(self, config: dict = None):
         """
-        Initializes a new instance of the LOG class.
+        Initializes the Log class with the given configuration.
 
-        The log class logs every interaction when called in both colorlog and in the log File
-
-        Best to only modify filename, and DEBUG.
-
-        Only if you are planning to use the dual-log parameter that allows you to both log unto the shell and the log
-        File: IMPORTANT: This class requires colorlog to be installed and also uses it in the INFO level, To use the
-        DEBUG level, set DEBUG to True.
-
-            If you are using colorlog, DO NOT INITIALIZE IT MANUALLY, USE THE LOG CLASS PARAMETER'S INSTEAD.
-            Sorry for any inconvenience that may arise.
-
-        Args:
-            filename (str, optional): The name of the log File. Defaults to "Server.log".
-            use_colorlog (bool, optional): Whether to use colorlog. Defaults to True.
-            debug (bool, optional): Whether to use the DEBUG level. Defaults to False (which uses the INFO level).
-            debug_color (str, optional): The color of the DEBUG level. Defaults to "cyan".
-            info_color (str, optional): The color of the info level. Defaults to "green".
-            warning_color (str, optional): The color of the warning level. Defaults to "yellow".
-            error_color (str, optional): The color of the error level. Defaults to "red".
-            critical_color (str, optional): The color of the critical level. Defaults to "red".
-            colorlog_fmt_parameters (str, optional): The format of the log message. Defaults to "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s".
-
-        Returns:
-            None
+        :param config: A dictionary containing configuration options.
         """
-        if not os.path.exists(filename):
-            os.makedirs(os.path.dirname(filename), exist_ok=True)
-        self.level = debug
-        self.color = use_colorlog
+        config = config or {
+            "filename": "../ACCESS/LOGS/Logicytics.log",
+            "use_colorlog": True,
+            "log_level": "INFO",
+            "debug_color": "cyan",
+            "info_color": "green",
+            "warning_color": "yellow",
+            "error_color": "red",
+            "critical_color": "red",
+            "exception_color": "red",
+            "colorlog_fmt_parameters": "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+        }
+        self.EXCEPTION_LOG_LEVEL = 45
+        self.INTERNAL_LOG_LEVEL = 15
+        logging.addLevelName(self.EXCEPTION_LOG_LEVEL, "EXCEPTION")
+        logging.addLevelName(self.INTERNAL_LOG_LEVEL, "INTERNAL")
+        self.color = config.get("use_colorlog", True)
+        self.filename = config.get("filename", "../ACCESS/LOGS/Logicytics.log")
         if self.color:
-            # Configure colorlog for logging messages with colors
             logger = colorlog.getLogger()
-            if debug:
-                logger.setLevel(
-                    colorlog.DEBUG
-                )  # Set the log level to DEBUG to capture all relevant logs
-            else:
-                logger.setLevel(
-                    colorlog.INFO
-                )  # Set the log level to INFO to capture all relevant logs
-            handler = colorlog.StreamHandler()
-            formatter = colorlog.ColoredFormatter(
-                colorlog_fmt_parameters,
-                datefmt=None,
-                reset=True,
-                log_colors={
-                    "DEBUG": debug_color,
-                    "INFO": info_color,
-                    "WARNING": warning_color,
-                    "ERROR": error_color,
-                    "CRITICAL": critical_color,
-                },
+            logger.setLevel(
+                getattr(logging, config["log_level"].upper(), logging.INFO)
             )
+            handler = colorlog.StreamHandler()
+            log_colors = {
+                "INTERNAL": "cyan",
+                "DEBUG": config.get("debug_color", "cyan"),
+                "INFO": config.get("info_color", "green"),
+                "WARNING": config.get("warning_color", "yellow"),
+                "ERROR": config.get("error_color", "red"),
+                "CRITICAL": config.get("critical_color", "red"),
+                "EXCEPTION": config.get("exception_color", "red"),
+            }
+
+            formatter = colorlog.ColoredFormatter(
+                config.get("colorlog_fmt_parameters", "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s"),
+                log_colors=log_colors,
+            )
+
             handler.setFormatter(formatter)
             logger.addHandler(handler)
+            try:
+                getattr(logging, config["log_level"].upper())
+            except AttributeError as AE:
+                self.__internal(f"Log Level {config['log_level']} not found, setting default level to INFO -> {AE}")
 
-        self.filename = str(filename)
-        if err_filename is None:
-            self.err_filename = self.filename
-        else:
-            self.err_filename = str(err_filename)
         if not os.path.exists(self.filename):
-            self.__only("|" + "-" * 19 + "|" + "-" * 13 + "|" + "-" * 152 + "|")
-            self.__only(
-                "|     Timestamp     |  LOG Level  |"
-                + " " * 70
-                + "LOG Messages"
-                + " " * 70
-                + "|"
-            )
-            self.__only("|" + "-" * 19 + "|" + "-" * 13 + "|" + "-" * 152 + "|")
+            self.newline()
+            self.raw("|     Timestamp     |  LOG Level  |" + " " * 71 + "LOG Messages" + " " * 71 + "|")
+        self.newline()
 
     @staticmethod
     def __timestamp() -> str:
         """
-        Returns the current timestamp as a string in the format 'YYYY-MM-DD HH:MM:SS'.
+        Returns the current timestamp as a string.
 
-        Returns:
-            str: The current timestamp.
+        :return: Current timestamp in 'YYYY-MM-DD HH:MM:SS' format.
         """
-        now = datetime.now()
-        time = f"{now.strftime('%Y-%m-%d %H:%M:%S')}"
-        return time
+        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    def __only(self, message):
+    @staticmethod
+    def __pad_message(message: str) -> str:
         """
-        Logs a quick message to the log File.
+        Pads or truncates the message to fit the log format.
 
-        Args:
-            message: The message to be logged.
-
-        Returns:
-            None
+        :param message: The log message to be padded or truncated.
+        :return: The padded or truncated message.
         """
+        return (message + " " * (153 - len(message)) if len(message) < 153 else message[:150] + "...") + "|"
+
+    def raw(self, message):
+        """
+        Logs a raw message directly to the log file.
+
+        :param message: The raw message to be logged.
+        """
+        frame = inspect.stack()[1]
+        if frame.function == "<module>":
+            self.__internal(f"Raw message called from a non-function - This is not recommended")
         with open(self.filename, "a") as f:
             f.write(f"{str(message)}\n")
 
-    @staticmethod
-    def __pad_message(message):
+    def newline(self):
         """
-        Adds spaces to the end of a message until its length is exactly 153 characters.
-
-        Parameters:
-        - message (str): The input message string.
-
-        Returns:
-        - str: The padded message with a length of exactly 153 characters.
+        Logs a newline separator in the log file.
         """
-        # Calculate the number of spaces needed
-        num_spaces = 151 - len(message)
-
-        if num_spaces > 0:
-            # If the message is shorter than 153 characters, add spaces to the end
-            padded_message = message + " " * num_spaces
-        else:
-            # If the message is already longer than 153 characters, truncate it to the first 148 characters
-            padded_message = message[:148]
-            padded_message += "..."
-
-        padded_message += "|"
-        return padded_message
-
-    def debug(self, message):
-        """
-        Logs an debug message via colorlog
-
-        Args:
-            message: The message to be logged.
-
-        Returns:
-            None
-        """
-        if message == "*-*":
-            self.__only("|" + "-" * 19 + "|" + "-" * 13 + "|" + "-" * 152 + "|")
-        else:
-            if self.level:
-                colorlog.debug(message)
+        with open(self.filename, "a") as f:
+            f.write("|" + "-" * 19 + "|" + "-" * 13 + "|" + "-" * 154 + "|" + "\n")
 
     def info(self, message):
         """
-        Logs an informational message to the log File.
+        Logs an info message.
 
-        Args:
-            message: The message to be logged.
-
-        Returns:
-            None
+        :param message: The info message to be logged.
         """
         if self.color:
-            colorlog.info(message)
-        with open(self.filename, "a") as f:
-            f.write(
-                f"[{self.__timestamp()}] > INFO:     | {self.__pad_message(str(message))}\n"
-            )
+            colorlog.info(str(message))
+        self.raw(f"[{self.__timestamp()}] > INFO:     | {self.__pad_message(str(message))}")
 
     def warning(self, message):
         """
-        Logs a warning message to the log File.
+        Logs a warning message.
 
-        Args:
-            message: The warning message to be logged.
-
-        Returns:
-            None
+        :param message: The warning message to be logged.
         """
         if self.color:
-            colorlog.warning(message)
-        with open(self.filename, "a") as f:
-            f.write(
-                f"[{self.__timestamp()}] > WARNING:  | {self.__pad_message(str(message))}\n"
-            )
+            colorlog.warning(str(message))
+        self.raw(f"[{self.__timestamp()}] > WARNING:  | {self.__pad_message(str(message))}")
 
     def error(self, message):
         """
-        Logs an error message to the log File.
+        Logs an error message.
 
-        Args:
-            message: The error message to be logged.
-
-        Returns:
-            None
+        :param message: The error message to be logged.
         """
         if self.color:
-            colorlog.error(message)
-        with open(self.err_filename, "a") as f:
-            f.write(
-                f"[{self.__timestamp()}] > ERROR:    | {self.__pad_message(str(message))}\n"
-            )
+            colorlog.error(str(message))
+        self.raw(f"[{self.__timestamp()}] > ERROR:    | {self.__pad_message(str(message))}")
 
     def critical(self, message):
         """
-        Logs a critical message to the error log File.
+        Logs a critical message.
 
-        Args:
-            message: The critical message to be logged.
-
-        Returns:
-            None
+        :param message: The critical message to be logged.
         """
         if self.color:
-            colorlog.critical(message)
-        with open(self.err_filename, "a") as f:
-            f.write(
-                f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message))}\n"
-            )
+            colorlog.critical(str(message))
+        self.raw(f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message))}")
 
-    def string(self, Message: str, Type="Debug"):
+    @staticmethod
+    def debug(message):
         """
-        Uses the string given to log the message using the correspondent log type,
-        defaults to 'log.debug' if no log type is given.
+        Logs a debug message.
 
-        Args:
-            Type: The string message to be used to replace XXX in 'log.XXX'.
-            Message: The message to be logged.
-
-        Returns:
-            None
+        :param message: The debug message to be logged.
         """
+        colorlog.debug(str(message))
+
+    def string(self, message, Type: str):
+        """
+        Logs a message with a specified type. Supported types are 'debug', 'info', 'warning', 'error', 'critical'
+        as well as the aliases 'err', 'warn', and 'crit'.
+
+        :param message: The message to be logged.
+        :param Type: The type of the log message.
+        """
+        type_map = {"err": "error", "warn": "warning", "crit": "critical"}
+        Type = type_map.get(Type.lower(), Type)
         try:
-            getattr(self, Type.lower())(Message)
+            getattr(self, Type.lower())(str(message))
         except AttributeError as AE:
-            self.warning(f"A wrong Log Type was called: {Type} not found. -> {AE}")
-            getattr(self, "Debug".lower())(Message)
+            self.__internal(f"A wrong Log Type was called: {Type} not found. -> {AE}")
+            getattr(self, "Debug".lower())(str(message))
+
+    def exception(self, message):
+        """
+        Logs an exception message.
+
+        :param message: The exception message to be logged.
+        """
+        if self.color:
+            colorlog.log(self.EXCEPTION_LOG_LEVEL, str(message))
+        self.raw(f"[{self.__timestamp()}] > EXCEPTION:| {self.__pad_message(str(message))}")
+
+    def __internal(self, message):
+        """
+        Logs an internal message.
+
+        :param message: The internal message to be logged.
+        """
+        if self.color:
+            colorlog.log(self.INTERNAL_LOG_LEVEL, str(message))

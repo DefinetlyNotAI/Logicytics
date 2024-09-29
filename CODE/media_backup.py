@@ -4,7 +4,7 @@ from datetime import datetime
 from __lib_class import *
 
 if __name__ == "__main__":
-    log = Log(debug=DEBUG)
+    log = Log({"log_level": DEBUG})
 
 
 class Media:

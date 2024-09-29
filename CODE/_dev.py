@@ -146,7 +146,7 @@ class Dev:
                 log_dev.info(Actions().run_command(f"python {item}"))
 
 
-log_dev = Log(debug=DEBUG)
+log_dev = Log({"log_level": DEBUG})
 log_dev_funcs = {
     "INFO": log_dev.info,
     "WARNING": log_dev.warning,
