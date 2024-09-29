@@ -8,7 +8,7 @@
 from __lib_class import *
 
 if __name__ == "__main__":
-    log = Log(debug=DEBUG)
+    log = Log({"log_level": DEBUG})
 
 # Your actual code, must be able to run without any interference by outside actions
 # USE log.debug, log.info, log.error, log.warning and log.critical and log.string as well
