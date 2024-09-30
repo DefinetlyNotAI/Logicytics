@@ -49,7 +49,7 @@ body:
         - Firefox
         - Other
   - type: dropdown
-    id: browser
+    id: device
     attributes:
       label: Select the device you used
       multiple: false
