@@ -45,6 +45,12 @@ contributing.md and Issue Templates.
 
 - [Bootstrap GitHub Repository](https://github.com/twbs/bootstrap)
 
+### HackBrowserData by moonD4rk
+
+We are grateful for the foundational work provided by HackBrowserData, a perfect open-source tool for Extract and decrypt browser data, supporting multiple data types, runnable on various operating systems (macOS, Windows, Linux). HackBrowserData's comprehensive documentation has been invaluable in helping indirectly shape our project by allowing escalation and post-exploitation actions.
+
+- [Hack Browser Data Repository v0.4.6](https://github.com/moonD4rk/HackBrowserData)
+
 ### winPEAS-ng by peas
 
 We are grateful for the foundational work provided by winPEAS, a perfect open-source tool for scanning dynamic window
