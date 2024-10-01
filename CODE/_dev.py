@@ -70,7 +70,6 @@ class Dev:
             ("Have you made files you don't want to be run start with '_'?", "."),
             ("Have you added the file to CODE dir?", "."),
             ("Have you added docstrings and comments?", "../CONTRIBUTING.md"),
-            ("Have you tested your code?", "../TESTS/TEST.py"),
             ("Is each file containing no more than 1 feature?", "../CONTRIBUTING.md"),
             (
                 "Have you NOT modified __wrapper__.py without authorization?",
@@ -84,7 +83,7 @@ class Dev:
 
             remind = False
             if self.__prompt_user(
-                "Is the update a major or minor upgrade (non-patch update)?"
+                "If the update is a major or minor upgrade (non-patch update) answer `yes`?"
             ):
                 if not self.__prompt_user(
                     "Did You Build the EXE with Advanced Installer?",
@@ -130,7 +129,7 @@ class Dev:
         Returns:
             None
         """
-        Actions().mkdir()
+        Actions.mkdir()
         if self.__dev_checks():
             test_files = []
             for item in os.listdir("../TESTS"):
@@ -143,7 +142,7 @@ class Dev:
                     test_files.append(full_path)
                     log_dev.info(f"Found test file: {item} - Full path: {full_path}")
             for item in test_files:
-                log_dev.info(Actions().run_command(f"python {item}"))
+                log_dev.info(Actions.run_command(f"python {item}"))
 
 
 log_dev = Log({"log_level": DEBUG})

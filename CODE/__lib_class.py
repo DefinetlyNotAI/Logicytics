@@ -184,14 +184,15 @@ class Actions:
                     break
         return tuple(true_keys)
 
-    def flags(self) -> tuple[str, ...] | argparse.ArgumentParser:
+    @classmethod
+    def flags(cls) -> tuple[str, ...] | argparse.ArgumentParser:
         """
         Handles the parsing and validation of command-line flags.
 
         Returns either a tuple of used flag names or an ArgumentParser instance.
         """
-        args, parser = self.__parse_arguments()
-        special_flag_used = self.__exclusivity(args)
+        args, parser = cls.__parse_arguments()
+        special_flag_used = cls.__exclusivity(args)
 
         if not special_flag_used:
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
@@ -200,7 +201,7 @@ class Actions:
                 exit(1)
 
         if special_flag_used:
-            used_flags = self.__set_flags(args)
+            used_flags = cls.__set_flags(args)
             if len(used_flags) > 2:
                 print("Invalid combination of flags.")
                 exit(1)
@@ -334,7 +335,8 @@ class Check:
         except AttributeError:
             return False
 
-    def uac(self) -> bool:
+    @staticmethod
+    def uac() -> bool:
         """
         Check if User Account Control (UAC) is enabled on the system.
 
@@ -344,7 +346,7 @@ class Check:
         Returns:
             bool: True if UAC is enabled, False otherwise.
         """
-        value = self.Actions.run_command(
+        value = Actions.run_command(
             r"powershell (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA"
         )
         return int(value.strip("\n")) == 1
@@ -404,7 +406,8 @@ class Execute:
                 file_list.append(filename)
         return file_list
 
-    def file(self, execution_list: list, Index: int):
+    @classmethod
+    def file(cls, execution_list: list, Index: int):
         # IT IS USED, DO NOT REMOVE
         """
         Executes a file from the execution list at the specified index.
@@ -414,23 +417,24 @@ class Execute:
         Returns:
             None
         """
-        self.execute_script(execution_list[Index])
+        cls.execute_script(execution_list[Index])
         if __name__ == "__main__":
             Log().info(f"{execution_list[Index]} executed")
 
-    def execute_script(self, script: str):
+    @classmethod
+    def execute_script(cls, script: str):
         """
         Executes a script file and handles its output based on the file extension.
         Parameters:
             script (str): The path of the script file to be executed.
         """
         if script.endswith(".ps1"):
-            self.__unblock_ps1_script(script)
-            self.__run_other_script(script)
+            cls.__unblock_ps1_script(script)
+            cls.__run_other_script(script)
         elif script.endswith(".py"):
-            self.__run_python_script(script)
+            cls.__run_python_script(script)
         else:
-            self.__run_other_script(script)
+            cls.__run_other_script(script)
 
     @staticmethod
     def __unblock_ps1_script(script: str):

@@ -18,7 +18,7 @@ def get_password(ssid: str) -> str:
         Exception: If an error occurs while executing the command.
     """
     try:
-        command_output = Actions().run_command(
+        command_output = Actions.run_command(
             f'netsh wlan show profile name="{ssid}" key=clear'
         )
         if command_output is None:
@@ -49,7 +49,7 @@ def get_wifi_names() -> list:
     """
     try:
         log.info("Retrieving Wi-Fi names...")
-        command_output = Actions().run_command("netsh wlan show profile")
+        command_output = Actions.run_command("netsh wlan show profile")
         wifi_names = []
 
         for line in command_output.split("\n"):
