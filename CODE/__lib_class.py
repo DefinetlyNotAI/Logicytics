@@ -13,7 +13,7 @@ from __lib_log import Log
 
 class Actions:
     @staticmethod
-    def open_file(file: str, use_full_path=False):
+    def open_file(file: str, use_full_path=False) -> str | None:
         """
         Opens a specified file using its default application in a cross-platform manner.
         Args:
@@ -29,9 +29,9 @@ class Actions:
             else:
                 file_path = os.path.realpath(file)
             try:
-                subprocess.call(file_path, shell=False)
+                subprocess.run(["start", file_path], shell=False)
             except Exception as e:
-                print(f"Error opening file: {e}")
+                return f"Error opening file: {e}"
 
     @staticmethod
     def run_command(command: str) -> str:
@@ -212,7 +212,7 @@ class Actions:
             return tuple(used_flags)
 
     @staticmethod
-    def read_config() -> tuple[str, bool, str, str, list[str]]:
+    def read_config() -> tuple[str, str, str, list[str]]:
         """
         Reads the configuration from the config.json file.
 
@@ -235,15 +235,13 @@ class Actions:
             with open(config_path, "r") as file:
                 data = json.load(file)
 
-                webhook_url = data.get("WEBHOOK_URL", "")
-                debug = data.get("DEBUG", False)
+                debug = data.get("Log Level Debug?", False)
                 version = data.get("VERSION", "2.0.0")
                 api_key = data.get("ipgeolocation.io API KEY", "")
                 files = data.get("CURRENT_FILES", [])
 
                 if not (
-                    isinstance(webhook_url, str)
-                    and isinstance(debug, bool)
+                    isinstance(debug, bool)
                     and isinstance(version, str)
                     and isinstance(api_key, str)
                     and isinstance(files, list)
@@ -251,8 +249,11 @@ class Actions:
                     print("Invalid config.json format.")
                     input("Press Enter to exit...")
                     exit(1)
-
-                return webhook_url, debug, version, api_key, files
+                if debug:
+                    debug = "DEBUG"
+                else:
+                    debug = "INFO"
+                return debug, version, api_key, files
         except FileNotFoundError:
             print("The config.json File is not found.")
             input("Press Enter to exit...")
@@ -292,7 +293,7 @@ class Actions:
         os.makedirs("../ACCESS/DATA/Zip", exist_ok=True)
 
     @staticmethod
-    def unzip(zip_path: str):
+    def unzip(zip_path: Path):
         """
         Unzips a given zip file to a new directory with the same name.
 
@@ -388,7 +389,7 @@ class Check:
 
 class Execute:
     @staticmethod
-    def get_files(directory: str, file_list: list) -> list:
+    def get_files(directory: Path, file_list: list) -> list:
         """
         Retrieves a list of files in the specified directory that have the specified extensions.
         Parameters:
@@ -422,19 +423,19 @@ class Execute:
             Log().info(f"{execution_list[Index]} executed")
 
     @classmethod
-    def execute_script(cls, script: str):
+    def execute_script(cls, script_path: str):
         """
         Executes a script file and handles its output based on the file extension.
         Parameters:
-            script (str): The path of the script file to be executed.
+            script_path (str): The path of the script file to be executed.
         """
-        if script.endswith(".ps1"):
-            cls.__unblock_ps1_script(script)
-            cls.__run_other_script(script)
-        elif script.endswith(".py"):
-            cls.__run_python_script(script)
+        if script_path.endswith(".ps1"):
+            cls.__unblock_ps1_script(script_path)
+            cls.__run_other_script(script_path)
+        elif script_path.endswith(".py"):
+            cls.__run_python_script(script_path)
         else:
-            cls.__run_other_script(script)
+            cls.__run_other_script(script_path)
 
     @staticmethod
     def __unblock_ps1_script(script: str):
@@ -487,4 +488,4 @@ class Execute:
             Log().string(str(lines), ID)
 
 
-WEBHOOK, DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
+DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
