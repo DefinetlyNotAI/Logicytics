@@ -206,7 +206,7 @@ def debug():
         log_debug.warning("Admin privileges not found")
 
     # Check UAC
-    if Check().uac():
+    if Check.uac():
         log_debug.info("UAC enabled")
     else:
         log_debug.warning("UAC disabled")

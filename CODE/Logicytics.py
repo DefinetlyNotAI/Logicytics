@@ -30,16 +30,16 @@ with many options and flags that can be used to customize its behavior.
 Actions.mkdir()
 check_status = Check()
 
-if isinstance(Actions().flags(), tuple):
+if isinstance(Actions.flags(), tuple):
     try:
         # Get flags
-        action, sub_action = Actions().flags()
+        action, sub_action = Actions.flags()
     except Exception:
-        action = Actions().flags()
+        action = Actions.flags()
         action = action[0]
         sub_action = None
 else:
-    parser = Actions().flags()
+    parser = Actions.flags()
     parser.print_help()
     input("Press Enter to exit...")
     exit(1)
@@ -82,7 +82,7 @@ if action == "restore":
         "Sorry, this feature is yet to be implemented. You can manually Restore your backups, We will open "
         "the location for you"
     )
-    Actions().open_file("../ACCESS/BACKUP/")
+    Actions.open_file("../ACCESS/BACKUP/")
     input("Press Enter to exit...")
     exit(1)
 
@@ -102,7 +102,7 @@ if action == "unzip_extra":
         "caution"
     )
     log.info("Unzipping...")
-    Actions().unzip("..\\EXTRA\\EXTRA.zip")
+    Actions.unzip("..\\EXTRA\\EXTRA.zip")
     log.info("Unzip complete!")
     input("Press Enter to exit...")
     exit(0)
@@ -171,7 +171,7 @@ if action == "threaded":
 
     def threaded_execution(execution_list_thread, index_thread):
         try:
-            thread_log = Execute().file(execution_list_thread, index_thread)
+            thread_log = Execute.file(execution_list_thread, index_thread)
             if thread_log[0]:
                 log.info(thread_log[0])
             log.info(thread_log[1])
@@ -183,7 +183,7 @@ if action == "threaded":
     threads = []
     for index, file in enumerate(execution_list):
         thread = threading.Thread(
-            target=Execute().file,
+            target=Execute.file,
             args=(
                 execution_list,
                 index,
@@ -197,7 +197,7 @@ if action == "threaded":
 else:
     try:
         for file in range(len(execution_list)):  # Loop through List
-            log.info(Execute().execute_script(execution_list[file]))
+            log.info(Execute.execute_script(execution_list[file]))
             log.info(f"{execution_list[file]} executed")
     except UnicodeDecodeError as e:
         log.error(f"Error in thread: {e}")
