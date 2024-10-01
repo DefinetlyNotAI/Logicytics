@@ -1,7 +1,6 @@
 {
-    "WEBHOOK URL": "IGNORE ME FOR NOW",
     "ipgeolocation.io API KEY": "OPTIONAL - ADD A KEY",
-    "DEBUG": false,
+    "Log Level Debug?": false,
     "VERSION": "2.3.4",
     "CURRENT_FILES": [
         "browser_miner.ps1",

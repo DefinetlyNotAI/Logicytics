@@ -102,7 +102,7 @@ if action == "unzip_extra":
         "caution"
     )
     log.info("Unzipping...")
-    Actions.unzip("..\\EXTRA\\EXTRA.zip")
+    Actions.unzip(Path("..\\EXTRA\\EXTRA.zip"))
     log.info("Unzip complete!")
     input("Press Enter to exit...")
     exit(0)
@@ -162,7 +162,7 @@ if action == "exe":
 
 if action == "modded":
     # Add all files in MODS to execution list
-    execution_list = Execute.get_files("../MODS", execution_list)
+    execution_list = Execute.get_files(Path("../MODS"), execution_list)
 
 log.debug(execution_list)
 

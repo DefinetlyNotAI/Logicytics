@@ -146,11 +146,4 @@ class Dev:
 
 
 log_dev = Log({"log_level": DEBUG})
-log_dev_funcs = {
-    "INFO": log_dev.info,
-    "WARNING": log_dev.warning,
-    "ERROR": log_dev.error,
-    "CRITICAL": log_dev.critical,
-    None: log_dev.debug,
-}
 Dev().run_dev()
