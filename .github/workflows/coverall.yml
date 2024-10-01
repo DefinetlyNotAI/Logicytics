@@ -19,6 +19,7 @@ jobs:
     - name: insatll and run coveralls
       run: |
         pip install coveralls
+        pip install pytest
         coverage run --source=mypkg -m pytest tests/
         coveralls
 
