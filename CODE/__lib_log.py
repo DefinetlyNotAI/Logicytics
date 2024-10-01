@@ -5,6 +5,9 @@ import logging
 import os
 from datetime import datetime
 import colorlog
+from typing import Type
+
+from zope.interface.common.interfaces import IOSError
 
 
 class Log:
@@ -156,31 +159,33 @@ class Log:
         """
         colorlog.debug(str(message))
 
-    def string(self, message, Type: str):
+    def string(self, message, type: str):
         """
         Logs a message with a specified type. Supported types are 'debug', 'info', 'warning', 'error', 'critical'
         as well as the aliases 'err', 'warn', and 'crit'.
 
         :param message: The message to be logged.
-        :param Type: The type of the log message.
+        :param type: The type of the log message.
         """
         type_map = {"err": "error", "warn": "warning", "crit": "critical"}
-        Type = type_map.get(Type.lower(), Type)
+        type = type_map.get(type.lower(), type)
         try:
-            getattr(self, Type.lower())(str(message))
+            getattr(self, type.lower())(str(message))
         except AttributeError as AE:
-            self.__internal(f"A wrong Log Type was called: {Type} not found. -> {AE}")
+            self.__internal(f"A wrong Log Type was called: {type} not found. -> {AE}")
             getattr(self, "Debug".lower())(str(message))
 
-    def exception(self, message):
+    def exception(self, message, exception_type: Type = Exception):
         """
         Logs an exception message.
 
         :param message: The exception message to be logged.
+        :param exception_type: The type of exception to raise.
         """
         if self.color:
             colorlog.log(self.EXCEPTION_LOG_LEVEL, str(message))
-        self.raw(f"[{self.__timestamp()}] > EXCEPTION:| {self.__pad_message(str(message))}")
+        self.raw(f"[{self.__timestamp()}] > EXCEPTION:| {self.__pad_message(f'{message} -> Exception provoked: {str(exception_type)}')}")
+        raise exception_type(message)
 
     def __internal(self, message):
         """
