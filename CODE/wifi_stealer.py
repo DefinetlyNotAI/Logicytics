@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from __lib_class import *
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
-def get_password(ssid: str) -> str:
+def get_password(ssid: str) -> str | None:
     """
     Retrieves the password associated with a given Wi-Fi SSID.
 
@@ -21,19 +23,25 @@ def get_password(ssid: str) -> str:
         command_output = Actions.run_command(
             f'netsh wlan show profile name="{ssid}" key=clear'
         )
-        if command_output is None:
-            return "None"
-        key_content = command_output.splitlines()
-        for line in key_content:
-            if "Key Content" in line:
-                return line.split(":")[1].strip()
-        return "None"
-    except UnicodeDecodeError as err:
-        log.error(err)
-        return "None"
+        if command_output:
+            key_content = command_output.splitlines()
+            for line in key_content:
+                if "Key Content" in line:
+                    return line.split(":")[1].strip()
     except Exception as err:
         log.error(err)
-        return "None"
+
+
+def parse_wifi_names(command_output: str) -> list:
+    wifi_names = []
+
+    for line in command_output.split("\n"):
+        if "All User Profile" in line:
+            start_index = line.find("All User Profile") + len("All User Profile")
+            wifi_name = line[start_index:].strip()
+            wifi_names.append(wifi_name)
+
+    return wifi_names
 
 
 def get_wifi_names() -> list:
@@ -49,14 +57,7 @@ def get_wifi_names() -> list:
     """
     try:
         log.info("Retrieving Wi-Fi names...")
-        command_output = Actions.run_command("netsh wlan show profile")
-        wifi_names = []
-
-        for line in command_output.split("\n"):
-            if "All User Profile" in line:
-                start_index = line.find("All User Profile") + len("All User Profile")
-                wifi_name = line[start_index:].strip()
-                wifi_names.append(wifi_name)
+        wifi_names = parse_wifi_names(Actions.run_command("netsh wlan show profile"))
         log.info(f"Retrieved {len(wifi_names)} Wi-Fi names.")
         return wifi_names
     except Exception as err:
