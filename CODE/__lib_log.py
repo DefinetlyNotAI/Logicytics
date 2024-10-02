@@ -7,8 +7,6 @@ from datetime import datetime
 import colorlog
 from typing import Type
 
-from zope.interface.common.interfaces import IOSError
-
 
 class Log:
     """
@@ -182,8 +180,6 @@ class Log:
         :param message: The exception message to be logged.
         :param exception_type: The type of exception to raise.
         """
-        if self.color:
-            colorlog.log(self.EXCEPTION_LOG_LEVEL, str(message))
         self.raw(f"[{self.__timestamp()}] > EXCEPTION:| {self.__pad_message(f'{message} -> Exception provoked: {str(exception_type)}')}")
         raise exception_type(message)
 
@@ -195,3 +191,7 @@ class Log:
         """
         if self.color:
             colorlog.log(self.INTERNAL_LOG_LEVEL, str(message))
+
+
+if __name__ == "__main__":
+    Log().exception("This is a library file and should not be executed directly.", Exception)
