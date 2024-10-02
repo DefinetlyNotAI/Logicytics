@@ -490,4 +490,6 @@ class Execute:
 
 DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
 if __name__ == "__main__":
-    Log().exception("This is a library file and should not be executed directly.", Exception)
+    Log().exception(
+        "This is a library file and should not be executed directly.", Exception
+    )
