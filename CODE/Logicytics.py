@@ -112,12 +112,12 @@ log.info("Starting Logicytics...")
 
 # Check for privileges and errors
 if not check_status.admin():
-    log.critical("Please run this script with admin privileges")
-    if not DEBUG:
+    log.critical("Please run this script with admin privileges - To ignore this message, run with DEBUG in config")
+    if DEBUG == "DEBUG":
+        log.warning("Running in debug mode, continuing without admin privileges - This may cause issues")
+    else:
         input("Press Enter to exit...")
         exit(1)
-    else:
-        log.warning("Running in debug mode, continuing without admin privileges")
 
 if check_status.uac():
     log.warning("UAC is enabled, this may cause issues")
