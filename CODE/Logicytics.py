@@ -5,6 +5,10 @@ from _health import backup, update
 from _hide_my_tracks import attempt_hide
 from _zipper import Zip
 
+# Initialization
+Actions.mkdir()
+check_status = Check()
+
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
@@ -26,9 +30,6 @@ The script appears to be designed to be highly configurable and modular,
 with many options and flags that can be used to customize its behavior.
 """
 
-# Initialization
-Actions.mkdir()
-check_status = Check()
 
 if isinstance(Actions.flags(), tuple):
     try:
