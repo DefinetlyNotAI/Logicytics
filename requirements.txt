@@ -1,5 +1,5 @@
 requests~=2.32.3
 psutil~=6.1.0
 DateTime~=5.5
-colorlog~=6.8.2
+colorlog~=6.9.0
 pathlib~=1.0.1
