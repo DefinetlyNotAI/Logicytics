@@ -104,12 +104,11 @@ The config.json file is a JSON file that contains the following information:
 
 ```json
 {
-    "WEBHOOK URL": "",
-    "ipgeolocation.io API KEY": "",
-    "DEBUG": true,
-    "VERSION": "X.X.X",
+    "ipgeolocation.io API KEY": "OPTIONAL - Key for ipgeoloc",
+    "Log Level Debug?": bool,
+    "VERSION": "Version number x.x.x  format",
     "CURRENT_FILES": [
-      
+        "Files Seperated by commas in strings"
     ]
 }
 ```
