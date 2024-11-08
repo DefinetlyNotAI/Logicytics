@@ -1,4 +1,6 @@
 import shutil
+from typing import Tuple
+
 from __lib_class import *
 
 
@@ -28,7 +30,7 @@ def backup(directory: str, name: str) -> None:
     shutil.move(f"{name}.zip", "../ACCESS/BACKUP")
 
 
-def update() -> str:
+def update() -> tuple[str, str]:
     """
     Updates the repository by pulling the latest changes from the remote repository.
 
@@ -36,11 +38,19 @@ def update() -> str:
     and then returns to the current working directory.
 
     Returns:
-        None
+        str: The output from the git pull command.
     """
+    # Check if git command is available
+    if subprocess.run(["git", "--version"], capture_output=True).returncode != 0:
+        return "Git is not installed or not available in the PATH.", "error"
+
+    # Check if the project is a git repository
+    if not os.path.exists(os.path.join(os.getcwd(), ".git")):
+        return "This project is not a git repository. The update flag uses git.", "error"
+
     current_dir = os.getcwd()
     parent_dir = os.path.dirname(current_dir)
     os.chdir(parent_dir)
-    output = subprocess.run(["git", "pull"]).stdout.decode()
+    output = subprocess.run(["git", "pull"], capture_output=True).stdout.decode()
     os.chdir(current_dir)
-    return output
+    return output, "info"

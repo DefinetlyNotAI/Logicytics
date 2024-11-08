@@ -92,7 +92,7 @@ class Actions:
         parser.add_argument(
             "--update",
             action="store_true",
-            help="Update Logicytics from GitHub - Use on your own device only -.",
+            help="Update Logicytics from GitHub, only if you have git and the project was downloaded via git - Use on your own device only -.",
         )
         parser.add_argument(
             "--extra",

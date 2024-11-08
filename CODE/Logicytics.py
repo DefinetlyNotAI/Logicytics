@@ -73,7 +73,8 @@ if action == "extra":
 
 if action == "update":
     log.info("Updating...")
-    log.info(update())
+    message, log_type = update()
+    log.string(message, log_type)
     log.info("Update complete!")
     input("Press Enter to exit...")
     exit(0)
