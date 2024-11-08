@@ -319,19 +319,4 @@ Always obtain proper authorization before extracting any data from a system.
 ### License
 
 - [Developer Certificate of Origin](DCO.md)
-- [MIT License](LICENSE)
-
-
-### 📃 GitHub Actions Status
-
-[![CodeQL](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/github-code-scanning/codeql)
-[![Codespaces Prebuilds](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/codespaces/create_codespaces_prebuilds)
-[![Dependabot Updates](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependabot/dependabot-updates)
-[![Dependency Review](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/dependency-review.yml)
-[![Docker Image CI](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/docker-image.yml)
-[![Greetings](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/greetings.yml)
-[![Mark stale issues and pull requests](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/stale.yml)
-[![pages-build-deployment](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/pages/pages-build-deployment)
-[![PSScriptAnalyzer](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/powershell.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/powershell.yml)
-[![Scorecard supply-chain security](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/scorecard.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/scorecard.yml)
-[![Verify Files modified](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/file-mod-restrict.yml/badge.svg)](https://github.com/DefinetlyNotAI/Logicytics/actions/workflows/file-mod-restrict.yml)
+- [Our License](LICENSE)
