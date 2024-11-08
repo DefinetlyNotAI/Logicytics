@@ -26,7 +26,7 @@ restrictions:
 
 ## Issues assignment
 
-I will be looking at the open issues, analyze them, and provide guidance on how to proceed.
+I will be looking at the open issues, analyse them, and provide guidance on how to proceed.
 
 Issues can be assigned to anyone other than me and contributors are welcome
 to participate in the discussion and provide their input on how to best solve the issue,
@@ -48,7 +48,7 @@ leave core files alone.
 ## Guidelines for Modifications 📃
 
 When making modifications to the Logicytics project,
-please adhere to the following guidelines on the WiKi page.
+please adhere to the following guidelines on the Wiki page.
 
 ## Issues and labels 🛠️
 
@@ -100,13 +100,10 @@ Please adhere to the coding guidelines used throughout the
 project (indentation, accurate comments, etc.) and any other requirements
 (such as test coverage).
 
-View the WiKi for more information on how to write pull requests.
+View the Wiki for more information on how to write pull requests.
 
 **IMPORTANT**: By submitting a patch, you agree to allow the project owners to
-license your work under the terms of the [MIT License](https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE) (
-if it
-includes code changes) and under the terms of the
-[Creative Commons Attribution 3.0 Unported License](https://creativecommons.org/licenses/by/3.0/).
+license your work under the terms of the [License](https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE)
 
 ## License 📝
 
