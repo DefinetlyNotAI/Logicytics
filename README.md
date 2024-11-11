@@ -104,8 +104,8 @@ The config.json file is a JSON file that contains the following information:
 
 ```json
 {
-    "ipgeolocation.io API KEY": "OPTIONAL - Key for ipgeoloc",
-    "Log Level Debug?": bool,
+    "ipgeolocation.io API KEY": "OPTIONAL - Key for ipgeolocation",
+    "Log Level Debug?": "boolean - True or False",
     "VERSION": "Version number x.x.x  format",
     "CURRENT_FILES": [
         "Files Seperated by commas in strings"
@@ -198,8 +198,8 @@ Don't recreate these:
     <td>Would love to be updated</td>
   </tr>
   <tr>
-    <td>driverquery+sysinfo.py</td>
-    <td>Gets data from driverquery and sysinfo command</td>
+    <td>cmd_commands.py</td>
+    <td>Gets data from driverquery, sysinfo, gpresult and more</td>
     <td></td>
   </tr>
   <tr>
