@@ -27,5 +27,5 @@ def command(file: str, com: str, message: str):
 
 command("Drivers.txt", "driverquery /v", "Driver Query")
 command("SysInfo.txt", "systeminfo", "System Info")
-# WIP
-# command("Dir_S.txt", "dir/s", "Directory Listing")
+command("GPResult.txt", "GPResult /r", "GPResult")
+command("Dir_Root.txt", "Get-ChildItem C:\\ -Recurse", "Root Directory Listing")

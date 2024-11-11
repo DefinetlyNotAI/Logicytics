@@ -126,7 +126,7 @@ if check_status.uac():
 
 # Create execution list
 execution_list = [
-    "driverquery+sysinfo.py",
+    "cmd_commands.py",
     "log_miner.py",
     "media_backup.py",
     "online_ip_scraper.py",
@@ -146,7 +146,7 @@ execution_list = [
 
 if action == "minimal":
     execution_list = [
-        "driverquery+sysinfo.py",
+        "cmd_commands.py",
         "registry.py",
         "tasklist.py",
         "tree.bat",
@@ -160,7 +160,7 @@ if action == "exe":
     log.warning(
         "EXE is not fully implemented yet - For now its only SysInternal and WMIC wrappers"
     )
-    execution_list = ["sys_internal.py", "wmic.py"]
+    execution_list = ["sys_internal.py", "wmic.py", "cmd_commands.py"]
 
 if action == "modded":
     # Add all files in MODS to execution list
