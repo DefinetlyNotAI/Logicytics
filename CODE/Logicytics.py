@@ -61,6 +61,7 @@ if action == "debug":
 
 messages = check_status.sys_internal_zip()
 if messages:
+    # If there are messages, log them with debug
     log.debug(messages)
 
 if action == "dev":
@@ -113,10 +114,10 @@ log.info("Starting Logicytics...")
 
 # Check for privileges and errors
 if not check_status.admin():
-    log.critical("Please run this script with admin privileges - To ignore this message, run with DEBUG in config")
     if DEBUG == "DEBUG":
         log.warning("Running in debug mode, continuing without admin privileges - This may cause issues")
     else:
+        log.critical("Please run this script with admin privileges - To ignore this message, run with DEBUG in config")
         input("Press Enter to exit...")
         exit(1)
 
@@ -131,7 +132,6 @@ execution_list = [
     "media_backup.py",
     "online_ip_scraper.py",
     "registry.py",
-    "sensitive_data_miner.py",
     "ssh_miner.py",
     "sys_internal.py",
     "tasklist.py",
@@ -166,11 +166,17 @@ if action == "modded":
     # Add all files in MODS to execution list
     execution_list = Execute.get_files(Path("../MODS"), execution_list)
 
-log.debug(execution_list)
+if action == "depth":
+    log.warning("This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards.")
+    execution_list.append("sensitive_data_miner.py")
+    execution_list.append("dir_list.py")
+    log.warning("This flag will use threading!")
+    action = "threaded"
+
+log.debug(f"The following will be executed: {execution_list}")
 
 # Check weather to use threading or not, as well as execute code
 if action == "threaded":
-
     def threaded_execution(execution_list_thread, index_thread):
         try:
             thread_log = Execute.file(execution_list_thread, index_thread)

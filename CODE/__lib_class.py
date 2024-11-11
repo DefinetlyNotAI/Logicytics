@@ -141,6 +141,11 @@ class Actions:
             action="store_true",
             help="Execute Flag that will shutdown the device afterward",
         )
+        parser.add_argument(
+            "--depth",
+            action="store_true",
+            help="This flag will run any script that is clunky and huge, but produces a lot of data",
+        )
         return parser.parse_args(), parser
 
     @staticmethod
@@ -157,7 +162,7 @@ class Actions:
         special_flag_used = False
         if args.reboot or args.shutdown or args.webhook:
             if not (
-                args.default or args.threaded or args.modded or args.minimal or args.exe
+                args.default or args.threaded or args.modded or args.minimal or args.exe or args.depth
             ):
                 print("Invalid combination of flags.")
                 exit(1)
