@@ -6,8 +6,7 @@ from _hide_my_tracks import attempt_hide
 from _zipper import Zip
 
 # Initialization
-Actions.mkdir()
-check_status = Check()
+FileManagement.mkdir()
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
@@ -31,16 +30,16 @@ with many options and flags that can be used to customize its behavior.
 """
 
 
-if isinstance(Actions.flags(), tuple):
+if isinstance(Flag.data(), tuple):
     try:
         # Get flags
-        action, sub_action = Actions.flags()
+        action, sub_action = Flag.data()
     except Exception:
-        action = Actions.flags()
+        action = Flag.data()
         action = action[0]
         sub_action = None
 else:
-    parser = Actions.flags()
+    parser = Flag.data()
     parser.print_help()
     input("Press Enter to exit...")
     exit(1)
@@ -59,7 +58,7 @@ if action == "debug":
     log.info("Opening debug menu...")
     special_run("_debug.py")
 
-messages = check_status.sys_internal_zip()
+messages = Check.sys_internal_zip()
 if messages:
     # If there are messages, log them with debug
     log.debug(messages)
@@ -85,7 +84,7 @@ if action == "restore":
         "Sorry, this feature is yet to be implemented. You can manually Restore your backups, We will open "
         "the location for you"
     )
-    Actions.open_file("../ACCESS/BACKUP/")
+    FileManagement.open_file("../ACCESS/BACKUP/")
     input("Press Enter to exit...")
     exit(1)
 
@@ -105,7 +104,7 @@ if action == "unzip_extra":
         "caution"
     )
     log.info("Unzipping...")
-    Actions.unzip(Path("..\\EXTRA\\EXTRA.zip"))
+    FileManagement.unzip(Path("..\\EXTRA\\EXTRA.zip"))
     log.info("Unzip complete!")
     input("Press Enter to exit...")
     exit(0)
@@ -113,7 +112,7 @@ if action == "unzip_extra":
 log.info("Starting Logicytics...")
 
 # Check for privileges and errors
-if not check_status.admin():
+if not Check.admin():
     if DEBUG == "DEBUG":
         log.warning("Running in debug mode, continuing without admin privileges - This may cause issues")
     else:
@@ -121,7 +120,7 @@ if not check_status.admin():
         input("Press Enter to exit...")
         exit(1)
 
-if check_status.uac():
+if Check.uac():
     log.warning("UAC is enabled, this may cause issues")
     log.warning("Please disable UAC if possible")
 
@@ -164,7 +163,7 @@ if action == "exe":
 
 if action == "modded":
     # Add all files in MODS to execution list
-    execution_list = Execute.get_files(Path("../MODS"), execution_list)
+    execution_list = Get.list_of_files(Path("../MODS"), execution_list)
 
 if action == "depth":
     log.warning("This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards.")
@@ -205,7 +204,7 @@ if action == "threaded":
 else:
     try:
         for file in range(len(execution_list)):  # Loop through List
-            log.info(Execute.execute_script(execution_list[file]))
+            log.info(Execute.script(execution_list[file]))
             log.info(f"{execution_list[file]} executed")
     except UnicodeDecodeError as e:
         log.error(f"Error in thread: {e}")

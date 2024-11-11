@@ -22,7 +22,7 @@ def run_command_threaded(directory: str, file: str, message: str, encoding: str 
     log.info(f"Executing {message} for {directory}")
     try:
         command = f"powershell -Command Get-ChildItem {directory} -Recurse"
-        output = Actions.run_command(command)
+        output = Execute.command(command)
         open(file, "a", encoding=encoding).write(output)
         log.info(f"{message} Successful for {directory} - {file}")
     except Exception as e:

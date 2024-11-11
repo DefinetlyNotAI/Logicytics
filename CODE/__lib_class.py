@@ -11,42 +11,7 @@ from pathlib import Path
 from __lib_log import Log
 
 
-class Actions:
-    @staticmethod
-    def open_file(file: str, use_full_path=False) -> str | None:
-        """
-        Opens a specified file using its default application in a cross-platform manner.
-        Args:
-            file (str): The path to the file to be opened.
-            use_full_path (bool): Whether to use the full path of the file or not.
-        Returns:
-            None
-        """
-        if not file == "":
-            if use_full_path:
-                current_dir = os.path.dirname(os.path.abspath(__file__))
-                file_path = os.path.join(current_dir, file)
-            else:
-                file_path = os.path.realpath(file)
-            try:
-                subprocess.run(["start", file_path], shell=False)
-            except Exception as e:
-                return f"Error opening file: {e}"
-
-    @staticmethod
-    def run_command(command: str) -> str:
-        """
-        Runs a command in a subprocess and returns the output as a string.
-
-        Parameters:
-            command (str): The command to be executed.
-
-        Returns:
-            CompletedProcess.stdout: The output of the command as a string.
-        """
-        process = subprocess.run(command, capture_output=True, text=True)
-        return process.stdout
-
+class Flag:
     @staticmethod
     def __parse_arguments() -> tuple[argparse.Namespace, argparse.ArgumentParser]:
         """
@@ -103,13 +68,13 @@ class Actions:
             "--dev",
             action="store_true",
             help="Run Logicytics developer mod, this is only for people who want to register their contributions "
-            "properly. - Use on your own device only -.",
+                 "properly. - Use on your own device only -.",
         )
         parser.add_argument(
             "--exe",
             action="store_true",
             help="Run Logicytics using its precompiled exe's, These may be outdated and not the best, use only if the "
-            "device doesnt have python installed.",
+                 "device doesnt have python installed.",
         )
         parser.add_argument(
             "--debug",
@@ -162,7 +127,7 @@ class Actions:
         special_flag_used = False
         if args.reboot or args.shutdown or args.webhook:
             if not (
-                args.default or args.threaded or args.modded or args.minimal or args.exe or args.depth
+                    args.default or args.threaded or args.modded or args.minimal or args.exe or args.depth
             ):
                 print("Invalid combination of flags.")
                 exit(1)
@@ -180,9 +145,9 @@ class Actions:
         Returns:
             tuple[str, ...]: A tuple of flag names that are set to True.
         """
-        Flags = {key: getattr(args, key) for key in vars(args)}
+        flags = {key: getattr(args, key) for key in vars(args)}
         true_keys = []
-        for key, value in Flags.items():
+        for key, value in flags.items():
             if value:
                 true_keys.append(key)
                 if len(true_keys) == 2:
@@ -190,7 +155,7 @@ class Actions:
         return tuple(true_keys)
 
     @classmethod
-    def flags(cls) -> tuple[str, ...] | argparse.ArgumentParser:
+    def data(cls) -> tuple[str, ...] | argparse.ArgumentParser:
         """
         Handles the parsing and validation of command-line flags.
 
@@ -216,72 +181,28 @@ class Actions:
         else:
             return tuple(used_flags)
 
+
+class FileManagement:
     @staticmethod
-    def read_config() -> tuple[str, str, str, list[str]]:
+    def open_file(file: str, use_full_path=False) -> str | None:
         """
-        Reads the configuration from the config.json file.
-
-        Returns:
-            A tuple containing the webhook URL, debug mode, version, API key, and a list of current files.
-            The types of the returned values are:
-                - webhook_url: str
-                - debug: bool
-                - version: str
-                - api_key: str
-                - files: list[str]
-
-        Raises:
-            FileNotFoundError: If the config.json file is not found.
-            SystemExit: If the config.json file has an invalid format.
-        """
-        try:
-            script_dir = Path(__file__).parent.absolute()
-            config_path = script_dir / "config.json"
-            with open(config_path, "r") as file:
-                data = json.load(file)
-
-                debug = data.get("Log Level Debug?", False)
-                version = data.get("VERSION", "2.0.0")
-                api_key = data.get("ipgeolocation.io API KEY", "")
-                files = data.get("CURRENT_FILES", [])
-
-                if not (
-                    isinstance(debug, bool)
-                    and isinstance(version, str)
-                    and isinstance(api_key, str)
-                    and isinstance(files, list)
-                ):
-                    print("Invalid config.json format.")
-                    input("Press Enter to exit...")
-                    exit(1)
-                if debug:
-                    debug = "DEBUG"
-                else:
-                    debug = "INFO"
-                return debug, version, api_key, files
-        except FileNotFoundError:
-            print("The config.json File is not found.")
-            input("Press Enter to exit...")
-            exit(1)
-
-    @staticmethod
-    def check_current_files(directory: str) -> list:
-        """
-        Retrieves a list of files with specific extensions within a specified directory and its subdirectories.
-
+        Opens a specified file using its default application in a cross-platform manner.
         Args:
-            directory (str): The path to the directory to search for files.
-
+            file (str): The path to the file to be opened.
+            use_full_path (bool): Whether to use the full path of the file or not.
         Returns:
-            list: A list of file paths with the following extensions: .py, .exe, .ps1, .bat.
+            None
         """
-        file = []
-        for root, _, filenames in os.walk(directory):
-            for filename in filenames:
-                if filename.endswith((".py", ".exe", ".ps1", ".bat")):
-                    files_path = os.path.join(root, filename)
-                    file.append(files_path.removeprefix(".\\"))
-        return file
+        if not file == "":
+            if use_full_path:
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                file_path = os.path.join(current_dir, file)
+            else:
+                file_path = os.path.realpath(file)
+            try:
+                subprocess.run(["start", file_path], shell=False)
+            except Exception as e:
+                return f"Error opening file: {e}"
 
     @staticmethod
     def mkdir():
@@ -320,14 +241,6 @@ class Actions:
 
 
 class Check:
-    def __init__(self):
-        """
-        Initializes an instance of the class.
-
-        Sets the Actions attribute to an instance of the Actions class.
-        """
-        self.Actions = Actions()
-
     @staticmethod
     def admin() -> bool:
         """
@@ -352,7 +265,7 @@ class Check:
         Returns:
             bool: True if UAC is enabled, False otherwise.
         """
-        value = Actions.run_command(
+        value = Execute.command(
             r"powershell (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System).EnableLUA"
         )
         return int(value.strip("\n")) == 1
@@ -393,25 +306,6 @@ class Check:
 
 
 class Execute:
-    @staticmethod
-    def get_files(directory: Path, file_list: list) -> list:
-        """
-        Retrieves a list of files in the specified directory that have the specified extensions.
-        Parameters:
-            directory (str): The path of the directory to search.
-            file_list (list): The list to append the filenames to.
-        Returns:
-            list: The list of filenames with the specified extensions.
-        """
-        for filename in os.listdir(directory):
-            if (
-                filename.endswith((".py", ".exe", ".ps1", ".bat"))
-                and not filename.startswith("_")
-                and filename != "Logicytics.py"
-            ):
-                file_list.append(filename)
-        return file_list
-
     @classmethod
     def file(cls, execution_list: list, Index: int):
         # IT IS USED, DO NOT REMOVE
@@ -423,12 +317,12 @@ class Execute:
         Returns:
             None
         """
-        cls.execute_script(execution_list[Index])
+        cls.script(execution_list[Index])
         if __name__ == "__main__":
             Log().info(f"{execution_list[Index]} executed")
 
     @classmethod
-    def execute_script(cls, script_path: str):
+    def script(cls, script_path: str):
         """
         Executes a script file and handles its output based on the file extension.
         Parameters:
@@ -441,6 +335,20 @@ class Execute:
             cls.__run_python_script(script_path)
         else:
             cls.__run_other_script(script_path)
+
+    @staticmethod
+    def command(command: str) -> str:
+        """
+        Runs a command in a subprocess and returns the output as a string.
+
+        Parameters:
+            command (str): The command to be executed.
+
+        Returns:
+            CompletedProcess.stdout: The output of the command as a string.
+        """
+        process = subprocess.run(command, capture_output=True, text=True)
+        return process.stdout
 
     @staticmethod
     def __unblock_ps1_script(script: str):
@@ -493,7 +401,95 @@ class Execute:
             Log().string(str(lines), ID)
 
 
-DEBUG, VERSION, API_KEY, CURRENT_FILES = Actions.read_config()
+class Get:
+    @staticmethod
+    def list_of_files(directory: Path, file_list: list) -> list:
+        """
+        Retrieves a list of files in the specified directory that have the specified extensions.
+        Parameters:
+            directory (str): The path of the directory to search.
+            file_list (list): The list to append the filenames to.
+        Returns:
+            list: The list of filenames with the specified extensions.
+        """
+        for filename in os.listdir(directory):
+            if (
+                    filename.endswith((".py", ".exe", ".ps1", ".bat"))
+                    and not filename.startswith("_")
+                    and filename != "Logicytics.py"
+            ):
+                file_list.append(filename)
+        return file_list
+
+    @staticmethod
+    def list_of_code_files(directory: str) -> list:
+        """
+        Retrieves a list of files with specific extensions within a specified directory and its subdirectories.
+
+        Args:
+            directory (str): The path to the directory to search for files.
+
+        Returns:
+            list: A list of file paths with the following extensions: .py, .exe, .ps1, .bat.
+        """
+        file = []
+        for root, _, filenames in os.walk(directory):
+            for filename in filenames:
+                if filename.endswith((".py", ".exe", ".ps1", ".bat")):
+                    files_path = os.path.join(root, filename)
+                    file.append(files_path.removeprefix(".\\"))
+        return file
+
+    @staticmethod
+    def config_data() -> tuple[str, str, str, list[str]]:
+        """
+        Reads the configuration from the config.json file.
+
+        Returns:
+            A tuple containing the webhook URL, debug mode, version, API key, and a list of current files.
+            The types of the returned values are:
+                - webhook_url: str
+                - debug: bool
+                - version: str
+                - api_key: str
+                - files: list[str]
+
+        Raises:
+            FileNotFoundError: If the config.json file is not found.
+            SystemExit: If the config.json file has an invalid format.
+        """
+        try:
+            script_dir = Path(__file__).parent.absolute()
+            config_path = script_dir / "config.json"
+            with open(config_path, "r") as file:
+                data = json.load(file)
+
+                debug = data.get("Log Level Debug?", False)
+                version = data.get("VERSION", "2.0.0")
+                api_key = data.get("ipgeolocation.io API KEY", "")
+                files = data.get("CURRENT_FILES", [])
+
+                if not (
+                        isinstance(debug, bool)
+                        and isinstance(version, str)
+                        and isinstance(api_key, str)
+                        and isinstance(files, list)
+                ):
+                    print("Invalid config.json format.")
+                    input("Press Enter to exit...")
+                    exit(1)
+                if debug:
+                    debug = "DEBUG"
+                else:
+                    debug = "INFO"
+                return debug, version, api_key, files
+        except FileNotFoundError:
+            print("The config.json File is not found.")
+            input("Press Enter to exit...")
+            exit(1)
+
+
+DEBUG, VERSION, API_KEY, CURRENT_FILES = Get.config_data()
 if __name__ == "__main__":
     Log().exception(
         "This is a library file and should not be executed directly.", Exception

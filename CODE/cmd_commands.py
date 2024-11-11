@@ -19,7 +19,7 @@ def command(file: str, commands: str, message: str, encoding: str = "UTF-8") -> 
     """
     log.info(f"Executing {message}")
     try:
-        output = Actions.run_command(commands)
+        output = Execute.command(commands)
         open(file, "w", encoding=encoding).write(output)
         log.info(f"{message} Successful - {file}")
     except Exception as e:
