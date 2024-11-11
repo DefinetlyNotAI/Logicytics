@@ -11,8 +11,8 @@ requestInfoReplyComment: >
 requestInfoDefaultTitles:
   - update readme.md
   - updates
-  - Provide a general summary of the issue
-  - Update
+  - provide a general summary of the issue
+  - update
 
 # *OPTIONAL* Label to be added to Issues and Pull Requests with insufficient information given
 requestInfoLabelToAdd: progress:Invalid
