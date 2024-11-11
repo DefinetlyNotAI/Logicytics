@@ -11,11 +11,6 @@ Until Now, no one. Please think of sparing a dollar ❤️
 
 ## 👨‍💻 Coders Credits 👨‍💻
 
-### WEB directory & index.html by iamthgeawsomboi2099
-Created the Website of [Logicytics](index.html) as well as maintained it and fixed security headers
-The sole creator of WEB directory
-- [iamthgeawsomboi2099](https://github.com/iamthgeawsomboi2099)
-
 ### Wifi-Stealer.py by ski-sketch
 Created Wi-Fi Password Stealer using python
 The sole creator of the code of wifi-stealer
