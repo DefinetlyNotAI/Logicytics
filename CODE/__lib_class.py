@@ -430,12 +430,12 @@ class Get:
             directory (str): The path to the directory to search for files.
 
         Returns:
-            list: A list of file paths with the following extensions: .py, .exe, .ps1, .bat.
+            list: A list of file paths with the following extensions: .py, .exe, .ps1, .bat, .vbs.
         """
         file = []
         for root, _, filenames in os.walk(directory):
             for filename in filenames:
-                if filename.endswith((".py", ".exe", ".ps1", ".bat")):
+                if filename.endswith((".py", ".exe", ".ps1", ".bat", ".vbs")):
                     files_path = os.path.join(root, filename)
                     file.append(files_path.removeprefix(".\\"))
         return file
