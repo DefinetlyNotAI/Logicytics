@@ -31,5 +31,5 @@ jobs:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         stale-issue-message: 'Stale issue message'
         stale-pr-message: 'Stale pull request message'
-        stale-issue-label: 'Stale'
-        stale-pr-label: 'Stale'
+        stale-issue-label: 'progress/Stale'
+        stale-pr-label: 'progress/Stale'
