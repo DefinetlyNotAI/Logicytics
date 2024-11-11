@@ -59,7 +59,7 @@ class Dev:
         Returns:
             bool: True if all checks pass, otherwise False.
         """
-        Actions.mkdir()
+        FileManagement.mkdir()
         checks = [
             ("Have you read the required contributing guidelines?", "../CONTRIBUTING.md"),
             ("Have you made files you don't want to be run start with '_'?", "."),
@@ -79,7 +79,7 @@ class Dev:
             if remind:
                 remind = not self.__prompt_user("Did You Build the EXE with Advanced Installer?", "../Logicytics.aip")
 
-            files = Actions.check_current_files(".")
+            files = Get.list_of_code_files(".")
             print(files)
             if not self.__prompt_user("Does the list above include your added files?"):
                 return "Something went wrong! Please contact support."

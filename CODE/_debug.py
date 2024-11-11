@@ -200,7 +200,7 @@ def debug():
     log_debug.string("\n".join(message).replace("\n", ""), type)
 
     # Check Admin
-    if Check().admin():
+    if Check.admin():
         log_debug.info("Admin privileges found")
     else:
         log_debug.warning("Admin privileges not found")
