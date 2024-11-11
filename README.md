@@ -234,8 +234,8 @@ Don't recreate these:
   </tr>
   <tr>
     <td>sensitive_data_miner.py</td>
-    <td>Copies all files that can be considered sensitive in a neat folder</td>
-    <td>Must be worked on - Pretty inefficient</td>
+    <td>Copies all files that can be considered sensitive in a neat folder, very slow and clunky</td>
+    <td></td>
   </tr>
   <tr>
     <td>ssh_miner.py</td>
@@ -270,6 +270,11 @@ Don't recreate these:
   <tr>
     <td>wifi_stealer.py</td>
     <td>Gets the SSID and Password of all saved Wi-Fi</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>dir_list.py</td>
+    <td>Produces a txt on every single file on the device, very slow and clunky - useful for depth scanning</td>
     <td></td>
   </tr>
 </table>
