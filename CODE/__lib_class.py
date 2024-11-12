@@ -12,8 +12,18 @@ from __lib_log import Log
 
 
 class Flag:
-    @staticmethod
-    def __parse_arguments() -> tuple[argparse.Namespace, argparse.ArgumentParser]:
+    @classmethod
+    def colorify(cls, text: str, color: str) -> str:
+        colors = {
+            "y": "\033[93m",
+            "r": "\033[91m",
+            "b": "\033[94m"
+        }
+        RESET = "\033[0m"
+        return f"{colors.get(color, '')}{text}{RESET}" if color in colors else text
+
+    @classmethod
+    def __available_arguments(cls) -> tuple[argparse.Namespace, argparse.ArgumentParser]:
         """
         A static method used to parse command-line arguments for the Logicytics application.
 
@@ -28,74 +38,93 @@ class Flag:
         """
         # Define the argument parser
         parser = argparse.ArgumentParser(
-            description="Logicytics, The most powerful tool for system data analysis."
+            description="Logicytics, The most powerful tool for system data analysis. "
+                        "This tool provides a comprehensive suite of features for analyzing system data, "
+                        "including various modes for different levels of detail and customization."
         )
-        # Define Flags
+
+        # Define Actions Flags
         parser.add_argument(
-            "--default", action="store_true", help="Runs Logicytics default"
-        )
-        parser.add_argument(
-            "--minimal",
+            "--default",
             action="store_true",
-            help="Run Logicytics in minimal mode. Just bare essential scraping",
-        )
-        parser.add_argument(
-            "--unzip-extra",
-            action="store_true",
-            help="Unzip the extra directory zip File - Use on your own device only -.",
-        )
-        parser.add_argument(
-            "--backup",
-            action="store_true",
-            help="Backup Logicytics files to the ACCESS/BACKUPS directory - Use on your own device only -.",
-        )
-        parser.add_argument(
-            "--restore",
-            action="store_true",
-            help="Restore Logicytics files from the ACCESS/BACKUPS directory - Use on your own device only -.",
-        )
-        parser.add_argument(
-            "--update",
-            action="store_true",
-            help="Update Logicytics from GitHub, only if you have git and the project was downloaded via git - Use on your own device only -.",
-        )
-        parser.add_argument(
-            "--extra",
-            action="store_true",
-            help="Open the extra directory for more tools.",
-        )
-        parser.add_argument(
-            "--dev",
-            action="store_true",
-            help="Run Logicytics developer mod, this is only for people who want to register their contributions "
-                 "properly. - Use on your own device only -.",
-        )
-        parser.add_argument(
-            "--exe",
-            action="store_true",
-            help="Run Logicytics using its precompiled exe's, These may be outdated and not the best, use only if the "
-                 "device doesnt have python installed.",
-        )
-        parser.add_argument(
-            "--debug",
-            action="store_true",
-            help="Runs the Debugger, Will check for any issues, warning etc, useful for debugging and issue reporting",
-        )
-        parser.add_argument(
-            "--modded",
-            action="store_true",
-            help="Runs the normal Logicytics, as well as any File in the MODS directory, Useful for custom scripts",
+            help="Runs Logicytics with its default settings and scripts. "
+                 f"{cls.colorify('- Recommended for most users -', 'b')}",
         )
         parser.add_argument(
             "--threaded",
             action="store_true",
-            help="Runs Logicytics using threads, where it runs in parallel",
+            help="Runs Logicytics using threads, where it runs in parallel, default settings though"
+                 f"{cls.colorify('- Recommended for some users -', 'b')}",
         )
         parser.add_argument(
-            "--webhook",
+            "--modded",
             action="store_true",
-            help="Execute Flag that will send zip File via webhook",
+            help="Runs the normal Logicytics, as well as any File in the MODS directory, "
+                 "Used for custom scripts as well as default ones.",
         )
+        parser.add_argument(
+            "--depth",
+            action="store_true",
+            help="This flag will run all default script's in threading mode, "
+                 "as well as any clunky and huge code, which produces a lot of data "
+                 f"{cls.colorify('- Will take a long time -', 'y')}",
+        )
+        parser.add_argument(
+            "--nopy",
+            action="store_true",
+            help="Run Logicytics using all non-python scripts, "
+                 f"These may be {cls.colorify('outdated', 'y')} "
+                 "and not the best, use only if the device doesnt have python installed.",
+        )
+        parser.add_argument(
+            "--minimal",
+            action="store_true",
+            help="Run Logicytics in minimal mode. Just bare essential scraping using only quick scripts",
+        )
+
+        # Define Side Flags
+        parser.add_argument(
+            "--debug",
+            action="store_true",
+            help="Runs the Debugger, Will check for any issues, "
+                 "warning etc, useful for debugging and issue reporting "
+                 f"{cls.colorify('- Use to get a special log file to report the bug -', 'b')}.",
+        )
+        parser.add_argument(
+            "--backup",
+            action="store_true",
+            help="Backup Logicytics files to the ACCESS/BACKUPS directory "
+                 f"{cls.colorify('- Use on your own device only -', 'y')}.",
+        )
+        parser.add_argument(
+            "--update",
+            action="store_true",
+            help="Update Logicytics from GitHub, only if you have git properly installed "
+                 "and the project was downloaded via git "
+                 f"{cls.colorify('- Use on your own device only -', 'y')}.",
+        )
+        parser.add_argument(
+            "--unzip-extra",
+            action="store_true",
+            help="Unzip the extra directory zip File "
+                 f"{cls.colorify('- Use on your own device only -', 'y')}.",
+        )
+        parser.add_argument(
+            "--extra",
+            action="store_true",
+            help="Open's the extra directory menu to use more tools. "
+                 f"{cls.colorify('- Still experimental -', 'y')} "
+                 f"{cls.colorify('- MUST have used --unzip-extra flag -', 'b')}.",
+        )
+        parser.add_argument(
+            "--dev",
+            action="store_true",
+            help="Run Logicytics developer mod, this is only for people who want to "
+                 "register their contributions properly. "
+                 f"{cls.colorify('- Use on your own device only -', 'y')}.",
+        )
+
+        # Define After-Execution Flags
         parser.add_argument(
             "--reboot",
             action="store_true",
@@ -106,15 +135,25 @@ class Flag:
             action="store_true",
             help="Execute Flag that will shutdown the device afterward",
         )
+
+        # Not yet Implemented
         parser.add_argument(
-            "--depth",
+            "--webhook",
             action="store_true",
-            help="This flag will run any script that is clunky and huge, but produces a lot of data",
+            help="Execute Flag that will send zip File via webhook "
+                 f"{cls.colorify('- Not yet Implemented -', 'r')}",
+        )
+        parser.add_argument(
+            "--restore",
+            action="store_true",
+            help="Restore Logicytics files from the ACCESS/BACKUPS directory "
+                 f"{cls.colorify('- Use on your own device only -', 'y')} "
+                 f"{cls.colorify('- Not yet Implemented -', 'r')}",
         )
         return parser.parse_args(), parser
 
     @staticmethod
-    def __exclusivity(args: argparse.Namespace) -> bool:
+    def __exclusivity_logic(args: argparse.Namespace) -> bool:
         """
         Checks if exclusive flags are used in the provided arguments.
 
@@ -127,7 +166,7 @@ class Flag:
         special_flag_used = False
         if args.reboot or args.shutdown or args.webhook:
             if not (
-                    args.default or args.threaded or args.modded or args.minimal or args.exe or args.depth
+                    args.default or args.threaded or args.modded or args.minimal or args.nopy or args.depth
             ):
                 print("Invalid combination of flags.")
                 exit(1)
@@ -135,7 +174,7 @@ class Flag:
         return special_flag_used
 
     @staticmethod
-    def __set_flags(args: argparse.Namespace) -> tuple[str, ...]:
+    def __used_flags_logic(args: argparse.Namespace) -> tuple[str, ...]:
         """
         Sets flags based on the provided arguments.
 
@@ -161,8 +200,8 @@ class Flag:
 
         Returns either a tuple of used flag names or an ArgumentParser instance.
         """
-        args, parser = cls.__parse_arguments()
-        special_flag_used = cls.__exclusivity(args)
+        args, parser = cls.__available_arguments()
+        special_flag_used = cls.__exclusivity_logic(args)
 
         if not special_flag_used:
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
@@ -171,7 +210,7 @@ class Flag:
                 exit(1)
 
         if special_flag_used:
-            used_flags = cls.__set_flags(args)
+            used_flags = cls.__used_flags_logic(args)
             if len(used_flags) > 2:
                 print("Invalid combination of flags.")
                 exit(1)
@@ -289,7 +328,7 @@ class Check:
 
             if zip_file and not ignore_file:
                 with zipfile.ZipFile(
-                    "SysInternal_Suite/SysInternal_Suite.zip"
+                        "SysInternal_Suite/SysInternal_Suite.zip"
                 ) as zip_ref:
                     zip_ref.extractall("SysInternal_Suite")
                 if __name__ == "__main__":
