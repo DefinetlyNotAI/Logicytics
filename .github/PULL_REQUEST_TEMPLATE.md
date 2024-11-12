@@ -9,7 +9,6 @@
 - [ ] I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md).
 - [ ] I have followed the instructions in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) about contributions.
 - [ ] I have updated the documentation accordingly, if required.
-- [ ] I have added tests to cover my changes, and they have passed, if required.
 - [ ] I have tested my code with the `--dev` flag, if required.
 
 ### PR Type
@@ -31,11 +30,6 @@
 ### Motivation and Context
 
 <!-- REQUIRED: Why is this PR required? What problem does it solve? Why do you want to do it? -->
-
-### Binaries
-
-<!-- If you have any binaries built from the AIP, Upload them here -->
-<!-- OPTIONAL for patch updates - To leave empty just type _N/A_ -->
 
 ### Credit
 
