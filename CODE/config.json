@@ -1,15 +1,14 @@
 {
-    "ipgeolocation.io API KEY": "OPTIONAL - ADD A KEY",
     "Log Level Debug?": false,
-    "VERSION": "2.3.6",
+    "VERSION": "2.4.0",
     "CURRENT_FILES": [
         "browser_miner.ps1",
-        "driverquery+sysinfo.py",
+        "cmd_commands.py",
+        "dir_list.py",
         "Logicytics.py",
         "log_miner.py",
         "media_backup.py",
         "netadapter.ps1",
-        "online_ip_scraper.py",
         "property_scraper.ps1",
         "registry.py",
         "sensitive_data_miner.py",
