@@ -124,7 +124,7 @@ if Check.uac():
     log.warning("UAC is enabled, this may cause issues")
     log.warning("Please disable UAC if possible")
 
-# Create execution list
+# Create execution list [default]
 execution_list = [
     "cmd_commands.py",
     "log_miner.py",
@@ -155,11 +155,14 @@ if action == "minimal":
         "window_feature_miner.ps1",
     ]
 
-if action == "exe":
-    log.warning(
-        "EXE is not fully implemented yet - For now its only SysInternal and WMIC wrappers"
-    )
-    execution_list = ["sys_internal.py", "wmic.py", "cmd_commands.py"]
+if action == "nopy":
+    execution_list = [
+        "browser_miner.ps1",
+        "netadapter.ps1",
+        "property_scraper.ps1",
+        "window_feature_miner.ps1",
+        "tree.bat"
+    ]
 
 if action == "modded":
     # Add all files in MODS to execution list
@@ -243,9 +246,9 @@ if sub_action == "shutdown":
 if sub_action == "reboot":
     log.info("Rebooting in 3 seconds...")
     subprocess.call("shutdown /r /t 3", shell=False)
-if sub_action == "webhook":
+# if sub_action == "webhook":
     # Implement this in future
-    log.warning("This feature is not fully implemented yet! Sorry")
+    # log.warning("This feature is not implemented yet! Sorry")
 
 log.info("Exiting...")
 input("Press Enter to exit...")
