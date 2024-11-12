@@ -104,7 +104,6 @@ The config.json file is a JSON file that contains the following information:
 
 ```json
 {
-    "ipgeolocation.io API KEY": "OPTIONAL - Key for ipgeolocation",
     "Log Level Debug?": "boolean - True or False",
     "VERSION": "Version number x.x.x  format",
     "CURRENT_FILES": [
@@ -113,8 +112,7 @@ The config.json file is a JSON file that contains the following information:
 }
 ```
 
-The config.json file is used to store the webhook URL, 
-the API key for `ipgeolocation.io`, the DEBUG flag, the VERSION, and the CURRENT_FILES.
+The config.json file is used to store the DEBUG flag bool, the VERSION, and the CURRENT_FILES.
 
 CURRENT_FILES is an array of strings that contains the names of the files you have, 
 this is used to later check for corruption or bugs.
@@ -216,11 +214,6 @@ Don't recreate these:
     <td>netadapter.ps1</td>
     <td>Runs Get-NetAdapter Command with many flags</td>
     <td></td>
-  </tr>
-  <tr>
-    <td>online_ip_scraper.py</td>
-    <td>Uses https://api.ipify.org to get your IP</td>
-    <td>May not be of much use</td>
   </tr>
   <tr>
     <td>property_scraper.ps1</td>
