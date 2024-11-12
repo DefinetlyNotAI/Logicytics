@@ -59,7 +59,7 @@ class Dev:
         Returns:
             bool: True if all checks pass, otherwise False.
         """
-        Actions.mkdir()
+        FileManagement.mkdir()
         checks = [
             ("Have you read the required contributing guidelines?", "../CONTRIBUTING.md"),
             ("Have you made files you don't want to be run start with '_'?", "."),
@@ -73,7 +73,8 @@ class Dev:
                 if not self.__prompt_user(question, file_to_open):
                     return "Fix the issues and try again with the checklist."
 
-            files = Actions.check_current_files(".")
+            print()
+            files = Get.list_of_code_files(".")
             print(files)
             if not self.__prompt_user("Does the list above include your added files?"):
                 return "Something went wrong! Please contact support."
@@ -81,10 +82,12 @@ class Dev:
             self.__update_json_file("config.json", files, "CURRENT_FILES")
             self.__update_json_file(
                 "config.json",
-                input(f"Enter the new version of the project (Old version is {VERSION}):"),
+                input(f"Enter the new version of the project (Old version is {VERSION}): "),
                 "VERSION",
             )
-            print("Great Job! Please tick the box in the GitHub PR request for completing steps in --dev")
+            print("\nGreat Job! Please tick the box in the GitHub PR request for completing steps in --dev")
+
+            input("\nPress Enter to exit the program. ")
             return None
         except Exception as e:
             return str(e)

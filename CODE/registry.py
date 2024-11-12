@@ -23,3 +23,4 @@ def backup_registry():
 
 
 backup_registry()
+# TODO Fix the issue of random operation completion message not adhering colorlog

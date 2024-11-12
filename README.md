@@ -104,8 +104,7 @@ The config.json file is a JSON file that contains the following information:
 
 ```json
 {
-    "ipgeolocation.io API KEY": "OPTIONAL - Key for ipgeoloc",
-    "Log Level Debug?": bool,
+    "Log Level Debug?": "boolean - True or False",
     "VERSION": "Version number x.x.x  format",
     "CURRENT_FILES": [
         "Files Seperated by commas in strings"
@@ -113,8 +112,7 @@ The config.json file is a JSON file that contains the following information:
 }
 ```
 
-The config.json file is used to store the webhook URL, 
-the API key for `ipgeolocation.io`, the DEBUG flag, the VERSION, and the CURRENT_FILES.
+The config.json file is used to store the DEBUG flag bool, the VERSION, and the CURRENT_FILES.
 
 CURRENT_FILES is an array of strings that contains the names of the files you have, 
 this is used to later check for corruption or bugs.
@@ -198,8 +196,8 @@ Don't recreate these:
     <td>Would love to be updated</td>
   </tr>
   <tr>
-    <td>driverquery+sysinfo.py</td>
-    <td>Gets data from driverquery and sysinfo command</td>
+    <td>cmd_commands.py</td>
+    <td>Gets data from driverquery, sysinfo, gpresult and more</td>
     <td></td>
   </tr>
   <tr>
@@ -218,11 +216,6 @@ Don't recreate these:
     <td></td>
   </tr>
   <tr>
-    <td>online_ip_scraper.py</td>
-    <td>Uses https://api.ipify.org to get your IP</td>
-    <td>May not be of much use</td>
-  </tr>
-  <tr>
     <td>property_scraper.ps1</td>
     <td>Gets all the windows properties</td>
     <td></td>
@@ -234,8 +227,8 @@ Don't recreate these:
   </tr>
   <tr>
     <td>sensitive_data_miner.py</td>
-    <td>Copies all files that can be considered sensitive in a neat folder</td>
-    <td>Must be worked on - Pretty inefficient</td>
+    <td>Copies all files that can be considered sensitive in a neat folder, very slow and clunky</td>
+    <td></td>
   </tr>
   <tr>
     <td>ssh_miner.py</td>
@@ -270,6 +263,11 @@ Don't recreate these:
   <tr>
     <td>wifi_stealer.py</td>
     <td>Gets the SSID and Password of all saved Wi-Fi</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>dir_list.py</td>
+    <td>Produces a txt on every single file on the device, very slow and clunky - useful for depth scanning</td>
     <td></td>
   </tr>
 </table>
