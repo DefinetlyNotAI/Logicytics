@@ -73,12 +73,6 @@ class Dev:
                 if not self.__prompt_user(question, file_to_open):
                     return "Fix the issues and try again with the checklist."
 
-            remind = self.__prompt_user(
-                "If the update is a major or minor upgrade (non-patch update) answer `yes`?", special=True
-            )
-            if remind:
-                remind = not self.__prompt_user("Did You Build the EXE with Advanced Installer?", "../Logicytics.aip")
-
             files = Actions.check_current_files(".")
             print(files)
             if not self.__prompt_user("Does the list above include your added files?"):
@@ -91,8 +85,6 @@ class Dev:
                 "VERSION",
             )
             print("Great Job! Please tick the box in the GitHub PR request for completing steps in --dev")
-            if remind:
-                print("Remember to upload the EXE files on the PR!")
             return None
         except Exception as e:
             return str(e)
