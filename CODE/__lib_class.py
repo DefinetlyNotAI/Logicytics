@@ -480,7 +480,7 @@ class Get:
         return file
 
     @staticmethod
-    def config_data() -> tuple[str, str, str, list[str]]:
+    def config_data() -> tuple[str, str, list[str]]:
         """
         Reads the configuration from the config.json file.
 
@@ -504,14 +504,12 @@ class Get:
                 data = json.load(file)
 
                 debug = data.get("Log Level Debug?", False)
-                version = data.get("VERSION", "2.0.0")
-                api_key = data.get("ipgeolocation.io API KEY", "")
-                files = data.get("CURRENT_FILES", [])
+                version = data.get("VERSION", "Unknown")
+                files = data.get("CURRENT_FILES", ["Unknown"])
 
                 if not (
                         isinstance(debug, bool)
                         and isinstance(version, str)
-                        and isinstance(api_key, str)
                         and isinstance(files, list)
                 ):
                     print("Invalid config.json format.")
@@ -521,14 +519,14 @@ class Get:
                     debug = "DEBUG"
                 else:
                     debug = "INFO"
-                return debug, version, api_key, files
+                return debug, version, files
         except FileNotFoundError:
             print("The config.json File is not found.")
             input("Press Enter to exit...")
             exit(1)
 
 
-DEBUG, VERSION, API_KEY, CURRENT_FILES = Get.config_data()
+DEBUG, VERSION, CURRENT_FILES = Get.config_data()
 if __name__ == "__main__":
     Log().exception(
         "This is a library file and should not be executed directly.", Exception
