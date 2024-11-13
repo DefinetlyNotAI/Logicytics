@@ -73,10 +73,10 @@ This opens a help menu.
 Once you have run the program, you can run the program with the following command:
 `python Logicytics.py -h`
 Replace the flags with the ones you want to use.
-you must have admin privelages while running!
+you must have admin privileges while running!
 
 > [!TIP]
-> Although its really recommended to use admin, by setting debug in the config.json to true, you can bypass this requirement
+> Although it's really recommended to use admin, by setting debug in the config.json to true, you can bypass this requirement
 
 6) Wait for magic to happen 🧙‍♀️
 Logicytics will now run and gather data according to the flags you used.
@@ -102,7 +102,8 @@ If you have an idea or want to contribute to the project, you can submit an issu
 After running and successfully collecting data, you may traverse the ACCESS directory as much as you like,
 Remove add and delete files, it's the safest directory where your backups, hashes, data zips and logs are found.
 
-Also watch this [video](https://www.youtube.com/watch?v=XVTBmdTQqOs) for a better understanding of Logicytics
+> [!TIP]
+> Watch this [video](https://www.youtube.com/watch?v=XVTBmdTQqOs) for a better understanding of Logicytics
 
 ## 🔧 Configuration 🔧
 
@@ -155,7 +156,7 @@ The `--modded` flag can also be used to run custom scripts.
 If you want to run a custom script with the `--modded` flag, 
 you can add the script to the `MODS` directory, and it will be run with the `--modded` flag.
 
-To check all the mods and how to make your own, you can check the `Logicytics.py` file and the WIKI.
+To check all the mods and how to make your own, you can check the `Logicytics.py` file and the Wiki.
 Also refer to the contributing.md for more info
 
 ## 🛑 Troubleshooting 🛑
@@ -180,7 +181,7 @@ If those don't work attempt:
 
 ### Support Resources
 
-Check out the [GitHub wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) for help
+Check out the [GitHub wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) for help.
 
 ## 📊 Data Analysis 📊
 
@@ -190,7 +191,8 @@ Logicytics extracts a wide range of data points on a Windows system.
 
 Here are some of the data points that Logicytics extracts:
 
-Don't recreate these:
+> [!IMPORTANT]
+> Don't recreate these as then it's a waste of time for you
 
 <table>
   <tr>
@@ -283,7 +285,8 @@ Don't recreate these:
 This is not an exhaustive list, 
 but it should give you a good idea of what data Logicytics is capable of extracting.
 
-**Any file with `_` is not counted here, do note they may range from custom libraries to special files/wrappers**
+> [!NOTE]
+> **Any file with `_` is not counted here, do note they may range from custom libraries to special files/wrappers**
 
 ### Want to create your own mod?
 
@@ -301,7 +304,10 @@ special tools
 
 ### Want to create your own mod?
 
-Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
+Check out the [contributing guidlines](CONTRIBUTING.md) file for more info, as well as the [wiki guidelines](https://github.com/DefinetlyNotAI/Logicytics/wiki/5-Contribution-Guidelines) for more info
+
+> [!IMPORTANT]
+> Always adhere to the [coding standards](https://github.com/DefinetlyNotAI/Logicytics/wiki/6-Coding-Standards) of Logicytics!
 
 ## 🌟 Conclusion 🌟
 
@@ -311,15 +317,14 @@ from forensics to system information gathering.
 Its ability to extract data from various sources makes it a valuable tool
 for any Windows system administrator or forensic investigator.
 
-### 📣 Note
-
-Please remember that extracting data from a system without proper authorization is illegal and unethical.
-Always obtain proper authorization before extracting any data from a system.
+> [!CAUTION]
+> Please remember that extracting data from a system without proper authorization is illegal and unethical.
+> Always obtain proper authorization before extracting any data from a system.
 
 ### 🔗 Links
 
 - [Project's Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
-- [Project's Future](https://definetlynotai.github.io/Logicytics/WEB/roadmap.html)
+- [Project's Future](PLANS.md)
 - [Project's License](LICENSE)
 
 ### License
