@@ -176,23 +176,24 @@ if action == "depth":
 
 log.debug(f"The following will be executed: {execution_list}")
 
+
 # Check weather to use threading or not, as well as execute code
 if action == "threaded":
     def threaded_execution(execution_list_thread, index_thread):
+        log.debug(f"Thread {index_thread} started")
         try:
-            thread_log = Execute.file(execution_list_thread, index_thread)
-            if thread_log[0]:
-                log.info(thread_log[0])
-            log.info(thread_log[1])
+            log.execute_log_parse(Execute.script(execution_list_thread[index_thread]))
+            log.info(f"{execution_list[index_thread]} executed")
         except UnicodeDecodeError as err:
             log.error(f"Error in thread: {err}")
         except Exception as err:
             log.error(f"Error in thread: {err}")
 
+    log.debug("Using threading")
     threads = []
     for index, file in enumerate(execution_list):
         thread = threading.Thread(
-            target=Execute.file,
+            target=Execute.script,
             args=(
                 execution_list,
                 index,
@@ -206,12 +207,12 @@ if action == "threaded":
 else:
     try:
         for file in range(len(execution_list)):  # Loop through List
-            log.info(Execute.script(execution_list[file]))
+            log.execute_log_parse(Execute.script(execution_list[file]))
             log.info(f"{execution_list[file]} executed")
     except UnicodeDecodeError as e:
-        log.error(f"Error in thread: {e}")
+        log.error(f"Error in code: {e}")
     except Exception as e:
-        log.error(f"Error in thread: {e}")
+        log.error(f"Error in code: {e}")
 
 # Zip generated files
 if action == "modded":
