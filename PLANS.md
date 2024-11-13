@@ -2,7 +2,6 @@
 
 | Task                                                                                                                 | Version |
 |----------------------------------------------------------------------------------------------------------------------|---------|
-| Check todos                                                                                                          | v2.4.1  |
 | Refactor logicytics                                                                                                  | v2.4.1  |
 | Docstring everything again                                                                                           | v2.4.2  |
 | Implement a parser for Windows Event Logs to extract and analyze security-related events.                            | v2.4.2  |

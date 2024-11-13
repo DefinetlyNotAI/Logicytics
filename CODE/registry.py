@@ -16,11 +16,12 @@ def backup_registry():
     cmd = [reg_path, "export", "HKLM", export_path]
 
     try:
-        subprocess.run(cmd, check=True)
-        log.info(f"Registry backed up successfully to {export_path}")
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        log.info(f"Registry backed up successfully to {export_path}. Output: {result.stdout}")
     except subprocess.CalledProcessError as e:
+        log.error(f"Failed to back up the registry: {e}. More details: {result.stderr}")
+    except Exception as e:
         log.error(f"Failed to back up the registry: {e}")
 
 
 backup_registry()
-# TODO Fix the issue of random operation completion message not adhering colorlog
