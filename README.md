@@ -51,7 +51,8 @@ To install and setup Logicytics, follow these steps:
 
 - **Knowledge of Command Line**: The project uses command line options for the user to interact with the program. It is recommended to have a basic understanding of command line options.
 
-- **Optional**: Create a `.sys.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the ZIP file (This is done for the OpenSSF score), if the `.sys.ignore` file is not found, it will auto extract the details
+> [!TIP]
+> Create a `.sys.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the ZIP file (This is done for the OpenSSF score), if the `.sys.ignore` file is not found, it will auto extract the details
 
 ## Step-by-Step Installation and Usage
 
@@ -72,18 +73,25 @@ This opens a help menu.
 Once you have run the program, you can run the program with the following command:
 `python Logicytics.py -h`
 Replace the flags with the ones you want to use.
-You Must use Admin!
+you must have admin privelages while running!
 
-5) Wait for magic to happen 🧙‍♀️
+> [!TIP]
+> Although its really recommended to use admin, by setting debug in the config.json to true, you can bypass this requirement
+
+6) Wait for magic to happen 🧙‍♀️
 Logicytics will now run and gather data according to the flags you used.
 
-6) Enjoy the gathered data 🎉
-Once the program has finished running, you can find the gathered data in the "Data" folder.
+7) Enjoy the gathered data 🎉
+Once the program has finished running, you can find the gathered data in the "ACCESS/DATA" folder. Both Zip and Hash will be found there.
 
-7) Share the love ❤️
+> [!NOTE]
+> All Zips and Hashes follow a conventional naming mechanism that goes as follows
+> `Logicytics_{CODE-or-MODS}_{Flag-Used}_{Date-And-Time}.zip`
+
+9) Share the love ❤️
 If you like Logicytics, please consider sharing it with others or spreading the word about it.
 
-8) Contribute to the project 👥
+10) Contribute to the project 👥
 If you have an idea or want to contribute to the project, you can submit an issue or PR on the <a href="https://github.com/DefinetlyNotAI/Logicytics">GitHub repository</a>.
 
 
