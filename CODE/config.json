@@ -1,6 +1,6 @@
 {
     "Log Level Debug?": false,
-    "VERSION": "2.4.0",
+    "VERSION": "2.4.1",
     "CURRENT_FILES": [
         "browser_miner.ps1",
         "cmd_commands.py",
@@ -15,7 +15,7 @@
         "ssh_miner.py",
         "sys_internal.py",
         "tasklist.py",
-        "tree.bat",
+        "tree.ps1",
         "wifi_stealer.py",
         "window_feature_miner.ps1",
         "wmic.py",

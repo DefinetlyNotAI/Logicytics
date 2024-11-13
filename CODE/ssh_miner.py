@@ -44,4 +44,3 @@ def ssh_miner():
 
 
 ssh_miner()
-# TODO Test me

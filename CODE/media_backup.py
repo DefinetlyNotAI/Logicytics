@@ -60,4 +60,3 @@ class Media:
 
 
 Media().backup()
-# TODO Test me
