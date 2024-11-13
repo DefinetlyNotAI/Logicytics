@@ -6,6 +6,8 @@ import os
 import zipfile
 
 
+# TODO - Fix bug where directories aren't zipped and remove their contents
+
 class Zip:
     """
     A class to handle zipping files, generating SHA256 hashes, and moving files.
@@ -36,13 +38,13 @@ class Zip:
     @staticmethod
     def __get_files_to_zip(path: str) -> list:
         """
-        Returns a list of files to be zipped, excluding certain file types and names.
+        Returns a list of files and directories to be zipped, excluding certain file types and names.
 
         Args:
             path (str): The directory path to search for files.
 
         Returns:
-            list: A list of file names to be zipped.
+            list: A list of file and directory names to be zipped.
         """
         return [
             f
@@ -66,7 +68,12 @@ class Zip:
         """
         with zipfile.ZipFile(f"{filename}.zip", "w") as zip_file:
             for file in files:
-                zip_file.write(os.path.join(path, file))
+                if os.path.isdir(os.path.join(path, file)):
+                    for root, _, files in os.walk(os.path.join(path, file)):
+                        for f in files:
+                            zip_file.write(os.path.join(root, f), os.path.relpath(os.path.join(root, f), path))
+                else:
+                    zip_file.write(os.path.join(path, file))
 
     @staticmethod
     def __remove_files(path: str, files: list):
