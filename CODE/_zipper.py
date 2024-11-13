@@ -6,8 +6,6 @@ import os
 import zipfile
 
 
-# TODO - Fix bug where directories aren't zipped and remove their contents
-
 class Zip:
     """
     A class to handle zipping files, generating SHA256 hashes, and moving files.
