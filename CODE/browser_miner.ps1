@@ -47,7 +47,7 @@ $fullSourcePath = $sourcePath -replace '\{\}', $currentUser
 # Enhanced error checking for source path existence and accessibility
 if (-not (Test-PathAndAccess $fullSourcePath))
 {
-    Write-Host "ERROR: Source path $fullSourcePath does not exist or cannot be accessed."
+    Write-Host "WARNING: Source path $fullSourcePath does not exist or cannot be accessed."
 continue
 }
 
@@ -84,9 +84,7 @@ Write-Host "INFO: Successfully copied $fullSourcePath to $destinationPath"
 catch
 {
     # Detailed error handling
-    Write-Host "ERROR: An error occurred while copying $fullSourcePath to $destinationPath. Error: $_"
+    Write-Host "ERROR: An error occurred while copying $fullSourcePath to $destinationPath : $_"
 exit
 }
 }
-
-# TODO Test me

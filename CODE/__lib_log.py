@@ -221,6 +221,12 @@ class Log:
         if self.color and message != "None" and message is not None:
             colorlog.log(self.INTERNAL_LOG_LEVEL, str(message))
 
+    def execute_log_parse(self, message_log):
+        if message_log:
+            for message_list in message_log:
+                if len(message_list) == 2:
+                    self.string(message_list[0], message_list[1])
+
 
 if __name__ == "__main__":
     Log().exception(
