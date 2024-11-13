@@ -133,7 +133,7 @@ execution_list = [
     "ssh_miner.py",
     "sys_internal.py",
     "tasklist.py",
-    "tree.bat",
+    "tree.ps1",
     "wmic.py",
     "browser_miner.ps1",
     "netadapter.ps1",
@@ -147,7 +147,7 @@ if action == "minimal":
         "cmd_commands.py",
         "registry.py",
         "tasklist.py",
-        "tree.bat",
+        "tree.ps1",
         "wmic.py",
         "netadapter.ps1",
         "property_scraper.ps1",
@@ -160,7 +160,7 @@ if action == "nopy":
         "netadapter.ps1",
         "property_scraper.ps1",
         "window_feature_miner.ps1",
-        "tree.bat"
+        "tree.ps1"
     ]
 
 if action == "modded":
