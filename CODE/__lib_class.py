@@ -1,13 +1,15 @@
 from __future__ import annotations
+
 import argparse
+import ctypes
 import json
 import os
-import subprocess
-import ctypes
 import os.path
+import subprocess
 import zipfile
-from subprocess import CompletedProcess
 from pathlib import Path
+from subprocess import CompletedProcess
+
 from __lib_log import Log
 
 
@@ -310,7 +312,7 @@ class Check:
         return int(value.strip("\n")) == 1
 
     @staticmethod
-    def sys_internal_zip():
+    def sys_internal_zip() -> str:
         """
         Extracts the SysInternal_Suite zip file if it exists and is not ignored.
 
@@ -331,14 +333,10 @@ class Check:
                         "SysInternal_Suite/SysInternal_Suite.zip"
                 ) as zip_ref:
                     zip_ref.extractall("SysInternal_Suite")
-                if __name__ == "__main__":
-                    Log({"log_level": DEBUG}).debug("SysInternal_Suite zip extracted")
+                    return "SysInternal_Suite zip extracted"
 
             elif ignore_file:
-                if __name__ == "__main__":
-                    Log({"log_level": DEBUG}).debug(
-                        "Found .sys.ignore file, skipping SysInternal_Suite zip extraction"
-                    )
+                return "Found .sys.ignore file, skipping SysInternal_Suite zip extraction"
 
         except Exception as err:
             exit(f"Failed to unzip SysInternal_Suite: {err}")
@@ -346,34 +344,19 @@ class Check:
 
 class Execute:
     @classmethod
-    def file(cls, execution_list: list, Index: int):
-        # IT IS USED, DO NOT REMOVE
-        """
-        Executes a file from the execution list at the specified index.
-        Parameters:
-            Index (int): The index of the file to be executed in the execution list.
-            execution_list (list): List to use when indexing
-        Returns:
-            None
-        """
-        cls.script(execution_list[Index])
-        if __name__ == "__main__":
-            Log().info(f"{execution_list[Index]} executed")
-
-    @classmethod
-    def script(cls, script_path: str):
+    def script(cls, script_path: str) -> list[list[str]] | None:
         """
         Executes a script file and handles its output based on the file extension.
         Parameters:
             script_path (str): The path of the script file to be executed.
         """
-        if script_path.endswith(".ps1"):
-            cls.__unblock_ps1_script(script_path)
-            cls.__run_other_script(script_path)
-        elif script_path.endswith(".py"):
+        if script_path.endswith(".py"):
             cls.__run_python_script(script_path)
+            return None
         else:
-            cls.__run_other_script(script_path)
+            if script_path.endswith(".ps1"):
+                cls.__unblock_ps1_script(script_path)
+            return cls.__run_other_script(script_path)
 
     @staticmethod
     def command(command: str) -> str:
@@ -401,8 +384,6 @@ class Execute:
         try:
             unblock_command = f'powershell.exe -Command "Unblock-File -Path {script}"'
             subprocess.run(unblock_command, shell=False, check=True)
-            if __name__ == "__main__":
-                Log().info("PS1 Script unblocked.")
         except Exception as err:
             exit(f"Failed to unblock script: {err}")
 
@@ -421,8 +402,8 @@ class Execute:
         # LEAVE AS PRINT
         print(result.decode())
 
-    @staticmethod
-    def __run_other_script(script: str):
+    @classmethod
+    def __run_other_script(cls, script: str) -> list[list[str]]:
         """
         Runs a script with other extensions and logs output based on its content.
         Parameters:
@@ -430,14 +411,14 @@ class Execute:
         Returns:
             None
         """
-
-        result = subprocess.run(
-            ["powershell.exe", ".\\" + script], capture_output=True, text=True
-        )
-        lines = result.stdout.splitlines()
-        ID = next((line.split(":")[0].strip() for line in lines if ":" in line), None)
-        if ID and __name__ == "__main__":
-            Log().string(str(lines), ID)
+        result = cls.command(f"powershell.exe -File {script}")
+        lines = result.splitlines()
+        messages = []
+        for line in lines:
+            if ":" in line:
+                id_part, message_part = line.split(":", 1)
+                messages.append([message_part.strip(), id_part.strip()])
+        return messages
 
 
 class Get:
