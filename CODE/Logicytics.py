@@ -183,17 +183,17 @@ if action == "threaded":
         log.debug(f"Thread {index_thread} started")
         try:
             log.execute_log_parse(Execute.script(execution_list_thread[index_thread]))
-            log.info(f"{execution_list[index_thread]} executed")
+            log.info(f"{execution_list_thread[index_thread]} executed")
         except UnicodeDecodeError as err:
             log.error(f"Error in thread: {err}")
         except Exception as err:
             log.error(f"Error in thread: {err}")
-
+        log.debug(f"Thread {index_thread} finished")
     log.debug("Using threading")
     threads = []
     for index, file in enumerate(execution_list):
         thread = threading.Thread(
-            target=Execute.script,
+            target=threaded_execution,
             args=(
                 execution_list,
                 index,
