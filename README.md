@@ -21,11 +21,8 @@ This comprehensive guide is here to equip you with everything you need to use Lo
     <a href="https://www.bestpractices.dev/projects/9451"><img src="https://www.bestpractices.dev/projects/9451/badge" alt="OpenSSF Best Practices Badge"></a>
 </div>
 
-## ❤️ Support Me ❤️
-
-Please consider buying me a coffee or sponsoring me in GitHub sponsor,
-I am saving for my college funds in MIT, and I need your help!
-Supporters will be placed in the Credits ❤️
+> [!CAUTION]
+> By using this software, you agree to the license, and agree that you hold responsibility of how you use and modify the code.
 
 ## 🛠️ Installation and Setup 🛠️
 
@@ -51,8 +48,8 @@ To install and setup Logicytics, follow these steps:
 
 - **Knowledge of Command Line**: The project uses command line options for the user to interact with the program. It is recommended to have a basic understanding of command line options.
 
-> [!TIP]
-> Create a `.sys.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the ZIP file (This is done for the OpenSSF score), if the `.sys.ignore` file is not found, it will auto extract the details
+> [!IMPORTANT]
+> You may create a `.sys.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the ZIP file (This is done for the OpenSSF score and to discourage binaries being used without source code), if the `.sys.ignore` file is not found, it will auto extract the binaries and run them using `Logicytics`. For more details on these binaries, go [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite) - For you weary cautious internet crusaders, you can view the [source code here](https://github.com/MicrosoftDocs/sysinternals) and compare hashes and perform your audits.
 
 ## Step-by-Step Installation and Usage
 
@@ -103,7 +100,7 @@ After running and successfully collecting data, you may traverse the ACCESS dire
 Remove add and delete files, it's the safest directory where your backups, hashes, data zips and logs are found.
 
 > [!TIP]
-> Watch this [video](https://www.youtube.com/watch?v=XVTBmdTQqOs) for a better understanding of Logicytics
+> Watch this [video](https://www.youtube.com/watch?v=XVTBmdTQqOs) to see a real life demo of Logicytics (Although the tools and interface may be changed as its a older version)
 
 ## 🔧 Configuration 🔧
 
@@ -320,6 +317,12 @@ for any Windows system administrator or forensic investigator.
 > [!CAUTION]
 > Please remember that extracting data from a system without proper authorization is illegal and unethical.
 > Always obtain proper authorization before extracting any data from a system.
+
+## ❤️ Support Me ❤️
+
+Please consider buying me a coffee or sponsoring me in GitHub sponsor,
+I am saving for my college funds in MIT, and I need your help!
+Supporters will be placed in the Credits ❤️
 
 ### 🔗 Links
 
