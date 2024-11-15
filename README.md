@@ -189,7 +189,10 @@ Logicytics extracts a wide range of data points on a Windows system.
 Here are some of the data points that Logicytics extracts:
 
 > [!IMPORTANT]
-> Don't recreate these as then it's a waste of time for you
+> Don't recreate the scripts/ideas below as then it's a waste of time for you, unless the Side-note on the script says otherwise, you can however contribute to the script itself.
+
+> [!TIP]
+> You can check out future plans [here](PLANS.md), you can contribute these plans if you have no idea's on what to contribute!
 
 <table>
   <tr>
