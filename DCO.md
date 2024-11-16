@@ -1,10 +1,3 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<!--
-    File:   Developer_Certificate_of_Origin.md
-    Editor: None, you wimpy wysiwyg people...this is handcrafted!
-            What are you doing reading this anyway??? - Original Authors message
--->
-
 <pre>
 Developer Certificate of Origin
 Version 1.1
