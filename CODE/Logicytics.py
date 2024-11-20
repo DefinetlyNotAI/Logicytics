@@ -1,13 +1,10 @@
 from __future__ import annotations
 
+import datetime
 import threading
 from typing import Any
 
 from __lib_class import *
-from _health import backup, update
-from _hide_my_tracks import attempt_hide
-from _zipper import Zip
-
 
 """
 This python script is the main entry point for the tool called Logicytics.
@@ -28,7 +25,71 @@ with many options and flags that can be used to customize its behavior.
 """
 
 
-def get_flags():
+class Health:
+    @staticmethod
+    def backup(directory: str, name: str):
+        """
+        Creates a backup of a specified directory by zipping its contents and moving it to a designated backup location.
+
+        Args:
+            directory (str): The path to the directory to be backed up.
+            name (str): The name of the backup file.
+
+        Returns:
+            None
+        """
+        # Check if backup exists, delete it if so
+        if os.path.exists(f"../ACCESS/BACKUP/{name}.zip"):
+            os.remove(f"../ACCESS/BACKUP/{name}.zip")
+
+        # Zip the directory and move it to the backup location
+        with zipfile.ZipFile(f"{name}.zip", "w") as zip_file:
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    relative_path = os.path.relpath(str(file_path), start=os.getcwd())
+                    zip_file.write(str(file_path), arcname=relative_path)
+
+        shutil.move(f"{name}.zip", "../ACCESS/BACKUP")
+
+    @staticmethod
+    def update() -> tuple[str, str]:
+        """
+        Updates the repository by pulling the latest changes from the remote repository.
+
+        This function navigates to the parent directory, pulls the latest changes using Git,
+        and then returns to the current working directory.
+
+        Returns:
+            str: The output from the git pull command.
+        """
+        # Check if git command is available
+        if subprocess.run(["git", "--version"], capture_output=True).returncode != 0:
+            return "Git is not installed or not available in the PATH.", "error"
+
+        # Check if the project is a git repository
+        if not os.path.exists(os.path.join(os.getcwd(), ".git")):
+            return "This project is not a git repository. The update flag uses git.", "error"
+
+        current_dir = os.getcwd()
+        parent_dir = os.path.dirname(current_dir)
+        os.chdir(parent_dir)
+        output = subprocess.run(["git", "pull"], capture_output=True).stdout.decode()
+        os.chdir(current_dir)
+        return output, "info"
+
+
+def get_flags() -> tuple[str, str]:
+    """
+    Retrieves the command-line flags and sub-actions.
+
+    This function checks if the flags are provided as a tuple. If so, it attempts to unpack
+    the tuple into actions and sub_actions. If an exception occurs, it sets sub_actions to None.
+    If the flags are not a tuple, it prints the help message and exits the program.
+
+    Returns:
+        tuple: A tuple containing actions and sub_actions.
+    """
     if isinstance(Flag.data(), tuple):
         try:
             # Get flags
@@ -60,6 +121,14 @@ def special_execute(file_path: str):
 
 
 def handle_special_actions():
+    """
+    Handles special actions based on the provided action flag.
+
+    This function checks the value of the `action` variable and performs
+    corresponding special actions such as opening debug, developer, or extra
+    tools menus, updating the repository, restoring backups, creating backups,
+    or unzipping extra files.
+    """
     # Special actions -> Quit
     if action == "debug":
         log.info("Opening debug menu...")
@@ -80,7 +149,7 @@ def handle_special_actions():
 
     if action == "update":
         log.info("Updating...")
-        message, log_type = update()
+        message, log_type = Health.update()
         log.string(message, log_type)
         log.info("Update complete!")
         input("Press Enter to exit...")
@@ -97,9 +166,9 @@ def handle_special_actions():
 
     if action == "backup":
         log.info("Backing up...")
-        backup(".", "Default_Backup")
+        Health.backup(".", "Default_Backup")
         log.debug("Backup complete -> CODE dir")
-        backup("../MODS", "Mods_Backup")
+        Health.backup("../MODS", "Mods_Backup")
         log.debug("Backup complete -> MODS dir")
         log.info("Backup complete!")
         input("Press Enter to exit...")
@@ -118,6 +187,13 @@ def handle_special_actions():
 
 
 def check_privileges():
+    """
+    Checks if the script is running with administrative privileges and handles UAC (User Account Control) settings.
+
+    This function verifies if the script has admin privileges. If not, it either logs a warning (in debug mode) or
+    prompts the user to run the script with admin privileges and exits. It also checks if UAC is enabled and logs
+    warnings accordingly.
+    """
     if not Check.admin():
         if DEBUG == "DEBUG":
             log.warning("Running in debug mode, continuing without admin privileges - This may cause issues")
@@ -128,8 +204,7 @@ def check_privileges():
             exit(1)
 
     if Check.uac():
-        log.warning("UAC is enabled, this may cause issues")
-        log.warning("Please disable UAC if possible")
+        log.warning("UAC is enabled, this may cause issues - Please disable UAC if possible")
 
 
 def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
@@ -194,6 +269,24 @@ def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
     return execution_list
 
 
+def attempt_hide():
+    """
+    Attempts to delete Windows event logs from the current day.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+    today = datetime.date.today()
+    log_path = r"C:\Windows\System32\winevt\Logs"
+
+    for file in os.listdir(log_path):
+        if file.endswith(".evtx") and file.startswith(today.strftime("%Y-%m-%d")):
+            subprocess.run(f'del "{os.path.join(log_path, file)}"', shell=False)
+
+
 def execute_scripts():
     """Executes the scripts in the execution list based on the action."""
     # Check weather to use threading or not, as well as execute code
@@ -239,28 +332,28 @@ def execute_scripts():
 
 def zip_generated_files():
     """Zips generated files based on the action."""
-    if action == "modded":
-        zip_loc_mod, hash_loc = Zip().and_hash("..\\MODS", "MODS", action)
-        log.info(zip_loc_mod)
-        zip_values = Zip().and_hash("..\\MODS", "MODS", action)
+
+    def zip_and_log(directory, name):
+        zip_values = FileManagement.Zip.and_hash(directory, name, action)
         if isinstance(zip_values, str):
             log.error(zip_values)
         else:
-            zip_loc_mod, hash_loc = zip_values
-            log.info(zip_loc_mod)
+            zip_loc, hash_loc = zip_values
+            log.info(zip_loc)
             log.debug(hash_loc)
 
-    zip_values = Zip().and_hash(".", "CODE", action)
-    if isinstance(zip_values, str):
-        # If error, log it
-        log.error(zip_values)
-    else:
-        zip_loc, hash_loc = zip_values
-        log.info(zip_loc)
-        log.debug(hash_loc)
+    if action == "modded":
+        zip_and_log("..\\MODS", "MODS")
+    zip_and_log(".", "CODE")
 
 
 def handle_sub_action():
+    """
+    Handles sub-actions based on the provided sub_action flag.
+
+    This function checks the value of the `sub_action` variable and performs
+    corresponding sub-actions such as shutting down or rebooting the system.
+    """
     if sub_action == "shutdown":
         subprocess.call("shutdown /s /t 3", shell=False)
     elif sub_action == "reboot":
