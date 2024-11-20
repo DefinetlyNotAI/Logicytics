@@ -1,5 +1,12 @@
 from __lib_class import *
 
+"""
+Files must be executed, and so can't ask or await user input.
+
+Any Extra files in the EXTRA directory 
+will be purely executed in the background and logged on the terminal.
+"""
+
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
@@ -16,9 +23,8 @@ def menu():
         files = [
             f
             for f in os.listdir("../EXTRA/EXTRA")
-            if f.endswith(".exe") or f.endswith(".ps1")
-        ]
-        log.info("Available scripts:")
+            if f.endswith((".exe", ".ps1", ".bat", ".cmd", ".py"))]
+        print("Available scripts:")
         for i, file in enumerate(files):
             print(f"{i + 1}. {file}")
     except FileNotFoundError:
@@ -43,3 +49,6 @@ def menu():
     selected_file = files[choice - 1]
     subprocess.run(["powershell.exe", "../EXTRA/EXTRA/" + selected_file], check=True)
     exit(0)
+
+
+menu()

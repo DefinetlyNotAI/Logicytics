@@ -1,4 +1,3 @@
-import shutil
 from __lib_class import *
 
 if __name__ == "__main__":

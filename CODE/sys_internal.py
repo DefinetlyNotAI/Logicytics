@@ -57,6 +57,14 @@ def sys_internal():
 
 
 def check_sys_internal_dir() -> tuple[bool, bool]:
+    """
+    Checks the existence of the 'SysInternal_Suite' directory and its contents.
+
+    Returns:
+        tuple[bool, bool]: A tuple where the first element is True if any of the
+        sys_internal_executables exist in the 'SysInternal_Suite' directory, and
+        the second element is True if 'SysInternal_Suite.zip' exists in the directory.
+    """
     if os.path.exists("SysInternal_Suite"):
         return any(
             os.path.exists(f"SysInternal_Suite/{file}")

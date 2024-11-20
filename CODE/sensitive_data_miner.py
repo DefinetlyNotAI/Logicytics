@@ -1,6 +1,6 @@
-import shutil
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
 from __lib_class import *
 
 if __name__ == "__main__":

@@ -159,7 +159,7 @@ class DebugCheck:
         """
         return (
             "CPU Architecture: " + platform.machine(),
-            "CPU Vendor Id: " + platform.system(),
+            "CPU Vendor ID: " + platform.system(),
             "CPU Model: " + f"{platform.release()} {platform.version()}",
         )
 
@@ -167,82 +167,49 @@ class DebugCheck:
 def debug():
     """
     Performs a series of system checks and logs the results.
-
-    This function performs the following checks:
-    1. Clears the debug log file.
-    2. Checks the integrity of files by comparing local and remote configurations.
-    3. Checks the status of SysInternal Binaries.
-    4. Checks for admin privileges.
-    5. Checks if User Account Control (UAC) is enabled.
-    6. Logs the execution paths.
-    7. Checks if the script is running in a virtual environment.
-    8. Checks the PowerShell execution policy.
-    9. Logs the Python version being used.
-    10. Logs the repository path.
-    11. Logs CPU information.
-    12. Logs the debug configuration.
-
-    Returns:
-        None
     """
     # Clear Debug Log
-    if os.path.exists("../ACCESS/LOGS/DEBUG/DEBUG.LOG"):
-        os.remove("../ACCESS/LOGS/DEBUG/DEBUG.LOG")
+    log_path = "../ACCESS/LOGS/DEBUG/DEBUG.LOG"
+    if os.path.exists(log_path):
+        os.remove(log_path)
 
     # Check File integrity (Online)
-    if HealthCheck().get_online_config():
-        version_tuple, file_tuple = HealthCheck().get_online_config()
-        log_debug.string(
-            "\n".join(version_tuple[0]).replace("\n", ""), version_tuple[2]
-        )
-        log_debug.string("\n".join(file_tuple[0]).replace("\n", ""), file_tuple[2])
+    online_config = HealthCheck().get_online_config()
+    if online_config:
+        version_tuple, file_tuple = online_config
+        log_debug.string(version_tuple[0], version_tuple[2])
+        log_debug.string(file_tuple[0], file_tuple[2])
+
+    # Check SysInternal Binaries
     message, type = DebugCheck.SysInternal_Binaries("SysInternal_Suite")
-    log_debug.string("\n".join(message).replace("\n", ""), type)
+    log_debug.string(message, type)
 
     # Check Admin
-    if Check.admin():
-        log_debug.info("Admin privileges found")
-    else:
-        log_debug.warning("Admin privileges not found")
+    log_debug.info("Admin privileges found" if Check.admin() else "Admin privileges not found")
 
     # Check UAC
-    if Check.uac():
-        log_debug.info("UAC enabled")
-    else:
-        log_debug.warning("UAC disabled")
+    log_debug.info("UAC enabled" if Check.uac() else "UAC disabled")
 
-    # Check Execution Path
+    # Log Execution Paths
     log_debug.info(f"Execution path: {psutil.__file__}")
     log_debug.info(f"Global execution path: {sys.executable}")
     log_debug.info(f"Local execution path: {sys.prefix}")
 
     # Check if running in a virtual environment
-    if sys.prefix != sys.base_prefix:
-        log_debug.warning("Running in a virtual environment")
-    else:
-        log_debug.info("Not running in a virtual environment")
+    log_debug.info("Running in a virtual environment" if sys.prefix != sys.base_prefix else "Not running in a virtual environment")
 
     # Check Execution Policy
-    if DebugCheck.execution_policy():
-        log_debug.info("Execution policy is unrestricted")
-    else:
-        log_debug.warning("Execution policy is not unrestricted")
+    log_debug.info("Execution policy is unrestricted" if DebugCheck.execution_policy() else "Execution policy is not unrestricted")
 
     # Get Python Version
     try:
-        major_py_version = int(sys.version.split()[0].split(".")[0])
-        minor_py_version = int(sys.version.split()[0].split(".")[1])
-
-        if major_py_version == 3 and minor_py_version == 11:
+        major, minor = map(int, sys.version.split()[0].split(".")[:2])
+        if major == 3 and minor == 11:
             log_debug.info(f"Python Version Used: {sys.version.split()[0]} - Perfect")
-        elif major_py_version == 3 and minor_py_version != 11:
-            log_debug.warning(
-                f"Python Version Used: {sys.version.split()[0]} - Recommended Version is: 3.11.X"
-            )
+        elif major == 3:
+            log_debug.warning(f"Python Version Used: {sys.version.split()[0]} - Recommended Version is: 3.11.X")
         else:
-            log_debug.error(
-                f"Python Version Used: {sys.version.split()[0]} - Incompatible Version"
-            )
+            log_debug.error(f"Python Version Used: {sys.version.split()[0]} - Incompatible Version")
     except Exception as e:
         log_debug.error(f"Failed to get Python Version: {e}")
 
