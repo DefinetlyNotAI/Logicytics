@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from __lib_class import *
 
 
@@ -92,7 +93,8 @@ class Dev:
             return str(e)
 
 
-log_dev = Log({"log_level": DEBUG})
+if __name__ == "__main__":
+    log_dev = Log({"log_level": DEBUG})
 message = Dev().dev_checks()
 if message is not None:
     log_dev.error(message)
