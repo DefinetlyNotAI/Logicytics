@@ -352,12 +352,15 @@ class FileManagement:
             Returns:
                 None
             """
+            def ignore_files(files_func):
+                for root, _, file_func in os.walk(os.path.join(path, files_func)):
+                    for f in file_func:
+                        zip_file.write(os.path.join(root, f), os.path.relpath(os.path.join(root, f), path))
+
             with zipfile.ZipFile(f"{filename}.zip", "w") as zip_file:
                 for file in files:
                     if os.path.isdir(os.path.join(path, file)):
-                        for root, _, files in os.walk(os.path.join(path, file)):
-                            for f in files:
-                                zip_file.write(os.path.join(root, f), os.path.relpath(os.path.join(root, f), path))
+                        ignore_files(file)
                     else:
                         zip_file.write(os.path.join(path, file))
 
