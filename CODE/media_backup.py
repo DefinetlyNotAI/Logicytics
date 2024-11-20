@@ -1,6 +1,5 @@
 import getpass
-import shutil
-from datetime import datetime
+
 from __lib_class import *
 
 if __name__ == "__main__":

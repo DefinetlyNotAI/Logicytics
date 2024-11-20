@@ -33,6 +33,15 @@ def get_password(ssid: str) -> str | None:
 
 
 def parse_wifi_names(command_output: str) -> list:
+    """
+    Parses the output of the command to extract Wi-Fi profile names.
+
+    Args:
+        command_output (str): The output of the command "netsh wlan show profile".
+
+    Returns:
+        list: A list of Wi-Fi profile names.
+    """
     wifi_names = []
 
     for line in command_output.split("\n"):
