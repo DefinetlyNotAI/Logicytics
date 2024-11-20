@@ -1,6 +1,6 @@
 {
     "Log Level Debug?": false,
-    "VERSION": "2.4.1",
+    "VERSION": "2.4.2",
     "CURRENT_FILES": [
         "browser_miner.ps1",
         "cmd_commands.py",
@@ -22,9 +22,6 @@
         "_debug.py",
         "_dev.py",
         "_extra.py",
-        "_health.py",
-        "_hide_my_tracks.py",
-        "_zipper.py",
         "__lib_class.py",
         "__lib_log.py",
         "__wrapper__.py"
