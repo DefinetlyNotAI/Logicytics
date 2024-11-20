@@ -7,7 +7,6 @@
 
 | Task                                                                                                                            | Version | Might or Will be done? |
 |---------------------------------------------------------------------------------------------------------------------------------|---------|------------------------|
-| Docstring everything again                                                                                                      | v2.4.2  | ✅                      |
 | Remove \_wrapper.py as its useless                                                                                              | v2.4.3  | ✅                      |
 | Implement a parser for Windows Event Logs to extract and analyze security-related events.                                       | v2.5.0  | ✅                      |
 | Enable integration with popular SIEM (Security Information and Event Management) systems.                                       | v2.5.0  | ✅                      |
