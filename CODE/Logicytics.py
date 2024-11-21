@@ -275,7 +275,7 @@ def execute_scripts():
         def threaded_execution(execution_list_thread, index_thread):
             log.debug(f"Thread {index_thread} started")
             try:
-                log.execute_log_parse(Execute.script(execution_list_thread[index_thread]))
+                log.parse_execution(Execute.script(execution_list_thread[index_thread]))
                 log.info(f"{execution_list_thread[index_thread]} executed")
             except UnicodeDecodeError as err:
                 log.error(f"Error in thread: {err}")
@@ -303,7 +303,7 @@ def execute_scripts():
         try:
             execution_list = generate_execution_list(action)
             for file in range(len(execution_list)):  # Loop through List
-                log.execute_log_parse(Execute.script(execution_list[file]))
+                log.parse_execution(Execute.script(execution_list[file]))
                 log.info(f"{execution_list[file]} executed")
         except UnicodeDecodeError as e:
             log.error(f"Error in code: {e}")
