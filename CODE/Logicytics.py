@@ -68,7 +68,7 @@ class Health:
             return "Git is not installed or not available in the PATH.", "error"
 
         # Check if the project is a git repository
-        if not os.path.exists(os.path.join(os.getcwd(), ".git")):
+        if not os.path.exists(os.path.join(os.getcwd(), "../.git")):
             return "This project is not a git repository. The update flag uses git.", "error"
 
         current_dir = os.getcwd()
@@ -151,7 +151,10 @@ def handle_special_actions():
         log.info("Updating...")
         message, log_type = Health.update()
         log.string(message, log_type)
-        log.info("Update complete!")
+        if log_type == "info":
+            log.info("Update complete!")
+        else:
+            log.error("Update failed!")
         input("Press Enter to exit...")
         exit(0)
 
