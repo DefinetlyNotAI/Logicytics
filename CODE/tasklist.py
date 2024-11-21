@@ -4,6 +4,7 @@ if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
+@log.function
 def tasklist():
     """
     Retrieves a list of running tasks on the system and exports the result to a CSV file.

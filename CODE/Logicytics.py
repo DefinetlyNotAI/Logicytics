@@ -5,27 +5,15 @@ from typing import Any
 
 from __lib_class import *
 
-"""
-This python script is the main entry point for the tool called Logicytics.
-The script performs various actions based on command-line flags and configuration settings.
 
-Here's a high-level overview of what the script does:
-
-1. Initializes directories and checks for admin privileges.
-2. Parses command-line flags and sets up logging.
-3. Performs special actions based on flags, such as debugging, updating, or restoring backups.
-4. Creates an execution list of files to run, which can be filtered based on flags.
-5. Runs the files in the execution list, either sequentially or in parallel using threading.
-6. Zips generated files and attempts to delete event logs.
-7. Performs sub-actions, such as shutting down or rebooting the system, or sending a webhook.
-
-The script appears to be designed to be highly configurable and modular, 
-with many options and flags that can be used to customize its behavior.
-"""
+# Initialization
+FileManagement.mkdir()
+log = Log({"log_level": DEBUG})
 
 
 class Health:
     @staticmethod
+    @log.function
     def backup(directory: str, name: str):
         """
         Creates a backup of a specified directory by zipping its contents and moving it to a designated backup location.
@@ -52,6 +40,7 @@ class Health:
         shutil.move(f"{name}.zip", "../ACCESS/BACKUP")
 
     @staticmethod
+    @log.function
     def update() -> tuple[str, str]:
         """
         Updates the repository by pulling the latest changes from the remote repository.
@@ -78,6 +67,7 @@ class Health:
         return output, "info"
 
 
+@log.function
 def get_flags() -> tuple[str, str]:
     """
     Retrieves the command-line flags and sub-actions.
@@ -105,6 +95,7 @@ def get_flags() -> tuple[str, str]:
     return actions, sub_actions
 
 
+@log.function
 def special_execute(file_path: str):
     """
     Executes a Python script in a new command prompt window.
@@ -119,6 +110,7 @@ def special_execute(file_path: str):
     exit(0)
 
 
+@log.function
 def handle_special_actions():
     """
     Handles special actions based on the provided action flag.
@@ -185,6 +177,7 @@ def handle_special_actions():
         exit(0)
 
 
+@log.function
 def check_privileges():
     """
     Checks if the script is running with administrative privileges and handles UAC (User Account Control) settings.
@@ -206,6 +199,7 @@ def check_privileges():
         log.warning("UAC is enabled, this may cause issues - Please disable UAC if possible")
 
 
+@log.function
 def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
     """
     Creates an execution list based on the provided action.
@@ -268,6 +262,7 @@ def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
     return execution_list
 
 
+@log.function
 def execute_scripts():
     """Executes the scripts in the execution list based on the action."""
     # Check weather to use threading or not, as well as execute code
@@ -311,6 +306,7 @@ def execute_scripts():
             log.error(f"Error in code: {e}")
 
 
+@log.function
 def zip_generated_files():
     """Zips generated files based on the action."""
 
@@ -328,6 +324,7 @@ def zip_generated_files():
     zip_and_log(".", "CODE")
 
 
+@log.function
 def handle_sub_action():
     """
     Handles sub-actions based on the provided sub_action flag.
@@ -345,9 +342,6 @@ def handle_sub_action():
 
 
 if __name__ == "__main__":
-    # Initialization
-    FileManagement.mkdir()
-    log = Log({"log_level": DEBUG})
     # Get flags and configs
     action, sub_action = get_flags()
     # Check for special actions

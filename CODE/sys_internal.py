@@ -14,6 +14,7 @@ sys_internal_executables = [
 ]
 
 
+@log.function
 def sys_internal():
     """
     This function runs a series of system internal sys_internal_executables and logs their output.
@@ -56,6 +57,7 @@ def sys_internal():
     log.info("SysInternal: Successfully executed")
 
 
+@log.function
 def check_sys_internal_dir() -> tuple[bool, bool]:
     """
     Checks the existence of the 'SysInternal_Suite' directory and its contents.
