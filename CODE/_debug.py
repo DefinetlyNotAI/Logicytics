@@ -11,6 +11,7 @@ if __name__ == "__main__":
 
 
 class HealthCheck:
+    @log_debug.function
     def get_online_config(
         self,
     ) -> bool | tuple[tuple[str, str, str], tuple[str, str, str]]:
@@ -92,7 +93,8 @@ class HealthCheck:
 
 class DebugCheck:
     @staticmethod
-    def SysInternal_Binaries(path: str) -> tuple[str, str]:
+    @log_debug.function
+    def sys_internal_binaries(path: str) -> tuple[str, str]:
         """
         Checks the contents of the given path and determines the status of the SysInternal Binaries.
 
@@ -135,6 +137,7 @@ class DebugCheck:
             return f"An Unexpected error occurred: {e}", "ERROR"
 
     @staticmethod
+    @log_debug.function
     def execution_policy() -> bool:
         """
         Checks the current PowerShell execution policy.
@@ -150,6 +153,7 @@ class DebugCheck:
         return result.stdout.strip().lower() == "unrestricted"
 
     @staticmethod
+    @log_debug.function
     def cpu_info() -> tuple[str, str, str]:
         """
         Retrieves information about the CPU.
@@ -164,6 +168,7 @@ class DebugCheck:
         )
 
 
+@log_debug.function
 def debug():
     """
     Performs a series of system checks and logs the results.
@@ -181,7 +186,7 @@ def debug():
         log_debug.string(file_tuple[0], file_tuple[2])
 
     # Check SysInternal Binaries
-    message, type = DebugCheck.SysInternal_Binaries("SysInternal_Suite")
+    message, type = DebugCheck.sys_internal_binaries("SysInternal_Suite")
     log_debug.string(message, type)
 
     # Check Admin

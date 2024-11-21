@@ -11,6 +11,7 @@ if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
+@log.function
 def menu():
     """
     Displays a menu of available executable scripts in the '../EXTRA/EXTRA' directory,

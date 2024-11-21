@@ -4,6 +4,7 @@ if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
+@log.function
 def wmic():
     """
     Retrieves system information using WMIC commands.
