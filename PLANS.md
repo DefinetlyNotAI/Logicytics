@@ -7,7 +7,6 @@
 
 | Task                                                                                                                                | Version | Might or Will be done? |
 |-------------------------------------------------------------------------------------------------------------------------------------|---------|------------------------|
-| Remove \_wrapper.py as its useless                                                                                                  | v2.4.3  | ✅                      |
 | Implement a parser for Windows Event Logs to extract and analyze security-related events.                                           | v2.5.0  | ✅                      |
 | Enable integration with popular SIEM (Security Information and Event Management) systems.                                           | v2.5.0  | ✅                      |
 | Add a tool to capture and analyse network traffic, which can help in forensic investigations.                                       | v2.6.0  | ❌                      |
