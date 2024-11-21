@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 import threading
 from typing import Any
 
@@ -269,24 +268,6 @@ def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
     return execution_list
 
 
-def attempt_hide():
-    """
-    Attempts to delete Windows event logs from the current day.
-
-    Parameters:
-    None
-
-    Returns:
-    None
-    """
-    today = datetime.date.today()
-    log_path = r"C:\Windows\System32\winevt\Logs"
-
-    for file in os.listdir(log_path):
-        if file.endswith(".evtx") and file.startswith(today.strftime("%Y-%m-%d")):
-            subprocess.run(f'del "{os.path.join(log_path, file)}"', shell=False)
-
-
 def execute_scripts():
     """Executes the scripts in the execution list based on the action."""
     # Check weather to use threading or not, as well as execute code
@@ -363,10 +344,9 @@ def handle_sub_action():
     # log.warning("This feature is not implemented yet! Sorry")
 
 
-# Initialization
-FileManagement.mkdir()
-
 if __name__ == "__main__":
+    # Initialization
+    FileManagement.mkdir()
     log = Log({"log_level": DEBUG})
     # Get flags and configs
     action, sub_action = get_flags()
@@ -374,13 +354,13 @@ if __name__ == "__main__":
     handle_special_actions()
     # Check for privileges and errors
     check_privileges()
+    """    
     # Execute scripts
     log.info("Starting Logicytics...")
     execute_scripts()
+    """
     # Zip generated files
     zip_generated_files()
-    # Attempt event log deletion
-    attempt_hide()
     # Finish with sub actions
     log.info("Completed successfully!")
     # Finish with sub actions
