@@ -4,16 +4,14 @@ import argparse
 import ctypes
 import hashlib
 import json
-import os
 import os.path
 import shutil
 import subprocess
 import zipfile
-from datetime import datetime
 from pathlib import Path
 from subprocess import CompletedProcess
 
-from __lib_log import Log
+from __lib_log import *
 
 
 class Flag:
@@ -316,7 +314,7 @@ class FileManagement:
             __move_files(filename: str):
                 Moves the zip file and its hash file to designated directories.
 
-            and_hash(self, path: str, name: str, flag: str) -> tuple | str:
+            and_hash(cls, path: str, name: str, flag: str) -> tuple | str:
                 Zips files, generates a SHA256 hash, and moves the files.
         """
 
