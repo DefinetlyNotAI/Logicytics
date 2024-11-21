@@ -6,6 +6,7 @@ if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
+@log.function
 def get_password(ssid: str) -> str | None:
     """
     Retrieves the password associated with a given Wi-Fi SSID.
@@ -32,6 +33,7 @@ def get_password(ssid: str) -> str | None:
         log.error(err)
 
 
+@log.function
 def parse_wifi_names(command_output: str) -> list:
     """
     Parses the output of the command to extract Wi-Fi profile names.
@@ -53,6 +55,7 @@ def parse_wifi_names(command_output: str) -> list:
     return wifi_names
 
 
+@log.function
 def get_wifi_names() -> list:
     """
     Retrieves the names of all Wi-Fi profiles on the system.
@@ -73,6 +76,7 @@ def get_wifi_names() -> list:
         log.error(err)
 
 
+@log.function
 def get_wifi_passwords():
     """
     Retrieves the passwords for all Wi-Fi profiles on the system.

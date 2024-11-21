@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from __lib_class import *
 
+if __name__ == "__main__":
+    log_dev = Log({"log_level": DEBUG})
+
 
 class Dev:
     @staticmethod
@@ -54,6 +57,7 @@ class Dev:
         except Exception as e:
             log_dev.error(e)
 
+    @log_dev.function
     def dev_checks(self) -> str | None:
         """
         Performs a series of checks to ensure that the developer has followed the required guidelines and best practices.
@@ -93,8 +97,6 @@ class Dev:
             return str(e)
 
 
-if __name__ == "__main__":
-    log_dev = Log({"log_level": DEBUG})
 message = Dev().dev_checks()
 if message is not None:
     log_dev.error(message)

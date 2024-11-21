@@ -77,6 +77,7 @@ class Mine:
                         dst_file_path = destination / file_path.name
                         executor.submit(self.__copy_file, file_path, dst_file_path)
 
+    @log.function
     def passwords(self):
         """
         Searches for files containing sensitive data keywords in their filenames,

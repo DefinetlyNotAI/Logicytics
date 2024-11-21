@@ -4,6 +4,7 @@ if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
+@log.function
 def command(file: str, commands: str, message: str, encoding: str = "UTF-8") -> None:
     """
     Executes a command and writes the output to a file.
