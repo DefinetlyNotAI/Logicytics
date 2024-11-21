@@ -16,10 +16,14 @@ if __name__ == "__main__":
 # Example of said code:-
 
 
-# You can enable this decorator to log the function name and the time it took to run,
+# This log decorator logs the function name and the time it took to run,
 # It is recommended to use this,
-# as it only logs the function and the time it took to run in debug mode
-# @log.function
+# as it only logs the function and the time it took to run
+# in debug mode thus helping when people enable debug mode
+# Do note however, if you are using multiple decorators, this should be the last one
+# check the WiKi for more information
+# Do not use this decorator if you are running a function that is part of another function
+@log.function
 def MOD_EXAMPLE() -> None:
     """
     This function MOD is used to log different types of messages.

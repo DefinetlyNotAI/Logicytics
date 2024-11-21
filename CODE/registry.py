@@ -4,6 +4,7 @@ if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
+@log.function
 def backup_registry():
     """
     Backs up the Windows registry to a file named 'RegistryBackup.reg' in the current working directory.

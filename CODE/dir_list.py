@@ -6,6 +6,7 @@ if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
+@log.function
 def run_command_threaded(directory: str, file: str, message: str, encoding: str = "UTF-8") -> None:
     """
     Executes a command for a specific directory and writes the output to a file.
@@ -29,6 +30,7 @@ def run_command_threaded(directory: str, file: str, message: str, encoding: str 
         log.error(f"Error while getting {message} for {directory}: {e}")
 
 
+@log.function
 def command_threaded(base_directory: str, file: str, message: str, encoding: str = "UTF-8") -> None:
     """
     Splits the base directory into subdirectories and runs the command concurrently.
