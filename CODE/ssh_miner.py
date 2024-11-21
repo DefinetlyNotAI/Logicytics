@@ -4,6 +4,7 @@ if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
+@log.function
 def ssh_miner():
     """
     This function backs up SSH keys and configuration

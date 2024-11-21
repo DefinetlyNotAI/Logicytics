@@ -102,6 +102,25 @@ class Log:
             else message[:150] + "..."
         ) + "|"
 
+    def __internal(self, message):
+        """
+        Logs an internal message.
+
+        :param message: The internal message to be logged.
+        """
+        if self.color and message != "None" and message is not None:
+            colorlog.log(self.INTERNAL_LOG_LEVEL, str(message))
+
+    @staticmethod
+    def debug(message):
+        """
+        Logs a debug message.
+
+        :param message: The debug message to be logged.
+        """
+        if message != "None" and message is not None:
+            colorlog.debug(str(message))
+
     def raw(self, message):
         """
         Logs a raw message directly to the log file.
@@ -172,16 +191,6 @@ class Log:
             f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message))}"
         )
 
-    @staticmethod
-    def debug(message):
-        """
-        Logs a debug message.
-
-        :param message: The debug message to be logged.
-        """
-        if message != "None" and message is not None:
-            colorlog.debug(str(message))
-
     def string(self, message, type: str):
         """
         Logs a message with a specified type. Supported types are 'debug', 'info', 'warning', 'error', 'critical'
@@ -212,20 +221,25 @@ class Log:
             )
         raise exception_type(message)
 
-    def __internal(self, message):
-        """
-        Logs an internal message.
-
-        :param message: The internal message to be logged.
-        """
-        if self.color and message != "None" and message is not None:
-            colorlog.log(self.INTERNAL_LOG_LEVEL, str(message))
-
-    def execute_log_parse(self, message_log):
+    def parse_execution(self, message_log: list[list[str]]):
         if message_log:
             for message_list in message_log:
                 if len(message_list) == 2:
                     self.string(message_list[0], message_list[1])
+
+    def function(self, func: callable):
+        def wrapper(*args, **kwargs):
+            if not callable(func):
+                self.exception(f"Function {func.__name__} is not callable.",
+                               TypeError)
+            start_time = datetime.now()
+            self.debug(f"Running the function {func.__name__}().")
+            result = func(*args, **kwargs)
+            end_time = datetime.now()
+            elapsed_time = end_time - start_time
+            self.debug(f"Function {func.__name__}() executed in {elapsed_time}.")
+            return result
+        return wrapper
 
 
 if __name__ == "__main__":

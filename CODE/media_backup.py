@@ -48,6 +48,7 @@ class Media:
             except Exception as e:
                 log.error(f"Failed to copy {src_file}: {str(e)}")
 
+    @log.function
     def backup(self):
         """Backs up media files from the default Windows photo and video directories."""
         source_dirs = self.__get_default_paths()
