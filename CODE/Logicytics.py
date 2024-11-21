@@ -348,11 +348,9 @@ if __name__ == "__main__":
     handle_special_actions()
     # Check for privileges and errors
     check_privileges()
-    """    
     # Execute scripts
     log.info("Starting Logicytics...")
     execute_scripts()
-    """
     # Zip generated files
     zip_generated_files()
     # Finish with sub actions
