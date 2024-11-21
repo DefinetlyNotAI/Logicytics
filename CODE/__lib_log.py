@@ -229,8 +229,16 @@ class Log:
 
     def function(self, func: callable):
         def wrapper(*args, **kwargs):
+            if not callable(func):
+                self.exception(f"Function {func.__name__} is not callable.",
+                               TypeError)
+            start_time = datetime.now()
             self.debug(f"Running the function {func.__name__}().")
-            return func(*args, **kwargs)
+            result = func(*args, **kwargs)
+            end_time = datetime.now()
+            elapsed_time = end_time - start_time
+            self.debug(f"Function {func.__name__}() executed in {elapsed_time}.")
+            return result
         return wrapper
 
 
