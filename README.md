@@ -40,8 +40,6 @@ To install and setup Logicytics, follow these steps:
 
 - **Dependencies**: The project requires certain Python modules to be installed. You can install all the required modules by running the following command in your terminal: `pip install -r requirements.txt`.
 
-![Admin Error](IMG/NeedAdmin.png "Not using admin will result in a soft crash")
-
 - **Administrative Privileges**: To be able to run the program using certain features of the project, like registry modification, you must run the program with administrative privileges.
 
 - **System Requirements**: The project has been tested on Windows 10 and 11. It will not work on other operating systems.
@@ -94,13 +92,11 @@ If you have an idea or want to contribute to the project, you can submit an issu
 
 ### Basic Usage
 
-![The flag options](IMG/Flag%20Options.png "Here are the options Logicytics has")
-
 After running and successfully collecting data, you may traverse the ACCESS directory as much as you like,
-Remove add and delete files, it's the safest directory where your backups, hashes, data zips and logs are found.
+Remove add and delete files, it's the safe directory where your backups, hashes, data zips and logs are found.
 
 > [!TIP]
-> Watch this [video](https://www.youtube.com/watch?v=XVTBmdTQqOs) to see a real life demo of Logicytics (Although the tools and interface may be changed as its a older version)
+> Watch this [video](https://www.youtube.com/watch?v=XVTBmdTQqOs) to see a real life demo of Logicytics (Although the tools and interface may be changed as it's an older version)
 
 ## 🔧 Configuration 🔧
 
@@ -120,13 +116,12 @@ The config.json file is a JSON file that contains the following information:
 
 The config.json file is used to store the DEBUG flag bool, the VERSION, and the CURRENT_FILES.
 
-CURRENT_FILES is an array of strings that contains the names of the files you have, 
-this is used to later check for corruption or bugs.
-VERSION is the version of the project, used to check and pull for updates.
+> [!TIP]
+> CURRENT_FILES is an array of strings that contains the names of the files you have, 
+> this is used to later check for corruption or bugs.
+> VERSION is the version of the project, used to check and pull for updates.
 
 ## 🚀 Advanced Usage 🚀
-
-![Main 3 Directories](IMG/3dir.png "The 3 Main Directories")
 
 ### Mods
 
@@ -228,10 +223,8 @@ Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
 If there is a specific piece of data that you would like to see extracted by Logicytics,
 please let us know. We are constantly working to improve the project and adding new features.
 
-![Extra Tools](IMG/ExtraTools.png "Here is the inbuilt extra tools menu {BETA}")
-
-Other than mods, some prefixed tools are in the `EXTRA` directory, use the `--extra` flag to traverse these
-special tools
+Other than mods, some prefixed tools are in the `EXTRA` directory, 
+use the `--extra` flag to traverse these special tools
 
 ### Want to create your own mod?
 
