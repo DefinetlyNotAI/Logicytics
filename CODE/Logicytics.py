@@ -213,33 +213,21 @@ def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
     Returns:
         list: The execution list of scripts to be executed.
     """
-    execution_list = [
-        "cmd_commands.py",
-        "log_miner.py",
-        "media_backup.py",
-        "registry.py",
-        "ssh_miner.py",
-        "sys_internal.py",
-        "tasklist.py",
-        "tree.ps1",
-        "wmic.py",
-        "browser_miner.ps1",
-        "netadapter.ps1",
-        "property_scraper.ps1",
-        "window_feature_miner.ps1",
-        "wifi_stealer.py",
-    ]
+    execution_list = Get.list_of_files(".")
+    execution_list.remove("sensitive_data_miner.py")
+    execution_list.remove("dir_list.py")
+    execution_list.remove("tree.ps1")
 
     if actions == "minimal":
         execution_list = [
             "cmd_commands.py",
             "registry.py",
             "tasklist.py",
-            "tree.ps1",
             "wmic.py",
             "netadapter.ps1",
             "property_scraper.ps1",
             "window_feature_miner.ps1",
+            "event_log.py",
         ]
 
     if actions == "nopy":
@@ -253,12 +241,13 @@ def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
 
     if actions == "modded":
         # Add all files in MODS to execution list
-        execution_list = Get.list_of_files(Path("../MODS"), execution_list)
+        execution_list = Get.list_of_files("../MODS", execution_list)
 
     if actions == "depth":
         log.warning("This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards.")
         execution_list.append("sensitive_data_miner.py")
         execution_list.append("dir_list.py")
+        execution_list.append("tree.ps1")
         log.warning("This flag will use threading!")
 
     log.debug(f"The following will be executed: {execution_list}")

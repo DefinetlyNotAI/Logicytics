@@ -7,8 +7,6 @@
 
 | Task                                                                                                                                | Version | Might or Will be done? |
 |-------------------------------------------------------------------------------------------------------------------------------------|---------|------------------------|
-| Implement a parser for Windows Event Logs to extract and analyze security-related events.                                           | v2.5.0  | ✅                      |
-| Enable integration with popular SIEM (Security Information and Event Management) systems.                                           | v2.5.0  | ✅                      |
 | Add a tool to capture and analyse network traffic, which can help in forensic investigations.                                       | v2.6.0  | ❌                      |
 | Change config.json to config.ini                                                                                                    | v3.0.0  | ✅                      |
 | Add "--perfomance-check" flag, which runs after normal execution, and shows in a neat table the exact time it took to execute files | v3.0.0  | ✅                      |

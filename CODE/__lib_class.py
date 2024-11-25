@@ -598,23 +598,29 @@ class Execute:
 
 class Get:
     @staticmethod
-    def list_of_files(directory: Path, file_list: list) -> list:
+    def list_of_files(directory: str, append_file_list: list = None, extensions: tuple = (".py", ".exe", ".ps1", ".bat")) -> list:
         """
         Retrieves a list of files in the specified directory that have the specified extensions.
+
+        Files starting with an underscore (_) and the file Logicytics.py are excluded from the list.
+
         Parameters:
             directory (str): The path of the directory to search.
-            file_list (list): The list to append the filenames to.
+            append_file_list (list): The list to append the filenames to.
+            extensions (tuple): The extensions of the files to search for.
         Returns:
             list: The list of filenames with the specified extensions.
         """
-        for filename in os.listdir(directory):
+        if not append_file_list:
+            append_file_list = []
+        for filename in os.listdir(Path(directory)):
             if (
-                    filename.endswith((".py", ".exe", ".ps1", ".bat"))
+                    filename.endswith(extensions)
                     and not filename.startswith("_")
                     and filename != "Logicytics.py"
             ):
-                file_list.append(filename)
-        return file_list
+                append_file_list.append(filename)
+        return append_file_list
 
     @staticmethod
     def list_of_code_files(directory: str) -> list:
