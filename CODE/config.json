@@ -1,6 +1,6 @@
 {
     "Log Level Debug?": false,
-    "VERSION": "2.5.0",
+    "VERSION": "2.5.1",
     "CURRENT_FILES": [
         "browser_miner.ps1",
         "cmd_commands.py",
