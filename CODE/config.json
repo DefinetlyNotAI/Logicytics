@@ -1,10 +1,11 @@
 {
     "Log Level Debug?": false,
-    "VERSION": "2.4.3",
+    "VERSION": "2.5.0",
     "CURRENT_FILES": [
         "browser_miner.ps1",
         "cmd_commands.py",
         "dir_list.py",
+        "event_logs.py",
         "Logicytics.py",
         "log_miner.py",
         "media_backup.py",
