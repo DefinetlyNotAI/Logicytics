@@ -5,7 +5,7 @@
 
 # This imports everything needed including the unique logger called by log - It is not optional
 # To know more check the WiKi
-from __lib_class import *
+from logicytics import *
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})

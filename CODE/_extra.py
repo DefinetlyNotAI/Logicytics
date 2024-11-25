@@ -1,4 +1,4 @@
-from __lib_class import *
+from logicytics import *
 
 """
 Files must be executed, and so can't ask or await user input.

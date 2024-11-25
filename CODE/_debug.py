@@ -4,7 +4,7 @@ import os.path
 import requests
 import psutil
 import sys
-from __lib_class import *
+from logicytics import *
 
 if __name__ == "__main__":
     log_debug = Log({"log_level": DEBUG, "filename": "../ACCESS/LOGS/DEBUG/DEBUG.log", "truncate_message": False})

@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from __lib_class import *
+from logicytics import *
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})

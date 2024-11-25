@@ -2,7 +2,7 @@ from os import mkdir
 
 import win32evtlog
 
-from __lib_class import *
+from logicytics import *
 
 # Note: This script CANNOT be run without admin privileges
 
