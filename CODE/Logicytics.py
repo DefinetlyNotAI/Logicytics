@@ -227,6 +227,7 @@ def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
             "netadapter.ps1",
             "property_scraper.ps1",
             "window_feature_miner.ps1",
+            "event_log.py",
         ]
 
     if actions == "nopy":
