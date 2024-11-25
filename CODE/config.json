@@ -23,7 +23,6 @@
         "_dev.py",
         "_extra.py",
         "__lib_class.py",
-        "__lib_log.py",
-        "__wrapper__.py"
+        "__lib_log.py"
     ]
 }
