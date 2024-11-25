@@ -7,7 +7,7 @@ import sys
 from __lib_class import *
 
 if __name__ == "__main__":
-    log_debug = Log({"log_level": DEBUG, "filename": "../ACCESS/LOGS/DEBUG/DEBUG.log"})
+    log_debug = Log({"log_level": DEBUG, "filename": "../ACCESS/LOGS/DEBUG/DEBUG.log", "truncate_message": False})
 
 
 class HealthCheck:
@@ -183,7 +183,9 @@ def debug():
     if online_config:
         version_tuple, file_tuple = online_config
         log_debug.string(version_tuple[0], version_tuple[2])
+        log_debug.raw(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] > DATA:     | {version_tuple[1] + ' ' * (153 - len(version_tuple[1])) + '|'}")
         log_debug.string(file_tuple[0], file_tuple[2])
+        log_debug.raw(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] > DATA:     | {file_tuple[1] + ' ' * (117 - len(version_tuple[1])) + '|'}")
 
     # Check SysInternal Binaries
     message, type = DebugCheck.sys_internal_binaries("SysInternal_Suite")
@@ -232,3 +234,5 @@ def debug():
 
 
 debug()
+input("Press Enter to exit...")
+exit(0)
