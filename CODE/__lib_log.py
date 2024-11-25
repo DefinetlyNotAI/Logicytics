@@ -30,12 +30,14 @@ class Log:
             "critical_color": "red",
             "exception_color": "red",
             "colorlog_fmt_parameters": "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+            "truncate_message": True,
         }
         self.EXCEPTION_LOG_LEVEL = 45
         self.INTERNAL_LOG_LEVEL = 15
         logging.addLevelName(self.EXCEPTION_LOG_LEVEL, "EXCEPTION")
         logging.addLevelName(self.INTERNAL_LOG_LEVEL, "INTERNAL")
         self.color = config.get("use_colorlog", True)
+        self.truncate = config.get("truncate_message", True)
         self.filename = config.get("filename", "../ACCESS/LOGS/Logicytics.log")
         if self.color:
             logger = colorlog.getLogger()
@@ -88,14 +90,15 @@ class Log:
         """
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    @staticmethod
-    def __pad_message(message: str) -> str:
+    def __trunc_message(self, message: str) -> str:
         """
         Pads or truncates the message to fit the log format.
 
         :param message: The log message to be padded or truncated.
         :return: The padded or truncated message.
         """
+        if self.truncate is False:
+            return message + " " * (153 - len(message)) + "|"
         return (
             message + " " * (153 - len(message))
             if len(message) < 153
@@ -111,14 +114,13 @@ class Log:
         if self.color and message != "None" and message is not None:
             colorlog.log(self.INTERNAL_LOG_LEVEL, str(message))
 
-    @staticmethod
-    def debug(message):
+    def debug(self, message):
         """
         Logs a debug message.
 
         :param message: The debug message to be logged.
         """
-        if message != "None" and message is not None:
+        if self.color and message != "None" and message is not None:
             colorlog.debug(str(message))
 
     def raw(self, message):
@@ -152,7 +154,7 @@ class Log:
         if self.color and message != "None" and message is not None:
             colorlog.info(str(message))
         self.raw(
-            f"[{self.__timestamp()}] > INFO:     | {self.__pad_message(str(message))}"
+            f"[{self.__timestamp()}] > INFO:     | {self.__trunc_message(str(message))}"
         )
 
     def warning(self, message):
@@ -164,7 +166,7 @@ class Log:
         if self.color and message != "None" and message is not None:
             colorlog.warning(str(message))
         self.raw(
-            f"[{self.__timestamp()}] > WARNING:  | {self.__pad_message(str(message))}"
+            f"[{self.__timestamp()}] > WARNING:  | {self.__trunc_message(str(message))}"
         )
 
     def error(self, message):
@@ -176,7 +178,7 @@ class Log:
         if self.color and message != "None" and message is not None:
             colorlog.error(str(message))
         self.raw(
-            f"[{self.__timestamp()}] > ERROR:    | {self.__pad_message(str(message))}"
+            f"[{self.__timestamp()}] > ERROR:    | {self.__trunc_message(str(message))}"
         )
 
     def critical(self, message):
@@ -188,7 +190,7 @@ class Log:
         if self.color and message != "None" and message is not None:
             colorlog.critical(str(message))
         self.raw(
-            f"[{self.__timestamp()}] > CRITICAL: | {self.__pad_message(str(message))}"
+            f"[{self.__timestamp()}] > CRITICAL: | {self.__trunc_message(str(message))}"
         )
 
     def string(self, message, type: str):
@@ -217,7 +219,7 @@ class Log:
         """
         if self.color and message != "None" and message is not None:
             self.raw(
-                f"[{self.__timestamp()}] > EXCEPTION:| {self.__pad_message(f'{message} -> Exception provoked: {str(exception_type)}')}"
+                f"[{self.__timestamp()}] > EXCEPTION:| {self.__trunc_message(f'{message} -> Exception provoked: {str(exception_type)}')}"
             )
         raise exception_type(message)
 

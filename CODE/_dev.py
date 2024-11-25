@@ -58,7 +58,7 @@ class Dev:
             log_dev.error(e)
 
     @log_dev.function
-    def dev_checks(self) -> str | None:
+    def dev_checks(self) -> None:
         """
         Performs a series of checks to ensure that the developer has followed the required guidelines and best practices.
         Returns:
@@ -75,13 +75,12 @@ class Dev:
         try:
             for question, file_to_open in checks:
                 if not self.__prompt_user(question, file_to_open):
-                    return "Fix the issues and try again with the checklist."
+                    log_dev.warning("Fix the issues and try again with the checklist.")
 
-            print()
             files = Get.list_of_code_files(".")
-            print(files)
+            print(f"\n{json.dumps(files, indent=4)}\n")
             if not self.__prompt_user("Does the list above include your added files?"):
-                return "Something went wrong! Please contact support."
+                log_dev.critical("Something went wrong! Please contact support.")
 
             self.__update_json_file("config.json", files, "CURRENT_FILES")
             self.__update_json_file(
@@ -94,9 +93,7 @@ class Dev:
             input("\nPress Enter to exit the program. ")
             return None
         except Exception as e:
-            return str(e)
+            log_dev.exception(str(e))
 
 
-message = Dev().dev_checks()
-if message is not None:
-    log_dev.error(message)
+Dev().dev_checks()
