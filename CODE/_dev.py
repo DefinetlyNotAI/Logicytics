@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from __lib_class import *
+from logicytics import *
 
 if __name__ == "__main__":
     log_dev = Log({"log_level": DEBUG})

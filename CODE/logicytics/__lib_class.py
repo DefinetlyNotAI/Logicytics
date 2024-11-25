@@ -11,8 +11,12 @@ import zipfile
 from pathlib import Path
 from subprocess import CompletedProcess
 
-from __lib_log import *
+from logicytics.__lib_log import *
 
+
+# TODO: Test if the bug where the library is zipped is fixed
+# TODO: Check sysinternal suite zip extraction works, and if it is ignored, and everything else
+# TODO: Check if the file saving bug is fixed, and doesnt save outside logicytics
 
 class Flag:
     @classmethod
@@ -330,7 +334,7 @@ class FileManagement:
                 list: A list of file and directory names to be zipped.
             """
             excluded_extensions = (".py", ".exe", ".bat", ".ps1")
-            excluded_prefixes = ("config.", "SysInternal_Suite", "__pycache__")
+            excluded_prefixes = ("config.", "SysInternal_Suite", "__pycache__", "logicytics")
 
             return [
                 f for f in os.listdir(path)
@@ -500,12 +504,12 @@ class Check:
             Exception: If there is an error during the extraction process. The error message is printed to the console and the program exits.
         """
         try:
-            ignore_file = os.path.exists("SysInternal_Suite/.sys.ignore")
-            zip_file = os.path.exists("SysInternal_Suite/SysInternal_Suite.zip")
+            ignore_file = os.path.exists("../SysInternal_Suite/.sys.ignore")
+            zip_file = os.path.exists("../SysInternal_Suite/SysInternal_Suite.zip")
 
             if zip_file and not ignore_file:
                 with zipfile.ZipFile(
-                        "SysInternal_Suite/SysInternal_Suite.zip"
+                        "../SysInternal_Suite/SysInternal_Suite.zip"
                 ) as zip_ref:
                     zip_ref.extractall("SysInternal_Suite")
                     return "SysInternal_Suite zip extracted"
@@ -659,9 +663,9 @@ class Get:
             FileNotFoundError: If the config.json file is not found.
             SystemExit: If the config.json file has an invalid format.
         """
-        try:
+        def get_config_data(config_file_name: str) -> tuple[str, str, list[str]]:
             script_dir = Path(__file__).parent.absolute()
-            config_path = script_dir / "config.json"
+            config_path = script_dir / config_file_name
             with open(config_path, "r") as file:
                 data = json.load(file)
 
@@ -682,13 +686,17 @@ class Get:
                 else:
                     debug = "INFO"
                 return debug, version, files
+        try:
+            return get_config_data("config.json")
         except FileNotFoundError:
-            print("The config.json File is not found.")
-            input("Press Enter to exit...")
-            exit(1)
+            try:
+                return get_config_data("../config.json")
+            except FileNotFoundError:
+                print("The config.json File is not found.")
+                input("Press Enter to exit...")
+                exit(1)
 
 
-DEBUG, VERSION, CURRENT_FILES = Get.config_data()
 if __name__ == "__main__":
     Log().exception(
         "This is a library file and should not be executed directly.", Exception

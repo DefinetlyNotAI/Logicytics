@@ -3,7 +3,7 @@ from __future__ import annotations
 import threading
 from typing import Any
 
-from __lib_class import *
+from logicytics import *
 
 
 # Initialization
