@@ -52,5 +52,5 @@ def command_threaded(base_directory: str, file: str, message: str, encoding: str
             future.result()
 
 
-log.warning("Running command_threaded - This is very slow")
+log.warning("Running command_threaded() - This is very slow")
 command_threaded("C:\\", "Dir_Root.txt", "Root Directory Listing")
