@@ -6,10 +6,8 @@ if __name__ == "__main__":
     log_dev = Log({"log_level": DEBUG})
 
 
-class Dev:
-    @staticmethod
-    def __update_json_file(filename: str, new_data: list | str, key: str) -> None:
-        """
+def _update_json_file(filename: str, new_data: list | str, key: str) -> None:
+    """
         Updates a JSON file with a new array of current files.
         Args:
             filename (str): The path to the JSON file to be updated.
@@ -18,24 +16,24 @@ class Dev:
         Returns:
             None
         """
-        try:
-            with open(filename, "r+") as f:
-                data = json.load(f)
-                data[key] = new_data
-                f.seek(0)
-                # noinspection PyTypeChecker
-                json.dump(data, f, indent=4)
-                f.truncate()
-        except FileNotFoundError:
-            log_dev.error(f"File not found: {filename}")
-        except json.JSONDecodeError:
-            log_dev.error(f"Error decoding JSON in the file: {filename}")
-        except Exception as e:
-            log_dev.error(f"An error occurred: {e}")
+    try:
+        with open(filename, "r+") as f:
+            data = json.load(f)
+            data[key] = new_data
+            f.seek(0)
+            # noinspection PyTypeChecker
+            json.dump(data, f, indent=4)
+            f.truncate()
+    except FileNotFoundError:
+        log_dev.error(f"File not found: {filename}")
+    except json.JSONDecodeError:
+        log_dev.error(f"Error decoding JSON in the file: {filename}")
+    except Exception as e:
+        log_dev.error(f"An error occurred: {e}")
 
-    @staticmethod
-    def __prompt_user(question: str, file_to_open: str = None, special: bool = False) -> bool:
-        """
+
+def _prompt_user(question: str, file_to_open: str = None, special: bool = False) -> bool:
+    """
         Prompts the user with a question and optionally opens a file if the answer is not 'yes'.
         Args:
             question (str): The question to ask the user.
@@ -43,57 +41,76 @@ class Dev:
         Returns:
             bool: True if the user's answer is 'yes', otherwise False.
         """
-        try:
-            answer = input(question + " (yes or no):- ")
-            if answer.lower() != "yes":
-                if file_to_open:
-                    subprocess.run(["start", file_to_open], shell=True)
-                if not special:
-                    print(
-                        "Please ensure you fix the issues/problem and try again with the checklist."
-                    )
-                return False
-            return True
-        except Exception as e:
-            log_dev.error(e)
+    try:
+        answer = input(question + " (yes or no):- ")
+        if answer.lower() != "yes":
+            if file_to_open:
+                subprocess.run(["start", file_to_open], shell=True)
+            if not special:
+                print(
+                    "Please ensure you fix the issues/problem and try again with the checklist."
+                )
+            return False
+        return True
+    except Exception as e:
+        log_dev.error(e)
 
-    @log_dev.function
-    def dev_checks(self) -> None:
-        """
+
+def dev_checks() -> None:
+    """
         Performs a series of checks to ensure that the developer has followed the required guidelines and best practices.
         Returns:
             bool: True if all checks pass, otherwise False.
         """
-        FileManagement.mkdir()
-        checks = [
-            ("Have you read the required contributing guidelines?", "../CONTRIBUTING.md"),
-            ("Have you made files you don't want to be run start with '_'?", "."),
-            ("Have you added the file to CODE dir?", "."),
-            ("Have you added docstrings and comments?", "../CONTRIBUTING.md"),
-            ("Is each file containing around 1 main feature?", "../CONTRIBUTING.md"),
-        ]
-        try:
-            for question, file_to_open in checks:
-                if not self.__prompt_user(question, file_to_open):
-                    log_dev.warning("Fix the issues and try again with the checklist.")
+    # Create the necessary directories if they do not exist
+    FileManagement.mkdir()
 
-            files = Get.list_of_code_files(".")
-            print(f"\n{json.dumps(files, indent=4)}\n")
-            if not self.__prompt_user("Does the list above include your added files?"):
-                log_dev.critical("Something went wrong! Please contact support.")
+    # List of checks to be performed, each check is a tuple containing a question and a file to open if the answer is not 'yes'
+    checks = [
+        ("Have you read the required contributing guidelines?", "../CONTRIBUTING.md"),
+        ("Have you made files you don't want to be run start with '_'?", "."),
+        ("Have you added the file to CODE dir?", "."),
+        ("Have you added docstrings and comments?", "../CONTRIBUTING.md"),
+        ("Is each file containing around 1 main feature?", "../CONTRIBUTING.md"),
+    ]
 
-            self.__update_json_file("config.json", files, "CURRENT_FILES")
-            self.__update_json_file(
-                "config.json",
-                input(f"Enter the new version of the project (Old version is {VERSION}): "),
-                "VERSION",
-            )
-            print("\nGreat Job! Please tick the box in the GitHub PR request for completing steps in --dev")
+    try:
+        # Iterate through each check and prompt the user
+        for question, file_to_open in checks:
+            if not _prompt_user(question, file_to_open):
+                log_dev.warning("Fix the issues and try again with the checklist.")
+                return None
 
-            input("\nPress Enter to exit the program. ")
+        # Get the list of code files in the current directory
+        files = Get.list_of_code_files(".")
+        added_files = [f for f in files if f not in CURRENT_FILES]
+        removed_files = [f for f in CURRENT_FILES if f not in files]
+        normal_files = [f for f in files if f in CURRENT_FILES]
+
+        # Print the list of added, removed, and normal files in color
+        print("\n".join([f"\033[92m+ {file}\033[0m" for file in added_files]))  # Green +
+        print([f"\033[91m- {file}\033[0m" for file in removed_files])  # Red -
+        print([f"* {file}" for file in normal_files])
+
+        # Prompt the user to confirm if the list includes their added files
+        if not _prompt_user("Does the list above include your added files?"):
+            log_dev.critical("Something went wrong! Please contact support.")
             return None
-        except Exception as e:
-            log_dev.exception(str(e))
+
+        # Update the JSON file with the current list of files
+        _update_json_file("config.json", files, "CURRENT_FILES")
+
+        # Prompt the user to enter the new version of the project and update the JSON file
+        _update_json_file("config.json", input(f"Enter the new version of the project (Old version is {VERSION}): "),
+                          "VERSION")
+
+        # Print a message indicating the completion of the steps
+        print("\nGreat Job! Please tick the box in the GitHub PR request for completing steps in --dev")
+    except Exception as e:
+        # Log any exceptions that occur during the process
+        log_dev.exception(str(e))
 
 
-Dev().dev_checks()
+dev_checks()
+# Wait for the user to press Enter to exit the program
+input("\nPress Enter to exit the program... ")
