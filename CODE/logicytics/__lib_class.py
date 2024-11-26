@@ -14,10 +14,6 @@ from subprocess import CompletedProcess
 from logicytics.__lib_log import *
 
 
-# TODO: Test if the bug where the library is zipped is fixed
-# TODO: Check sysinternal suite zip extraction works, and if it is ignored, and everything else
-# TODO: Check if the file saving bug is fixed, and doesnt save outside logicytics
-
 class Flag:
     @classmethod
     def colorify(cls, text: str, color: str) -> str:

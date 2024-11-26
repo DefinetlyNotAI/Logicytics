@@ -5,7 +5,6 @@
       <sourceFolder url="file://$MODULE_DIR$/CODE" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/EXTRA" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MODS" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/CODE/SysInternal_Suite" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CODE/libs" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CODE/_internal" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/TESTS" isTestSource="true" />

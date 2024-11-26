@@ -10,6 +10,7 @@
             <path value="file://$PROJECT_DIR$/WEB" />
             <path value="file://$PROJECT_DIR$/IMG" />
             <path value="file://$PROJECT_DIR$/EXTRA" />
+            <path value="file://$PROJECT_DIR$/CODE/SysInternal_Suite" />
           </resourceRoots>
         </entryData>
       </entry>

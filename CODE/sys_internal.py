@@ -54,7 +54,7 @@ def sys_internal():
             except Exception as e:
                 log.error(f"Error executing {executable}: {str(e)}")
                 outfile.write(f"Error executing {executable}: {str(e)}\n")
-    log.info("SysInternal: Successfully executed")
+    log.info("SysInternal Suite fully executed")
 
 
 @log.function
