@@ -4,4 +4,4 @@ DEBUG: str
 VERSION: str
 CURRENT_FILES: list[str]
 
-DEBUG, VERSION, CURRENT_FILES = Get.config_data()
+DEBUG, VERSION, CURRENT_FILES, DELETE_LOGS = Get.config_data()

@@ -665,7 +665,7 @@ class Get:
         return file
 
     @staticmethod
-    def config_data() -> tuple[str, str, list[str]]:
+    def config_data() -> tuple[str, str, list[str], bool]:
         """
         Retrieves configuration data from the 'config.ini' file.
 
@@ -674,9 +674,9 @@ class Get:
         If neither file is found, the program exits with an error message.
 
         Returns:
-            tuple[str, str, list[str]]: A tuple containing the log level, version, and a list of files.
+            tuple[str, str, list[str], bool]: A tuple containing the log level, version, and a list of files.
         """
-        def get_config_data(config_file_name: str) -> tuple[str, str, list[str]]:
+        def get_config_data(config_file_name: str) -> tuple[str, str, list[str], bool]:
             """
             Reads configuration data from the specified 'config.ini' file.
 
@@ -684,18 +684,19 @@ class Get:
                 config_file_name (str): The name of the configuration file to read.
 
             Returns:
-                tuple[str, str, list[str]]: A tuple containing the log level, version, and a list of files.
+                tuple[str, str, list[str], bool]: A tuple containing the log level, version, and a list of files.
             """
             config = configparser.ConfigParser()
             config.read(config_file_name)
 
             log_using_debug = config.getboolean("Settings", "log_using_debug")
+            delete_old_logs = config.getboolean("Settings", "delete_old_logs")
             version = config.get("System Settings", "version")
             files = config.get("System Settings", "files").split(", ")
 
             log_using_debug = "DEBUG" if log_using_debug else "INFO"
 
-            return log_using_debug, version, files
+            return log_using_debug, version, files, delete_old_logs
 
         try:
             return get_config_data("config.ini")
