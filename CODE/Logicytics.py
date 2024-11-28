@@ -67,32 +67,29 @@ class Health:
         return output, "info"
 
 
-@log.function
-def get_flags() -> tuple[str, str]:
+def get_flags():
     """
     Retrieves the command-line flags and sub-actions.
 
     This function checks if the flags are provided as a tuple. If so, it attempts to unpack
-    the tuple into actions and sub_actions. If an exception occurs, it sets sub_actions to None.
+    the tuple into ACTION and SUB_ACTION. If an exception occurs, it sets SUB_ACTION to None.
     If the flags are not a tuple, it prints the help message and exits the program.
 
-    Returns:
-        tuple: A tuple containing actions and sub_actions.
     """
     if isinstance(Flag.data(), tuple):
+        global ACTION, SUB_ACTION
         try:
             # Get flags
-            actions, sub_actions = Flag.data()
+            ACTION, SUB_ACTION = Flag.data()
         except Exception:
-            actions = Flag.data()
-            actions = actions[0]
-            sub_actions = None
+            ACTIONS = Flag.data()
+            ACTION = ACTIONS[0]
+            SUB_ACTION = None
     else:
         parser = Flag.data()
         parser.print_help()
         input("Press Enter to exit...")
         exit(1)
-    return actions, sub_actions
 
 
 @log.function
@@ -121,7 +118,7 @@ def handle_special_actions():
     or unzipping extra files.
     """
     # Special actions -> Quit
-    if action == "debug":
+    if ACTION == "debug":
         log.info("Opening debug menu...")
         special_execute("_debug.py")
 
@@ -130,15 +127,15 @@ def handle_special_actions():
         # If there are messages, log them with debug
         log.debug(messages)
 
-    if action == "dev":
+    if ACTION == "dev":
         log.info("Opening developer menu...")
         special_execute("_dev.py")
 
-    if action == "extra":
+    if ACTION == "extra":
         log.info("Opening extra tools menu...")
         special_execute("_extra.py")
 
-    if action == "update":
+    if ACTION == "update":
         log.info("Updating...")
         message, log_type = Health.update()
         log.string(message, log_type)
@@ -149,7 +146,7 @@ def handle_special_actions():
         input("Press Enter to exit...")
         exit(0)
 
-    if action == "restore":
+    if ACTION == "restore":
         log.warning(
             "Sorry, this feature is yet to be implemented. You can manually Restore your backups, We will open "
             "the location for you"
@@ -158,7 +155,7 @@ def handle_special_actions():
         input("Press Enter to exit...")
         exit(1)
 
-    if action == "backup":
+    if ACTION == "backup":
         log.info("Backing up...")
         Health.backup(".", "Default_Backup")
         log.debug("Backup complete -> CODE dir")
@@ -168,7 +165,7 @@ def handle_special_actions():
         input("Press Enter to exit...")
         exit(0)
 
-    if action == "unzip_extra":
+    if ACTION == "unzip_extra":
         log.warning(
             "The contents of this directory can be flagged as malicious and enter quarantine, please use with "
             "caution"
@@ -203,12 +200,9 @@ def check_privileges():
 
 
 @log.function
-def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
+def generate_execution_list() -> list | list[str] | list[str | Any]:
     """
     Creates an execution list based on the provided action.
-
-    Args:
-        actions (str): The action to determine the execution list.
 
     Returns:
         list: The execution list of scripts to be executed.
@@ -218,7 +212,7 @@ def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
     execution_list.remove("dir_list.py")
     execution_list.remove("tree.ps1")
 
-    if actions == "minimal":
+    if ACTION == "minimal":
         execution_list = [
             "cmd_commands.py",
             "registry.py",
@@ -230,7 +224,7 @@ def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
             "event_log.py",
         ]
 
-    if actions == "nopy":
+    if ACTION == "nopy":
         execution_list = [
             "browser_miner.ps1",
             "netadapter.ps1",
@@ -239,11 +233,11 @@ def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
             "tree.ps1"
         ]
 
-    if actions == "modded":
+    if ACTION == "modded":
         # Add all files in MODS to execution list
         execution_list = Get.list_of_files("../MODS", execution_list)
 
-    if actions == "depth":
+    if ACTION == "depth":
         log.warning("This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards.")
         execution_list.append("sensitive_data_miner.py")
         execution_list.append("dir_list.py")
@@ -258,7 +252,7 @@ def generate_execution_list(actions: str) -> list | list[str] | list[str | Any]:
 def execute_scripts():
     """Executes the scripts in the execution list based on the action."""
     # Check weather to use threading or not, as well as execute code
-    if action == "threaded" or action == "depth":
+    if ACTION == "threaded" or ACTION == "depth":
         def threaded_execution(execution_list_thread, index_thread):
             log.debug(f"Thread {index_thread} started")
             try:
@@ -272,7 +266,7 @@ def execute_scripts():
 
         log.debug("Using threading")
         threads = []
-        execution_list = generate_execution_list(action)
+        execution_list = generate_execution_list(ACTION)
         for index, file in enumerate(execution_list):
             thread = threading.Thread(
                 target=threaded_execution,
@@ -288,7 +282,7 @@ def execute_scripts():
             thread.join()
     else:
         try:
-            execution_list = generate_execution_list(action)
+            execution_list = generate_execution_list(ACTION)
             for file in range(len(execution_list)):  # Loop through List
                 log.parse_execution(Execute.script(execution_list[file]))
                 log.info(f"{execution_list[file]} executed")
@@ -303,7 +297,7 @@ def zip_generated_files():
     """Zips generated files based on the action."""
 
     def zip_and_log(directory, name):
-        zip_values = FileManagement.Zip.and_hash(directory, name, action)
+        zip_values = FileManagement.Zip.and_hash(directory, name, ACTION)
         if isinstance(zip_values, str):
             log.error(zip_values)
         else:
@@ -311,7 +305,7 @@ def zip_generated_files():
             log.info(zip_loc)
             log.debug(hash_loc)
 
-    if action == "modded":
+    if ACTION == "modded":
         zip_and_log("..\\MODS", "MODS")
     zip_and_log(".", "CODE")
 
@@ -324,18 +318,18 @@ def handle_sub_action():
     This function checks the value of the `sub_action` variable and performs
     corresponding sub-actions such as shutting down or rebooting the system.
     """
-    if sub_action == "shutdown":
+    if SUB_ACTION == "shutdown":
         subprocess.call("shutdown /s /t 3", shell=False)
-    elif sub_action == "reboot":
+    elif SUB_ACTION == "reboot":
         subprocess.call("shutdown /r /t 3", shell=False)
     # elif sub_action == "webhook":
-    # Implement this in future
-    # log.warning("This feature is not implemented yet! Sorry")
+        # Implement this in future
+        # log.warning("This feature is not implemented yet! Sorry")
 
 
 if __name__ == "__main__":
     # Get flags and configs
-    action, sub_action = get_flags()
+    get_flags()
     # Check for special actions
     handle_special_actions()
     # Check for privileges and errors
