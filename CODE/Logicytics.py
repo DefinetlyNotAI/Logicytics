@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import threading
 from typing import Any
+from prettytable import PrettyTable
 
 from logicytics import *
 
@@ -92,7 +93,6 @@ def get_flags():
         exit(1)
 
 
-@log.function
 def special_execute(file_path: str):
     """
     Executes a Python script in a new command prompt window.
@@ -107,7 +107,6 @@ def special_execute(file_path: str):
     exit(0)
 
 
-@log.function
 def handle_special_actions():
     """
     Handles special actions based on the provided action flag.
@@ -177,7 +176,6 @@ def handle_special_actions():
         exit(0)
 
 
-@log.function
 def check_privileges():
     """
     Checks if the script is running with administrative privileges and handles UAC (User Account Control) settings.
@@ -199,7 +197,6 @@ def check_privileges():
         log.warning("UAC is enabled, this may cause issues - Please disable UAC if possible")
 
 
-@log.function
 def generate_execution_list() -> list | list[str] | list[str | Any]:
     """
     Creates an execution list based on the provided action.
@@ -248,10 +245,10 @@ def generate_execution_list() -> list | list[str] | list[str | Any]:
     return execution_list
 
 
-@log.function
 def execute_scripts():
     """Executes the scripts in the execution list based on the action."""
     # Check weather to use threading or not, as well as execute code
+    log.info("Starting Logicytics...")
     if ACTION == "threaded" or ACTION == "depth":
         def threaded_execution(execution_list_thread, index_thread):
             log.debug(f"Thread {index_thread} started")
@@ -266,12 +263,12 @@ def execute_scripts():
 
         log.debug("Using threading")
         threads = []
-        execution_list = generate_execution_list(ACTION)
-        for index, file in enumerate(execution_list):
+        EXECUTION_LIST = generate_execution_list()
+        for index, file in enumerate(EXECUTION_LIST):
             thread = threading.Thread(
                 target=threaded_execution,
                 args=(
-                    execution_list,
+                    EXECUTION_LIST,
                     index,
                 ),
             )
@@ -280,19 +277,41 @@ def execute_scripts():
 
         for thread in threads:
             thread.join()
+    elif ACTION == "performance_check":
+        execution_times = []
+        EXECUTION_LIST = generate_execution_list()
+        for file in range(len(EXECUTION_LIST)):
+            start_time = datetime.now()
+            log.parse_execution(Execute.script(EXECUTION_LIST[file]))
+            end_time = datetime.now()
+            elapsed_time = end_time - start_time
+            execution_times.append((file, elapsed_time))
+            log.info(f"{EXECUTION_LIST[file]} executed in {elapsed_time}")
+
+        table = PrettyTable()
+        table.field_names = ["Script", "Execution Time"]
+        for file, elapsed_time in execution_times:
+            table.add_row([file, elapsed_time])
+
+        with open(
+                f"../ACCESS/LOGS/PERFORMANCE/Performance_Summary_"
+                f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt", "w"
+        ) as f:
+            f.write(table.get_string())
+
+        log.info("Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE")
     else:
         try:
-            execution_list = generate_execution_list(ACTION)
-            for file in range(len(execution_list)):  # Loop through List
-                log.parse_execution(Execute.script(execution_list[file]))
-                log.info(f"{execution_list[file]} executed")
+            EXECUTION_LIST = generate_execution_list()
+            for file in range(len(EXECUTION_LIST)):  # Loop through List
+                log.parse_execution(Execute.script(EXECUTION_LIST[file]))
+                log.info(f"{EXECUTION_LIST[file]} executed")
         except UnicodeDecodeError as e:
             log.error(f"Error in code: {e}")
         except Exception as e:
             log.error(f"Error in code: {e}")
 
 
-@log.function
 def zip_generated_files():
     """Zips generated files based on the action."""
 
@@ -310,7 +329,6 @@ def zip_generated_files():
     zip_and_log(".", "CODE")
 
 
-@log.function
 def handle_sub_action():
     """
     Handles sub-actions based on the provided sub_action flag.
@@ -318,6 +336,10 @@ def handle_sub_action():
     This function checks the value of the `sub_action` variable and performs
     corresponding sub-actions such as shutting down or rebooting the system.
     """
+    log.info("Completed successfully!")
+    log.newline()
+    if ACTION == "performance_check":
+        return  # Do not handle sub actions for performance check
     if SUB_ACTION == "shutdown":
         subprocess.call("shutdown /s /t 3", shell=False)
     elif SUB_ACTION == "reboot":
@@ -335,14 +357,10 @@ if __name__ == "__main__":
     # Check for privileges and errors
     check_privileges()
     # Execute scripts
-    log.info("Starting Logicytics...")
     execute_scripts()
     # Zip generated files
     zip_generated_files()
     # Finish with sub actions
-    log.info("Completed successfully!")
-    # Finish with sub actions
-    log.newline()
     handle_sub_action()
     # Finish
     input("Press Enter to exit...")

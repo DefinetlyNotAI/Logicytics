@@ -7,7 +7,6 @@
 
 | Task                                                                                                                                | Version | Might or Will be done? |
 |-------------------------------------------------------------------------------------------------------------------------------------|---------|------------------------|
-| Add "--perfomance-check" flag, which runs after normal execution, and shows in a neat table the exact time it took to execute files | v3.0.0  | ✅                      |
 | Integrate machine learning algorithms to detect anomalies and potential security threats automatically and log them.                | v3.0.0  | ❌                      |
 | Update to Python 3.13 (And use the new @deprecated flag from now on)                                                                | v3.0.0  | ✅                      |
 | Add a tool to capture and analyse memory dumps, which can help in forensic investigations.                                          | v3.1.0  | ❌                      |

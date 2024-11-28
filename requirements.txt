@@ -3,3 +3,4 @@ psutil~=6.1.0
 colorlog~=6.9.0
 DateTime~=5.5
 pathlib~=1.0.1
+prettytable~=3.12.0

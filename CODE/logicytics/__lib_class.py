@@ -96,6 +96,14 @@ class Flag:
             help="Run Logicytics in minimal mode. Just bare essential scraping using only quick scripts",
         )
 
+        parser.add_argument(
+            "--performance-check",
+            action="store_true",
+            help="Run's Logicytics default while testing its performance and time, "
+                 "this then shows a table with the file names and time to executed. "
+                 f"{cls.colorify('- Beta Mode -', 'y')}"
+        )
+
         # Define Side Flags
         parser.add_argument(
             "--debug",
@@ -177,15 +185,26 @@ class Flag:
         Returns:
             bool: True if exclusive flags are used, False otherwise.
         """
-        special_flag_used = False
-        if args.reboot or args.shutdown or args.webhook:
-            if not (
-                    args.default or args.threaded or args.modded or args.minimal or args.nopy or args.depth
-            ):
-                print("Invalid combination of flags.")
-                exit(1)
-            special_flag_used = True
-        return special_flag_used
+        special_flags = {
+            args.reboot,
+            args.shutdown,
+            args.webhook
+        }
+        action_flags = {
+            args.default,
+            args.threaded,
+            args.modded,
+            args.minimal,
+            args.nopy,
+            args.depth,
+            args.performance_check
+        }
+
+        if any(special_flags) and not any(action_flags):
+            print("Invalid combination of flags: Special and Action flag exclusivity issue.")
+            exit(1)
+
+        return any(special_flags)
 
     @staticmethod
     def __used_flags_logic(args: argparse.Namespace) -> tuple[str, ...]:
@@ -220,13 +239,13 @@ class Flag:
         if not special_flag_used:
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
             if len(used_flags) > 1:
-                print("Only one flag is allowed.")
+                print("Invalid combination of flags: Maximum 1 action flag allowed.")
                 exit(1)
 
         if special_flag_used:
             used_flags = cls.__used_flags_logic(args)
             if len(used_flags) > 2:
-                print("Invalid combination of flags.")
+                print("Invalid combination of flags: Maximum 2 flag mixes allowed.")
                 exit(1)
 
         if not tuple(used_flags):
@@ -267,6 +286,7 @@ class FileManagement:
         """
         os.makedirs("../ACCESS/LOGS/", exist_ok=True)
         os.makedirs("../ACCESS/LOGS/DEBUG", exist_ok=True)
+        os.makedirs("../ACCESS/LOGS/PERFORMANCE", exist_ok=True)
         os.makedirs("../ACCESS/BACKUP/", exist_ok=True)
         os.makedirs("../ACCESS/DATA/Hashes", exist_ok=True)
         os.makedirs("../ACCESS/DATA/Zip", exist_ok=True)
