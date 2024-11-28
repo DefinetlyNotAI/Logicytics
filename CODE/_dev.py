@@ -6,28 +6,33 @@ if __name__ == "__main__":
     log_dev = Log({"log_level": DEBUG})
 
 
-def _update_json_file(filename: str, new_data: list | str, key: str) -> None:
+def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
     """
-        Updates a JSON file with a new array of current files.
-        Args:
-            filename (str): The path to the JSON file to be updated.
-            new_data (list | str): The list of current files to be written to the JSON file.
-            key (str): The key in the JSON file to be updated.
-        Returns:
-            None
-        """
+    Updates an INI file with a new array of current files or version.
+    Args:
+        filename (str): The path to the INI file to be updated.
+        new_data (list | str): The list of current files or the new version to be written to the INI file.
+        key (str): The key in the INI file to be updated.
+    Returns:
+        None
+    """
     try:
-        with open(filename, "r+") as f:
-            data = json.load(f)
-            data[key] = new_data
-            f.seek(0)
+        config = configparser.ConfigParser()
+        config.read(filename)
+        if key == "files":
+            config["System Settings"][key] = ", ".join(new_data)
+        elif key == "version":
+            config["System Settings"][key] = new_data
+        else:
+            log_dev.error(f"Invalid key: {key}")
+            return
+        with open(filename, "w", encoding="utf-8") as configfile:
             # noinspection PyTypeChecker
-            json.dump(data, f, indent=4)
-            f.truncate()
+            config.write(configfile)
     except FileNotFoundError:
         log_dev.error(f"File not found: {filename}")
-    except json.JSONDecodeError:
-        log_dev.error(f"Error decoding JSON in the file: {filename}")
+    except configparser.Error as e:
+        log_dev.error(f"Error parsing INI file: {filename}, {e}")
     except Exception as e:
         log_dev.error(f"An error occurred: {e}")
 
@@ -89,8 +94,8 @@ def dev_checks() -> None:
 
         # Print the list of added, removed, and normal files in color
         print("\n".join([f"\033[92m+ {file}\033[0m" for file in added_files]))  # Green +
-        print([f"\033[91m- {file}\033[0m" for file in removed_files])  # Red -
-        print([f"* {file}" for file in normal_files])
+        print("\n".join([f"\033[91m- {file}\033[0m" for file in removed_files]))  # Red -
+        print("\n".join([f"* {file}" for file in normal_files]))
 
         # Prompt the user to confirm if the list includes their added files
         if not _prompt_user("Does the list above include your added files?"):
@@ -98,11 +103,11 @@ def dev_checks() -> None:
             return None
 
         # Update the JSON file with the current list of files
-        _update_json_file("config.json", files, "CURRENT_FILES")
+        _update_ini_file("config.ini", files, "files")
 
         # Prompt the user to enter the new version of the project and update the JSON file
-        _update_json_file("config.json", input(f"Enter the new version of the project (Old version is {VERSION}): "),
-                          "VERSION")
+        _update_ini_file("config.ini", input(f"Enter the new version of the project (Old version is {VERSION}): "),
+                         "version")
 
         # Print a message indicating the completion of the steps
         print("\nGreat Job! Please tick the box in the GitHub PR request for completing steps in --dev")

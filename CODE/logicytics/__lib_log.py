@@ -242,9 +242,3 @@ class Log:
             self.debug(f"Function {func.__name__}() executed in {elapsed_time}.")
             return result
         return wrapper
-
-
-if __name__ == "__main__":
-    Log().exception(
-        "This is a library file and should not be executed directly.", Exception
-    )

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import configparser
 import ctypes
 import hashlib
-import json
 import os.path
 import shutil
 import subprocess
@@ -350,6 +350,7 @@ class FileManagement:
             Returns:
                 None
             """
+
             def ignore_files(files_func):
                 for root, _, file_func in os.walk(os.path.join(path, files_func)):
                     for f in file_func:
@@ -598,7 +599,8 @@ class Execute:
 
 class Get:
     @staticmethod
-    def list_of_files(directory: str, append_file_list: list = None, extensions: tuple = (".py", ".exe", ".ps1", ".bat")) -> list:
+    def list_of_files(directory: str, append_file_list: list = None,
+                      extensions: tuple = (".py", ".exe", ".ps1", ".bat")) -> list:
         """
         Retrieves a list of files in the specified directory that have the specified extensions.
 
@@ -644,56 +646,41 @@ class Get:
     @staticmethod
     def config_data() -> tuple[str, str, list[str]]:
         """
-        Reads the configuration from the config.json file.
+        Retrieves configuration data from the 'config.ini' file.
+
+        This method attempts to read the 'config.ini' file located in the current directory.
+        If the file is not found, it attempts to read the 'config.ini' file from the parent directory.
+        If neither file is found, the program exits with an error message.
 
         Returns:
-            A tuple containing the webhook URL, debug mode, version, API key, and a list of current files.
-            The types of the returned values are:
-                - webhook_url: str
-                - debug: bool
-                - version: str
-                - api_key: str
-                - files: list[str]
-
-        Raises:
-            FileNotFoundError: If the config.json file is not found.
-            SystemExit: If the config.json file has an invalid format.
+            tuple[str, str, list[str]]: A tuple containing the log level, version, and a list of files.
         """
         def get_config_data(config_file_name: str) -> tuple[str, str, list[str]]:
-            script_dir = Path(__file__).parent.absolute()
-            config_path = script_dir / config_file_name
-            with open(config_path, "r") as file:
-                data = json.load(file)
+            """
+            Reads configuration data from the specified 'config.ini' file.
 
-                debug = data.get("Log Level Debug?", False)
-                version = data.get("VERSION", "Unknown")
-                files = data.get("CURRENT_FILES", ["Unknown"])
+            Args:
+                config_file_name (str): The name of the configuration file to read.
 
-                if not (
-                        isinstance(debug, bool)
-                        and isinstance(version, str)
-                        and isinstance(files, list)
-                ):
-                    print("Invalid config.json format.")
-                    input("Press Enter to exit...")
-                    exit(1)
-                if debug:
-                    debug = "DEBUG"
-                else:
-                    debug = "INFO"
-                return debug, version, files
+            Returns:
+                tuple[str, str, list[str]]: A tuple containing the log level, version, and a list of files.
+            """
+            config = configparser.ConfigParser()
+            config.read(config_file_name)
+
+            log_using_debug = config.getboolean("Settings", "log_using_debug")
+            version = config.get("System Settings", "version")
+            files = config.get("System Settings", "files").split(", ")
+
+            log_using_debug = "INFO" if log_using_debug else "DEBUG"
+
+            return log_using_debug, version, files
+
         try:
-            return get_config_data("config.json")
+            return get_config_data("config.ini")
         except FileNotFoundError:
             try:
-                return get_config_data("../config.json")
+                return get_config_data("../config.ini")
             except FileNotFoundError:
-                print("The config.json File is not found.")
-                input("Press Enter to exit...")
+                print("The config.ini file is not found.")
                 exit(1)
-
-
-if __name__ == "__main__":
-    Log().exception(
-        "This is a library file and should not be executed directly.", Exception
-    )
