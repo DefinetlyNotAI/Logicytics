@@ -8,6 +8,7 @@ import os.path
 import shutil
 import subprocess
 import zipfile
+from argparse import ArgumentParser
 from pathlib import Path
 from subprocess import CompletedProcess
 
@@ -207,7 +208,7 @@ class Flag:
         return tuple(true_keys)
 
     @classmethod
-    def data(cls) -> tuple[str, ...] | argparse.ArgumentParser:
+    def data(cls) -> ArgumentParser | tuple[str]:
         """
         Handles the parsing and validation of command-line flags.
 
@@ -672,7 +673,7 @@ class Get:
             version = config.get("System Settings", "version")
             files = config.get("System Settings", "files").split(", ")
 
-            log_using_debug = "INFO" if log_using_debug else "DEBUG"
+            log_using_debug = "DEBUG" if log_using_debug else "INFO"
 
             return log_using_debug, version, files
 
