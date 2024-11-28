@@ -31,6 +31,7 @@ class Log:
             "exception_color": "red",
             "colorlog_fmt_parameters": "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
             "truncate_message": True,
+            "delete_log": False,
         }
         self.EXCEPTION_LOG_LEVEL = 45
         self.INTERNAL_LOG_LEVEL = 15
@@ -79,6 +80,16 @@ class Log:
                 + " " * 71
                 + "|"
             )
+        elif os.path.exists(self.filename) and config.get("delete_log", False):
+            with open(self.filename, "w") as f:
+                f.write(
+                    "|     Timestamp     |  LOG Level  |"
+                    + " " * 71
+                    + "LOG Messages"
+                    + " " * 71
+                    + "|"
+                    + "\n"
+                )
         self.newline()
 
     @staticmethod
