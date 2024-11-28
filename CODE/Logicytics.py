@@ -9,7 +9,7 @@ from logicytics import *
 
 # Initialization
 FileManagement.mkdir()
-log = Log({"log_level": DEBUG})
+log = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
 
 
 class Health:
