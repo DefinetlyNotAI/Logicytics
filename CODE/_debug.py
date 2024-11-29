@@ -12,9 +12,7 @@ if __name__ == "__main__":
 
 class HealthCheck:
     @log_debug.function
-    def get_online_config(
-        self,
-    ) -> bool | tuple[tuple[str, str, str], tuple[str, str, str]]:
+    def get_online_config(self) -> bool | tuple[tuple[str, str, str], tuple[str, str, str]]:
         """
         Retrieves configuration data from a remote repository and compares it with the local configuration.
 
@@ -23,13 +21,14 @@ class HealthCheck:
             tuple[tuple[str, str, str], tuple[str, str, str]]: A tuple containing version check and file check results.
         """
         try:
-            url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/CODE/config.json"
-            config = json.loads(requests.get(url).text)
+            url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/CODE/config.ini"
+            config = configparser.ConfigParser()
+            config.read_string(requests.get(url).text)
         except requests.exceptions.ConnectionError:
             log_debug.warning("No connection found")
             return False
-        version_check = self.__compare_versions(VERSION, config["VERSION"])
-        file_check = self.__check_files(CURRENT_FILES, config["CURRENT_FILES"])
+        version_check = self.__compare_versions(VERSION, config["System Settings"]["version"])
+        file_check = self.__check_files(CURRENT_FILES, config["System Settings"]["files"].split(','))
 
         return version_check, file_check
 
