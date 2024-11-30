@@ -364,3 +364,6 @@ if __name__ == "__main__":
     handle_sub_action()
     # Finish
     input("Press Enter to exit...")
+else:
+    log.error("This script cannot be imported!")
+    exit(1)
