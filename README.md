@@ -30,6 +30,9 @@ To install and setup Logicytics, follow these steps:
 
 1. **Install Python**: If you don't have Python installed, you can download it from the [official website](https://www.python.org/downloads/).
 
+> [!IMPORTANT]
+> We recommend version 3.13 or higher, as the project is developed and tested on this version.
+
 2. **Install Dependencies**: Logicytics requires Python modules. You can install all the required modules by running the following command in your terminal: `pip install -r requirements.txt`
 
 3. **Run Logicytics**: To run Logicytics, simply run the following command in your terminal: `python Logicytics.py -h` - This opens a help menu.
@@ -100,21 +103,28 @@ Remove add and delete files, it's the safe directory where your backups, hashes,
 
 ## 🔧 Configuration 🔧
 
-Logicytics uses a config.json file to store configurations. The config.json is located in the CODE directory.
+Logicytics uses a config.ini file to store configurations. The config.ini is located in the CODE directory.
 
-The config.json file is a JSON file that contains the following information:
+The config.ini file is a INI file that contains the following information:
 
-```json
-{
-    "Log Level Debug?": "boolean - True or False",
-    "VERSION": "Version number x.x.x  format",
-    "CURRENT_FILES": [
-        "Files Seperated by commas in strings"
-    ]
-}
+```ini
+[Settings]
+; Would you like to enable debug mode?
+; This will print out more information to the console, with prefix DEBUG
+; This will not be logged however
+log_using_debug = bool
+; Would you like for new logs to be created every execution?
+; Or would you like to append to the same log file?
+delete_old_logs = bool
+
+[System Settings]
+; Do not play with these settings unless you know what you are doing
+version = str
+files = str, str
+
 ```
 
-The config.json file is used to store the DEBUG flag bool, the VERSION, and the CURRENT_FILES.
+The config.ini file is used to store the DEBUG flag bool, the VERSION, and the CURRENT_FILES.
 
 > [!TIP]
 > CURRENT_FILES is an array of strings that contains the names of the files you have, 
@@ -173,7 +183,7 @@ If those don't work attempt:
 
 ### Support Resources
 
-Check out the [GitHub wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) for help.
+Check out the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) for help.
 
 ## 📊 Data Analysis 📊
 
