@@ -53,18 +53,21 @@ class Flag:
             help="Runs Logicytics with its default settings and scripts. "
                  f"{cls.colorify('- Recommended for most users -', 'b')}",
         )
+
         parser.add_argument(
             "--threaded",
             action="store_true",
             help="Runs Logicytics using threads, where it runs in parallel, default settings though"
                  f"{cls.colorify('- Recommended for some users -', 'b')}",
         )
+
         parser.add_argument(
             "--modded",
             action="store_true",
             help="Runs the normal Logicytics, as well as any File in the MODS directory, "
                  "Used for custom scripts as well as default ones.",
         )
+
         parser.add_argument(
             "--depth",
             action="store_true",
@@ -72,6 +75,7 @@ class Flag:
                  "as well as any clunky and huge code, which produces a lot of data "
                  f"{cls.colorify('- Will take a long time -', 'y')}",
         )
+
         parser.add_argument(
             "--nopy",
             action="store_true",
@@ -79,6 +83,16 @@ class Flag:
                  f"These may be {cls.colorify('outdated', 'y')} "
                  "and not the best, use only if the device doesnt have python installed.",
         )
+
+        parser.add_argument(
+            "--vulnscan-ai",
+            action="store_true",
+            help="Run's Logicytics new Vulnerability Detection AI, its a new feature that will "
+                 "detect any files that are out of the ordinary, "
+                 f"{cls.colorify('- Beta Mode -', 'y')} "
+                 f"{cls.colorify('- Will take a long time -', 'y')}",
+        )
+
         parser.add_argument(
             "--minimal",
             action="store_true",
@@ -101,12 +115,14 @@ class Flag:
                  "warning etc, useful for debugging and issue reporting "
                  f"{cls.colorify('- Use to get a special log file to report the bug -', 'b')}.",
         )
+
         parser.add_argument(
             "--backup",
             action="store_true",
             help="Backup Logicytics files to the ACCESS/BACKUPS directory "
                  f"{cls.colorify('- Use on your own device only -', 'y')}.",
         )
+
         parser.add_argument(
             "--update",
             action="store_true",
@@ -114,12 +130,14 @@ class Flag:
                  "and the project was downloaded via git "
                  f"{cls.colorify('- Use on your own device only -', 'y')}.",
         )
+
         parser.add_argument(
             "--unzip-extra",
             action="store_true",
             help="Unzip the extra directory zip File "
                  f"{cls.colorify('- Use on your own device only -', 'y')}.",
         )
+
         parser.add_argument(
             "--extra",
             action="store_true",
@@ -127,6 +145,7 @@ class Flag:
                  f"{cls.colorify('- Still experimental -', 'y')} "
                  f"{cls.colorify('- MUST have used --unzip-extra flag -', 'b')}.",
         )
+
         parser.add_argument(
             "--dev",
             action="store_true",
@@ -141,6 +160,7 @@ class Flag:
             action="store_true",
             help="Execute Flag that will reboot the device afterward",
         )
+
         parser.add_argument(
             "--shutdown",
             action="store_true",
@@ -154,6 +174,7 @@ class Flag:
             help="Execute Flag that will send zip File via webhook "
                  f"{cls.colorify('- Not yet Implemented -', 'r')}",
         )
+
         parser.add_argument(
             "--restore",
             action="store_true",
@@ -161,6 +182,7 @@ class Flag:
                  f"{cls.colorify('- Use on your own device only -', 'y')} "
                  f"{cls.colorify('- Not yet Implemented -', 'r')}",
         )
+
         return parser.parse_args(), parser
 
     @staticmethod
@@ -188,9 +210,20 @@ class Flag:
             args.depth,
             args.performance_check
         }
+        exclusive_flags = {
+            args.vulnscan_ai,
+        }
 
         if any(special_flags) and not any(action_flags):
             print("Invalid combination of flags: Special and Action flag exclusivity issue.")
+            exit(1)
+
+        if any(exclusive_flags) and any(action_flags):
+            print("Invalid combination of flags: Exclusive and Action flag exclusivity issue.")
+            exit(1)
+
+        if any(exclusive_flags) and any(special_flags):
+            print("Invalid combination of flags: Exclusive and Special flag exclusivity issue.")
             exit(1)
 
         return any(special_flags)
