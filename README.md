@@ -218,6 +218,7 @@ Here are some of the data points that Logicytics extracts:
 | wifi_stealer.py          | Gets the SSID and Password of all saved Wi-Fi                                                                          |                          |
 | dir_list.py              | Produces a txt on every single file on the device, very slow and clunky - useful for depth scanning                    |                          |
 | event_logs.py            | Produces a multiple txt files in a folder on many event logs (Security, Applications and System)                       |                          |
+| anomaly_detector.py      | CHANGEME TODO                                                                                                          |                          |
 
 This is not an exhaustive list, 
 but it should give you a good idea of what data Logicytics is capable of extracting.

@@ -208,6 +208,7 @@ def generate_execution_list() -> list | list[str] | list[str | Any]:
     execution_list.remove("sensitive_data_miner.py")
     execution_list.remove("dir_list.py")
     execution_list.remove("tree.ps1")
+    execution_list.remove("vulnscan.py")
 
     if ACTION == "minimal":
         execution_list = [
@@ -240,6 +241,10 @@ def generate_execution_list() -> list | list[str] | list[str | Any]:
         execution_list.append("dir_list.py")
         execution_list.append("tree.ps1")
         log.warning("This flag will use threading!")
+
+    if ACTION == "vulnscan_ai":
+        # Only vulnscan detector
+        execution_list = ["vulnscan.py"]
 
     log.debug(f"The following will be executed: {execution_list}")
     return execution_list
