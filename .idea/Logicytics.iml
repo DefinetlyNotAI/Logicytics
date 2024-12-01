@@ -9,6 +9,7 @@
       <sourceFolder url="file://$MODULE_DIR$/CODE/_internal" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/TESTS" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/ACCESS" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/test-vulnscan/cves" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.11" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
