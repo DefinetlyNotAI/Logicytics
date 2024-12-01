@@ -1,88 +1,116 @@
-import os
-from typing import Any
-
+import numpy as np
 import joblib
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+import signal
+import os
 
-# Paths
-DATA_DIR = "cves"  # Directory containing .json and .txt files
-MODEL_PATH = "vulnerability_model.pkl"
-VECTORIZER_PATH = "vectorizer.pkl"
-
-
-def load_cve(file_path) -> str:
-    """
-    Load a CVE from a .txt file.
-    """
-    try:
-        with open(file_path, "r") as f:
-            return f.read()
-    except Exception as e:
-        print(f"Error loading {file_path}: {e}")
-        return ""
+# Global flag to handle stop command
+stop_training = False
 
 
-def load_cve_data() -> tuple[list[str], list[int]]:
-    """
-    Load CVE data from both .json and .txt files in the data directory.
-    Labels:
-    - 1 for vulnerabilities with "critical" or "high" severity.
-    - 0 for others.
-    """
+# Signal handler for the STOP command
+def handle_stop_signal(signum, frame):
+    global stop_training
+    print("\nReceived STOP command. Finishing current epoch and saving progress...")
+    stop_training = True
+
+
+# Set up signal handler for the STOP command
+signal.signal(signal.SIGINT, handle_stop_signal)
+
+
+# Function to load and preprocess files
+def load_data(file_paths):
     data = []
     labels = []
-    for root, dirs, files in os.walk(DATA_DIR):
-        for dir in dirs:
-            dir_path = os.path.join(root, dir)
-            for sub_root, _, sub_files in os.walk(dir_path):
-                for file in sub_files:
-                    file_path = os.path.join(sub_root, file)
-                    if file.endswith(".txt") or file.endswith(".json"):
-                        print(f"Loading {file}...")
-                        content = load_cve(file_path)
-                        label = 1 if "critical" in file.lower() or "high" in file.lower() else 0
-                        data.append(content)
-                        labels.append(label)
-    return data, labels
+
+    for file_path_ld in file_paths:
+        try:
+            with open(file_path_ld, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+                # Example feature extraction
+                word_count = len(content.split())
+                special_char_count = sum(c in "@#$%^&*" for c in content)
+                sensitive_keywords = content.lower().count("password") + content.lower().count("confidential")
+                features = [word_count, special_char_count, sensitive_keywords]
+                data.append(features)
+                # Label: 1 for sensitive, 0 for non-sensitive
+                labels.append(1 if "sensitive" in content.lower() else 0)
+                print(f"File {file_path_ld} loaded successfully. Features: {features}, Label: {labels[-1]}")
+        except Exception as e:
+            print(f"Error reading file {file_path_ld}: {e}")
+
+    return np.array(data), np.array(labels)
 
 
-def preprocess_text(data) -> Any:
-    """
-    Convert text data into numerical features using TF-IDF.
-    """
-    vectorizer = CountVectorizer(stop_words="english", max_features=5000)
-    tfidf_transformer = TfidfTransformer()
-    counts = vectorizer.fit_transform(data)
-    features = tfidf_transformer.fit_transform(counts)
-    joblib.dump(vectorizer, VECTORIZER_PATH)  # Save vectorizer for later use
-    return features
+# Function to train the model
+def train_model(file_paths):
+    print("Training model...")
+    global stop_training
+
+    # Load data
+    data, labels = load_data(file_paths)
+    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
+
+    # Initialize model
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    epochs = 10  # Set number of epochs
+    accuracies = []
+
+    for epoch in range(epochs):
+        if stop_training:
+            break
+        print(f"Epoch {epoch + 1}/{epochs}")
+
+        # Train model
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+
+        # Evaluate performance
+        accuracy = accuracy_score(y_test, predictions)
+        precision = precision_score(y_test, predictions, zero_division=0)
+        recall = recall_score(y_test, predictions, zero_division=0)
+        f1 = f1_score(y_test, predictions, zero_division=0)
+        roc_auc = roc_auc_score(y_test, predictions)
+
+        print(
+            f"Accuracy: {accuracy:.2f}, Precision: {precision:.2f}, Recall: {recall:.2f}, F1-Score: {f1:.2f}, ROC-AUC: {roc_auc:.2f}")
+        accuracies.append(accuracy)
+
+        # Save progress plot
+        plt.figure(figsize=(8, 6))
+        plt.plot(range(1, len(accuracies) + 1), accuracies, marker='o', label="Training Accuracy")
+        plt.xlabel("Epochs")
+        plt.ylabel("Accuracy")
+        plt.title("Training Progress")
+        plt.legend()
+        plt.grid()
+        plt.savefig("training_progress.png")
+        plt.close()
+
+        # Save model checkpoint
+        joblib.dump(model, f"trained_model_epoch_{epoch + 1}.pkl")
+        print(f"Model checkpoint saved: trained_model_epoch_{epoch + 1}.pkl")
+
+    # Save final model
+    joblib.dump(model, "trained_model.pkl")
+    print("Final model saved as trained_model.pkl")
+    print("Training complete.")
 
 
-def train_model():
-    """
-    Train a model using the CVE data.
-    """
-    data, labels = load_cve_data()
-    features = preprocess_text(data)
-
-    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.3, random_state=42)
-
-    model = RandomForestClassifier()
-    model.fit(X_train, y_train)
-    print("Model Training Completed!")
-
-    # Evaluate the model
-    y_pred = model.predict(X_test)
-    print(classification_report(y_test, y_pred))
-
-    # Save the trained model
-    joblib.dump(model, MODEL_PATH)
-    print(f"Model saved to {MODEL_PATH}")
-
-
+# Main function
 if __name__ == "__main__":
-    input("This may take around 10-20 minutes per 1m files. Press Enter to continue...")
-    train_model()
+    folder_path = "generated_data"
+    file_path = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith(".txt")]
+
+    if not file_path:
+        print("No files found for training. Please ensure 'generated_data/' contains text files.")
+    else:
+        print(f"Found {len(file_path)} files for training.")
+        train_model(file_path)
+
+# TODO - Implement hyperparameter tuning
+# TODO - Make use of different models
