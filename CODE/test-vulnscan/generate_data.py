@@ -6,9 +6,6 @@ from faker import Faker
 # Initialize the Faker instance
 fake = Faker()
 
-# Maximum file size in bytes (default to 1 GB)
-MAX_FILE_SIZE = 1 * 1024 * 1024 * 1024  # 1 GB
-
 
 # Function to generate a sensitive file with real sensitive information
 def create_sensitive_file(file_path, max_size=MAX_FILE_SIZE):
@@ -78,11 +75,10 @@ def create_random_files(directories, num_file=100):
 
 # Main function to call the file creation logic
 if __name__ == "__main__":
-    directory = "generated_data_v2"
-    num_files = 50000  # Adjust as needed
-    MAX_FILE_SIZE = 20 * 1024  # Example: Max file size is 20 KB
+    directory = "generated_data_1m-files_10KB"
+    MAX_FILE_SIZE = 10 * 1024  # Example: Max file size is 10 KB
 
-    create_random_files(directory, num_file=num_files)
+    create_random_files(directory, num_file=1000000)
 
 
 # TODO Fix the code to generate the data for the vulnscan project
