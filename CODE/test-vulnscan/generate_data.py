@@ -3,8 +3,8 @@ import random
 
 from faker import Faker
 
-MAX_FILE_SIZE = 10 * 1024  # Example: Max file size is 10 KB
-
+MAX_FILE_SIZE: int = 10 * 1024  # Example: Max file size is 10 KB
+SAVE_DIRECTORY: str = "PATH"
 # Initialize the Faker instance
 fake = Faker()
 
@@ -75,8 +75,4 @@ def create_random_files(directories, num_file=100):
         print(f"Created {file_type} file: {file_name}")
 
 
-# Main function to call the file creation logic
-if __name__ == "__main__":
-    directory = "generated_data_1m-files_10KB"
-
-    create_random_files(directory, num_file=1000000)
+create_random_files(SAVE_DIRECTORY, num_file=1000000)
