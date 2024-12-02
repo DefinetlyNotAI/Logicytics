@@ -8,7 +8,7 @@ fake = Faker()
 
 
 # Function to generate a sensitive file with real sensitive information
-def create_sensitive_file(file_path, max_size=MAX_FILE_SIZE):
+def create_sensitive_file(file_path, max_size):
     content = ""
     # Generate sensitive data using Faker
     content += f"Name: {fake.name()}\n"
@@ -28,7 +28,7 @@ def create_sensitive_file(file_path, max_size=MAX_FILE_SIZE):
 
 
 # Function to generate a normal file with non-sensitive data
-def create_normal_file(file_path, max_size=MAX_FILE_SIZE):
+def create_normal_file(file_path, max_size):
     content = ""
     # Add random text
     while len(content.encode('utf-8')) < max_size:
@@ -39,7 +39,7 @@ def create_normal_file(file_path, max_size=MAX_FILE_SIZE):
 
 
 # Function to generate a mix file with both normal and sensitive data
-def create_mix_file(file_path, max_size=MAX_FILE_SIZE):
+def create_mix_file(file_path, max_size):
     content = ""
     # Add a mix of normal and sensitive data
     while len(content.encode('utf-8')) < max_size:
@@ -79,38 +79,3 @@ if __name__ == "__main__":
     MAX_FILE_SIZE = 10 * 1024  # Example: Max file size is 10 KB
 
     create_random_files(directory, num_file=1000000)
-
-
-# TODO Fix the code to generate the data for the vulnscan project
-# Epoch 1/10
-# Accuracy: 1.00, Precision: 1.00, Recall: 1.00, F1-Score: 1.00, ROC-AUC: 1.00
-# Model checkpoint saved: trained_model_epoch_1.pkl
-# Epoch 2/10
-# Accuracy: 1.00, Precision: 1.00, Recall: 1.00, F1-Score: 1.00, ROC-AUC: 1.00
-# Model checkpoint saved: trained_model_epoch_2.pkl
-# Epoch 3/10
-# Accuracy: 1.00, Precision: 1.00, Recall: 1.00, F1-Score: 1.00, ROC-AUC: 1.00
-# Model checkpoint saved: trained_model_epoch_3.pkl
-# Epoch 4/10
-# Accuracy: 1.00, Precision: 1.00, Recall: 1.00, F1-Score: 1.00, ROC-AUC: 1.00
-# Model checkpoint saved: trained_model_epoch_4.pkl
-# Epoch 5/10
-# Accuracy: 1.00, Precision: 1.00, Recall: 1.00, F1-Score: 1.00, ROC-AUC: 1.00
-# Model checkpoint saved: trained_model_epoch_5.pkl
-# Epoch 6/10
-# Accuracy: 1.00, Precision: 1.00, Recall: 1.00, F1-Score: 1.00, ROC-AUC: 1.00
-# Model checkpoint saved: trained_model_epoch_6.pkl
-# Epoch 7/10
-# Accuracy: 1.00, Precision: 1.00, Recall: 1.00, F1-Score: 1.00, ROC-AUC: 1.00
-# Model checkpoint saved: trained_model_epoch_7.pkl
-# Epoch 8/10
-# Accuracy: 1.00, Precision: 1.00, Recall: 1.00, F1-Score: 1.00, ROC-AUC: 1.00
-# Model checkpoint saved: trained_model_epoch_8.pkl
-# Epoch 9/10
-# Accuracy: 1.00, Precision: 1.00, Recall: 1.00, F1-Score: 1.00, ROC-AUC: 1.00
-# Model checkpoint saved: trained_model_epoch_9.pkl
-# Epoch 10/10
-# Accuracy: 1.00, Precision: 1.00, Recall: 1.00, F1-Score: 1.00, ROC-AUC: 1.00
-# Model checkpoint saved: trained_model_epoch_10.pkl
-# Final model saved as trained_model.pkl
-# Training complete.

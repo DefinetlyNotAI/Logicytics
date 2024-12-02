@@ -4,22 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
-import signal
 import os
-
-# Global flag to handle stop command
-stop_training = False
-
-
-# Signal handler for the STOP command
-def handle_stop_signal(signum, frame):
-    global stop_training
-    print("\nReceived STOP command. Finishing current epoch and saving progress...")
-    stop_training = True
-
-
-# Set up signal handler for the STOP command
-signal.signal(signal.SIGINT, handle_stop_signal)
 
 
 # Function to load and preprocess files
@@ -103,11 +88,17 @@ def train_model(file_paths):
 
 # Main function
 if __name__ == "__main__":
-    folder_path = "generated_data"
-    file_path = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith(".txt")]
+    folder_path = r"C:\Users\Hp\Desktop\Model Tests\Model Sense.1L\generated_data_1m-files_10KB"
+    file_path = []
+    for file in os.listdir(folder_path):
+        if file.endswith(".txt"):
+            os.path.join(folder_path, file)
+            print(f"Indexed file: {file}")
+            file_path.append(os.path.join(folder_path, file))
+    print(f"Total Indexed file's: {len(file_path)}")
 
     if not file_path:
-        print("No files found for training. Please ensure 'generated_data/' contains text files.")
+        print(f"No files found for training. Please ensure '{folder_path}' contains text files.")
     else:
         print(f"Found {len(file_path)} files for training.")
         train_model(file_path)
