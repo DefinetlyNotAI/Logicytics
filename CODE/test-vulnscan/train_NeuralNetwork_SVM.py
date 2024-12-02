@@ -130,3 +130,6 @@ if __name__ == "__main__":
         print(f"No files found for training. Please ensure '{FOLDER_PATH}' contains text files.")
     else:
         train_model(FILE_PATH, model_type=MODEL)
+
+
+# TODO Merge train_1.py and train_2.py into a single file
