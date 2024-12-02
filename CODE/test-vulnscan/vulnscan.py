@@ -5,7 +5,7 @@ import joblib
 def preprocess_file(file_paths):
     with open(file_paths, 'r', encoding='utf-8', errors='ignore') as f:
         content = f.read()
-        feature = len(content), content.count("@")  # Example features
+        feature = len(content), content.count("@"), content.count("password")  # Example features
     return [feature]  # Return as a list of features for prediction
 
 
@@ -20,8 +20,8 @@ def predict_sensitive(file_paths, model_to_use):
 
 # Main function to load model_to_use and make predictions
 if __name__ == "__main__":
-    model = joblib.load("trained_model.pkl")
-    file_path = "file_to_check.txt"  # Replace with the file you want to check
+    model = joblib.load(r"C:\Users\Hp\Desktop\Model Tests\Model Sense.1L\trained_model.pkl")
+    file_path = r"C:\Users\Hp\Desktop\todo.txt"  # Replace with the file you want to check
     result, confidence = predict_sensitive(file_path, model)
 
     print(f"File '{file_path}' is classified as {result} with a confidence score of {confidence:.2f}")
