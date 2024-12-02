@@ -26,4 +26,4 @@ if __name__ == "__main__":
 
     print(f"File '{file_path}' is classified as {result} with a confidence score of {confidence:.2f}")
 
-# TODO Test the code with a file to check if it is sensitive or not
+# TODO Remake this code to be more modular and user-friendly
