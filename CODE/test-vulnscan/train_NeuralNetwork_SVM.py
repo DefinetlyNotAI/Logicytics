@@ -5,12 +5,11 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.neural_network import MLPClassifier
-import time
 import os
 
-EPOCHS: int = 20  # Set number of epochs
-FOLDER_PATH: str = r"C:\Users\Hp\Desktop\Model Tests\Model Sense.1L\generated_data_1m-files_10KB"
-MODEL: str = "nn"  # Change `model_type` to "nn" for a neural network model or "svm" for a support vector machine model
+EPOCHS: int = 5  # Set number of epochs
+FOLDER_PATH: str = r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 1M files with 10KB"
+MODEL: str = "svm"  # Change `model_type` to "nn" for a neural network model or "svm" for a support vector machine model
 
 
 # Function to load and preprocess files
@@ -53,10 +52,12 @@ def save_progress_graph(accuracies, filename=f"training_progress_{MODEL}.png"):
 # Function to train the model with hyperparameter tuning
 def train_model(file_paths, model_type="svm"):
     # Load data
+    print("Loading data...")
     data, labels = load_data(file_paths)
     X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
 
     # Initialize model
+    print("Initializing model...")
     model = None
     param_grid = None
     if model_type == "svm":
@@ -74,8 +75,9 @@ def train_model(file_paths, model_type="svm"):
             "solver": ["adam", "sgd"],
         }
 
-    # Perform grid search for hyperparameter tuning
-    grid_search = GridSearchCV(model, param_grid, cv=3, scoring="accuracy", verbose=1)
+    # Perform grid search for hyperparameter tuning with parallel processing
+    print(f"Training {model_type.upper()} model with hyperparameter tuning...")
+    grid_search = GridSearchCV(model, param_grid, cv=3, scoring="accuracy", verbose=1, n_jobs=-1)
     grid_search.fit(X_train, y_train)
 
     best_model = grid_search.best_estimator_
@@ -103,12 +105,10 @@ def train_model(file_paths, model_type="svm"):
         # Save progress graph
         save_progress_graph(accuracies)
 
-        # Simulate training time (optional)
-        time.sleep(1)  # Remove this for real training
-
-        # Save checkpoint model
-        joblib.dump(best_model, f"trained_model_epoch_{epoch + 1}_{MODEL}.pkl")
-        print(f"Model checkpoint saved: trained_model_epoch_{epoch + 1}_{MODEL}.pkl")
+        # Save checkpoint model after every epoch
+        if epoch % 1 == 0:
+            joblib.dump(best_model, f"trained_model_epoch_{epoch + 1}_{MODEL}.pkl")
+            print(f"Model checkpoint saved: trained_model_epoch_{epoch + 1}_{MODEL}.pkl")
 
     # Save final model
     joblib.dump(best_model, f"trained_model_{MODEL}.pkl")
@@ -121,7 +121,6 @@ if __name__ == "__main__":
     FILE_PATH: list[str] = []
     for file in os.listdir(FOLDER_PATH):
         if file.endswith(".txt"):
-            os.path.join(FOLDER_PATH, file)
             print(f"Indexed file: {file}")
             FILE_PATH.append(os.path.join(FOLDER_PATH, file))
     print(f"Total Indexed file's: {len(FILE_PATH)}")
@@ -130,6 +129,3 @@ if __name__ == "__main__":
         print(f"No files found for training. Please ensure '{FOLDER_PATH}' contains text files.")
     else:
         train_model(FILE_PATH, model_type=MODEL)
-
-
-# TODO Merge train_1.py and train_2.py into a single file
