@@ -34,7 +34,6 @@ def load_data(file_paths):
 # Function to train the model
 def train_model(file_paths):
     print("Training model...")
-    global stop_training
 
     # Load data
     data, labels = load_data(file_paths)
@@ -42,12 +41,10 @@ def train_model(file_paths):
 
     # Initialize model
     model = RandomForestClassifier(n_estimators=100, random_state=42)
-    epochs = 10  # Set number of epochs
+    epochs = 20  # Set number of epochs
     accuracies = []
 
     for epoch in range(epochs):
-        if stop_training:
-            break
         print(f"Epoch {epoch + 1}/{epochs}")
 
         # Train model
@@ -102,6 +99,3 @@ if __name__ == "__main__":
     else:
         print(f"Found {len(file_path)} files for training.")
         train_model(file_path)
-
-# TODO - Implement hyperparameter tuning
-# TODO - Make use of different models
