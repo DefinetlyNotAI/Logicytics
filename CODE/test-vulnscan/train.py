@@ -59,6 +59,7 @@ def evaluate_model(y_true, y_pred):
         f"Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, ROC-AUC: {roc_auc:.4f}")
     return accuracy, precision, recall, f1, roc_auc
 
+
 # ---------------------------------------
 # MODEL TRAINING FUNCTIONS
 # ---------------------------------------
@@ -77,58 +78,62 @@ def save_progress_graph(accuracies, filename=f"training_progress.png"):
 
 
 # noinspection DuplicatedCode
-def train_nn_svm(file_paths, model_type, epochs, save_dir):
-    if model_type not in ["svm", "nn"]:
-        logging.error(f"Invalid model type: {model_type}. Please choose 'svm' or 'nn'.")
+def train_nn_svm(MODEL, EPOCHS, SAVE_DIR, MAX_FEATURES, TEST_SIZE, MAX_ITER, RANDOM_STATE):
+    if MODEL not in ["svm", "nn"]:
+        logging.error(f"Invalid model type: {MODEL}. Please choose 'svm' or 'nn'.")
         return
 
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+    if not os.path.exists(SAVE_DIR):
+        os.makedirs(SAVE_DIR)
 
     # Load data
     logging.info("Loading data...")
-    if file_paths == "Large":
-        data, labels = DATA_HUGE
-    else:
-        data, labels = DATA_SMALL
-    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
+    data, labels = DATA
+    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
     # Vectorize text data
-    vectorizer = TfidfVectorizer(max_features=10000)
+    vectorizer = TfidfVectorizer(max_features=MAX_FEATURES)
     X_train = vectorizer.fit_transform(X_train).toarray()
     X_test = vectorizer.transform(X_test).toarray()
 
     # Initialize model
     logging.info("Initializing model...")
-    model = None
-    param_grid = None
-    if model_type == "svm":
-        model = SVC(probability=True, random_state=42)
+    if MODEL == "svm":
+        model = SVC(probability=True, random_state=RANDOM_STATE)
         param_grid = {
             "C": [1, 10],
             "kernel": ["linear"],
             "gamma": ["scale"],
         }
-    elif model_type == "nn":
-        model = MLPClassifier(random_state=42, max_iter=5000)
+    elif MODEL == "nn":
+        model = MLPClassifier(random_state=RANDOM_STATE, max_iter=MAX_ITER)
         param_grid = {
             "hidden_layer_sizes": [(50,), (100,), (100, 50)],
             "activation": ["relu", "tanh"],
             "solver": ["adam", "sgd"],
         }
+    else:
+        logging.error(f"Invalid model type: {MODEL}. Please choose 'svm' or 'nn'.")
+        return
 
     # Perform grid search for hyperparameter tuning with parallel processing
-    logging.info(f"Training {model_type.upper()} model with hyperparameter tuning...")
-    grid_search = GridSearchCV(model, param_grid, cv=2, scoring="accuracy", verbose=1)
-    grid_search.fit(X_train, y_train)
+    logging.info(f"Training {MODEL.upper()} model with hyperparameter tuning...")
+    try:
+        grid_search = GridSearchCV(model, param_grid, cv=3, scoring="accuracy", verbose=1)
+        grid_search.fit(X_train, y_train)
+    except Exception as e:
+        logging.error(f"Error occurred during grid search: {e}")
+        logging.info("Training with CV=2...")
+        grid_search = GridSearchCV(model, param_grid, cv=2, scoring="accuracy", verbose=1)
+        grid_search.fit(X_train, y_train)
 
     best_model = grid_search.best_estimator_
     logging.info(f"Best Model Parameters: {grid_search.best_params_}")
 
     # Train with the best model
     accuracies = []
-    for epoch in range(epochs):
-        logging.info(f"Epoch {epoch + 1}/{epochs}")
+    for epoch in range(EPOCHS):
+        logging.info(f"Epoch {epoch + 1}/{EPOCHS}")
 
         best_model.fit(X_train, y_train)
         predictions = best_model.predict(X_test)
@@ -138,46 +143,44 @@ def train_nn_svm(file_paths, model_type, epochs, save_dir):
         precision = precision_score(y_test, predictions, zero_division=0)
         recall = recall_score(y_test, predictions, zero_division=0)
         f1 = f1_score(y_test, predictions, zero_division=0)
-        roc_auc = roc_auc_score(y_test, best_model.predict_proba(X_test)[:, 1]) if len(set(y_test)) > 1 else float('nan')
+        roc_auc = roc_auc_score(y_test, best_model.predict_proba(X_test)[:, 1]) if len(set(y_test)) > 1 else float(
+            'nan')
         logging.info(
             f"Accuracy: {accuracy:.2f}, Precision: {precision:.2f}, Recall: {recall:.2f}, F1-Score: {f1:.2f}, ROC-AUC: {roc_auc:.2f}")
         accuracies.append(accuracy)
 
         # Save progress graph
-        save_progress_graph(accuracies, filename=os.path.join(save_dir, f"training_progress.png"))
+        save_progress_graph(accuracies, filename=os.path.join(SAVE_DIR, f"training_progress.png"))
 
         # Save checkpoint model after every epoch
         if epoch % 1 == 0:
-            joblib.dump(best_model, os.path.join(save_dir, f"trained_model_epoch_{epoch + 1}.pkl"))
-            logging.info(f"Model checkpoint saved: {os.path.join(save_dir, f'trained_model_epoch_{epoch + 1}.pkl')}")
+            joblib.dump(best_model, os.path.join(SAVE_DIR, f"trained_model_epoch_{epoch + 1}.pkl"))
+            logging.info(f"Model checkpoint saved: {os.path.join(SAVE_DIR, f'trained_model_epoch_{epoch + 1}.pkl')}")
 
     # Save final model
-    joblib.dump(best_model, os.path.join(save_dir, "trained_model.pkl"))
-    logging.info(f"Final model saved as {os.path.join(save_dir, 'trained_model.pkl')}")
+    joblib.dump(best_model, os.path.join(SAVE_DIR, "trained_model.pkl"))
+    logging.info(f"Final model saved as {os.path.join(SAVE_DIR, 'trained_model.pkl')}")
     logging.info("Training complete.")
 
 
 # noinspection DuplicatedCode
-def train_rfc(file_paths, save_dir, epochs):
+def train_rfc(SAVE_DIR, EPOCHS, TEST_SIZE, N_ESTIMATORS, RANDOM_STATE):
     logging.info("Training model...")
 
     # Load data
-    if file_paths == "Large":
-        data, labels = DATA_HUGE
-    else:
-        data, labels = DATA_SMALL
+    data, labels = DATA
 
     # Vectorize text data
     vectorizer = TfidfVectorizer(max_features=10000)
     X = vectorizer.fit_transform(data).toarray()
-    X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
     # Initialize model
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model = RandomForestClassifier(n_estimators=N_ESTIMATORS, random_state=RANDOM_STATE)
     accuracies = []
 
-    for epoch in range(epochs):
-        logging.info(f"Epoch {epoch + 1}/{epochs}")
+    for epoch in range(EPOCHS):
+        logging.info(f"Epoch {epoch + 1}/{EPOCHS}")
 
         model.fit(X_train, y_train)
         predictions = model.predict(X_test)
@@ -193,17 +196,17 @@ def train_rfc(file_paths, save_dir, epochs):
         accuracies.append(accuracy)
 
         # Save progress plot
-        if not os.path.exists(save_dir):
-            mkdir(save_dir)
-        save_progress_graph(accuracies, filename=os.path.join(save_dir, f"training_progress.png"))
+        if not os.path.exists(SAVE_DIR):
+            mkdir(SAVE_DIR)
+        save_progress_graph(accuracies, filename=os.path.join(SAVE_DIR, f"training_progress.png"))
 
         # Save model checkpoint
-        joblib.dump(model, os.path.join(save_dir, f"trained_model_epoch_{epoch + 1}.pkl"))
-        logging.info(f"Model checkpoint saved: {os.path.join(save_dir, f'trained_model_epoch_{epoch + 1}.pkl')}")
+        joblib.dump(model, os.path.join(SAVE_DIR, f"trained_model_epoch_{epoch + 1}.pkl"))
+        logging.info(f"Model checkpoint saved: {os.path.join(SAVE_DIR, f'trained_model_epoch_{epoch + 1}.pkl')}")
 
     # Save final model
-    joblib.dump(model, os.path.join(save_dir, "trained_model.pkl"))
-    logging.info(f"Final model saved as {os.path.join(save_dir, 'trained_model.pkl')}")
+    joblib.dump(model, os.path.join(SAVE_DIR, "trained_model.pkl"))
+    logging.info(f"Final model saved as {os.path.join(SAVE_DIR, 'trained_model.pkl')}")
     logging.info("Training complete.")
 
 
@@ -345,19 +348,17 @@ def train_lstm(X_train, X_test, y_train, y_test, MAX_FEATURES, LEARNING_RATE, BA
 # MAIN LOGIC
 # ---------------------------------------
 
-def train_model_v3(MODEL_TYPE, DATASET_SIZE, SAVE_DIR, EPOCHS, BATCH_SIZE, LEARNING_RATE, MAX_FEATURES, MAX_LEN,
-                   TEST_SIZE, MODEL_PATH_BERT=None):
+def train_model_v3(MODEL_TYPE, SAVE_DIR, EPOCHS, BATCH_SIZE, LEARNING_RATE, MAX_FEATURES, MAX_LEN,
+                   TEST_SIZE, RANDOM_STATE, MODEL_PATH_BERT=None):
     # Create save directory if it doesn't exist
     os.makedirs(SAVE_DIR, exist_ok=True)
 
     # Load data
     logging.info("Loading data...")
-    if DATASET_SIZE == "Large":
-        texts_main, labels_main = DATA_HUGE
-    else:
-        texts_main, labels_main = DATA_SMALL
+    texts_main, labels_main = DATA
     X_train_main, X_test_main, y_train_main, y_test_main = train_test_split(texts_main, labels_main,
-                                                                            test_size=TEST_SIZE, random_state=42)
+                                                                            test_size=TEST_SIZE,
+                                                                            random_state=RANDOM_STATE)
 
     # Train based on the chosen model
     if MODEL_TYPE == "xgboost":
@@ -378,54 +379,40 @@ def train_model_v3(MODEL_TYPE, DATASET_SIZE, SAVE_DIR, EPOCHS, BATCH_SIZE, LEARN
                    EPOCHS, SAVE_DIR)
 
 
-def train_model_v2(EPOCHS, DATASET_SIZE, MODEL, SAVE_DIR):
-    train_nn_svm(DATASET_SIZE, MODEL, EPOCHS, SAVE_DIR)
+if __name__ == "__main__":
+    DATA = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 1M files with 10KB")
 
+    train_rfc(SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .1Lr4", EPOCHS=30, TEST_SIZE=0.2,
+              N_ESTIMATORS=100, RANDOM_STATE=42)
 
-def train_model_v1(DATASET_SIZE, SAVE_DIR, EPOCHS):
-    logging.info(f"Found {len(DATASET_SIZE)} files for training.")
-    train_rfc(DATASET_SIZE, SAVE_DIR, EPOCHS)
+    train_rfc(SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .1Sr5", EPOCHS=30, TEST_SIZE=0.2,
+              N_ESTIMATORS=100, RANDOM_STATE=42)
 
+    train_nn_svm(EPOCHS=50,
+                 MODEL="nn", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2Ln2", MAX_FEATURES=5000,
+                 TEST_SIZE=0.2, MAX_ITER=5000, RANDOM_STATE=42)
 
-# TODO Make it all from a config file
-# DATA_HUGE = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 1M files with 10KB")
-# DATA_SMALL = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 50k files with 50KB")
-DATA_HUGE = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Test Data")
-DATA_SMALL = DATA_HUGE
+    train_nn_svm(EPOCHS=50,
+                 MODEL="nn", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2Sn3", MAX_FEATURES=5000,
+                 TEST_SIZE=0.2, MAX_ITER=5000, RANDOM_STATE=42)
 
-train_model_v1(DATASET_SIZE=r"Large",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .1Lr4", EPOCHS=30)
+    train_nn_svm(EPOCHS=50,
+                 MODEL="svm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .3Lv2", MAX_FEATURES=5000,
+                 TEST_SIZE=0.2, MAX_ITER=5000, RANDOM_STATE=42)
 
-train_model_v1(DATASET_SIZE=r"Small",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .1Sr5", EPOCHS=30)
+    train_nn_svm(EPOCHS=50,
+                 MODEL="svm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .3Sv3", MAX_FEATURES=5000,
+                 TEST_SIZE=0.2, MAX_ITER=5000, RANDOM_STATE=42)
 
-train_model_v2(EPOCHS=50,
-               DATASET_SIZE=r"Large",
-               MODEL="nn", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .2Ln2")
+    train_model_v3(MODEL_TYPE="xgboost",
+                   SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .4Lx1", EPOCHS=10, BATCH_SIZE=32,
+                   LEARNING_RATE=5e-5, MAX_FEATURES=7500, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42)
 
-train_model_v2(EPOCHS=50,
-               DATASET_SIZE=r"Small",
-               MODEL="nn", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .2Sn3")
+    train_model_v3(MODEL_TYPE="lstm",
+                   SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .5Ll1", EPOCHS=10, BATCH_SIZE=16,
+                   LEARNING_RATE=5e-5, MAX_FEATURES=7500, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42)
 
-train_model_v2(EPOCHS=50,
-               DATASET_SIZE=r"Large",
-               MODEL="svm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .3Lv2")
-
-train_model_v2(EPOCHS=50,
-               DATASET_SIZE=r"Small",
-               MODEL="svm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .3Sv3")
-
-train_model_v3(MODEL_TYPE="xgboost",
-               DATASET_SIZE=r"Large",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .4Lx1", EPOCHS=10, BATCH_SIZE=32,
-               LEARNING_RATE=5e-5, MAX_FEATURES=7500, MAX_LEN=128, TEST_SIZE=0.2)
-
-train_model_v3(MODEL_TYPE="lstm",
-               DATASET_SIZE=r"Large",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .5Ll1", EPOCHS=10, BATCH_SIZE=16,
-               LEARNING_RATE=5e-5, MAX_FEATURES=7500, MAX_LEN=128, TEST_SIZE=0.2)
-
-train_model_v3(MODEL_TYPE="bert",
-               DATASET_SIZE=r"Small",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .6Sb1", EPOCHS=5, BATCH_SIZE=8,
-               LEARNING_RATE=5e-5, MAX_FEATURES=5000, MAX_LEN=128, TEST_SIZE=0.2, MODEL_PATH_BERT="Extra/bert-base-uncased-model")
+    train_model_v3(MODEL_TYPE="bert",
+                   SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .6Sb1", EPOCHS=5, BATCH_SIZE=8,
+                   LEARNING_RATE=5e-5, MAX_FEATURES=5000, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42,
+                   MODEL_PATH_BERT="Extra/bert-base-uncased-model")
