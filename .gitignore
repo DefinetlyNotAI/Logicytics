@@ -319,5 +319,4 @@ $RECYCLE.BIN/
 *.pyc
 /CODE/SysInternal_Suite/.sys.ignore
 /ACCESS/
-/CODE/test-vulnscan/generated_data_1m-files_10KB
-/CODE/test-vulnscan/generated_data_50k-files_50KB
+/CODE/test-vulnscan/Extra/bert-base-uncased-model/
