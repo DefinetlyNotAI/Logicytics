@@ -1,5 +1,6 @@
 import logging
 import os
+from os import mkdir
 
 import joblib
 import matplotlib.pyplot as plt
@@ -22,12 +23,13 @@ from transformers import BertTokenizer, BertForSequenceClassification
 logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s - %(message)s',
                     handlers=[
+                        logging.FileHandler("Training.log"),
                         logging.StreamHandler()
                     ])
 
 BERT_MODEL_NAME = "bert-base-uncased"
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+logging.info(f"Using device: {DEVICE}")
 
 
 # ---------------------------------------
@@ -42,24 +44,25 @@ def load_data(data_dir):
             text = f.read()
             texts.append(text)
             labels.append(1 if "sensitive" in text.lower() else 0)  # Example labeling
-            print(f"File {file_name} loaded successfully. Label: {labels[-1]}")
+            logging.info(f"File {file_name} loaded successfully. Label: {labels[-1]}")
     return texts, np.array(labels)
 
 
 def evaluate_model(y_true, y_pred):
     """Evaluates the model using standard metrics."""
     accuracy = accuracy_score(y_true, y_pred)
-    precision = precision_score(y_true, y_pred)
-    recall = recall_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred)
-    roc_auc = roc_auc_score(y_true, y_pred)
-    print(
+    precision = precision_score(y_true, y_pred, zero_division=1)
+    recall = recall_score(y_true, y_pred, zero_division=1)
+    f1 = f1_score(y_true, y_pred, zero_division=1)
+    roc_auc = roc_auc_score(y_true, y_pred) if len(set(y_pred)) > 1 else float('nan')
+    logging.info(
         f"Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, ROC-AUC: {roc_auc:.4f}")
-
+    return accuracy, precision, recall, f1, roc_auc
 
 # ---------------------------------------
 # MODEL TRAINING FUNCTIONS
 # ---------------------------------------
+
 
 def save_progress_graph(accuracies, filename=f"training_progress.png"):
     plt.figure(figsize=(8, 6))
@@ -76,19 +79,27 @@ def save_progress_graph(accuracies, filename=f"training_progress.png"):
 # noinspection DuplicatedCode
 def train_nn_svm(file_paths, model_type, epochs, save_dir):
     if model_type not in ["svm", "nn"]:
-        print(f"Invalid model type: {model_type}. Please choose 'svm' or 'nn'.")
+        logging.error(f"Invalid model type: {model_type}. Please choose 'svm' or 'nn'.")
         return
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
     # Load data
-    print("Loading data...")
-    data, labels = load_data(file_paths)
+    logging.info("Loading data...")
+    if file_paths == "Large":
+        data, labels = DATA_HUGE
+    else:
+        data, labels = DATA_SMALL
     X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
 
+    # Vectorize text data
+    vectorizer = TfidfVectorizer(max_features=10000)
+    X_train = vectorizer.fit_transform(X_train).toarray()
+    X_test = vectorizer.transform(X_test).toarray()
+
     # Initialize model
-    print("Initializing model...")
+    logging.info("Initializing model...")
     model = None
     param_grid = None
     if model_type == "svm":
@@ -99,7 +110,7 @@ def train_nn_svm(file_paths, model_type, epochs, save_dir):
             "gamma": ["scale"],
         }
     elif model_type == "nn":
-        model = MLPClassifier(random_state=42, max_iter=200)
+        model = MLPClassifier(random_state=42, max_iter=5000)
         param_grid = {
             "hidden_layer_sizes": [(50,), (100,), (100, 50)],
             "activation": ["relu", "tanh"],
@@ -107,17 +118,17 @@ def train_nn_svm(file_paths, model_type, epochs, save_dir):
         }
 
     # Perform grid search for hyperparameter tuning with parallel processing
-    print(f"Training {model_type.upper()} model with hyperparameter tuning...")
-    grid_search = GridSearchCV(model, param_grid, cv=3, scoring="accuracy", verbose=1)
+    logging.info(f"Training {model_type.upper()} model with hyperparameter tuning...")
+    grid_search = GridSearchCV(model, param_grid, cv=2, scoring="accuracy", verbose=1)
     grid_search.fit(X_train, y_train)
 
     best_model = grid_search.best_estimator_
-    print(f"Best Model Parameters: {grid_search.best_params_}")
+    logging.info(f"Best Model Parameters: {grid_search.best_params_}")
 
     # Train with the best model
     accuracies = []
     for epoch in range(epochs):
-        print(f"Epoch {epoch + 1}/{epochs}")
+        logging.info(f"Epoch {epoch + 1}/{epochs}")
 
         best_model.fit(X_train, y_train)
         predictions = best_model.predict(X_test)
@@ -127,9 +138,8 @@ def train_nn_svm(file_paths, model_type, epochs, save_dir):
         precision = precision_score(y_test, predictions, zero_division=0)
         recall = recall_score(y_test, predictions, zero_division=0)
         f1 = f1_score(y_test, predictions, zero_division=0)
-        roc_auc = roc_auc_score(y_test, best_model.predict_proba(X_test)[:, 1])
-
-        print(
+        roc_auc = roc_auc_score(y_test, best_model.predict_proba(X_test)[:, 1]) if len(set(y_test)) > 1 else float('nan')
+        logging.info(
             f"Accuracy: {accuracy:.2f}, Precision: {precision:.2f}, Recall: {recall:.2f}, F1-Score: {f1:.2f}, ROC-AUC: {roc_auc:.2f}")
         accuracies.append(accuracy)
 
@@ -139,28 +149,35 @@ def train_nn_svm(file_paths, model_type, epochs, save_dir):
         # Save checkpoint model after every epoch
         if epoch % 1 == 0:
             joblib.dump(best_model, os.path.join(save_dir, f"trained_model_epoch_{epoch + 1}.pkl"))
-            print(f"Model checkpoint saved: {os.path.join(save_dir, f'trained_model_epoch_{epoch + 1}.pkl')}")
+            logging.info(f"Model checkpoint saved: {os.path.join(save_dir, f'trained_model_epoch_{epoch + 1}.pkl')}")
 
     # Save final model
     joblib.dump(best_model, os.path.join(save_dir, "trained_model.pkl"))
-    print(f"Final model saved as {os.path.join(save_dir, 'trained_model.pkl')}")
-    print("Training complete.")
+    logging.info(f"Final model saved as {os.path.join(save_dir, 'trained_model.pkl')}")
+    logging.info("Training complete.")
 
 
 # noinspection DuplicatedCode
 def train_rfc(file_paths, save_dir, epochs):
-    print("Training model...")
+    logging.info("Training model...")
 
     # Load data
-    data, labels = load_data(file_paths)
-    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
+    if file_paths == "Large":
+        data, labels = DATA_HUGE
+    else:
+        data, labels = DATA_SMALL
+
+    # Vectorize text data
+    vectorizer = TfidfVectorizer(max_features=10000)
+    X = vectorizer.fit_transform(data).toarray()
+    X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, random_state=42)
 
     # Initialize model
     model = RandomForestClassifier(n_estimators=100, random_state=42)
     accuracies = []
 
     for epoch in range(epochs):
-        print(f"Epoch {epoch + 1}/{epochs}")
+        logging.info(f"Epoch {epoch + 1}/{epochs}")
 
         model.fit(X_train, y_train)
         predictions = model.predict(X_test)
@@ -170,64 +187,67 @@ def train_rfc(file_paths, save_dir, epochs):
         precision = precision_score(y_test, predictions, zero_division=0)
         recall = recall_score(y_test, predictions, zero_division=0)
         f1 = f1_score(y_test, predictions, zero_division=0)
-        roc_auc = roc_auc_score(y_test, predictions)
-
-        print(
+        roc_auc = roc_auc_score(y_test, predictions) if len(set(y_test)) > 1 else float('nan')
+        logging.info(
             f"Accuracy: {accuracy:.2f}, Precision: {precision:.2f}, Recall: {recall:.2f}, F1-Score: {f1:.2f}, ROC-AUC: {roc_auc:.2f}")
         accuracies.append(accuracy)
 
         # Save progress plot
+        if not os.path.exists(save_dir):
+            mkdir(save_dir)
         save_progress_graph(accuracies, filename=os.path.join(save_dir, f"training_progress.png"))
 
         # Save model checkpoint
         joblib.dump(model, os.path.join(save_dir, f"trained_model_epoch_{epoch + 1}.pkl"))
-        print(f"Model checkpoint saved: {os.path.join(save_dir, f'trained_model_epoch_{epoch + 1}.pkl')}")
+        logging.info(f"Model checkpoint saved: {os.path.join(save_dir, f'trained_model_epoch_{epoch + 1}.pkl')}")
 
     # Save final model
     joblib.dump(model, os.path.join(save_dir, "trained_model.pkl"))
-    print(f"Final model saved as {os.path.join(save_dir, 'trained_model.pkl')}")
-    print("Training complete.")
+    logging.info(f"Final model saved as {os.path.join(save_dir, 'trained_model.pkl')}")
+    logging.info("Training complete.")
 
 
 def train_xgboost(X_train, X_test, y_train, y_test, SAVE_DIR):
     """Trains a Gradient Boosting Classifier (XGBoost) with GPU."""
-    print("Enabling GPU acceleration...")
-    model = xgb.XGBClassifier(tree_method='gpu_hist')  # Enable GPU acceleration
-    print("GPU acceleration enabled.")
-    print("Training XGBoost...")
+    logging.info("Enabling GPU acceleration...")
+    model = xgb.XGBClassifier(tree_method='hist', device=DEVICE)  # Enable GPU acceleration
+    logging.info("GPU acceleration enabled.")
+    logging.info("Training XGBoost...")
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
+    logging.info("XGBoost evaluation commencing...")
     evaluate_model(y_test, predictions)
     joblib.dump(model, os.path.join(SAVE_DIR, "xgboost_model.pkl"))
-    print("Model saved as xgboost_model.pkl")
+    logging.info("Model saved as xgboost_model.pkl")
 
 
-def train_bert(X_train, X_test, y_train, y_test, MAX_LEN, LEARNING_RATE, BATCH_SIZE, EPOCHS, SAVE_DIR):
+def train_bert(X_train, X_test, y_train, y_test, MAX_LEN, LEARNING_RATE, BATCH_SIZE, EPOCHS, SAVE_DIR, MODEL_PATH):
     """Trains a BERT model with GPU support."""
-    print("Loading BERT tokenizer...")
+    logging.info("Loading BERT tokenizer...")
     tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME)
     train_encodings = tokenizer(list(X_train), truncation=True, padding=True, max_length=MAX_LEN, return_tensors="pt")
     test_encodings = tokenizer(list(X_test), truncation=True, padding=True, max_length=MAX_LEN, return_tensors="pt")
 
-    print("Loading BERT model...")
-    model = BertForSequenceClassification.from_pretrained(BERT_MODEL_NAME, num_labels=2).to(device)
+    logging.info("Loading BERT model...")
+    model = BertForSequenceClassification.from_pretrained(MODEL_PATH, num_labels=2).to(DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
     # Prepare data for training
-    print("Preparing data for training...")
-    train_data = TensorDataset(train_encodings.input_ids.to(device), train_encodings.attention_mask.to(device),
-                               torch.tensor(y_train).to(device))
-    test_data = TensorDataset(test_encodings.input_ids.to(device), test_encodings.attention_mask.to(device),
-                              torch.tensor(y_test).to(device))
+    logging.info("Preparing data for training...")
+    train_data = TensorDataset(train_encodings.input_ids.to(DEVICE), train_encodings.attention_mask.to(DEVICE),
+                               torch.tensor(y_train).to(DEVICE))
+    test_data = TensorDataset(test_encodings.input_ids.to(DEVICE), test_encodings.attention_mask.to(DEVICE),
+                              torch.tensor(y_test).to(DEVICE))
     train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
     test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
 
     # Train model
-    print("Training BERT model...")
-    model.train_model_v2()
+    logging.info("Training BERT model...")
+    model.train()
     for epoch in range(EPOCHS):
         for batch in train_loader:
             input_ids, attention_mask, labels = batch
+            labels = labels.long()
             optimizer.zero_grad()
             outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
             loss = outputs.loss
@@ -235,7 +255,7 @@ def train_bert(X_train, X_test, y_train, y_test, MAX_LEN, LEARNING_RATE, BATCH_S
             optimizer.step()
 
     # Evaluate model
-    print("Evaluating BERT model...")
+    logging.info("Evaluating BERT model...")
     model.eval()
     predictions = []
     with torch.no_grad():
@@ -245,10 +265,10 @@ def train_bert(X_train, X_test, y_train, y_test, MAX_LEN, LEARNING_RATE, BATCH_S
             logits = outputs.logits
             predictions.extend(torch.argmax(logits, dim=1).cpu().numpy())
 
-    print("BERT model evaluation:")
+    logging.info("BERT model evaluating..")
     evaluate_model(y_test, np.array(predictions))
     model.save_pretrained(os.path.join(SAVE_DIR, "bert_model"))
-    print("Model saved as bert_model")
+    logging.info("Model saved as bert_model")
 
 
 class LSTMModel(nn.Module):
@@ -269,35 +289,35 @@ class LSTMModel(nn.Module):
 
 def train_lstm(X_train, X_test, y_train, y_test, MAX_FEATURES, LEARNING_RATE, BATCH_SIZE, EPOCHS, SAVE_DIR):
     """Trains an LSTM model using PyTorch with GPU support."""
-    print("Training LSTM...")
-    print("Vectorizing text data...")
+    logging.info("Training LSTM...")
+    logging.info("Vectorizing text data...")
     vectorizer = TfidfVectorizer(max_features=MAX_FEATURES)
     X_train_vec = vectorizer.fit_transform(X_train).toarray()
     X_test_vec = vectorizer.transform(X_test).toarray()
 
-    print("Preparing LSTM model...")
+    logging.info("Preparing LSTM model...")
     vocab_size = X_train_vec.shape[1]
-    model = LSTMModel(vocab_size=vocab_size).to(device)
+    model = LSTMModel(vocab_size=vocab_size).to(DEVICE)
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
     criterion = nn.BCELoss()
 
     # Prepare data for training
-    print("Preparing data for training...")
-    train_data = TensorDataset(torch.tensor(X_train_vec, dtype=torch.long).to(device),
-                               torch.tensor(y_train, dtype=torch.float32).to(device))
-    test_data = TensorDataset(torch.tensor(X_test_vec, dtype=torch.long).to(device),
-                              torch.tensor(y_test, dtype=torch.float32).to(device))
+    logging.info("Preparing data for training...")
+    train_data = TensorDataset(torch.tensor(X_train_vec, dtype=torch.long).to(DEVICE),
+                               torch.tensor(y_train, dtype=torch.float32).to(DEVICE))
+    test_data = TensorDataset(torch.tensor(X_test_vec, dtype=torch.long).to(DEVICE),
+                              torch.tensor(y_test, dtype=torch.float32).to(DEVICE))
 
-    print("Training LSTM model...")
+    logging.info("Training LSTM model...")
     train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
     test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
 
     # Train model
     for epoch in range(EPOCHS):
-        print(f"Epoch {epoch + 1}/{EPOCHS}")
+        logging.info(f"Epoch {epoch + 1}/{EPOCHS}")
         model.train()
         for batch in train_loader:
-            print(f"Batch training: {batch}...")
+            logging.info(f"Batch training: {batch}...")
             inputs, labels = batch
             optimizer.zero_grad()
             outputs = model(inputs)
@@ -306,33 +326,36 @@ def train_lstm(X_train, X_test, y_train, y_test, MAX_FEATURES, LEARNING_RATE, BA
             optimizer.step()
 
     # Evaluate model
-    print("Evaluating LSTM model...")
+    logging.info("Evaluating LSTM model...")
     model.eval()
     predictions = []
     with torch.no_grad():
         for batch in test_loader:
-            print(f"Batch testing: {batch}...")
+            logging.info(f"Batch testing: {batch}...")
             inputs, _ = batch
             outputs = model(inputs)
-            predictions.extend((outputs.squeeze() > 0.5).int().cpu().numpy())
+            predictions.extend((outputs.squeeze(dim=-1) > 0.5).int().cpu().numpy())
 
     evaluate_model(y_test, np.array(predictions))
     torch.save(model.state_dict(), os.path.join(SAVE_DIR, "lstm_model.pth"))
-    print("Model saved as lstm_model.pth")
+    logging.info("Model saved as lstm_model.pth")
 
 
 # ---------------------------------------
 # MAIN LOGIC
 # ---------------------------------------
 
-def train_model_v3(MODEL_TYPE, DATASET_PATH, SAVE_DIR, EPOCHS, BATCH_SIZE, LEARNING_RATE, MAX_FEATURES, MAX_LEN,
-                   TEST_SIZE, ):
+def train_model_v3(MODEL_TYPE, DATASET_SIZE, SAVE_DIR, EPOCHS, BATCH_SIZE, LEARNING_RATE, MAX_FEATURES, MAX_LEN,
+                   TEST_SIZE, MODEL_PATH_BERT=None):
     # Create save directory if it doesn't exist
     os.makedirs(SAVE_DIR, exist_ok=True)
 
     # Load data
-    print("Loading data...")
-    texts_main, labels_main = load_data(DATASET_PATH)
+    logging.info("Loading data...")
+    if DATASET_SIZE == "Large":
+        texts_main, labels_main = DATA_HUGE
+    else:
+        texts_main, labels_main = DATA_SMALL
     X_train_main, X_test_main, y_train_main, y_test_main = train_test_split(texts_main, labels_main,
                                                                             test_size=TEST_SIZE, random_state=42)
 
@@ -344,83 +367,65 @@ def train_model_v3(MODEL_TYPE, DATASET_PATH, SAVE_DIR, EPOCHS, BATCH_SIZE, LEARN
         train_xgboost(X_train_vec_main, X_test_vec_main, y_train_main, y_test_main, SAVE_DIR)
 
     elif MODEL_TYPE == "bert":
+        if MODEL_PATH_BERT is None:
+            logging.error("Please provide a valid BERT model path.")
+            return
         train_bert(X_train_main, X_test_main, y_train_main, y_test_main, MAX_LEN, LEARNING_RATE, BATCH_SIZE, EPOCHS,
-                   SAVE_DIR)
+                   SAVE_DIR, MODEL_PATH_BERT)
 
     elif MODEL_TYPE == "lstm":
         train_lstm(X_train_main, X_test_main, y_train_main, y_test_main, MAX_FEATURES, LEARNING_RATE, BATCH_SIZE,
                    EPOCHS, SAVE_DIR)
 
 
-def train_model_v2(EPOCHS, DATASET_PATH, MODEL, SAVE_DIR):
-    FILE_PATH: list[str] = []
-    for file in os.listdir(DATASET_PATH):
-        if file.endswith(".txt"):
-            print(f"Indexed file: {file}")
-            FILE_PATH.append(os.path.join(DATASET_PATH, file))
-    print(f"Total Indexed file's: {len(FILE_PATH)}")
-
-    if not FILE_PATH:
-        print(f"No files found for training. Please ensure '{DATASET_PATH}' contains text files.")
-    else:
-        train_nn_svm(FILE_PATH, MODEL, EPOCHS, SAVE_DIR)
+def train_model_v2(EPOCHS, DATASET_SIZE, MODEL, SAVE_DIR):
+    train_nn_svm(DATASET_SIZE, MODEL, EPOCHS, SAVE_DIR)
 
 
-def train_model_v1(DATASET_PATH, SAVE_DIR, EPOCHS):
-    file_path = []
-    for file in os.listdir(DATASET_PATH):
-        if file.endswith(".txt"):
-            os.path.join(DATASET_PATH, file)
-            print(f"Indexed file: {file}")
-            file_path.append(os.path.join(DATASET_PATH, file))
-    print(f"Total Indexed file's: {len(file_path)}")
-
-    if not file_path:
-        print(f"No files found for training. Please ensure '{DATASET_PATH}' contains text files.")
-    else:
-        print(f"Found {len(file_path)} files for training.")
-        train_rfc(file_path, SAVE_DIR, EPOCHS)
+def train_model_v1(DATASET_SIZE, SAVE_DIR, EPOCHS):
+    logging.info(f"Found {len(DATASET_SIZE)} files for training.")
+    train_rfc(DATASET_SIZE, SAVE_DIR, EPOCHS)
 
 
-train_model_v1(DATASET_PATH=r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 1M files with 10KB",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .1Lr4",
-               EPOCHS=30)
+# TODO Make it all from a config file
+# DATA_HUGE = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 1M files with 10KB")
+# DATA_SMALL = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 50k files with 50KB")
+DATA_HUGE = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Test Data")
+DATA_SMALL = DATA_HUGE
 
-train_model_v1(DATASET_PATH=r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 50k files with 50KB",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .1Sr5",
-               EPOCHS=30)
+train_model_v1(DATASET_SIZE=r"Large",
+               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .1Lr4", EPOCHS=30)
+
+train_model_v1(DATASET_SIZE=r"Small",
+               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .1Sr5", EPOCHS=30)
 
 train_model_v2(EPOCHS=50,
-               DATASET_PATH=r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 1M files with 10KB",
-               MODEL="nn",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2Ln2")
+               DATASET_SIZE=r"Large",
+               MODEL="nn", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .2Ln2")
 
 train_model_v2(EPOCHS=50,
-               DATASET_PATH=r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 50k files with 50KB",
-               MODEL="nn",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2Sn3")
+               DATASET_SIZE=r"Small",
+               MODEL="nn", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .2Sn3")
 
 train_model_v2(EPOCHS=50,
-               DATASET_PATH=r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 1M files with 10KB",
-               MODEL="svm",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .3Lv2")
+               DATASET_SIZE=r"Large",
+               MODEL="svm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .3Lv2")
 
 train_model_v2(EPOCHS=50,
-               DATASET_PATH=r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 50k files with 50KB",
-               MODEL="svm",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .3Sv3")
+               DATASET_SIZE=r"Small",
+               MODEL="svm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .3Sv3")
 
 train_model_v3(MODEL_TYPE="xgboost",
-               DATASET_PATH=r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 1M files with 10KB",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .4Lx1", EPOCHS=10, BATCH_SIZE=32,
+               DATASET_SIZE=r"Large",
+               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .4Lx1", EPOCHS=10, BATCH_SIZE=32,
                LEARNING_RATE=5e-5, MAX_FEATURES=7500, MAX_LEN=128, TEST_SIZE=0.2)
 
 train_model_v3(MODEL_TYPE="lstm",
-               DATASET_PATH=r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 1M files with 10KB",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .5Ll1", EPOCHS=10, BATCH_SIZE=16,
+               DATASET_SIZE=r"Large",
+               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .5Ll1", EPOCHS=10, BATCH_SIZE=16,
                LEARNING_RATE=5e-5, MAX_FEATURES=7500, MAX_LEN=128, TEST_SIZE=0.2)
 
 train_model_v3(MODEL_TYPE="bert",
-               DATASET_PATH=r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 50k files with 50KB",
-               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .6Sb1", EPOCHS=5, BATCH_SIZE=8,
-               LEARNING_RATE=5e-5, MAX_FEATURES=5000, MAX_LEN=128, TEST_SIZE=0.2)
+               DATASET_SIZE=r"Small",
+               SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Del\Model Sense .6Sb1", EPOCHS=5, BATCH_SIZE=8,
+               LEARNING_RATE=5e-5, MAX_FEATURES=5000, MAX_LEN=128, TEST_SIZE=0.2, MODEL_PATH_BERT="Extra/bert-base-uncased-model")
