@@ -348,8 +348,8 @@ def train_lstm(X_train, X_test, y_train, y_test, MAX_FEATURES, LEARNING_RATE, BA
 # MAIN LOGIC
 # ---------------------------------------
 
-def train_model_v3(MODEL_TYPE, SAVE_DIR, EPOCHS, BATCH_SIZE, LEARNING_RATE, MAX_FEATURES, MAX_LEN,
-                   TEST_SIZE, RANDOM_STATE, MODEL_PATH_BERT=None):
+def train_model_blx(MODEL_TYPE, SAVE_DIR, EPOCHS, BATCH_SIZE, LEARNING_RATE, MAX_FEATURES, MAX_LEN,
+                    TEST_SIZE, RANDOM_STATE, MODEL_PATH_BERT=None):
     # Create save directory if it doesn't exist
     os.makedirs(SAVE_DIR, exist_ok=True)
 
@@ -379,40 +379,28 @@ def train_model_v3(MODEL_TYPE, SAVE_DIR, EPOCHS, BATCH_SIZE, LEARNING_RATE, MAX_
                    EPOCHS, SAVE_DIR)
 
 
+# TODO Docstring + Give data type for each parameter in functions
 if __name__ == "__main__":
-    DATA = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 1M files with 10KB")
+    DATA = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 50k files with 50KB")
 
-    train_rfc(SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .1Lr4", EPOCHS=30, TEST_SIZE=0.2,
+    """    
+    train_rfc(SAVE_DIR=r"PATH", EPOCHS=30, TEST_SIZE=0.2,
               N_ESTIMATORS=100, RANDOM_STATE=42)
 
-    train_rfc(SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .1Sr5", EPOCHS=30, TEST_SIZE=0.2,
-              N_ESTIMATORS=100, RANDOM_STATE=42)
-
     train_nn_svm(EPOCHS=50,
-                 MODEL="nn", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2Ln2", MAX_FEATURES=5000,
+                 MODEL="nn", SAVE_DIR=r"PATH", MAX_FEATURES=5000,
+                 TEST_SIZE=0.2, MAX_ITER=5000, RANDOM_STATE=42)
+    """
+    train_nn_svm(EPOCHS=50,
+                 MODEL="svm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2v1", MAX_FEATURES=5000,
                  TEST_SIZE=0.2, MAX_ITER=5000, RANDOM_STATE=42)
 
-    train_nn_svm(EPOCHS=50,
-                 MODEL="nn", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2Sn3", MAX_FEATURES=5000,
-                 TEST_SIZE=0.2, MAX_ITER=5000, RANDOM_STATE=42)
+    train_model_blx(MODEL_TYPE="xgboost", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2x1", EPOCHS=10,
+                    BATCH_SIZE=32, LEARNING_RATE=5e-5, MAX_FEATURES=7500, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42)
 
-    train_nn_svm(EPOCHS=50,
-                 MODEL="svm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .3Lv2", MAX_FEATURES=5000,
-                 TEST_SIZE=0.2, MAX_ITER=5000, RANDOM_STATE=42)
+    train_model_blx(MODEL_TYPE="lstm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2l1", EPOCHS=10,
+                    BATCH_SIZE=16, LEARNING_RATE=5e-5, MAX_FEATURES=7500, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42)
 
-    train_nn_svm(EPOCHS=50,
-                 MODEL="svm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .3Sv3", MAX_FEATURES=5000,
-                 TEST_SIZE=0.2, MAX_ITER=5000, RANDOM_STATE=42)
-
-    train_model_v3(MODEL_TYPE="xgboost",
-                   SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .4Lx1", EPOCHS=10, BATCH_SIZE=32,
-                   LEARNING_RATE=5e-5, MAX_FEATURES=7500, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42)
-
-    train_model_v3(MODEL_TYPE="lstm",
-                   SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .5Ll1", EPOCHS=10, BATCH_SIZE=16,
-                   LEARNING_RATE=5e-5, MAX_FEATURES=7500, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42)
-
-    train_model_v3(MODEL_TYPE="bert",
-                   SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .6Sb1", EPOCHS=5, BATCH_SIZE=8,
-                   LEARNING_RATE=5e-5, MAX_FEATURES=5000, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42,
-                   MODEL_PATH_BERT="Extra/bert-base-uncased-model")
+    train_model_blx(MODEL_TYPE="bert", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2b1", EPOCHS=5,
+                    BATCH_SIZE=8, LEARNING_RATE=5e-5, MAX_FEATURES=5000, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42,
+                    MODEL_PATH_BERT="Extra/bert-base-uncased-model")
