@@ -12,7 +12,7 @@ config = configparser.ConfigParser()
 config.read('../../config.ini')
 
 # Load configuration values
-config = config['VulnScan.generate']
+config = config['VulnScan.generate Settings']
 EXTENSIONS_ALLOWED = config.get('extensions', '.txt').split(',')
 SAVE_PATH = config.get('save_path', '.')
 CODE_NAME = config.get('code_name', 'Sense')
