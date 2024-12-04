@@ -8,8 +8,11 @@
       <sourceFolder url="file://$MODULE_DIR$/CODE/libs" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CODE/_internal" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/TESTS" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/CODE/test-vulnscan/v2" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CODE/test-vulnscan/v3" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/ACCESS" />
       <excludeFolder url="file://$MODULE_DIR$/CODE/test-vulnscan/cves" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/test-vulnscan/tools/bert-base-uncased-model" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.11" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

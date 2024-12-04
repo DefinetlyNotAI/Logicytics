@@ -11,6 +11,7 @@
             <path value="file://$PROJECT_DIR$/IMG" />
             <path value="file://$PROJECT_DIR$/EXTRA" />
             <path value="file://$PROJECT_DIR$/CODE/SysInternal_Suite" />
+            <path value="file://$PROJECT_DIR$/CODE/test-vulnscan/tools" />
           </resourceRoots>
         </entryData>
       </entry>
