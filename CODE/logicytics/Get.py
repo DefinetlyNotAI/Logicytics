@@ -89,9 +89,12 @@ class Get:
 
         try:
             return get_config_data("config.ini")
-        except FileNotFoundError:
+        except Exception:
             try:
                 return get_config_data("../config.ini")
-            except FileNotFoundError:
-                print("The config.ini file is not found.")
-                exit(1)
+            except Exception:
+                try:
+                    return get_config_data("../../config.ini")
+                except Exception:
+                    print("The config.ini file is not found.")
+                    exit(1)

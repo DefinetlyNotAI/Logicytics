@@ -1,5 +1,3 @@
-import logging
-import os
 from configparser import ConfigParser
 
 import matplotlib.pyplot as plt
@@ -11,28 +9,50 @@ from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from transformers import Trainer, TrainingArguments
 
+from logicytics import *
+
+if __name__ == "__main__":
+    log = Log(
+        {"log_level": "Info",
+         "filename": "VulnScanTrain.log",
+         "colorlog_fmt_parameters":
+             "%(log_color)s%(levelname)-8s%(reset)s %(yellow)s%(asctime)s %(blue)s%(message)s",
+         }
+    )
+
 # Load configurations
 config = ConfigParser()
 config.read('../../config.ini')
 
 # Get config values
-model_name = config.get('VulnScan.generate Settings', 'model_name')
-epochs = int(config.get('VulnScan.generate Settings', 'epochs'))
-batch_size = int(config.get('VulnScan.generate Settings', 'batch_size'))
-learning_rate = float(config.get('VulnScan.generate Settings', 'learning_rate'))
-train_data_path = config.get('VulnScan.generate Settings', 'train_data_path')
-test_data_path = config.get('VulnScan.generate Settings', 'test_data_path')
-save_model_path = config.get('VulnScan.generate Settings', 'save_model_path')
+log.info("Loading configurations...")
+model_name = config.get('VulnScan.train Settings', 'model_name')
+epochs = int(config.get('VulnScan.train Settings', 'epochs'))
+batch_size = int(config.get('VulnScan.train Settings', 'batch_size'))
+learning_rate = float(config.get('VulnScan.train Settings', 'learning_rate'))
+train_data_path = config.get('VulnScan.train Settings', 'train_data_path')
+test_data_path = config.get('VulnScan.train Settings', 'test_data_path')
+save_model_path = config.get('VulnScan.train Settings', 'save_model_path')
+
+# Validate model name
+allowed_models = ["distilbert", "albert", "fasttext", "tabnet", "clip", "t5"]
+if not any(model_name.lower().startswith(allowed_model) for allowed_model in allowed_models):
+    raise ValueError(f"Invalid model '{model_name}'. Allowed models are: {', '.join(allowed_models)}")
+
+log.info(f"Validated model: {model_name}")
+
 
 # GPU check
-device = torch.device("cuda" if torch.cuda.is_available() and config.getboolean('VulnScan.generate Settings', 'use_cuda') else "cpu")
-
-# Set logging for verbosity
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
+device = torch.device(
+    "cuda" if torch.cuda.is_available() and config.getboolean('VulnScan.train Settings', 'use_cuda') else "cpu")
 
 # Load model tokenizer and model
+log.info(f"Loading model {model_name}...")
+log.info(f"Using device: {device}")
+log.info(f"Training for {epochs} epochs with batch size {batch_size} and learning rate {learning_rate}")
+log.info("Loading tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained(model_name)
+log.info("Loading model...")
 model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)  # Sensitive vs Non-sensitive
 
 
@@ -40,21 +60,24 @@ model = AutoModelForSequenceClassification.from_pretrained(model_name, num_label
 def load_files_from_directory(directory_path):
     files_data = []
     for file_name in os.listdir(directory_path):
-        if file_name.endswith(('.txt', '.pdf', '.docx')):  # Assuming text-based files
-            try:
-                with open(os.path.join(directory_path, file_name), 'r', encoding='utf-8') as file:
-                    content = file.read()
-                files_data.append((content, 1 if 'sensitive' in file_name else 0))  # 1: sensitive, 0: non-sensitive
-            except Exception as e:
-                logger.warning(f"Skipping file {file_name}: {str(e)}")
+        try:
+            with open(os.path.join(directory_path, file_name), 'r', encoding='utf-8') as file:
+                content = file.read()
+            files_data.append((content, 1 if 'sensitive' in file_name else 0))  # 1: sensitive, 0: non-sensitive
+            log.info(
+                f"Loaded file {file_name}: {len(content)} characters, {'sensitive' if 'sensitive' in file_name else 'non-sensitive'}")
+        except Exception as e:
+            log.warning(f"Skipping file {file_name}: {str(e)}")
     return pd.DataFrame(files_data, columns=["text", "label"])
 
 
 # Load and process data
+log.info("Loading data...")
 train_df = load_files_from_directory(train_data_path)
 test_df = load_files_from_directory(test_data_path)
 
 # Split data
+log.info("Splitting data into training and validation sets...")
 train_texts, val_texts, train_labels, val_labels = train_test_split(train_df['text'], train_df['label'], test_size=0.1)
 
 
@@ -63,6 +86,7 @@ def encode_texts(texts):
     return tokenizer(texts.tolist(), padding=True, truncation=True, max_length=128, return_tensors='pt')
 
 
+log.info("Tokenizing and encoding texts...")
 train_encodings = encode_texts(train_texts)
 val_encodings = encode_texts(val_texts)
 
@@ -102,19 +126,19 @@ trainer = Trainer(
 )
 
 # Train model
-logger.info("Starting training...")
+log.info("Starting training...")
 train_results = trainer.train()
 
 # Save the model
-logger.info(f"Saving model to {save_model_path}")
+log.info(f"Saving model to {save_model_path}")
 model.save_pretrained(save_model_path)
 tokenizer.save_pretrained(save_model_path)
 
 # Evaluate the model
-logger.info("Evaluating model...")
+log.info("Evaluating model...")
 eval_results = trainer.evaluate()
 
-logger.info(f"Evaluation results: {eval_results}")
+log.info(f"Evaluation results: {eval_results}")
 
 # Plot training loss and accuracy (Progress visualization)
 train_loss = train_results.training_loss
@@ -134,4 +158,4 @@ plt.savefig('training_progress.png')
 plt.show()
 
 # Output logs
-logger.info(f"Training completed. Model saved at {save_model_path}")
+log.info(f"Training completed. Model saved at {save_model_path}")
