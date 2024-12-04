@@ -383,14 +383,12 @@ def train_model_blx(MODEL_TYPE, SAVE_DIR, EPOCHS, BATCH_SIZE, LEARNING_RATE, MAX
 if __name__ == "__main__":
     DATA = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 50k files with 50KB")
 
-    """    
     train_rfc(SAVE_DIR=r"PATH", EPOCHS=30, TEST_SIZE=0.2,
               N_ESTIMATORS=100, RANDOM_STATE=42)
 
     train_nn_svm(EPOCHS=50,
                  MODEL="nn", SAVE_DIR=r"PATH", MAX_FEATURES=5000,
                  TEST_SIZE=0.2, MAX_ITER=5000, RANDOM_STATE=42)
-    """
     train_nn_svm(EPOCHS=50,
                  MODEL="svm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2v1", MAX_FEATURES=5000,
                  TEST_SIZE=0.2, MAX_ITER=5000, RANDOM_STATE=42)
@@ -403,4 +401,4 @@ if __name__ == "__main__":
 
     train_model_blx(MODEL_TYPE="bert", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2b1", EPOCHS=5,
                     BATCH_SIZE=8, LEARNING_RATE=5e-5, MAX_FEATURES=5000, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42,
-                    MODEL_PATH_BERT="Extra/bert-base-uncased-model")
+                    MODEL_PATH_BERT="../bert-base-uncased-model")
