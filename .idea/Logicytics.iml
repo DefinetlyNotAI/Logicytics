@@ -12,7 +12,10 @@
       <sourceFolder url="file://$MODULE_DIR$/CODE/VulnScan/v3" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/ACCESS" />
       <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/cves" />
-      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/tools/bert-base-uncased-model" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/albert" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/bert" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/distilbert" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/t5" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.11" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -25,5 +28,12 @@
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
     <option name="myDocStringFormat" value="Plain" />
+  </component>
+  <component name="TemplatesService">
+    <option name="TEMPLATE_FOLDERS">
+      <list>
+        <option value="$MODULE_DIR$/CODE/VulnScan/tools" />
+      </list>
+    </option>
   </component>
 </module>
