@@ -319,7 +319,3 @@ $RECYCLE.BIN/
 *.pyc
 /CODE/SysInternal_Suite/.sys.ignore
 /ACCESS/
-/CODE/VulnScan/bert/
-/CODE/VulnScan/distilbert/
-/CODE/VulnScan/t5/
-/CODE/VulnScan/albert/

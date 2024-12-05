@@ -52,8 +52,8 @@ print(f"Generating {FILE_NUM} files with sizes between {MIN_FILE_SIZE} and {MAX_
 
 
 # Function to generate random file names
-def generate_random_filename(extensions):
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=10)) + extensions
+def generate_random_filename(extensions, suffix_x):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=10)) + suffix_x + extensions
 
 
 # Function to generate content based on file extension
@@ -125,6 +125,7 @@ def generate_content_for_extension(extensions, size):
             contents = "\n".join([generate_sensitive_data() for _ in range(size // 500)])
         else:
             contents = "\n".join([generate_sensitive_data() for _ in range(size // 500)])
+        return contents, '-sensitive'
     else:
         # Generate regular content with optional partial sensitivity
         regular_content = generate_regular_content(extensions, size)
@@ -137,10 +138,10 @@ def generate_content_for_extension(extensions, size):
                 insert_position = random.randint(0, len(regular_content_lines) - 1)
                 regular_content_lines.insert(insert_position, str(random.choice(sensitive_data)))
             contents = "\n".join(regular_content_lines)
+            return contents, '-mix'
         else:
             contents = regular_content
-
-    return contents
+            return contents, '-none'
 
 
 # Function to generate file content
@@ -164,9 +165,9 @@ def generate_file_content(extensions):
 for i in range(FILE_NUM):
     print(f"Generating file {i + 1}/{FILE_NUM}")
     extension = random.choice(EXTENSIONS_ALLOWED).strip()
-    filename = generate_random_filename(extension)
+    content, suffix = generate_file_content(extension)
+    filename = generate_random_filename(extension, suffix)
     filepath = os.path.join(SAVE_PATH, filename)
-    content = generate_file_content(extension)
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(content)
 
