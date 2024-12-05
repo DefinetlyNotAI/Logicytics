@@ -30,9 +30,9 @@ logger = Log(
 
 # Dataset Class for PyTorch models
 class SensitiveDataDataset(Dataset):
-    def __init__(self, texts, labels, tokenizer=None):
-        self.texts = texts
-        self.labels = labels
+    def __init__(self, texts_init, labels_init, tokenizer=None):
+        self.texts = texts_init
+        self.labels = labels_init
         self.tokenizer = tokenizer
 
     def __len__(self):
@@ -52,37 +52,14 @@ def train_model(
         epochs,
         batch_size,
         learning_rate,
-        train_data_path,
         save_model_path,
         use_cuda=False,
 ):
-    # Load Data
-    logger.info(f"Loading data from {train_data_path}")
-    texts, labels = [], []
-    for filename in os.listdir(train_data_path):
-        with open(os.path.join(train_data_path, filename), 'r', encoding='utf-8') as file:
-            texts.append(file.read())
-            labels.append(1 if '-sensitive' in filename else 0)
-        logger.info(f"Loaded data from {filename}")
-
-    # Split Data
-    X_train, X_val, y_train, y_val = train_test_split(texts, labels, test_size=0.2, random_state=42)
-
-    # Vectorizer Setup
-    vectorizer = None
-    if model_name in ['Tfidf_LogReg', 'CountVectorizer_LogReg']:
-        vectorizer_type = 'Tfidf' if 'Tfidf' in model_name else 'Count'
-        logger.info(f"Using Vectorizer {vectorizer_type}")
-        vectorizer = TfidfVectorizer(max_features=10000,
-                                     ngram_range=(1, 2)) if vectorizer_type == 'Tfidf' else CountVectorizer(
-            max_features=10000, ngram_range=(1, 2))
-        X_train = vectorizer.fit_transform(X_train).toarray()
-        X_val = vectorizer.transform(X_val).toarray()
-
     # Model Selection and Training
     if model_name == 'NeuralNetwork':
         # Vectorize the text data
         logger.info("Vectorizing text data for Neural Network")
+        global vectorizer, X_val, X_train, labels
         vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
         X_train = vectorizer.fit_transform(X_train).toarray()
         X_val = vectorizer.transform(X_val).toarray()
@@ -232,13 +209,37 @@ def train_model(
 # Config file reading
 config = ConfigParser()
 config.read('../../config.ini')
+
+# Load Data
+logger.info(f"Loading data from {config.get('VulnScan.train Settings', 'train_data_path')}")
+texts, labels = [], []
+for filename in os.listdir(config.get('VulnScan.train Settings', 'train_data_path')):
+    with open(os.path.join(config.get('VulnScan.train Settings', 'train_data_path'), filename), 'r', encoding='utf-8') as file:
+        texts.append(file.read())
+        labels.append(1 if '-sensitive' in filename else 0)
+    logger.info(f"Loaded data from {filename}")
+
+# Split Data
+X_train, X_val, y_train, y_val = train_test_split(texts, labels, test_size=0.2, random_state=42)
+
+# Vectorizer Setup
+vectorizer = None
+if config.get('VulnScan.train Settings', 'model_name') in ['Tfidf_LogReg', 'CountVectorizer_LogReg']:
+    vectorizer_type = 'Tfidf' if 'Tfidf' in config.get('VulnScan.train Settings', 'model_name') else 'Count'
+    logger.info(f"Using Vectorizer {vectorizer_type}")
+    vectorizer = TfidfVectorizer(max_features=10000,
+                                 ngram_range=(1, 2)) if vectorizer_type == 'Tfidf' else CountVectorizer(
+        max_features=10000, ngram_range=(1, 2))
+    X_train = vectorizer.fit_transform(X_train).toarray()
+    X_val = vectorizer.transform(X_val).toarray()
+
+# Train Model
 if config.getboolean('VulnScan.train Settings', 'use_1_model_only?'):
     try:
         train_model(model_name=config.get('VulnScan.train Settings', 'model_name'),
                     epochs=int(config.get('VulnScan.train Settings', 'epochs')),
                     batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
                     learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
-                    train_data_path=config.get('VulnScan.train Settings', 'train_data_path'),
                     save_model_path=config.get('VulnScan.train Settings', 'save_model_path'),
                     use_cuda=config.getboolean('VulnScan.train Settings', 'use_cuda'))
     except FileNotFoundError as e:
@@ -276,7 +277,6 @@ else:
                         epochs=int(config.get('VulnScan.train Settings', 'epochs')),
                         batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
                         learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
-                        train_data_path=config.get('VulnScan.train Settings', 'train_data_path'),
                         save_model_path=model_path_save,
                         use_cuda=config.getboolean('VulnScan.train Settings', 'use_cuda'))
         except FileNotFoundError as e:
