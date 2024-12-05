@@ -1,26 +1,49 @@
 from configparser import ConfigParser
-
-import matplotlib.pyplot as plt
-import pandas as pd
-import torch
-from datasets import Dataset
+import os
 from sklearn.model_selection import train_test_split
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from transformers import Trainer, TrainingArguments
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, classification_report
+import xgboost as xgb
+import matplotlib.pyplot as plt
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+from logicytics import Log
 
-from logicytics import *
-
-if __name__ == "__main__":
-    log = Log(
+# Set up logging
+logger = Log(
         {"log_level": "Info",
          "filename": "VulnScanTrain.log",
          "colorlog_fmt_parameters":
              "%(log_color)s%(levelname)-8s%(reset)s %(yellow)s%(asctime)s %(blue)s%(message)s",
          }
-    )
+)
 
 
-# TODO FIX ME/REMAKE ME
+# Dataset Class for PyTorch models
+class SensitiveDataDataset(Dataset):
+    def __init__(self, texts, labels, tokenizer=None):
+        self.texts = texts
+        self.labels = labels
+        self.tokenizer = tokenizer
+
+    def __len__(self):
+        return len(self.texts)
+
+    def __getitem__(self, idx):
+        text = self.texts[idx]
+        label = self.labels[idx]
+        if self.tokenizer:
+            text = self.tokenizer(text)
+        return torch.tensor(text, dtype=torch.float32), torch.tensor(label, dtype=torch.long)
+
+
+# Train Model Function
 def train_model(
         model_name=None,
         epochs=3,
@@ -30,148 +53,169 @@ def train_model(
         save_model_path=None,
         use_cuda=True,
 ):
-    log.info("Initializing VulnScan training pipeline...")
+    # Load Data
+    logger.info(f"Loading data from {train_data_path}")
+    texts, labels = [], []
+    for filename in os.listdir(train_data_path):
+        with open(os.path.join(train_data_path, filename), 'r', encoding='utf-8') as file:
+            texts.append(file.read())
+            labels.append(1 if '-sensitive' in filename else 0)
 
-    # Validate model name
-    allowed_models = ["distilbert", "albert", "bert",
-                      "t5"]
-    if not any(model_name.lower().startswith(allowed_model) for allowed_model in allowed_models):
-        raise ValueError(f"Invalid model '{model_name}'. Allowed models are: {', '.join(allowed_models)}")
+    # Split Data
+    X_train, X_val, y_train, y_val = train_test_split(texts, labels, test_size=0.2, random_state=42)
 
-    log.info(f"Validated model: {model_name}")
+    # Vectorizer Setup
+    if model_name in ['Tfidf_LogReg', 'CountVectorizer_LogReg']:
+        vectorizer_type = 'Tfidf' if 'Tfidf' in model_name else 'Count'
+        logger.info(f"Using Vectorizer {vectorizer_type}")
+        vectorizer = TfidfVectorizer(max_features=10000,
+                                     ngram_range=(1, 2)) if vectorizer_type == 'Tfidf' else CountVectorizer(
+            max_features=10000, ngram_range=(1, 2))
+        X_train = vectorizer.fit_transform(X_train).toarray()
+        X_val = vectorizer.transform(X_val).toarray()
 
-    # GPU check
-    device = torch.device("cuda" if torch.cuda.is_available() and use_cuda else "cpu")
-    log.info(f"Using device: {device}")
+    # Model Selection
+    if model_name == 'NeuralNetwork':
+        # Vectorize the text data
+        logger.info("Vectorizing text data for Neural Network")
+        vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
+        X_train = vectorizer.fit_transform(X_train).toarray()
+        X_val = vectorizer.transform(X_val).toarray()
 
-    # Load model and tokenizer
-    log.info(f"Loading model {model_name}...")
+        model = nn.Sequential(nn.Linear(X_train.shape[1], 128), nn.ReLU(), nn.Linear(128, 2))
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
+        model.to(device)
 
-    def load_model_and_tokenizer(model_names):
-        try:
-            tokenizers = AutoTokenizer.from_pretrained(f"{model_names}")
-            models = AutoModelForSequenceClassification.from_pretrained(f"{model_names}", num_labels=2)
-        except EnvironmentError:
-            log.warning(f"Local model not found. Downloading {model_names} from Hugging Face model hub...")
-            tokenizers = AutoTokenizer.from_pretrained(model_names)
-            models = AutoModelForSequenceClassification.from_pretrained(model_names, num_labels=2)
-        return tokenizers, models
+        # DataLoader
+        train_dataset = SensitiveDataDataset(X_train, y_train)
+        val_dataset = SensitiveDataDataset(X_val, y_val)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=batch_size)
 
-    # Usage in train_model function
-    tokenizer, model = load_model_and_tokenizer(model_name)
+        for epoch in range(epochs):
+            model.train()
+            epoch_loss, correct, total = 0, 0, 0
+            for inputs, labels in train_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
+                optimizer.zero_grad()
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                loss.backward()
+                optimizer.step()
+                epoch_loss += loss.item()
+                _, preds = torch.max(outputs, 1)
+                preds = torch.tensor(preds, dtype=torch.long, device=device)
+                labels = torch.tensor(labels, dtype=torch.long, device=device)
+                correct += (preds == labels).sum().item()
+                total += labels.size(0)
+            acc = correct / total
+            logger.info(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss:.4f}, Accuracy: {acc:.4f}")
 
-    # Function to load files and create a dataframe
-    def load_files_from_directory(directory_path):
-        files_data = []
-        for file_name in os.listdir(directory_path):
-            try:
-                with open(os.path.join(directory_path, file_name), 'r', encoding='utf-8') as file:
-                    content = file.read()
-                files_data.append((content, 1 if 'sensitive' in file_name else 0))  # 1: sensitive, 0: non-sensitive
-                log.info(
-                    f"Loaded file {file_name}: {len(content)} characters, {'sensitive' if 'sensitive' in file_name else 'non-sensitive'}")
-            except Exception as e:
-                log.warning(f"Skipping file {file_name}: {str(e)}")
-        return pd.DataFrame(files_data, columns=["text", "label"])
+        val_loss, val_correct, val_total = 0, 0, 0
+        with torch.no_grad():
+            for inputs, labels in val_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                val_loss += loss.item()
+                _, preds = torch.max(outputs, 1)
+                logger.debug(f"Preds type: {type(preds)}, Labels type: {type(labels)}")
+                preds = torch.tensor(preds, dtype=torch.long, device=device)
+                labels = torch.tensor(labels, dtype=torch.long, device=device)
+                val_correct += (preds == labels).sum().item()
+                val_total += labels.size(0)
 
-    # Load and process data
-    log.info("Loading data...")
-    train_df = load_files_from_directory(train_data_path)
+        val_acc = val_correct / val_total
+        logger.info(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_acc:.4f}")
 
-    # Split data
-    log.info("Splitting data into training and validation sets...")
-    train_texts, val_texts, train_labels, val_labels = train_test_split(train_df['text'], train_df['label'],
-                                                                        test_size=0.1)
+    else:
+        if model_name == 'LogisticRegression':
+            model = LogisticRegression(max_iter=epochs)
+        elif model_name == 'RandomForest':
+            model = RandomForestClassifier(n_estimators=100)
+        elif model_name == 'ExtraTrees':
+            model = ExtraTreesClassifier(n_estimators=100)
+        elif model_name == 'GBM':
+            model = GradientBoostingClassifier(n_estimators=100)
+        elif model_name == 'XGBoost':
+            model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+        elif model_name == 'DecisionTree':
+            model = DecisionTreeClassifier()
+        elif model_name == 'NaiveBayes':
+            model = MultinomialNB()
+        else:
+            logger.error("Invalid model name")
+            return
 
-    # Tokenization & Encoding
-    def encode_texts(texts):
-        return tokenizer(texts.tolist(), padding=True, truncation=True, max_length=128, return_tensors='pt')
+        # Train Traditional Model
+        model.fit(X_train, y_train)
+        preds = model.predict(X_val)
+        acc = accuracy_score(y_val, preds)
+        logger.info(f"Validation Accuracy: {acc:.4f}")
+        logger.info(classification_report(y_val, preds))
 
-    log.info("Tokenizing and encoding texts...")
-    train_encodings = encode_texts(train_texts)
-    val_encodings = encode_texts(val_texts)
+    # Save Model
+    if save_model_path:
+        logger.info(f"Saving model to {save_model_path}")
+        torch.save(model, save_model_path)
 
-    train_dataset = Dataset.from_dict({
-        'input_ids': train_encodings['input_ids'],
-        'attention_mask': train_encodings['attention_mask'],
-        'labels': torch.tensor(train_labels.tolist())
-    })
-
-    val_dataset = Dataset.from_dict({
-        'input_ids': val_encodings['input_ids'],
-        'attention_mask': val_encodings['attention_mask'],
-        'labels': torch.tensor(val_labels.tolist())
-    })
-
-    # Trainer setup
-    training_args = TrainingArguments(
-        output_dir='./results',
-        evaluation_strategy="epoch",
-        num_train_epochs=epochs,
-        per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=batch_size,
-        warmup_steps=500,
-        weight_decay=0.01,
-        logging_dir='./logs',
-        logging_steps=10,
-        learning_rate=learning_rate,
-        report_to=["tensorboard"]
-    )
-
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=val_dataset,
-        tokenizer=tokenizer,
-    )
-
-    # Train model
-    log.info("Starting training...")
-    train_results = trainer.train()
-
-    # Save the model
-    log.info(f"Saving model to {save_model_path}")
-    model.save_pretrained(save_model_path)
-    tokenizer.save_pretrained(save_model_path)
-
-    # Evaluate the model
-    log.info("Evaluating model...")
-    eval_results = trainer.evaluate()
-    log.info(f"Evaluation results: {eval_results}")
-
-    # Plot training loss and accuracy (Progress visualization)
-    plt.figure(figsize=(12, 6))
-    plt.plot(train_results.metrics['epoch'], train_results.metrics['train_loss'], label='Training Loss')
-    plt.plot(train_results.metrics['epoch'], eval_results['eval_accuracy'], label='Validation Accuracy')
-    plt.title("Training Progress")
+    # Visuals
+    plt.plot(range(epochs), acc)
+    plt.title("Model Accuracy Over Epochs")
     plt.xlabel("Epochs")
-    plt.ylabel("Loss / Accuracy")
-    plt.legend()
-    plt.grid(True)
-    plt.savefig('training_progress.png')
+    plt.ylabel("Accuracy")
     plt.show()
 
-    log.info("Training completed.")
 
-
+# Config file reading
 config = ConfigParser()
 config.read('../../config.ini')
-if bool(config.get('VulnScan.train Settings', 'train_all?')):
+if config.getboolean('VulnScan.train Settings', 'use_1_model_only?'):
     train_model(model_name=config.get('VulnScan.train Settings', 'model_name'),
                 epochs=int(config.get('VulnScan.train Settings', 'epochs')),
                 batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
                 learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
                 train_data_path=config.get('VulnScan.train Settings', 'train_data_path'),
-                save_model_path=config.get('VulnScan.train Settings', 'save_model_path'),
-                use_cuda=config.getboolean('VulnScan.train Settings', 'use_cuda'))
+                save_model_path=config.get('VulnScan.train Settings', 'save_model_path'))
 else:
-    for model_main in ["distilbert", "albert", "bert",
-                       "t5"]:
-        train_model(model_name=model_main,
-                    epochs=int(config.get('VulnScan.train Settings', 'epochs')),
-                    batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
-                    learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
-                    train_data_path=config.get('VulnScan.train Settings', 'train_data_path'),
-                    save_model_path=config.get('VulnScan.train Settings', 'save_model_path'),
-                    use_cuda=config.getboolean('VulnScan.train Settings', 'use_cuda'))
+    for model_main in ["NeuralNetwork", "CNN", "Tfidf_LogReg",
+                       "CountVectorizer_LogReg", "RandomForest",
+                       "ExtraTrees", "GBM", "XGBoost", "DecisionTree",
+                       "NaiveBayes"]:
+
+        code_names = {
+            "CountVectorizer_LogReg": "cl",
+            "CNN": "cn",
+            "DecisionTree": "dt",
+            "ExtraTrees": "et",
+            "GBM": "g",
+            "NeuralNetwork": "n",
+            "NaiveBayes": "nb",
+            "RandomForest": "r",
+            "Tfidf_LogReg": "tl",
+            "XGBoost": "x"
+        }
+
+        if model_main in code_names.keys():
+            model_path_save = f"{config.get('VulnScan.train Settings', 'save_model_path')} 3{code_names[model_main]}1"
+
+        logger.info(f"Save path: {model_path_save}")
+
+        try:
+            train_model(model_name=model_main,
+                        epochs=int(config.get('VulnScan.train Settings', 'epochs')),
+                        batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
+                        learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
+                        train_data_path=config.get('VulnScan.train Settings', 'train_data_path'),
+                        save_model_path="")
+        except FileNotFoundError as e:
+            logger.error(f"File Not Found Error in training model {model_main}: {e}")
+            exit(1)
+        except AttributeError as e:
+            logger.error(f"Attribute Error in training model {model_main}: {e}")
+            exit(1)
+        except Exception as e:
+            logger.error(f"Error in training model {model_main}: {e}")
+            exit(1)
