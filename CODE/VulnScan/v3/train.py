@@ -46,13 +46,13 @@ class SensitiveDataDataset(Dataset):
 
 # Train Model Function
 def train_model(
-        model_name=None,
-        epochs=3,
-        batch_size=16,
-        learning_rate=5e-5,
-        train_data_path=None,
-        save_model_path=None,
-        use_cuda=True,
+        model_name,
+        epochs,
+        batch_size,
+        learning_rate,
+        train_data_path,
+        save_model_path,
+        use_cuda=False,
 ):
     # Load Data
     logger.info(f"Loading data from {train_data_path}")
@@ -95,6 +95,9 @@ def train_model(
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=batch_size)
 
+        acc = []
+        loss_plot = []
+
         for epoch in range(epochs):
             model.train()
             epoch_loss, correct, total = 0, 0, 0
@@ -107,40 +110,22 @@ def train_model(
                 optimizer.step()
                 epoch_loss += loss.item()
                 _, preds = torch.max(outputs, 1)
-                preds = preds.to(torch.long)
-                labels = labels.to(torch.long)
                 correct += (preds == labels).sum().item()
                 total += labels.size(0)
-            acc = correct / total
-            logger.info(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss:.4f}, Accuracy: {acc:.4f}")
+            acc.append(correct / total)
+            loss_plot.append(epoch_loss)
+            logger.info(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss:.4f}, Accuracy: {(correct / total):.4f}")
 
         val_loss, val_correct, val_total = 0, 0, 0
 
         with torch.no_grad():
+            model.eval()
             for inputs, labels in val_loader:
                 inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 val_loss += loss.item()
-
-                # Check the shapes before and after squeezing
-                logger.info(
-                    f"Inputs shape: {inputs.shape}, Outputs shape: {outputs.shape}, Labels shape: {labels.shape}")
-
-                # Get predicted classes
                 _, preds = torch.max(outputs, 1)
-                logger.info(f"Preds shape: {preds.shape}, Labels shape: {labels.shape}")
-
-                # Ensure correct shape for preds and labels
-                labels = labels.to(torch.long)  # Ensure labels are in the correct type
-                preds = preds.to(torch.long)  # Ensure preds are in the correct type
-
-                # Check if the shapes match before comparison
-                logger.info(f"Outputs shape: {outputs.shape}, Labels shape: {labels.shape}")
-
-                if preds.shape != labels.shape:
-                    logger.error(f"Shape mismatch: preds {preds.shape}, labels {labels.shape}")
-
                 val_correct += (preds == labels).sum().item()
                 val_total += labels.size(0)
 
@@ -176,13 +161,22 @@ def train_model(
     # Save Model
     if save_model_path:
         logger.info(f"Saving model to {save_model_path}")
-        torch.save(model, save_model_path)
+        torch.save(model, save_model_path + ".pth")
 
     # Visuals
-    plt.plot(range(epochs), acc)
+    plt.plot(list(range(1, epochs + 1)), acc, label="Training Accuracy")
     plt.title("Model Accuracy Over Epochs")
     plt.xlabel("Epochs")
     plt.ylabel("Accuracy")
+    plt.legend()
+    plt.savefig(os.path.join(os.path.dirname(model_path_save), "Model Accuracy Over Epochs.png"))
+    plt.show()
+    plt.plot(list(range(1, epochs + 1)), loss_plot, label="Training Loss")
+    plt.title("Model Loss Over Epochs")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.savefig(os.path.join(os.path.dirname(model_path_save), "Model Loss Over Epochs.png"))
     plt.show()
 
 
