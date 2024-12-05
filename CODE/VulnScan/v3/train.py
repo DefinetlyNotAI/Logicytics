@@ -1,19 +1,20 @@
-# TODO Add more verbose logging
+# TODO Add more verbose logging, and add type hints + docstrings
 import os
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score, classification_report
-import xgboost as xgb
+from configparser import ConfigParser
+
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import xgboost as xgb
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.tree import DecisionTreeClassifier
 from torch.utils.data import Dataset, DataLoader
-from configparser import ConfigParser
 
 # Set up logging
 from logicytics import Log
@@ -46,7 +47,6 @@ class SensitiveDataDataset(Dataset):
 
 
 # Train Model Function
-# Train Model Function (modified for handling vectorization properly)
 def train_model(
         model_name,
         epochs,
@@ -63,6 +63,7 @@ def train_model(
         with open(os.path.join(train_data_path, filename), 'r', encoding='utf-8') as file:
             texts.append(file.read())
             labels.append(1 if '-sensitive' in filename else 0)
+        logger.info(f"Loaded data from {filename}")
 
     # Split Data
     X_train, X_val, y_train, y_val = train_test_split(texts, labels, test_size=0.2, random_state=42)
@@ -72,7 +73,9 @@ def train_model(
     if model_name in ['Tfidf_LogReg', 'CountVectorizer_LogReg']:
         vectorizer_type = 'Tfidf' if 'Tfidf' in model_name else 'Count'
         logger.info(f"Using Vectorizer {vectorizer_type}")
-        vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2)) if vectorizer_type == 'Tfidf' else CountVectorizer(max_features=10000, ngram_range=(1, 2))
+        vectorizer = TfidfVectorizer(max_features=10000,
+                                     ngram_range=(1, 2)) if vectorizer_type == 'Tfidf' else CountVectorizer(
+            max_features=10000, ngram_range=(1, 2))
         X_train = vectorizer.fit_transform(X_train).toarray()
         X_val = vectorizer.transform(X_val).toarray()
 
@@ -132,7 +135,6 @@ def train_model(
 
         val_acc = val_correct / val_total
         logger.info(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_acc:.4f}")
-
     else:
         # Ensure text is vectorized for non-NN models
         if vectorizer is None:
@@ -154,6 +156,8 @@ def train_model(
             model = DecisionTreeClassifier()
         elif model_name == 'NaiveBayes':
             model = MultinomialNB()
+        elif model_name == 'LogReg':
+            model = LogisticRegression(max_iter=epochs)
         else:
             logger.error(f"Invalid model name: {model_name}")
             return
@@ -177,7 +181,7 @@ def train_model(
             acc = accuracy_score(y_val, preds)
             acc_plot.append(acc)
 
-            logger.info(f"Epoch {epoch+1}/{epochs} - Validation Accuracy: {acc:.4f}")
+            logger.info(f"Epoch {epoch + 1}/{epochs} - Validation Accuracy: {acc:.4f}")
             logger.info(classification_report(y_val, preds, zero_division=0))
 
             # Optional: Track loss (e.g., log loss for XGBoost)
@@ -235,7 +239,8 @@ if config.getboolean('VulnScan.train Settings', 'use_1_model_only?'):
                     batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
                     learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
                     train_data_path=config.get('VulnScan.train Settings', 'train_data_path'),
-                    save_model_path=config.get('VulnScan.train Settings', 'save_model_path'))
+                    save_model_path=config.get('VulnScan.train Settings', 'save_model_path'),
+                    use_cuda=config.getboolean('VulnScan.train Settings', 'use_cuda'))
     except FileNotFoundError as e:
         logger.error(f"File Not Found Error in training model: {e}")
         exit(1)
@@ -246,21 +251,18 @@ if config.getboolean('VulnScan.train Settings', 'use_1_model_only?'):
         logger.error(f"Error in training model: {e}")
         exit(1)
 else:
-    for model_main in ["NeuralNetwork", "CNN", "Tfidf_LogReg",
-                       "CountVectorizer_LogReg", "RandomForest",
-                       "ExtraTrees", "GBM", "XGBoost", "DecisionTree",
-                       "NaiveBayes"]:
+    for model_main in ["NeuralNetwork", "LogReg",
+                       "RandomForest", "ExtraTrees", "GBM",
+                       "XGBoost", "DecisionTree", "NaiveBayes"]:
 
         code_names = {
-            "CountVectorizer_LogReg": "cl",
-            "CNN": "cn",
             "DecisionTree": "dt",
             "ExtraTrees": "et",
             "GBM": "g",
             "NeuralNetwork": "n",
             "NaiveBayes": "nb",
             "RandomForest": "r",
-            "Tfidf_LogReg": "tl",
+            "LogReg": "lr",
             "XGBoost": "x"
         }
 
@@ -275,7 +277,8 @@ else:
                         batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
                         learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
                         train_data_path=config.get('VulnScan.train Settings', 'train_data_path'),
-                        save_model_path=model_path_save)
+                        save_model_path=model_path_save,
+                        use_cuda=config.getboolean('VulnScan.train Settings', 'use_cuda'))
         except FileNotFoundError as e:
             logger.error(f"File Not Found Error in training model {model_main}: {e}")
             exit(1)
