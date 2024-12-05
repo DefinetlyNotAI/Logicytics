@@ -10,7 +10,7 @@ fake = Faker()
 
 
 # Function to generate a sensitive file with real sensitive information
-def create_sensitive_file(file_path, max_size):
+def create_sensitive_file(file_path: str, max_size: int):
     content = ""
     # Generate sensitive data using Faker
     content += f"Name: {fake.name()}\n"
@@ -30,7 +30,7 @@ def create_sensitive_file(file_path, max_size):
 
 
 # Function to generate a normal file with non-sensitive data
-def create_normal_file(file_path, max_size):
+def create_normal_file(file_path: str, max_size: int):
     content = ""
     # Add random text
     while len(content.encode('utf-8')) < max_size:
@@ -41,7 +41,7 @@ def create_normal_file(file_path, max_size):
 
 
 # Function to generate a mix file with both normal and sensitive data
-def create_mix_file(file_path, max_size):
+def create_mix_file(file_path: str, max_size: int):
     content = ""
     # Add a mix of normal and sensitive data
     while len(content.encode('utf-8')) < max_size:
@@ -57,7 +57,7 @@ def create_mix_file(file_path, max_size):
 
 
 # Function to create random files (Normal, Mix, Sensitive)
-def create_random_files(directories, num_file=100):
+def create_random_files(directories: str, num_file: int = 100):
     os.makedirs(directories, exist_ok=True)
 
     for i in range(num_file):

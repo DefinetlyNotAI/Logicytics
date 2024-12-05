@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 from os import mkdir
@@ -36,7 +38,7 @@ logging.info(f"Using device: {DEVICE}")
 # UTILITIES
 # ---------------------------------------
 
-def load_data(data_dir):
+def load_data(data_dir: str) -> tuple[list[str], np.ndarray]:
     """Loads text data and labels from the directory."""
     texts, labels = [], []
     for file_name in os.listdir(data_dir):
@@ -48,7 +50,7 @@ def load_data(data_dir):
     return texts, np.array(labels)
 
 
-def evaluate_model(y_true, y_pred):
+def evaluate_model(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[float, float, float, float, float]:
     """Evaluates the model using standard metrics."""
     accuracy = accuracy_score(y_true, y_pred)
     precision = precision_score(y_true, y_pred, zero_division=1)
@@ -65,7 +67,7 @@ def evaluate_model(y_true, y_pred):
 # ---------------------------------------
 
 
-def save_progress_graph(accuracies, filename=f"training_progress.png"):
+def save_progress_graph(accuracies: list[float], filename: str = "training_progress.png"):
     plt.figure(figsize=(8, 6))
     plt.plot(range(1, len(accuracies) + 1), accuracies, marker='o', label="Training Accuracy")
     plt.xlabel("Epochs")
@@ -77,8 +79,153 @@ def save_progress_graph(accuracies, filename=f"training_progress.png"):
     plt.close()
 
 
+def train_xgboost(X_train: np.ndarray, X_test: np.ndarray,
+                  y_train: np.ndarray, y_test: np.ndarray, SAVE_DIR: str):
+    """Trains a Gradient Boosting Classifier (XGBoost) with GPU."""
+    logging.info("Enabling GPU acceleration...")
+    model = xgb.XGBClassifier(tree_method='hist', device=DEVICE)  # Enable GPU acceleration
+    logging.info("GPU acceleration enabled.")
+    logging.info("Training XGBoost...")
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_test)
+    logging.info("XGBoost evaluation commencing...")
+    evaluate_model(y_test, predictions)
+    joblib.dump(model, os.path.join(SAVE_DIR, "xgboost_model.pkl"))
+    logging.info("Model saved as xgboost_model.pkl")
+
+
+def train_bert(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
+               y_test: np.ndarray, MAX_LEN: int, LEARNING_RATE: float, BATCH_SIZE: int,
+               EPOCHS: int, SAVE_DIR: str, MODEL_PATH: str):
+    """Trains a BERT model with GPU support."""
+    logging.info("Loading BERT tokenizer...")
+    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME)
+    train_encodings = tokenizer(list(X_train), truncation=True, padding=True, max_length=MAX_LEN, return_tensors="pt")
+    test_encodings = tokenizer(list(X_test), truncation=True, padding=True, max_length=MAX_LEN, return_tensors="pt")
+
+    logging.info("Loading BERT model...")
+    model = BertForSequenceClassification.from_pretrained(MODEL_PATH, num_labels=2).to(DEVICE)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+
+    # Prepare data for training
+    logging.info("Preparing data for training...")
+    train_data = TensorDataset(train_encodings.input_ids.to(DEVICE), train_encodings.attention_mask.to(DEVICE),
+                               torch.tensor(y_train).to(DEVICE))
+    test_data = TensorDataset(test_encodings.input_ids.to(DEVICE), test_encodings.attention_mask.to(DEVICE),
+                              torch.tensor(y_test).to(DEVICE))
+    train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
+
+    # Train model
+    logging.info("Training BERT model...")
+    model.train()
+    for epoch in range(EPOCHS):
+        for batch in train_loader:
+            input_ids, attention_mask, labels = batch
+            labels = labels.long()
+            optimizer.zero_grad()
+            outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
+            loss = outputs.loss
+            loss.backward()
+            optimizer.step()
+
+    # Evaluate model
+    logging.info("Evaluating BERT model...")
+    model.eval()
+    predictions = []
+    with torch.no_grad():
+        for batch in test_loader:
+            input_ids, attention_mask, _ = batch
+            outputs = model(input_ids, attention_mask=attention_mask)
+            logits = outputs.logits
+            predictions.extend(torch.argmax(logits, dim=1).cpu().numpy())
+
+    logging.info("BERT model evaluating..")
+    evaluate_model(y_test, np.array(predictions))
+    model.save_pretrained(os.path.join(SAVE_DIR, "bert_model"))
+    logging.info("Model saved as bert_model")
+
+
+class LSTMModel(nn.Module):
+    def __init__(self, vocab_size: int, embedding_dim: int = 128, hidden_dim: int = 128, output_dim: int = 1):
+        super(LSTMModel, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, bidirectional=True, batch_first=True)
+        self.fc = nn.Linear(hidden_dim * 2, output_dim)  # Bidirectional, so multiply by 2
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.embedding(x)
+        lstm_out, _ = self.lstm(x)
+        x = self.fc(lstm_out[:, -1, :])
+        x = self.sigmoid(x)
+        return x
+
+
+def train_lstm(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
+               y_test: np.ndarray, MAX_FEATURES: int, LEARNING_RATE: float, BATCH_SIZE: int,
+               EPOCHS: int, SAVE_DIR: str):
+    """Trains an LSTM model using PyTorch with GPU support."""
+    logging.info("Training LSTM...")
+    logging.info("Vectorizing text data...")
+    vectorizer = TfidfVectorizer(max_features=MAX_FEATURES)
+    X_train_vec = vectorizer.fit_transform(X_train).toarray()
+    X_test_vec = vectorizer.transform(X_test).toarray()
+
+    logging.info("Preparing LSTM model...")
+    vocab_size = X_train_vec.shape[1]
+    model = LSTMModel(vocab_size=vocab_size).to(DEVICE)
+    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    criterion = nn.BCELoss()
+
+    # Prepare data for training
+    logging.info("Preparing data for training...")
+    train_data = TensorDataset(torch.tensor(X_train_vec, dtype=torch.long).to(DEVICE),
+                               torch.tensor(y_train, dtype=torch.float32).to(DEVICE))
+    test_data = TensorDataset(torch.tensor(X_test_vec, dtype=torch.long).to(DEVICE),
+                              torch.tensor(y_test, dtype=torch.float32).to(DEVICE))
+
+    logging.info("Training LSTM model...")
+    train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
+
+    # Train model
+    for epoch in range(EPOCHS):
+        logging.info(f"Epoch {epoch + 1}/{EPOCHS}")
+        model.train()
+        for batch in train_loader:
+            logging.info(f"Batch training: {batch}...")
+            inputs, labels = batch
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs.squeeze(), labels)
+            loss.backward()
+            optimizer.step()
+
+    # Evaluate model
+    logging.info("Evaluating LSTM model...")
+    model.eval()
+    predictions = []
+    with torch.no_grad():
+        for batch in test_loader:
+            logging.info(f"Batch testing: {batch}...")
+            inputs, _ = batch
+            outputs = model(inputs)
+            predictions.extend((outputs.squeeze(dim=-1) > 0.5).int().cpu().numpy())
+
+    evaluate_model(y_test, np.array(predictions))
+    torch.save(model.state_dict(), os.path.join(SAVE_DIR, "lstm_model.pth"))
+    logging.info("Model saved as lstm_model.pth")
+
+
+# ---------------------------------------
+# MAIN LOGIC
+# ---------------------------------------
+
 # noinspection DuplicatedCode
-def train_nn_svm(MODEL, EPOCHS, SAVE_DIR, MAX_FEATURES, TEST_SIZE, MAX_ITER, RANDOM_STATE):
+def train_nn_svm(MODEL: str, EPOCHS: int, SAVE_DIR: str,
+                 MAX_FEATURES: int, TEST_SIZE: float | int,
+                 MAX_ITER: int, RANDOM_STATE: int):
     if MODEL not in ["svm", "nn"]:
         logging.error(f"Invalid model type: {MODEL}. Please choose 'svm' or 'nn'.")
         return
@@ -163,8 +310,41 @@ def train_nn_svm(MODEL, EPOCHS, SAVE_DIR, MAX_FEATURES, TEST_SIZE, MAX_ITER, RAN
     logging.info("Training complete.")
 
 
+def train_model_blx(MODEL_TYPE: str, SAVE_DIR: str, EPOCHS: int, BATCH_SIZE: int, LEARNING_RATE: float,
+                    MAX_FEATURES: int, MAX_LEN: int,
+                    TEST_SIZE: float | int, RANDOM_STATE: int, MODEL_PATH_BERT: str = None):
+    # Create save directory if it doesn't exist
+    os.makedirs(SAVE_DIR, exist_ok=True)
+
+    # Load data
+    logging.info("Loading data...")
+    texts_main, labels_main = DATA
+    X_train_main, X_test_main, y_train_main, y_test_main = train_test_split(texts_main, labels_main,
+                                                                            test_size=TEST_SIZE,
+                                                                            random_state=RANDOM_STATE)
+
+    # Train based on the chosen model
+    if MODEL_TYPE == "xgboost":
+        vectorizer_main = TfidfVectorizer(max_features=MAX_FEATURES)
+        X_train_vec_main = vectorizer_main.fit_transform(X_train_main)
+        X_test_vec_main = vectorizer_main.transform(X_test_main)
+        train_xgboost(X_train_vec_main, X_test_vec_main, y_train_main, y_test_main, SAVE_DIR)
+
+    elif MODEL_TYPE == "bert":
+        if MODEL_PATH_BERT is None:
+            logging.error("Please provide a valid BERT model path.")
+            return
+        train_bert(X_train_main, X_test_main, y_train_main, y_test_main, MAX_LEN, LEARNING_RATE, BATCH_SIZE, EPOCHS,
+                   SAVE_DIR, MODEL_PATH_BERT)
+
+    elif MODEL_TYPE == "lstm":
+        train_lstm(X_train_main, X_test_main, y_train_main, y_test_main, MAX_FEATURES, LEARNING_RATE, BATCH_SIZE,
+                   EPOCHS, SAVE_DIR)
+
+
 # noinspection DuplicatedCode
-def train_rfc(SAVE_DIR, EPOCHS, TEST_SIZE, N_ESTIMATORS, RANDOM_STATE):
+def train_rfc(SAVE_DIR: str, EPOCHS: int, TEST_SIZE: float | int,
+              N_ESTIMATORS: int, RANDOM_STATE: int):
     logging.info("Training model...")
 
     # Load data
@@ -210,176 +390,6 @@ def train_rfc(SAVE_DIR, EPOCHS, TEST_SIZE, N_ESTIMATORS, RANDOM_STATE):
     logging.info("Training complete.")
 
 
-def train_xgboost(X_train, X_test, y_train, y_test, SAVE_DIR):
-    """Trains a Gradient Boosting Classifier (XGBoost) with GPU."""
-    logging.info("Enabling GPU acceleration...")
-    model = xgb.XGBClassifier(tree_method='hist', device=DEVICE)  # Enable GPU acceleration
-    logging.info("GPU acceleration enabled.")
-    logging.info("Training XGBoost...")
-    model.fit(X_train, y_train)
-    predictions = model.predict(X_test)
-    logging.info("XGBoost evaluation commencing...")
-    evaluate_model(y_test, predictions)
-    joblib.dump(model, os.path.join(SAVE_DIR, "xgboost_model.pkl"))
-    logging.info("Model saved as xgboost_model.pkl")
-
-
-def train_bert(X_train, X_test, y_train, y_test, MAX_LEN, LEARNING_RATE, BATCH_SIZE, EPOCHS, SAVE_DIR, MODEL_PATH):
-    """Trains a BERT model with GPU support."""
-    logging.info("Loading BERT tokenizer...")
-    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME)
-    train_encodings = tokenizer(list(X_train), truncation=True, padding=True, max_length=MAX_LEN, return_tensors="pt")
-    test_encodings = tokenizer(list(X_test), truncation=True, padding=True, max_length=MAX_LEN, return_tensors="pt")
-
-    logging.info("Loading BERT model...")
-    model = BertForSequenceClassification.from_pretrained(MODEL_PATH, num_labels=2).to(DEVICE)
-    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
-
-    # Prepare data for training
-    logging.info("Preparing data for training...")
-    train_data = TensorDataset(train_encodings.input_ids.to(DEVICE), train_encodings.attention_mask.to(DEVICE),
-                               torch.tensor(y_train).to(DEVICE))
-    test_data = TensorDataset(test_encodings.input_ids.to(DEVICE), test_encodings.attention_mask.to(DEVICE),
-                              torch.tensor(y_test).to(DEVICE))
-    train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
-    test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
-
-    # Train model
-    logging.info("Training BERT model...")
-    model.train()
-    for epoch in range(EPOCHS):
-        for batch in train_loader:
-            input_ids, attention_mask, labels = batch
-            labels = labels.long()
-            optimizer.zero_grad()
-            outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
-            loss = outputs.loss
-            loss.backward()
-            optimizer.step()
-
-    # Evaluate model
-    logging.info("Evaluating BERT model...")
-    model.eval()
-    predictions = []
-    with torch.no_grad():
-        for batch in test_loader:
-            input_ids, attention_mask, _ = batch
-            outputs = model(input_ids, attention_mask=attention_mask)
-            logits = outputs.logits
-            predictions.extend(torch.argmax(logits, dim=1).cpu().numpy())
-
-    logging.info("BERT model evaluating..")
-    evaluate_model(y_test, np.array(predictions))
-    model.save_pretrained(os.path.join(SAVE_DIR, "bert_model"))
-    logging.info("Model saved as bert_model")
-
-
-class LSTMModel(nn.Module):
-    def __init__(self, vocab_size, embedding_dim=128, hidden_dim=128, output_dim=1):
-        super(LSTMModel, self).__init__()
-        self.embedding = nn.Embedding(vocab_size, embedding_dim)
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, bidirectional=True, batch_first=True)
-        self.fc = nn.Linear(hidden_dim * 2, output_dim)  # Bidirectional, so multiply by 2
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x):
-        x = self.embedding(x)
-        lstm_out, _ = self.lstm(x)
-        x = self.fc(lstm_out[:, -1, :])
-        x = self.sigmoid(x)
-        return x
-
-
-def train_lstm(X_train, X_test, y_train, y_test, MAX_FEATURES, LEARNING_RATE, BATCH_SIZE, EPOCHS, SAVE_DIR):
-    """Trains an LSTM model using PyTorch with GPU support."""
-    logging.info("Training LSTM...")
-    logging.info("Vectorizing text data...")
-    vectorizer = TfidfVectorizer(max_features=MAX_FEATURES)
-    X_train_vec = vectorizer.fit_transform(X_train).toarray()
-    X_test_vec = vectorizer.transform(X_test).toarray()
-
-    logging.info("Preparing LSTM model...")
-    vocab_size = X_train_vec.shape[1]
-    model = LSTMModel(vocab_size=vocab_size).to(DEVICE)
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    criterion = nn.BCELoss()
-
-    # Prepare data for training
-    logging.info("Preparing data for training...")
-    train_data = TensorDataset(torch.tensor(X_train_vec, dtype=torch.long).to(DEVICE),
-                               torch.tensor(y_train, dtype=torch.float32).to(DEVICE))
-    test_data = TensorDataset(torch.tensor(X_test_vec, dtype=torch.long).to(DEVICE),
-                              torch.tensor(y_test, dtype=torch.float32).to(DEVICE))
-
-    logging.info("Training LSTM model...")
-    train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
-    test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
-
-    # Train model
-    for epoch in range(EPOCHS):
-        logging.info(f"Epoch {epoch + 1}/{EPOCHS}")
-        model.train()
-        for batch in train_loader:
-            logging.info(f"Batch training: {batch}...")
-            inputs, labels = batch
-            optimizer.zero_grad()
-            outputs = model(inputs)
-            loss = criterion(outputs.squeeze(), labels)
-            loss.backward()
-            optimizer.step()
-
-    # Evaluate model
-    logging.info("Evaluating LSTM model...")
-    model.eval()
-    predictions = []
-    with torch.no_grad():
-        for batch in test_loader:
-            logging.info(f"Batch testing: {batch}...")
-            inputs, _ = batch
-            outputs = model(inputs)
-            predictions.extend((outputs.squeeze(dim=-1) > 0.5).int().cpu().numpy())
-
-    evaluate_model(y_test, np.array(predictions))
-    torch.save(model.state_dict(), os.path.join(SAVE_DIR, "lstm_model.pth"))
-    logging.info("Model saved as lstm_model.pth")
-
-
-# ---------------------------------------
-# MAIN LOGIC
-# ---------------------------------------
-
-def train_model_blx(MODEL_TYPE, SAVE_DIR, EPOCHS, BATCH_SIZE, LEARNING_RATE, MAX_FEATURES, MAX_LEN,
-                    TEST_SIZE, RANDOM_STATE, MODEL_PATH_BERT=None):
-    # Create save directory if it doesn't exist
-    os.makedirs(SAVE_DIR, exist_ok=True)
-
-    # Load data
-    logging.info("Loading data...")
-    texts_main, labels_main = DATA
-    X_train_main, X_test_main, y_train_main, y_test_main = train_test_split(texts_main, labels_main,
-                                                                            test_size=TEST_SIZE,
-                                                                            random_state=RANDOM_STATE)
-
-    # Train based on the chosen model
-    if MODEL_TYPE == "xgboost":
-        vectorizer_main = TfidfVectorizer(max_features=MAX_FEATURES)
-        X_train_vec_main = vectorizer_main.fit_transform(X_train_main)
-        X_test_vec_main = vectorizer_main.transform(X_test_main)
-        train_xgboost(X_train_vec_main, X_test_vec_main, y_train_main, y_test_main, SAVE_DIR)
-
-    elif MODEL_TYPE == "bert":
-        if MODEL_PATH_BERT is None:
-            logging.error("Please provide a valid BERT model path.")
-            return
-        train_bert(X_train_main, X_test_main, y_train_main, y_test_main, MAX_LEN, LEARNING_RATE, BATCH_SIZE, EPOCHS,
-                   SAVE_DIR, MODEL_PATH_BERT)
-
-    elif MODEL_TYPE == "lstm":
-        train_lstm(X_train_main, X_test_main, y_train_main, y_test_main, MAX_FEATURES, LEARNING_RATE, BATCH_SIZE,
-                   EPOCHS, SAVE_DIR)
-
-
-# TODO Docstring + Give data type for each parameter in functions
 if __name__ == "__main__":
     DATA = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 50k files with 50KB")
 
