@@ -1,4 +1,3 @@
-from configparser import ConfigParser
 import os
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
@@ -13,15 +12,17 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
-from logicytics import Log
+from configparser import ConfigParser
 
 # Set up logging
+from logicytics import Log
+
 logger = Log(
-        {"log_level": "Info",
-         "filename": "VulnScanTrain.log",
-         "colorlog_fmt_parameters":
-             "%(log_color)s%(levelname)-8s%(reset)s %(yellow)s%(asctime)s %(blue)s%(message)s",
-         }
+    {"log_level": "Info",
+     "filename": "VulnScanTrain.log",
+     "colorlog_fmt_parameters":
+         "%(log_color)s%(levelname)-8s%(reset)s %(yellow)s%(asctime)s %(blue)s%(message)s",
+     }
 )
 
 
@@ -106,24 +107,40 @@ def train_model(
                 optimizer.step()
                 epoch_loss += loss.item()
                 _, preds = torch.max(outputs, 1)
-                preds = torch.tensor(preds, dtype=torch.long, device=device)
-                labels = torch.tensor(labels, dtype=torch.long, device=device)
+                preds = preds.to(torch.long)
+                labels = labels.to(torch.long)
                 correct += (preds == labels).sum().item()
                 total += labels.size(0)
             acc = correct / total
             logger.info(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss:.4f}, Accuracy: {acc:.4f}")
 
         val_loss, val_correct, val_total = 0, 0, 0
+
         with torch.no_grad():
             for inputs, labels in val_loader:
                 inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 val_loss += loss.item()
+
+                # Check the shapes before and after squeezing
+                logger.info(
+                    f"Inputs shape: {inputs.shape}, Outputs shape: {outputs.shape}, Labels shape: {labels.shape}")
+
+                # Get predicted classes
                 _, preds = torch.max(outputs, 1)
-                logger.debug(f"Preds type: {type(preds)}, Labels type: {type(labels)}")
-                preds = torch.tensor(preds, dtype=torch.long, device=device)
-                labels = torch.tensor(labels, dtype=torch.long, device=device)
+                logger.info(f"Preds shape: {preds.shape}, Labels shape: {labels.shape}")
+
+                # Ensure correct shape for preds and labels
+                labels = labels.to(torch.long)  # Ensure labels are in the correct type
+                preds = preds.to(torch.long)  # Ensure preds are in the correct type
+
+                # Check if the shapes match before comparison
+                logger.info(f"Outputs shape: {outputs.shape}, Labels shape: {labels.shape}")
+
+                if preds.shape != labels.shape:
+                    logger.error(f"Shape mismatch: preds {preds.shape}, labels {labels.shape}")
+
                 val_correct += (preds == labels).sum().item()
                 val_total += labels.size(0)
 
@@ -173,12 +190,22 @@ def train_model(
 config = ConfigParser()
 config.read('../../config.ini')
 if config.getboolean('VulnScan.train Settings', 'use_1_model_only?'):
-    train_model(model_name=config.get('VulnScan.train Settings', 'model_name'),
-                epochs=int(config.get('VulnScan.train Settings', 'epochs')),
-                batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
-                learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
-                train_data_path=config.get('VulnScan.train Settings', 'train_data_path'),
-                save_model_path=config.get('VulnScan.train Settings', 'save_model_path'))
+    try:
+        train_model(model_name=config.get('VulnScan.train Settings', 'model_name'),
+                    epochs=int(config.get('VulnScan.train Settings', 'epochs')),
+                    batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
+                    learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
+                    train_data_path=config.get('VulnScan.train Settings', 'train_data_path'),
+                    save_model_path=config.get('VulnScan.train Settings', 'save_model_path'))
+    except FileNotFoundError as e:
+        logger.error(f"File Not Found Error in training model: {e}")
+        exit(1)
+    except AttributeError as e:
+        logger.error(f"Attribute Error in training model: {e}")
+        exit(1)
+    except Exception as e:
+        logger.error(f"Error in training model: {e}")
+        exit(1)
 else:
     for model_main in ["NeuralNetwork", "CNN", "Tfidf_LogReg",
                        "CountVectorizer_LogReg", "RandomForest",
@@ -209,7 +236,7 @@ else:
                         batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
                         learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
                         train_data_path=config.get('VulnScan.train Settings', 'train_data_path'),
-                        save_model_path="")
+                        save_model_path=model_path_save)
         except FileNotFoundError as e:
             logger.error(f"File Not Found Error in training model {model_main}: {e}")
             exit(1)
