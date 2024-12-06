@@ -1,6 +1,8 @@
-# TODO Add more verbose logging, and add type hints + docstrings
+from __future__ import annotations
+
 import os
 from configparser import ConfigParser
+from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
@@ -8,7 +10,7 @@ import torch.nn as nn
 import torch.optim as optim
 import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
@@ -17,11 +19,11 @@ from sklearn.tree import DecisionTreeClassifier
 from torch.utils.data import Dataset, DataLoader
 
 # Set up logging
-from logicytics import Log
+from logicytics import Log, DEBUG
 
 logger = Log(
-    {"log_level": "Info",
-     "filename": "VulnScanTrain.log",
+    {"log_level": DEBUG,
+     "filename": "../../../ACCESS/LOGS/VulnScan_Train.log",
      "colorlog_fmt_parameters":
          "%(log_color)s%(levelname)-8s%(reset)s %(yellow)s%(asctime)s %(blue)s%(message)s",
      }
@@ -30,15 +32,50 @@ logger = Log(
 
 # Dataset Class for PyTorch models
 class SensitiveDataDataset(Dataset):
-    def __init__(self, texts_init, labels_init, tokenizer=None):
+    """
+    A custom Dataset class for handling sensitive data for PyTorch models.
+
+    Attributes:
+        texts (list[str]): List of text data.
+        labels (list[int]): List of labels corresponding to the text data.
+        tokenizer (callable, optional): A function to tokenize the text data.
+    """
+
+    def __init__(self,
+                 texts_init: list[str],
+                 labels_init: list[int],
+                 tokenizer: callable = None):
+        """
+        Initializes the SensitiveDataDataset with texts, labels, and an optional tokenizer.
+
+        Args:
+            texts_init (list[str]): List of text data.
+            labels_init (list[int]): List of labels corresponding to the text data.
+            tokenizer (callable, optional): A function to tokenize the text data.
+        """
         self.texts = texts_init
         self.labels = labels_init
         self.tokenizer = tokenizer
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """
+        Returns the number of samples in the dataset.
+
+        Returns:
+            int: Number of samples.
+        """
         return len(self.texts)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple:
+        """
+        Retrieves a sample and its label from the dataset at the specified index.
+
+        Args:
+            idx (int): Index of the sample to retrieve.
+
+        Returns:
+            tuple: A tuple containing the tokenized text tensor and the label tensor.
+        """
         text = self.texts[idx]
         label = self.labels[idx]
         if self.tokenizer:
@@ -46,245 +83,275 @@ class SensitiveDataDataset(Dataset):
         return torch.tensor(text, dtype=torch.float32), torch.tensor(label, dtype=torch.long)
 
 
-# Train Model Function
-def train_model(
-        model_name,
-        epochs,
-        batch_size,
-        learning_rate,
-        save_model_path,
-        use_cuda=False,
-):
-    # Model Selection and Training
-    if model_name == 'NeuralNetwork':
-        # Vectorize the text data
-        logger.info("Vectorizing text data for Neural Network")
-        global vectorizer, X_val, X_train, labels
-        vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
-        X_train = vectorizer.fit_transform(X_train).toarray()
-        X_val = vectorizer.transform(X_val).toarray()
+def save_and_plot_model(model: nn.Module,
+                        save_model_path: str,
+                        accuracy_list: list[float],
+                        loss_list: list[float],
+                        epochs: int,
+                        model_name: str):
+    """
+    Saves the trained model and plots the accuracy and loss over epochs.
 
-        model = nn.Sequential(nn.Linear(X_train.shape[1], 128), nn.ReLU(), nn.Linear(128, 2))
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-        device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
-        model.to(device)
-
-        # DataLoader
-        train_dataset = SensitiveDataDataset(X_train, y_train)
-        val_dataset = SensitiveDataDataset(X_val, y_val)
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size)
-
-        acc = []
-        loss_plot = []
-
-        for epoch in range(epochs):
-            model.train()
-            epoch_loss, correct, total = 0, 0, 0
-            for inputs, labels in train_loader:
-                inputs, labels = inputs.to(device), labels.to(device)
-                optimizer.zero_grad()
-                outputs = model(inputs)
-                loss = criterion(outputs, labels)
-                loss.backward()
-                optimizer.step()
-                epoch_loss += loss.item()
-                _, preds = torch.max(outputs, 1)
-                correct += (preds == labels).sum().item()
-                total += labels.size(0)
-            acc.append(correct / total)
-            loss_plot.append(epoch_loss)
-            logger.info(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss:.4f}, Accuracy: {(correct / total):.4f}")
-
-        val_loss, val_correct, val_total = 0, 0, 0
-
-        with torch.no_grad():
-            model.eval()
-            for inputs, labels in val_loader:
-                inputs, labels = inputs.to(device), labels.to(device)
-                outputs = model(inputs)
-                loss = criterion(outputs, labels)
-                val_loss += loss.item()
-                _, preds = torch.max(outputs, 1)
-                val_correct += (preds == labels).sum().item()
-                val_total += labels.size(0)
-
-        val_acc = val_correct / val_total
-        logger.info(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_acc:.4f}")
-    else:
-        # Ensure text is vectorized for non-NN models
-        if vectorizer is None:
-            vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
-            X_train = vectorizer.fit_transform(X_train).toarray()
-            X_val = vectorizer.transform(X_val).toarray()
-
-        if model_name == 'LogisticRegression':
-            model = LogisticRegression(max_iter=epochs)
-        elif model_name == 'RandomForest':
-            model = RandomForestClassifier(n_estimators=100)
-        elif model_name == 'ExtraTrees':
-            model = ExtraTreesClassifier(n_estimators=100)
-        elif model_name == 'GBM':
-            model = GradientBoostingClassifier(n_estimators=100)
-        elif model_name == 'XGBoost':
-            model = xgb.XGBClassifier(eval_metric='logloss')
-        elif model_name == 'DecisionTree':
-            model = DecisionTreeClassifier()
-        elif model_name == 'NaiveBayes':
-            model = MultinomialNB()
-        elif model_name == 'LogReg':
-            model = LogisticRegression(max_iter=epochs)
-        else:
-            logger.error(f"Invalid model name: {model_name}")
-            return
-
-        # Train Traditional Model
-        model.fit(X_train, y_train)
-        preds = model.predict(X_val)
-        acc = accuracy_score(y_val, preds)
-        logger.info(f"Validation Accuracy: {acc:.4f}")
-        logger.info(classification_report(y_val, preds))
-
-        # Store loss and accuracy for each epoch
-        loss_plot = []
-        acc_plot = []
-
-        # Train Traditional Model
-        for epoch in range(epochs):
-            model.fit(X_train, y_train)  # You can also track partial fit for large datasets
-
-            preds = model.predict(X_val)
-            acc = accuracy_score(y_val, preds)
-            acc_plot.append(acc)
-
-            logger.info(f"Epoch {epoch + 1}/{epochs} - Validation Accuracy: {acc:.4f}")
-            logger.info(classification_report(y_val, preds, zero_division=0))
-
-            # Optional: Track loss (e.g., log loss for XGBoost)
-            # For models without loss, you can track the error rate or use other metrics
-            if hasattr(model, 'predict_proba'):
-                loss = -model.score(X_val, y_val)  # In case model supports probability prediction
-            else:
-                loss = 1 - acc  # Simple approximation for loss based on accuracy
-            loss_plot.append(loss)
-
-        # Plot the accuracy and loss over epochs
-        plt.figure(figsize=(12, 6))
-
-        # Accuracy Plot
-        plt.plot(list(range(1, epochs + 1)), loss_plot, label="Accuracy")
-        plt.title(f'{model_name} - Validation Accuracy Over Epochs')
-        plt.xlabel('Epoch')
-        plt.ylabel('Accuracy')
-        plt.legend()
-        plt.grid(True)
-        plt.savefig(os.path.join(os.path.dirname(save_model_path), f"Model Accuracy Over Epochs - {model_name}.png"))
-        plt.show()
-
-    # Save Model
+    Args:
+        model (nn.Module): The trained PyTorch model.
+        save_model_path (str): The path to save the model.
+        accuracy_list (list[float]): List of accuracy values over epochs.
+        loss_list (list[float]): List of loss values over epochs.
+        epochs (int): The number of epochs.
+        model_name (str): The name of the model.
+    """
+    logger.info(f"Saving {model_name} model")
     if save_model_path:
         logger.info(f"Saving model to {save_model_path}.pth")
         torch.save(model, save_model_path + ".pth")
 
-    # Visuals (NN)
-    if model_name == 'NeuralNetwork':
-        plt.plot(list(range(1, epochs + 1)), acc, label="Training Accuracy")
-        plt.title("Model Accuracy Over Epochs")
-        plt.xlabel("Epochs")
-        plt.ylabel("Accuracy")
-        plt.legend()
-        plt.savefig(os.path.join(os.path.dirname(save_model_path), f"Model Accuracy Over Epochs - {model_name}.png"))
-        plt.show()
+    logger.info(f"Plotting {model_name} model - Accuracy Over Epochs")
+    plt.figure(figsize=(12, 6))
+    plt.plot(list(range(1, epochs + 1)), accuracy_list, label="Accuracy")
+    plt.title(f'{model_name} - Validation Accuracy Over Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(os.path.join(os.path.dirname(save_model_path), f"Model Accuracy Over Epochs - {model_name}.png"))
+    plt.show()
 
-        plt.plot(list(range(1, epochs + 1)), loss_plot, label="Training Loss")
-        plt.title("Model Loss Over Epochs")
-        plt.xlabel("Epochs")
-        plt.ylabel("Loss")
-        plt.legend()
-        plt.savefig(os.path.join(os.path.dirname(save_model_path), f"Model Loss Over Epochs - {model_name}.png"))
-        plt.show()
+    logger.info(f"Plotting {model_name} model - Loss Over Epochs")
+    plt.plot(list(range(1, epochs + 1)), loss_list, label="Loss")
+    plt.title(f'{model_name} - Validation Loss Over Epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.savefig(os.path.join(os.path.dirname(save_model_path), f"Model Loss Over Epochs - {model_name}.png"))
+    plt.show()
 
 
-# Config file reading
-config = ConfigParser()
-config.read('../../config.ini')
+def select_model_from_traditional(model_name: str,
+                                  epochs: int) -> LogisticRegression | RandomForestClassifier | ExtraTreesClassifier | GradientBoostingClassifier | DecisionTreeClassifier | MultinomialNB | Any:
+    """
+    Selects and returns a machine learning model based on the provided model name.
 
-# Load Data
-logger.info(f"Loading data from {config.get('VulnScan.train Settings', 'train_data_path')}")
-texts, labels = [], []
-for filename in os.listdir(config.get('VulnScan.train Settings', 'train_data_path')):
-    with open(os.path.join(config.get('VulnScan.train Settings', 'train_data_path'), filename), 'r', encoding='utf-8') as file:
-        texts.append(file.read())
-        labels.append(1 if '-sensitive' in filename else 0)
-    logger.info(f"Loaded data from {filename}")
+    Args:
+        model_name (str): The name of the model to select.
+        epochs (int): The number of epochs for training (used for LogisticRegression).
 
-# Split Data
-X_train, X_val, y_train, y_val = train_test_split(texts, labels, test_size=0.2, random_state=42)
+    Returns:
+        A machine learning model instance corresponding to the model name.
+    """
+    logger.info(f"Selecting {model_name} model")
+    if model_name == 'LogisticRegression':
+        return LogisticRegression(max_iter=epochs)
+    elif model_name == 'RandomForest':
+        return RandomForestClassifier(n_estimators=100)
+    elif model_name == 'ExtraTrees':
+        return ExtraTreesClassifier(n_estimators=100)
+    elif model_name == 'GBM':
+        return GradientBoostingClassifier(n_estimators=100)
+    elif model_name == 'XGBoost':
+        return xgb.XGBClassifier(eval_metric='logloss')
+    elif model_name == 'DecisionTree':
+        return DecisionTreeClassifier()
+    elif model_name == 'NaiveBayes':
+        return MultinomialNB()
+    elif model_name == 'LogReg':
+        return LogisticRegression(max_iter=epochs)
+    else:
+        logger.error(f"Invalid model name: {model_name}")
+        raise ValueError(f"Invalid model name: {model_name}")
 
-# Vectorizer Setup
-vectorizer = None
-if config.get('VulnScan.train Settings', 'model_name') in ['Tfidf_LogReg', 'CountVectorizer_LogReg']:
-    vectorizer_type = 'Tfidf' if 'Tfidf' in config.get('VulnScan.train Settings', 'model_name') else 'Count'
-    logger.info(f"Using Vectorizer {vectorizer_type}")
-    vectorizer = TfidfVectorizer(max_features=10000,
-                                 ngram_range=(1, 2)) if vectorizer_type == 'Tfidf' else CountVectorizer(
-        max_features=10000, ngram_range=(1, 2))
+
+def train_traditional_model(model_name: str,
+                            epochs: int,
+                            save_model_path: str):
+    """
+    Trains a traditional machine learning model.
+
+    Args:
+        model_name (str): The name of the model to train.
+        epochs (int): The number of epochs for training.
+        save_model_path (str): The path to save the trained model.
+    """
+    global vectorizer, X_val, X_train
+    logger.info(f"Using Vectorizer TfidfVectorizer for {model_name} model")
+    vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
     X_train = vectorizer.fit_transform(X_train).toarray()
     X_val = vectorizer.transform(X_val).toarray()
 
+    logger.info(f"Training {model_name} model")
+    model = select_model_from_traditional(model_name, epochs)
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_val)
+    accuracy_list = accuracy_score(y_val, predictions)
+    logger.info(f"Validation Accuracy: {accuracy_list:.4f}")
+    logger.info(classification_report(y_val, predictions))
+
+    loss_list, acc_plot = [], []
+
+    logger.info(f"Training {model_name} model for {epochs} epochs")
+    for epoch in range(epochs):
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_val)
+        accuracy_list = accuracy_score(y_val, predictions)
+        acc_plot.append(accuracy_list)
+        logger.info(f"Epoch {epoch + 1}/{epochs} - Validation Accuracy: {accuracy_list:.4f}")
+        logger.info(classification_report(y_val, predictions, zero_division=0))
+
+        if hasattr(model, 'predict_proba'):
+            loss = model.score(X_val, y_val)
+            logger.debug(f"Epoch {epoch + 1}: Model loss: {loss}")
+        else:
+            loss = 1 - accuracy_list
+            logger.debug(f"Epoch {epoch + 1}: Model loss: {loss}")
+        loss_list.append(loss)
+
+    save_and_plot_model(model, save_model_path, acc_plot, loss_list, epochs, model_name)
+
+
+def train_neural_network(epochs: int,
+                         batch_size: int,
+                         learning_rate: float,
+                         save_model_path: str,
+                         use_cuda: bool = False):
+    """
+    Trains a neural network model.
+
+    Args:
+        epochs (int): The number of epochs to train the model.
+        batch_size (int): The size of the batches for training.
+        learning_rate (float): The learning rate for the optimizer.
+        save_model_path (str): The path to save the trained model.
+        use_cuda (bool, optional): Whether to use CUDA for training. Defaults to False.
+    """
+    logger.info("Vectorizing text data for Neural Network")
+    global vectorizer, X_val, X_train, labels
+    vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
+    X_train = vectorizer.fit_transform(X_train).toarray()
+    X_val = vectorizer.transform(X_val).toarray()
+
+    logger.info("Training Neural Network model")
+    model = nn.Sequential(nn.Linear(X_train.shape[1], 128), nn.ReLU(), nn.Linear(128, 2))
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
+    logger.info(f"Training on hardware: {device}")
+    model.to(device)
+
+    logger.info("Creating DataLoaders for Neural Network")
+    train_dataset = SensitiveDataDataset(X_train, y_train)
+    val_dataset = SensitiveDataDataset(X_val, y_val)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+
+    accuracy_list = []
+    loss_list = []
+
+    for epoch in range(epochs):
+        model.train()
+        epoch_loss, correct, total = 0, 0, 0
+        for inputs, labels in train_loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+            _, predictions = torch.max(outputs, 1)
+            correct += (predictions == labels).sum().item()
+            total += labels.size(0)
+            logger.debug(f"Epoch {epoch + 1}: Correct: {correct}, Total: {total}")
+        accuracy_list.append(correct / total)
+        loss_list.append(epoch_loss)
+        logger.info(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss:.4f}, Accuracy: {(correct / total):.4f}")
+
+    logger.info("Validating Neural Network model")
+    val_loss, val_correct, val_total = 0, 0, 0
+    with torch.no_grad():
+        model.eval()
+        for inputs, labels in val_loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            val_loss += loss.item()
+            _, predictions = torch.max(outputs, 1)
+            val_correct += (predictions == labels).sum().item()
+            val_total += labels.size(0)
+            logger.debug(f"Validation: Correct: {val_correct}, Total: {val_total}")
+
+    val_acc = val_correct / val_total
+    logger.info(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_acc:.4f}")
+
+    save_and_plot_model(model, save_model_path, accuracy_list, loss_list, epochs, 'NeuralNetwork')
+
+
+def train_model(
+        model_name: str,
+        epochs: int,
+        batch_size: int,
+        learning_rate: float,
+        save_model_path: str,
+        use_cuda: bool = False,
+):
+    """
+    Trains a machine learning model based on the specified parameters.
+
+    Args:
+        model_name (str): The name of the model to train.
+        epochs (int): The number of epochs to train the model.
+        batch_size (int): The size of the batches for training.
+        learning_rate (float): The learning rate for the optimizer.
+        save_model_path (str): The path to save the trained model.
+        use_cuda (bool, optional): Whether to use CUDA for training. Defaults to False.
+    """
+    if model_name == 'NeuralNetwork':
+        train_neural_network(epochs, batch_size, learning_rate, save_model_path, use_cuda)
+    else:
+        train_traditional_model(model_name, epochs, save_model_path)
+
+
+# Config file reading and setting constants
+logger.info("Reading config file")
+config = ConfigParser()
+config.read('../../config.ini')
+MODEL_NAME = config.get('VulnScan.train Settings', 'model_name')
+TRAINING_PATH = config.get('VulnScan.train Settings', 'train_data_path')
+EPOCHS = int(config.get('VulnScan.train Settings', 'epochs'))
+BATCH_SIZE = int(config.get('VulnScan.train Settings', 'batch_size'))
+LEARN_RATE = float(config.get('VulnScan.train Settings', 'learning_rate'))
+CUDA = config.getboolean('VulnScan.train Settings', 'use_cuda')
+SAVE_PATH = config.get('VulnScan.train Settings', 'save_model_path')
+
+# Load Data
+logger.info(f"Loading data from {TRAINING_PATH}")
+texts, labels = [], []
+for filename in os.listdir(TRAINING_PATH):
+    with open(os.path.join(config.get('VulnScan.train Settings', 'train_data_path'), filename), 'r',
+              encoding='utf-8') as file:
+        texts.append(file.read())
+        labels.append(1 if '-sensitive' in filename else 0)
+    logger.debug(f"Loaded data from {filename} with label {labels[-1]}")
+
+# Split Data
+logger.info("Splitting data into training and validation sets")
+X_train, X_val, y_train, y_val = train_test_split(texts,
+                                                  labels,
+                                                  test_size=0.2,
+                                                  random_state=42)
+
 # Train Model
-if config.getboolean('VulnScan.train Settings', 'use_1_model_only?'):
-    try:
-        train_model(model_name=config.get('VulnScan.train Settings', 'model_name'),
-                    epochs=int(config.get('VulnScan.train Settings', 'epochs')),
-                    batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
-                    learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
-                    save_model_path=config.get('VulnScan.train Settings', 'save_model_path'),
-                    use_cuda=config.getboolean('VulnScan.train Settings', 'use_cuda'))
-    except FileNotFoundError as e:
-        logger.error(f"File Not Found Error in training model: {e}")
-        exit(1)
-    except AttributeError as e:
-        logger.error(f"Attribute Error in training model: {e}")
-        exit(1)
-    except Exception as e:
-        logger.error(f"Error in training model: {e}")
-        exit(1)
-else:
-    for model_main in ["NeuralNetwork", "LogReg",
-                       "RandomForest", "ExtraTrees", "GBM",
-                       "XGBoost", "DecisionTree", "NaiveBayes"]:
-
-        code_names = {
-            "DecisionTree": "dt",
-            "ExtraTrees": "et",
-            "GBM": "g",
-            "NeuralNetwork": "n",
-            "NaiveBayes": "nb",
-            "RandomForest": "r",
-            "LogReg": "lr",
-            "XGBoost": "x"
-        }
-
-        if model_main in code_names.keys():
-            model_path_save = f"{config.get('VulnScan.train Settings', 'save_model_path')} 3{code_names[model_main]}1"
-
-        logger.info(f"Save path: {model_path_save}")
-
-        try:
-            train_model(model_name=model_main,
-                        epochs=int(config.get('VulnScan.train Settings', 'epochs')),
-                        batch_size=int(config.get('VulnScan.train Settings', 'batch_size')),
-                        learning_rate=float(config.get('VulnScan.train Settings', 'learning_rate')),
-                        save_model_path=model_path_save,
-                        use_cuda=config.getboolean('VulnScan.train Settings', 'use_cuda'))
-        except FileNotFoundError as e:
-            logger.error(f"File Not Found Error in training model {model_main}: {e}")
-            exit(1)
-        except AttributeError as e:
-            logger.error(f"Attribute Error in training model {model_main}: {e}")
-            exit(1)
-        except Exception as e:
-            logger.error(f"Error in training model {model_main}: {e}")
-            exit(1)
+try:
+    train_model(model_name=MODEL_NAME,
+                epochs=EPOCHS,
+                batch_size=BATCH_SIZE,
+                learning_rate=LEARN_RATE,
+                save_model_path=SAVE_PATH,
+                use_cuda=CUDA)
+except FileNotFoundError as e:
+    logger.error(f"File Not Found Error in training model: {e}")
+    exit(1)
+except AttributeError as e:
+    logger.error(f"Attribute Error in training model: {e}")
+    exit(1)
+except Exception as e:
+    logger.error(f"Error in training model: {e}")
+    exit(1)
