@@ -17,3 +17,4 @@ networkx~=3.2.1
 scapy~=2.5.0
 safetensors~=0.4.2
 tqdm~=4.66.6
+configobj~=5.0.9

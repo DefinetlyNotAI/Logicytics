@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import configparser
+import configobj
 import subprocess
 
 from logicytics import Log, DEBUG, Get, FileManagement, CURRENT_FILES, VERSION
@@ -20,8 +20,7 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
         None
     """
     try:
-        config = configparser.ConfigParser(allow_no_value=True)
-        config.read(filename)
+        config = configobj.ConfigObj(filename, encoding='utf-8', write_empty_values=True)
         if key == "files":
             config["System Settings"][key] = ", ".join(new_data)
         elif key == "version":
@@ -29,12 +28,10 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
         else:
             log_dev.error(f"Invalid key: {key}")
             return
-        with open(filename, "w", encoding="utf-8") as configfile:
-            # noinspection PyTypeChecker
-            config.write(configfile, space_around_delimiters=False)
+        config.write()
     except FileNotFoundError:
         log_dev.error(f"File not found: {filename}")
-    except configparser.Error as e:
+    except configobj.ConfigObjError as e:
         log_dev.error(f"Error parsing INI file: {filename}, {e}")
     except Exception as e:
         log_dev.error(f"An error occurred: {e}")
