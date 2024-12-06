@@ -1,3 +1,5 @@
+from configparser import ConfigParser
+
 import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 
@@ -20,6 +22,8 @@ def load_data(data_paths):
 
 
 def choose_vectorizer(vectorizer_types):
+    print("Vectorizer Type: ", vectorizer_types)
+    print("Vectorizing Data...")
     if vectorizer_types == 'tfidf':
         return TfidfVectorizer(max_features=10000)
     elif vectorizer_types == 'count':
@@ -37,8 +41,12 @@ def main(data_paths, vectorizer_types, output_paths):
 
 
 if __name__ == "__main__":
-    # TODO Turn into config.ini
-    data_path = r"C:\Users\Hp\Desktop\Model Tests\Model Data\GeneratedData"
-    vectorizer_type = "tfidf"
-    output_path = r"C:\Users\Hp\Desktop\Model Tests\Model Sense - Vectorizer"
+    print("Reading config file")
+    config = ConfigParser()
+    config.read('../../config.ini')
+    data_path = config.get('VulnScan.vectorizer Settings', 'data_path')
+    vectorizer_type = config.get('VulnScan.vectorizer Settings', 'vectorizer_type')
+    output_path = config.get('VulnScan.vectorizer Settings', 'output_path')
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
     main(data_path, vectorizer_type, output_path)

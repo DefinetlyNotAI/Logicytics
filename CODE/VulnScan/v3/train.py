@@ -4,6 +4,7 @@ import os
 from configparser import ConfigParser
 from typing import Any
 
+import joblib
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
@@ -81,6 +82,23 @@ class SensitiveDataDataset(Dataset):
         if self.tokenizer:
             text = self.tokenizer(text)
         return torch.tensor(text, dtype=torch.float32), torch.tensor(label, dtype=torch.long)
+
+
+def vectorize_text_data(X_trains: list[float], X_vals: list[float], save_model_path: str):
+    """
+    Vectorizes the text data using TfidfVectorizer and saves the vectorizer model.
+
+    Args:
+        X_trains (list[float]): List of training text data.
+        X_vals (list[float]): List of validation text data.
+        save_model_path (str): Path to save the vectorizer model.
+
+    Returns:
+        tuple: Transformed training and validation data as arrays.
+    """
+    vectorizers = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
+    joblib.dump(vectorizers, os.path.join(os.path.dirname(save_model_path), 'Vectorizer.pkl'))
+    return vectorizers.fit_transform(X_trains).toarray(), vectorizers.transform(X_vals).toarray()
 
 
 def save_and_plot_model(model: nn.Module,
@@ -173,9 +191,7 @@ def train_traditional_model(model_name: str,
     """
     global vectorizer, X_val, X_train
     logger.info(f"Using Vectorizer TfidfVectorizer for {model_name} model")
-    vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
-    X_train = vectorizer.fit_transform(X_train).toarray()
-    X_val = vectorizer.transform(X_val).toarray()
+    X_train, X_val = vectorize_text_data(X_train, X_val, save_model_path)
 
     logger.info(f"Training {model_name} model")
     model = select_model_from_traditional(model_name, epochs)
@@ -222,11 +238,9 @@ def train_neural_network(epochs: int,
         save_model_path (str): The path to save the trained model.
         use_cuda (bool, optional): Whether to use CUDA for training. Defaults to False.
     """
-    logger.info("Vectorizing text data for Neural Network")
     global vectorizer, X_val, X_train, labels
-    vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
-    X_train = vectorizer.fit_transform(X_train).toarray()
-    X_val = vectorizer.transform(X_val).toarray()
+    logger.info("Vectorizing text data for Neural Network")
+    X_train, X_val = vectorize_text_data(X_train, X_val, save_model_path)
 
     logger.info("Training Neural Network model")
     model = nn.Sequential(nn.Linear(X_train.shape[1], 128), nn.ReLU(), nn.Linear(128, 2))
