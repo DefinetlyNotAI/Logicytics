@@ -1,4 +1,6 @@
-from logicytics import *
+import subprocess
+
+from logicytics import Log, DEBUG
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
