@@ -107,7 +107,7 @@ class FileManagement:
             Returns:
                 list: A list of file and directory names to be zipped.
             """
-            excluded_extensions = (".py", ".exe", ".bat", ".ps1")
+            excluded_extensions = (".py", ".exe", ".bat", ".ps1", ".pkl", ".pth")
             excluded_prefixes = ("config.ini", "SysInternal_Suite", "__pycache__", "logicytics", "VulnScan")
 
             return [
