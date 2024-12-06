@@ -7,7 +7,6 @@
 
 | Task                                                                                                                            | Version | Might or Will be done? |
 |---------------------------------------------------------------------------------------------------------------------------------|---------|------------------------|
-| Integrate machine learning algorithms to detect anomalies and potential security threats automatically and log them.            | v3.0.0  | ❌                      |
 | Add a tool to capture and analyse memory dumps, which can help in forensic investigations.                                      | v3.1.0  | ❌                      |
 | Add a tool to capture and analyse network traffic, which can help in forensic investigations.                                   | v3.1.0  | ❌                      |
 | Remove EXTRA dir, and zip features with custom proper features from Logicytics, as well as remove EXTRA wrapper                 | v3.2.0  | ❌                      |
