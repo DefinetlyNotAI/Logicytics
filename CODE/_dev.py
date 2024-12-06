@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from logicytics import *
+import configparser
+import subprocess
+
+from logicytics import Log, DEBUG, Get, FileManagement, CURRENT_FILES, VERSION
 
 if __name__ == "__main__":
     log_dev = Log({"log_level": DEBUG})

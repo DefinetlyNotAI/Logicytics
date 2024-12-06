@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
-from adodbapi import InterfaceError
 from scapy.all import sniff, conf
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 from configparser import ConfigParser
-from logicytics import *
+from logicytics import Log, DEBUG
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
@@ -38,13 +39,13 @@ def log_packet(packet: IP):
             packet_data.append(packet_info)
             print_packet_summary(packet_info)
             add_to_graph(packet_info)
-    except Exception as e:
-        log.error(f"Error processing packet: {e}")
+    except Exception as err:
+        log.error(f"Error processing packet: {err}")
 
 
 # Function to determine the protocol name
 @log.function
-def get_protocol_name(packet: IP):
+def get_protocol_name(packet: IP) -> str:
     """Returns the name of the protocol."""
     log.debug(f"Checking protocol for packet: {packet.summary()}")
     if packet.haslayer(TCP):
@@ -63,7 +64,7 @@ def get_protocol_name(packet: IP):
 
 # Function to extract port information from a packet
 @log.function
-def get_port_info(packet: IP, port_type: str):
+def get_port_info(packet: IP, port_type: str) -> int | None:
     """Extracts the source or destination port from a packet."""
     log.debug(f"Port type: {port_type}")
     if packet.haslayer(TCP):
@@ -101,7 +102,7 @@ def start_sniffing(interface: str, packet_count: int = 10, timeout: int = 10):
     packet_counter = 0
 
     # Define a custom packet callback to count packets
-    def packet_callback(packet):
+    def packet_callback(packet: IP) -> bool:
         log.debug(f"Received packet: {packet.summary()}")
         nonlocal packet_counter  # Reference the outer packet_counter
         if packet_counter >= packet_count:
@@ -175,14 +176,13 @@ def main():
 
     try:
         start_sniffing(interface, packet_count, timeout)
-    except InterfaceError as e:
-        if interface != "WiFi" and interface != "Wi-Fi":
-            log.error(f"Invalid interface '{interface}'. Please check the configuration: {e}")
-        if interface == "WiFi":
-            interface = "Wi-Fi"
-        elif interface == "Wi-Fi":
-            interface = "WiFi"
-        start_sniffing(interface, packet_count, timeout)
+    except Exception as err:
+        log.error(f"Invalid interface '{interface}'. Please check the configuration: {err}")
+        if interface == "WiFi" or interface == "Wi-Fi":
+            log.warning("Attempting to correct the interface name...")
+            interface = "Wi-Fi" if interface == "WiFi" else "WiFi"
+            log.info(f"Interface name corrected to '{interface}'.")
+            start_sniffing(interface, packet_count, timeout)
 
 
 # Entry point of the script

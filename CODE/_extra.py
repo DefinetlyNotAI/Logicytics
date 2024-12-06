@@ -1,4 +1,7 @@
-from logicytics import *
+import os
+import subprocess
+
+from logicytics import Log, DEBUG
 
 """
 Files must be executed, and so can't ask or await user input.
