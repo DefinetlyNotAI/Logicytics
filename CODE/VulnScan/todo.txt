@@ -1,0 +1,46 @@
+Make an explanation to naming:
+
+Names are: Model_{Type of model}_{Version}
+    {Type of Model}: Codename to the model's training data type, Sense is the codename for sensitive data by itself it means 50k files of 50KB each, SenseNano is a test for only 5-10 files of 5KB to check if code doesn't produce errors, SenseMacro is a 1 million file each of 10KB this is huge, but hard to train so corners were cut, SenseMini is 10K files each 10-200KB this is also smaller but makes the job
+    {Version}: Follows #c# format, # is a number, c is a char
+        First #: Version Number - Increment if its a upgrade of the code to train the model
+        c: Model Name - SEE DOWN
+        Second #: Repeat count of the model, if its 2 for example, it means the code wasn't changed that much, and was repeated for better consistency with the same model
+        If it has a -F it means its a failed model
+
+Life cycle is: (v1)
+- Generate data
+- Index paths
+- Read paths
+- Train models and act on epochs
+- Produce data, graphs, and pkl files
+
+Life cycle is: (v2)
+- Load Data
+- Split Data
+- Vectorize Text
+- Initialize Model
+- Train Model
+- Evaluate Model
+- Save Model
+- Track Progress
+
+Life cycle is: (v3)
+TODO
+NN seems to be the best choice for this task
+
+(Archive v2, for v1 say it is removed due to its small and weak code)
+
+-----------------------------------------------------------------------------------
+
+b = bert
+dt = DecisionTree
+et = ExtraTrees
+g = GBM
+l = lstm
+n = NeuralNetwork
+nb = NaiveBayes
+r = RandomForestClassifier
+lr = LogReg
+v = SupportVectorMachine
+x = xgboost

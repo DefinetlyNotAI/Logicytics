@@ -16,3 +16,4 @@ pandas~=2.2.2
 networkx~=3.2.1
 scapy~=2.5.0
 safetensors~=0.4.2
+tqdm~=4.66.6
