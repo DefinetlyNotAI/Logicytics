@@ -26,10 +26,19 @@ Life cycle is: (v2)
 - Track Progress
 
 Life cycle is: (v3)
-TODO
+- Read Config
+- Load Data
+- Split Data
+- Vectorize Text
+- Initialize Model
+- Train Model
+- Validate Model
+- Save Model
+- Track Progress
+
 NN seems to be the best choice for this task
 
-(Archive v2, for v1 say it is removed due to its small and weak code)
+(Deprecate v2, for v1 say it is removed due to its small and weak code)
 
 -----------------------------------------------------------------------------------
 
@@ -44,3 +53,5 @@ r = RandomForestClassifier
 lr = LogReg
 v = SupportVectorMachine
 x = xgboost
+
+-----------------------------------------------------------------------------------
