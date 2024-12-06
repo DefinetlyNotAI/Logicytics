@@ -19,6 +19,8 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.tree import DecisionTreeClassifier
 from torch.utils.data import Dataset, DataLoader
 
+# NN seems to be the best choice for this task
+
 # Set up logging
 from logicytics import Log, DEBUG
 
@@ -84,13 +86,13 @@ class SensitiveDataDataset(Dataset):
         return torch.tensor(text, dtype=torch.float32), torch.tensor(label, dtype=torch.long)
 
 
-def vectorize_text_data(X_trains: list[float], X_vals: list[float], save_model_path: str):
+def vectorize_text_data(X_trains: list[str], X_vals: list[str], save_model_path: str):
     """
     Vectorizes the text data using TfidfVectorizer and saves the vectorizer model.
 
     Args:
-        X_trains (list[float]): List of training text data.
-        X_vals (list[float]): List of validation text data.
+        X_trains (list[str]): List of training text data.
+        X_vals (list[str]): List of validation text data.
         save_model_path (str): Path to save the vectorizer model.
 
     Returns:
@@ -191,6 +193,11 @@ def train_traditional_model(model_name: str,
     """
     global vectorizer, X_val, X_train
     logger.info(f"Using Vectorizer TfidfVectorizer for {model_name} model")
+    # Ensure X_train and X_val are lists of strings
+    X_train = [str(text) for text in X_train]
+    X_val = [str(text) for text in X_val]
+
+    # Call the vectorize_text_data function
     X_train, X_val = vectorize_text_data(X_train, X_val, save_model_path)
 
     logger.info(f"Training {model_name} model")
@@ -240,12 +247,18 @@ def train_neural_network(epochs: int,
     """
     global vectorizer, X_val, X_train, labels
     logger.info("Vectorizing text data for Neural Network")
+    # Ensure X_train and X_val are lists of strings
+    X_train = [str(text) for text in X_train]
+    X_val = [str(text) for text in X_val]
+
+    # Call the vectorize_text_data function
     X_train, X_val = vectorize_text_data(X_train, X_val, save_model_path)
 
     logger.info("Training Neural Network model")
     model = nn.Sequential(nn.Linear(X_train.shape[1], 128), nn.ReLU(), nn.Linear(128, 2))
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=250, gamma=0.01)
     device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
     logger.info(f"Training on hardware: {device}")
     model.to(device)
@@ -274,8 +287,13 @@ def train_neural_network(epochs: int,
             correct += (predictions == labels).sum().item()
             total += labels.size(0)
             logger.debug(f"Epoch {epoch + 1}: Correct: {correct}, Total: {total}")
+
+        scheduler.step()
+
         accuracy_list.append(correct / total)
         loss_list.append(epoch_loss)
+        current_lr = scheduler.get_last_lr()[0]
+        logger.info(f"Epoch {epoch + 1}/{epochs}, Learning Rate: {current_lr}")
         logger.info(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss:.4f}, Accuracy: {(correct / total):.4f}")
 
     logger.info("Validating Neural Network model")
