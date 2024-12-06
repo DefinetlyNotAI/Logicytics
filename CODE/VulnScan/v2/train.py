@@ -171,6 +171,7 @@ def train_lstm(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
     vectorizer = TfidfVectorizer(max_features=MAX_FEATURES)
     X_train_vec = vectorizer.fit_transform(X_train).toarray()
     X_test_vec = vectorizer.transform(X_test).toarray()
+    joblib.dump(vectorizer, os.path.join(SAVE_DIR, "vectorizer.pkl"))
 
     logging.info("Preparing LSTM model...")
     vocab_size = X_train_vec.shape[1]
@@ -242,6 +243,7 @@ def train_nn_svm(MODEL: str, EPOCHS: int, SAVE_DIR: str,
     vectorizer = TfidfVectorizer(max_features=MAX_FEATURES)
     X_train = vectorizer.fit_transform(X_train).toarray()
     X_test = vectorizer.transform(X_test).toarray()
+    joblib.dump(vectorizer, os.path.join(SAVE_DIR, "vectorizer.pkl"))
 
     # Initialize model
     logging.info("Initializing model...")
@@ -353,6 +355,7 @@ def train_rfc(SAVE_DIR: str, EPOCHS: int, TEST_SIZE: float | int,
     # Vectorize text data
     vectorizer = TfidfVectorizer(max_features=10000)
     X = vectorizer.fit_transform(data).toarray()
+    joblib.dump(vectorizer, os.path.join(SAVE_DIR, "vectorizer.pkl"))
     X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
     # Initialize model
@@ -391,7 +394,7 @@ def train_rfc(SAVE_DIR: str, EPOCHS: int, TEST_SIZE: float | int,
 
 
 if __name__ == "__main__":
-    DATA = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\Artificial Generated Data 50k files with 50KB")
+    DATA = load_data(r"C:\Users\Hp\Desktop\Model Tests\Model Data\GeneratedData")
 
     train_rfc(SAVE_DIR=r"PATH", EPOCHS=30, TEST_SIZE=0.2,
               N_ESTIMATORS=100, RANDOM_STATE=42)
@@ -409,6 +412,7 @@ if __name__ == "__main__":
     train_model_blx(MODEL_TYPE="lstm", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2l1", EPOCHS=10,
                     BATCH_SIZE=16, LEARNING_RATE=5e-5, MAX_FEATURES=7500, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42)
 
+    # Note: Download the BERT model from https://huggingface.co/bert-base-uncased
     train_model_blx(MODEL_TYPE="bert", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2b1", EPOCHS=5,
                     BATCH_SIZE=8, LEARNING_RATE=5e-5, MAX_FEATURES=5000, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42,
                     MODEL_PATH_BERT="../bert-base-uncased-model")
