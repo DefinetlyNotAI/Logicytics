@@ -6,11 +6,13 @@ This section outlines the versions of our project that are currently supported w
 
 | Version | Supported |
 |---------|-----------|
-| 2.4.x   | ✅         |
-| 2.3.x   | ✅         |
-| 2.2.x   | ❌         |
-| 2.1.x   | ❌         |
-| 2.0.x   | ❌         |
+| 3.0.x   | ✅         |
+| 2.5.x   | ⚠️        |
+| 2.4.x   | ⚠️        |
+| 2.3.x   | ✖️        |
+| 2.2.x   | ✖️        |
+| 2.1.x   | ✖️        |
+| 2.0.x   | ✖️        |
 | 1.6.x   | ❌         |
 | 1.5.x   | ❌         |
 | 1.4.x   | ❌         |
@@ -18,6 +20,16 @@ This section outlines the versions of our project that are currently supported w
 | 1.2.x   | ❌         |
 | 1.1.x   | ❌         |
 | 1.0.x   | ❌         |
+
+
+### Key:
+
+| Key | Desc                                                |
+|-----|-----------------------------------------------------|
+| ✅   | Supported for security updates                      |
+| ⚠️  | Supported, but will leave support next major update |
+| ✖️  | Only for major security issues (CVSS 8.0+)          |
+| ❌   | No longer supported for security updates            |
 
 ## Reporting a Vulnerability
 
