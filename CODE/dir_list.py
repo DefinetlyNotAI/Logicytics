@@ -1,6 +1,7 @@
+import os
 from concurrent.futures import ThreadPoolExecutor
 
-from logicytics import *
+from logicytics import Log, DEBUG, Execute
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
