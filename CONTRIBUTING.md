@@ -42,8 +42,7 @@ If you don't get a response immediately,
 it doesn't mean that we are ignoring you or that we don't care about your issue or PR.
 We will get back to you as soon as we can.
 
-If you decide to pull a PR or fork the project, keep in mind that you should only add/edit the scripts you need to,
-leave core files alone.
+If you decide to pull a PR or fork the project, keep in mind that you should only add/edit the scripts you need to, leave core files alone.
 
 ## Guidelines for Modifications 📃
 
