@@ -199,26 +199,26 @@ Here are some of the data points that Logicytics extracts:
 > [!TIP]
 > You can check out future plans [here](PLANS.md), you can contribute these plans if you have no idea's on what to contribute!
 
-| File Name                | About                                                                                                                  | Important Note           |
-|--------------------------|------------------------------------------------------------------------------------------------------------------------|--------------------------|
-| browser_miner.ps1        | Mines all data related to browsers                                                                                     | Would love to be updated |
-| cmd_commands.py          | Gets data from driverquery, sysinfo, gpresult and more                                                                 |                          |
-| log_miner.py             | Gets all logs from the Windows device                                                                                  |                          |
-| media_backup.py          | Gets all media of the device in a neat folder                                                                          | Would love to be updated |
-| netadapter.ps1           | Runs Get-NetAdapter Command with many flags                                                                            |                          |
-| property_scraper.ps1     | Gets all the windows properties                                                                                        |                          |
-| registry.py              | Backups the registry                                                                                                   |                          |
-| sensitive_data_miner.py  | Copies all files that can be considered sensitive in a neat folder, , very slow and clunky - useful for depth scanning |                          |
-| ssh_miner.py             | Gets as much ssh private data as possible                                                                              |                          |
-| sys_internal.py          | Attempts to use the Sys_Internal Suite from microsoft                                                                  |                          |
-| tasklist.py              | Gets all running tasks, PID and info/data                                                                              |                          |
-| tree.ps1                 | Runs and logs the tree.ps1 command, very slow and clunky - useful for depth scanning                                   |                          |
-| window_feature_miner.ps1 | Logs all the windows features enabled                                                                                  |                          |
-| wmic.py                  | Logs and runs many wmic commands to gain sensitive data and information                                                |                          |
-| wifi_stealer.py          | Gets the SSID and Password of all saved Wi-Fi                                                                          |                          |
-| dir_list.py              | Produces a txt on every single file on the device, very slow and clunky - useful for depth scanning                    |                          |
-| event_logs.py            | Produces a multiple txt files in a folder on many event logs (Security, Applications and System)                       |                          |
-| anomaly_detector.py      | CHANGEME TODO                                                                                                          |                          |
+| File Name                | About                                                                                                                  | Important Note                  |
+|--------------------------|------------------------------------------------------------------------------------------------------------------------|---------------------------------|
+| browser_miner.ps1        | Mines all data related to browsers                                                                                     | Would love to be updated        |
+| cmd_commands.py          | Gets data from driverquery, sysinfo, gpresult and more                                                                 |                                 |
+| log_miner.py             | Gets all logs from the Windows device                                                                                  |                                 |
+| media_backup.py          | Gets all media of the device in a neat folder                                                                          | Would love to be updated        |
+| netadapter.ps1           | Runs Get-NetAdapter Command with many flags                                                                            |                                 |
+| property_scraper.ps1     | Gets all the windows properties                                                                                        |                                 |
+| registry.py              | Backups the registry                                                                                                   |                                 |
+| sensitive_data_miner.py  | Copies all files that can be considered sensitive in a neat folder, , very slow and clunky - useful for depth scanning |                                 |
+| ssh_miner.py             | Gets as much ssh private data as possible                                                                              |                                 |
+| sys_internal.py          | Attempts to use the Sys_Internal Suite from microsoft                                                                  |                                 |
+| tasklist.py              | Gets all running tasks, PID and info/data                                                                              |                                 |
+| tree.ps1                 | Runs and logs the tree.ps1 command, very slow and clunky - useful for depth scanning                                   |                                 |
+| window_feature_miner.ps1 | Logs all the windows features enabled                                                                                  |                                 |
+| wmic.py                  | Logs and runs many wmic commands to gain sensitive data and information                                                |                                 |
+| wifi_stealer.py          | Gets the SSID and Password of all saved Wi-Fi                                                                          |                                 |
+| dir_list.py              | Produces a txt on every single file on the device, very slow and clunky - useful for depth scanning                    |                                 |
+| event_logs.py            | Produces a multiple txt files in a folder on many event logs (Security, Applications and System)                       |                                 |
+| vulnscan.py              | Uses AI/ML to detect sensitive files, and log their paths                                                              | Is pretty new, and may not work |
 
 This is not an exhaustive list, 
 but it should give you a good idea of what data Logicytics is capable of extracting.
