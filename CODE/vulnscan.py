@@ -7,7 +7,8 @@ import warnings
 
 import joblib
 import torch
-from safetensors import safe_open as safetensors_load, safe_open
+from safetensors import safe_open
+from sklearn.feature_extraction.text import TfidfVectorizer
 from tqdm import tqdm
 
 # Set up logging
@@ -37,7 +38,7 @@ def load_model(model_path_to_load: str) -> safe_open | torch.nn.Module:
     if model_path_to_load.endswith('.pkl'):
         return joblib.load(model_path_to_load)
     elif model_path_to_load.endswith('.safetensors'):
-        return safetensors_load(model_path_to_load, framework='torch')
+        return safe_open(model_path_to_load, framework='torch')
     elif model_path_to_load.endswith('.pth'):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=FutureWarning)
@@ -46,7 +47,7 @@ def load_model(model_path_to_load: str) -> safe_open | torch.nn.Module:
         raise ValueError("Unsupported model file format. Use .pkl, .safetensors, or .pth")
 
 
-def is_sensitive(model: torch.nn.Module, vectorizer, file_content: str) -> tuple[bool, float]:
+def is_sensitive(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_content: str) -> tuple[bool, float]:
     """
     Determine if the file content is sensitive using the provided model and vectorizer.
 
@@ -75,7 +76,7 @@ def is_sensitive(model: torch.nn.Module, vectorizer, file_content: str) -> tuple
         return model.predict(features)[0] == 1, probability
 
 
-def scan_file(model: torch.nn.Module, vectorizer, file_path: str) -> tuple[bool, float]:
+def scan_file(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_path: str) -> tuple[bool, float]:
     """
     Scan a single file to determine if it contains sensitive content.
 
@@ -164,6 +165,8 @@ def scan_path(model_path: str, scan_paths: str, vectorizer_path: str):
         """
     main(model_path, scan_paths, vectorizer_path)
 
+
+log.warning("Starting scan - This may take hours!!")
 
 threads = []
 paths = [

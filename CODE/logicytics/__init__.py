@@ -1,9 +1,9 @@
-from logicytics.Execute import *
-from logicytics.Get import *
-from logicytics.Logger import *
-from logicytics.Checks import *
-from logicytics.FileManagement import *
-from logicytics.Flag import *
+from logicytics.Execute import Execute
+from logicytics.Get import Get
+from logicytics.Logger import Log
+from logicytics.Checks import Check
+from logicytics.FileManagement import FileManagement
+from logicytics.Flag import Flag
 import functools
 
 

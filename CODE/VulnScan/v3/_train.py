@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from configparser import ConfigParser
-from typing import Any
+from typing import Any, Optional
 
 import joblib
 import matplotlib.pyplot as plt
@@ -47,7 +47,7 @@ class SensitiveDataDataset(Dataset):
     def __init__(self,
                  texts_init: list[str],
                  labels_init: list[int],
-                 tokenizer: callable = None):
+                 tokenizer: Optional[callable] = None):
         """
         Initializes the SensitiveDataDataset with texts, labels, and an optional tokenizer.
 
@@ -161,24 +161,22 @@ def select_model_from_traditional(model_name: str,
     logger.info(f"Selecting {model_name} model")
     if model_name == 'LogisticRegression':
         return LogisticRegression(max_iter=epochs)
-    elif model_name == 'RandomForest':
+    if model_name == 'RandomForest':
         return RandomForestClassifier(n_estimators=100)
-    elif model_name == 'ExtraTrees':
+    if model_name == 'ExtraTrees':
         return ExtraTreesClassifier(n_estimators=100)
-    elif model_name == 'GBM':
+    if model_name == 'GBM':
         return GradientBoostingClassifier(n_estimators=100)
-    elif model_name == 'XGBoost':
+    if model_name == 'XGBoost':
         return xgb.XGBClassifier(eval_metric='logloss')
-    elif model_name == 'DecisionTree':
+    if model_name == 'DecisionTree':
         return DecisionTreeClassifier()
-    elif model_name == 'NaiveBayes':
+    if model_name == 'NaiveBayes':
         return MultinomialNB()
-    elif model_name == 'LogReg':
+    if model_name == 'LogReg':
         return LogisticRegression(max_iter=epochs)
-    else:
-        logger.error(f"Invalid model name: {model_name}")
-        raise ValueError(f"Invalid model name: {model_name}")
-
+    logger.error(f"Invalid model name: {model_name}")
+    exit(1)
 
 def train_traditional_model(model_name: str,
                             epochs: int,
@@ -234,7 +232,7 @@ def train_neural_network(epochs: int,
                          batch_size: int,
                          learning_rate: float,
                          save_model_path: str,
-                         use_cuda: bool = False):
+                         use_cuda: Optional[bool] = False):
     """
     Trains a neural network model.
 
@@ -245,6 +243,8 @@ def train_neural_network(epochs: int,
         save_model_path (str): The path to save the trained model.
         use_cuda (bool, optional): Whether to use CUDA for training. Defaults to False.
     """
+    if use_cuda is None:
+        use_cuda = False
     global vectorizer, X_val, X_train, labels
     logger.info("Vectorizing text data for Neural Network")
     # Ensure X_train and X_val are lists of strings
@@ -322,7 +322,7 @@ def train_model(
         batch_size: int,
         learning_rate: float,
         save_model_path: str,
-        use_cuda: bool = False,
+        use_cuda: Optional[bool] = False,
 ):
     """
     Trains a machine learning model based on the specified parameters.
@@ -335,6 +335,8 @@ def train_model(
         save_model_path (str): The path to save the trained model.
         use_cuda (bool, optional): Whether to use CUDA for training. Defaults to False.
     """
+    if use_cuda is None:
+        use_cuda = False
     if model_name == 'NeuralNetwork':
         train_neural_network(epochs, batch_size, learning_rate, save_model_path, use_cuda)
     else:

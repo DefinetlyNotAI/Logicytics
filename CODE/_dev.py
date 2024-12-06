@@ -20,7 +20,7 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
         None
     """
     try:
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(allow_no_value=True)
         config.read(filename)
         if key == "files":
             config["System Settings"][key] = ", ".join(new_data)
@@ -31,7 +31,7 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
             return
         with open(filename, "w", encoding="utf-8") as configfile:
             # noinspection PyTypeChecker
-            config.write(configfile)
+            config.write(configfile, space_around_delimiters=False)
     except FileNotFoundError:
         log_dev.error(f"File not found: {filename}")
     except configparser.Error as e:

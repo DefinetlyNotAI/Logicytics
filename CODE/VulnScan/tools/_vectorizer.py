@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from configparser import ConfigParser
 
 import joblib
@@ -6,7 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 import os
 
 
-def load_data(data_paths):
+def load_data(data_paths: str | os.PathLike) -> list[str]:
     data = []
     if os.path.isdir(data_paths):
         for root, _, files in os.walk(data_paths):
@@ -21,18 +23,17 @@ def load_data(data_paths):
     return data
 
 
-def choose_vectorizer(vectorizer_types):
+def choose_vectorizer(vectorizer_types: str) -> TfidfVectorizer | CountVectorizer:
     print("Vectorizer Type: ", vectorizer_types)
     print("Vectorizing Data...")
     if vectorizer_types == 'tfidf':
         return TfidfVectorizer(max_features=10000)
-    elif vectorizer_types == 'count':
+    if vectorizer_types == 'count':
         return CountVectorizer(max_features=10000)
-    else:
-        raise ValueError("Unsupported vectorizer type. Choose 'tfidf' or 'count'.")
+    raise ValueError("Unsupported vectorizer type. Choose 'tfidf' or 'count'.")
 
 
-def main(data_paths, vectorizer_types, output_paths):
+def main(data_paths: str, vectorizer_types: str, output_paths: str):
     data = load_data(data_paths)
     vectorizer = choose_vectorizer(vectorizer_types)
     vectorizer.fit(data)

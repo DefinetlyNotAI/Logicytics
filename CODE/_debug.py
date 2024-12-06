@@ -28,7 +28,7 @@ class HealthCheck:
         try:
             url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/CODE/config.ini"
             config = configparser.ConfigParser()
-            config.read_string(requests.get(url).text)
+            config.read_string(requests.get(url, timeout=15).text)
         except requests.exceptions.ConnectionError:
             log_debug.warning("No connection found")
             return False

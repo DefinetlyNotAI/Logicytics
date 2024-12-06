@@ -272,5 +272,4 @@ class Flag:
 
         if not tuple(used_flags):
             return parser
-        else:
-            return tuple(used_flags)
+        return tuple(used_flags)

@@ -4,8 +4,7 @@ import ctypes
 import os.path
 import zipfile
 
-from logicytics.Logger import *
-from logicytics.Execute import *
+from logicytics.Execute import Execute
 
 
 class Check:

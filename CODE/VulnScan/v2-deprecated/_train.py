@@ -308,7 +308,7 @@ def train_nn_svm(MODEL: str, EPOCHS: int, SAVE_DIR: str,
         accuracies.append(accuracy)
 
         # Save progress graph
-        save_progress_graph(accuracies, filename=os.path.join(SAVE_DIR, f"training_progress.png"))
+        save_progress_graph(accuracies, filename=os.path.join(SAVE_DIR, "training_progress.png"))
 
         # Save checkpoint model after every epoch
         if epoch % 1 == 0:
@@ -392,7 +392,7 @@ def train_rfc(SAVE_DIR: str, EPOCHS: int, TEST_SIZE: float | int,
         # Save progress plot
         if not os.path.exists(SAVE_DIR):
             mkdir(SAVE_DIR)
-        save_progress_graph(accuracies, filename=os.path.join(SAVE_DIR, f"training_progress.png"))
+        save_progress_graph(accuracies, filename=os.path.join(SAVE_DIR, "training_progress.png"))
 
         # Save model checkpoint
         joblib.dump(model, os.path.join(SAVE_DIR, f"trained_model_epoch_{epoch + 1}.pkl"))
