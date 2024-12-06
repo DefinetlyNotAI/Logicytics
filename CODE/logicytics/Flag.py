@@ -87,8 +87,8 @@ class Flag:
         parser.add_argument(
             "--vulnscan-ai",
             action="store_true",
-            help="Run's Logicytics new Vulnerability Detection AI, its a new feature that will "
-                 "detect any files that are out of the ordinary, "
+            help="Run's Logicytics new Sensitive data Detection AI, its a new feature that will "
+                 "detect any files that are out of the ordinary, and logs their path. Runs threaded."
                  f"{cls.colorify('- Beta Mode -', 'y')} "
                  f"{cls.colorify('- Will take a long time -', 'y')}",
         )
