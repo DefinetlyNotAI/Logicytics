@@ -1,6 +1,6 @@
 import os
 import random
-
+from logicytics import deprecated
 from faker import Faker
 
 MAX_FILE_SIZE: int = 10 * 1024  # Example: Max file size is 10 KB
@@ -10,6 +10,7 @@ fake = Faker()
 
 
 # Function to generate a sensitive file with real sensitive information
+@deprecated(reason="This function is only used for generating sensitive data for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.3.0")
 def create_sensitive_file(file_path: str, max_size: int):
     content = ""
     # Generate sensitive data using Faker
@@ -30,6 +31,7 @@ def create_sensitive_file(file_path: str, max_size: int):
 
 
 # Function to generate a normal file with non-sensitive data
+@deprecated(reason="This function is only used for generating normal data for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.3.0")
 def create_normal_file(file_path: str, max_size: int):
     content = ""
     # Add random text
@@ -41,6 +43,7 @@ def create_normal_file(file_path: str, max_size: int):
 
 
 # Function to generate a mix file with both normal and sensitive data
+@deprecated(reason="This function is only used for generating mixed data for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.3.0")
 def create_mix_file(file_path: str, max_size: int):
     content = ""
     # Add a mix of normal and sensitive data
@@ -57,6 +60,7 @@ def create_mix_file(file_path: str, max_size: int):
 
 
 # Function to create random files (Normal, Mix, Sensitive)
+@deprecated(reason="This function is only used for generating random files for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.3.0")
 def create_random_files(directories: str, num_file: int = 100):
     os.makedirs(directories, exist_ok=True)
 
