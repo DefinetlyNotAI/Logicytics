@@ -21,7 +21,9 @@ This section outlines the versions of our project that are currently supported w
 | 1.1.x   | ❌         |
 | 1.0.x   | ❌         |
 
+
 ### Key:
+
 | Key | Desc                                                |
 |-----|-----------------------------------------------------|
 | ✅   | Supported for security updates                      |

@@ -8,8 +8,9 @@ import zipfile
 from datetime import datetime
 from typing import Any
 from prettytable import PrettyTable
+from pathlib import Path
 
-from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS, Path
+from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS
 
 
 # Initialization

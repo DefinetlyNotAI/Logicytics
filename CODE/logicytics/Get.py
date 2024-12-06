@@ -4,8 +4,6 @@ import configparser
 import os.path
 from pathlib import Path
 
-from logicytics.Logger import *
-
 
 class Get:
     @staticmethod

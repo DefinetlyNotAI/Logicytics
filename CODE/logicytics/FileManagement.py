@@ -6,14 +6,13 @@ import os.path
 import shutil
 import subprocess
 import zipfile
+from datetime import datetime
 from pathlib import Path
-
-from logicytics.Logger import *
 
 
 class FileManagement:
     @staticmethod
-    def open_file(file: str, use_full_path=False) -> str | None:
+    def open_file(file: str, use_full_path: bool = False) -> str | None:
         """
         Opens a specified file using its default application in a cross-platform manner.
         Args:
