@@ -31,7 +31,7 @@ To install and setup Logicytics, follow these steps:
 1. **Install Python**: If you don't have Python installed, you can download it from the [official website](https://www.python.org/downloads/).
 
 > [!IMPORTANT]
-> We recommend version 3.13 or higher, as the project is developed and tested on this version.
+> We recommend version 3.11 or higher, as the project is developed and tested on this version.
 
 2. **Install Dependencies**: Logicytics requires Python modules. You can install all the required modules by running the following command in your terminal: `pip install -r requirements.txt`
 
@@ -76,20 +76,20 @@ you must have admin privileges while running!
 > [!TIP]
 > Although it's really recommended to use admin, by setting debug in the config.json to true, you can bypass this requirement
 
-6) Wait for magic to happen 🧙‍♀️
+5) Wait for magic to happen 🧙‍♀️
 Logicytics will now run and gather data according to the flags you used.
 
-7) Enjoy the gathered data 🎉
+6) Enjoy the gathered data 🎉
 Once the program has finished running, you can find the gathered data in the "ACCESS/DATA" folder. Both Zip and Hash will be found there.
 
 > [!NOTE]
 > All Zips and Hashes follow a conventional naming mechanism that goes as follows
 > `Logicytics_{CODE-or-MODS}_{Flag-Used}_{Date-And-Time}.zip`
 
-9) Share the love ❤️
+7) Share the love ❤️
 If you like Logicytics, please consider sharing it with others or spreading the word about it.
 
-10) Contribute to the project 👥
+8) Contribute to the project 👥
 If you have an idea or want to contribute to the project, you can submit an issue or PR on the <a href="https://github.com/DefinetlyNotAI/Logicytics">GitHub repository</a>.
 
 
@@ -99,7 +99,7 @@ After running and successfully collecting data, you may traverse the ACCESS dire
 Remove add and delete files, it's the safe directory where your backups, hashes, data zips and logs are found.
 
 > [!TIP]
-> Watch this [video](https://www.youtube.com/watch?v=XVTBmdTQqOs) to see a real life demo of Logicytics (Although the tools and interface may be changed as it's an older version)
+> Watch this [video](https://www.youtube.com/watch?v=XVTBmdTQqOs) to see a real life demo of Logicytics (Although the tools and interface may be changed as it's an older version `2.1.1` - `2.3.3`)
 
 ## 🔧 Configuration 🔧
 
@@ -109,22 +109,98 @@ The config.ini file is a INI file that contains the following information:
 
 ```ini
 [Settings]
-; Would you like to enable debug mode?
-; This will print out more information to the console, with prefix DEBUG
-; This will not be logged however
-log_using_debug = bool
-; Would you like for new logs to be created every execution?
-; Or would you like to append to the same log file?
-delete_old_logs = bool
+# Would you like to enable debug mode?
+# This will print out more information to the console, with prefix DEBUG
+# This will not be logged however
+log_using_debug = false
+# Would you like for new logs to be created every execution?
+# Or would you like to append to the same log file?
+delete_old_logs = false
 
 [System Settings]
-; Do not play with these settings unless you know what you are doing
-version = str
-files = str, str
+# Do not play with these settings unless you know what you are doing
+version = 3.0.0
+files = "browser_miner.ps1, cmd_commands.py, dir_list.py, event_log.py, Logicytics.py, log_miner.py, media_backup.py, netadapter.ps1, packet_sniffer.py, property_scraper.ps1, registry.py, sensitive_data_miner.py, ssh_miner.py, sys_internal.py, tasklist.py, tree.ps1, vulnscan.py, wifi_stealer.py, window_feature_miner.ps1, wmic.py, _debug.py, _dev.py, _extra.py, logicytics\Checks.py, logicytics\Execute.py, logicytics\FileManagement.py, logicytics\Flag.py, logicytics\Get.py, logicytics\Logger.py, logicytics\__init__.py, VulnScan\tools\_test_gpu_acceleration.py, VulnScan\tools\_vectorizer.py, VulnScan\v2-deprecated\_generate_data.py, VulnScan\v2-deprecated\_train.py, VulnScan\v3\_generate_data.py, VulnScan\v3\_train.py"
 
+###################################################
+# The following settings are for specific modules #
+###################################################
+
+[PacketSniffer Settings]
+# The interface to sniff packets on, keep it as WiFi for most cases
+# Autocorrects between WiFi and Wi-Fi
+interface = WiFi
+# The number of packets to sniff,
+packet_count = 10000
+# The time to timeout the sniffing process
+timeout = 10
+
+###################################################
+
+[VulnScan.train Settings]
+# The following settings are for the Train module for training models
+# NeuralNetwork seems to be the best choice for this task
+# Options: "NeuralNetwork", "LogReg",
+#          "RandomForest", "ExtraTrees", "GBM",
+#          "XGBoost", "DecisionTree", "NaiveBayes"
+model_name = NeuralNetwork
+# General Training Parameters
+epochs = 10
+batch_size = 32
+learning_rate = 0.001
+use_cuda = true
+
+# Paths to train and save data
+train_data_path = C:\Users\Hp\Desktop\Model Tests\Model Data\GeneratedData
+# If all models are to be trained, this is the path to save all models,
+# and will be appended with the model codename and follow naming convention
+save_model_path = C:\Users\Hp\Desktop\Model Tests\Model SenseMini
+
+[VulnScan.generate Settings]
+# The following settings are for the Generate module for fake training data
+extensions = .txt, .log, .md, .csv, .json, .xml, .html, .yaml, .ini, .pdf, .docx, .xlsx, .pptx
+save_path = C:\Users\Hp\Desktop\Model Tests\Generated Data
+# Options include:
+# 'Sense' - Generates 50k files, each 25KB in size.
+# 'SenseNano' - Generates 5 files, each 5KB in size.
+# 'SenseMacro' - Generates 1m files, each 10KB in size.
+# 'SenseMini' - Generates 10k files, each 10KB in size.
+# 'SenseCustom' - Uses custom size settings from the configuration file.
+code_name = SenseMini
+# This allows more randomness in the file sizes, use 0 to disable
+# this is applied randomly every time a file is generated
+# Variation is applied in the following way:
+# size +- (size */ variation) where its random weather to add or subtract and divide or multiply
+size_variation = 0.1
+# Set to SenseCustom to use below size settings
+min_file_size = 5KB
+max_file_size = 50KB
+# Chances for the following data types in files:
+# 0.0 - 1.0, the rest will be for pure data
+full_sensitive_chance = 0.07
+partial_sensitive_chance = 0.2
+
+[VulnScan.vectorizer Settings]
+# The following settings are for the Vectorizer module for vectorizing data
+# Usually it automatically vectorizes data, but this is for manual vectorization
+
+# We advise to use this vectorization, although not knowing the vectorizer is not advised
+# as this may lead to ValueErrors due to different inputs
+# Use the vectorizer supplied for any v3 model on SenseMini
+
+# The path to the data to vectorize, either a file or a directory
+data_path = C:\Users\Hp\Desktop\Model Tests\Model Data\GeneratedData
+# The path to save the vectorized data - It will automatically be appended '\Vectorizer.pkl'
+# Make sure the path is a directory, and it exists
+output_path = C:\Users\Hp\Desktop\Model Tests\Model Sense - Vectorizer
+
+# Vectorizer to use, options include:
+# tfidf or count - The code for the training only supports tfidf - we advise to use tfidf
+vectorizer_type = tfidf
 ```
 
 The config.ini file is used to store the DEBUG flag bool, the VERSION, and the CURRENT_FILES.
+It is also used to store and save settings for other programs.
 
 > [!TIP]
 > CURRENT_FILES is an array of strings that contains the names of the files you have, 
@@ -218,7 +294,7 @@ Here are some of the data points that Logicytics extracts:
 | wifi_stealer.py          | Gets the SSID and Password of all saved Wi-Fi                                                                          |                                 |
 | dir_list.py              | Produces a txt on every single file on the device, very slow and clunky - useful for depth scanning                    |                                 |
 | event_logs.py            | Produces a multiple txt files in a folder on many event logs (Security, Applications and System)                       |                                 |
-| vulnscan.py              | Uses AI/ML to detect sensitive files, and log their paths                                                              | Is pretty new, and may not work |
+| vulnscan.py              | Uses AI/ML to detect sensitive files, and log their paths                                                              | In beta!                        |
 
 This is not an exhaustive list, 
 but it should give you a good idea of what data Logicytics is capable of extracting.
@@ -240,10 +316,11 @@ use the `--extra` flag to traverse these special tools
 
 ### Want to create your own mod?
 
-Check out the [contributing guidlines](CONTRIBUTING.md) file for more info, as well as the [wiki guidelines](https://github.com/DefinetlyNotAI/Logicytics/wiki/5-Contribution-Guidelines) for more info
+Check out the [contributing guidlines](CONTRIBUTING.md) file for more info, as well as the [wiki guidelines](https://github.com/DefinetlyNotAI/Logicytics/wiki/5-How-to-Contribute) for more info
+Tips and tricks of the given modules/API's can be found [here](https://github.com/DefinetlyNotAI/Logicytics/wiki/6-Code-tips-and-tricks) too!
 
 > [!IMPORTANT]
-> Always adhere to the [coding standards](https://github.com/DefinetlyNotAI/Logicytics/wiki/6-Coding-Standards) of Logicytics!
+> Always adhere to the [coding standards](https://github.com/DefinetlyNotAI/Logicytics/wiki/7-Advanced-Coding-Standards) of Logicytics!
 
 ## 🌟 Conclusion 🌟
 
@@ -260,7 +337,7 @@ for any Windows system administrator or forensic investigator.
 ## ❤️ Support Me ❤️
 
 Please consider buying me a coffee or sponsoring me in GitHub sponsor,
-I am saving for my college funds in MIT, and I need your help!
+I am saving for my college funds, and I need your help!
 Supporters will be placed in the Credits ❤️
 
 ### 🔗 Links
