@@ -3,14 +3,14 @@ from collections import OrderedDict
 from os import mkdir
 
 import joblib
-import matplotlib.pyplot as plt
-import networkx as nx
-import numpy as np
 import seaborn as sns
 import torch
 import torch.nn as nn
 from torchviz import make_dot
+import networkx as nx
+import numpy as np
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 
 def summary(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
@@ -122,13 +122,13 @@ def summary(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
         # return summary
 
 
-def visualize_model():
-    # Create a directed graph
-    G = nx.DiGraph()
+def visualize_model(models, output_dir="model_graphs", visualize_separately=True):
+    # Create a directed graph for the whole model
+    os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
 
-    def add_edges_bulk(layer_names, weight_matrices):
+    def add_edges_bulk(layer_names, weight_matrices, G):
         """Efficiently add edges to the graph with progress tracking."""
-        threshold = 0.1  # Adjust this threshold as needed
+        threshold = 1  # Adjust this threshold as needed
         significant_weights = np.abs(weight_matrices) > threshold
         rows, cols = np.where(significant_weights)
         weights = weight_matrices[rows, cols]
@@ -142,18 +142,45 @@ def visualize_model():
                 G.add_edge(in_node, out_node, weight=weight)
                 pbar.update(1)
 
-    # Process parameters
-    for name, param in model.named_parameters():
+    # Process model parameters and create graphs for each layer
+    layer_graphs = {}
+
+    for name, param in models.named_parameters():
         if 'weight' in name:
             layer_name = name.split('.')[0]
             weight_matrix = param.data.cpu().numpy()
 
-            # Add edges with progress bar
-            add_edges_bulk(layer_name, weight_matrix)
+            # Create a new graph for the current layer and add edges
+            layer_G = nx.DiGraph()
+            add_edges_bulk(layer_name, weight_matrix, layer_G)
 
-    # Draw the graph
-    print("Writing the graph to a file...")
-    nx.write_gexf(G, "Vectorizer features/Neural Network Nodes Graph.gexf")
+            # Store the graph for the layer
+            layer_graphs[layer_name] = layer_G
+
+            # Save the layer graph to a separate file
+            layer_output_file = os.path.join(output_dir, f"{layer_name}_graph.gexf")
+            nx.write_gexf(layer_G, layer_output_file)
+            print(f"Layer graph saved to {layer_output_file}")
+
+    if visualize_separately:
+        # Visualize each graph separately
+        for layer_name, layer_G in layer_graphs.items():
+            plt.figure(figsize=(8, 8))
+            pos = nx.spring_layout(layer_G, seed=42)  # Layout for better visualization
+            nx.draw(layer_G, pos, with_labels=True, node_size=50, node_color="skyblue", font_size=8, font_color="black",
+                    alpha=0.6)
+            plt.title(f"Visualization for {layer_name}")
+            plt.show()
+
+    else:
+        # Combine all layer graphs into one and visualize
+        combined_graph = nx.DiGraph()
+
+        for layer_name, layer_G in layer_graphs.items():
+            combined_graph.add_nodes_from(layer_G.nodes())
+            combined_graph.add_edges_from(layer_G.edges())
+
+    print("Visualization complete.")
 
 
 # TODO - Add more print statements to indicate the progress of the script
@@ -223,6 +250,6 @@ if __name__ == '__main__':
         os.remove("Digraph.gv.png")
 
     # Visualize the model
-    visualize_model()
+    visualize_model(model)
 
     print("Model visualization and summary have been saved to the 'Vectorizer features' directory.")
