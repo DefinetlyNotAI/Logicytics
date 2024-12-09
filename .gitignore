@@ -319,3 +319,4 @@ $RECYCLE.BIN/
 *.pyc
 /CODE/SysInternal_Suite/.sys.ignore
 /ACCESS/
+/CODE/VulnScan/tools/Vectorizer features/
