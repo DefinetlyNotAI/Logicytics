@@ -122,7 +122,7 @@ def summary(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
         # return summary
 
 
-def visualize_model():
+def visualize_model(models, output_file="model_graph.gexf"):
     # Create a directed graph
     G = nx.DiGraph()
 
@@ -142,8 +142,8 @@ def visualize_model():
                 G.add_edge(in_node, out_node, weight=weight)
                 pbar.update(1)
 
-    # Process parameters
-    for name, param in model.named_parameters():
+    # Process model parameters
+    for name, param in models.named_parameters():
         if 'weight' in name:
             layer_name = name.split('.')[0]
             weight_matrix = param.data.cpu().numpy()
@@ -151,9 +151,9 @@ def visualize_model():
             # Add edges with progress bar
             add_edges_bulk(layer_name, weight_matrix)
 
-    # Draw the graph
-    print("Writing the graph to a file...")
-    nx.write_gexf(G, "Vectorizer features/Neural Network Nodes Graph.gexf")
+    # Save the graph to a GEXF file
+    nx.write_gexf(G, output_file)
+    print(f"Graph saved to {output_file}")
 
 
 # TODO - Add more print statements to indicate the progress of the script
@@ -223,6 +223,6 @@ if __name__ == '__main__':
         os.remove("Digraph.gv.png")
 
     # Visualize the model
-    visualize_model()
+    visualize_model(model, output_file='Vectorizer features/NN.gexf')
 
     print("Model visualization and summary have been saved to the 'Vectorizer features' directory.")
