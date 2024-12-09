@@ -21,4 +21,5 @@ def check_gpu():
         print(f"Error initializing CUDA: {err}")
 
 
-check_gpu()
+if __name__ == '__main__':
+    check_gpu()
