@@ -35,6 +35,7 @@
     <option name="TEMPLATE_FOLDERS">
       <list>
         <option value="$MODULE_DIR$/CODE/VulnScan/tools" />
+        <option value="$MODULE_DIR$/CODE/VulnScan/tools/test_tools" />
       </list>
     </option>
   </component>
