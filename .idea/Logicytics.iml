@@ -17,6 +17,7 @@
       <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/distilbert" />
       <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/t5" />
       <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/tools/Vectorizer features" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/tools/NN features" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.11" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

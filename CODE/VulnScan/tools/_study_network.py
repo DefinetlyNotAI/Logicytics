@@ -3,17 +3,16 @@ from collections import OrderedDict
 from os import mkdir
 
 import joblib
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
 import seaborn as sns
 import torch
 import torch.nn as nn
 from torchviz import make_dot
-import networkx as nx
-import numpy as np
-from tqdm import tqdm
-import matplotlib.pyplot as plt
 
 
-def summary(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
+def save_graph(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
     def register_hook(module):
 
         def hook(modules, inputs, output):
@@ -81,11 +80,11 @@ def summary(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
     for h in hooks:
         h.remove()
 
-    with open('Vectorizer features/Model Summary.txt', 'w') as vf_ms:
-        vf_ms.write("----------------------------------------------------------------")
+    with open('NN features/Model Summary.txt', 'w') as vf_ms:
+        vf_ms.write("----------------------------------------------------------------\n")
         line_new = "{:>20}  {:>25} {:>15}".format("Layer (type)", "Output Shape", "Param #")
-        vf_ms.write(line_new)
-        vf_ms.write("================================================================")
+        vf_ms.write(f"{line_new}\n")
+        vf_ms.write("================================================================\n")
         total_params = 0
         total_output = 0
         trainable_params = 0
@@ -101,7 +100,7 @@ def summary(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
             if "trainable" in summaries[layer]:
                 if summaries[layer]["trainable"]:
                     trainable_params += summaries[layer]["nb_params"]
-            vf_ms.write(line_new)
+            vf_ms.write(f"{line_new}\n")
 
         # assume 4 bytes/number (float on cuda).
         total_input_size = abs(np.prod(input_size) * batch_size * 4. / (1024 ** 2.))
@@ -109,87 +108,47 @@ def summary(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
         total_params_size = abs(total_params.numpy() * 4. / (1024 ** 2.))
         total_size = total_params_size + total_output_size + total_input_size
 
-        vf_ms.write("================================================================")
-        vf_ms.write("Total params: {0:,}".format(total_params))
-        vf_ms.write("Trainable params: {0:,}".format(trainable_params))
-        vf_ms.write("Non-trainable params: {0:,}".format(total_params - trainable_params))
-        vf_ms.write("----------------------------------------------------------------")
-        vf_ms.write("Input size (MB): %0.2f" % total_input_size)
-        vf_ms.write("Forward/backward pass size (MB): %0.2f" % total_output_size)
-        vf_ms.write("Params size (MB): %0.2f" % total_params_size)
-        vf_ms.write("Estimated Total Size (MB): %0.2f" % total_size)
-        vf_ms.write("----------------------------------------------------------------")
-        # return summary
+        vf_ms.write("\n================================================================")
+        vf_ms.write("\nTotal params: {0:,}".format(total_params))
+        vf_ms.write("\nTrainable params: {0:,}".format(trainable_params))
+        vf_ms.write("\nNon-trainable params: {0:,}".format(total_params - trainable_params))
+        vf_ms.write("\n----------------------------------------------------------------")
+        vf_ms.write("\nInput size (MB): %0.2f" % total_input_size)
+        vf_ms.write("\nForward/backward pass size (MB): %0.2f" % total_output_size)
+        vf_ms.write("\nParams size (MB): %0.2f" % total_params_size)
+        vf_ms.write("\nEstimated Total Size (MB): %0.2f" % total_size)
+        vf_ms.write("\n----------------------------------------------------------------\n")
 
 
-def visualize_model(models, output_dir="model_graphs", visualize_separately=True):
-    # Create a directed graph for the whole model
-    os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
+def visualize_model(models, output_dir="NN features"):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    def add_edges_bulk(layer_names, weight_matrices, G):
-        """Efficiently add edges to the graph with progress tracking."""
-        threshold = 1  # Adjust this threshold as needed
-        significant_weights = np.abs(weight_matrices) > threshold
-        rows, cols = np.where(significant_weights)
-        weights = weight_matrices[rows, cols]
+    # Create a directed graph
+    G = nx.DiGraph()
 
-        # Use tqdm for progress tracking
-        edge_count = len(rows)
-        with tqdm(total=edge_count, desc=f"Processing {layer_names}", unit="edges") as pbar:
-            for row, col, weight in zip(rows, cols, weights):
-                in_node = f"{layer_names}_in_{col}"
-                out_node = f"{layer_names}_out_{row}"
-                G.add_edge(in_node, out_node, weight=weight)
-                pbar.update(1)
+    # Add nodes and edges to the graph
+    for model_i in models:
+        for names, param in model_i.named_parameters():
+            G.add_node(names, size=param.numel())
+            if param.requires_grad:
+                G.add_edge(names, f"{names}_grad")
 
-    # Process model parameters and create graphs for each layer
-    layer_graphs = {}
+    # Define the output file path
+    output_file = os.path.join(output_dir, "model.graphml")
 
-    for name, param in models.named_parameters():
-        if 'weight' in name:
-            layer_name = name.split('.')[0]
-            weight_matrix = param.data.cpu().numpy()
+    # Write the graph to a GraphML file
+    nx.write_graphml(G, output_file)
 
-            # Create a new graph for the current layer and add edges
-            layer_G = nx.DiGraph()
-            add_edges_bulk(layer_name, weight_matrix, layer_G)
-
-            # Store the graph for the layer
-            layer_graphs[layer_name] = layer_G
-
-            # Save the layer graph to a separate file
-            layer_output_file = os.path.join(output_dir, f"{layer_name}_graph.gexf")
-            nx.write_gexf(layer_G, layer_output_file)
-            print(f"Layer graph saved to {layer_output_file}")
-
-    if visualize_separately:
-        # Visualize each graph separately
-        for layer_name, layer_G in layer_graphs.items():
-            plt.figure(figsize=(8, 8))
-            pos = nx.spring_layout(layer_G, seed=42)  # Layout for better visualization
-            nx.draw(layer_G, pos, with_labels=True, node_size=50, node_color="skyblue", font_size=8, font_color="black",
-                    alpha=0.6)
-            plt.title(f"Visualization for {layer_name}")
-            plt.show()
-
-    else:
-        # Combine all layer graphs into one and visualize
-        combined_graph = nx.DiGraph()
-
-        for layer_name, layer_G in layer_graphs.items():
-            combined_graph.add_nodes_from(layer_G.nodes())
-            combined_graph.add_edges_from(layer_G.edges())
-
-    print("Visualization complete.")
+    print(f"Model visualization saved as {output_file}")
 
 
-# TODO - Add more print statements to indicate the progress of the script
 if __name__ == '__main__':
     print("Visualizing the model and vectorizer features...")
     print("This may take a while, please wait.")
 
-    if not os.path.exists('Vectorizer features'):
-        mkdir('Vectorizer features')
+    if not os.path.exists('NN features'):
+        mkdir('NN features')
 
     # Load the vectorizer
     vectorizer_path = '../Vectorizer .3n3.pkl'
@@ -197,7 +156,7 @@ if __name__ == '__main__':
 
     # Inspect the vectorizer
     feature_names = vectorizer.get_feature_names_out()
-    with open('Vectorizer features/Vectorizer features', 'w') as f:
+    with open('NN features/Vectorizer features.txt', 'w') as f:
         f.write(f"Number of features: {len(feature_names)}\n\n")
         f.write('\n'.join(feature_names))
 
@@ -214,7 +173,7 @@ if __name__ == '__main__':
     plt.ylabel('Feature')
 
     # Save the plot as a vector graphic
-    plt.savefig('Vectorizer features/Top_90_Features.svg', format='svg')
+    plt.savefig('NN features/Top_90_Features.svg', format='svg')
 
     plt.show()
 
@@ -225,10 +184,10 @@ if __name__ == '__main__':
     # Save the model summary
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
-    summary(model, input_size=(1, vectorizer.vocabulary_.__len__()))
+    save_graph(model, input_size=(1, vectorizer.vocabulary_.__len__()))
 
     # Save the model's state dictionary
-    with open('Vectorizer features/Model state dictionary.txt', 'w') as f:
+    with open('NN features/Model state dictionary.txt', 'w') as f:
         f.write("Model's state dictionary:\n\n")
         for param_tensor in model.state_dict():
             f.write(f"\n{param_tensor}\t{model.state_dict()[param_tensor].size()}")
@@ -237,19 +196,17 @@ if __name__ == '__main__':
     dummy_input = torch.randn(1, vectorizer.vocabulary_.__len__()).to(device)
 
     # Generate the visualization
-    model_viz = make_dot(model(dummy_input), params=dict(model.named_parameters()))
+    model_viz = make_dot(model(dummy_input), params=dict(model.named_parameters()), show_attrs=True, show_saved=True)
 
     # Save the visualization to a file
     model_viz.format = 'png'
-    model_viz.render(filename='Vectorizer features/Model Visualization', format='png')
+    model_viz.render(filename='NN features/Model Visualization', format='png')
 
     # Removing the temporary files as they are no longer needed, we saved them to the desired location
-    if os.path.exists("Digraph.gv"):
-        os.remove("Digraph.gv")
-    if os.path.exists("Digraph.gv.png"):
-        os.remove("Digraph.gv.png")
+    if os.path.exists("NN features/Model Visualization"):
+        os.remove("NN features/Model Visualization")
 
     # Visualize the model
     visualize_model(model)
 
-    print("Model visualization and summary have been saved to the 'Vectorizer features' directory.")
+    print("Model visualization and summary have been saved to the 'NN features' directory.")
