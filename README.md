@@ -30,7 +30,7 @@ To install and setup Logicytics, follow these steps:
 
 1. **Install Python**: If you don't have Python installed, you can download it from the [official website](https://www.python.org/downloads/).
 
-2. **Install Dependencies**: Logicytics requires Python modules. You can install all the required modules by running the following command in your terminal: `pip install -r requirements.txt`
+2. **Install Dependencies**: Logicytics requires Python modules. You can install all the required modules by running the following command in your terminal:     `pip install -r requirements.txt`
 
 
 3. **Run Logicytics**: To run Logicytics, simply run the following command in your terminal: `python Logicytics.py -h` - This opens a help menu.
