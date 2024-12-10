@@ -10,9 +10,10 @@ import seaborn as sns
 import torch
 import torch.nn as nn
 from torchviz import make_dot
+from tqdm import tqdm
 
 
-def save_graph(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
+def save_data(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
     def register_hook(module):
 
         def hook(modules, inputs, output):
@@ -120,27 +121,38 @@ def save_graph(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
         vf_ms.write("\n----------------------------------------------------------------\n")
 
 
-def visualize_model(models, output_dir="NN features"):
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
+def save_graph():
     # Create a directed graph
     G = nx.DiGraph()
 
-    # Add nodes and edges to the graph
-    for model_i in models:
-        for names, param in model_i.named_parameters():
-            G.add_node(names, size=param.numel())
-            if param.requires_grad:
-                G.add_edge(names, f"{names}_grad")
+    def add_edges_bulk(layer_names, weight_matrices):
+        """Efficiently add edges to the graph with progress tracking."""
+        threshold = 0.1  # Adjust this threshold as needed
+        significant_weights = np.abs(weight_matrices) > threshold
+        rows, cols = np.where(significant_weights)
+        weights = weight_matrices[rows, cols]
 
-    # Define the output file path
-    output_file = os.path.join(output_dir, "model.graphml")
+        # Use tqdm for progress tracking
+        edge_count = len(rows)
+        with tqdm(total=edge_count, desc=f"Processing {layer_names}", unit="edges") as pbar:
+            for row, col, weight in zip(rows, cols, weights):
+                in_node = f"{layer_names}_in_{col}"
+                out_node = f"{layer_names}_out_{row}"
+                G.add_edge(in_node, out_node, weight=weight)
+                pbar.update(1)
 
-    # Write the graph to a GraphML file
-    nx.write_graphml(G, output_file)
+    # Process parameters
+    for name, param in model.named_parameters():
+        if 'weight' in name:
+            layer_name = name.split('.')[0]
+            weight_matrix = param.data.cpu().numpy()
 
-    print(f"Model visualization saved as {output_file}")
+            # Add edges with progress bar
+            add_edges_bulk(layer_name, weight_matrix)
+
+    # Draw the graph
+    print("Writing the graph to a file...")
+    nx.write_gexf(G, "NN features/Neural Network Nodes Graph.gexf")
 
 
 if __name__ == '__main__':
@@ -184,7 +196,7 @@ if __name__ == '__main__':
     # Save the model summary
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
-    save_graph(model, input_size=(1, vectorizer.vocabulary_.__len__()))
+    save_data(model, input_size=(1, vectorizer.vocabulary_.__len__()))
 
     # Save the model's state dictionary
     with open('NN features/Model state dictionary.txt', 'w') as f:
@@ -207,6 +219,6 @@ if __name__ == '__main__':
         os.remove("NN features/Model Visualization")
 
     # Visualize the model
-    visualize_model(model)
+    save_graph()
 
     print("Model visualization and summary have been saved to the 'NN features' directory.")

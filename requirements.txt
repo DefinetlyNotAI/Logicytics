@@ -19,5 +19,5 @@ networkx~=3.2.1
 scapy~=2.5.0
 seaborn~=0.13.2
 torchviz~=0.0.3
-torchvision~=0.20.1+cu124
-torchcam~=0.4.0
+plotly~=5.24.1
+tqdm~=4.66.6
