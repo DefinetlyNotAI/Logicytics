@@ -20,6 +20,10 @@ from torchviz import make_dot
 from tqdm import tqdm
 
 
+# TODO Add docstring, and hint-type
+# TODO Do v3.1 plans
+#  ZIP the file and attach somewhere (Data)
+
 # Example of DataLoader for loss landscape (dummy dataset for visualization)
 class DummyDataset(torch.utils.data.Dataset):
     def __init__(self, num_samples=100, input_dim=10000):
@@ -123,7 +127,7 @@ def visualize_tsne(model_to_load, dataloader):
             # Extract features (output of the model)
             output = model_to_load(data)
             features.append(output.cpu().numpy())  # Move output to CPU for concatenation
-            labels.append(target.cpu().numpy())   # Move target to CPU for concatenation
+            labels.append(target.cpu().numpy())  # Move target to CPU for concatenation
 
     # Stack all batches
     features = np.vstack(features)
@@ -192,7 +196,7 @@ def plot_many_graphs():
     print("Completed.")
 
 
-# Visualize feature importance (dummy example for visualization) and save as SVG + show the plot
+# Visualize feature importance (dummy example for visualization) and save as SVG
 def visualize_feature_importance(TOKENS, FEATURE_IMPORTANCE, FILENAME="Plot.svg"):
     # Limit the number of tokens to visualize
     TOKENS = TOKENS[:1000]
@@ -229,15 +233,14 @@ def plot_loss_landscape_3d(MODEL, DATA_LOADER, CRITERION, GRID_SIZE=200, EPSILON
 
     # Iterate through the grid to compute losses
     for i, dx in enumerate(x):
-        print(f"Computing loss for row {i+1}/{GRID_SIZE}...")
+        print(f"Computing loss for row {i + 1}/{GRID_SIZE}...")
         for j, dy in enumerate(y):
-            print(f"    Computing loss for column {j+1}/{GRID_SIZE}...")
+            print(f"    Computing loss for column {j + 1}/{GRID_SIZE}...")
             param.data += dx * u + dy * v  # Apply perturbation
             loss = 0
 
             # Compute loss for all batches in data loader
             for batch in DATA_LOADER:
-                print(f"        Computing loss for batch: {batch}...")
                 inputs, targets = batch
                 inputs = inputs.to(param.device)
                 targets = targets.to(param.device)
@@ -281,9 +284,11 @@ def main_plot():
 
     # Feature importance
     # Max number of features to visualize is 3000 due to image constraints
-    print(f"Visualizing feature importance - This may take a while for {len(tokens[:NUMBER_OF_FEATURES])+1} tokens...")
+    print(
+        f"Visualizing feature importance - This may take a while for {len(tokens[:NUMBER_OF_FEATURES]) + 1} tokens...")
     feature_importance = np.random.rand(len(tokens[:NUMBER_OF_FEATURES]))  # Example random importance
-    visualize_feature_importance(tokens[:NUMBER_OF_FEATURES], feature_importance, FILENAME="NN features/feature_importance.svg")
+    visualize_feature_importance(tokens[:NUMBER_OF_FEATURES], feature_importance,
+                                 FILENAME="NN features/feature_importance.svg")
 
     # Loss landscape
     print("Visualizing loss landscape - This may take a while...")
@@ -468,7 +473,7 @@ def visualize_top_features(top_n=90):
 
     # Save the plot as a vector graphic
     plt.savefig('NN features/Top_90_Features.svg', format='svg')
-    plt.show()
+    plt.close()
 
 
 def load_model():
@@ -522,7 +527,7 @@ if __name__ == '__main__':
     # Load the paths from the config file
     vectorizer_path = config.get('VulnScan.study Settings', 'vectorizer_path')
     model_path = config.get('VulnScan.study Settings', 'model_path')
-    NUMBER_OF_FEATURES = config.get('VulnScan.study Settings', 'number_of_features')
+    NUMBER_OF_FEATURES = int(config.get('VulnScan.study Settings', 'number_of_features'))
 
     # Check if the paths exist
     if not os.path.exists(vectorizer_path):
