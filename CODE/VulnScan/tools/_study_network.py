@@ -64,7 +64,6 @@ def save_data(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
 
     # batch_size of 2 for batch norm
     x = [torch.rand(2, *in_size).type(dtype) for in_size in input_size]
-    # print(type(x[0]))
 
     # create properties
     summaries = OrderedDict()
@@ -74,14 +73,15 @@ def save_data(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
     model_to_use.apply(register_hook)
 
     # make a forward pass
-    # print(x.shape)
     model_to_use(*x)
 
     # remove these hooks
     for h in hooks:
         h.remove()
 
-    with open('NN features/Model Summary.txt', 'w') as vf_ms:
+    # Save the summary
+    mode = "a" if os.path.exists("NN features/Model Summary.txt") else "w"
+    with open('NN features/Model Summary.txt', mode) as vf_ms:
         vf_ms.write("----------------------------------------------------------------\n")
         line_new = "{:>20}  {:>25} {:>15}".format("Layer (type)", "Output Shape", "Param #")
         vf_ms.write(f"{line_new}\n")

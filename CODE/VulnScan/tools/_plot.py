@@ -1,3 +1,5 @@
+import os
+
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -96,6 +98,9 @@ class DummyDataset(torch.utils.data.Dataset):
 
 if __name__ == "__main__":
     # Check if GPU is available
+    if not os.path.exists('NN features'):
+        os.mkdir('NN features')
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
@@ -112,7 +117,9 @@ if __name__ == "__main__":
     print(f"Loading model from: {model_path}")
     model = torch.load(model_path, weights_only=False)
     model.to(device)  # Move model to GPU or CPU
-    print(model)
+    mode = "a" if os.path.exists("NN features/Model Summary.txt") else "w"
+    with open("NN features/Model Summary.txt", mode) as f:
+        f.write(str(model))
 
     # Instantiate dummy data loader
     print("Creating dummy data loader...")
