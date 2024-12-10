@@ -30,12 +30,19 @@ To install and setup Logicytics, follow these steps:
 
 1. **Install Python**: If you don't have Python installed, you can download it from the [official website](https://www.python.org/downloads/).
 
-> [!IMPORTANT]
-> We recommend version 3.11 or higher, as the project is developed and tested on this version.
-
 2. **Install Dependencies**: Logicytics requires Python modules. You can install all the required modules by running the following command in your terminal: `pip install -r requirements.txt`
 
+
 3. **Run Logicytics**: To run Logicytics, simply run the following command in your terminal: `python Logicytics.py -h` - This opens a help menu.
+
+> [!IMPORTANT]
+> We recommend Python Version `3.11` or higher, as the project is developed and tested on this version.
+> 
+> You must also install `pytorch` if you want to use the vulnscan feature, To install run the command `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124`
+> If the device has CUDA available (NVidea GPU's),
+>
+> Otherwise run `pip3 install torch torchvision torchaudio` to use the CPU, ofcourse this is optional for normal usage's,
+> until you require `vulnscan`
 
 ### Prerequisites
 
