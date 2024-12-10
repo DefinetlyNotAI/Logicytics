@@ -178,6 +178,7 @@ def select_model_from_traditional(model_name: str,
     logger.error(f"Invalid model name: {model_name}")
     exit(1)
 
+
 def train_traditional_model(model_name: str,
                             epochs: int,
                             save_model_path: str):
