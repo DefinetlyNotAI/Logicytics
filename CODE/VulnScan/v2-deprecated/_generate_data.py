@@ -9,9 +9,15 @@ SAVE_DIRECTORY: str = "PATH"
 fake = Faker()
 
 
-# Function to generate a sensitive file with real sensitive information
-@deprecated(reason="This function is only used for generating sensitive data for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.3.0")
+@deprecated(reason="This function is only used for generating sensitive data for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.4.0")
 def create_sensitive_file(file_path: str, max_size: int):
+    """
+    Generate a sensitive file with real sensitive information.
+
+    Args:
+        file_path (str): The path where the file will be saved.
+        max_size (int): The maximum size of the file in bytes.
+    """
     content = ""
     # Generate sensitive data using Faker
     content += f"Name: {fake.name()}\n"
@@ -30,9 +36,15 @@ def create_sensitive_file(file_path: str, max_size: int):
         f.write(content)
 
 
-# Function to generate a normal file with non-sensitive data
-@deprecated(reason="This function is only used for generating normal data for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.3.0")
+@deprecated(reason="This function is only used for generating normal data for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.4.0")
 def create_normal_file(file_path: str, max_size: int):
+    """
+    Generate a normal file with non-sensitive data.
+
+    Args:
+        file_path (str): The path where the file will be saved.
+        max_size (int): The maximum size of the file in bytes.
+    """
     content = ""
     # Add random text
     while len(content.encode('utf-8')) < max_size:
@@ -42,9 +54,15 @@ def create_normal_file(file_path: str, max_size: int):
         f.write(content)
 
 
-# Function to generate a mix file with both normal and sensitive data
-@deprecated(reason="This function is only used for generating mixed data for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.3.0")
+@deprecated(reason="This function is only used for generating mixed data for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.4.0")
 def create_mix_file(file_path: str, max_size: int):
+    """
+    Generate a mix file with both normal and sensitive data.
+
+    Args:
+        file_path (str): The path where the file will be saved.
+        max_size (int): The maximum size of the file in bytes.
+    """
     content = ""
     # Add a mix of normal and sensitive data
     while len(content.encode('utf-8')) < max_size:
@@ -59,9 +77,15 @@ def create_mix_file(file_path: str, max_size: int):
         f.write(content)
 
 
-# Function to create random files (Normal, Mix, Sensitive)
-@deprecated(reason="This function is only used for generating random files for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.3.0")
+@deprecated(reason="This function is only used for generating random files for testing purposes for v2 trainers, v2 trainers are deprecated now, use v3 trainers.", removal_version="3.4.0")
 def create_random_files(directories: str, num_file: int = 100):
+    """
+    Create random files (Normal, Mix, Sensitive).
+
+    Args:
+        directories (str): The directory where the files will be saved.
+        num_file (int): The number of files to generate.
+    """
     os.makedirs(directories, exist_ok=True)
 
     for i in range(num_file):

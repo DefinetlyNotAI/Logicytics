@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import os
 import os.path
 import random
 from collections import OrderedDict
 from configparser import ConfigParser
 from os import mkdir
+from typing import Any
 
 import joblib
 import matplotlib.pyplot as plt
@@ -14,23 +17,44 @@ import seaborn as sns
 import torch
 import torch.nn as nn
 from faker import Faker
+from numpy import ndarray, dtype
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.manifold import TSNE
+from torch import device
 from torch.utils.data import DataLoader, TensorDataset
 from torchviz import make_dot
 from tqdm import tqdm
 
 
-# TODO Add docstring, and hint-type
 # TODO Do v3.1 plans
-#  ZIP the file and attach somewhere (Data)
+#   Raise an ImportError to make the file unimportable
+#   raise ImportError("This file cannot be imported")
+
 
 # Example of DataLoader for loss landscape (dummy dataset for visualization)
 class DummyDataset(torch.utils.data.Dataset):
-    def __init__(self, num_samples=100, input_dim=10000):
+    """
+    A dummy dataset for generating synthetic data for visualization purposes.
+
+    Attributes:
+        num_samples (int): Number of samples in the dataset.
+        input_dim (int): Dimension of the input data.
+        data (list): List of generated data samples.
+        labels (list): List of labels corresponding to the data samples.
+    """
+
+    def __init__(self, num_samples: int = 100, input_dim: int = 10000):
+        """
+        Initializes the DummyDataset with the specified number of samples and input dimension.
+
+        Args:
+            num_samples (int): Number of samples to generate.
+            input_dim (int): Dimension of the input data.
+        """
         self.num_samples = num_samples
         self.input_dim = input_dim
-        self.data = []
-        self.labels = []
+        self.data: list[str] = []
+        self.labels: list[int] = []
         faker = Faker()
         for _ in range(num_samples):
             if random.random() < 0.05:  # 5% chance to include sensitive data
@@ -40,10 +64,25 @@ class DummyDataset(torch.utils.data.Dataset):
                 self.data.append(faker.text(max_nb_chars=100))  # Non-sensitive data
                 self.labels.append(0)  # Label as non-sensitive
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """
+        Returns the number of samples in the dataset.
+
+        Returns:
+            int: Number of samples in the dataset.
+        """
         return self.num_samples
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        """
+        Retrieves the data and label at the specified index.
+
+        Args:
+            idx (int): Index of the data and label to retrieve.
+
+        Returns:
+            tuple: A tuple containing the data tensor and label tensor.
+        """
         data = self.data[idx]
         label = self.labels[idx]
         # Convert data to tensor of ASCII values and pad to input_dim
@@ -57,7 +96,17 @@ class DummyDataset(torch.utils.data.Dataset):
         return data_tensor, label_tensor
 
 
-def load_data(text_data, vectorizer_to_load):
+def load_data(text_data: list[str], vectorizer_to_load: TfidfVectorizer | CountVectorizer) -> DataLoader:
+    """
+    Vectorizes the text data and creates a DataLoader for it.
+
+    Args:
+        text_data (list of str): The text data to be vectorized.
+        vectorizer_to_load: The vectorizer to use for transforming the text data.
+
+    Returns:
+        DataLoader: A DataLoader containing the vectorized text data and dummy labels.
+    """
     # Vectorize the text data
     X = vectorizer_to_load.transform(text_data)
     # Create a dummy label for visualization (replace with real labels if available)
@@ -69,7 +118,7 @@ def load_data(text_data, vectorizer_to_load):
     return DataLoader(dataset, batch_size=32, shuffle=True)
 
 
-def visualize_weight_distribution(model_to_load):
+def visualize_weight_distribution(model_to_load: torch.nn.Module):
     # Access weights of the first layer
     weights = model_to_load[0].weight.detach().cpu().numpy()  # Move tensor to CPU before conversion to numpy
     plt.hist(weights.flatten(), bins=50)
@@ -80,7 +129,7 @@ def visualize_weight_distribution(model_to_load):
     plt.close()
 
 
-def visualize_activations(model_to_load, input_tensor):
+def visualize_activations(model_to_load: torch.nn.Module, input_tensor: torch.Tensor):
     # Check the device of the model
     device_va = next(model_to_load.parameters()).device
 
@@ -110,7 +159,7 @@ def visualize_activations(model_to_load, input_tensor):
     plt.close()
 
 
-def visualize_tsne(model_to_load, dataloader):
+def visualize_tsne(model_to_load: torch.nn.Module, dataloader: DataLoader):
     # Get the device of the model
     device_va = next(model_to_load.parameters()).device
 
@@ -197,7 +246,8 @@ def plot_many_graphs():
 
 
 # Visualize feature importance (dummy example for visualization) and save as SVG
-def visualize_feature_importance(TOKENS, FEATURE_IMPORTANCE, FILENAME="Plot.svg"):
+def visualize_feature_importance(TOKENS: list[str], FEATURE_IMPORTANCE: float | ndarray[Any, dtype[np.floating]],
+                                 FILENAME: str = "Plot.svg"):
     # Limit the number of tokens to visualize
     TOKENS = TOKENS[:1000]
     FEATURE_IMPORTANCE = FEATURE_IMPORTANCE[:1000]
@@ -213,7 +263,8 @@ def visualize_feature_importance(TOKENS, FEATURE_IMPORTANCE, FILENAME="Plot.svg"
 
 
 # Function to visualize the loss landscape as an interactive 3D object
-def plot_loss_landscape_3d(MODEL, DATA_LOADER, CRITERION, GRID_SIZE=200, EPSILON=0.01, FILENAME="Plot.html"):
+def plot_loss_landscape_3d(MODEL: torch.nn.Module, DATA_LOADER: DataLoader, CRITERION: torch.nn.Module,
+                           GRID_SIZE: int = 200, EPSILON: float = 0.01, FILENAME: str = "Plot.html"):
     MODEL.eval()  # Set model to evaluation mode
     param = next(MODEL.parameters())  # Use the first parameter for landscape perturbations
     param_flat = param.view(-1)
@@ -300,10 +351,11 @@ def main_plot():
     plot_many_graphs()
 
 
-def save_data(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
-    def register_hook(module):
+def save_data(model_to_use: torch.nn.Module, input_size: tuple[int, Any] | int, batch_size: int = -1,
+              device_to_use: str = "cuda"):
+    def register_hook(module: torch.nn.Module):
 
-        def hook(modules, inputs, output):
+        def hook(modules: torch.nn.Module, inputs: (torch.nn.Module, tuple[torch.Tensor]), output: torch.Tensor):
             class_name = str(modules.__class__).split(".")[-1].split("'")[0]
             module_idx = len(summaries)
 
@@ -341,16 +393,16 @@ def save_data(model_to_use, input_size, batch_size=-1, device_to_use="cuda"):
     ], "Input device is not valid, please specify 'cuda' or 'cpu'"
 
     if device_to_use == "cuda" and torch.cuda.is_available():
-        dtype = torch.cuda.FloatTensor
+        dtype_to_use = torch.cuda.FloatTensor
     else:
-        dtype = torch.FloatTensor
+        dtype_to_use = torch.FloatTensor
 
     # multiple inputs to the network
     if isinstance(input_size, tuple):
         input_size = [input_size]
 
     # batch_size of 2 for batch norm
-    x = [torch.rand(2, *in_size).type(dtype) for in_size in input_size]
+    x = [torch.rand(2, *in_size).type(dtype_to_use) for in_size in input_size]
 
     # create properties
     summaries = OrderedDict()
@@ -412,7 +464,7 @@ def save_graph():
     # Create a directed graph
     G = nx.DiGraph()
 
-    def add_edges_bulk(layer_names, weight_matrices):
+    def add_edges_bulk(layer_names: str, weight_matrices: np.ndarray[np.float32]):
         """Efficiently add edges to the graph with progress tracking."""
         threshold = 0.1  # Adjust this threshold as needed
         significant_weights = np.abs(weight_matrices) > threshold
@@ -459,7 +511,7 @@ def load_vectorizer():
     return vectorizer_load
 
 
-def visualize_top_features(top_n=90):
+def visualize_top_features(top_n: int = 90):
     feature_names = vectorizer.get_feature_names_out()
     sorted_indices = vectorizer.idf_.argsort()[:top_n]
     top_features = [feature_names[i] for i in sorted_indices]
@@ -476,7 +528,7 @@ def visualize_top_features(top_n=90):
     plt.close()
 
 
-def load_model():
+def load_model() -> tuple[Any, device]:
     device_load = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_load = torch.load(model_path, weights_only=False)
     model_load.to(device_load)

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-from os import mkdir
 
 import joblib
 import matplotlib.pyplot as plt
@@ -20,6 +19,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from torch.utils.data import DataLoader, TensorDataset
 from transformers import BertTokenizer, BertForSequenceClassification
+
 from logicytics import deprecated
 
 # Configure logging
@@ -42,7 +42,15 @@ logging.info(f"Using device: {DEVICE}")
 
 @deprecated(reason="This function is used to load data from a directory. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
 def load_data(data_dir: str) -> tuple[list[str], np.ndarray]:
-    """Loads text data and labels from the directory."""
+    """
+    Loads text data and labels from the directory.
+
+    Args:
+        data_dir (str): The directory containing the data files.
+
+    Returns:
+        tuple[list[str], np.ndarray]: A tuple containing the list of texts and the corresponding labels.
+    """
     texts, labels = [], []
     for file_name in os.listdir(data_dir):
         with open(os.path.join(data_dir, file_name), "r", encoding="utf-8") as f:
@@ -55,7 +63,16 @@ def load_data(data_dir: str) -> tuple[list[str], np.ndarray]:
 
 @deprecated(reason="This function is used to evaluate a model. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
 def evaluate_model(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[float, float, float, float, float]:
-    """Evaluates the model using standard metrics."""
+    """
+    Evaluates the model using standard metrics.
+
+    Args:
+        y_true (np.ndarray): The true labels.
+        y_pred (np.ndarray): The predicted labels.
+
+    Returns:
+        tuple[float, float, float, float, float]: A tuple containing accuracy, precision, recall, F1 score, and ROC-AUC score.
+    """
     accuracy = accuracy_score(y_true, y_pred)
     precision = precision_score(y_true, y_pred, zero_division=1)
     recall = recall_score(y_true, y_pred, zero_division=1)
@@ -73,6 +90,13 @@ def evaluate_model(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[float, float
 
 @deprecated(reason="This function is used to save progress graphs. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
 def save_progress_graph(accuracies: list[float], filename: str = "training_progress.png"):
+    """
+    Saves a graph of training progress.
+
+    Args:
+        accuracies (list[float]): List of accuracies for each epoch.
+        filename (str): The filename to save the graph as.
+    """
     plt.figure(figsize=(8, 6))
     plt.plot(range(1, len(accuracies) + 1), accuracies, marker='o', label="Training Accuracy")
     plt.xlabel("Epochs")
@@ -87,7 +111,16 @@ def save_progress_graph(accuracies: list[float], filename: str = "training_progr
 @deprecated(reason="This function is used to train xgboost. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
 def train_xgboost(X_train: np.ndarray, X_test: np.ndarray,
                   y_train: np.ndarray, y_test: np.ndarray, SAVE_DIR: str):
-    """Trains a Gradient Boosting Classifier (XGBoost) with GPU."""
+    """
+    Trains a Gradient Boosting Classifier (XGBoost) with GPU.
+
+    Args:
+        X_train (np.ndarray): Training data features.
+        X_test (np.ndarray): Testing data features.
+        y_train (np.ndarray): Training data labels.
+        y_test (np.ndarray): Testing data labels.
+        SAVE_DIR (str): Directory to save the trained model.
+    """
     logging.info("Enabling GPU acceleration...")
     model = xgb.XGBClassifier(tree_method='hist', device=DEVICE)  # Enable GPU acceleration
     logging.info("GPU acceleration enabled.")
@@ -104,7 +137,21 @@ def train_xgboost(X_train: np.ndarray, X_test: np.ndarray,
 def train_bert(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
                y_test: np.ndarray, MAX_LEN: int, LEARNING_RATE: float, BATCH_SIZE: int,
                EPOCHS: int, SAVE_DIR: str, MODEL_PATH: str):
-    """Trains a BERT model with GPU support."""
+    """
+    Trains a BERT model with GPU support.
+
+    Args:
+        X_train (np.ndarray): Training data features.
+        X_test (np.ndarray): Testing data features.
+        y_train (np.ndarray): Training data labels.
+        y_test (np.ndarray): Testing data labels.
+        MAX_LEN (int): Maximum length of the sequences.
+        LEARNING_RATE (float): Learning rate for the optimizer.
+        BATCH_SIZE (int): Batch size for training.
+        EPOCHS (int): Number of epochs for training.
+        SAVE_DIR (str): Directory to save the trained model.
+        MODEL_PATH (str): Path to the pre-trained BERT model.
+    """
     logging.info("Loading BERT tokenizer...")
     tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME)
     train_encodings = tokenizer(list(X_train), truncation=True, padding=True, max_length=MAX_LEN, return_tensors="pt")
@@ -154,14 +201,34 @@ def train_bert(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
 
 
 class LSTMModel(nn.Module):
+    @deprecated(reason="This class is used to define an LSTM model. Its for training v2 models, which is now deprecated, use _train.py v3 instead.", removal_version="3.3.0")
     def __init__(self, vocab_size: int, embedding_dim: int = 128, hidden_dim: int = 128, output_dim: int = 1):
+        """
+        Initializes the LSTM model.
+
+        Args:
+            vocab_size (int): Size of the vocabulary.
+            embedding_dim (int): Dimension of the embedding layer.
+            hidden_dim (int): Dimension of the hidden layer.
+            output_dim (int): Dimension of the output layer.
+        """
         super(LSTMModel, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
         self.lstm = nn.LSTM(embedding_dim, hidden_dim, bidirectional=True, batch_first=True)
         self.fc = nn.Linear(hidden_dim * 2, output_dim)  # Bidirectional, so multiply by 2
         self.sigmoid = nn.Sigmoid()
 
+    @deprecated(reason="This class is used to define an LSTM model. Its for training v2 models, which is now deprecated, use _train.py v3 instead.", removal_version="3.3.0")
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Defines the forward pass of the LSTM model.
+
+        Args:
+            x (torch.Tensor): Input tensor.
+
+        Returns:
+            torch.Tensor: Output tensor.
+        """
         x = self.embedding(x)
         lstm_out, _ = self.lstm(x)
         x = self.fc(lstm_out[:, -1, :])
@@ -173,7 +240,20 @@ class LSTMModel(nn.Module):
 def train_lstm(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
                y_test: np.ndarray, MAX_FEATURES: int, LEARNING_RATE: float, BATCH_SIZE: int,
                EPOCHS: int, SAVE_DIR: str):
-    """Trains an LSTM model using PyTorch with GPU support."""
+    """
+    Trains an LSTM model using PyTorch with GPU support.
+
+    Args:
+        X_train (np.ndarray): Training data features.
+        X_test (np.ndarray): Testing data features.
+        y_train (np.ndarray): Training data labels.
+        y_test (np.ndarray): Testing data labels.
+        MAX_FEATURES (int): Maximum number of features for the vectorizer.
+        LEARNING_RATE (float): Learning rate for the optimizer.
+        BATCH_SIZE (int): Batch size for training.
+        EPOCHS (int): Number of epochs for training.
+        SAVE_DIR (str): Directory to save the trained model.
+    """
     logging.info("Training LSTM...")
     logging.info("Vectorizing text data...")
     vectorizer = TfidfVectorizer(max_features=MAX_FEATURES)
@@ -236,6 +316,18 @@ def train_lstm(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
 def train_nn_svm(MODEL: str, EPOCHS: int, SAVE_DIR: str,
                  MAX_FEATURES: int, TEST_SIZE: float | int,
                  MAX_ITER: int, RANDOM_STATE: int):
+    """
+    Trains a Neural Network or SVM model with hyperparameter tuning.
+
+    Args:
+        MODEL (str): The type of model to train ('svm' or 'nn').
+        EPOCHS (int): Number of epochs for training.
+        SAVE_DIR (str): Directory to save the trained model.
+        MAX_FEATURES (int): Maximum number of features for the vectorizer.
+        TEST_SIZE (float | int): Proportion of the dataset to include in the test split.
+        MAX_ITER (int): Maximum number of iterations for the model.
+        RANDOM_STATE (int): Random state for reproducibility.
+    """
     if MODEL not in ["svm", "nn"]:
         logging.error(f"Invalid model type: {MODEL}. Please choose 'svm' or 'nn'.")
         return
@@ -325,6 +417,21 @@ def train_nn_svm(MODEL: str, EPOCHS: int, SAVE_DIR: str,
 def train_model_blx(MODEL_TYPE: str, SAVE_DIR: str, EPOCHS: int, BATCH_SIZE: int, LEARNING_RATE: float,
                     MAX_FEATURES: int, MAX_LEN: int,
                     TEST_SIZE: float | int, RANDOM_STATE: int, MODEL_PATH_BERT: str = None):
+    """
+    Sets up and trains a model based on the specified type.
+
+    Args:
+        MODEL_TYPE (str): The type of model to train ('xgboost', 'bert', 'lstm').
+        SAVE_DIR (str): Directory to save the trained model.
+        EPOCHS (int): Number of epochs for training.
+        BATCH_SIZE (int): Batch size for training.
+        LEARNING_RATE (float): Learning rate for the optimizer.
+        MAX_FEATURES (int): Maximum number of features for the vectorizer.
+        MAX_LEN (int): Maximum length of the sequences (for BERT).
+        TEST_SIZE (float | int): Proportion of the dataset to include in the test split.
+        RANDOM_STATE (int): Random state for reproducibility.
+        MODEL_PATH_BERT (str, optional): Path to the pre-trained BERT model.
+    """
     # Create save directory if it doesn't exist
     os.makedirs(SAVE_DIR, exist_ok=True)
 
@@ -358,6 +465,16 @@ def train_model_blx(MODEL_TYPE: str, SAVE_DIR: str, EPOCHS: int, BATCH_SIZE: int
 @deprecated(reason="This function is used to train RandomForest. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
 def train_rfc(SAVE_DIR: str, EPOCHS: int, TEST_SIZE: float | int,
               N_ESTIMATORS: int, RANDOM_STATE: int):
+    """
+    Trains a Random Forest Classifier.
+
+    Args:
+        SAVE_DIR (str): Directory to save the trained model.
+        EPOCHS (int): Number of epochs for training.
+        TEST_SIZE (float | int): Proportion of the dataset to include in the test split.
+        N_ESTIMATORS (int): Number of trees in the forest.
+        RANDOM_STATE (int): Random state for reproducibility.
+    """
     logging.info("Training model...")
 
     # Load data
@@ -391,7 +508,7 @@ def train_rfc(SAVE_DIR: str, EPOCHS: int, TEST_SIZE: float | int,
 
         # Save progress plot
         if not os.path.exists(SAVE_DIR):
-            mkdir(SAVE_DIR)
+            os.mkdir(SAVE_DIR)
         save_progress_graph(accuracies, filename=os.path.join(SAVE_DIR, "training_progress.png"))
 
         # Save model checkpoint

@@ -9,6 +9,15 @@ import os
 
 
 def load_data(data_paths: str | os.PathLike) -> list[str]:
+    """
+    Load data from the specified path(s).
+
+    Args:
+        data_paths (str | os.PathLike): Path to a directory or a file containing data.
+
+    Returns:
+        list[str]: List of strings, each representing the content of a file.
+    """
     data = []
     if os.path.isdir(data_paths):
         for root, _, files in os.walk(data_paths):
@@ -24,6 +33,18 @@ def load_data(data_paths: str | os.PathLike) -> list[str]:
 
 
 def choose_vectorizer(vectorizer_types: str) -> TfidfVectorizer | CountVectorizer:
+    """
+    Choose and return a vectorizer based on the specified type.
+
+    Args:
+        vectorizer_types (str): Type of vectorizer to use ('tfidf' or 'count').
+
+    Returns:
+        TfidfVectorizer | CountVectorizer: The chosen vectorizer.
+
+    Raises:
+        ValueError: If an unsupported vectorizer type is specified.
+    """
     print("Vectorizer Type: ", vectorizer_types)
     print("Vectorizing Data...")
     if vectorizer_types == 'tfidf':
@@ -34,6 +55,14 @@ def choose_vectorizer(vectorizer_types: str) -> TfidfVectorizer | CountVectorize
 
 
 def main(data_paths: str, vectorizer_types: str, output_paths: str):
+    """
+    Main function to load data, choose a vectorizer, fit the vectorizer to the data, and save the vectorizer.
+
+    Args:
+        data_paths (str): Path to the data.
+        vectorizer_types (str): Type of vectorizer to use ('tfidf' or 'count').
+        output_paths (str): Path to save the fitted vectorizer.
+    """
     data = load_data(data_paths)
     vectorizer = choose_vectorizer(vectorizer_types)
     vectorizer.fit(data)

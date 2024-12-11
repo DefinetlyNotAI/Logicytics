@@ -344,49 +344,50 @@ def train_model(
         train_traditional_model(model_name, epochs, save_model_path)
 
 
-# Config file reading and setting constants
-logger.info("Reading config file")
-config = ConfigParser()
-config.read('../../config.ini')
-MODEL_NAME = config.get('VulnScan.train Settings', 'model_name')
-TRAINING_PATH = config.get('VulnScan.train Settings', 'train_data_path')
-EPOCHS = int(config.get('VulnScan.train Settings', 'epochs'))
-BATCH_SIZE = int(config.get('VulnScan.train Settings', 'batch_size'))
-LEARN_RATE = float(config.get('VulnScan.train Settings', 'learning_rate'))
-CUDA = config.getboolean('VulnScan.train Settings', 'use_cuda')
-SAVE_PATH = config.get('VulnScan.train Settings', 'save_model_path')
+if __name__ == "__main__":
+    # Config file reading and setting constants
+    logger.info("Reading config file")
+    config = ConfigParser()
+    config.read('../../config.ini')
+    MODEL_NAME = config.get('VulnScan.train Settings', 'model_name')
+    TRAINING_PATH = config.get('VulnScan.train Settings', 'train_data_path')
+    EPOCHS = int(config.get('VulnScan.train Settings', 'epochs'))
+    BATCH_SIZE = int(config.get('VulnScan.train Settings', 'batch_size'))
+    LEARN_RATE = float(config.get('VulnScan.train Settings', 'learning_rate'))
+    CUDA = config.getboolean('VulnScan.train Settings', 'use_cuda')
+    SAVE_PATH = config.get('VulnScan.train Settings', 'save_model_path')
 
-# Load Data
-logger.info(f"Loading data from {TRAINING_PATH}")
-texts, labels = [], []
-for filename in os.listdir(TRAINING_PATH):
-    with open(os.path.join(config.get('VulnScan.train Settings', 'train_data_path'), filename), 'r',
-              encoding='utf-8') as file:
-        texts.append(file.read())
-        labels.append(1 if '-sensitive' in filename else 0)
-    logger.debug(f"Loaded data from {filename} with label {labels[-1]}")
+    # Load Data
+    logger.info(f"Loading data from {TRAINING_PATH}")
+    texts, labels = [], []
+    for filename in os.listdir(TRAINING_PATH):
+        with open(os.path.join(config.get('VulnScan.train Settings', 'train_data_path'), filename), 'r',
+                  encoding='utf-8') as file:
+            texts.append(file.read())
+            labels.append(1 if '-sensitive' in filename else 0)
+        logger.debug(f"Loaded data from {filename} with label {labels[-1]}")
 
-# Split Data
-logger.info("Splitting data into training and validation sets")
-X_train, X_val, y_train, y_val = train_test_split(texts,
-                                                  labels,
-                                                  test_size=0.2,
-                                                  random_state=42)
+    # Split Data
+    logger.info("Splitting data into training and validation sets")
+    X_train, X_val, y_train, y_val = train_test_split(texts,
+                                                      labels,
+                                                      test_size=0.2,
+                                                      random_state=42)
 
-# Train Model
-try:
-    train_model(model_name=MODEL_NAME,
-                epochs=EPOCHS,
-                batch_size=BATCH_SIZE,
-                learning_rate=LEARN_RATE,
-                save_model_path=SAVE_PATH,
-                use_cuda=CUDA)
-except FileNotFoundError as e:
-    logger.error(f"File Not Found Error in training model: {e}")
-    exit(1)
-except AttributeError as e:
-    logger.error(f"Attribute Error in training model: {e}")
-    exit(1)
-except Exception as e:
-    logger.error(f"Error in training model: {e}")
-    exit(1)
+    # Train Model
+    try:
+        train_model(model_name=MODEL_NAME,
+                    epochs=EPOCHS,
+                    batch_size=BATCH_SIZE,
+                    learning_rate=LEARN_RATE,
+                    save_model_path=SAVE_PATH,
+                    use_cuda=CUDA)
+    except FileNotFoundError as e:
+        logger.error(f"File Not Found Error in training model: {e}")
+        exit(1)
+    except AttributeError as e:
+        logger.error(f"Attribute Error in training model: {e}")
+        exit(1)
+    except Exception as e:
+        logger.error(f"Error in training model: {e}")
+        exit(1)
