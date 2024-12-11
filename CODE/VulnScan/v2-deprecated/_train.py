@@ -40,7 +40,7 @@ logging.info(f"Using device: {DEVICE}")
 # ---------------------------------------
 
 
-@deprecated(reason="This function is used to load data from a directory. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
+@deprecated(reason="This function is used to load data from a directory. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.2.0")
 def load_data(data_dir: str) -> tuple[list[str], np.ndarray]:
     """
     Loads text data and labels from the directory.
@@ -61,7 +61,7 @@ def load_data(data_dir: str) -> tuple[list[str], np.ndarray]:
     return texts, np.array(labels)
 
 
-@deprecated(reason="This function is used to evaluate a model. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
+@deprecated(reason="This function is used to evaluate a model. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.2.0")
 def evaluate_model(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[float, float, float, float, float]:
     """
     Evaluates the model using standard metrics.
@@ -88,7 +88,7 @@ def evaluate_model(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[float, float
 # ---------------------------------------
 
 
-@deprecated(reason="This function is used to save progress graphs. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
+@deprecated(reason="This function is used to save progress graphs. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.2.0")
 def save_progress_graph(accuracies: list[float], filename: str = "training_progress.png"):
     """
     Saves a graph of training progress.
@@ -108,7 +108,7 @@ def save_progress_graph(accuracies: list[float], filename: str = "training_progr
     plt.close()
 
 
-@deprecated(reason="This function is used to train xgboost. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
+@deprecated(reason="This function is used to train xgboost. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.2.0")
 def train_xgboost(X_train: np.ndarray, X_test: np.ndarray,
                   y_train: np.ndarray, y_test: np.ndarray, SAVE_DIR: str):
     """
@@ -133,7 +133,7 @@ def train_xgboost(X_train: np.ndarray, X_test: np.ndarray,
     logging.info("Model saved as xgboost_model.pkl")
 
 
-@deprecated(reason="This function is used to train bert. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
+@deprecated(reason="This function is used to train bert. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.2.0")
 def train_bert(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
                y_test: np.ndarray, MAX_LEN: int, LEARNING_RATE: float, BATCH_SIZE: int,
                EPOCHS: int, SAVE_DIR: str, MODEL_PATH: str):
@@ -201,7 +201,7 @@ def train_bert(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
 
 
 class LSTMModel(nn.Module):
-    @deprecated(reason="This class is used to define an LSTM model. Its for training v2 models, which is now deprecated, use _train.py v3 instead.", removal_version="3.3.0")
+    @deprecated(reason="This class is used to define an LSTM model. Its for training v2 models, which is now deprecated, use _train.py v3 instead.", removal_version="3.2.0")
     def __init__(self, vocab_size: int, embedding_dim: int = 128, hidden_dim: int = 128, output_dim: int = 1):
         """
         Initializes the LSTM model.
@@ -218,7 +218,7 @@ class LSTMModel(nn.Module):
         self.fc = nn.Linear(hidden_dim * 2, output_dim)  # Bidirectional, so multiply by 2
         self.sigmoid = nn.Sigmoid()
 
-    @deprecated(reason="This class is used to define an LSTM model. Its for training v2 models, which is now deprecated, use _train.py v3 instead.", removal_version="3.3.0")
+    @deprecated(reason="This class is used to define an LSTM model. Its for training v2 models, which is now deprecated, use _train.py v3 instead.", removal_version="3.2.0")
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Defines the forward pass of the LSTM model.
@@ -236,7 +236,7 @@ class LSTMModel(nn.Module):
         return x
 
 
-@deprecated(reason="This function is used to train lstm. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
+@deprecated(reason="This function is used to train lstm. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.2.0")
 def train_lstm(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
                y_test: np.ndarray, MAX_FEATURES: int, LEARNING_RATE: float, BATCH_SIZE: int,
                EPOCHS: int, SAVE_DIR: str):
@@ -312,7 +312,7 @@ def train_lstm(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
 # ---------------------------------------
 
 # noinspection DuplicatedCode
-@deprecated(reason="This function is used to train NeuralNetworks/SVM. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
+@deprecated(reason="This function is used to train NeuralNetworks/SVM. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.2.0")
 def train_nn_svm(MODEL: str, EPOCHS: int, SAVE_DIR: str,
                  MAX_FEATURES: int, TEST_SIZE: float | int,
                  MAX_ITER: int, RANDOM_STATE: int):
@@ -413,7 +413,7 @@ def train_nn_svm(MODEL: str, EPOCHS: int, SAVE_DIR: str,
     logging.info("Training complete.")
 
 
-@deprecated(reason="This function is used setup training. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
+@deprecated(reason="This function is used setup training. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.2.0")
 def train_model_blx(MODEL_TYPE: str, SAVE_DIR: str, EPOCHS: int, BATCH_SIZE: int, LEARNING_RATE: float,
                     MAX_FEATURES: int, MAX_LEN: int,
                     TEST_SIZE: float | int, RANDOM_STATE: int, MODEL_PATH_BERT: str = None):
@@ -462,7 +462,7 @@ def train_model_blx(MODEL_TYPE: str, SAVE_DIR: str, EPOCHS: int, BATCH_SIZE: int
 
 
 # noinspection DuplicatedCode
-@deprecated(reason="This function is used to train RandomForest. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.3.0")
+@deprecated(reason="This function is used to train RandomForest. Its for training v2 models, which is now deprecated, use train.py v3 instead.", removal_version="3.2.0")
 def train_rfc(SAVE_DIR: str, EPOCHS: int, TEST_SIZE: float | int,
               N_ESTIMATORS: int, RANDOM_STATE: int):
     """
