@@ -66,7 +66,7 @@ def dev_checks() -> None:
         Performs a series of checks to ensure that the developer has followed the required guidelines and best practices.
         Returns:
             bool: True if all checks pass, otherwise False.
-        """
+    """
     # Create the necessary directories if they do not exist
     FileManagement.mkdir()
 
@@ -88,9 +88,9 @@ def dev_checks() -> None:
 
         # Get the list of code files in the current directory
         files = Get.list_of_code_files(".")
-        added_files = [f for f in files if f not in CURRENT_FILES]
-        removed_files = [f for f in CURRENT_FILES if f not in files]
-        normal_files = [f for f in files if f in CURRENT_FILES]
+        added_files = [f.replace('"', '') for f in files if f not in CURRENT_FILES]
+        removed_files = [f.replace('"', '') for f in CURRENT_FILES if f not in files]
+        normal_files = [f.replace('"', '') for f in files if f in CURRENT_FILES]
 
         # Print the list of added, removed, and normal files in color
         print("\n".join([f"\033[92m+ {file}\033[0m" for file in added_files]))  # Green +
