@@ -325,9 +325,13 @@ def execute_scripts():
 
 def zip_generated_files():
     """Zips generated files based on the action."""
-
-    def zip_and_log(directory, name):
-        zip_values = FileManagement.Zip.and_hash(directory, name, ACTION if not None else "ERROR_NULL_ACTION_VALUE")
+    def zip_and_log(directory: str, name: str):
+        log.debug(f"Zipping directory '{directory}' with name '{name}' under action '{ACTION}'")
+        zip_values = FileManagement.Zip.and_hash(
+                directory,
+                name,
+                ACTION if ACTION is not None else f"ERROR_NO_ACTION_SPECIFIED_{datetime.now().isoformat()}"
+        )
         if isinstance(zip_values, str):
             log.error(zip_values)
         else:

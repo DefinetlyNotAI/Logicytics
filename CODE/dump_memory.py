@@ -102,7 +102,7 @@ def read_memory():
     min_address = system_info.lpMinimumApplicationAddress
     max_address = system_info.lpMaximumApplicationAddress
     with open("SystemRam_Info.txt", "w") as sys_file:
-        sys_file.write(f"System Information:\n")
+        sys_file.write("System Information:\n")
         sys_file.write("===================================\n")
         sys_file.write(f"Minimum Address: {min_address}\n")
         sys_file.write(f"Maximum Address: {max_address}\n")

@@ -344,11 +344,38 @@ def train_model(
         train_traditional_model(model_name, epochs, save_model_path)
 
 
+def validate_data():
+    """
+    Validates the data by checking if the variables are of the correct type.
+    """
+    if not isinstance(EPOCHS, int) and EPOCHS > 0:
+        logger.error("EPOCHS must be an integer")
+        exit(1)
+    if not isinstance(BATCH_SIZE, int) and BATCH_SIZE > 0:
+        logger.error("BATCH_SIZE must be an integer")
+        exit(1)
+    if not isinstance(LEARN_RATE, float) and 0 < LEARN_RATE < 1:
+        logger.error("LEARN_RATE must be a float")
+        exit(1)
+    if not isinstance(CUDA, bool):
+        logger.error("CUDA must be a boolean")
+        exit(1)
+    allowed_models = ["NeuralNetwork", "LogReg",
+                      "RandomForest", "ExtraTrees", "GBM",
+                      "XGBoost", "DecisionTree", "NaiveBayes"]
+    if MODEL_NAME not in allowed_models:
+        logger.error('MODEL_NAME must be one of the following: '
+                     '"NeuralNetwork", "LogReg", "RandomForest", '
+                     '"ExtraTrees", "GBM","XGBoost", "DecisionTree", "NaiveBayes"')
+        exit(1)
+
+
 if __name__ == "__main__":
     # Config file reading and setting constants
     logger.info("Reading config file")
     config = ConfigParser()
     config.read('../../config.ini')
+
     MODEL_NAME = config.get('VulnScan.train Settings', 'model_name')
     TRAINING_PATH = config.get('VulnScan.train Settings', 'train_data_path')
     EPOCHS = int(config.get('VulnScan.train Settings', 'epochs'))
@@ -356,6 +383,8 @@ if __name__ == "__main__":
     LEARN_RATE = float(config.get('VulnScan.train Settings', 'learning_rate'))
     CUDA = config.getboolean('VulnScan.train Settings', 'use_cuda')
     SAVE_PATH = config.get('VulnScan.train Settings', 'save_model_path')
+
+    validate_data()
 
     # Load Data
     logger.info(f"Loading data from {TRAINING_PATH}")

@@ -4,7 +4,17 @@ import os
 import random
 import string
 import configparser
+from Logicytics import Log, DEBUG
 from faker import Faker
+
+
+logger = Log(
+    {"log_level": DEBUG,
+     "filename": "../../../ACCESS/LOGS/VulnScan_Train.log",
+     "colorlog_fmt_parameters":
+         "%(log_color)s%(levelname)-8s%(reset)s %(yellow)s%(asctime)s %(blue)s%(message)s",
+     }
+)
 
 
 def generate_random_filename(extensions: str, suffix_x: str = '') -> str:
@@ -149,7 +159,7 @@ def generate_file_content(extensions: str) -> tuple[str, str]:
         size = abs(int(size + (size / SIZE_VARIATION)))
     elif variation_choice == 4:
         size = abs(int(size - (size / SIZE_VARIATION)))
-    print(f"Generating {extensions} content of size {size} bytes")
+    logger.debug(f"Generating {extensions} content of size {size} bytes")
     return generate_content_for_extension(extensions, size)
 
 
@@ -183,6 +193,8 @@ if __name__ == "__name__":
         MIN_FILE_SIZE = int(DEFAULT_MIN_FILE_SIZE * 0.5)
         MAX_FILE_SIZE = int(DEFAULT_MAX_FILE_SIZE * 0.5)
     elif CODE_NAME == 'SenseMacro':
+        logger.warning("Generating 100 times more files and 100 times larger files")
+        logger.warning("This is being deprecated in version 3.2.0")
         FILE_NUM = DEFAULT_FILE_NUM * 100
         MIN_FILE_SIZE = DEFAULT_MIN_FILE_SIZE
         MAX_FILE_SIZE = DEFAULT_MAX_FILE_SIZE
@@ -195,10 +207,10 @@ if __name__ == "__name__":
         MAX_FILE_SIZE = int(config['max_file_size'].replace('KB', '')) * 1024
         FILE_NUM = DEFAULT_FILE_NUM
 
-    print(f"Generating {FILE_NUM} files with sizes between {MIN_FILE_SIZE} and {MAX_FILE_SIZE} bytes")
+    logger.info(f"Generating {FILE_NUM} files with sizes between {MIN_FILE_SIZE} and {MAX_FILE_SIZE} bytes")
 
     for i in range(FILE_NUM):
-        print(f"Generating file {i + 1}/{FILE_NUM}")
+        logger.debug(f"Generating file {i + 1}/{FILE_NUM}")
         extension = random.choice(EXTENSIONS_ALLOWED).strip()
         content, suffix = generate_file_content(extension)
         filename = generate_random_filename(extension, suffix)
@@ -206,6 +218,6 @@ if __name__ == "__name__":
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(content)
 
-    print(f"Generated {FILE_NUM} files in {SAVE_PATH}")
+    logger.info(f"Generated {FILE_NUM} files in {SAVE_PATH}")
 else:
     raise ImportError("This file cannot be imported")
