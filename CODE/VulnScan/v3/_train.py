@@ -411,6 +411,17 @@ if __name__ == "__main__":
                     learning_rate=LEARN_RATE,
                     save_model_path=SAVE_PATH,
                     use_cuda=CUDA)
+    except RuntimeError as e:
+        if "CUDA" in str(e):
+            logger.error(f"GPU error: {e}. Falling back to CPU...")
+            train_model(model_name=MODEL_NAME,
+                        epochs=EPOCHS,
+                        batch_size=BATCH_SIZE,
+                        learning_rate=LEARN_RATE,
+                        save_model_path=SAVE_PATH,
+                        use_cuda=False)
+        else:
+            raise
     except FileNotFoundError as e:
         logger.error(f"File Not Found Error in training model: {e}")
         exit(1)

@@ -163,7 +163,7 @@ def generate_file_content(extensions: str) -> tuple[str, str]:
     return generate_content_for_extension(extensions, size)
 
 
-if __name__ == "__name__":
+if __name__ == "__main__":
     """
     Main function to generate files based on the configuration.
     """
