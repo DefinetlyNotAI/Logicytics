@@ -80,3 +80,5 @@ if __name__ == "__main__":
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     main(data_path, vectorizer_type, output_path)
+else:
+    raise ImportError("This file cannot be imported")

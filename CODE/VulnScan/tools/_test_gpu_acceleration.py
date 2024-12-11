@@ -23,3 +23,5 @@ def check_gpu():
 
 if __name__ == '__main__':
     check_gpu()
+else:
+    raise ImportError("This file cannot be imported")

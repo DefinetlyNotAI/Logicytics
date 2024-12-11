@@ -26,11 +26,6 @@ from torchviz import make_dot
 from tqdm import tqdm
 
 
-# TODO Do v3.1 plans
-#   Raise an ImportError to make the file unimportable
-#   raise ImportError("This file cannot be imported")
-
-
 # Example of DataLoader for loss landscape (dummy dataset for visualization)
 class DummyDataset(torch.utils.data.Dataset):
     """
@@ -624,3 +619,5 @@ if __name__ == '__main__':
 
     model_summary()
     main_plot()
+else:
+    raise ImportError("This file cannot be imported")

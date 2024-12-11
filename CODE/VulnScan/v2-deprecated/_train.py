@@ -544,3 +544,5 @@ if __name__ == "__main__":
     train_model_blx(MODEL_TYPE="bert", SAVE_DIR=r"C:\Users\Hp\Desktop\Model Tests\Model Sense .2b1", EPOCHS=5,
                     BATCH_SIZE=8, LEARNING_RATE=5e-5, MAX_FEATURES=5000, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42,
                     MODEL_PATH_BERT="../bert-base-uncased-model")
+else:
+    raise ImportError("This file cannot be imported")
