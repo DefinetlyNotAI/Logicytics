@@ -348,25 +348,28 @@ def validate_data():
     """
     Validates the data by checking if the variables are of the correct type.
     """
-    if not isinstance(EPOCHS, int) and EPOCHS > 0:
-        logger.error("EPOCHS must be an integer")
+    if not isinstance(EPOCHS, int) or EPOCHS <= 0:
+        logger.error("EPOCHS must be a positive integer")
         exit(1)
-    if not isinstance(BATCH_SIZE, int) and BATCH_SIZE > 0:
-        logger.error("BATCH_SIZE must be an integer")
+    if not isinstance(BATCH_SIZE, int) or BATCH_SIZE <= 0:
+        logger.error("BATCH_SIZE must be a positive integer")
         exit(1)
-    if not isinstance(LEARN_RATE, float) and 0 < LEARN_RATE < 1:
-        logger.error("LEARN_RATE must be a float")
+    if not isinstance(LEARN_RATE, float) or not (0 < LEARN_RATE < 1):
+        logger.error("LEARN_RATE must be a float between 0 and 1")
         exit(1)
     if not isinstance(CUDA, bool):
         logger.error("CUDA must be a boolean")
         exit(1)
-    allowed_models = ["NeuralNetwork", "LogReg",
-                      "RandomForest", "ExtraTrees", "GBM",
-                      "XGBoost", "DecisionTree", "NaiveBayes"]
+
+    allowed_models = ["NeuralNetwork", "LogReg", "RandomForest", "ExtraTrees", "GBM", "XGBoost", "DecisionTree", "NaiveBayes"]
     if MODEL_NAME not in allowed_models:
-        logger.error('MODEL_NAME must be one of the following: '
-                     '"NeuralNetwork", "LogReg", "RandomForest", '
-                     '"ExtraTrees", "GBM","XGBoost", "DecisionTree", "NaiveBayes"')
+        logger.error(f"MODEL_NAME must be one of: {', '.join(allowed_models)}")
+        exit(1)
+    if not os.path.exists(TRAINING_PATH):
+        logger.error(f"Training data path {TRAINING_PATH} does not exist")
+        exit(1)
+    if not os.path.exists(os.path.dirname(SAVE_PATH)):
+        logger.error(f"Save model path {SAVE_PATH} does not exist")
         exit(1)
 
 
@@ -421,15 +424,19 @@ if __name__ == "__main__":
                         save_model_path=SAVE_PATH,
                         use_cuda=False)
         else:
-            raise
+            logger.error(f"Runtime Error in training model: {e}")
+            exit(1)
     except FileNotFoundError as e:
-        logger.error(f"File Not Found Error in training model: {e}")
+        logger.error(f"Training data or model files not found: {e}."
+                     f" Please check if all required files exist.")
         exit(1)
     except AttributeError as e:
-        logger.error(f"Attribute Error in training model: {e}")
+        logger.error(f"Invalid model configuration or missing attributes: {e}."
+                     f" Please verify model settings.")
         exit(1)
     except Exception as e:
         logger.error(f"Error in training model: {e}")
         exit(1)
 else:
-    raise ImportError("This file cannot be imported")
+    raise ImportError("This training script is meant to be run directly "
+                      "and cannot be imported. Please execute it as a standalone script.")
