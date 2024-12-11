@@ -178,6 +178,7 @@ def select_model_from_traditional(model_name: str,
     logger.error(f"Invalid model name: {model_name}")
     exit(1)
 
+
 def train_traditional_model(model_name: str,
                             epochs: int,
                             save_model_path: str):
@@ -343,49 +344,99 @@ def train_model(
         train_traditional_model(model_name, epochs, save_model_path)
 
 
-# Config file reading and setting constants
-logger.info("Reading config file")
-config = ConfigParser()
-config.read('../../config.ini')
-MODEL_NAME = config.get('VulnScan.train Settings', 'model_name')
-TRAINING_PATH = config.get('VulnScan.train Settings', 'train_data_path')
-EPOCHS = int(config.get('VulnScan.train Settings', 'epochs'))
-BATCH_SIZE = int(config.get('VulnScan.train Settings', 'batch_size'))
-LEARN_RATE = float(config.get('VulnScan.train Settings', 'learning_rate'))
-CUDA = config.getboolean('VulnScan.train Settings', 'use_cuda')
-SAVE_PATH = config.get('VulnScan.train Settings', 'save_model_path')
+def validate_data():
+    """
+    Validates the data by checking if the variables are of the correct type.
+    """
+    if not isinstance(EPOCHS, int) or EPOCHS <= 0:
+        logger.error("EPOCHS must be a positive integer")
+        exit(1)
+    if not isinstance(BATCH_SIZE, int) or BATCH_SIZE <= 0:
+        logger.error("BATCH_SIZE must be a positive integer")
+        exit(1)
+    if not isinstance(LEARN_RATE, float) or not (0 < LEARN_RATE < 1):
+        logger.error("LEARN_RATE must be a float between 0 and 1")
+        exit(1)
+    if not isinstance(CUDA, bool):
+        logger.error("CUDA must be a boolean")
+        exit(1)
 
-# Load Data
-logger.info(f"Loading data from {TRAINING_PATH}")
-texts, labels = [], []
-for filename in os.listdir(TRAINING_PATH):
-    with open(os.path.join(config.get('VulnScan.train Settings', 'train_data_path'), filename), 'r',
-              encoding='utf-8') as file:
-        texts.append(file.read())
-        labels.append(1 if '-sensitive' in filename else 0)
-    logger.debug(f"Loaded data from {filename} with label {labels[-1]}")
+    allowed_models = ["NeuralNetwork", "LogReg", "RandomForest", "ExtraTrees", "GBM", "XGBoost", "DecisionTree", "NaiveBayes"]
+    if MODEL_NAME not in allowed_models:
+        logger.error(f"MODEL_NAME must be one of: {', '.join(allowed_models)}")
+        exit(1)
+    if not os.path.exists(TRAINING_PATH):
+        logger.error(f"Training data path {TRAINING_PATH} does not exist")
+        exit(1)
+    if not os.path.exists(os.path.dirname(SAVE_PATH)):
+        logger.error(f"Save model path {SAVE_PATH} does not exist")
+        exit(1)
 
-# Split Data
-logger.info("Splitting data into training and validation sets")
-X_train, X_val, y_train, y_val = train_test_split(texts,
-                                                  labels,
-                                                  test_size=0.2,
-                                                  random_state=42)
 
-# Train Model
-try:
-    train_model(model_name=MODEL_NAME,
-                epochs=EPOCHS,
-                batch_size=BATCH_SIZE,
-                learning_rate=LEARN_RATE,
-                save_model_path=SAVE_PATH,
-                use_cuda=CUDA)
-except FileNotFoundError as e:
-    logger.error(f"File Not Found Error in training model: {e}")
-    exit(1)
-except AttributeError as e:
-    logger.error(f"Attribute Error in training model: {e}")
-    exit(1)
-except Exception as e:
-    logger.error(f"Error in training model: {e}")
-    exit(1)
+if __name__ == "__main__":
+    # Config file reading and setting constants
+    logger.info("Reading config file")
+    config = ConfigParser()
+    config.read('../../config.ini')
+
+    MODEL_NAME = config.get('VulnScan.train Settings', 'model_name')
+    TRAINING_PATH = config.get('VulnScan.train Settings', 'train_data_path')
+    EPOCHS = int(config.get('VulnScan.train Settings', 'epochs'))
+    BATCH_SIZE = int(config.get('VulnScan.train Settings', 'batch_size'))
+    LEARN_RATE = float(config.get('VulnScan.train Settings', 'learning_rate'))
+    CUDA = config.getboolean('VulnScan.train Settings', 'use_cuda')
+    SAVE_PATH = config.get('VulnScan.train Settings', 'save_model_path')
+
+    validate_data()
+
+    # Load Data
+    logger.info(f"Loading data from {TRAINING_PATH}")
+    texts, labels = [], []
+    for filename in os.listdir(TRAINING_PATH):
+        with open(os.path.join(config.get('VulnScan.train Settings', 'train_data_path'), filename), 'r',
+                  encoding='utf-8') as file:
+            texts.append(file.read())
+            labels.append(1 if '-sensitive' in filename else 0)
+        logger.debug(f"Loaded data from {filename} with label {labels[-1]}")
+
+    # Split Data
+    logger.info("Splitting data into training and validation sets")
+    X_train, X_val, y_train, y_val = train_test_split(texts,
+                                                      labels,
+                                                      test_size=0.2,
+                                                      random_state=42)
+
+    # Train Model
+    try:
+        train_model(model_name=MODEL_NAME,
+                    epochs=EPOCHS,
+                    batch_size=BATCH_SIZE,
+                    learning_rate=LEARN_RATE,
+                    save_model_path=SAVE_PATH,
+                    use_cuda=CUDA)
+    except RuntimeError as e:
+        if "CUDA" in str(e):
+            logger.error(f"GPU error: {e}. Falling back to CPU...")
+            train_model(model_name=MODEL_NAME,
+                        epochs=EPOCHS,
+                        batch_size=BATCH_SIZE,
+                        learning_rate=LEARN_RATE,
+                        save_model_path=SAVE_PATH,
+                        use_cuda=False)
+        else:
+            logger.error(f"Runtime Error in training model: {e}")
+            exit(1)
+    except FileNotFoundError as e:
+        logger.error(f"Training data or model files not found: {e}."
+                     f" Please check if all required files exist.")
+        exit(1)
+    except AttributeError as e:
+        logger.error(f"Invalid model configuration or missing attributes: {e}."
+                     f" Please verify model settings.")
+        exit(1)
+    except Exception as e:
+        logger.error(f"Error in training model: {e}")
+        exit(1)
+else:
+    raise ImportError("This training script is meant to be run directly "
+                      "and cannot be imported. Please execute it as a standalone script.")

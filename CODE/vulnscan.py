@@ -6,20 +6,23 @@ import threading
 import warnings
 
 import joblib
+import numpy as np
 import torch
 from safetensors import safe_open
 from sklearn.feature_extraction.text import TfidfVectorizer
-from tqdm import tqdm
 
 # Set up logging
 from logicytics import Log, DEBUG
 
-# Use v3 models on this! Especially NN models
-
 if __name__ == "__main__":
-    log = Log(
-        {"log_level": DEBUG}
-    )
+    log = Log({"log_level": DEBUG})
+
+log.info("Locking threads - Model and Vectorizer")
+model_lock = threading.Lock()
+vectorizer_lock = threading.Lock()
+
+model_to_use = None
+vectorizer_to_use = None
 
 
 def load_model(model_path_to_load: str) -> safe_open | torch.nn.Module:
@@ -42,12 +45,28 @@ def load_model(model_path_to_load: str) -> safe_open | torch.nn.Module:
     elif model_path_to_load.endswith('.pth'):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=FutureWarning)
-            return torch.load(model_path_to_load)
+            return torch.load(model_path_to_load, weights_only=False)
     else:
         raise ValueError("Unsupported model file format. Use .pkl, .safetensors, or .pth")
 
 
-def is_sensitive(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_content: str) -> tuple[bool, float]:
+def scan_path(model_path: str, scan_paths: str, vectorizer_path: str):
+    global model_to_use, vectorizer_to_use
+    try:
+        with model_lock:
+            if model_to_use is None:
+                log.info(f"Loading model from {model_path}")
+                model_to_use = load_model(model_path)
+        with vectorizer_lock:
+            if vectorizer_to_use is None:
+                log.info(f"Loading vectorizer from {vectorizer_path}")
+                vectorizer_to_use = joblib.load(vectorizer_path)
+        vulnscan(model_to_use, scan_paths, vectorizer_to_use)
+    except Exception as e:
+        log.error(f"Error scanning path {scan_paths}: {e}")
+
+
+def is_sensitive(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_content: str) -> tuple[bool, float, str]:
     """
     Determine if the file content is sensitive using the provided model and vectorizer.
 
@@ -57,7 +76,7 @@ def is_sensitive(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_conte
         file_content (str): Content of the file to be analyzed.
 
     Returns:
-        tuple: (True if the content is sensitive, False otherwise, prediction probability).
+        tuple: (True if the content is sensitive, False otherwise, prediction probability, reason).
     """
     if isinstance(model, torch.nn.Module):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -68,15 +87,19 @@ def is_sensitive(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_conte
             features_tensor = torch.tensor(features.toarray(), dtype=torch.float32).to(device)
             prediction = model(features_tensor)
             probability = torch.softmax(prediction, dim=1).max().item()
-            return prediction.argmax(dim=1).item() == 1, probability
+            top_features = np.argsort(features.toarray()[0])[-5:]
+            reason = ", ".join([vectorizer.get_feature_names_out()[i] for i in top_features])
+            return prediction.argmax(dim=1).item() == 1, probability, reason
     else:
         features = vectorizer.transform([file_content])
         prediction = model.predict_proba(features)
         probability = prediction.max()
-        return model.predict(features)[0] == 1, probability
+        top_features = np.argsort(features.toarray()[0])[-5:]
+        reason = ", ".join([vectorizer.get_feature_names_out()[i] for i in top_features])
+        return model.predict(features)[0] == 1, probability, reason
 
 
-def scan_file(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_path: str) -> tuple[bool, float]:
+def scan_file(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_path: str) -> tuple[bool, float, str]:
     """
     Scan a single file to determine if it contains sensitive content.
 
@@ -99,82 +122,37 @@ def scan_file(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_path: st
         return is_sensitive(model, vectorizer, content)
 
 
-def scan_directory(model: torch.nn.Module, vectorizer, dir_path: str) -> dict[str, tuple[bool, float]]:
-    """
-    Scan all files in a directory to determine if they contain sensitive content.
-
-    Args:
-        model: Machine learning model.
-        vectorizer: Vectorizer to transform file content.
-        dir_path (str): Path to the directory to be scanned.
-
-    Returns:
-        dict: Dictionary with file paths as keys and (sensitivity, prediction probability) as values.
-    """
-    results = {}
-    for roots, _, files_dir in os.walk(dir_path):
-        for file in tqdm(files_dir, desc="Scanning files", unit="file", leave=True):
-            file_path = os.path.join(roots, file)
-            if file.endswith(('.zip', '.rar', '.7z', '.tar', '.gz', '.tar.gz')):
-                continue
-            results[file_path] = scan_file(model, vectorizer, file_path)
-
-    return results
-
-
-def main(MODELS_PATH: str, SCAN_PATH: str, VECTORIZER_PATH: str):
-    """
-    Main function to load the model and vectorizer, and scan the specified path.
-    Saves the paths of sensitive files to a file named "Sensitive_File_Paths.txt".
-
-    Args:
-        MODELS_PATH (str): Path to the model file.
-        SCAN_PATH (str): Path to the file or directory to be scanned.
-        VECTORIZER_PATH (str): Path to the vectorizer file.
-    """
-    log.info(f"Loading model from {MODELS_PATH}")
-    model = load_model(MODELS_PATH)
-    log.info(f"Loading vectorizer from {VECTORIZER_PATH}")
-    vectorizer = joblib.load(VECTORIZER_PATH)  # Adjust as needed
+def vulnscan(model, SCAN_PATH, vectorizer):
     log.info(f"Scanning {SCAN_PATH}")
-    if os.path.isfile(SCAN_PATH):
-        result, probability = scan_file(model, vectorizer, SCAN_PATH)
-        log.info(f"File {SCAN_PATH} is {'sensitive' if result else 'not sensitive'} with probability {probability:.2f}")
-        with open("Sensitive_File_Paths.txt", "w") as sensitive_file:
+    result, probability, reason = scan_file(model, vectorizer, SCAN_PATH)
+    if result:
+        log.info(f"File {SCAN_PATH} is sensitive with probability {probability:.2f}. Reason: {reason}")
+        if not os.path.exists("Sensitive_File_Paths.txt"):
+            with open("Sensitive_File_Paths.txt", "w") as sensitive_file:
+                sensitive_file.write(f"{SCAN_PATH}\n\n")
+        with open("Sensitive_File_Paths.txt", "a") as sensitive_file:
             sensitive_file.write(f"{SCAN_PATH}\n")
-    elif os.path.isdir(SCAN_PATH):
-        results = scan_directory(model, vectorizer, SCAN_PATH)
-        with open("Sensitive_File_Paths.txt", "w") as sensitive_file:
-            for file_path, (is_sensitive_main, probability) in results.items():
-                log.info(f"File {file_path} is {'sensitive' if is_sensitive_main else 'not sensitive'} with probability {probability:.2f}")
-                if is_sensitive_main:
-                    sensitive_file.write(f"{file_path}\n")
-    else:
-        log.error("Invalid path provided. Please provide a valid file or directory path.")
-        exit(1)
 
 
-def scan_path(model_path: str, scan_paths: str, vectorizer_path: str):
-    """
-        Scan the specified path using the provided model and vectorizer.
-
-        Args:
-            model_path (str): Path to the model file.
-            scan_paths (str): Path to the file or directory to be scanned.
-            vectorizer_path (str): Path to the vectorizer file.
-        """
-    main(model_path, scan_paths, vectorizer_path)
-
-
-log.warning("Starting scan - This may take hours!!")
+# Start scanning
+log.info("Getting paths to scan - This may take some time!!")
 
 threads = []
-paths = [
+paths = []
+base_paths = [
     "C:\\Users\\",
     "C:\\Windows\\Logs",
     "C:\\Program Files",
     "C:\\Program Files (x86)"
 ]
+
+for base_path in base_paths:
+    for root, dirs, files_main in os.walk(base_path):
+        for file_main in files_main:
+            paths.append(os.path.join(root, file_main))
+
+# Start scanning
+log.warning("Starting scan - This may take hours and consume memory!!")
 
 for path in paths:
     thread = threading.Thread(target=scan_path,
