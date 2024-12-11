@@ -81,4 +81,5 @@ if __name__ == "__main__":
         os.makedirs(output_path)
     main(data_path, vectorizer_type, output_path)
 else:
-    raise ImportError("This file cannot be imported")
+    raise ImportError("This training script is meant to be run directly "
+                      "and cannot be imported. Please execute it as a standalone script.")

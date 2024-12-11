@@ -545,4 +545,5 @@ if __name__ == "__main__":
                     BATCH_SIZE=8, LEARNING_RATE=5e-5, MAX_FEATURES=5000, MAX_LEN=128, TEST_SIZE=0.2, RANDOM_STATE=42,
                     MODEL_PATH_BERT="../bert-base-uncased-model")
 else:
-    raise ImportError("This file cannot be imported")
+    raise ImportError("This training script is meant to be run directly "
+                      "and cannot be imported. Please execute it as a standalone script.")

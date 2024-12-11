@@ -7,13 +7,25 @@ from logicytics import Log, DEBUG
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
+    # Constants
+    PROCESS_QUERY_INFORMATION = 0x0400
+    PROCESS_VM_READ = 0x0010
+    MEM_COMMIT = 0x1000
+    PAGE_READWRITE = 0x04
 
 
 # Function to save RAM content snapshot to a file
+@log.function
 def dump_ram_content():
+    """
+    Capture the current state of the system's RAM and write it to a file.
+
+    This function gathers memory statistics, system-specific details, and writes
+    the information to a file named 'Ram_Snapshot.txt'.
+    """
     try:
         # Generate a timestamp for the file
-        dump_file = f"Ram_Snapshot.txt"
+        dump_file = "Ram_Snapshot.txt"
 
         # Gather memory statistics using psutil
         memory_info = psutil.virtual_memory()
@@ -56,6 +68,23 @@ def dump_ram_content():
 
 # Define structures for SystemInfo
 class SystemInfo(ctypes.Structure):
+    # noinspection PyUnresolvedReferences
+    """
+        A ctypes Structure to hold system information.
+
+        Attributes:
+            wProcessorArchitecture (ctypes.c_ushort): Processor architecture.
+            wReserved (ctypes.c_ushort): Reserved.
+            dwPageSize (ctypes.c_ulong): Page size.
+            lpMinimumApplicationAddress (ctypes.c_void_p): Minimum application address.
+            lpMaximumApplicationAddress (ctypes.c_void_p): Maximum application address.
+            dwActiveProcessorMask (ctypes.POINTER(ctypes.c_ulong)): Active processor mask.
+            dwNumberOfProcessors (ctypes.c_ulong): Number of processors.
+            dwProcessorType (ctypes.c_ulong): Processor type.
+            dwAllocationGranularity (ctypes.c_ulong): Allocation granularity.
+            wProcessorLevel (ctypes.c_ushort): Processor level.
+            wProcessorRevision (ctypes.c_ushort): Processor revision.
+    """
     _fields_ = [
         ("wProcessorArchitecture", ctypes.c_ushort),
         ("wReserved", ctypes.c_ushort),
@@ -73,6 +102,19 @@ class SystemInfo(ctypes.Structure):
 
 # Define BasicMemInfo
 class BasicMemInfo(ctypes.Structure):
+    # noinspection PyUnresolvedReferences
+    """
+        A ctypes Structure to hold basic memory information.
+
+        Attributes:
+            BaseAddress (ctypes.c_void_p): Base address.
+            AllocationBase (ctypes.c_void_p): Allocation base.
+            AllocationProtect (ctypes.c_ulong): Allocation protection.
+            RegionSize (ctypes.c_size_t): Region size.
+            State (ctypes.c_ulong): State.
+            Protect (ctypes.c_ulong): Protection.
+            Type (ctypes.c_ulong): Type.
+    """
     _fields_ = [
         ("BaseAddress", ctypes.c_void_p),
         ("AllocationBase", ctypes.c_void_p),
@@ -84,13 +126,28 @@ class BasicMemInfo(ctypes.Structure):
     ]
 
 
+@log.function
 def get_system_info() -> SystemInfo:
+    """
+    Retrieve and return system information using the `GetSystemInfo` function from the Windows API.
+
+    Returns:
+        SystemInfo: A `SystemInfo` structure containing details about the system's architecture,
+                    processor, memory, and other attributes.
+    """
     system_info = SystemInfo()
     ctypes.windll.kernel32.GetSystemInfo(ctypes.byref(system_info))
     return system_info
 
 
+@log.function
 def read_memory():
+    """
+    Read the memory of the current process and write the content to a file.
+
+    This function opens the current process with the necessary permissions,
+    retrieves system information, and iterates through memory pages to read
+    """
     # Open current process with permissions
     process = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, os.getpid())
     if not process:
@@ -153,11 +210,9 @@ def read_memory():
 
 
 if __name__ == "__main__":
-    # Constants
-    PROCESS_QUERY_INFORMATION = 0x0400
-    PROCESS_VM_READ = 0x0010
-    MEM_COMMIT = 0x1000
-    PAGE_READWRITE = 0x04
-
-    dump_ram_content()
-    read_memory()
+    try:
+        log.info("Starting memory dump process...")
+        dump_ram_content()
+        read_memory()
+    except Exception as err:
+        log.error(f"Error during memory dump: {err}")

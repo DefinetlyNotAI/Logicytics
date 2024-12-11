@@ -106,4 +106,5 @@ def create_random_files(directories: str, num_file: int = 100):
 if __name__ == "__main__":
     create_random_files(SAVE_DIRECTORY, num_file=1000000)
 else:
-    raise ImportError("This file cannot be imported")
+    raise ImportError("This training script is meant to be run directly "
+                      "and cannot be imported. Please execute it as a standalone script.")
