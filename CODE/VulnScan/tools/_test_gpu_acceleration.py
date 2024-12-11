@@ -21,4 +21,8 @@ def check_gpu():
         print(f"Error initializing CUDA: {err}")
 
 
-check_gpu()
+if __name__ == '__main__':
+    check_gpu()
+else:
+    raise ImportError("This training script is meant to be run directly "
+                      "and cannot be imported. Please execute it as a standalone script.")
