@@ -207,3 +207,5 @@ if __name__ == "__name__":
             f.write(content)
 
     print(f"Generated {FILE_NUM} files in {SAVE_PATH}")
+else:
+    raise ImportError("This file cannot be imported")

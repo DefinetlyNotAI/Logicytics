@@ -103,4 +103,7 @@ def create_random_files(directories: str, num_file: int = 100):
         print(f"Created {file_type} file: {file_name}")
 
 
-create_random_files(SAVE_DIRECTORY, num_file=1000000)
+if __name__ == "__main__":
+    create_random_files(SAVE_DIRECTORY, num_file=1000000)
+else:
+    raise ImportError("This file cannot be imported")

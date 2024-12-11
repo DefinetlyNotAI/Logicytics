@@ -391,3 +391,5 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"Error in training model: {e}")
         exit(1)
+else:
+    raise ImportError("This file cannot be imported")
