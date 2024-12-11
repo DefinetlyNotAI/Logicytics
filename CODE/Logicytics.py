@@ -16,11 +16,12 @@ from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DE
 # Initialization
 FileManagement.mkdir()
 log = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
+ACTION = None
+SUB_ACTION = None
 
 
 class Health:
     @staticmethod
-    @log.function
     def backup(directory: str, name: str):
         """
         Creates a backup of a specified directory by zipping its contents and moving it to a designated backup location.
@@ -47,7 +48,6 @@ class Health:
         shutil.move(f"{name}.zip", "../ACCESS/BACKUP")
 
     @staticmethod
-    @log.function
     def update() -> tuple[str, str]:
         """
         Updates the repository by pulling the latest changes from the remote repository.
@@ -327,7 +327,7 @@ def zip_generated_files():
     """Zips generated files based on the action."""
 
     def zip_and_log(directory, name):
-        zip_values = FileManagement.Zip.and_hash(directory, name, ACTION)
+        zip_values = FileManagement.Zip.and_hash(directory, name, ACTION if not None else "ERROR_NULL_ACTION_VALUE")
         if isinstance(zip_values, str):
             log.error(zip_values)
         else:
