@@ -83,14 +83,14 @@ def get_flags():
     If the flags are not a tuple, it prints the help message and exits the program.
 
     """
+    global ACTION, SUB_ACTION
     if isinstance(Flag.data(), tuple):
-        global ACTION, SUB_ACTION
         try:
             # Get flags
             ACTION, SUB_ACTION = Flag.data()
         except Exception:
-            ACTIONS = Flag.data()
-            ACTION = ACTIONS[0]
+            actions = Flag.data()
+            ACTION = actions[0]
             SUB_ACTION = None
     else:
         parser = Flag.data()
@@ -274,12 +274,12 @@ def execute_scripts():
 
         log.debug("Using threading")
         threads = []
-        EXECUTION_LIST = generate_execution_list()
-        for index, file in enumerate(EXECUTION_LIST):
+        execution_list = generate_execution_list()
+        for index, file in enumerate(execution_list):
             thread = threading.Thread(
                 target=threaded_execution,
                 args=(
-                    EXECUTION_LIST,
+                    execution_list,
                     index,
                 ),
             )
@@ -290,14 +290,14 @@ def execute_scripts():
             thread.join()
     elif ACTION == "performance_check":
         execution_times = []
-        EXECUTION_LIST = generate_execution_list()
-        for file in range(len(EXECUTION_LIST)):
+        execution_list = generate_execution_list()
+        for file in range(len(execution_list)):
             start_time = datetime.now()
-            log.parse_execution(Execute.script(EXECUTION_LIST[file]))
+            log.parse_execution(Execute.script(execution_list[file]))
             end_time = datetime.now()
             elapsed_time = end_time - start_time
             execution_times.append((file, elapsed_time))
-            log.info(f"{EXECUTION_LIST[file]} executed in {elapsed_time}")
+            log.info(f"{execution_list[file]} executed in {elapsed_time}")
 
         table = PrettyTable()
         table.field_names = ["Script", "Execution Time"]
@@ -313,10 +313,10 @@ def execute_scripts():
         log.info("Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE")
     else:
         try:
-            EXECUTION_LIST = generate_execution_list()
-            for file in range(len(EXECUTION_LIST)):  # Loop through List
-                log.parse_execution(Execute.script(EXECUTION_LIST[file]))
-                log.info(f"{EXECUTION_LIST[file]} executed")
+            execution_list = generate_execution_list()
+            for file in range(len(execution_list)):  # Loop through List
+                log.parse_execution(Execute.script(execution_list[file]))
+                log.info(f"{execution_list[file]} executed")
         except UnicodeDecodeError as e:
             log.error(f"Error in code: {e}")
         except Exception as e:
