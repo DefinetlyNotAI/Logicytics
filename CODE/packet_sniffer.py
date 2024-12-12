@@ -78,7 +78,7 @@ def get_port_info(packet: IP, port_type: str) -> int | None:
 @log.function
 def print_packet_summary(packet_info: dict):
     """Prints a summary of the captured packet."""
-    log.info(f"Packet captured: {packet_info['protocol']} packet from {packet_info['src_ip']} "
+    log.debug(f"Packet captured: {packet_info['protocol']} packet from {packet_info['src_ip']} "
              f"to {packet_info['dst_ip']} | Src Port: {packet_info['src_port']} | Dst Port: {packet_info['dst_port']}")
 
 
@@ -162,7 +162,7 @@ def visualize_graph(node_colors: str = None, node_sizes: str = None):
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
     plt.title("Network Connections Graph")
     plt.savefig("network_connections_graph.png")
-    plt.show()
+    plt.close()
 
 
 @log.function
