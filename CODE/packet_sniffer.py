@@ -172,7 +172,11 @@ def main():
     timeout = int(config['timeout'])
 
     if packet_count <= 0 or timeout <= 0:
-        log.error(f"Invalid values: packet_count ({packet_count}) and timeout ({timeout}) must be positive")
+        log.error(
+            f"Oops! Can't work with these values:\n"
+            f"- Packet count: {packet_count} {'❌ (must be > 0)' if packet_count <= 0 else '✅'}\n"
+            f"- Timeout: {timeout} {'❌ (must be > 0)' if timeout <= 0 else '✅'}"
+        )
         exit(1)
 
     try:
