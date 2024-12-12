@@ -32,18 +32,20 @@ def get_bluetooth_device_details():
 
         devices = service.ExecQuery("SELECT * FROM Win32_PnPEntity WHERE Name LIKE '%Bluetooth%'")
 
-        # Make sure it exists first
+        # Making sure it exists first
         with open("Bluetooth Info.txt", "w", encoding="UTF-8") as f:
             for device in devices:
-                log.info(f"Name: {device.Name}")
-                f.write(f"Name: {device.Name}\n")
-                f.write(f"    Device ID: {device.DeviceID}\n")
-                f.write(f"    Description: {device.Description}\n")
-                f.write(f"    Manufacturer: {device.Manufacturer}\n")
-                f.write(f"    Status: {device.Status}\n")
-                f.write(f"    PNP Device ID: {device.PNPDeviceID}\n")
-                f.write("-" * 50)
-                f.write("\n\n")
+                device_info = {
+                    'Name': getattr(device, 'Name', 'Unknown'),
+                    'Device ID': getattr(device, 'DeviceID', 'Unknown'),
+                    'Description': getattr(device, 'Description', 'Unknown'),
+                    'Manufacturer': getattr(device, 'Manufacturer', 'Unknown'),
+                    'Status': getattr(device, 'Status', 'Unknown'),
+                    'PNP Device ID': getattr(device, 'PNPDeviceID', 'Unknown')
+                }
+                log.info(f"Name: {device_info['Name']}")
+                for key, value in device_info.items():
+                    f.write(f"{key}: {value}\n" if key == 'Name' else f"    {key}: {value}\n")
     except Exception as e:
         log.error(f"Error: {e}")
 
