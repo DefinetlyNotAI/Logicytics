@@ -171,8 +171,9 @@ def main():
     packet_count = int(config['packet_count'])
     timeout = int(config['timeout'])
 
-    if packet_count == 0 or timeout == 0:
-        log.error("Invalid packet count or timeout value. Please check the configuration.")
+    if packet_count <= 0 or timeout <= 0:
+        log.error(f"Invalid values: packet_count ({packet_count}) and timeout ({timeout}) must be positive")
+        exit(1)
 
     try:
         start_sniffing(interface, packet_count, timeout)

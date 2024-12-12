@@ -88,7 +88,7 @@ def get_flags():
         try:
             # Get flags
             ACTION, SUB_ACTION = Flag.data()
-        except Exception:
+        except ValueError:
             actions = Flag.data()
             ACTION = actions[0]
             SUB_ACTION = None
@@ -275,7 +275,7 @@ def execute_scripts():
         log.debug("Using threading")
         threads = []
         execution_list = generate_execution_list()
-        for index, file in enumerate(execution_list):
+        for index, _ in enumerate(execution_list):
             thread = threading.Thread(
                 target=threaded_execution,
                 args=(
@@ -314,9 +314,9 @@ def execute_scripts():
     else:
         try:
             execution_list = generate_execution_list()
-            for file in range(len(execution_list)):  # Loop through List
-                log.parse_execution(Execute.script(execution_list[file]))
-                log.info(f"{execution_list[file]} executed")
+            for script in execution_list:  # Loop through List
+                log.parse_execution(Execute.script(script))
+                log.info(f"{script} executed")
         except UnicodeDecodeError as e:
             log.error(f"Error in code: {e}")
         except Exception as e:
