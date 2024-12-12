@@ -88,9 +88,20 @@ def dev_checks() -> None:
 
         # Get the list of code files in the current directory
         files = Get.list_of_code_files(".")
-        added_files = [f.replace('"', '') for f in files if f not in CURRENT_FILES]
-        removed_files = [f.replace('"', '') for f in CURRENT_FILES if f not in files]
-        normal_files = [f.replace('"', '') for f in files if f in CURRENT_FILES]
+        added_files, removed_files, normal_files = [], [], []
+        clean_files_list = [file.replace('"', '') for file in CURRENT_FILES]
+
+        for f in files:
+            clean_f = f.replace('"', '')
+            if clean_f in clean_files_list:
+                normal_files.append(clean_f)
+            else:
+                added_files.append(clean_f)
+
+        for f in clean_files_list:
+            clean_f = f.replace('"', '')
+            if clean_f not in files:
+                removed_files.append(clean_f)
 
         # Print the list of added, removed, and normal files in color
         print("\n".join([f"\033[92m+ {file}\033[0m" for file in added_files]))  # Green +
