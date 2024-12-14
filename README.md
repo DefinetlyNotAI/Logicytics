@@ -57,7 +57,9 @@ To install and setup Logicytics, follow these steps:
 - **Knowledge of Command Line**: The project uses command line options for the user to interact with the program. It is recommended to have a basic understanding of command line options.
 
 > [!IMPORTANT]
-> You may create a `.sys.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the ZIP file (This is done for the OpenSSF score and to discourage binaries being used without source code), if the `.sys.ignore` file is not found, it will auto extract the binaries and run them using `Logicytics`. For more details on these binaries, go [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite) - For you weary cautious internet crusaders, you can view the [source code here](https://github.com/MicrosoftDocs/sysinternals) and compare hashes and perform your audits.
+> You may create a `.sys.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the ZIP file (This is done for the OpenSSF score and to discourage binaries being used without source code), if the `.sys.ignore` file is not found, it will auto extract the binaries and run them using `Logicytics`. 
+>
+> For more details on these binaries, go [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite) - For you weary cautious internet crusaders, you can view the [source code here](https://github.com/MicrosoftDocs/sysinternals) and compare hashes and perform your audits.
 
 ## Step-by-Step Installation and Usage
 
