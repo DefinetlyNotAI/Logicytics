@@ -118,7 +118,6 @@ as well as previously trained models for you to test out
 The repository is located [here](https://github.com/DefinetlyNotAI/VulnScan_TrainingData).
 
 The repository contains the following directories:
-- `Training Data`: Contains the data used to train the models. Is organized by the file size and amount, unless its Tests, where they explicitly say text.
 - `Archived Models`: Contains the previously trained models. Is organized by the model type then version.
 - `NN features`: Contains information about the model `.3n3` and the vectorizer used. Information include:
   - `Documentation_Study_Network.md`: A markdown file that contains more info.
