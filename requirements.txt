@@ -20,4 +20,3 @@ safetensors~=0.4.5
 prettytable~=3.12.0
 pandas~=2.2.2
 scapy~=2.5.0
-future~=1.0.0
