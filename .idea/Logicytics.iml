@@ -20,7 +20,7 @@
       <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/tools/NN features" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.11" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.12 (Logicytics)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="font-awesome" level="application" />
   </component>
