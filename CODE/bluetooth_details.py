@@ -60,7 +60,7 @@ def _query_bluetooth_devices():
             'Status': getattr(device, 'Status', 'Unknown'),
             'PNP Device ID': getattr(device, 'PNPDeviceID', 'Unknown')
         }
-        log.info(f"Retrieved device: {device_info['Name']}")
+        log.debug(f"Retrieved device: {device_info['Name']}")
         device_info_list.append(device_info)
 
     return device_info_list
@@ -78,15 +78,29 @@ def _write_device_info_to_file(devices, filename):
         None
     """
     try:
-        with open(filename, "w", encoding="UTF-8") as f:
+        with open(filename, "w", encoding="UTF-8") as file:
             for device_info in devices:
-                for key, value in device_info.items():
-                    formatted_line = f"{key}: {value}\n" if key == 'Name' else f"    {key}: {value}\n"
-                    f.write(formatted_line)
-                f.write("\n")  # Separate devices with a blank line
+                _write_single_device_info(file, device_info)
     except Exception as e:
         log.error(f"Failed to write device information to file: {e}")
         exit(1)
+
+def _write_single_device_info(file, device_info):
+    """
+    Writes information for a single Bluetooth device to the file.
+
+    Args:
+        file (TextIO): File object to write to.
+        device_info (dict): Dictionary containing device information.
+
+    Returns:
+        None
+    """
+    file.write(f"Name: {device_info.get('Name', 'Unknown')}\n")
+    for key, value in device_info.items():
+        if key != 'Name':
+            file.write(f"    {key}: {value}\n")
+    file.write("\n")  # Separate devices with a blank line
 
 
 get_bluetooth_device_details()
