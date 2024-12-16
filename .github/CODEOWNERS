@@ -1,3 +1,5 @@
 * @DefinetlyNotAI
 wifi_stealer.py @ski-sketch
 packet_sniffer.py @ski-sketch
+bluetooth_details.py @ski-sketch
+bluetooth_logger.py @ski-sketch

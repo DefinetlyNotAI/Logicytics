@@ -213,6 +213,8 @@ Here are some of the data points that Logicytics extracts:
 | event_logs.py            | Produces a multiple txt files in a folder on many event logs (Security, Applications and System)                     |                          |
 | vulnscan.py              | Uses AI/ML to detect sensitive files, and log their paths                                                            | In beta!                 |
 | dump_memory.py           | Dumps some memory as well as log some RAM details                                                                    |                          |
+| bluetooth_details.py     | Gets the PNP Device ID, Status, Manufacturer, Device ID, Name, Description of all paired bluetooth devices           |                          |
+| bluetooth_logger.py      | Collect, log, and analyze Bluetooth-related data, by accessing the Windows registry and Event Viewer.                |                          |
 
 This is not an exhaustive list, 
 but it should give you a good idea of what data Logicytics is capable of extracting.
