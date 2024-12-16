@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import configparser
-import platform
 import os.path
+import platform
 import subprocess
+import sys
 from datetime import datetime
 
-import requests
 import psutil
-import sys
-from logicytics import Log, DEBUG, VERSION, CURRENT_FILES, Check
+import requests
+
+from logicytics import Log, DEBUG, VERSION, Check
 
 if __name__ == "__main__":
     log_debug = Log({"log_level": DEBUG, "filename": "../ACCESS/LOGS/DEBUG/DEBUG.log", "truncate_message": False})
@@ -17,7 +18,7 @@ if __name__ == "__main__":
 
 class HealthCheck:
     @log_debug.function
-    def get_online_config(self) -> bool | tuple[tuple[str, str, str], tuple[str, str, str]]:
+    def get_online_config(self) -> bool | tuple[str, str, str]:
         """
         Retrieves configuration data from a remote repository and compares it with the local configuration.
 
@@ -33,9 +34,8 @@ class HealthCheck:
             log_debug.warning("No connection found")
             return False
         version_check = self.__compare_versions(VERSION, config["System Settings"]["version"])
-        file_check = self.__check_files(CURRENT_FILES, config["System Settings"]["files"].split(','))
 
-        return version_check, file_check
+        return version_check
 
     @staticmethod
     def __compare_versions(
@@ -64,33 +64,6 @@ class HealthCheck:
             return (
                 "Version is behind the repository.",
                 f"Your Version: {local_version}, Repository Version: {remote_version}",
-                "ERROR",
-            )
-
-    @staticmethod
-    def __check_files(local_files: list, remote_files: list) -> tuple[str, str, str]:
-        """
-        Check if all the files in the local_files list are present in the remote_files list.
-
-        Args:
-            local_files (list): A list of files in the local repository.
-            remote_files (list): A list of files in the remote repository.
-
-        Returns:
-            tuple[str, str, str]: A tuple containing the result message, a message detailing the files present or missing,
-                                 and the log level.
-        """
-        missing_files = set(remote_files) - set(local_files)
-        if not missing_files:
-            return (
-                "All files are present.",
-                f"Your files: {local_files} contain all the files in the repository.",
-                "INFO",
-            )
-        else:
-            return (
-                "You have missing files.",
-                f"You are missing the following files: {missing_files}",
                 "ERROR",
             )
 
@@ -185,11 +158,9 @@ def debug():
     # Check File integrity (Online)
     online_config = HealthCheck().get_online_config()
     if online_config:
-        version_tuple, file_tuple = online_config
+        version_tuple = online_config
         log_debug.string(version_tuple[0], version_tuple[2])
         log_debug.raw(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] > DATA:     | {version_tuple[1] + ' ' * (153 - len(version_tuple[1])) + '|'}")
-        log_debug.string(file_tuple[0], file_tuple[2])
-        log_debug.raw(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] > DATA:     | {file_tuple[1] + ' ' * (117 - len(version_tuple[1])) + '|'}")
 
     # Check SysInternal Binaries
     message, type = DebugCheck.sys_internal_binaries("SysInternal_Suite")
