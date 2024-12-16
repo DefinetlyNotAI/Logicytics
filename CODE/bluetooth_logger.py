@@ -1,4 +1,3 @@
-import winreg
 import subprocess
 import re
 import datetime
@@ -8,132 +7,100 @@ if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
-# Utility function to log collected data to a file
-def log_to_file(filename, section_title, data):
-    """Logs collected data to a text file with a section title."""
+# Utility function to log data to a file
+def save_to_file(filename, section_title, data):
+    """Logs data to a text file with a section title."""
     try:
         with open(filename, 'a', encoding='utf-8') as file:
             file.write(f"\n{'=' * 50}\n{section_title}\n{'=' * 50}\n")
-            if isinstance(data, list):
-                for item in data:
-                    file.write(f"{item}\n")
-            else:
-                file.write(f"{data}\n")
-            file.write(f"\n{'=' * 50}\n")
+            file.write(f"{data}\n" if isinstance(data, str) else "\n".join(data) + "\n")
+            file.write(f"{'=' * 50}\n")
     except Exception as e:
         log.error(f"Error writing to file {filename}: {e}")
 
 
-# Function to collect paired Bluetooth devices
-def get_paired_bluetooth_devices():
-    """Retrieves paired Bluetooth devices from the Windows Registry."""
-    devices = []
-    try:
-        reg_path = r"SYSTEM\CurrentControlSet\Services\BTHPORT\Parameters\Devices"
-        registry_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path)
-        i = 0
-        while True:
-            try:
-                device_mac = winreg.EnumKey(registry_key, i)
-                device_key_path = f"{reg_path}\\{device_mac}"
-                device_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, device_key_path)
-
-                try:
-                    device_name, _ = winreg.QueryValueEx(device_key, "Name")
-                except FileNotFoundError:
-                    device_name = "Unknown"
-
-                devices.append(f"Device Name: {device_name}, MAC: {device_mac}")
-                winreg.CloseKey(device_key)
-                i += 1
-            except OSError:
-                break  # No more devices
-    except Exception as e:
-        log.error(f"Error reading Bluetooth devices from registry: {e}")
-
-    return devices
-
-
-# Function to execute PowerShell command and return results
+# Utility function to run PowerShell commands
 def run_powershell_command(command):
     """Runs a PowerShell command and returns the output."""
     try:
         result = subprocess.run(["powershell", "-Command", command], capture_output=True, text=True)
-        return result.stdout.split('\n')
+        return result.stdout.splitlines()
     except Exception as e:
         log.error(f"Error running PowerShell command: {e}")
         return []
 
 
-# Function to get connection/disconnection logs from Event Viewer
-def get_bluetooth_event_logs():
-    """Extracts connection/disconnection logs from Event Viewer (Bluetooth)."""
-    powershell_command = (
-        'Get-WinEvent -LogName "Microsoft-Windows-Bluetooth-BthLEServices/Operational" '
-        '| Select-Object TimeCreated, Id, Message | Format-Table -AutoSize'
+# Unified parsing function for PowerShell output
+def parse_output(lines, regex, group_names):
+    """Parses command output using a regex and extracts specified groups."""
+    results = []
+    for line in lines:
+        match = re.match(regex, line)
+        if match:
+            results.append({name: match.group(name) for name in group_names})
+        else:
+            log.debug(f"Skipping unrecognized line: {line}")
+    return results
+
+
+# Function to get paired Bluetooth devices
+def get_paired_bluetooth_devices():
+    """Retrieves paired Bluetooth devices with names and MAC addresses."""
+    command = (
+        'Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq "OK" } | Select-Object Name, DeviceID'
     )
-    logs = run_powershell_command(powershell_command)
-    return logs
+    output = run_powershell_command(command)
+    log.debug(f"Raw PowerShell output for paired devices:\n{output}")
 
-
-# Function to get Bluetooth file transfer logs
-def get_bluetooth_file_transfer_logs():
-    """Extracts Bluetooth file transfer logs from Event Viewer."""
-    powershell_command = (
-        'Get-WinEvent -LogName "Microsoft-Windows-Bluetooth-BthLEServices/Operational" '
-        '| Select-Object TimeCreated, Id, Message | Format-Table -AutoSize'
+    devices = parse_output(
+        output,
+        regex=r"^(?P<Name>.+?)\s+(?P<DeviceID>.+)$",
+        group_names=["Name", "DeviceID"]
     )
-    log_output = run_powershell_command(powershell_command)
 
-    transfer_logs = []
-    try:
-        transfer_logs = re.findall(r'.*Bluetooth.*file.*transferred.*', '\n'.join(log_output), re.IGNORECASE)
-    except Exception as e:
-        log.error(f"Error parsing file transfer logs: {e}")
+    # Extract MAC addresses
+    for device in devices:
+        mac_match = re.search(r"BLUETOOTHDEVICE_(?P<MAC>[A-F0-9]{12})", device["DeviceID"], re.IGNORECASE)
+        device["MAC"] = mac_match.group("MAC") if mac_match else "Address Not Found"
 
-    return transfer_logs
+    return [f"Name: {device['Name']}, MAC: {device['MAC']}" for device in devices]
 
 
-# Main function to collect and log all Bluetooth data
-
-
-def main():
+# Function to log all Bluetooth data
+def log_bluetooth():
+    """Logs Bluetooth device data and event logs."""
+    log.info("Starting Bluetooth data logging...")
     filename = "bluetooth_data.txt"
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_to_file(filename, "Bluetooth Data Collection - Timestamp", current_time)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    save_to_file(filename, "Bluetooth Data Collection - Timestamp", timestamp)
 
-    log.info("Collecting Paired Bluetooth Devices...")
+    # Collect and log paired devices
+    log.info(f"Collecting paired devices...")
     paired_devices = get_paired_bluetooth_devices()
-    if paired_devices:
-        log_to_file(filename, "Paired Bluetooth Devices", paired_devices)
-        for device in paired_devices:
-            log.debug(device)
-    else:
-        log.warning("No paired Bluetooth devices found.")
-        log_to_file(filename, "Paired Bluetooth Devices", "No paired Bluetooth devices found.")
+    section_title = "Paired Bluetooth Devices"
+    save_to_file(filename, section_title, paired_devices or ["No paired Bluetooth devices found."])
+    log.debug(f"{section_title}: {paired_devices}")
 
-    log.info("Collecting Bluetooth Connection/Disconnection Logs...")
-    bluetooth_logs = get_bluetooth_event_logs()
-    if bluetooth_logs:
-        log_to_file(filename, "Bluetooth Connection/Disconnection Logs", bluetooth_logs)
-        for log_for in bluetooth_logs:
-            log.debug(log_for)
-    else:
-        log.warning("No Bluetooth connection/disconnection logs found.")
-        log_to_file(filename, "Bluetooth Connection/Disconnection Logs",
-                    "No Bluetooth connection/disconnection logs found.")
+    # Collect and log event logs
+    def collect_logs(title, command):
+        logs = run_powershell_command(command)
+        save_to_file(filename, title, logs or ["No logs found."])
+        log.info(f"Getting {title}...")
 
-    log.info("Collecting Bluetooth File Transfer Logs...")
-    file_transfers = get_bluetooth_file_transfer_logs()
-    if file_transfers:
-        log_to_file(filename, "Bluetooth File Transfer Logs", file_transfers)
-        for transfer in file_transfers:
-            log.warning(transfer)
-    else:
-        log.warning("No Bluetooth file transfers found.")
-        log_to_file(filename, "Bluetooth File Transfer Logs",
-                    "No Bluetooth file transfers found.")  # Ensure we log even if no transfers are found
+    collect_logs(
+        "Bluetooth Connection/Disconnection Logs",
+        'Get-WinEvent -LogName "Microsoft-Windows-Bluetooth-BthLEServices/Operational" '
+        '| Select-Object TimeCreated, Id, Message | Format-Table -AutoSize'
+    )
+
+    collect_logs(
+        "Bluetooth File Transfer Logs",
+        'Get-WinEvent -LogName "Microsoft-Windows-Bluetooth-BthLEServices/Operational" '
+        '| Select-String -Pattern "file.*transferred" | Format-Table -AutoSize'
+    )
+
+    log.info("Finished Bluetooth data logging.")
 
 
 if __name__ == "__main__":
-    main()
+    log_bluetooth()
