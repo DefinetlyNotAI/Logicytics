@@ -7,6 +7,7 @@ from logicytics import Log, DEBUG
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
+
 # Utility function to log collected data to a file
 def log_to_file(filename, section_title, data):
     """Logs collected data to a text file with a section title."""
@@ -119,7 +120,8 @@ def main():
             log.debug(log_for)
     else:
         log.warning("No Bluetooth connection/disconnection logs found.")
-        log_to_file(filename, "Bluetooth Connection/Disconnection Logs", "No Bluetooth connection/disconnection logs found.")
+        log_to_file(filename, "Bluetooth Connection/Disconnection Logs",
+                    "No Bluetooth connection/disconnection logs found.")
 
     log.info("Collecting Bluetooth File Transfer Logs...")
     file_transfers = get_bluetooth_file_transfer_logs()
@@ -129,7 +131,8 @@ def main():
             log.warning(transfer)
     else:
         log.warning("No Bluetooth file transfers found.")
-        log_to_file(filename, "Bluetooth File Transfer Logs", "No Bluetooth file transfers found.")  # Ensure we log even if no transfers are found
+        log_to_file(filename, "Bluetooth File Transfer Logs",
+                    "No Bluetooth file transfers found.")  # Ensure we log even if no transfers are found
 
 
 if __name__ == "__main__":
