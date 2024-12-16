@@ -24,6 +24,9 @@ def run_powershell_command(command):
     """Runs a PowerShell command and returns the output."""
     try:
         result = subprocess.run(["powershell", "-Command", command], capture_output=True, text=True)
+        if result.returncode != 0:
+            log.error(f"PowerShell command failed with return code {result.returncode}")
+            return []
         return result.stdout.splitlines()
     except Exception as e:
         log.error(f"Error running PowerShell command: {e}")
