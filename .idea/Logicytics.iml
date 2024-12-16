@@ -25,7 +25,8 @@
     <orderEntry type="library" name="font-awesome" level="application" />
   </component>
   <component name="PackageRequirementsSettings">
-    <option name="keepMatchingSpecifier" value="false" />
+    <option name="removeUnused" value="true" />
+    <option name="modifyBaseFiles" value="true" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
