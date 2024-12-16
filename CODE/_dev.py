@@ -48,7 +48,7 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
         """
     try:
         answer = input(question + " (yes or no):- ")
-        if answer.lower() != "yes":
+        if answer.lower() != "yes" or answer.lower() != "y":
             if file_to_open:
                 subprocess.run(["start", file_to_open], shell=True)
             if not special:
