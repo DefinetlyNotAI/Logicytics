@@ -86,8 +86,8 @@ def dev_checks() -> None:
                 log_dev.warning("Fix the issues and try again with the checklist.")
                 return None
 
-        # Get the list of code files in the current directory
-        files = Get.list_of_code_files(".")
+        # Get the list of files in the current directory
+        files = Get.list_of_files(".", True)
         added_files, removed_files, normal_files = [], [], []
         clean_files_list = [file.replace('"', '') for file in CURRENT_FILES]
 
