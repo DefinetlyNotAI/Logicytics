@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import configparser
-import os.path
+import os
 import platform
 import subprocess
 import sys
@@ -17,197 +17,237 @@ if __name__ == "__main__":
 
 
 class HealthCheck:
-    @log_debug.function
-    def get_online_config(self) -> bool | tuple[str, str, str]:
+    @staticmethod
+    def check_files(directory: str, required_files: list[str]) -> tuple[str, str]:
         """
-        Retrieves configuration data from a remote repository and compares it with the local configuration.
+        Checks if all required files are present in the directory and its subdirectories.
+
+        Args:
+            directory (str): Path to the directory to check.
+            required_files (list[str]): List of required file names with relative paths.
 
         Returns:
-            bool: False if a connection error occurs, otherwise a tuple containing version check and file check results.
-            tuple[tuple[str, str, str], tuple[str, str, str]]: A tuple containing version check and file check results.
+            tuple[str, str]: Status message and severity level.
+        """
+        try:
+            log_debug.debug(f"Checking directory: {directory}")
+            if not os.path.exists(directory):
+                log_debug.error(f"Directory {directory} does not exist.")
+                return f"Directory {directory} does not exist.", "ERROR"
+
+            # Gather all files with relative paths
+            actual_files = []
+            for root, _, files in os.walk(directory):
+                for file in files:
+                    relative_path = os.path.relpath(os.path.join(root, file), start=directory)
+                    actual_files.append(
+                        relative_path.replace("\\", "/").replace('"', ''))  # Normalize paths for comparison
+
+            log_debug.debug(f"Actual files found: {actual_files}")
+
+            # Track missing and extra files
+            missing_files = []
+            extra_files = []
+
+            # Normalize required files
+            normalized_required_files = [required_file.strip().replace("\\", "/").replace('"', '') for required_file in
+                                         required_files]
+
+            # Check for missing files
+            for required_file in normalized_required_files:
+                if required_file not in actual_files:
+                    missing_files.append(required_file)
+
+            log_debug.debug(f"Missing files: {missing_files}")
+
+            # Check for extra files
+            for actual_file in actual_files:
+                if actual_file not in normalized_required_files:
+                    extra_files.append(actual_file)
+
+            log_debug.debug(f"Extra files: {extra_files}")
+
+            if missing_files:
+                return f"Missing files: {', '.join(missing_files)}", "ERROR"
+            if extra_files:
+                return f"Extra files found: {', '.join(extra_files)}", "WARNING"
+            return "All required files are present.", "INFO"
+
+        except Exception as e:
+            log_debug.error(f"Unexpected error during file check: {e}")
+            return f"Unexpected error during file check: {e}", "ERROR"
+
+    @staticmethod
+    def get_online_config() -> dict | None:
+        """
+        Retrieves configuration data from a remote repository.
+
+        Returns:
+            dict: Parsed configuration data if successful.
+            None: If there was an error fetching the configuration.
         """
         try:
             url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/CODE/config.ini"
             config = configparser.ConfigParser()
             config.read_string(requests.get(url, timeout=15).text)
-        except requests.exceptions.ConnectionError:
-            log_debug.warning("No connection found")
-            return False
-        version_check = self.__compare_versions(VERSION, config["System Settings"]["version"])
-
-        return version_check
+            return config
+        except requests.exceptions.RequestException as e:
+            log_debug.warning(f"Connection error: {e}")
+            return None
 
     @staticmethod
-    def __compare_versions(
-        local_version: str, remote_version: str
-    ) -> tuple[str, str, str]:
+    def compare_versions(local_version: str, remote_version: str) -> tuple[str, str, str]:
         """
-        Compares the local version with the remote version and returns a tuple containing a comparison result message,
-        a version information message, and a severity level.
+        Compares local and remote versions.
 
         Args:
-            local_version (str): The version number of the local system.
-            remote_version (str): The version number of the remote repository.
+            local_version (str): Local version.
+            remote_version (str): Remote version.
 
         Returns:
-            tuple[str, str, str]: A tuple containing a comparison result message, a version information message, and a severity level.
+            tuple[str, str, str]: Comparison result, version details, and severity level.
         """
         if local_version == remote_version:
             return "Version is up to date.", f"Your Version: {local_version}", "INFO"
-        elif local_version > remote_version:
+        if local_version > remote_version:
             return (
                 "Version is ahead of the repository.",
                 f"Your Version: {local_version}, Repository Version: {remote_version}",
                 "WARNING",
             )
-        else:
-            return (
-                "Version is behind the repository.",
-                f"Your Version: {local_version}, Repository Version: {remote_version}",
-                "ERROR",
-            )
+        return (
+            "Version is behind the repository.",
+            f"Your Version: {local_version}, Repository Version: {remote_version}",
+            "ERROR",
+        )
 
 
 class DebugCheck:
     @staticmethod
-    @log_debug.function
     def sys_internal_binaries(path: str) -> tuple[str, str]:
         """
-        Checks the contents of the given path and determines the status of the SysInternal Binaries.
+        Checks the SysInternal Binaries in the given directory.
 
         Args:
-            path (str): The path to the directory containing the SysInternal Binaries.
+            path (str): Directory path.
 
         Returns:
-            tuple[str, str]: A tuple containing a status message and a severity level.
-                The status message indicates the result of the check.
-                The severity level is either "INFO", "WARNING", or "ERROR".
-
-        Raises:
-            FileNotFoundError: If the given path does not exist.
-            Exception: If an unexpected error occurs during the check.
+            tuple[str, str]: Status message and severity level.
         """
         try:
+            if not os.path.exists(path):
+                raise FileNotFoundError("Directory does not exist")
+
             contents = os.listdir(path)
             log_debug.debug(str(contents))
+
+            has_zip = any(file.endswith(".zip") for file in contents)
+            has_exe = any(file.endswith(".exe") for file in contents)
+
             if any(file.endswith(".ignore") for file in contents):
                 return "A `.sys.ignore` file was found - Ignoring", "WARNING"
-            if any(file.endswith(".zip") for file in contents) and not any(
-                file.endswith(".exe") for file in contents
-            ):
-                return "Only zip files - Missing EXE's due to no `ignore` file", "ERROR"
-            elif any(file.endswith(".zip") for file in contents) and any(
-                file.endswith(".exe") for file in contents
-            ):
+            if has_zip and not has_exe:
+                return "Only zip files - Missing EXEs due to no `ignore` file", "ERROR"
+            if has_zip and has_exe:
                 return "Both zip and exe files - All good", "INFO"
-            else:
-                return (
-                    "SysInternal Binaries Not Found: Missing Files - Corruption detected",
-                    "ERROR",
-                )
-        except FileNotFoundError:
-            return (
-                "SysInternal Binaries Not Found: Missing Directory- Corruption detected",
-                "ERROR",
-            )
+
+            return "SysInternal Binaries Not Found: Missing Files - Corruption detected", "ERROR"
         except Exception as e:
-            return f"An Unexpected error occurred: {e}", "ERROR"
+            return f"Unexpected error: {e}", "ERROR"
 
     @staticmethod
-    @log_debug.function
     def execution_policy() -> bool:
         """
-        Checks the current PowerShell execution policy.
+        Checks if the execution policy is unrestricted.
 
         Returns:
-            bool: True if the execution policy is unrestricted, False otherwise.
+            bool: True if unrestricted, False otherwise.
         """
-        result = subprocess.run(
-            ["powershell", "-Command", "Get-ExecutionPolicy"],
-            capture_output=True,
-            text=True,
-        )
-        return result.stdout.strip().lower() == "unrestricted"
+        try:
+            result = subprocess.run(
+                ["powershell", "-Command", "Get-ExecutionPolicy"],
+                capture_output=True,
+                text=True,
+            )
+            return result.stdout.strip().lower() == "unrestricted"
+        except Exception as e:
+            log_debug.error(f"Failed to check execution policy: {e}")
+            return False
 
     @staticmethod
-    @log_debug.function
     def cpu_info() -> tuple[str, str, str]:
         """
-        Retrieves information about the CPU.
+        Retrieves CPU details.
 
         Returns:
-            tuple[str, str, str]: A tuple containing the CPU architecture, vendor ID, and model.
+            tuple[str, str, str]: Architecture, vendor ID, and model.
         """
         return (
-            "CPU Architecture: " + platform.machine(),
-            "CPU Vendor ID: " + platform.system(),
-            "CPU Model: " + f"{platform.release()} {platform.version()}",
+            f"CPU Architecture: {platform.machine()}",
+            f"CPU Vendor ID: {platform.system()}",
+            f"CPU Model: {platform.release()} {platform.version()}",
         )
 
 
-@log_debug.function
 def debug():
     """
-    Performs a series of system checks and logs the results.
+    Executes system checks and logs results.
     """
     # Clear Debug Log
     log_path = "../ACCESS/LOGS/DEBUG/DEBUG.LOG"
     if os.path.exists(log_path):
         os.remove(log_path)
 
-    # Check File integrity (Online)
-    online_config = HealthCheck().get_online_config()
-    if online_config:
-        version_tuple = online_config
-        log_debug.string(version_tuple[0], version_tuple[2])
-        log_debug.raw(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] > DATA:     | {version_tuple[1] + ' ' * (153 - len(version_tuple[1])) + '|'}")
+    # Online Configuration Check
+    config = HealthCheck.get_online_config()
+    if config:
+        version_check = HealthCheck.compare_versions(VERSION, config["System Settings"]["version"])
+        log_debug.string(version_check[0], version_check[2])
+        log_debug.raw(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] > DATA: {version_check[1]}")
 
-    # Check SysInternal Binaries
-    message, type = DebugCheck.sys_internal_binaries("SysInternal_Suite")
-    log_debug.string(message, type)
+        # File Integrity Check
+        required_files = config["System Settings"].get("files", "").split(",")
+        message, severity = HealthCheck.check_files(".", required_files)
+        log_debug.string(message, severity)
 
-    # Check Admin
+    # SysInternal Binaries Check
+    message, severity = DebugCheck.sys_internal_binaries("SysInternal_Suite")
+    log_debug.string(message, severity)
+
+    # System Checks
     log_debug.info("Admin privileges found" if Check.admin() else "Admin privileges not found")
-
-    # Check UAC
     log_debug.info("UAC enabled" if Check.uac() else "UAC disabled")
-
-    # Log Execution Paths
     log_debug.info(f"Execution path: {psutil.__file__}")
     log_debug.info(f"Global execution path: {sys.executable}")
     log_debug.info(f"Local execution path: {sys.prefix}")
+    log_debug.info(
+        "Running in a virtual environment" if sys.prefix != sys.base_prefix else "Not running in a virtual environment")
 
-    # Check if running in a virtual environment
-    log_debug.info("Running in a virtual environment" if sys.prefix != sys.base_prefix else "Not running in a virtual environment")
+    # Execution Policy Check
+    log_debug.info(
+        "Execution policy is unrestricted" if DebugCheck.execution_policy() else "Execution policy is not unrestricted")
 
-    # Check Execution Policy
-    log_debug.info("Execution policy is unrestricted" if DebugCheck.execution_policy() else "Execution policy is not unrestricted")
-
-    # Get Python Version
+    # Python Version Check
+    python_version = sys.version.split()[0]
     try:
-        major, minor = map(int, sys.version.split()[0].split(".")[:2])
-        if major == 3 and minor == 11:
-            log_debug.info(f"Python Version Used: {sys.version.split()[0]} - Perfect")
+        major, minor = map(int, python_version.split(".")[:2])
+        if (major, minor) == (3, 11):
+            log_debug.info(f"Python Version: {python_version} - Perfect")
         elif major == 3:
-            log_debug.warning(f"Python Version Used: {sys.version.split()[0]} - Recommended Version is: 3.11.X")
+            log_debug.warning(f"Python Version: {python_version} - Recommended: 3.11.x")
         else:
-            log_debug.error(f"Python Version Used: {sys.version.split()[0]} - Incompatible Version")
+            log_debug.error(f"Python Version: {python_version} - Incompatible")
     except Exception as e:
-        log_debug.error(f"Failed to get Python Version: {e}")
+        log_debug.error(f"Failed to parse Python Version: {e}")
 
-    # Get Repo Path
-    log_debug.info(os.path.abspath(__file__).removesuffix("\\CODE\\_debug.py"))
+    # CPU Info
+    for info in DebugCheck.cpu_info():
+        log_debug.info(info)
 
-    # Get CPU Info
-    architecture, vID, cpuModel = DebugCheck.cpu_info()
-    log_debug.info(architecture)
-    log_debug.info(vID)
-    log_debug.info(cpuModel)
-
-    # Get config data
+    # Final Debug Status
     log_debug.info(f"Debug: {DEBUG}")
 
 
-debug()
-input("Press Enter to exit...")
-exit(0)
+if __name__ == "__main__":
+    debug()
+    input("Press Enter to exit...")

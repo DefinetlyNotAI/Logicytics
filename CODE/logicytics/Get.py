@@ -7,12 +7,19 @@ from pathlib import Path
 
 class Get:
     @staticmethod
-    def list_of_files(directory: str, append_file_list: list = None,
-                      extensions: tuple = (".py", ".exe", ".ps1", ".bat")) -> list:
+    def list_of_files(directory: str,
+                      extensions: tuple | bool = True,
+                      append_file_list: list = None
+                      ) -> list:
         """
         Retrieves a list of files in the specified directory that have the specified extensions.
 
-        Files starting with an underscore (_) and the file Logicytics.py are excluded from the list.
+        If the extensions parameter is set to 'all',
+        all files in the directory are returned.
+
+        Else, only files with the specified extensions are returned.
+        Files starting with an underscore (_) and the file Logicytics.py
+        are excluded from the list.
 
         Parameters:
             directory (str): The path of the directory to search.
@@ -21,8 +28,15 @@ class Get:
         Returns:
             list: The list of filenames with the specified extensions.
         """
-        if not append_file_list:
-            append_file_list = []
+        append_file_list = [] if not append_file_list else append_file_list
+
+        if isinstance(extensions, bool) and extensions:
+            for root, _, filenames in os.walk(directory):
+                for filename in filenames:
+                    file_path = os.path.relpath(os.path.join(root, filename), directory)
+                    append_file_list.append(file_path)
+            return append_file_list
+
         for filename in os.listdir(Path(directory)):
             if (
                     filename.endswith(extensions)
@@ -63,6 +77,7 @@ class Get:
         Returns:
             tuple[str, str, list[str], bool]: A tuple containing the log level, version, and a list of files.
         """
+
         def get_config_data(config_file_name: str) -> tuple[str, str, list[str], bool]:
             """
             Reads configuration data from the specified 'config.ini' file.

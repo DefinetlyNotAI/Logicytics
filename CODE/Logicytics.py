@@ -210,7 +210,7 @@ def generate_execution_list() -> list | list[str] | list[str | Any]:
     Returns:
         list: The execution list of scripts to be executed.
     """
-    execution_list = Get.list_of_files(".")
+    execution_list = Get.list_of_files(".", extensions=(".py", ".exe", ".ps1", ".bat"))
     execution_list.remove("sensitive_data_miner.py")
     execution_list.remove("dir_list.py")
     execution_list.remove("tree.ps1")
@@ -239,7 +239,9 @@ def generate_execution_list() -> list | list[str] | list[str | Any]:
 
     if ACTION == "modded":
         # Add all files in MODS to execution list
-        execution_list = Get.list_of_files("../MODS", execution_list)
+        execution_list = Get.list_of_files("../MODS",
+                                           extensions=(".py", ".exe", ".ps1", ".bat"),
+                                           append_file_list=execution_list)
 
     if ACTION == "depth":
         log.warning("This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards.")
