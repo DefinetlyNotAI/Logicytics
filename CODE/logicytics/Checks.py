@@ -24,12 +24,27 @@ class Check:
 
     @staticmethod
     def execution_policy() -> bool:
-        result = subprocess.run(
-            ["powershell", "-Command", "Get-ExecutionPolicy"],
-            capture_output=True,
-            text=True,
-        )
-        return result.stdout.strip().lower() == "unrestricted"
+        """
+        Check if PowerShell execution policy is set to unrestricted.
+
+        Returns:
+            bool: True if execution policy is unrestricted, False otherwise.
+
+        Note:
+            This method requires PowerShell to be available on the system.
+        """
+        if not os.path.exists("C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"):
+            return False
+        try:
+            result = subprocess.run(
+                ["powershell", "-Command", "Get-ExecutionPolicy"],
+                capture_output=True,
+                text=True,
+                timeout=5  # Don't hang forever
+            )
+            return result.returncode == 0 and result.stdout.strip().lower() == "unrestricted"
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
+            return False
 
     @staticmethod
     def uac() -> bool:
