@@ -33,8 +33,6 @@ class Check:
         Note:
             This method requires PowerShell to be available on the system.
         """
-        if not os.path.exists("C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"):
-            return False
         try:
             result = subprocess.run(
                 ["powershell", "-Command", "Get-ExecutionPolicy"],
@@ -44,7 +42,8 @@ class Check:
             )
             return result.returncode == 0 and result.stdout.strip().lower() == "unrestricted"
         except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
-            return False
+            print(f"Failed to check execution policy: {e}")
+            exit(1)
 
     @staticmethod
     def uac() -> bool:
