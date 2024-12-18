@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ctypes
 import os.path
+import subprocess
 import zipfile
 
 from logicytics.Execute import Execute
@@ -20,6 +21,29 @@ class Check:
             return ctypes.windll.shell32.IsUserAnAdmin()
         except AttributeError:
             return False
+
+    @staticmethod
+    def execution_policy() -> bool:
+        """
+        Check if PowerShell execution policy is set to unrestricted.
+
+        Returns:
+            bool: True if execution policy is unrestricted, False otherwise.
+
+        Note:
+            This method requires PowerShell to be available on the system.
+        """
+        try:
+            result = subprocess.run(
+                ["powershell", "-Command", "Get-ExecutionPolicy"],
+                capture_output=True,
+                text=True,
+                timeout=5  # Don't hang forever
+            )
+            return result.returncode == 0 and result.stdout.strip().lower() == "unrestricted"
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
+            print(f"Failed to check execution policy: {e}")
+            exit(1)
 
     @staticmethod
     def uac() -> bool:
