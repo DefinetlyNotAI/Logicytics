@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ctypes
 import os.path
+import subprocess
 import zipfile
 
 from logicytics.Execute import Execute
@@ -20,6 +21,15 @@ class Check:
             return ctypes.windll.shell32.IsUserAnAdmin()
         except AttributeError:
             return False
+
+    @staticmethod
+    def execution_policy() -> bool:
+        result = subprocess.run(
+            ["powershell", "-Command", "Get-ExecutionPolicy"],
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip().lower() == "unrestricted"
 
     @staticmethod
     def uac() -> bool:
