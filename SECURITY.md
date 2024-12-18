@@ -6,13 +6,14 @@ This section outlines the versions of our project that are currently supported w
 
 | Version | Supported |
 |---------|-----------|
+| 3.1.x   | ✅         |
 | 3.0.x   | ✅         |
-| 2.5.x   | ⚠️        |
-| 2.4.x   | ⚠️        |
+| 2.5.x   | ✖️        |
+| 2.4.x   | ✖️        |
 | 2.3.x   | ✖️        |
 | 2.2.x   | ✖️        |
-| 2.1.x   | ✖️        |
-| 2.0.x   | ✖️        |
+| 2.1.x   | ❌         |
+| 2.0.x   | ❌         |
 | 1.6.x   | ❌         |
 | 1.5.x   | ❌         |
 | 1.4.x   | ❌         |
