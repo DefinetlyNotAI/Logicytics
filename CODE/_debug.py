@@ -20,7 +20,31 @@ if __name__ == "__main__":
 
 class HealthCheck:
     @staticmethod
-    def check_files(directory: str, required_files: list[str]):
+    def __version_tuple(version: str) -> tuple[int, int, int | str, str]:
+        """
+        Parses a version string into a tuple.
+
+        Args:
+            version (str): The version string to parse.
+
+        Returns:
+            tuple[int, int, int, str]: A tuple containing the major, minor, and patch versions,
+                                       and a string indicating whether it is a snapshot or release version.
+        """
+        try:
+            if version.startswith("snapshot-"):
+                parts = version.split('-')[1].split('.')
+                major, minor = map(int, parts[:2])
+                patch = parts[2] if len(parts) > 2 else "0"
+                return major, minor, patch, "snapshot"
+            else:
+                return tuple(map(int, version.split('.'))) + ("release",)
+        except Exception as err:
+            log_debug.error(f"Failed to parse version: {err}")
+            return 0, 0, 0, "error"
+
+    @staticmethod
+    def files(directory: str, required_files: list[str]):
         """
         Checks if all required files are present in the directory and its subdirectories.
 
@@ -74,26 +98,8 @@ class HealthCheck:
         except Exception as e:
             log_debug.error(f"Unexpected error during file check: {e}")
 
-    @staticmethod
-    def get_online_config() -> dict | None:
-        """
-        Retrieves configuration data from a remote repository.
-
-        Returns:
-            dict: Parsed configuration data if successful.
-            None: If there was an error fetching the configuration.
-        """
-        try:
-            url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/CODE/config.ini"
-            config = configparser.ConfigParser()
-            config.read_string(requests.get(url, timeout=15).text)
-            return config
-        except requests.exceptions.RequestException as e:
-            log_debug.error(f"Connection error: {e}")
-            return None
-
-    @staticmethod
-    def compare_versions(local_version: str, remote_version: str):
+    @classmethod
+    def versions(cls, local_version: str, remote_version: str):
         """
         Compares local and remote versions.
 
@@ -101,16 +107,29 @@ class HealthCheck:
             local_version (str): Local version.
             remote_version (str): Remote version.
         """
-        if local_version == remote_version:
-            log_debug.info(f"Version is up to date. Your Version: {local_version}")
-        elif local_version > remote_version:
-            log_debug.warning("Version is ahead of the repository. "
-                              f"Your Version: {local_version}, "
-                              f"Repository Version: {remote_version}")
-        else:
-            log_debug.error("Version is behind the repository."
-                            f"Your Version: {local_version}, Repository Version: {remote_version}"
-                            )
+
+        local_version_tuple = cls.__version_tuple(local_version)
+        remote_version_tuple = cls.__version_tuple(remote_version)
+
+        if "error" in local_version_tuple or "error" in remote_version_tuple:
+            log_debug.error("Version parsing error.")
+            return
+
+        try:
+            if "snapshot" in local_version_tuple or "snapshot" in remote_version_tuple:
+                log_debug.warning("Snapshot versions are unstable.")
+
+            if local_version_tuple == remote_version_tuple:
+                log_debug.info(f"Version is up to date. Your Version: {local_version}")
+            elif local_version_tuple > remote_version_tuple:
+                log_debug.warning("Version is ahead of the repository. "
+                                  f"Your Version: {local_version}, "
+                                  f"Repository Version: {remote_version}")
+            else:
+                log_debug.error("Version is behind the repository. "
+                                f"Your Version: {local_version}, Repository Version: {remote_version}")
+        except Exception as e:
+            log_debug.error(f"Version comparison error: {e}")
 
 
 class DebugCheck:
@@ -160,11 +179,13 @@ class DebugCheck:
 
 def python_version():
     version = sys.version.split()[0]
+    MIN_VERSION = (3, 11)
+    MAX_VERSION = (3, 13)
     try:
         major, minor = map(int, version.split(".")[:2])
-        if (major, minor) == (3, 11):
+        if MIN_VERSION <= (major, minor) < MAX_VERSION:
             log_debug.info(f"Python Version: {version} - Perfect")
-        elif major == 3:
+        elif (major, minor) < MIN_VERSION:
             log_debug.warning(f"Python Version: {version} - Recommended: 3.11.x")
         else:
             log_debug.error(f"Python Version: {version} - Incompatible")
@@ -172,23 +193,41 @@ def python_version():
         log_debug.error(f"Failed to parse Python Version: {e}")
 
 
+def get_online_config() -> dict | None:
+    """
+        Retrieves configuration data from a remote repository.
+
+        Returns:
+            dict: Parsed configuration data if successful.
+            None: If there was an error fetching the configuration.
+        """
+    try:
+        url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/CODE/config.ini"
+        config = configparser.ConfigParser()
+        config.read_string(requests.get(url, timeout=15).text)
+        return config
+    except requests.exceptions.RequestException as e:
+        log_debug.error(f"Connection error: {e}")
+        return None
+
+
 def debug():
     """
     Executes system checks and logs results.
     """
     # Clear Debug Log
-    log_path = "../ACCESS/LOGS/DEBUG/DEBUG.LOG"
+    log_path = "../ACCESS/LOGS/DEBUG/DEBUG.log"
     if os.path.exists(log_path):
         os.remove(log_path)
 
     # Online Configuration Check
-    config = HealthCheck.get_online_config()
+    config = get_online_config()
     if config:
-        HealthCheck.compare_versions(VERSION, config["System Settings"]["version"])
+        HealthCheck.versions(VERSION, config["System Settings"]["version"])
 
         # File Integrity Check
         required_files = config["System Settings"].get("files", "").split(",")
-        HealthCheck.check_files(".", required_files)
+        HealthCheck.files(".", required_files)
 
     # SysInternal Binaries Check
     DebugCheck.sys_internal_binaries("SysInternal_Suite")
