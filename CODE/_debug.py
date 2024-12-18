@@ -3,9 +3,7 @@ from __future__ import annotations
 import configparser
 import os
 import platform
-import subprocess
 import sys
-from datetime import datetime
 
 import psutil
 import requests
@@ -13,27 +11,51 @@ import requests
 from logicytics import Log, DEBUG, VERSION, Check
 
 if __name__ == "__main__":
-    log_debug = Log({"log_level": DEBUG, "filename": "../ACCESS/LOGS/DEBUG/DEBUG.log", "truncate_message": False})
+    log_debug = Log(
+        {"log_level": DEBUG,
+         "filename": "../ACCESS/LOGS/DEBUG/DEBUG.log",
+         "truncate_message": False}
+    )
 
 
 class HealthCheck:
     @staticmethod
-    def check_files(directory: str, required_files: list[str]) -> tuple[str, str]:
+    def __version_tuple(version: str) -> tuple[int, int, int | str, str]:
+        """
+        Parses a version string into a tuple.
+
+        Args:
+            version (str): The version string to parse.
+
+        Returns:
+            tuple[int, int, int, str]: A tuple containing the major, minor, and patch versions,
+                                       and a string indicating whether it is a snapshot or release version.
+        """
+        try:
+            if version.startswith("snapshot-"):
+                parts = version.split('-')[1].split('.')
+                major, minor = map(int, parts[:2])
+                patch = parts[2] if len(parts) > 2 else "0"
+                return major, minor, patch, "snapshot"
+            else:
+                return tuple(map(int, version.split('.'))) + ("release",)
+        except Exception as err:
+            log_debug.error(f"Failed to parse version: {err}")
+            return 0, 0, 0, "error"
+
+    @staticmethod
+    def files(directory: str, required_files: list[str]):
         """
         Checks if all required files are present in the directory and its subdirectories.
 
         Args:
             directory (str): Path to the directory to check.
             required_files (list[str]): List of required file names with relative paths.
-
-        Returns:
-            tuple[str, str]: Status message and severity level.
         """
         try:
             log_debug.debug(f"Checking directory: {directory}")
             if not os.path.exists(directory):
                 log_debug.error(f"Directory {directory} does not exist.")
-                return f"Directory {directory} does not exist.", "ERROR"
 
             # Gather all files with relative paths
             actual_files = []
@@ -68,71 +90,56 @@ class HealthCheck:
             log_debug.debug(f"Extra files: {extra_files}")
 
             if missing_files:
-                return f"Missing files: {', '.join(missing_files)}", "ERROR"
+                log_debug.error(f"Missing files: {', '.join(missing_files)}")
             if extra_files:
-                return f"Extra files found: {', '.join(extra_files)}", "WARNING"
-            return "All required files are present.", "INFO"
+                log_debug.warning(f"Extra files found: {', '.join(extra_files)}")
+            log_debug.info("All required files are present.")
 
         except Exception as e:
             log_debug.error(f"Unexpected error during file check: {e}")
-            return f"Unexpected error during file check: {e}", "ERROR"
 
-    @staticmethod
-    def get_online_config() -> dict | None:
-        """
-        Retrieves configuration data from a remote repository.
-
-        Returns:
-            dict: Parsed configuration data if successful.
-            None: If there was an error fetching the configuration.
-        """
-        try:
-            url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/CODE/config.ini"
-            config = configparser.ConfigParser()
-            config.read_string(requests.get(url, timeout=15).text)
-            return config
-        except requests.exceptions.RequestException as e:
-            log_debug.warning(f"Connection error: {e}")
-            return None
-
-    @staticmethod
-    def compare_versions(local_version: str, remote_version: str) -> tuple[str, str, str]:
+    @classmethod
+    def versions(cls, local_version: str, remote_version: str):
         """
         Compares local and remote versions.
 
         Args:
             local_version (str): Local version.
             remote_version (str): Remote version.
-
-        Returns:
-            tuple[str, str, str]: Comparison result, version details, and severity level.
         """
-        if local_version == remote_version:
-            return "Version is up to date.", f"Your Version: {local_version}", "INFO"
-        if local_version > remote_version:
-            return (
-                "Version is ahead of the repository.",
-                f"Your Version: {local_version}, Repository Version: {remote_version}",
-                "WARNING",
-            )
-        return (
-            "Version is behind the repository.",
-            f"Your Version: {local_version}, Repository Version: {remote_version}",
-            "ERROR",
-        )
+
+        local_version_tuple = cls.__version_tuple(local_version)
+        remote_version_tuple = cls.__version_tuple(remote_version)
+
+        if "error" in local_version_tuple or "error" in remote_version_tuple:
+            log_debug.error("Version parsing error.")
+            return
+
+        try:
+            if "snapshot" in local_version_tuple or "snapshot" in remote_version_tuple:
+                log_debug.warning("Snapshot versions are unstable.")
+
+            if local_version_tuple == remote_version_tuple:
+                log_debug.info(f"Version is up to date. Your Version: {local_version}")
+            elif local_version_tuple > remote_version_tuple:
+                log_debug.warning("Version is ahead of the repository. "
+                                  f"Your Version: {local_version}, "
+                                  f"Repository Version: {remote_version}")
+            else:
+                log_debug.error("Version is behind the repository. "
+                                f"Your Version: {local_version}, Repository Version: {remote_version}")
+        except Exception as e:
+            log_debug.error(f"Version comparison error: {e}")
 
 
 class DebugCheck:
     @staticmethod
-    def sys_internal_binaries(path: str) -> tuple[str, str]:
+    def sys_internal_binaries(path: str):
         """
         Checks the SysInternal Binaries in the given directory.
 
         Args:
             path (str): Directory path.
-
-        Returns:
-            tuple[str, str]: Status message and severity level.
         """
         try:
             if not os.path.exists(path):
@@ -145,34 +152,15 @@ class DebugCheck:
             has_exe = any(file.endswith(".exe") for file in contents)
 
             if any(file.endswith(".ignore") for file in contents):
-                return "A `.sys.ignore` file was found - Ignoring", "WARNING"
-            if has_zip and not has_exe:
-                return "Only zip files - Missing EXEs due to no `ignore` file", "ERROR"
-            if has_zip and has_exe:
-                return "Both zip and exe files - All good", "INFO"
-
-            return "SysInternal Binaries Not Found: Missing Files - Corruption detected", "ERROR"
+                log_debug.warning("A `.sys.ignore` file was found - Ignoring")
+            elif has_zip and not has_exe:
+                log_debug.error("Only zip files - Missing EXEs due to no `ignore` file")
+            elif has_zip and has_exe:
+                log_debug.info("Both zip and exe files - All good")
+            else:
+                log_debug.error("SysInternal Binaries Not Found: Missing Files - Corruption detected")
         except Exception as e:
-            return f"Unexpected error: {e}", "ERROR"
-
-    @staticmethod
-    def execution_policy() -> bool:
-        """
-        Checks if the execution policy is unrestricted.
-
-        Returns:
-            bool: True if unrestricted, False otherwise.
-        """
-        try:
-            result = subprocess.run(
-                ["powershell", "-Command", "Get-ExecutionPolicy"],
-                capture_output=True,
-                text=True,
-            )
-            return result.stdout.strip().lower() == "unrestricted"
-        except Exception as e:
-            log_debug.error(f"Failed to check execution policy: {e}")
-            return False
+            log_debug.error(f"Unexpected error: {e}")
 
     @staticmethod
     def cpu_info() -> tuple[str, str, str]:
@@ -189,30 +177,60 @@ class DebugCheck:
         )
 
 
+def python_version():
+    version = sys.version.split()[0]
+    MIN_VERSION = (3, 11)
+    MAX_VERSION = (3, 13)
+    try:
+        major, minor = map(int, version.split(".")[:2])
+        if MIN_VERSION <= (major, minor) < MAX_VERSION:
+            log_debug.info(f"Python Version: {version} - Perfect")
+        elif (major, minor) < MIN_VERSION:
+            log_debug.warning(f"Python Version: {version} - Recommended: 3.11.x")
+        else:
+            log_debug.error(f"Python Version: {version} - Incompatible")
+    except Exception as e:
+        log_debug.error(f"Failed to parse Python Version: {e}")
+
+
+def get_online_config() -> dict | None:
+    """
+        Retrieves configuration data from a remote repository.
+
+        Returns:
+            dict: Parsed configuration data if successful.
+            None: If there was an error fetching the configuration.
+        """
+    try:
+        url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/CODE/config.ini"
+        config = configparser.ConfigParser()
+        config.read_string(requests.get(url, timeout=15).text)
+        return config
+    except requests.exceptions.RequestException as e:
+        log_debug.error(f"Connection error: {e}")
+        return None
+
+
 def debug():
     """
     Executes system checks and logs results.
     """
     # Clear Debug Log
-    log_path = "../ACCESS/LOGS/DEBUG/DEBUG.LOG"
+    log_path = "../ACCESS/LOGS/DEBUG/DEBUG.log"
     if os.path.exists(log_path):
         os.remove(log_path)
 
     # Online Configuration Check
-    config = HealthCheck.get_online_config()
+    config = get_online_config()
     if config:
-        version_check = HealthCheck.compare_versions(VERSION, config["System Settings"]["version"])
-        log_debug.string(version_check[0], version_check[2])
-        log_debug.raw(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] > DATA: {version_check[1]}")
+        HealthCheck.versions(VERSION, config["System Settings"]["version"])
 
         # File Integrity Check
         required_files = config["System Settings"].get("files", "").split(",")
-        message, severity = HealthCheck.check_files(".", required_files)
-        log_debug.string(message, severity)
+        HealthCheck.files(".", required_files)
 
     # SysInternal Binaries Check
-    message, severity = DebugCheck.sys_internal_binaries("SysInternal_Suite")
-    log_debug.string(message, severity)
+    DebugCheck.sys_internal_binaries("SysInternal_Suite")
 
     # System Checks
     log_debug.info("Admin privileges found" if Check.admin() else "Admin privileges not found")
@@ -222,23 +240,11 @@ def debug():
     log_debug.info(f"Local execution path: {sys.prefix}")
     log_debug.info(
         "Running in a virtual environment" if sys.prefix != sys.base_prefix else "Not running in a virtual environment")
-
-    # Execution Policy Check
     log_debug.info(
-        "Execution policy is unrestricted" if DebugCheck.execution_policy() else "Execution policy is not unrestricted")
+        "Execution policy is unrestricted" if Check.execution_policy() else "Execution policy is not unrestricted")
 
     # Python Version Check
-    python_version = sys.version.split()[0]
-    try:
-        major, minor = map(int, python_version.split(".")[:2])
-        if (major, minor) == (3, 11):
-            log_debug.info(f"Python Version: {python_version} - Perfect")
-        elif major == 3:
-            log_debug.warning(f"Python Version: {python_version} - Recommended: 3.11.x")
-        else:
-            log_debug.error(f"Python Version: {python_version} - Incompatible")
-    except Exception as e:
-        log_debug.error(f"Failed to parse Python Version: {e}")
+    python_version()
 
     # CPU Info
     for info in DebugCheck.cpu_info():
