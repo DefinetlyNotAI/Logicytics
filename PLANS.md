@@ -2,8 +2,8 @@
 
 > [!TIP]
 > Here is a key for the table above:
-> - ❌ = Might be done, Not sure yet
-> - ✅ = Will be done, 100% sure
+> - ❌ ➡️ Might be done, Not sure yet
+> - ✅ ➡️ Will be done, 100% sure
 
 | Task                                                                                                                                           | Version        | Might or Will be done? |
 |------------------------------------------------------------------------------------------------------------------------------------------------|----------------|------------------------|

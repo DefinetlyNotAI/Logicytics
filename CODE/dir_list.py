@@ -44,12 +44,16 @@ def command_threaded(base_directory: str, file: str, message: str, encoding: str
     Returns:
         None
     """
-    with ThreadPoolExecutor() as executor:
-        subdirectories = [os.path.join(base_directory, d) for d in os.listdir(base_directory) if
-                          os.path.isdir(os.path.join(base_directory, d))]
-        futures = [executor.submit(run_command_threaded, subdir, file, message, encoding) for subdir in subdirectories]
-        for future in futures:
-            future.result()
+    try:
+        with ThreadPoolExecutor() as executor:
+            subdirectories = [os.path.join(base_directory, d) for d in os.listdir(base_directory) if
+                              os.path.isdir(os.path.join(base_directory, d))]
+            futures = [executor.submit(run_command_threaded, subdir, file, message, encoding) for subdir in
+                       subdirectories]
+            for future in futures:
+                future.result()
+    except Exception as e:
+        log.error(f"Thread Pool Error: {e}")
 
 
 if __name__ == "__main__":
