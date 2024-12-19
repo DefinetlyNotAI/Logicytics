@@ -70,13 +70,16 @@ def parse_output(lines, regex, group_names):
         list: A list of dictionaries, each containing the extracted group names and their corresponding values.
     """
     results = []
-    for line in lines:
-        match = re.match(regex, line)
-        if match:
-            results.append({name: match.group(name) for name in group_names})
-        else:
-            log.debug(f"Skipping unrecognized line: {line}")
-    return results
+    try:
+        for line in lines:
+            match = re.match(regex, line)
+            if match:
+                results.append({name: match.group(name) for name in group_names})
+            else:
+                log.debug(f"Skipping unrecognized line: {line}")
+        return results
+    except Exception as e:
+        log.error(f"Parsing output failed: {e}")
 
 
 # Function to get paired Bluetooth devices

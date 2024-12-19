@@ -35,7 +35,7 @@ def backup_windows_logs():
         stdout, stderr = process.communicate(input=cmd)
 
         if process.returncode != 0:
-            raise Exception(f"Failed to backup logs: {stderr.strip()}")
+            log.exception(f"Failed to backup logs: {stderr.strip()}", ChildProcessError)
 
         log.info(f"Windows logs backed up to {backup_file}")
     except Exception as e:

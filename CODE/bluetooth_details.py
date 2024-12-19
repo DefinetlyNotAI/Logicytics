@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import subprocess
 
@@ -29,15 +31,12 @@ def get_bluetooth_device_details():
         None
     """
     log.info("Fetching detailed info for Bluetooth devices...")
-    try:
-        devices = _query_bluetooth_devices()
+    devices = _query_bluetooth_devices()
+    if devices:
         _write_device_info_to_file(devices, "Bluetooth Info.txt")
-    except Exception as e:
-        log.error(f"Error: {e}")
-        exit(1)
 
 
-def _query_bluetooth_devices():
+def _query_bluetooth_devices() -> bool | list[dict[str, str]]:
     """
     Queries the system for Bluetooth devices using PowerShell commands.
 
@@ -51,14 +50,15 @@ def _query_bluetooth_devices():
             "Select-Object FriendlyName, DeviceID, Description, Manufacturer, Status, PnpDeviceID | "
             "ConvertTo-Json -Depth 3"
         )
-        result = subprocess.run(["powershell", "-Command", command], capture_output=True, text=True, check=True)
+        result = subprocess.run(["powershell", "-Command", command],
+                                capture_output=True, text=True, check=True)
         devices = json.loads(result.stdout)
     except subprocess.CalledProcessError as e:
         log.error(f"Failed to query Bluetooth devices: {e}")
-        exit(1)
+        return False
     except json.JSONDecodeError as e:
         log.error(f"Failed to parse device information: {e}")
-        exit(1)
+        return False
 
     if isinstance(devices, dict):
         devices = [devices]  # Handle single result case
@@ -66,12 +66,12 @@ def _query_bluetooth_devices():
     device_info_list = []
     for device in devices:
         device_info = {
-            'Name': device.get('FriendlyName', 'Unknown'),
-            'Device ID': device.get('DeviceID', 'Unknown'),
-            'Description': device.get('Description', 'Unknown'),
-            'Manufacturer': device.get('Manufacturer', 'Unknown'),
-            'Status': device.get('Status', 'Unknown'),
-            'PNP Device ID': device.get('PnpDeviceID', 'Unknown')
+            'Name': device.get('FriendlyName', 'Unknown (Fallback due to failed Get request)'),
+            'Device ID': device.get('DeviceID', 'Unknown (Fallback due to failed Get request)'),
+            'Description': device.get('Description', 'Unknown (Fallback due to failed Get request)'),
+            'Manufacturer': device.get('Manufacturer', 'Unknown (Fallback due to failed Get request)'),
+            'Status': device.get('Status', 'Unknown (Fallback due to failed Get request)'),
+            'PNP Device ID': device.get('PnpDeviceID', 'Unknown (Fallback due to failed Get request)')
         }
         log.debug(f"Retrieved device: {device_info['Name']}")
         device_info_list.append(device_info)
@@ -96,7 +96,6 @@ def _write_device_info_to_file(devices, filename):
                 _write_single_device_info(file, device_info)
     except Exception as e:
         log.error(f"Failed to write device information to file: {e}")
-        exit(1)
 
 
 def _write_single_device_info(file, device_info):

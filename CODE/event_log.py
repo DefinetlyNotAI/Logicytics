@@ -48,7 +48,7 @@ def parse_event_logs(log_type: str, output_file: str, server: str = 'localhost')
         win32evtlog.CloseEventLog(hand)
         log.info(f"{log_type} events (Windows Events) have been written to {output_file}")
     except Exception as e:
-        log.error(f"(Most likely) Permission Error: {e}")
+        log.error(f"Fatal issue: {e}")
 
 
 if __name__ == "__main__":

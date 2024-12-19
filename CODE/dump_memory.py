@@ -156,26 +156,29 @@ def read_memory():
         return
 
     # Get system info
+    log.info("Getting SystemRAM Info...")
     system_info = get_system_info()
     min_address = system_info.lpMinimumApplicationAddress
     max_address = system_info.lpMaximumApplicationAddress
-    with open("SystemRam_Info.txt", "w") as sys_file:
-        sys_file.write("System Information:\n")
-        sys_file.write("===================================\n")
-        sys_file.write(f"Minimum Address: {min_address}\n")
-        sys_file.write(f"Maximum Address: {max_address}\n")
-        sys_file.write(f"Allocation Granularity: {system_info.dwAllocationGranularity}\n")
-        sys_file.write(f"Processor Architecture: {system_info.wProcessorArchitecture}\n")
-        sys_file.write(f"Number of Processors: {system_info.dwNumberOfProcessors}\n")
-        sys_file.write(f"Processor Type: {system_info.dwProcessorType}\n")
-        sys_file.write(f"Processor Level: {system_info.wProcessorLevel}\n")
-        sys_file.write(f"Processor Revision: {system_info.wProcessorRevision}\n")
-        sys_file.write(f"Page Size: {system_info.dwPageSize}\n")
-        sys_file.write(f"Active Processor Mask: {system_info.dwActiveProcessorMask.contents}\n")
-        sys_file.write(f"Reserved: {system_info.wReserved}\n")
-        sys_file.write("===================================\n")
-        sys_file.write(f"Raw SystemInfo: {system_info}\n")
-        sys_file.write("===================================\n")
+    try:
+        with open("SystemRam_Info.txt", "w") as sys_file:
+            sys_file.write("System Information:\n")
+            sys_file.write("===================================\n")
+            sys_file.write(f"Minimum Address: {min_address}\n")
+            sys_file.write(f"Maximum Address: {max_address}\n")
+            sys_file.write(f"Allocation Granularity: {system_info.dwAllocationGranularity}\n")
+            sys_file.write(f"Processor Architecture: {system_info.wProcessorArchitecture}\n")
+            sys_file.write(f"Number of Processors: {system_info.dwNumberOfProcessors}\n")
+            sys_file.write(f"Processor Type: {system_info.dwProcessorType}\n")
+            sys_file.write(f"Processor Level: {system_info.wProcessorLevel}\n")
+            sys_file.write(f"Processor Revision: {system_info.wProcessorRevision}\n")
+            sys_file.write(f"Page Size: {system_info.dwPageSize}\n")
+            sys_file.write(f"Reserved: {system_info.wReserved}\n")
+            sys_file.write("===================================\n")
+            sys_file.write(f"Raw SystemInfo: {system_info}\n")
+            sys_file.write("===================================\n")
+    except Exception as e:
+        log.error(f"Error getting RAM info: {e}")
     log.debug(f"Memory Range: {min_address:#x} - {max_address:#x}")
 
     # Iterate through memory pages
@@ -189,8 +192,9 @@ def read_memory():
             if not result:
                 break
 
-            # Check if the memory is committed and readable
-            if memory_info.State == MEM_COMMIT and memory_info.Protect == PAGE_READWRITE:
+            # FIXME - mem issues
+            try:
+                # Check if the memory is committed and readable
                 buffer = ctypes.create_string_buffer(memory_info.RegionSize)
                 bytes_read = ctypes.c_size_t()
                 ctypes.windll.kernel32.ReadProcessMemory(
@@ -201,8 +205,10 @@ def read_memory():
                     ctypes.byref(bytes_read),
                 )
                 dump_file.write(str(buffer.raw[: bytes_read.value]))
-
-            address += memory_info.RegionSize
+                address += memory_info.RegionSize
+            except MemoryError as ME:
+                log.error(f"Memory is not enough and is not available to be read (RAM): {ME}")
+                os.remove("Ram_Dump.txt")
 
     # Close the process handle
     ctypes.windll.kernel32.CloseHandle(process)
@@ -211,9 +217,6 @@ def read_memory():
 
 
 if __name__ == "__main__":
-    try:
-        log.info("Starting memory dump process...")
-        dump_ram_content()
-        read_memory()
-    except Exception as err:
-        log.error(f"Error during memory dump: {err}")
+    log.info("Starting memory dump process...")
+    dump_ram_content()
+    read_memory()
