@@ -1,5 +1,11 @@
 # VulnScan Documentation
 
+> [!WARNING]
+> VulnScan will be moved to a different repository soon.
+> This part of the repository will be archived and the new repository will be linked here.
+> The `pkl` and `pth` files will stay here, linked properly for `vulnscan.py`,
+> VulnScan will NOT be moved to the other repository.
+
 ## Overview
 
 VulnScan is designed to detect sensitive data across various file formats. It offers a modular framework to train models using diverse algorithms, from traditional ML classifiers to advanced Neural Networks. This document outlines the system's naming conventions, lifecycle, and model configuration.
