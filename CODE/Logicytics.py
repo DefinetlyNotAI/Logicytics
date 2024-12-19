@@ -7,11 +7,10 @@ import threading
 import zipfile
 from datetime import datetime
 from typing import Any
+
 from prettytable import PrettyTable
-from pathlib import Path
 
 from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS
-
 
 # Initialization
 FileManagement.mkdir()
@@ -136,9 +135,16 @@ def handle_special_actions():
         log.info("Opening developer menu...")
         special_execute("_dev.py")
 
+    # Deprecated, remove in v3.3.0
     if ACTION == "extra":
-        log.info("Opening extra tools menu...")
-        special_execute("_extra.py")
+        print("\033[91mDeprecationWarning: "
+              "A call to the deprecated feature `extra` has been called, "
+              "this feature has been removed as it doesn't follow "
+              "the required code standards or aim of Logicytics.\033[0m")
+        log.info("No flag is supplied due to --extra flag deprecation, will show help menu instead")
+        Flag.show_help_menu()
+        input("Press Enter to exit...")
+        exit(0)
 
     if ACTION == "update":
         log.info("Updating...")
@@ -170,14 +176,14 @@ def handle_special_actions():
         input("Press Enter to exit...")
         exit(0)
 
+    # Deprecated, remove in v3.3.0
     if ACTION == "unzip_extra":
-        log.warning(
-            "The contents of this directory can be flagged as malicious and enter quarantine, please use with "
-            "caution"
-        )
-        log.info("Unzipping...")
-        FileManagement.unzip(Path("..\\EXTRA\\EXTRA.zip"))
-        log.info("Unzip complete!")
+        print("\033[91mDeprecationWarning: "
+              "A call to the deprecated feature `unzip-extra` has been called, "
+              "this feature has been removed as it doesn't follow "
+              "the required code standards or aim of Logicytics.\033[0m")
+        log.info("No flag is supplied due to --unzip-extra flag deprecation, will show help menu instead")
+        Flag.show_help_menu()
         input("Press Enter to exit...")
         exit(0)
 
@@ -327,12 +333,13 @@ def execute_scripts():
 
 def zip_generated_files():
     """Zips generated files based on the action."""
+
     def zip_and_log(directory: str, name: str):
         log.debug(f"Zipping directory '{directory}' with name '{name}' under action '{ACTION}'")
         zip_values = FileManagement.Zip.and_hash(
-                directory,
-                name,
-                ACTION if ACTION is not None else f"ERROR_NO_ACTION_SPECIFIED_{datetime.now().isoformat()}"
+            directory,
+            name,
+            ACTION if ACTION is not None else f"ERROR_NO_ACTION_SPECIFIED_{datetime.now().isoformat()}"
         )
         if isinstance(zip_values, str):
             log.error(zip_values)
@@ -362,8 +369,8 @@ def handle_sub_action():
     elif SUB_ACTION == "reboot":
         subprocess.call("shutdown /r /t 3", shell=False)
     # elif sub_action == "webhook":
-        # Implement this in future
-        # log.warning("This feature is not implemented yet! Sorry")
+    # Implement this in future
+    # log.warning("This feature is not implemented yet! Sorry")
 
 
 if __name__ == "__main__":

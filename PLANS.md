@@ -7,7 +7,6 @@
 
 | Task                                                                                                                            | Version        | Might or Will be done? |
 |---------------------------------------------------------------------------------------------------------------------------------|----------------|------------------------|
-| Remove EXTRA dir, and zip features with custom proper features from Logicytics, as well as remove EXTRA wrapper                 | v3.2.0         | ❌                      |
 | Implement a parser for Windows Prefetch files, Shellbags, Jump Lists, LNK files to extract data                                 | snapshot-3.3.a | ✅                      |
 | Implement a parser for Windows UserAssist registry key, SRUM database to extract data.                                          | snapshot-3.3.b | ✅                      |
 | Implement a parser for Windows Volume Shadow Copy, LSA Secrets, Syscache, Shimcache, Amcache Event Tracing logs to extract data | snapshot-3.3.c | ✅                      |
