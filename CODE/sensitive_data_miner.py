@@ -12,7 +12,13 @@ if __name__ == "__main__":
 allowed_extensions = [
     ".png", ".txt", ".md", ".json", ".yaml", ".secret", ".jpg", ".jpeg",
     ".password", ".text", ".docx", ".doc", ".xls", ".xlsx", ".csv",
-    ".xml", ".config", ".log", ".pdf", ".zip", ".rar", ".7z", ".tar"
+    ".xml", ".config", ".log", ".pdf", ".zip", ".rar", ".7z", ".tar",
+    ".gz", ".tgz", ".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst",
+    ".sql", ".db", ".dbf", ".sqlite", ".sqlite3", ".bak", ".dbx",
+    ".mdb", ".accdb", ".pst", ".ost", ".msg", ".eml", ".vsd",
+    ".vsdx", ".vsdm", ".vss", ".vssx", ".vssm", ".vst", ".vstx",
+    ".vstm", ".vdx", ".vsx", ".vtx", ".vdw", ".vsw", ".vst",
+    ".mpp", ".mppx", ".mpt", ".mpd", ".mpx", ".mpd", ".mdf",
 ]
 
 
@@ -56,7 +62,8 @@ class Mine:
         except Exception as e:
             log.error(f"Failed to copy file: {e}")
 
-    def __search_and_copy_files(self, keyword: str):
+    @classmethod
+    def __search_and_copy_files(cls, keyword: str):
         """
         Searches for files containing the specified keyword in their names and copies them to a destination directory.
         Args:
@@ -72,15 +79,16 @@ class Mine:
 
         with ThreadPoolExecutor() as executor:
             for root, dirs, files in os.walk(drives_root):
-                future_to_file = {executor.submit(self.__search_files_by_keyword, Path(root), keyword): root_path for
+                future_to_file = {executor.submit(cls.__search_files_by_keyword, Path(root), keyword): root_path for
                                   root_path in dirs}
                 for future in future_to_file:
                     for file_path in future.result():
                         dst_file_path = destination / file_path.name
-                        executor.submit(self.__copy_file, file_path, dst_file_path)
+                        executor.submit(cls.__copy_file, file_path, dst_file_path)
 
+    @classmethod
     @log.function
-    def passwords(self):
+    def passwords(cls):
         """
         Searches for files containing sensitive data keywords in their filenames,
         copies them to a "Password Files" directory, and logs the completion of the task.
@@ -96,10 +104,11 @@ class Mine:
         destination.mkdir()
 
         for word in keywords:
-            self.__search_and_copy_files(word)
+            cls.__search_and_copy_files(word)
 
         log.info("Sensitive Data Miner Completed")
 
 
-log.warning("Sensitive Data Miner Started, This may take a while... (aka touch some grass)")
-Mine().passwords()
+if __name__ == "__main__":
+    log.warning("Sensitive Data Miner Started, This may take a while... (aka touch some grass and drink coffee)")
+    Mine.passwords()

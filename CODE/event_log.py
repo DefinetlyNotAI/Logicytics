@@ -1,6 +1,7 @@
+import os
 from os import mkdir
 
-import win32evtlog
+import win32evtlog  # TODO - Remove this dependency, find a alternative
 
 from logicytics import Log, DEBUG
 
@@ -50,7 +51,10 @@ def parse_event_logs(log_type: str, output_file: str, server: str = 'localhost')
         log.error(f"(Most likely) Permission Error: {e}")
 
 
-mkdir('event_logs')
-parse_event_logs('Security', 'event_logs/Security_events.txt')
-parse_event_logs('Application', 'event_logs/App_events.txt')
-parse_event_logs('System', 'event_logs/System_events.txt')
+if __name__ == "__main__":
+    if os.path.exists('event_logs'):
+        os.rmdir('event_logs')
+    mkdir('event_logs')
+    parse_event_logs('Security', 'event_logs/Security_events.txt')
+    parse_event_logs('Application', 'event_logs/App_events.txt')
+    parse_event_logs('System', 'event_logs/System_events.txt')

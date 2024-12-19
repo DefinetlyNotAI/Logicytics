@@ -32,4 +32,5 @@ def tasklist():
         log.error(f"Error: {e}")
 
 
-tasklist()
+if __name__ == "__main__":
+    tasklist()

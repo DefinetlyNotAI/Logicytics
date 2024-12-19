@@ -7,7 +7,6 @@ if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
-@log.function
 def run_command_threaded(directory: str, file: str, message: str, encoding: str = "UTF-8") -> None:
     """
     Executes a command for a specific directory and writes the output to a file.
@@ -53,5 +52,6 @@ def command_threaded(base_directory: str, file: str, message: str, encoding: str
             future.result()
 
 
-log.warning("Running command_threaded() - This is very slow")
-command_threaded("C:\\", "Dir_Root.txt", "Root Directory Listing")
+if __name__ == "__main__":
+    log.warning("Running dir_list.py - This is very slow - We will use threading to speed it up")
+    command_threaded("C:\\", "Dir_Root.txt", "Root Directory Listing")

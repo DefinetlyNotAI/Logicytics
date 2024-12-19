@@ -367,7 +367,20 @@ def handle_sub_action():
     # log.warning("This feature is not implemented yet! Sorry")
 
 
-if __name__ == "__main__":
+@log.function
+def Logicytics():
+    """
+    Main function to run the Logicytics process.
+
+    This function performs the following steps:
+    1. Retrieves command-line flags and configurations.
+    2. Handles any special actions based on the provided action flag.
+    3. Checks for administrative privileges and potential errors.
+    4. Executes the scripts based on the action flag.
+    5. Zips the generated files.
+    6. Handles any sub-actions based on the provided sub-action flag.
+    7. Waits for user input to exit the program.
+    """
     # Get flags and configs
     get_flags()
     # Check for special actions
@@ -382,6 +395,10 @@ if __name__ == "__main__":
     handle_sub_action()
     # Finish
     input("Press Enter to exit...")
+
+
+if __name__ == "__main__":
+    Logicytics()
 else:
     log.error("This script cannot be imported!")
     exit(1)

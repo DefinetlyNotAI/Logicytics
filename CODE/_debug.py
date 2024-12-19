@@ -178,6 +178,14 @@ class DebugCheck:
 
 
 def python_version():
+    """
+    Checks the current Python version and logs the result.
+
+    Logs:
+        - Info if the Python version is within the acceptable range.
+        - Warning if the Python version is below the minimum recommended version.
+        - Error if the Python version is above the maximum supported version or if there is a parsing error.
+    """
     version = sys.version.split()[0]
     MIN_VERSION = (3, 11)
     MAX_VERSION = (3, 13)
@@ -211,6 +219,7 @@ def get_online_config() -> dict | None:
         return None
 
 
+@log_debug.function
 def debug():
     """
     Executes system checks and logs results.

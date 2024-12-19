@@ -10,9 +10,18 @@ if __name__ == "__main__":
 
 
 class Media:
+    """
+    A class to handle media backup operations.
+    """
+
     @staticmethod
     def __get_default_paths() -> list:
-        """Returns the default paths for photos and videos based on the Windows username."""
+        """
+        Returns the default paths for photos and videos based on the Windows username.
+
+        Returns:
+            list: A list containing the default photo and video paths.
+        """
         username = getpass.getuser()
         default_photo_path = os.path.expanduser(f"C:\\Users\\{username}\\Pictures")
         default_video_path = os.path.expanduser(f"C:\\Users\\{username}\\Videos")
@@ -20,13 +29,26 @@ class Media:
 
     @staticmethod
     def __ensure_backup_directory_exists(backup_directory: str):
-        """Ensures the backup directory exists; creates it if not."""
+        """
+        Ensures the backup directory exists; creates it if not.
+
+        Args:
+            backup_directory (str): The path to the backup directory.
+        """
         if not os.path.exists(backup_directory):
             os.makedirs(backup_directory)
 
     @staticmethod
     def __collect_media_files(source_dirs: list) -> list:
-        """Collects all media files from the source directories."""
+        """
+        Collects all media files from the source directories.
+
+        Args:
+            source_dirs (list): A list of source directories to collect media files from.
+
+        Returns:
+            list: A list of paths to the collected media files.
+        """
         media_files = []
         for source_dir in source_dirs:
             for root, _, files in os.walk(source_dir):
@@ -37,7 +59,13 @@ class Media:
 
     @staticmethod
     def __backup_files(media_files: list, backup_directory: str):
-        """Backs up media files to the backup directory."""
+        """
+        Backs up media files to the backup directory.
+
+        Args:
+            media_files (list): A list of paths to the media files to be backed up.
+            backup_directory (str): The path to the backup directory.
+        """
         for src_file in media_files:
             dst_file = os.path.join(
                 backup_directory,
@@ -51,15 +79,19 @@ class Media:
             except Exception as e:
                 log.error(f"Failed to copy {src_file}: {str(e)}")
 
+    @classmethod
     @log.function
-    def backup(self):
-        """Backs up media files from the default Windows photo and video directories."""
-        source_dirs = self.__get_default_paths()
+    def backup(cls):
+        """
+        Backs up media files from the default Windows photo and video directories.
+        """
+        source_dirs = cls.__get_default_paths()
         backup_directory = "MediaBackup"
-        self.__ensure_backup_directory_exists(backup_directory)
-        media_files = self.__collect_media_files(source_dirs)
-        self.__backup_files(media_files, backup_directory)
+        cls.__ensure_backup_directory_exists(backup_directory)
+        media_files = cls.__collect_media_files(source_dirs)
+        cls.__backup_files(media_files, backup_directory)
         log.info("Media backup script completed.")
 
 
-Media().backup()
+if __name__ == "__main__":
+    Media.backup()

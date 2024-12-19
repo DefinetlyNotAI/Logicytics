@@ -1,31 +1,44 @@
 from __future__ import annotations
 
-import pandas as pd
-import networkx as nx
+from configparser import ConfigParser
+
 import matplotlib.pyplot as plt
+import networkx as nx
+import pandas as pd
 from scapy.all import sniff, conf
 from scapy.layers.inet import IP, TCP, UDP, ICMP
-from configparser import ConfigParser
+
 from logicytics import Log, DEBUG
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
+try:
+    # Read configuration from config.ini
+    config = ConfigParser()
+    config.read('config.ini')
+    config = config['PacketSniffer Settings']
 
-# Read configuration from config.ini
-config = ConfigParser()
-config.read('config.ini')
-config = config['PacketSniffer Settings']
-
-# Global configuration
-conf.verb = 0  # Turn off verbosity for clean output
-packet_data = []  # List to store packet information
-G = nx.Graph()  # Initialize a graph
+    # Global configuration
+    conf.verb = 0  # Turn off verbosity for clean output
+    packet_data = []  # List to store packet information
+    G = nx.Graph()  # Initialize a graph
+except Exception as e:
+    log.error(f"Error reading configuration: {e}")
+    exit(1)
 
 
 # Function to process and log packet details
-@log.function
 def log_packet(packet: IP):
+    """
+    Processes a captured packet, logs its details, and updates the packet data and graph.
+
+    Parameters:
+    packet (IP): The captured packet to process.
+
+    Returns:
+    None
+    """
     try:
         if packet.haslayer(IP):
             log.debug(f"Packet captured: {packet.summary()}")
@@ -44,9 +57,16 @@ def log_packet(packet: IP):
 
 
 # Function to determine the protocol name
-@log.function
 def get_protocol_name(packet: IP) -> str:
-    """Returns the name of the protocol."""
+    """
+    Determines the protocol name of a captured packet.
+
+    Parameters:
+    packet (IP): The captured packet to analyze.
+
+    Returns:
+    str: The name of the protocol (TCP, UDP, ICMP, or Other).
+    """
     log.debug(f"Checking protocol for packet: {packet.summary()}")
     if packet.haslayer(TCP):
         log.debug("Protocol: TCP")
@@ -63,9 +83,17 @@ def get_protocol_name(packet: IP) -> str:
 
 
 # Function to extract port information from a packet
-@log.function
 def get_port_info(packet: IP, port_type: str) -> int | None:
-    """Extracts the source or destination port from a packet."""
+    """
+    Extracts the source or destination port from a captured packet.
+
+    Parameters:
+    packet (IP): The captured packet to analyze.
+    port_type (str): The type of port to extract ('sport' for source port, 'dport' for destination port).
+
+    Returns:
+    int | None: The port number if available, otherwise None.
+    """
     log.debug(f"Port type: {port_type}")
     if packet.haslayer(TCP):
         return packet[TCP].sport if port_type == 'sport' else packet[TCP].dport
@@ -75,17 +103,31 @@ def get_port_info(packet: IP, port_type: str) -> int | None:
 
 
 # Function to print packet summary
-@log.function
 def print_packet_summary(packet_info: dict):
-    """Prints a summary of the captured packet."""
+    """
+    Prints a summary of the captured packet.
+
+    Parameters:
+    packet_info (dict): A dictionary containing packet details.
+
+    Returns:
+    None
+    """
     log.debug(f"Packet captured: {packet_info['protocol']} packet from {packet_info['src_ip']} "
-             f"to {packet_info['dst_ip']} | Src Port: {packet_info['src_port']} | Dst Port: {packet_info['dst_port']}")
+              f"to {packet_info['dst_ip']} | Src Port: {packet_info['src_port']} | Dst Port: {packet_info['dst_port']}")
 
 
 # Function to add packet information to the graph
-@log.function
 def add_to_graph(packet_info: dict):
-    """Adds the packet information to the graph."""
+    """
+    Adds the packet information to the graph.
+
+    Parameters:
+    packet_info (dict): A dictionary containing packet details.
+
+    Returns:
+    None
+    """
     src_ip = packet_info['src_ip']
     dst_ip = packet_info['dst_ip']
     protocol = packet_info['protocol']
@@ -93,9 +135,18 @@ def add_to_graph(packet_info: dict):
 
 
 # Function to start sniffing packets
-@log.function
 def start_sniffing(interface: str, packet_count: int = 10, timeout: int = 10):
-    """Starts packet sniffing on a given network interface."""
+    """
+    Starts packet sniffing on a given network interface.
+
+    Parameters:
+    interface (str): The network interface to sniff on.
+    packet_count (int): The number of packets to capture.
+    timeout (int): The timeout for packet capture in seconds.
+
+    Returns:
+    None
+    """
     log.info(f"Starting packet capture on interface '{interface}'...")
 
     # Initialize a packet capture counter
@@ -103,6 +154,15 @@ def start_sniffing(interface: str, packet_count: int = 10, timeout: int = 10):
 
     # Define a custom packet callback to count packets
     def packet_callback(packet: IP) -> bool:
+        """
+        Callback function to process each captured packet.
+
+        Parameters:
+        packet (IP): The captured packet.
+
+        Returns:
+        bool: True if the packet count is reached, otherwise False.
+        """
         log.debug(f"Received packet: {packet.summary()}")
         nonlocal packet_counter  # Reference the outer packet_counter
         if packet_counter >= packet_count:
@@ -122,9 +182,16 @@ def start_sniffing(interface: str, packet_count: int = 10, timeout: int = 10):
 
 
 # Function to save captured packet data to CSV
-@log.function
 def save_packet_data_to_csv(file_path: str):
-    """Saves captured packet data to a CSV file."""
+    """
+    Saves captured packet data to a CSV file.
+
+    Parameters:
+    file_path (str): The path to the CSV file where the packet data will be saved.
+
+    Returns:
+    None
+    """
     global packet_data
     if packet_data:
         df = pd.DataFrame(packet_data)
@@ -135,7 +202,6 @@ def save_packet_data_to_csv(file_path: str):
 
 
 # Function to visualize the graph
-@log.function
 def visualize_graph(node_colors: str = None, node_sizes: str = None):
     """
     Visualizes the graph of packet connections with customizable node colors and sizes.
@@ -166,17 +232,28 @@ def visualize_graph(node_colors: str = None, node_sizes: str = None):
 
 
 @log.function
-def main():
+def packet_sniffer():
+    """
+    Main function to read configuration and start packet sniffing.
+
+    Reads the network interface, packet count, and timeout from the configuration.
+    Validates the packet count and timeout values.
+    Starts packet sniffing on the specified interface.
+    Handles exceptions related to invalid interface names and attempts to correct them.
+    """
     interface = config['interface']
     packet_count = int(config['packet_count'])
     timeout = int(config['timeout'])
 
     if packet_count <= 0 or timeout <= 0:
-        log.error(
-            f"Oops! Can't work with these values:\n"
-            f"- Packet count: {packet_count} {'❌ (must be > 0)' if packet_count <= 0 else '✅'}\n"
-            f"- Timeout: {timeout} {'❌ (must be > 0)' if timeout <= 0 else '✅'}"
-        )
+        try:
+            log.error(
+                f"Oops! Can't work with these values:\n"
+                f"- Packet count: {packet_count} {'❌ (must be > 0)' if packet_count <= 0 else '✅'}\n"
+                f"- Timeout: {timeout} {'❌ (must be > 0)' if timeout <= 0 else '✅'}"
+            )
+        except Exception:
+            log.error(f"Error reading configuration: Improper values for packet count or timeout")
         exit(1)
 
     try:
@@ -193,6 +270,7 @@ def main():
 # Entry point of the script
 if __name__ == "__main__":
     try:
-        main()
+        packet_sniffer()
     except Exception as e:
         log.error(e)
+        exit(1)

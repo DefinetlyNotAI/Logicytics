@@ -47,25 +47,6 @@ class Get:
         return append_file_list
 
     @staticmethod
-    def list_of_code_files(directory: str) -> list:
-        """
-        Retrieves a list of files with specific extensions within a specified directory and its subdirectories.
-
-        Args:
-            directory (str): The path to the directory to search for files.
-
-        Returns:
-            list: A list of file paths with the following extensions: .py, .exe, .ps1, .bat, .vbs.
-        """
-        file = []
-        for root, _, filenames in os.walk(directory):
-            for filename in filenames:
-                if filename.endswith((".py", ".exe", ".ps1", ".bat", ".vbs")):
-                    files_path = os.path.join(root, filename)
-                    file.append(files_path.removeprefix(".\\"))
-        return file
-
-    @staticmethod
     def config_data() -> tuple[str, str, list[str], bool]:
         """
         Retrieves configuration data from the 'config.ini' file.
