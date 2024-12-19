@@ -187,7 +187,10 @@ if __name__ == "__main__":
 
     if CODE_NAME == 'SenseMacro':
         print(
-            "\033[91mDeprecationWarning: A call to the deprecated feature SenseMacro has been called, this has been removed due to instability issues, going with default settings (Model Sense).\033[0m")
+            "\033[91mDeprecationWarning: SenseMacro has been removed due to instability issues. "
+            "Please use 'Sense' instead for better stability and performance. "
+            "Defaulting to 'Sense' settings for now.\033[0m"
+        )
         CODE_NAME = 'Sense'
 
     if CODE_NAME == 'Sense':

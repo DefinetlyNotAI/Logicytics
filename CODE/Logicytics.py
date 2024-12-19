@@ -137,12 +137,9 @@ def handle_special_actions():
 
     # Deprecated, remove in v3.3.0
     if ACTION == "extra":
-        print("\033[91mDeprecationWarning: "
-              "A call to the deprecated feature `extra` has been called, "
-              "this feature has been removed as it doesn't follow "
-              "the required code standards or aim of Logicytics.\033[0m")
-        log.info("No flag is supplied due to --extra flag deprecation, will show help menu instead")
-        Flag.show_help_menu()
+        print("\033[91mDeprecationWarning: The `extra` feature has been removed! 🚫\n"
+              "Why? It didn't match our code quality standards.\n"
+              "What to use instead? Check out our new features with --help\033[0m")
         input("Press Enter to exit...")
         exit(0)
 
@@ -178,12 +175,9 @@ def handle_special_actions():
 
     # Deprecated, remove in v3.3.0
     if ACTION == "unzip_extra":
-        print("\033[91mDeprecationWarning: "
-              "A call to the deprecated feature `unzip-extra` has been called, "
-              "this feature has been removed as it doesn't follow "
-              "the required code standards or aim of Logicytics.\033[0m")
-        log.info("No flag is supplied due to --unzip-extra flag deprecation, will show help menu instead")
-        Flag.show_help_menu()
+        print("\033[91mDeprecationWarning: The `unzip_extra` feature has been removed! 🚫\n"
+              "Why? It didn't match our code quality standards.\n"
+              "What to use instead? Check out our new features with --help\033[0m")
         input("Press Enter to exit...")
         exit(0)
 

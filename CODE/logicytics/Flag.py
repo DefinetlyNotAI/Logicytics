@@ -172,16 +172,13 @@ class Flag:
         parser.add_argument(
             "--unzip-extra",
             action="store_true",
-            help="Unzip the extra directory zip File "
-                 f"{cls.colorify('- Use on your own device only -', 'y')}.",
+            help=f"{cls.colorify('[REMOVED]', 'r')} Unzip the extra directory zip File "
         )
 
         parser.add_argument(
             "--extra",
             action="store_true",
-            help="Open's the extra directory menu to use more tools. "
-                 f"{cls.colorify('- Still experimental -', 'y')} "
-                 f"{cls.colorify('- MUST have used --unzip-extra flag -', 'b')}.",
+            help=f"{cls.colorify('[REMOVED]', 'r')} Open's the extra directory menu to use more tools. "
         )
 
         return parser.parse_args(), parser
@@ -276,9 +273,15 @@ class Flag:
         return tuple(used_flags)
 
     @staticmethod
-    def show_help_menu():
+    def show_help_menu(format_output: bool = False):
         """
         Displays the help menu for the Logicytics application.
+
+        Args:
+             format_output (bool): If True, returns the help text instead of printing it
         """
         _, parser = Flag.__available_arguments()
-        parser.print_help()
+        if format_output:
+            return parser.format_help()
+        else:
+            parser.print_help()
