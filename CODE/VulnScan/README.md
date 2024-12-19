@@ -1,10 +1,15 @@
 # VulnScan Documentation
 
 > [!WARNING]
-> VulnScan will be moved to a different repository soon.
-> This part of the repository will be archived and the new repository will be linked here.
-> The `pkl` and `pth` files will stay here, linked properly for `vulnscan.py`,
-> VulnScan will NOT be moved to the other repository.
+> # VulnScan Migration Notice 🚨
+>
+> VulnScan is moving to a new home! Here's what you need to know:
+> - This repository section will be archived
+> - A link to the new repository will be added here
+> - The `pkl` and `pth` files will stay here (they'll work with `vulnscan.py`)
+> - VulnScan itself will NOT be moved to the other repository
+>
+> This will occur in version `3.2.0` of Logicytics.
 
 ## Overview
 
