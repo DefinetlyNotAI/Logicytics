@@ -17,6 +17,7 @@
 <!-- To tick the checkboxes replace the space with an 'x', so [ ] becomes [x] . -->
 
 - [ ] Bug fix <!-- Non-Breaking Bug Fix - Usually relates to fixing an issue -->
+- [ ] Deprecation Change <!-- Removing a deprecation -->
 - [ ] New feature <!-- Non-Breaking Change that adds a new feature -->
 - [ ] Refactoring <!-- Non-Breaking Change that modifies existing code to refactor it to become more organised -->
 - [ ] Documentation
