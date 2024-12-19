@@ -32,16 +32,16 @@ To install and setup Logicytics, follow these steps:
 
 2. **Install Dependencies**: Logicytics requires Python modules. You can install all the required modules by running the following command in your terminal:     `pip install -r requirements.txt`
 
-
 3. **Run Logicytics**: To run Logicytics, simply run the following command in your terminal: `python Logicytics.py -h` - This opens a help menu.
 
 > [!IMPORTANT]
 > We recommend Python Version `3.11` or higher, as the project is developed and tested on this version.
 > 
 > You must also install `pytorch` if you want to use the vulnscan feature, To install run the command `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124`
-> If the device has CUDA available (NVidea GPU's),
+> If the device has CUDA available (NVidea GPUs),
 >
-> Otherwise run `pip3 install torch torchvision torchaudio` to use the CPU, ofcourse this is optional for normal usage's,
+> Otherwise, run `pip3 install torch torchvision torchaudio` to use the CPU, ofcourse this is optional for normal
+> usage's,
 > until you require `vulnscan`
 
 ### Prerequisites
@@ -124,9 +124,7 @@ It is also used to store and save settings for other programs.
 > this is used to later check for corruption or bugs.
 > VERSION is the version of the project, used to check and pull for updates.
 
-## 🚀 Advanced Usage 🚀
-
-### Mods
+## 🚀 Mods 🚀
 
 Mods are special files that are run with the `--modded` flag.
 These files are essentially scripts that are run after the main Logicytics.py script is run
@@ -178,19 +176,19 @@ If those don't work attempt:
 
 Check out the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) for help.
 
-## 📊 Data Analysis 📊
-
-## Data Extraction
+## 📊 Data Extraction 📊
 
 Logicytics extracts a wide range of data points on a Windows system.
 
 Here are some of the data points that Logicytics extracts:
 
 > [!IMPORTANT]
-> Don't recreate the scripts/ideas below as then it's a waste of time for you, unless the Side-note on the script says otherwise, you can however contribute to the script itself.
+> Don't recreate the scripts/ideas below as then it's a waste of time for you,
+> unless the Side-note on the script says otherwise, you can however contribute to the script itself.
 
 > [!TIP]
-> You can check out future plans [here](PLANS.md), you can contribute these plans if you have no idea's on what to contribute!
+> You can check out future plans [here](PLANS.md),
+> you can contribute these plans if you have no idea's on what to contribute!
 
 | File Name                | About                                                                                                                | Important Note           |
 |--------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------|
@@ -220,7 +218,8 @@ This is not an exhaustive list,
 but it should give you a good idea of what data Logicytics is capable of extracting.
 
 > [!NOTE]
-> **Any file with `_` is not counted here, do note they may range from custom libraries to special files/wrappers**
+> **Any file with `_` is not counted here,
+> do note they may range from custom libraries to special files/wrappers**
 
 ### Want to create your own mod?
 
@@ -231,13 +230,12 @@ Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
 If there is a specific piece of data that you would like to see extracted by Logicytics,
 please let us know. We are constantly working to improve the project and adding new features.
 
-Other than mods, some prefixed tools are in the `EXTRA` directory, 
-use the `--extra` flag to traverse these special tools
-
 ### Want to create your own mod?
 
-Check out the [contributing guidlines](CONTRIBUTING.md) file for more info, as well as the [wiki guidelines](https://github.com/DefinetlyNotAI/Logicytics/wiki/5-How-to-Contribute) for more info
-Tips and tricks of the given modules/API's can be found [here](https://github.com/DefinetlyNotAI/Logicytics/wiki/6-Code-tips-and-tricks) too!
+Check out the [contributing guidlines](CONTRIBUTING.md) file for more info,
+as well as the [wiki guidelines](https://github.com/DefinetlyNotAI/Logicytics/wiki/5-How-to-Contribute) for more info
+Tips and tricks of the given modules/APIs can be
+found [here](https://github.com/DefinetlyNotAI/Logicytics/wiki/6-Code-tips-and-tricks) too!
 
 > [!IMPORTANT]
 > Always adhere to the [coding standards](https://github.com/DefinetlyNotAI/Logicytics/wiki/7-Advanced-Coding-Standards) of Logicytics!
