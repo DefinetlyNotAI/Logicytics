@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import configparser
 import os
 import random
 import string
-import configparser
-from Logicytics import Log, DEBUG
+
 from faker import Faker
 
+from Logicytics import Log, DEBUG
 
 logger = Log(
     {"log_level": DEBUG,
@@ -184,6 +185,14 @@ if __name__ == "__main__":
     DEFAULT_MIN_FILE_SIZE = 10 * 1024
     DEFAULT_MAX_FILE_SIZE = 10 * 1024
 
+    if CODE_NAME == 'SenseMacro':
+        print(
+            "\033[91mDeprecationWarning: SenseMacro has been removed due to instability issues. "
+            "Please use 'Sense' instead for better stability and performance. "
+            "Defaulting to 'Sense' settings for now.\033[0m"
+        )
+        CODE_NAME = 'Sense'
+
     if CODE_NAME == 'Sense':
         FILE_NUM = DEFAULT_FILE_NUM * 5
         MIN_FILE_SIZE = DEFAULT_MIN_FILE_SIZE * 5
@@ -192,12 +201,6 @@ if __name__ == "__main__":
         FILE_NUM = 5
         MIN_FILE_SIZE = int(DEFAULT_MIN_FILE_SIZE * 0.5)
         MAX_FILE_SIZE = int(DEFAULT_MAX_FILE_SIZE * 0.5)
-    elif CODE_NAME == 'SenseMacro':
-        logger.warning("Generating 100 times more files and 100 times larger files")
-        logger.warning("This is being deprecated in version 3.2.0")
-        FILE_NUM = DEFAULT_FILE_NUM * 100
-        MIN_FILE_SIZE = DEFAULT_MIN_FILE_SIZE
-        MAX_FILE_SIZE = DEFAULT_MAX_FILE_SIZE
     elif CODE_NAME == 'SenseMini':
         FILE_NUM = DEFAULT_FILE_NUM
         MIN_FILE_SIZE = DEFAULT_MIN_FILE_SIZE
