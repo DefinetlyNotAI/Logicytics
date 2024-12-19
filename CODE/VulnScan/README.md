@@ -1,5 +1,16 @@
 # VulnScan Documentation
 
+> [!WARNING]
+> # VulnScan Migration Notice 🚨
+>
+> VulnScan is moving to a new home! Here's what you need to know:
+> - This repository section will be archived
+> - A link to the new repository will be added here
+> - The `pkl` and `pth` files will stay here (they'll work with `vulnscan.py`)
+> - VulnScan itself will NOT be moved to the other repository
+>
+> This will occur in version `3.2.0` of Logicytics.
+
 ## Overview
 
 VulnScan is designed to detect sensitive data across various file formats. It offers a modular framework to train models using diverse algorithms, from traditional ML classifiers to advanced Neural Networks. This document outlines the system's naming conventions, lifecycle, and model configuration.
