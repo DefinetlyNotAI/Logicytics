@@ -44,4 +44,5 @@ def backup_windows_logs():
     log.info("Log Miner completed.")
 
 
-backup_windows_logs()
+if __name__ == "__main__":
+    backup_windows_logs()

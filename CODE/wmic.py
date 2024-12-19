@@ -38,4 +38,5 @@ def wmic():
         file.write("-" * 190)
 
 
-wmic()
+if __name__ == "__main__":
+    wmic()

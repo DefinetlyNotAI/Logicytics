@@ -60,7 +60,6 @@ def sys_internal():
     log.info("SysInternal Suite fully executed")
 
 
-@log.function
 def check_sys_internal_dir() -> tuple[bool, bool]:
     """
     Checks the existence of the 'SysInternal_Suite' directory and its contents.
@@ -82,13 +81,11 @@ def check_sys_internal_dir() -> tuple[bool, bool]:
         return False, False
 
 
-if check_sys_internal_dir()[0]:
-    sys_internal()
-elif check_sys_internal_dir()[0] is False and check_sys_internal_dir()[1] is True:
-    log.warning(
-        "Files are not found, They are still zipped, most likely due to a .ignore file being present, continuing Logicytics"
-    )
-elif check_sys_internal_dir()[0] is False and check_sys_internal_dir()[1] is False:
-    log.error(
-        "Files are not found, The zip file is also missing!, continuing Logicytics"
-    )
+if __name__ == "__main__":
+    if check_sys_internal_dir()[0]:
+        sys_internal()
+    elif check_sys_internal_dir()[1]:
+        log.warning(
+            "Files are not found, They are still zipped, most likely due to a .ignore file being present, continuing Logicytics")
+    else:
+        log.error("Files are not found, The zip file is also missing!, continuing Logicytics")

@@ -1,11 +1,13 @@
-import subprocess
 import json
+import subprocess
+
 from logicytics import Log, DEBUG
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
+@log.function
 def get_bluetooth_device_details():
     """
     Retrieves and logs detailed information about Bluetooth devices on the system.

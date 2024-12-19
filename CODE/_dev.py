@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import configobj
 import subprocess
+
+import configobj
 
 from logicytics import Log, DEBUG, Get, FileManagement, CURRENT_FILES, VERSION
 
@@ -61,6 +62,7 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
         log_dev.error(e)
 
 
+@log_dev.function
 def dev_checks() -> None:
     """
         Performs a series of checks to ensure that the developer has followed the required guidelines and best practices.
@@ -127,6 +129,7 @@ def dev_checks() -> None:
         log_dev.exception(str(e))
 
 
-dev_checks()
-# Wait for the user to press Enter to exit the program
-input("\nPress Enter to exit the program... ")
+if __name__ == "__main__":
+    dev_checks()
+    # Wait for the user to press Enter to exit the program
+    input("\nPress Enter to exit the program... ")

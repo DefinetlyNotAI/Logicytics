@@ -27,6 +27,7 @@ def command(file: str, commands: str, message: str, encoding: str = "UTF-8") -> 
         log.error(f"Error while getting {message}: {e}")
 
 
-command("Drivers.txt", "driverquery /v", "Driver Query")
-command("SysInfo.txt", "systeminfo", "System Info")
-command("GPResult.txt", "GPResult /r", "GPResult", "windows-1252")
+if __name__ == "__main__":
+    command("Drivers.txt", "driverquery /v", "Driver Query")
+    command("SysInfo.txt", "systeminfo", "System Info")
+    command("GPResult.txt", "GPResult /r", "GPResult", "windows-1252")

@@ -17,13 +17,6 @@ from logicytics import Log, DEBUG
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
-log.info("Locking threads - Model and Vectorizer")
-model_lock = threading.Lock()
-vectorizer_lock = threading.Lock()
-
-model_to_use = None
-vectorizer_to_use = None
-
 
 def load_model(model_path_to_load: str) -> safe_open | torch.nn.Module:
     """
@@ -50,7 +43,19 @@ def load_model(model_path_to_load: str) -> safe_open | torch.nn.Module:
         raise ValueError("Unsupported model file format. Use .pkl, .safetensors, or .pth")
 
 
+@log.function
 def scan_path(model_path: str, scan_paths: str, vectorizer_path: str):
+    """
+    Load the model and vectorizer if not already loaded, and scan the specified path for sensitive content.
+
+    Args:
+        model_path (str): Path to the machine learning model file.
+        scan_paths (str): Path to the file or directory to be scanned.
+        vectorizer_path (str): Path to the vectorizer file.
+
+    Raises:
+        Exception: If an error occurs during scanning.
+    """
     global model_to_use, vectorizer_to_use
     try:
         with model_lock:
@@ -122,7 +127,16 @@ def scan_file(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_path: st
         return is_sensitive(model, vectorizer, content)
 
 
+@log.function
 def vulnscan(model, SCAN_PATH, vectorizer):
+    """
+    Scan a file to determine if it contains sensitive content and log the results.
+
+    Args:
+        model: Machine learning model.
+        SCAN_PATH (str): Path to the file to be scanned.
+        vectorizer: Vectorizer to transform file content.
+    """
     log.info(f"Scanning {SCAN_PATH}")
     result, probability, reason = scan_file(model, vectorizer, SCAN_PATH)
     if result:
@@ -134,31 +148,41 @@ def vulnscan(model, SCAN_PATH, vectorizer):
             sensitive_file.write(f"{SCAN_PATH}\n")
 
 
-# Start scanning
-log.info("Getting paths to scan - This may take some time!!")
+if __name__ == "__main__":
+    # Locks for model and vectorizer
+    log.info("Locking threads - Model and Vectorizer")
+    model_lock = threading.Lock()
+    vectorizer_lock = threading.Lock()
 
-threads = []
-paths = []
-base_paths = [
-    "C:\\Users\\",
-    "C:\\Windows\\Logs",
-    "C:\\Program Files",
-    "C:\\Program Files (x86)"
-]
+    model_to_use = None
+    vectorizer_to_use = None
 
-for base_path in base_paths:
-    for root, dirs, files_main in os.walk(base_path):
-        for file_main in files_main:
-            paths.append(os.path.join(root, file_main))
+    # Start scanning
+    log.info("Getting paths to scan - This may take some time!!")
 
-# Start scanning
-log.warning("Starting scan - This may take hours and consume memory!!")
+    threads = []
+    paths = []
+    base_paths = [
+        "C:\\Users\\",
+        "C:\\Windows\\Logs",
+        "C:\\Program Files",
+        "C:\\Program Files (x86)"
+    ]
 
-for path in paths:
-    thread = threading.Thread(target=scan_path,
-                              args=("VulnScan/Model SenseMini .3n3.pth", path, "VulnScan/Vectorizer .3n3.pkl"))
-    threads.append(thread)
-    thread.start()
+    for base_path in base_paths:
+        for root, dirs, files_main in os.walk(base_path):
+            for file_main in files_main:
+                paths.append(os.path.join(root, file_main))
 
-for thread in threads:
-    thread.join()
+    # Start scanning
+    log.warning("Starting scan - This may take hours and consume memory!!")
+
+    for path in paths:
+        thread = threading.Thread(target=scan_path,
+                                  args=("VulnScan/Model SenseMini .3n3.pth",
+                                        path, "VulnScan/Vectorizer .3n3.pkl"))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()

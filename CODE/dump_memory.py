@@ -1,8 +1,10 @@
+import ctypes  # TODO - Remove this dependency, change to pywin32 or find a alternative
 import datetime
-import platform
-import ctypes
 import os
+import platform
+
 import psutil
+
 from logicytics import Log, DEBUG
 
 if __name__ == "__main__":
@@ -126,7 +128,6 @@ class BasicMemInfo(ctypes.Structure):
     ]
 
 
-@log.function
 def get_system_info() -> SystemInfo:
     """
     Retrieve and return system information using the `GetSystemInfo` function from the Windows API.
