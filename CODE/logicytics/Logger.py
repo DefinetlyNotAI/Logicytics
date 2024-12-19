@@ -4,8 +4,9 @@ import inspect
 import logging
 import os
 from datetime import datetime
-import colorlog
 from typing import Type
+
+import colorlog
 
 
 class Log:
@@ -146,8 +147,15 @@ class Log:
                 f"Raw message called from a non-function - This is not recommended"
             )
         if message != "None" and message is not None:
-            with open(self.filename, "a") as f:
-                f.write(f"{str(message)}\n")
+            try:
+                with open(self.filename, "a", encoding="utf-8") as f:
+                    f.write(f"{str(message)}\n")
+            except UnicodeDecodeError or UnicodeEncodeError as UDE:
+                self.__internal(
+                    f"UnicodeDecodeError: {UDE} - Message: {str(message)}"
+                )
+            except Exception as E:
+                self.__internal(f"Error: {E} - Message: {str(message)}")
 
     def newline(self):
         """
@@ -235,16 +243,35 @@ class Log:
         raise exception_type(message)
 
     def parse_execution(self, message_log: list[list[str]]):
+        """
+        Parses and logs a list of messages with their corresponding log types.
+
+        :param message_log: A list of lists, where each inner list contains a message and its log type.
+        """
         if message_log:
             for message_list in message_log:
                 if len(message_list) == 2:
                     self.string(message_list[0], message_list[1])
 
     def function(self, func: callable):
+        """
+        A decorator that logs the execution of a function, including its start time, end time, and elapsed time.
+
+        :param func: The function to be decorated.
+        :return: The wrapper function.
+        """
+
         def wrapper(*args, **kwargs):
+            """
+            Wrapper function that logs the execution of the decorated function.
+
+            :param args: Positional arguments for the decorated function.
+            :param kwargs: Keyword arguments for the decorated function.
+            :raises TypeError: If the provided function is not callable.
+            :return: The result of the decorated function.
+            """
             if not callable(func):
-                self.exception(f"Function {func.__name__} is not callable.",
-                               TypeError)
+                self.exception(f"Function {func.__name__} is not callable.", TypeError)
             start_time = datetime.now()
             self.debug(f"Running the function {func.__name__}().")
             result = func(*args, **kwargs)
@@ -252,4 +279,5 @@ class Log:
             elapsed_time = end_time - start_time
             self.debug(f"Function {func.__name__}() executed in {elapsed_time}.")
             return result
+
         return wrapper
