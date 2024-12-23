@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 
 class Flag:
     @classmethod
-    def colorify(cls, text: str, color: str) -> str:
+    def __colorify(cls, text: str, color: str) -> str:
         """
         Adds color to the given text based on the specified color code.
 
@@ -43,7 +43,8 @@ class Flag:
         parser = argparse.ArgumentParser(
             description="Logicytics, The most powerful tool for system data analysis. "
                         "This tool provides a comprehensive suite of features for analyzing system data, "
-                        "including various modes for different levels of detail and customization."
+                        "including various modes for different levels of detail and customization.",
+            allow_abbrev=False
         )
 
         # Define Actions Flags
@@ -51,14 +52,14 @@ class Flag:
             "--default",
             action="store_true",
             help="Runs Logicytics with its default settings and scripts. "
-                 f"{cls.colorify('- Recommended for most users -', 'b')}",
+                 f"{cls.__colorify('- Recommended for most users -', 'b')}",
         )
 
         parser.add_argument(
             "--threaded",
             action="store_true",
             help="Runs Logicytics using threads, where it runs in parallel, default settings though"
-                 f"{cls.colorify('- Recommended for some users -', 'b')}",
+                 f"{cls.__colorify('- Recommended for some users -', 'b')}",
         )
 
         parser.add_argument(
@@ -73,14 +74,14 @@ class Flag:
             action="store_true",
             help="This flag will run all default script's in threading mode, "
                  "as well as any clunky and huge code, which produces a lot of data "
-                 f"{cls.colorify('- Will take a long time -', 'y')}",
+                 f"{cls.__colorify('- Will take a long time -', 'y')}",
         )
 
         parser.add_argument(
             "--nopy",
             action="store_true",
             help="Run Logicytics using all non-python scripts, "
-                 f"These may be {cls.colorify('outdated', 'y')} "
+                 f"These may be {cls.__colorify('outdated', 'y')} "
                  "and not the best, use only if the device doesnt have python installed.",
         )
 
@@ -89,8 +90,8 @@ class Flag:
             action="store_true",
             help="Run's Logicytics new Sensitive data Detection AI, its a new feature that will "
                  "detect any files that are out of the ordinary, and logs their path. Runs threaded."
-                 f"{cls.colorify('- Beta Mode -', 'y')} "
-                 f"{cls.colorify('- Will take a long time -', 'y')}",
+                 f"{cls.__colorify('- Beta Mode -', 'y')} "
+                 f"{cls.__colorify('- Will take a long time -', 'y')}",
         )
 
         parser.add_argument(
@@ -104,7 +105,7 @@ class Flag:
             action="store_true",
             help="Run's Logicytics default while testing its performance and time, "
                  "this then shows a table with the file names and time to executed. "
-                 f"{cls.colorify('- Beta Mode -', 'y')}"
+                 f"{cls.__colorify('- Beta Mode -', 'y')}"
         )
 
         # Define Side Flags
@@ -113,14 +114,14 @@ class Flag:
             action="store_true",
             help="Runs the Debugger, Will check for any issues, "
                  "warning etc, useful for debugging and issue reporting "
-                 f"{cls.colorify('- Use to get a special log file to report the bug -', 'b')}.",
+                 f"{cls.__colorify('- Use to get a special log file to report the bug -', 'b')}.",
         )
 
         parser.add_argument(
             "--backup",
             action="store_true",
             help="Backup Logicytics files to the ACCESS/BACKUPS directory "
-                 f"{cls.colorify('- Use on your own device only -', 'y')}.",
+                 f"{cls.__colorify('- Use on your own device only -', 'y')}.",
         )
 
         parser.add_argument(
@@ -128,7 +129,7 @@ class Flag:
             action="store_true",
             help="Update Logicytics from GitHub, only if you have git properly installed "
                  "and the project was downloaded via git "
-                 f"{cls.colorify('- Use on your own device only -', 'y')}.",
+                 f"{cls.__colorify('- Use on your own device only -', 'y')}.",
         )
 
         parser.add_argument(
@@ -136,7 +137,7 @@ class Flag:
             action="store_true",
             help="Run Logicytics developer mod, this is only for people who want to "
                  "register their contributions properly. "
-                 f"{cls.colorify('- Use on your own device only -', 'y')}.",
+                 f"{cls.__colorify('- Use on your own device only -', 'y')}.",
         )
 
         # Define After-Execution Flags
@@ -157,15 +158,15 @@ class Flag:
             "--webhook",
             action="store_true",
             help="Execute Flag that will send zip File via webhook "
-                 f"{cls.colorify('- Not yet Implemented -', 'r')}",
+                 f"{cls.__colorify('- Not yet Implemented -', 'r')}",
         )
 
         parser.add_argument(
             "--restore",
             action="store_true",
             help="Restore Logicytics files from the ACCESS/BACKUPS directory "
-                 f"{cls.colorify('- Use on your own device only -', 'y')} "
-                 f"{cls.colorify('- Not yet Implemented -', 'r')}",
+                 f"{cls.__colorify('- Use on your own device only -', 'y')} "
+                 f"{cls.__colorify('- Not yet Implemented -', 'r')}",
         )
 
         # Deprecated Flags - v3.3
@@ -181,7 +182,7 @@ class Flag:
             help=f"{cls.colorify('[REMOVED]', 'r')} Open's the extra directory menu to use more tools. "
         )
 
-        return parser.parse_args(), parser
+        return args, parser
 
     @staticmethod
     def __exclusivity_logic(args: argparse.Namespace) -> bool:
