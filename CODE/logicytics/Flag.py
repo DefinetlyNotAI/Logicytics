@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import argparse
-from argparse import ArgumentParser
+import difflib
+import json
+import os
 
 
 class Flag:
+    CONFIG_FILE = 'flag_suggestions_config.json'
+
     @classmethod
     def __colorify(cls, text: str, color: str) -> str:
         """
@@ -169,19 +173,7 @@ class Flag:
                  f"{cls.__colorify('- Not yet Implemented -', 'r')}",
         )
 
-        # Deprecated Flags - v3.3
-        parser.add_argument(
-            "--unzip-extra",
-            action="store_true",
-            help=f"{cls.colorify('[REMOVED]', 'r')} Unzip the extra directory zip File "
-        )
-
-        parser.add_argument(
-            "--extra",
-            action="store_true",
-            help=f"{cls.colorify('[REMOVED]', 'r')} Open's the extra directory menu to use more tools. "
-        )
-
+        args = parser.parse_args()
         return args, parser
 
     @staticmethod
@@ -248,7 +240,7 @@ class Flag:
         return tuple(true_keys)
 
     @classmethod
-    def data(cls) -> ArgumentParser | tuple[str]:
+    def data(cls) -> tuple[str, str | None]:
         """
         Handles the parsing and validation of command-line flags.
 
@@ -269,9 +261,9 @@ class Flag:
                 print("Invalid combination of flags: Maximum 2 flag mixes allowed.")
                 exit(1)
 
-        if not tuple(used_flags):
-            return parser
-        return tuple(used_flags)
+        if len(used_flags) == 2:
+            return tuple(used_flags)
+        return used_flags[0], None
 
     @staticmethod
     def show_help_menu(format_output: bool = False):
@@ -286,3 +278,94 @@ class Flag:
             return parser.format_help()
         else:
             parser.print_help()
+
+    @classmethod
+    def load_config(cls):
+        if os.path.exists(cls.CONFIG_FILE):
+            with open(cls.CONFIG_FILE, 'r') as file:
+                return json.load(file)
+        return {}
+
+    @classmethod
+    def save_config(cls, config):
+        with open(cls.CONFIG_FILE, 'w') as file:
+            json.dump(config, file, indent=4)
+
+    @classmethod
+    def get_closest_flag(cls, input_flag, available_flags, threshold=0.6):
+        closest_matches = difflib.get_close_matches(input_flag, available_flags, n=1, cutoff=threshold)
+        if closest_matches:
+            return closest_matches[0], difflib.SequenceMatcher(None, input_flag, closest_matches[0]).ratio()
+        return None, 0
+
+    @classmethod
+    def suggest_flag_based_on_description(cls, description, available_flags):
+        """
+        Suggests a flag based on the provided description using a simple keyword matching mechanism.
+
+        Args:
+            description (str): The description of what the user wants to do.
+            available_flags (list[str]): The list of available flags.
+
+        Returns:
+            str: The suggested flag based on the description.
+        """
+        description = description.lower()
+        for flag in available_flags:
+            if flag in description:
+                return flag
+        return available_flags[0]
+
+    @classmethod
+    def handle_invalid_flag(cls, input_flag, available_flags):
+        # Handle the invalid flag and collect feedback
+        closest_flag, accuracy = cls.get_closest_flag(input_flag, available_flags)
+        if closest_flag:
+            print(f"Did you mean '{closest_flag}'? (Accuracy: {accuracy:.2f})")
+            feedback = input(f"Was this suggestion helpful? (yes/no): ").strip().lower()
+            feedback = 'positive' if feedback == 'yes' else 'negative'
+            cls.track_user_interaction(input_flag, closest_flag, feedback)
+        else:
+            description = input("Flag not recognized. Please describe what you want to do: ")
+            suggested_flag = cls.suggest_flag_based_on_description(description, available_flags)
+            print(f"Based on your description, you might want to use the '{suggested_flag}' flag.")
+            feedback = input(f"Was this suggestion helpful? (yes/no): ").strip().lower()
+            feedback = 'positive' if feedback == 'yes' else 'negative'
+            cls.track_user_interaction(input_flag, suggested_flag, feedback)
+
+    @classmethod
+    def track_user_interaction(cls, input_flag, suggested_flag, feedback):
+        # Tracks user interaction and feedback on flag suggestions
+        config = cls.load_config()
+        if input_flag not in config:
+            config[input_flag] = []
+        config[input_flag].append({'suggested_flag': suggested_flag, 'feedback': feedback})
+        cls.save_config(config)
+
+    @classmethod
+    def improve_suggestions(cls):
+        # Improve the suggestion logic based on the feedback received
+        config = cls.load_config()
+        improved_config = {}
+
+        for input_flag, suggestions in config.items():
+            # Aggregate feedback for each suggested flag
+            feedback_counter = {}
+            for suggestion in suggestions:
+                suggested_flag = suggestion['suggested_flag']
+                feedback = suggestion['feedback']
+                if suggested_flag not in feedback_counter:
+                    feedback_counter[suggested_flag] = {'positive': 0, 'negative': 0}
+                if feedback == 'positive':
+                    feedback_counter[suggested_flag]['positive'] += 1
+                else:
+                    feedback_counter[suggested_flag]['negative'] += 1
+
+            # Determine the best suggestion based on feedback
+            best_suggestion = max(feedback_counter,
+                                  key=lambda k: feedback_counter[k]['positive'] - feedback_counter[k]['negative'])
+            improved_config[input_flag] = best_suggestion
+
+        # Save improved suggestions to the configuration file
+        cls.save_config(improved_config)
+        print("Improved suggestions config:", improved_config)
