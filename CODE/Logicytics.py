@@ -75,27 +75,16 @@ class Health:
 
 def get_flags():
     """
-    Retrieves the command-line flags and sub-actions.
+    Retrieves the action and sub-action flags from the Flag module and logs them.
 
-    This function checks if the flags are provided as a tuple. If so, it attempts to unpack
-    the tuple into ACTION and SUB_ACTION. If an exception occurs, it sets SUB_ACTION to None.
-    If the flags are not a tuple, it prints the help message and exits the program.
-
+    This function sets the global variables ACTION and SUB_ACTION based on the data
+    retrieved from the Flag module. It also logs the retrieved values for debugging purposes.
     """
     global ACTION, SUB_ACTION
-    if isinstance(Flag.data(), tuple):
-        try:
-            # Get flags
-            ACTION, SUB_ACTION = Flag.data()
-        except ValueError:
-            actions = Flag.data()
-            ACTION = actions[0]
-            SUB_ACTION = None
-    else:
-        parser = Flag.data()
-        parser.print_help()
-        input("Press Enter to exit...")
-        exit(1)
+    # Get flags
+    ACTION, SUB_ACTION = Flag.data()
+    log.debug(f"Action: {ACTION}")
+    log.debug(f"Sub-Action: {SUB_ACTION}")
 
 
 def special_execute(file_path: str):
