@@ -45,40 +45,63 @@ Top 1:
     Accuracy: 51.78%,
     Line: 1,
     Weights: {"jaccard": 0.0, "cosine": 0.0, "synonym": 0.0, "difflib": 0.0, "enhanced": 0.0, "levenshtein": 1.0}
+    ❌ FAILS 4 TEST CASES OUT OF 17
 
 Top 2:
     Accuracy: 51.60%,
     Line: 12,
     Weights: {"jaccard": 0.0, "cosine": 0.0, "synonym": 0.0, "difflib": 0.1, "enhanced": 0.0, "levenshtein": 0.9}
+    ❌ FAILS 5 TEST CASES OUT OF 17
 
 Top 3:
     Accuracy: 51.50%,
     Line: 22,
     Weights: {"jaccard": 0.0, "cosine": 0.0, "synonym": 0.0, "difflib": 0.2, "enhanced": 0.0, "levenshtein": 0.8}
+    ❌ FAILS 5 TEST CASES OUT OF 17
 
 Top 4:
     Accuracy: 51.40%,
     Line: 30,
     Weights: {"jaccard": 0.0, "cosine": 0.0, "synonym": 0.0, "difflib": 0.3, "enhanced": 0.0, "levenshtein": 0.7}
+    ❌ FAILS 6 TEST CASES OUT OF 17
 
 Top 5:
     Accuracy: 51.30%,
     Line: 37,
     Weights: {"jaccard": 0.0, "cosine": 0.0, "synonym": 0.0, "difflib": 0.4, "enhanced": 0.0, "levenshtein": 0.6}
+    ❌ FAILS 6 TEST CASES OUT OF 17
 
 Top 6:
     Accuracy: 51.19%,
     Line: 44,
     Weights: {"jaccard": 0.0, "cosine": 0.0, "synonym": 0.0, "difflib": 0.5, "enhanced": 0.0, "levenshtein": 0.5}
+    ❌ FAILS 6 TEST CASES OUT OF 17
 
 Top 7:
     Accuracy: 51.09%,
     Line: 50,
     Weights: {"jaccard": 0.0, "cosine": 0.0, "synonym": 0.0, "difflib": 0.6, "enhanced": 0.0, "levenshtein": 0.4}
+    ❌ FAILS 6 TEST CASES OUT OF 17
 
 ----------------------------------------
 
 Total Weights Tested: 2486
 
 ----------------------------------------
+
+Additional Test I Manually ran:
+{"jaccard": 0.2, "cosine": 0.2, "synonym": 0.2, "difflib": 0.2, "enhanced": 0.2, "levenshtein": 0.2}
+❌ FAILS 1 TEST CASE OUT OF 17
+
+Additional Test II Manually ran:
+{"jaccard": 0.1, "cosine": 0.1, "synonym": 0.2, "difflib": 0.2, "enhanced": 0.15, "levenshtein": 0.25}
+❌ FAILS 1 TEST CASES OUT OF 17
+
+Additional Test III Manually ran:
+{"jaccard": 0.0, "cosine": 0.0, "synonym": 0.5, "difflib": 0.5, "enhanced": 0.0, "levenshtein": 0.0}
+❌ FAILS 2 TEST CASES OUT OF 17
+
+Additional Test IV Manually ran:
+{"jaccard": 0.5, "cosine": 0.5, "synonym": 0.5, "difflib": 0.5, "enhanced": 0.5, "levenshtein": 0.5}
+✖️ FAILS 2 TEST CASES OUT OF 17 - Gets wrong % accuracy (Aka >100)
 """
