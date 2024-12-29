@@ -44,9 +44,9 @@ body:
     validations:
       required: false
   - type: dropdown
-    id: flags
+    id: flags_list
     attributes:
-      label: What flags were you using to run Logicytics?
+      label: What flags_list were you using to run Logicytics?
       multiple: false
       options:
         - Threading

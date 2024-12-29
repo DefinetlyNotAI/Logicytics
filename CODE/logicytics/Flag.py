@@ -3,6 +3,9 @@ from __future__ import annotations
 import argparse
 import difflib
 
+import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
+
 
 class Flag:
     @classmethod
@@ -34,7 +37,7 @@ class Flag:
         """
         A static method used to parse command-line arguments for the Logicytics application.
 
-        It defines various flags that can be used to customize the behavior of the application,
+        It defines various flags_list that can be used to customize the behavior of the application,
         including options for running in default or minimal mode, unzipping extra files,
         backing up or restoring data, updating from GitHub, and more.
 
@@ -175,21 +178,23 @@ class Flag:
 
         # Parse the arguments
         args, unknown = parser.parse_known_args()
+        valid_flags = [action.dest for action in parser._actions if action.dest != 'help']
+        valid_desc = [action.help for action in parser._actions if action.dest != 'help']
         if unknown:
-            print(cls.__suggest_flag(unknown[0], [action.dest for action in parser._actions if action.dest != 'help']))
+            print(cls.__suggest_flag(unknown[0], valid_flags, valid_desc))
             exit(1)
         return args, parser
 
     @staticmethod
     def __exclusivity_logic(args: argparse.Namespace) -> bool:
         """
-        Checks if exclusive flags are used in the provided arguments.
+        Checks if exclusive flags_list are used in the provided arguments.
 
         Args:
             args (argparse.Namespace): The arguments to be checked.
 
         Returns:
-            bool: True if exclusive flags are used, False otherwise.
+            bool: True if exclusive flags_list are used, False otherwise.
         """
         special_flags = {
             args.reboot,
@@ -210,15 +215,15 @@ class Flag:
         }
 
         if any(special_flags) and not any(action_flags):
-            print("Invalid combination of flags: Special and Action flag exclusivity issue.")
+            print("Invalid combination of flags_list: Special and Action flag exclusivity issue.")
             exit(1)
 
         if any(exclusive_flags) and any(action_flags):
-            print("Invalid combination of flags: Exclusive and Action flag exclusivity issue.")
+            print("Invalid combination of flags_list: Exclusive and Action flag exclusivity issue.")
             exit(1)
 
         if any(exclusive_flags) and any(special_flags):
-            print("Invalid combination of flags: Exclusive and Special flag exclusivity issue.")
+            print("Invalid combination of flags_list: Exclusive and Special flag exclusivity issue.")
             exit(1)
 
         return any(special_flags)
@@ -226,10 +231,10 @@ class Flag:
     @staticmethod
     def __used_flags_logic(args: argparse.Namespace) -> tuple[str, ...]:
         """
-        Sets flags based on the provided arguments.
+        Sets flags_list based on the provided arguments.
 
         Args:
-            args (argparse.Namespace): The arguments to be checked for flags.
+            args (argparse.Namespace): The arguments to be checked for flags_list.
 
         Returns:
             tuple[str, ...]: A tuple of flag names that are set to True.
@@ -246,7 +251,7 @@ class Flag:
     @classmethod
     def data(cls) -> tuple[str, str | None]:
         """
-        Handles the parsing and validation of command-line flags.
+        Handles the parsing and validation of command-line flags_list.
 
         Returns either a tuple of used flag names or an ArgumentParser instance.
         """
@@ -256,13 +261,13 @@ class Flag:
         if not special_flag_used:
             used_flags = [flag for flag in vars(args) if getattr(args, flag)]
             if len(used_flags) > 1:
-                print("Invalid combination of flags: Maximum 1 action flag allowed.")
+                print("Invalid combination of flags_list: Maximum 1 action flag allowed.")
                 exit(1)
 
         if special_flag_used:
             used_flags = cls.__used_flags_logic(args)
             if len(used_flags) > 2:
-                print("Invalid combination of flags: Maximum 2 flag mixes allowed.")
+                print("Invalid combination of flags_list: Maximum 2 flag mixes allowed.")
                 exit(1)
 
         if len(used_flags) == 0:
@@ -287,19 +292,110 @@ class Flag:
         else:
             parser.print_help()
 
-    @staticmethod
-    def __suggest_flag(user_input: str, valid_flags: list[str]) -> str:
+    @classmethod
+    def __suggest_flag(cls, user_input: str, valid_flags: list[str], valid_desc: list[str]) -> str:
         """
         Suggests the closest valid flag based on the user's input.
 
         Args:
             user_input (str): The flag input by the user.
-            valid_flags (list[str]): The list of valid flags.
-
+            valid_flags (list[str]): The list of valid flags_list.
+            valid_desc (list[str]): The list of descriptions corresponding to the valid flags_list.
         Returns:
             str: A suggestion message with the closest valid flag.
         """
-        closest_matches = difflib.get_close_matches(user_input, valid_flags, n=1, cutoff=0.4)
+        # Get the closest valid flag match based on the user's input
+        closest_matches = difflib.get_close_matches(user_input, valid_flags, n=1, cutoff=0.6)
         if closest_matches:
             return f"Invalid flag '{user_input}', Did you mean '{closest_matches[0]}'?"
+
+        # Prompt the user for a description if no close match is found
+        user_input_desc = input("We can't find a match, Please provide a description: ").lower()
+
+        # Map the user-provided description to the closest valid flag
+        closest_matches = cls.__map_user_desc_to_flag(valid_flags, valid_desc, user_input_desc)
+        if closest_matches:
+            return closest_matches
+
+        # Return a message if no valid flag is found
         return f"Invalid flag '{user_input}'."
+
+    @staticmethod
+    def __map_user_desc_to_flag(flags: list[str], descriptions: list[str], user_input: str,
+                                threshold: int = 20) -> str | None:
+        """
+        Maps user input to the best matching flag based on similarity scores.
+
+        Args:
+            flags (list[str]): Available flags_list.
+            descriptions (list[str]): Descriptions for the flags_list.
+            user_input (str): User-provided description or input.
+            threshold (int): Minimum similarity percentage to consider a match.
+
+        Returns:
+            str | None: The closest matching flag or None if no match exceeds the threshold.
+        """
+
+        def jaccard_similarity(str1: str, str2: str) -> float:
+            """
+            Calculate the Jaccard similarity between two strings.
+
+            :param str1: First string
+            :param str2: Second string
+            :return: Jaccard similarity coefficient
+            """
+            set1 = set(str1.lower().split())
+            set2 = set(str2.lower().split())
+            intersection = set1.intersection(set2)
+            union = set1.union(set2)
+            return len(intersection) / len(union)
+
+        def cosine_similarity(str1: str, str2: str) -> float:
+            """
+            Calculate the Cosine similarity between two strings.
+
+            :param str1: First string
+            :param str2: Second string
+            :return: Cosine similarity coefficient
+            """
+            vectorizer = CountVectorizer().fit_transform([str1, str2])
+            vectors = vectorizer.toarray()
+            vec1, vec2 = vectors[0], vectors[1]
+            return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+
+        def calculate_similarity(target: str) -> float:
+            """
+            Calculate the similarity between the user input and the target string using multiple metrics.
+
+            Args:
+                target (str): The target string to compare against the user input.
+
+            Returns:
+                float: The combined similarity score.
+            """
+            jaccard = jaccard_similarity(user_input, target)
+            cosine = cosine_similarity(user_input, target)
+            difflib_ratio = difflib.SequenceMatcher(None, user_input, target).ratio()
+            return (jaccard * 0.5) + (cosine * 0.2) + (difflib_ratio * 0.3)
+
+        max_similarity = 0
+        best_match = None
+
+        for flag, desc in zip(flags, descriptions):
+            similarity = calculate_similarity(desc)
+            if similarity > max_similarity:
+                max_similarity = similarity
+                best_match = flag
+
+        return (
+            f"{best_match} (Accurate to {max_similarity * 100:.2f}%)"
+            if max_similarity * 100 > threshold
+            else None
+        )
+
+# FIXME: Implement a better similarity metric for flag suggestions, as now it is not very accurate
+# TODO: Implement a history file system, and a voting mechanism to improve the flag suggestion accuracy, make it so that every valid flag inputted by the user is increased by 1,
+#  and a very powerful smart algorithm will be used to suggest the best flag based on the user's input,
+#  and the history of the user's input. The history will be very expansive,
+#  including the when the user usually uses the program, what are the most used flags_list,
+#  what are the best combos, how much each flag was used, and much more.

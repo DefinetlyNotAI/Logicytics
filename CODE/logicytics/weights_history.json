@@ -1,0 +1,8 @@
+{
+  "jaccard": 0.0,
+  "cosine": 0.0,
+  "synonym": 0.0,
+  "difflib": 0.0,
+  "enhanced": 0.0,
+  "levenshtein": 1.0
+}

@@ -75,13 +75,13 @@ class Health:
 
 def get_flags():
     """
-    Retrieves the action and sub-action flags from the Flag module and logs them.
+    Retrieves the action and sub-action flags_list from the Flag module and logs them.
 
     This function sets the global variables ACTION and SUB_ACTION based on the data
     retrieved from the Flag module. It also logs the retrieved values for debugging purposes.
     """
     global ACTION, SUB_ACTION
-    # Get flags
+    # Get flags_list
     ACTION, SUB_ACTION = Flag.data()
     log.debug(f"Action: {ACTION}")
     log.debug(f"Sub-Action: {SUB_ACTION}")
@@ -362,7 +362,7 @@ def Logicytics():
     Main function to run the Logicytics process.
 
     This function performs the following steps:
-    1. Retrieves command-line flags and configurations.
+    1. Retrieves command-line flags_list and configurations.
     2. Handles any special actions based on the provided action flag.
     3. Checks for administrative privileges and potential errors.
     4. Executes the scripts based on the action flag.
@@ -370,7 +370,7 @@ def Logicytics():
     6. Handles any sub-actions based on the provided sub-action flag.
     7. Waits for user input to exit the program.
     """
-    # Get flags and configs
+    # Get flags_list and configs
     get_flags()
     # Check for special actions
     handle_special_actions()
