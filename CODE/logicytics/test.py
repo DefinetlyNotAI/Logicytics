@@ -182,7 +182,7 @@ descriptions_list = [
 user_inputs = [
     "run with default settings",  # Close to "--default"
     "parallel execution with threads",  # Close to "--threaded"
-    "custom scripts in mods folder",  # Close to "--modded"
+    "all default scripts in a mods folder",  # Close to "--modded"
     "detailed analysis using threading",  # Close to "--depth"
     "non-python mode for older devices",  # Close to "--nopy"
     "ai scanning for sensitive data",  # Close to "--vulnscan-ai"
@@ -207,39 +207,9 @@ for user_input in user_inputs:
     print("-" * 40)
 """
 
-# Run the test cases
-import itertools
-
-# Generate all combinations of weights once
-weight_combinations = itertools.product(
-    [round(i * 0.1, 1) for i in range(11)], repeat=6
-)
-
-# Store results to write once at the end
-results = []
-
-for weight_combo in weight_combinations:
-    if sum(weight_combo) == 1.0:
-        jaccard_weight, cosine_weight, synonym_weight, difflib_weight, enhanced_weight, levenshtein_weight = weight_combo
-        SimilarityScorer.weights = {
-            "jaccard": jaccard_weight,
-            "cosine": cosine_weight,
-            "synonym": synonym_weight,
-            "difflib": difflib_weight,
-            "enhanced": enhanced_weight,
-            "levenshtein": levenshtein_weight
-        }
-
-        total_accuracy = 0
-        for user_input_x in user_inputs:
-            suggestion = __map_user_desc_to_flag(flags_list, descriptions_list, user_input_x, threshold=20)
-            accuracy = float(suggestion.split('Accurate to ')[-1].split('%')[0]) if suggestion else 0
-            total_accuracy += accuracy
-
-        average_accuracy = total_accuracy / len(user_inputs)
-        results.append(f"Weights: {SimilarityScorer.weights}, Average Accuracy: {average_accuracy:.2f}%")
-        print(f"Weights: {SimilarityScorer.weights}, Average Accuracy: {average_accuracy:.2f}%")
-
-# Write all results to file at once
-with open("weights_log.txt", "a") as log_file:
-    log_file.write("\n".join(results) + "\n")
+print(SimilarityScorer.weights)
+for user_input in user_inputs:
+    suggestion = __map_user_desc_to_flag(flags_list, descriptions_list, user_input, threshold=20)
+    print(f"User Input: {user_input}")
+    print(f"Suggestion: {suggestion}")
+    print("-" * 40)
