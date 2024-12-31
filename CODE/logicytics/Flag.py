@@ -3,9 +3,6 @@ from __future__ import annotations
 import argparse
 import difflib
 
-import numpy as np
-from sklearn.feature_extraction.text import CountVectorizer
-
 
 class Flag:
     @classmethod
@@ -179,9 +176,8 @@ class Flag:
         # Parse the arguments
         args, unknown = parser.parse_known_args()
         valid_flags = [action.dest for action in parser._actions if action.dest != 'help']
-        valid_desc = [action.help for action in parser._actions if action.dest != 'help']
         if unknown:
-            print(cls.__suggest_flag(unknown[0], valid_flags, valid_desc))
+            print(cls.__suggest_flag(unknown[0], valid_flags))
             exit(1)
         return args, parser
 
@@ -293,22 +289,23 @@ class Flag:
             parser.print_help()
 
     @classmethod
-    def __suggest_flag(cls, user_input: str, valid_flags: list[str], valid_desc: list[str]) -> str:
+    def __suggest_flag(cls, user_input: str, valid_flags: list[str]) -> str:
         """
         Suggests the closest valid flag based on the user's input.
 
         Args:
             user_input (str): The flag input by the user.
             valid_flags (list[str]): The list of valid flags_list.
-            valid_desc (list[str]): The list of descriptions corresponding to the valid flags_list.
         Returns:
             str: A suggestion message with the closest valid flag.
         """
         # Get the closest valid flag match based on the user's input
         closest_matches = difflib.get_close_matches(user_input, valid_flags, n=1, cutoff=0.6)
         if closest_matches:
-            return f"Invalid flag '{user_input}', Did you mean '{closest_matches[0]}'?"
+            return f"Invalid flag '{user_input}', Did you mean '--{closest_matches[0]}'?"
 
+        # TODO Implement this here
+        """
         # Prompt the user for a description if no close match is found
         user_input_desc = input("We can't find a match, Please provide a description: ").lower()
 
@@ -316,82 +313,10 @@ class Flag:
         closest_matches = cls.__map_user_desc_to_flag(valid_flags, valid_desc, user_input_desc)
         if closest_matches:
             return closest_matches
+        """
 
         # Return a message if no valid flag is found
         return f"Invalid flag '{user_input}'."
-
-    @staticmethod
-    def __map_user_desc_to_flag(flags: list[str], descriptions: list[str], user_input: str,
-                                threshold: int = 20) -> str | None:
-        """
-        Maps user input to the best matching flag based on similarity scores.
-
-        Args:
-            flags (list[str]): Available flags_list.
-            descriptions (list[str]): Descriptions for the flags_list.
-            user_input (str): User-provided description or input.
-            threshold (int): Minimum similarity percentage to consider a match.
-
-        Returns:
-            str | None: The closest matching flag or None if no match exceeds the threshold.
-        """
-
-        def jaccard_similarity(str1: str, str2: str) -> float:
-            """
-            Calculate the Jaccard similarity between two strings.
-
-            :param str1: First string
-            :param str2: Second string
-            :return: Jaccard similarity coefficient
-            """
-            set1 = set(str1.lower().split())
-            set2 = set(str2.lower().split())
-            intersection = set1.intersection(set2)
-            union = set1.union(set2)
-            return len(intersection) / len(union)
-
-        def cosine_similarity(str1: str, str2: str) -> float:
-            """
-            Calculate the Cosine similarity between two strings.
-
-            :param str1: First string
-            :param str2: Second string
-            :return: Cosine similarity coefficient
-            """
-            vectorizer = CountVectorizer().fit_transform([str1, str2])
-            vectors = vectorizer.toarray()
-            vec1, vec2 = vectors[0], vectors[1]
-            return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
-
-        def calculate_similarity(target: str) -> float:
-            """
-            Calculate the similarity between the user input and the target string using multiple metrics.
-
-            Args:
-                target (str): The target string to compare against the user input.
-
-            Returns:
-                float: The combined similarity score.
-            """
-            jaccard = jaccard_similarity(user_input, target)
-            cosine = cosine_similarity(user_input, target)
-            difflib_ratio = difflib.SequenceMatcher(None, user_input, target).ratio()
-            return (jaccard * 0.5) + (cosine * 0.2) + (difflib_ratio * 0.3)
-
-        max_similarity = 0
-        best_match = None
-
-        for flag, desc in zip(flags, descriptions):
-            similarity = calculate_similarity(desc)
-            if similarity > max_similarity:
-                max_similarity = similarity
-                best_match = flag
-
-        return (
-            f"{best_match} (Accurate to {max_similarity * 100:.2f}%)"
-            if max_similarity * 100 > threshold
-            else None
-        )
 
 # FIXME: Implement a better similarity metric for flag suggestions, as now it is not very accurate
 # TODO: Implement a history file system, and a voting mechanism to improve the flag suggestion accuracy, make it so that every valid flag inputted by the user is increased by 1,
