@@ -119,10 +119,6 @@ class SimilarityScorer:
             cls.save_weights()
 
 
-# Load weights at the start
-SimilarityScorer.load_weights()
-
-
 def __map_user_desc_to_flag(flags: list[str], descriptions: list[str], user_input: str,
                             threshold: int = 20) -> str | None:
     """
@@ -152,6 +148,9 @@ def __map_user_desc_to_flag(flags: list[str], descriptions: list[str], user_inpu
         else None
     )
 
+
+# Load weights at the start
+SimilarityScorer.load_weights()
 
 flags_list = [
     "--default", "--threaded", "--modded", "--depth",
