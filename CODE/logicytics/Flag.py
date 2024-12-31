@@ -6,10 +6,6 @@ import difflib
 
 class Flag:
     @classmethod
-    def __init__(cls, CONFIG_FILE: str = "Flag_History.json"):
-        cls.CONFIG_FILE = CONFIG_FILE
-
-    @classmethod
     def __colorify(cls, text: str, color: str) -> str:
         """
         Adds color to the given text based on the specified color code.
@@ -318,7 +314,6 @@ class Flag:
         # Return a message if no valid flag is found
         return f"Invalid flag '{user_input}'."
 
-# FIXME: Implement a better similarity metric for flag suggestions, as now it is not very accurate
 # TODO: Implement a history file system, and a voting mechanism to improve the flag suggestion accuracy, make it so that every valid flag inputted by the user is increased by 1,
 #  and a very powerful smart algorithm will be used to suggest the best flag based on the user's input,
 #  and the history of the user's input. The history will be very expansive,
