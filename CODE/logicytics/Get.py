@@ -9,7 +9,8 @@ class Get:
     @staticmethod
     def list_of_files(directory: str,
                       extensions: tuple | bool = True,
-                      append_file_list: list = None
+                      append_file_list: list = None,
+                      exclude_files: list = None
                       ) -> list:
         """
         Retrieves a list of files in the specified directory that have the specified extensions.
@@ -24,7 +25,8 @@ class Get:
         Parameters:
             directory (str): The path of the directory to search.
             append_file_list (list): The list to append the filenames to.
-            extensions (tuple): The extensions of the files to search for.
+            extensions (tuple): The extensions of the files to search for or True to search for all files.
+            exclude_files (list): The files to exclude from the list.
         Returns:
             list: The list of filenames with the specified extensions.
         """
@@ -42,6 +44,7 @@ class Get:
                     filename.endswith(extensions)
                     and not filename.startswith("_")
                     and filename != "Logicytics.py"
+                    and filename not in exclude_files
             ):
                 append_file_list.append(filename)
         return append_file_list
