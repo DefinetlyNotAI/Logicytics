@@ -9,9 +9,48 @@ from sentence_transformers import SentenceTransformer, util
 
 # File for storing user history data
 history_file = 'User_History.json.gz'  # Changed to .gz extension
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
 
-class FlagMatch:
+class Match:
+    @classmethod
+    def __suggest_flags_based_on_history(cls, user_input: str) -> list[str]:
+        """
+        Suggests flags based on historical data and similarity to the current input.
+
+        Parameters:
+            user_input (str): The current input for which suggestions are needed.
+
+        Returns:
+            list[str]: List of suggested flags based on historical data.
+        """
+        history_data = cls.__load_history()
+        if not history_data or 'interactions' not in history_data:
+            return []
+
+        interactions = history_data['interactions']
+        all_descriptions = []
+        all_flags = []
+
+        # Combine all flags and their respective user inputs
+        for flag, details in interactions.items():
+            all_flags.extend([flag] * len(details))
+            all_descriptions.extend([detail['user_input'] for detail in details])
+
+        # Encode the current user input and historical inputs
+        user_embedding = model.encode(user_input, convert_to_tensor=True)
+        historical_embeddings = model.encode(all_descriptions, convert_to_tensor=True)
+
+        # Compute cosine similarities
+        similarities = util.pytorch_cos_sim(user_embedding, historical_embeddings).squeeze(0).tolist()
+
+        # Find the top 3 most similar historical inputs
+        top_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[:3]
+        suggested_flags = [all_flags[i] for i in top_indices if similarities[i] > 0.3]
+
+        # Remove duplicates and return suggestions
+        return list(dict.fromkeys(suggested_flags))
+
     @classmethod
     def _generate_summary_and_graph(cls):
         """Generates a full summary and graph based on user history data."""
@@ -20,7 +59,7 @@ class FlagMatch:
         if not os.path.exists(history_file):
             exit("No history data found.")
 
-        history_data = cls.load_history()
+        history_data = cls.__load_history()
 
         # Extract interactions and flag usage count
         interactions = history_data['interactions']
@@ -66,7 +105,7 @@ class FlagMatch:
         plt.savefig('Flag_usage_summary.png')
 
     @staticmethod
-    def load_history() -> dict[str, any]:
+    def __load_history() -> dict[str, any]:
         """Loads the user history from the gzipped JSON file."""
         try:
             with gzip.open(history_file, 'rt', encoding='utf-8') as f:  # Use 'rt' mode for text read
@@ -75,15 +114,15 @@ class FlagMatch:
             return {'interactions': [], 'flags_usage': Counter()}
 
     @staticmethod
-    def save_history(history_data: dict[str, any]):
+    def __save_history(history_data: dict[str, any]):
         """Saves the user history to the gzipped JSON file."""
         with gzip.open(history_file, 'wt', encoding='utf-8') as f:  # Use 'wt' mode for text write
             json.dump(history_data, f, indent=4)
 
     @classmethod
-    def update_history(cls, user_input: str, matched_flag: str, accuracy: float):
+    def __update_history(cls, user_input: str, matched_flag: str, accuracy: float):
         """Updates the history based on the user's input and flag match."""
-        history_data = cls.load_history()
+        history_data = cls.__load_history()
 
         # Ensure that interactions is a dictionary (not a list)
         if not isinstance(history_data['interactions'], dict):
@@ -109,10 +148,10 @@ class FlagMatch:
             history_data['flags_usage'][matched_flag] = 0
         history_data['flags_usage'][matched_flag] += 1
 
-        cls.save_history(history_data)
+        cls.__save_history(history_data)
 
     @classmethod
-    def match_flag(cls, user_input: str, flags: list[str], flag_description: list[str]) -> tuple[str, float]:
+    def flag(cls, user_input: str, flags: list[str], flag_description: list[str]) -> tuple[str, float]:
         """
         Matches user_input to flag_description using advanced semantic similarity.
         Returns the corresponding flag and the accuracy of the match.
@@ -123,13 +162,10 @@ class FlagMatch:
             flag_description (list): List of flag descriptions.
 
         Returns:
-            tuple: (matched_flag, accuracy) or ('Nothing matched (Accuracy < 25%)', 0.0).
+            tuple: (matched_flag, accuracy) or ('Nothing matched (Accuracy < 30%)', 0.0).
         """
         if len(flags) != len(flag_description):
             raise ValueError("flags and flag_description lists must be of the same length")
-
-        # Load a pre-trained model for sentence similarity
-        model = SentenceTransformer('all-MiniLM-L6-v2')  # Compact and efficient model
 
         # Combine flags and descriptions for better matching context
         combined_descriptions = [f"{flag} {desc}" for flag, desc in zip(flags, flag_description)]
@@ -144,17 +180,18 @@ class FlagMatch:
         # Find the best match
         best_index = max(range(len(similarities)), key=lambda i: similarities[i])
         best_accuracy = similarities[best_index] * 100
-        best_match = flags[best_index] if best_accuracy > 25.0 else "Nothing matched (Accuracy < 25%)"
+        best_match = flags[best_index] if best_accuracy > 30.0 else "Nothing matched (Accuracy < 30%)"
 
         # Update history
-        cls.update_history(user_input, best_match, best_accuracy)
+        cls.__update_history(user_input, best_match, best_accuracy)
 
-        # TODO If accuracy is low, suggest flags based on historical data
-        """    
-        if best_accuracy < 25.0:
-            suggested_flags = suggest_flags_based_on_history()
-            best_match = suggested_flags[0] if suggested_flags else best_match
-        """
+        # Suggest flags if accuracy is low
+        if best_accuracy < 30.0:
+            suggested_flags = cls.__suggest_flags_based_on_history(user_input)
+            if suggested_flags:
+                print(f"No Flags matched so suggestions based on historical data: "
+                      f"{', '.join(suggested_flags).replace(' (Accuracy < 30%)', '')}")
+
         return best_match, best_accuracy
 
 
@@ -210,5 +247,5 @@ users_inputs = [
 
 # Test the updated function
 for users_input in users_inputs:
-    flag_received, accuracy_received = FlagMatch.match_flag(users_input, flags_list, descriptions_list)
+    flag_received, accuracy_received = Match.flag(users_input, flags_list, descriptions_list)
     print(f"User input: {users_input}\nMatched flag: {flag_received}\nAccuracy: {accuracy_received:.2f}%\n")
