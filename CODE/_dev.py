@@ -48,7 +48,7 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
             bool: True if the user's answer is 'yes', otherwise False.
         """
     try:
-        answer = input(question + " (yes or no):- ")
+        answer = input(question + " (Y)es or (N)o:- ")
         if not (answer.lower() == "yes" or answer.lower() == "y"):
             if file_to_open:
                 subprocess.run(["start", file_to_open], shell=True)
@@ -89,20 +89,21 @@ def dev_checks() -> None:
                 return None
 
         # Get the list of files in the current directory
-        files = Get.list_of_files(".", True)
+        EXCLUDE_FILES = ["logicytics\\User_History.json.gz", "logicytics\\User_History.json"]
+        files = Get.list_of_files(".", True, exclude_files=EXCLUDE_FILES)
         added_files, removed_files, normal_files = [], [], []
         clean_files_list = [file.replace('"', '') for file in CURRENT_FILES]
 
         for f in files:
             clean_f = f.replace('"', '')
-            if clean_f in clean_files_list:
+            if clean_f in clean_files_list and clean_f not in EXCLUDE_FILES:
                 normal_files.append(clean_f)
-            else:
+            elif clean_f not in EXCLUDE_FILES:
                 added_files.append(clean_f)
 
         for f in clean_files_list:
             clean_f = f.replace('"', '')
-            if clean_f not in files:
+            if clean_f not in files and clean_f not in EXCLUDE_FILES:
                 removed_files.append(clean_f)
 
         # Print the list of added, removed, and normal files in color

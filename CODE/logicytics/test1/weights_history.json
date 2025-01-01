@@ -1,8 +1,0 @@
-{
-  "jaccard": 0.5,
-  "cosine": 0.5,
-  "synonym": 0.5,
-  "difflib": 0.5,
-  "enhanced": 0.5,
-  "levenshtein": 0.5
-}
