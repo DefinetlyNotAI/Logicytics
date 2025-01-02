@@ -7,11 +7,8 @@ from pathlib import Path
 
 class Get:
     @staticmethod
-    def list_of_files(directory: str,
-                      extensions: tuple | bool = True,
-                      append_file_list: list = None,
-                      exclude_files: list = None
-                      ) -> list:
+    def list_of_files(directory: str, extensions: tuple | bool = True, append_file_list: list = None,
+                      exclude_files: list = None) -> list:
         """
         Retrieves a list of files in the specified directory that have the specified extensions.
 
