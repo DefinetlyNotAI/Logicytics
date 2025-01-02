@@ -124,14 +124,6 @@ def handle_special_actions():
         log.info("Opening developer menu...")
         special_execute("_dev.py")
 
-    # Deprecated, remove in v3.3.0
-    if ACTION == "extra":
-        print("\033[91mDeprecationWarning: The `extra` feature has been removed! 🚫\n"
-              "Why? It didn't match our code quality standards.\n"
-              "What to use instead? Check out our new features with --help\033[0m")
-        input("Press Enter to exit...")
-        exit(0)
-
     if ACTION == "update":
         log.info("Updating...")
         message, log_type = Health.update()
@@ -159,14 +151,6 @@ def handle_special_actions():
         Health.backup("../MODS", "Mods_Backup")
         log.debug("Backup complete -> MODS dir")
         log.info("Backup complete!")
-        input("Press Enter to exit...")
-        exit(0)
-
-    # Deprecated, remove in v3.3.0
-    if ACTION == "unzip_extra":
-        print("\033[91mDeprecationWarning: The `unzip_extra` feature has been removed! 🚫\n"
-              "Why? It didn't match our code quality standards.\n"
-              "What to use instead? Check out our new features with --help\033[0m")
         input("Press Enter to exit...")
         exit(0)
 
@@ -204,6 +188,7 @@ def generate_execution_list() -> list | list[str] | list[str | Any]:
     execution_list.remove("dir_list.py")
     execution_list.remove("tree.ps1")
     execution_list.remove("vulnscan.py")
+    execution_list.remove("event_log.py")
 
     if ACTION == "minimal":
         execution_list = [
@@ -237,6 +222,7 @@ def generate_execution_list() -> list | list[str] | list[str | Any]:
         execution_list.append("sensitive_data_miner.py")
         execution_list.append("dir_list.py")
         execution_list.append("tree.ps1")
+        execution_list.append("event_log.py")
         log.warning("This flag will use threading!")
 
     if ACTION == "vulnscan_ai":

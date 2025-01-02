@@ -127,7 +127,7 @@ def dev_checks() -> None:
         print("\nGreat Job! Please tick the box in the GitHub PR request for completing steps in --dev")
     except Exception as e:
         # Log any exceptions that occur during the process
-        log_dev.exception(str(e))
+        log_dev.error(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
