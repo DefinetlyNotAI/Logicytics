@@ -233,6 +233,9 @@ class Log:
         """
         Logs an exception message.
 
+        This is not recommended for use in production code, as it raises the exception after logging it.
+        Use Log().error() instead.
+
         :param message: The exception message to be logged.
         :param exception_type: The type of exception to raise.
         """
