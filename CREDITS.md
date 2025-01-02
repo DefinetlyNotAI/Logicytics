@@ -3,6 +3,10 @@
 This project is built on the shoulders of giants and inspired by the work of many talented individuals and
 organizations. We acknowledge their contributions and are grateful for the knowledge and tools they have shared.
 
+<a href="https://github.com/DefinetlyNotAI/Logicytics/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=DefinetlyNotAI/Logicytics"  alt="Contributor GitHub Profiles"/>
+</a>
+
 <!--
 ## ❤️ Sponsors Credits ❤️
 
