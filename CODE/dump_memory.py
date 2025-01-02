@@ -106,6 +106,7 @@ def memory_dump():
 
 
 # Main function to run all tasks
+@log.function
 def main():
     log.info("Starting system memory collection tasks...")
     capture_ram_snapshot()
