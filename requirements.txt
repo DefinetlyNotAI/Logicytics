@@ -19,6 +19,4 @@ safetensors~=0.4.5
 prettytable~=3.12.0
 pandas~=2.2.2
 scapy~=2.5.0
-nltk~=3.8.1
-Levenshtein~=0.26.1
 sentence-transformers~=3.3.1
