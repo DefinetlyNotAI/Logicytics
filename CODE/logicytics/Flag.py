@@ -376,9 +376,16 @@ class Match:
 class Flag:
     @classmethod
     def __colorify(cls, text: str, color: str) -> str:
-        The existing docstring is comprehensive and follows good documentation practices. It clearly explains the function's purpose, parameters, return value, and provides context about the color codes. Therefore:
-        
-        KEEP_EXISTING
+        """
+        Colorize text with ANSI color codes.
+
+        Args:
+            text (str): The text to colorize
+            color (str): The color code ('y' for yellow, 'r' for red, 'b' for blue)
+
+        Returns:
+            str: The colorized text with ANSI escape codes
+        """
         colors = {
             "y": "\033[93m",
             "r": "\033[91m",
@@ -395,10 +402,7 @@ class Flag:
         This method creates an ArgumentParser with a comprehensive set of flags for customizing the application's behavior. It supports various execution modes, debugging options, system management flags, and post-execution actions.
         
         The method handles argument parsing, provides helpful descriptions for each flag, and includes color-coded hints for user guidance. It also supports suggesting valid flags if an unknown flag is provided.
-        
-        Parameters:
-            cls (type): The class context in which the method is called.
-        
+
         Returns:
             tuple[argparse.Namespace, argparse.ArgumentParser]: A tuple containing:
                 - Parsed command-line arguments (Namespace)
@@ -701,10 +705,7 @@ class Flag:
         - Special flags are handled with specific logic
         - No invalid flag combinations are permitted
         - User history is optionally updated based on preferences
-        
-        Parameters:
-            cls (type): The class context for accessing class methods
-        
+
         Returns:
             tuple[str, str | None]: A tuple containing:
                 - The primary matched flag
