@@ -349,6 +349,8 @@ class Log:
                 # Function implementation
                 pass
         """
+        if not callable(func):
+            self.exception(f"Function {func.__name__} is not callable.", TypeError)
 
         def wrapper(*args, **kwargs):
             """
@@ -371,14 +373,14 @@ class Log:
                 - Measures and logs the total execution time with microsecond precision
                 - Preserves the original function's return value
             """
-            if not callable(func):
-                self.exception(f"Function {func.__name__} is not callable.", TypeError)
             start_time = time.perf_counter()
-            self.debug(f"Running the function {func.__name__}().")
+            func_args = ", ".join([str(arg) for arg in args] +
+                                  [f"{k}={v}" for k, v in kwargs.items()])
+            self.debug(f"Running the function {func.__name__}({func_args}).")
             result = func(*args, **kwargs)
             end_time = time.perf_counter()
             elapsed_time = end_time - start_time
-            self.debug(f"Function {func.__name__}() executed in {elapsed_time:.6f} seconds.")
+            self.debug(f"{func.__name__}({func_args}) executed in {elapsed_time} -> returned {type(result).__name__}")
             return result
 
         return wrapper

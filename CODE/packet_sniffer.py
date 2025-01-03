@@ -13,19 +13,15 @@ from logicytics import Log, DEBUG
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
-try:
-    # Read configuration from config.ini
-    config = ConfigParser()
-    config.read('config.ini')
-    config = config['PacketSniffer Settings']
+# Read configuration from config.ini
+config = ConfigParser()
+config.read('config.ini')
+config = config['PacketSniffer Settings']
 
-    # Global configuration
-    conf.verb = 0  # Turn off verbosity for clean output
-    packet_data = []  # List to store packet information
-    G = nx.Graph()  # Initialize a graph
-except Exception as e:
-    log.error(f"Error reading configuration: {e}")
-    exit(1)
+# Global configuration
+conf.verb = 0  # Turn off verbosity for clean output
+packet_data = []  # List to store packet information
+G = nx.Graph()  # Initialize a graph
 
 
 # Function to process and log packet details
@@ -274,7 +270,7 @@ def save_packet_data_to_csv(file_path: str):
         log.warning("No packet data to save.")
 
 
-# Function to visualize the graph
+# Function to visualize the graph of packet connections
 def visualize_graph(node_colors: str = None, node_sizes: str = None):
     """
     Visualizes the graph of packet connections with customizable node colors and sizes.
@@ -345,6 +341,14 @@ def packet_sniffer():
         - Calls start_sniffing() to capture network packets
         - Exits the program if critical configuration errors are encountered
     """
+
+    def correct_interface_name(interface_name: str) -> str:
+        corrections = {
+            "WiFi": "Wi-Fi",
+            "Wi-Fi": "WiFi"
+        }
+        return corrections.get(interface_name, interface_name)
+
     interface = config['interface']
     packet_count = int(config['packet_count'])
     timeout = int(config['timeout'])
@@ -360,18 +364,16 @@ def packet_sniffer():
             log.error("Error reading configuration: Improper values for packet count or timeout")
         exit(1)
 
-    try:
-        start_sniffing(interface, packet_count, timeout)
-    except Exception as err:
-        log.error(f"Invalid interface '{interface}'. Please check the configuration: {err}")
-        if interface == "WiFi" or interface == "Wi-Fi":
-            log.warning("Attempting to correct the interface name...")
-            interface = "Wi-Fi" if interface == "WiFi" else "WiFi"
-            log.info(f"Interface name auto-corrected to '{interface}', retrying packet sniffing...")
-            try:
-                start_sniffing(interface, packet_count, timeout)
-            except Exception as err:
-                log.error(f"Error sniffing packets on auto-corrected interface '{interface}': {err}")
+    for attempt in range(2):  # Try original and corrected name
+        try:
+            start_sniffing(interface, packet_count, timeout)
+            break
+        except Exception as err:
+            if attempt == 0 and interface in ("WiFi", "Wi-Fi"):
+                log.warning(f"Retrying with corrected interface name...")
+                interface = correct_interface_name(interface)
+            else:
+                log.error(f"Failed to sniff packets: {err}")
 
 
 # Entry point of the script
@@ -380,4 +382,6 @@ if __name__ == "__main__":
         packet_sniffer()
     except Exception as e:
         log.error(e)
-        exit(1)
+    finally:
+        if G:
+            plt.close()

