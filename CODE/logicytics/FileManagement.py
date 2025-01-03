@@ -35,9 +35,16 @@ class FileManagement:
     def mkdir():
         """
         Creates the necessary directories for storing logs, backups, and data.
-
+        
+        This method ensures the existence of specific directory structures used by the application, including:
+        - Log directories for general, debug, and performance logs
+        - Backup directory
+        - Data directories for storing hashes and zip files
+        
+        The method uses `os.makedirs()` with `exist_ok=True` to create directories without raising an error if they already exist.
+        
         Returns:
-            None
+            None: No return value. Directories are created as a side effect.
         """
         os.makedirs("../ACCESS/LOGS/", exist_ok=True)
         os.makedirs("../ACCESS/LOGS/DEBUG", exist_ok=True)

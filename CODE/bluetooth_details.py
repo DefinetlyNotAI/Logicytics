@@ -13,22 +13,15 @@ if __name__ == "__main__":
 def get_bluetooth_device_details():
     """
     Retrieves and logs detailed information about Bluetooth devices on the system.
-
-    The function runs a PowerShell command to query devices whose names contain the term 'Bluetooth'.
-    It writes the information to a text file named 'Bluetooth Info.txt'.
-
-    Information for each device includes:
-    - Name
-    - Device ID
-    - Description
-    - Manufacturer
-    - Status
-    - PNP Device ID
-
-    Logs errors if any issues are encountered during the process.
-
+    
+    Executes a PowerShell query to collect Bluetooth device details and writes the information to a text file. 
+    The function performs the following key actions:
+    - Logs the start of the device information retrieval process
+    - Queries Bluetooth devices using an internal helper function
+    - Writes device details to 'Bluetooth Info.txt' if devices are found
+    
     Returns:
-        None
+        None: No return value; results are written to a file and logged
     """
     log.info("Fetching detailed info for Bluetooth devices...")
     devices = _query_bluetooth_devices()
@@ -39,9 +32,23 @@ def get_bluetooth_device_details():
 def _query_bluetooth_devices() -> bool | list[dict[str, str]]:
     """
     Queries the system for Bluetooth devices using PowerShell commands.
-
+    
+    Executes a PowerShell command to retrieve detailed information about Bluetooth devices connected to the system. 
+    The function handles potential errors during command execution and JSON parsing, providing fallback values 
+    for device information.
+    
     Returns:
-        list: A list of device information dictionaries.
+        bool | list[dict[str, str]]: A list of device information dictionaries or False if an error occurs. 
+        Each dictionary contains details such as Name, Device ID, Description, Manufacturer, Status, and PNP Device ID.
+    
+    Raises:
+        No direct exceptions are raised. Errors are logged and the function returns False.
+    
+    Example:
+        devices = _query_bluetooth_devices()
+        if devices:
+            for device in devices:
+                print(device['Name'])
     """
     try:
         # Run PowerShell command to get Bluetooth devices
@@ -81,14 +88,20 @@ def _query_bluetooth_devices() -> bool | list[dict[str, str]]:
 
 def _write_device_info_to_file(devices, filename):
     """
-    Writes the details of the Bluetooth devices to a file.
-
+    Writes the details of Bluetooth devices to a specified file.
+    
     Args:
-        devices (list): List of device information dictionaries.
-        filename (str): Name of the file to write to.
-
-    Returns:
-        None
+        devices (list): A list of dictionaries containing Bluetooth device information.
+        filename (str): The path and name of the file where device details will be written.
+    
+    Raises:
+        IOError: If there is an error opening or writing to the specified file.
+        OSError: If there are file system related issues during file writing.
+    
+    Notes:
+        - Uses UTF-8 encoding for file writing
+        - Logs an error if file writing fails
+        - Calls _write_single_device_info() for each device in the list
     """
     try:
         with open(filename, "w", encoding="UTF-8") as file:
@@ -100,14 +113,25 @@ def _write_device_info_to_file(devices, filename):
 
 def _write_single_device_info(file, device_info):
     """
-    Writes information for a single Bluetooth device to the file.
-
-    Args:
-        file (TextIO): File object to write to.
-        device_info (dict): Dictionary containing device information.
-
-    Returns:
-        None
+    Writes detailed information for a single Bluetooth device to the specified file.
+    
+    Parameters:
+        file (TextIO): An open file object to which device information will be written.
+        device_info (dict): A dictionary containing key-value pairs of Bluetooth device attributes.
+    
+    Writes the device name followed by all other device attributes, with each device's information separated by a blank line. Uses `.get()` method to provide a fallback 'Unknown' value if the device name is missing.
+    
+    Example:
+        If device_info is {'Name': 'Wireless Headset', 'Address': '00:11:22:33:44:55', 'Connected': 'True'}
+        The file will contain:
+        Name: Wireless Headset
+            Address: 00:11:22:33:44:55
+            Connected: True
+    
+        If no name is provided:
+        Name: Unknown
+            Address: 00:11:22:33:44:55
+            Connected: True
     """
     file.write(f"Name: {device_info.get('Name', 'Unknown')}\n")
     for key, value in device_info.items():

@@ -39,7 +39,24 @@ class Match:
     @staticmethod
     def __get_sim(user_input: str, all_descriptions: list[str]) -> list[float]:
         """
-        Get the similarity between the user input and the flag description.
+        Compute cosine similarity between user input and flag descriptions using a Sentence Transformer model.
+        
+        This method encodes the user input and historical flag descriptions into embeddings and calculates their cosine similarities. It handles model loading, logging configuration, and error handling for the embedding process.
+        
+        Parameters:
+            user_input (str): The current user input to match against historical descriptions
+            all_descriptions (list[str]): A list of historical flag descriptions to compare
+        
+        Returns:
+            list[float]: A list of similarity scores between the user input and each historical description
+        
+        Raises:
+            SystemExit: If there is an error loading the specified Sentence Transformer model
+        
+        Notes:
+            - Uses the model specified in the configuration file
+            - Configures logging based on the global DEBUG_MODE setting
+            - Converts embeddings to tensors for efficient similarity computation
         """
         # Encode the current user input and historical inputs
         from sentence_transformers import SentenceTransformer, util
@@ -70,12 +87,20 @@ class Match:
     def __suggest_flags_based_on_history(cls, user_input: str) -> list[str]:
         """
         Suggests flags based on historical data and similarity to the current input.
-
+        
+        This method analyzes historical user interactions to recommend relevant flags when preferences for saving history are enabled. It uses semantic similarity to find the most contextually related flags from past interactions.
+        
         Parameters:
             user_input (str): The current input for which suggestions are needed.
-
+        
         Returns:
-            list[str]: List of suggested flags based on historical data.
+            list[str]: A list of suggested flags derived from historical interactions, filtered by similarity threshold.
+        
+        Notes:
+            - Returns an empty list if history saving is disabled or no interaction history exists
+            - Uses cosine similarity with a minimum threshold of 0.3 to filter suggestions
+            - Limits suggestions to top 3 most similar historical inputs
+            - Removes duplicate flag suggestions
         """
         if not SAVE_PREFERENCES:
             return []
@@ -105,7 +130,32 @@ class Match:
 
     @classmethod
     def _generate_summary_and_graph(cls):
-        """Generates a full summary and graph based on user history data."""
+        """
+        Generates a comprehensive summary and visualization of user interaction history with command-line flags.
+        
+        This method processes historical interaction data, computes statistical insights, and creates a bar graph representing flag usage frequency. It performs the following key tasks:
+        - Loads historical interaction data from a compressed file
+        - Calculates and prints detailed statistics for each flag
+        - Generates a horizontal bar graph of flag usage counts
+        - Saves the graph visualization to a PNG file
+        
+        Parameters:
+            cls (Match): The class instance containing historical data methods
+        
+        Raises:
+            SystemExit: If no history data file is found
+            FileNotFoundError: If unable to save the graph in default locations
+        
+        Side Effects:
+            - Prints detailed interaction summary to console
+            - Saves flag usage graph as a PNG image
+            - Uses matplotlib to create visualization
+        
+        Notes:
+            - Currently in beta stage of development
+            - Requires matplotlib for graph generation
+            - Attempts to save graph in multiple predefined directory paths
+        """
         # TODO Yet in beta
         # Load the decompressed history data using the load_history function
         import matplotlib.pyplot as plt
@@ -169,7 +219,20 @@ class Match:
 
     @staticmethod
     def load_history() -> dict[str, any]:
-        """Loads the user history from the gzipped JSON file."""
+        """
+        Load user interaction history from a gzipped JSON file.
+        
+        This method attempts to read and parse historical interaction data from a compressed JSON file. If the file is not found, it returns an empty history structure with an empty interactions dictionary and a zero-initialized flags usage counter.
+        
+        Returns:
+            dict[str, any]: A dictionary containing:
+                - 'interactions': A dictionary of past user interactions
+                - 'flags_usage': A Counter object tracking flag usage frequencies
+        
+        Raises:
+            json.JSONDecodeError: If the JSON file is malformed
+            gzip.BadGzipFile: If the gzipped file is corrupted
+        """
         try:
             with gzip.open(HISTORY_FILE, 'rt', encoding='utf-8') as f:  # Use 'rt' mode for text read
                 return json.load(f)
@@ -178,14 +241,48 @@ class Match:
 
     @staticmethod
     def save_history(history_data: dict[str, any]):
-        """Saves the user history to the gzipped JSON file."""
+        """
+        Save user interaction history to a gzipped JSON file.
+        
+        This method writes the user history to a compressed JSON file only if saving preferences are enabled. 
+        The history is saved with an indentation of 4 spaces for readability.
+        
+        Parameters:
+            history_data (dict[str, any]): A dictionary containing user interaction history data to be saved.
+        
+        Notes:
+            - Saves only if SAVE_PREFERENCES is True
+            - Uses gzip compression to reduce file size
+            - Writes in UTF-8 encoding
+            - Indents JSON for human-readable format
+        """
         if SAVE_PREFERENCES:
             with gzip.open(HISTORY_FILE, 'wt', encoding='utf-8') as f:  # Use 'wt' mode for text write
                 json.dump(history_data, f, indent=4)
 
     @classmethod
     def update_history(cls, user_input: str, matched_flag: str, accuracy: float):
-        """Updates the history based on the user's input and flag match."""
+        """
+        Update the user interaction history with details of a matched flag.
+        
+        This method records user interactions with flags, including timestamp, input, match accuracy,
+        and device information. It only updates history if save preferences are enabled.
+        
+        Parameters:
+            user_input (str): The original input text provided by the user.
+            matched_flag (str): The flag that was successfully matched to the user input.
+            accuracy (float): The similarity/match accuracy score for the flag.
+        
+        Side Effects:
+            - Modifies the history JSON file by adding a new interaction entry
+            - Increments the usage count for the matched flag
+            - Requires write access to the history file
+        
+        Notes:
+            - Skips history update if SAVE_PREFERENCES is False
+            - Creates new flag entries in history if they do not exist
+            - Uses current timestamp and logged-in user's device name
+        """
         if not SAVE_PREFERENCES:
             return
         history_data = cls.load_history()
@@ -219,16 +316,34 @@ class Match:
     @classmethod
     def flag(cls, user_input: str, flags: list[str], flag_description: list[str]) -> tuple[str, float]:
         """
-        Matches user_input to flag_description using advanced semantic similarity.
-        Returns the corresponding flag and the accuracy of the match.
-
+        Matches user input to flag descriptions using advanced semantic similarity.
+        
+        Computes the best matching flag based on cosine similarity between the user input and flag descriptions. 
+        Handles matching with a minimum accuracy threshold and provides flag suggestions from historical data 
+        if no direct match is found.
+        
         Parameters:
-            user_input (str): The input string to match.
-            flags (list): List of flags.
-            flag_description (list): List of flag descriptions.
-
+            user_input (str): The input string to match against available flags.
+            flags (list[str]): List of available command flags.
+            flag_description (list[str]): Corresponding descriptions for each flag.
+        
         Returns:
-            tuple: (matched_flag, accuracy) or ('Nothing matched', 0.0).
+            tuple[str, float]: A tuple containing:
+                - The best matched flag (or 'Nothing matched')
+                - Accuracy percentage of the match (0.0-100.0)
+        
+        Raises:
+            ValueError: If the number of flags and descriptions do not match.
+        
+        Side Effects:
+            - Updates user interaction history
+            - Prints flag suggestions if no direct match is found
+            - Requires a global MIN_ACCURACY_THRESHOLD to be defined
+        
+        Example:
+            matched_flag, accuracy = Flag.flag("show help", 
+                                               ["-h", "--verbose"], 
+                                               ["Display help", "Enable verbose output"])
         """
         if len(flags) != len(flag_description):
             raise ValueError("flags and flag_description lists must be of the same length")
@@ -261,16 +376,9 @@ class Match:
 class Flag:
     @classmethod
     def __colorify(cls, text: str, color: str) -> str:
-        """
-        Adds color to the given text based on the specified color code.
-
-        Args:
-            text (str): The text to be colorized.
-            color (str): The color code ('y' for yellow, 'r' for red, 'b' for blue).
-
-        Returns:
-            str: The colorized text if the color code is valid, otherwise the original text.
-        """
+        The existing docstring is comprehensive and follows good documentation practices. It clearly explains the function's purpose, parameters, return value, and provides context about the color codes. Therefore:
+        
+        KEEP_EXISTING
         colors = {
             "y": "\033[93m",
             "r": "\033[91m",
@@ -282,16 +390,19 @@ class Flag:
     @classmethod
     def __available_arguments(cls) -> tuple[argparse.Namespace, argparse.ArgumentParser]:
         """
-        A static method used to parse command-line arguments for the Logicytics application.
-
-        It defines various flags_list that can be used to customize the behavior of the application,
-        including options for running in default or minimal mode, unzipping extra files,
-        backing up or restoring data, updating from GitHub, and more.
-
-        The method returns a tuple containing the parsed arguments and the argument parser object.
-
+        Defines and parses command-line arguments for the Logicytics application.
+        
+        This method creates an ArgumentParser with a comprehensive set of flags for customizing the application's behavior. It supports various execution modes, debugging options, system management flags, and post-execution actions.
+        
+        The method handles argument parsing, provides helpful descriptions for each flag, and includes color-coded hints for user guidance. It also supports suggesting valid flags if an unknown flag is provided.
+        
+        Parameters:
+            cls (type): The class context in which the method is called.
+        
         Returns:
-            tuple[argparse.Namespace, argparse.ArgumentParser]: A tuple containing the parsed arguments and the argument parser object.
+            tuple[argparse.Namespace, argparse.ArgumentParser]: A tuple containing:
+                - Parsed command-line arguments (Namespace)
+                - The configured argument parser object
         """
         # Define the argument parser
         parser = argparse.ArgumentParser(
@@ -434,13 +545,21 @@ class Flag:
     @staticmethod
     def __exclusivity_logic(args: argparse.Namespace) -> bool:
         """
-        Checks if exclusive flags_list are used in the provided arguments.
-
-        Args:
-            args (argparse.Namespace): The arguments to be checked.
-
+        Validates the mutual exclusivity of command-line flags to prevent invalid flag combinations.
+        
+        This method checks for conflicting or mutually exclusive flags across three flag categories:
+        - Special flags (reboot, shutdown, webhook)
+        - Action flags (default, threaded, modded, minimal, nopy, depth, performance_check)
+        - Exclusive flags (vulnscan_ai)
+        
+        Parameters:
+            args (argparse.Namespace): Parsed command-line arguments to validate.
+        
         Returns:
-            bool: True if exclusive flags_list are used, False otherwise.
+            bool: True if any special flags are set, False otherwise.
+        
+        Raises:
+            SystemExit: If incompatible flag combinations are detected, with an error message describing the conflict.
         """
         special_flags = {
             args.reboot,
@@ -477,13 +596,22 @@ class Flag:
     @staticmethod
     def __used_flags_logic(args: argparse.Namespace) -> tuple[str, ...]:
         """
-        Sets flags_list based on the provided arguments.
-
-        Args:
-            args (argparse.Namespace): The arguments to be checked for flags_list.
-
+        Determines the flags that are set to True in the provided command-line arguments.
+        
+        This method examines the arguments namespace and returns a tuple of flag names 
+        that have been activated. It limits the returned flags to a maximum of two to 
+        prevent excessive flag usage.
+        
+        Parameters:
+            args (argparse.Namespace): Parsed command-line arguments to be analyzed.
+        
         Returns:
-            tuple[str, ...]: A tuple of flag names that are set to True.
+            tuple[str, ...]: A tuple containing the names of flags set to True, 
+            with a maximum of two flags.
+        
+        Notes:
+            - If no flags are set, returns an empty tuple.
+            - Stops collecting flags after finding two True flags to limit complexity.
         """
         flags = {key: getattr(args, key) for key in vars(args)}
         true_keys = []
@@ -497,11 +625,25 @@ class Flag:
     @classmethod
     def __suggest_flag(cls, user_input: str, valid_flags: list[str]):
         """
-        Suggests the closest valid flag based on the user's input.
-
+        Suggests the closest valid flag based on the user's input and provides interactive flag matching.
+        
+        This method handles flag suggestion through two mechanisms:
+        1. Using difflib to find close flag matches
+        2. Prompting user for a description to find the most relevant flag
+        
         Args:
             user_input (str): The flag input by the user.
-            valid_flags (list[str]): The list of valid flags_list.
+            valid_flags (list[str]): The list of valid flags.
+        
+        Behavior:
+            - If a close flag match exists, suggests the closest match
+            - If no close match, prompts user for a description
+            - Uses the Match.flag method to find the most accurate flag based on description
+            - Prints matching results, with optional detailed output in debug mode
+        
+        Side Effects:
+            - Prints suggestions and matched flags to console
+            - Prompts user for additional input if no direct match is found
         """
         # Get the closest valid flag match based on the user's input
         closest_matches = difflib.get_close_matches(user_input, valid_flags, n=1, cutoff=0.6)
@@ -523,10 +665,25 @@ class Flag:
     @staticmethod
     def show_help_menu(return_output: bool = False):
         """
-        Displays the help menu for the Logicytics application.
-
+        Display the help menu for the Logicytics application.
+        
+        This method retrieves the argument parser from the Flag class and either prints or returns the help text based on the input parameter.
+        
         Args:
-             return_output (bool): If True, returns the help text instead of printing it
+            return_output (bool, optional): Controls the method's behavior. 
+                - If True, returns the formatted help text as a string. 
+                - If False (default), prints the help text directly to the console.
+        
+        Returns:
+            str or None: Help text as a string if return_output is True, otherwise None.
+        
+        Example:
+            # Print help menu to console
+            Flag.show_help_menu()
+        
+            # Get help menu as a string
+            help_text = Flag.show_help_menu(return_output=True)
+            print(help_text)
         """
         parser = Flag.__available_arguments()[1]
         if return_output:
@@ -537,9 +694,27 @@ class Flag:
     @classmethod
     def data(cls) -> tuple[str, str | None]:
         """
-        Handles the parsing and validation of command-line flags_list.
-
-        Returns either a tuple of used flag names or an ArgumentParser instance.
+        Handles the parsing and validation of command-line flags.
+        
+        This method processes command-line arguments, validates their usage, and manages flag interactions. It ensures that:
+        - Only one primary action flag is used at a time
+        - Special flags are handled with specific logic
+        - No invalid flag combinations are permitted
+        - User history is optionally updated based on preferences
+        
+        Parameters:
+            cls (type): The class context for accessing class methods
+        
+        Returns:
+            tuple[str, str | None]: A tuple containing:
+                - The primary matched flag
+                - An optional secondary flag (None if not applicable)
+                - Exits the program if no flags are used or invalid combinations are detected
+        
+        Raises:
+            SystemExit: Terminates the program with an error message for:
+                - Invalid flag combinations
+                - No flags specified
         """
         args, parser = cls.__available_arguments()
         special_flag_used = cls.__exclusivity_logic(args)
@@ -565,6 +740,22 @@ class Flag:
             return
 
         def update_data_history(matched_flag: str):
+            """
+            Update the usage count for a specific flag in the user's interaction history.
+            
+            This method increments the usage count for a given flag in the historical data. If the flag
+            does not exist in the history, it initializes its count to 0 before incrementing.
+            
+            Parameters:
+                matched_flag (str): The flag whose usage count needs to be updated.
+            
+            Side Effects:
+                - Modifies the 'flags_usage' dictionary in the user's history file
+                - Saves the updated history data to a persistent storage
+            
+            Example:
+                update_data_history('--verbose')  # Increments usage count for '--verbose' flag
+            """
             history_data = Match.load_history()
             # Ensure the flag exists in the flags_usage counter and increment it
             if matched_flag not in history_data['flags_usage']:
