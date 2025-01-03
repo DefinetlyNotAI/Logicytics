@@ -17,9 +17,6 @@ def backup_windows_logs():
     The function handles potential errors during log backup and logs the operation's outcome.
     If the backup fails, an error message is logged without raising an exception.
     
-    Args:
-        None
-    
     Returns:
         None
     

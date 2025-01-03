@@ -148,8 +148,13 @@ class Log:
         """
         Log a raw message directly to the log file.
         
-        This method writes a message directly to the log file without any additional formatting or logging levels. It is intended for internal use within the Log class and should not be called directly in external code.
-        
+        This method writes a message directly to the log file without any additional formatting
+        or logging levels.
+
+        WARNING: This method is for internal use only! Using it directly can mess up
+        your log file format and make it hard to read. Use info(), debug(), or
+        other public methods instead.
+
         Parameters:
             message (str): The raw message to be written to the log file.
         
@@ -183,10 +188,9 @@ class Log:
         """
         Write a newline separator to the log file, creating a visual divider between log entries.
         
-        This method writes a formatted horizontal line to the log file using ASCII characters, which helps visually separate different sections or log entries. The line consists of vertical bars and dashes creating a structured tabular-like separator.
-        
-        Parameters:
-            None
+        This method writes a formatted horizontal line to the log file using ASCII characters,
+        which helps visually separate different sections or log entries.
+        The line consists of vertical bars and dashes creating a structured tabular-like separator.
         
         Side Effects:
             Appends a newline separator to the log file specified by `self.filename`.

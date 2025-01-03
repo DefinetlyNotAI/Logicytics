@@ -61,7 +61,7 @@ def _query_bluetooth_devices() -> bool | list[dict[str, str]]:
                                 capture_output=True, text=True, check=True)
         devices = json.loads(result.stdout)
     except subprocess.CalledProcessError as e:
-        log.error(f"Failed to query Bluetooth devices: {e}")
+        log.error(f"Failed to query Bluetooth devices with command '{command}': {e}")
         return False
     except json.JSONDecodeError as e:
         log.error(f"Failed to parse device information: {e}")
@@ -72,13 +72,14 @@ def _query_bluetooth_devices() -> bool | list[dict[str, str]]:
 
     device_info_list = []
     for device in devices:
+        FALLBACK_MSG = 'Unknown (Fallback due to failed Get request)'
         device_info = {
-            'Name': device.get('FriendlyName', 'Unknown (Fallback due to failed Get request)'),
-            'Device ID': device.get('DeviceID', 'Unknown (Fallback due to failed Get request)'),
-            'Description': device.get('Description', 'Unknown (Fallback due to failed Get request)'),
-            'Manufacturer': device.get('Manufacturer', 'Unknown (Fallback due to failed Get request)'),
-            'Status': device.get('Status', 'Unknown (Fallback due to failed Get request)'),
-            'PNP Device ID': device.get('PnpDeviceID', 'Unknown (Fallback due to failed Get request)')
+            'Name': device.get('FriendlyName', FALLBACK_MSG),
+            'Device ID': device.get('DeviceID', FALLBACK_MSG),
+            'Description': device.get('Description', FALLBACK_MSG),
+            'Manufacturer': device.get('Manufacturer', FALLBACK_MSG),
+            'Status': device.get('Status', FALLBACK_MSG),
+            'PNP Device ID': device.get('PnpDeviceID', FALLBACK_MSG)
         }
         log.debug(f"Retrieved device: {device_info['Name']}")
         device_info_list.append(device_info)

