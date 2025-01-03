@@ -4,6 +4,7 @@ import mimetypes
 import os
 import threading
 import warnings
+from concurrent.futures import ThreadPoolExecutor
 
 import joblib
 import numpy as np
@@ -82,8 +83,8 @@ def scan_path(model_path: str, scan_paths: str, vectorizer_path: str):
                 log.info(f"Loading vectorizer from {vectorizer_path}")
                 vectorizer_to_use = joblib.load(vectorizer_path)
         vulnscan(model_to_use, scan_paths, vectorizer_to_use)
-    except Exception as e:
-        log.error(f"Error scanning path {scan_paths}: {e}")
+    except Exception as err:
+        log.error(f"Error scanning path {scan_paths}: {err}")
 
 
 def is_sensitive(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_content: str) -> tuple[bool, float, str]:
@@ -203,12 +204,20 @@ if __name__ == "__main__":
     # Start scanning
     log.warning("Starting scan - This may take hours and consume memory!!")
 
-    for path in paths:
-        thread = threading.Thread(target=scan_path,
-                                  args=("VulnScan/Model SenseMini .3n3.pth",
-                                        path, "VulnScan/Vectorizer .3n3.pkl"))
-        threads.append(thread)
-        thread.start()
-
-    for thread in threads:
-        thread.join()
+    # Use max_workers based on CPU count but cap it at a reasonable number
+    max_workers = min(32, os.cpu_count() * 2)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [
+            executor.submit(
+                scan_path,
+                "VulnScan/Model SenseMini .3n3.pth",
+                path,
+                "VulnScan/Vectorizer .3n3.pkl"
+            )
+            for path in paths
+        ]
+        for future in futures:
+            try:
+                future.result()
+            except Exception as e:
+                log.error(f"Scan failed: {e}")
