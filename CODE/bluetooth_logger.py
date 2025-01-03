@@ -33,8 +33,8 @@ def save_to_file(filename, section_title, data):
             file.write(f"\n{'=' * 50}\n{section_title}\n{'=' * 50}\n")
             file.write(f"{data}\n" if isinstance(data, str) else "\n".join(data) + "\n")
             file.write(f"{'=' * 50}\n")
-    except Exception as e:
-        log.error(f"Error writing to file {filename}: {e}")
+    except Exception as err:
+        log.error(f"Error writing to file {filename}: {err}")
 
 
 # Utility function to run PowerShell commands
@@ -64,8 +64,8 @@ def run_powershell_command(command):
             log.error(f"PowerShell command failed with return code {result.returncode}")
             return []
         return result.stdout.splitlines()
-    except Exception as e:
-        log.error(f"Error running PowerShell command: {e}")
+    except Exception as err:
+        log.error(f"Error running PowerShell command: {err}")
         return []
 
 
@@ -99,8 +99,8 @@ def parse_output(lines, regex, group_names):
             else:
                 log.debug(f"Skipping unrecognized line: {line}")
         return results
-    except Exception as e:
-        log.error(f"Parsing output failed: {e}")
+    except Exception as err:
+        log.error(f"Parsing output failed: {err}")
 
 
 # Function to get paired Bluetooth devices
@@ -177,7 +177,7 @@ def log_bluetooth():
     log.debug(f"{section_title}: {paired_devices}")
 
     # Collect and log event logs
-    def collect_logs(title, command):
+    def collect_logs(title: str, command: str):
         """
         Collects and logs event logs by executing a PowerShell command and saving the results.
         
@@ -215,4 +215,7 @@ def log_bluetooth():
 
 
 if __name__ == "__main__":
-    log_bluetooth()
+    try:
+        log_bluetooth()
+    except Exception as e:
+        log.error(f"Failed to log Bluetooth data: {e}")
