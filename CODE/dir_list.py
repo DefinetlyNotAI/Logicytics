@@ -9,16 +9,21 @@ if __name__ == "__main__":
 
 def run_command_threaded(directory: str, file: str, message: str, encoding: str = "UTF-8") -> None:
     """
-    Executes a command for a specific directory and writes the output to a file.
-
+    Executes a PowerShell command to recursively list directory contents and writes the output to a specified file.
+    
     Args:
-        directory (str): The directory to run the command on.
-        file (str): The name of the file to write the command output to.
-        message (str): A message to be logged.
-        encoding (str): The encoding to write the file in.
-
-    Returns:
-        None
+        directory (str): The target directory path to list contents from.
+        file (str): The output file path where directory contents will be appended.
+        message (str): A descriptive message for logging the operation.
+        encoding (str, optional): File writing encoding. Defaults to "UTF-8".
+    
+    Raises:
+        Exception: If command execution or file writing fails.
+    
+    Notes:
+        - Uses PowerShell's Get-ChildItem with recursive flag
+        - Appends output to the specified file
+        - Logs operation start and result/error
     """
     log.info(f"Executing {message} for {directory}")
     try:
@@ -33,16 +38,22 @@ def run_command_threaded(directory: str, file: str, message: str, encoding: str 
 @log.function
 def command_threaded(base_directory: str, file: str, message: str, encoding: str = "UTF-8") -> None:
     """
-    Splits the base directory into subdirectories and runs the command concurrently.
-
+    Concurrently lists contents of subdirectories within a base directory using thread pooling.
+    
     Args:
-        base_directory (str): The base directory to split and run the command on.
-        file (str): The name of the file to write the command output to.
-        message (str): A message to be logged.
-        encoding (str): The encoding to write the file in.
-
-    Returns:
-        None
+        base_directory (str): Root directory to explore and list subdirectories from.
+        file (str): Output file path to write directory listing results.
+        message (str): Descriptive logging message for the operation.
+        encoding (str, optional): File writing character encoding. Defaults to "UTF-8".
+    
+    Raises:
+        Exception: Logs and captures any errors during thread pool execution.
+    
+    Notes:
+        - Uses ThreadPoolExecutor for parallel directory content listing
+        - Processes each subdirectory concurrently
+        - Writes results to the specified file
+        - Handles potential errors during thread execution
     """
     try:
         with ThreadPoolExecutor() as executor:

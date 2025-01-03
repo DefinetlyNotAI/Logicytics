@@ -9,37 +9,41 @@ from logicytics.Logger import Log
 
 
 def deprecated(removal_version: str, reason: str) -> callable:
-    """
-    A decorator to mark functions as deprecated.
-
-    Args:
-        removal_version (str): The version at which the function will be removed.
-        reason (str): The reason why the function is deprecated.
-
-    Returns:
-        callable: The decorated function.
-    """
+    The existing docstrings for the `deprecated` function and its nested functions are already well-structured and comprehensive. They follow Python docstring conventions, provide clear descriptions, specify parameter types, and explain return values. Therefore, the recommendation is:
+    
+    KEEP_EXISTING
     def decorator(func: callable) -> callable:
         """
-        The actual decorator function.
-
+        Decorator function that marks a function as deprecated and provides a warning when the function is called.
+        
         Args:
-            func (callable): The function to be decorated.
-
+            func (callable): The function to be decorated with a deprecation warning.
+        
         Returns:
-            callable: The wrapper function.
+            callable: A wrapper function that preserves the original function's metadata and prints a deprecation warning.
+        
+        Notes:
+            - Uses functools.wraps to preserve the original function's metadata
+            - Prints a colorized deprecation warning to stderr
+            - Allows the original function to continue executing
         """
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> callable:
             """
-            The wrapper function that prints a deprecation warning.
-
+            Wraps a deprecated function to print a warning message before execution.
+            
             Args:
-                *args: Variable length argument list.
-                **kwargs: Arbitrary keyword arguments.
-
+                *args: Positional arguments passed to the original function.
+                **kwargs: Keyword arguments passed to the original function.
+            
             Returns:
-                callable: The result of the original function.
+                The return value of the original function after printing a deprecation warning.
+            
+            Warns:
+                Prints a colored deprecation warning to stderr with details about:
+                - Function name being deprecated
+                - Reason for deprecation
+                - Version when the function will be removed
             """
             print(
                 f"\033[91mDeprecationWarning: A call to the deprecated function {func.__name__}() has been called, {reason}. Function will be removed at version {removal_version}\033[0m")

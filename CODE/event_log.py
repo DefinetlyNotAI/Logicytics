@@ -16,13 +16,20 @@ if __name__ == "__main__":
 def parse_event_logs(log_type: str, output_file: str):
     """
     Parses Windows event logs of a specified type and writes them to an output file using WMI.
-
+    
     Args:
-        log_type (str): The type of event log to parse (e.g., 'Security', 'Application').
+        log_type (str): The type of event log to parse (e.g., 'Security', 'Application', 'System').
         output_file (str): The file path where the parsed event logs will be written.
-
+    
     Raises:
-        Exception: If there is an error opening or reading the event log, or writing to the output file.
+        wmi.x_wmi: If there is a WMI-specific error during event log retrieval.
+        Exception: If there is a general error during file operations or log parsing.
+    
+    Notes:
+        - Requires administrative privileges to access Windows event logs.
+        - Retrieves all events for the specified log type using a WMI query.
+        - Writes event details including category, timestamp, source, event ID, type, and data.
+        - Logs informational and debug messages during the parsing process.
     """
     log.info(f"Parsing {log_type} events (Windows Events) and writing to {output_file}, this may take a while...")
     try:
