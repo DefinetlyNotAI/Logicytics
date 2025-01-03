@@ -197,7 +197,7 @@ def save_packet_data_to_csv(file_path: str):
         log.warning("No packet data to save.")
 
 
-# Function to visualize the graph
+# Function to visualize the graph of packet connections
 def visualize_graph(node_colors: str = None, node_sizes: str = None):
     """
     Visualizes the graph of packet connections with customizable node colors and sizes.

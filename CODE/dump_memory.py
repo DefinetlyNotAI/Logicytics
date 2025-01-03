@@ -62,11 +62,20 @@ def gather_system_info():
 def memory_dump():
     log.info("Creating basic memory dump scan...")
     pid = os.getpid()
+
     try:
         process = psutil.Process(pid)
         with open("Ram_Dump.txt", "wb") as dump_file:
             total_size = 0
             for mem_region in process.memory_maps(grouped=False):
+                # Check available disk space
+                if os.path.exists("Ram_Dump.txt"):
+                    required_space = LIMIT_FILE_SIZE * 1024 * 1024 * 1.5  # 2x safety margin
+                    free_space = psutil.disk_usage(".").free
+                    if free_space < required_space:
+                        log.error(f"Not enough disk space. Need {required_space / 1024 / 1024:.2f}MB")
+                    return
+
                 # Check if the memory region is readable ('r' permission)
                 if 'r' in mem_region.perms:
                     # Extract start and end addresses from the memory region string
@@ -112,6 +121,7 @@ def memory_dump():
                         total_size += len(metadata_bytes)
                     except Exception as e:
                         log.error(f"Error writing memory region metadata: {str(e)}")
+
     except psutil.Error as e:
         log.error(f"Error opening process memory: {str(e)}")
     except Exception as e:
