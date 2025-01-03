@@ -120,9 +120,17 @@ class Log:
 
     def __internal(self, message):
         """
-        Logs an internal message. Internal messages are displayed in the console only.
-
-        :param message: The internal message to be logged.
+        Log an internal message exclusively to the console.
+        
+        Internal messages are used for logging system states or debug information that should not be written to log files. These messages are only displayed in the console when color logging is enabled.
+        
+        Parameters:
+            message (str): The internal message to be logged. If the message is "None" or None, no logging occurs.
+        
+        Notes:
+            - Requires color logging to be enabled
+            - Uses a custom internal log level
+            - Converts the message to a string before logging
         """
         if self.color and message != "None" and message is not None:
             colorlog.log(self.INTERNAL_LOG_LEVEL, str(message))
@@ -138,11 +146,22 @@ class Log:
 
     def raw(self, message):
         """
-        Logs a raw message directly to the log file.
-        This should only be called from within the Log class.
-        So do not use this method in your code.
-
-        :param message: The raw message to be logged.
+        Log a raw message directly to the log file.
+        
+        This method writes a message directly to the log file without any additional formatting or logging levels. It is intended for internal use within the Log class and should not be called directly in external code.
+        
+        Parameters:
+            message (str): The raw message to be written to the log file.
+        
+        Notes:
+            - Checks the calling context to warn about non-function calls
+            - Handles potential Unicode encoding errors
+            - Skips logging if message is None or "None"
+            - Writes message with a newline character
+            - Logs internal errors if file writing fails
+        
+        Raises:
+            Logs internal errors for Unicode or file writing issues without stopping execution
         """
         frame = inspect.stack()[1]
         if frame.function == "<module>":
@@ -162,7 +181,15 @@ class Log:
 
     def newline(self):
         """
-        Logs a newline separator in the log file.
+        Write a newline separator to the log file, creating a visual divider between log entries.
+        
+        This method writes a formatted horizontal line to the log file using ASCII characters, which helps visually separate different sections or log entries. The line consists of vertical bars and dashes creating a structured tabular-like separator.
+        
+        Parameters:
+            None
+        
+        Side Effects:
+            Appends a newline separator to the log file specified by `self.filename`.
         """
         with open(self.filename, "a") as f:
             f.write("|" + "-" * 19 + "|" + "-" * 13 + "|" + "-" * 154 + "|" + "\n")
@@ -217,11 +244,25 @@ class Log:
 
     def string(self, message, type: str):
         """
-        Logs a message with a specified type. Supported types are 'debug', 'info', 'warning', 'error', 'critical'
-        as well as the aliases 'err', 'warn', and 'crit'.
-
-        :param message: The message to be logged.
-        :param type: The type of the log message.
+        Logs a message with a specified log type, supporting multiple type aliases.
+        
+        This method allows logging messages with flexible type specifications, mapping aliases to standard log types
+        and handling potential errors in type selection. It supports logging with color if enabled.
+        
+        Parameters:
+            message (str): The message to be logged. Skipped if "None" or None.
+            type (str): The log type, which can be one of:
+                - Standard types: 'debug', 'info', 'warning', 'error', 'critical'
+                - Aliases: 'err' (error), 'warn' (warning), 'crit' (critical), 'except' (exception)
+        
+        Behavior:
+            - Converts type to lowercase and maps aliases to standard log types
+            - Logs message using the corresponding log method
+            - Falls back to debug logging if an invalid type is provided
+            - Only logs if color is enabled and message is not "None"
+        
+        Raises:
+            AttributeError: If no matching log method is found (internally handled)
         """
         if self.color and message != "None" and message is not None:
             type_map = {"err": "error", "warn": "warning", "crit": "critical", "except": "exception"}
@@ -234,13 +275,21 @@ class Log:
 
     def exception(self, message, exception_type: Type = Exception):
         """
-        Logs an exception message.
-
-        This is not recommended for use in production code, as it raises the exception after logging it.
-        Use Log().error() instead.
-
-        :param message: The exception message to be logged.
-        :param exception_type: The type of exception to raise.
+        Log an exception message and raise the specified exception.
+        
+        Warning: Not recommended for production use. Prefer Log().error() for logging exceptions.
+        
+        Args:
+            message (str): The exception message to be logged.
+            exception_type (Type, optional): The type of exception to raise. Defaults to Exception.
+        
+        Raises:
+            The specified exception type with the provided message.
+        
+        Note:
+            - Only logs the exception if color logging is enabled and message is not None
+            - Logs the exception with a timestamp and truncated message
+            - Includes both the original message and the exception type in the log
         """
         if self.color and message != "None" and message is not None:
             self.raw(
@@ -250,11 +299,27 @@ class Log:
 
     def parse_execution(self, message_log: list[list[str, str]]):
         """
-        Parses and logs a list of messages with their corresponding log types.
-        Only use this method if you have a list of lists where each inner list contains a message and its log type.
-        Use case include "Execute.script()" function.
-
-        :param message_log: A list of lists, where each inner list contains a message and its log type.
+        Parse and log multiple messages with their corresponding log types.
+        
+        This method processes a list of messages, where each message is associated with a specific log type. It is designed for scenarios where multiple log entries need to be processed simultaneously, such as logging script execution results.
+        
+        Parameters:
+            message_log (list[list[str, str]]): A list of message entries. Each entry is a list containing two elements:
+                - First element: The log message (str)
+                - Second element: The log type (str)
+        
+        Behavior:
+            - Iterates through the provided message log
+            - Logs each message using the specified log type via `self.string()`
+            - Logs an internal warning if a message list does not contain exactly two elements
+        
+        Example:
+            log = Log()
+            log.parse_execution([
+                ['Operation started', 'info'],
+                ['Processing data', 'debug'],
+                ['Completed successfully', 'info']
+            ])
         """
         if message_log:
             for message_list in message_log:
@@ -267,21 +332,44 @@ class Log:
 
     def function(self, func: callable):
         """
-        A decorator that logs the execution of a function,
-        including its start time, end time, and elapsed time.
-
-        :param func: The function to be decorated.
-        :return: The wrapper function.
+        A decorator that logs the execution details of a function, tracking its performance and providing runtime insights.
+        
+        Parameters:
+            func (callable): The function to be decorated and monitored.
+        
+        Returns:
+            callable: A wrapper function that logs execution metrics.
+        
+        Raises:
+            TypeError: If the provided function is not callable.
+        
+        Example:
+            @log.function
+            def example_function():
+                # Function implementation
+                pass
         """
 
         def wrapper(*args, **kwargs):
             """
             Wrapper function that logs the execution of the decorated function.
-
-            :param args: Positional arguments for the decorated function.
-            :param kwargs: Keyword arguments for the decorated function.
-            :raises TypeError: If the provided function is not callable.
-            :return: The result of the decorated function.
+            
+            Tracks and logs the start, execution, and completion of a function with performance timing.
+            
+            Parameters:
+                *args (tuple): Positional arguments passed to the decorated function.
+                **kwargs (dict): Keyword arguments passed to the decorated function.
+            
+            Returns:
+                Any: The original result of the decorated function.
+            
+            Raises:
+                TypeError: If the decorated function is not callable.
+            
+            Notes:
+                - Logs debug messages before and after function execution
+                - Measures and logs the total execution time with microsecond precision
+                - Preserves the original function's return value
             """
             if not callable(func):
                 self.exception(f"Function {func.__name__} is not callable.", TypeError)
