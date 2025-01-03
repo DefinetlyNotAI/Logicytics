@@ -75,10 +75,16 @@ class Health:
 
 def get_flags():
     """
-    Retrieves the action and sub-action flags_list from the Flag module and logs them.
-
-    This function sets the global variables ACTION and SUB_ACTION based on the data
-    retrieved from the Flag module. It also logs the retrieved values for debugging purposes.
+    Retrieves action and sub-action flags from the Flag module and sets global variables.
+    
+    This function extracts the current action and sub-action from the Flag module, setting global
+    ACTION and SUB_ACTION variables. It logs the retrieved values for debugging and tracing purposes.
+    
+    No parameters.
+    
+    Side effects:
+        - Sets global variables ACTION and SUB_ACTION
+        - Logs debug information about current action and sub-action
     """
     global ACTION, SUB_ACTION
     # Get flags_list
@@ -89,10 +95,22 @@ def get_flags():
 
 def special_execute(file_path: str):
     """
-    Executes a Python script in a new command prompt window.
-
-    Args:
-        file_path (str): The relative path to the Python script to be executed.
+    Execute a Python script in a new command prompt window.
+    
+    This function launches the specified Python script in a separate command prompt window, waits for its completion, and then exits the current process.
+    
+    Parameters:
+        file_path (str): The relative path to the Python script to be executed, 
+                         which will be resolved relative to the current script's directory.
+    
+    Side Effects:
+        - Opens a new command prompt window
+        - Runs the specified Python script
+        - Terminates the current process after script execution
+    
+    Raises:
+        FileNotFoundError: If the specified script path does not exist
+        subprocess.SubprocessError: If there are issues launching the subprocess
     """
     sr_current_dir = os.path.dirname(os.path.abspath(__file__))
     sr_script_path = os.path.join(sr_current_dir, file_path)
@@ -103,12 +121,23 @@ def special_execute(file_path: str):
 
 def handle_special_actions():
     """
-    Handles special actions based on the provided action flag.
-
-    This function checks the value of the `action` variable and performs
-    corresponding special actions such as opening debug, developer, or extra
-    tools menus, updating the repository, restoring backups, creating backups,
-    or unzipping extra files.
+    Handles special actions based on the current action flag.
+    
+    This function performs specific actions depending on the global `ACTION` variable:
+    - For "debug": Opens the debug menu by executing '_debug.py'
+    - For "dev": Opens the developer menu by executing '_dev.py'
+    - For "update": Updates the repository using Health.update() method
+    - For "restore": Displays a warning and opens the backup location
+    - For "backup": Creates backups of the CODE and MODS directories
+    
+    Side Effects:
+        - Logs informational, debug, warning, or error messages
+        - May execute external Python scripts
+        - May open file locations
+        - May terminate the program after completing special actions
+    
+    Raises:
+        SystemExit: Exits the program after completing certain special actions
     """
     # Special actions -> Quit
     if ACTION == "debug":
@@ -158,10 +187,18 @@ def handle_special_actions():
 def check_privileges():
     """
     Checks if the script is running with administrative privileges and handles UAC (User Account Control) settings.
-
+    
     This function verifies if the script has admin privileges. If not, it either logs a warning (in debug mode) or
     prompts the user to run the script with admin privileges and exits. It also checks if UAC is enabled and logs
     warnings accordingly.
+    
+    Raises:
+        SystemExit: If the script is not running with admin privileges and not in debug mode.
+    
+    Notes:
+        - Requires the `Check` module with `admin()` and `uac()` methods
+        - Depends on global `DEBUG` configuration variable
+        - Logs warnings or critical messages based on privilege and UAC status
     """
     if not Check.admin():
         if DEBUG == "DEBUG":
@@ -178,10 +215,29 @@ def check_privileges():
 
 def generate_execution_list() -> list | list[str] | list[str | Any]:
     """
-    Creates an execution list based on the provided action.
-
+    Generate an execution list of scripts based on the specified action.
+    
+    This function dynamically creates a list of scripts to be executed by filtering and selecting
+    scripts based on the global ACTION variable. It supports different execution modes:
+    - 'minimal': A predefined set of lightweight scripts
+    - 'nopy': PowerShell and script-based scripts without Python
+    - 'modded': Includes scripts from the MODS directory
+    - 'depth': Comprehensive script execution with data mining and logging scripts
+    - 'vulnscan_ai': Vulnerability scanning script only
+    
+    Parameters:
+        None
+    
     Returns:
-        list: The execution list of scripts to be executed.
+        list[str]: A list of script file paths to be executed, filtered and modified based on the current action.
+    
+    Raises:
+        ValueError: Implicitly if a script file cannot be removed from the initial list.
+    
+    Notes:
+        - Removes sensitive or unnecessary scripts from the initial file list
+        - Logs the final execution list for debugging purposes
+        - Warns users about potential long execution times for certain actions
     """
     execution_list = Get.list_of_files(".", extensions=(".py", ".exe", ".ps1", ".bat"))
     execution_list.remove("sensitive_data_miner.py")
@@ -345,16 +401,18 @@ def handle_sub_action():
 @log.function
 def Logicytics():
     """
-    Main function to run the Logicytics process.
-
-    This function performs the following steps:
-    1. Retrieves command-line flags_list and configurations.
-    2. Handles any special actions based on the provided action flag.
-    3. Checks for administrative privileges and potential errors.
-    4. Executes the scripts based on the action flag.
-    5. Zips the generated files.
-    6. Handles any sub-actions based on the provided sub-action flag.
-    7. Waits for user input to exit the program.
+    Orchestrates the complete Logicytics workflow, managing script execution, system actions, and user interactions.
+    
+    This function serves as the primary entry point for the Logicytics utility, coordinating a series of system-level operations:
+    - Retrieves command-line configuration flags
+    - Processes special actions
+    - Verifies system privileges
+    - Executes targeted scripts
+    - Compresses generated output files
+    - Handles final system sub-actions
+    - Provides a graceful exit mechanism
+    
+    Performs actions sequentially without returning a value, designed to be the main execution flow of the Logicytics utility.
     """
     # Get flags_list and configs
     get_flags()

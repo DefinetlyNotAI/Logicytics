@@ -179,12 +179,28 @@ class DebugCheck:
 
 def python_version():
     """
-    Checks the current Python version and logs the result.
-
+    Checks the current Python version against recommended version ranges and logs the result.
+    
+    This function determines the compatibility of the current Python runtime by comparing its version
+    against predefined minimum and maximum version thresholds. It provides informative logging about
+    the Python version status.
+    
+    Parameters:
+        None
+    
     Logs:
-        - Info if the Python version is within the acceptable range.
-        - Warning if the Python version is below the minimum recommended version.
-        - Error if the Python version is above the maximum supported version or if there is a parsing error.
+        - Info: When Python version is within the recommended range (3.11.x to 3.12.x)
+        - Warning: When Python version is below the minimum recommended version (< 3.11)
+        - Error: When Python version is above the maximum supported version (>= 3.13) or parsing fails
+    
+    Raises:
+        No explicit exceptions are raised; errors are logged internally
+    
+    Example:
+        Typical log outputs might include:
+        - "Python Version: 3.11.5 - Perfect"
+        - "Python Version: 3.10.2 - Recommended: 3.11.x"
+        - "Python Version: 3.13.0 - Incompatible"
     """
     version = sys.version.split()[0]
     MIN_VERSION = (3, 11)
@@ -222,7 +238,25 @@ def get_online_config() -> dict | None:
 @log_debug.function
 def debug():
     """
-    Executes system checks and logs results.
+    Executes a comprehensive system debug routine, performing various checks and logging system information.
+    
+    This function performs the following tasks:
+    - Clears the existing debug log file
+    - Retrieves and validates online configuration
+    - Checks system version compatibility
+    - Verifies required file integrity
+    - Checks SysInternal binaries
+    - Logs system privileges and environment details
+    - Checks Python version compatibility
+    - Retrieves and logs CPU information
+    
+    Logs are written to the debug log file, capturing system state, configuration, and potential issues.
+    
+    Notes:
+    - Requires admin privileges for full system checks
+    - Logs information about execution environment
+    - Checks system and Python version compatibility
+    - Provides insights into system configuration and potential security settings
     """
     # Clear Debug Log
     log_path = "../ACCESS/LOGS/DEBUG/DEBUG.log"

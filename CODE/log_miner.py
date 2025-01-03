@@ -9,14 +9,26 @@ if __name__ == "__main__":
 @log.function
 def backup_windows_logs():
     """
-    Backs up Windows system logs to a CSV file.
-
-    This function constructs a PowerShell command to retrieve system logs and export them to a CSV file.
-    It then executes the command using subprocess.Popen and handles any errors that may occur.
-    The function logs the result of the backup operation and any errors that occur.
-
+    Backs up Windows system logs to a CSV file using PowerShell.
+    
+    This function retrieves system logs and exports them to a CSV file named 'Logs_backup.csv'. 
+    It uses PowerShell's Get-EventLog cmdlet to collect system logs and Export-Csv to save them.
+    
+    The function handles potential errors during log backup and logs the operation's outcome.
+    If the backup fails, an error message is logged without raising an exception.
+    
+    Args:
+        None
+    
     Returns:
         None
+    
+    Raises:
+        No explicit exceptions are raised; errors are logged instead.
+    
+    Example:
+        When called, this function will create a 'Logs_backup.csv' file 
+        containing all system event log entries.
     """
     try:
         log_type = "System"

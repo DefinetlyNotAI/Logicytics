@@ -18,9 +18,19 @@ class Media:
     def __get_default_paths() -> list:
         """
         Returns the default paths for photos and videos based on the Windows username.
-
+        
+        This method retrieves the current Windows user's default media directories for photos and videos
+        by using the current username and standard Windows file system paths.
+        
         Returns:
-            list: A list containing the default photo and video paths.
+            list: A list containing two paths:
+                - First element: Default photo directory path
+                - Second element: Default video directory path
+        
+        Notes:
+            - Uses `getpass.getuser()` to dynamically retrieve the current Windows username
+            - Expands the user path using `os.path.expanduser()` to handle potential path variations
+            - Assumes standard Windows user directory structure
         """
         username = getpass.getuser()
         default_photo_path = os.path.expanduser(f"C:\\Users\\{username}\\Pictures")
@@ -30,10 +40,13 @@ class Media:
     @staticmethod
     def __ensure_backup_directory_exists(backup_directory: str):
         """
-        Ensures the backup directory exists; creates it if not.
-
+        Ensures the backup directory exists, creating it if necessary.
+        
         Args:
-            backup_directory (str): The path to the backup directory.
+            backup_directory (str): The full path to the directory where media files will be backed up.
+        
+        Raises:
+            OSError: If the directory cannot be created due to permission issues or other system constraints.
         """
         if not os.path.exists(backup_directory):
             os.makedirs(backup_directory)
@@ -41,13 +54,18 @@ class Media:
     @staticmethod
     def __collect_media_files(source_dirs: list) -> list:
         """
-        Collects all media files from the source directories.
-
+        Collects media files from specified source directories.
+        
+        Recursively searches through the provided source directories to find image and video files with extensions .jpg, .jpeg, .png, and .mp4.
+        
         Args:
-            source_dirs (list): A list of source directories to collect media files from.
-
+            source_dirs (list): List of directory paths to search for media files.
+        
         Returns:
-            list: A list of paths to the collected media files.
+            list: Absolute file paths of all discovered media files, including those in subdirectories.
+        
+        Raises:
+            OSError: If any of the source directories are inaccessible or cannot be traversed.
         """
         media_files = []
         for source_dir in source_dirs:
@@ -60,11 +78,22 @@ class Media:
     @staticmethod
     def __backup_files(media_files: list, backup_directory: str):
         """
-        Backs up media files to the backup directory.
-
-        Args:
-            media_files (list): A list of paths to the media files to be backed up.
-            backup_directory (str): The path to the backup directory.
+        Copies media files to a backup directory with timestamped filenames.
+        
+        Parameters:
+            media_files (list): A list of file paths for media files to be backed up.
+            backup_directory (str): Destination directory path for storing backup files.
+        
+        Behavior:
+            - Iterates through each media file in the input list
+            - Generates a new filename with current timestamp
+            - Attempts to copy each file to the backup directory
+            - Logs successful copy operations
+            - Logs any errors encountered during file copying
+        
+        Exceptions:
+            Handles and logs any exceptions that occur during file copy process
+            Does not interrupt the entire backup process if a single file copy fails
         """
         for src_file in media_files:
             dst_file = os.path.join(
@@ -83,7 +112,22 @@ class Media:
     @log.function
     def backup(cls):
         """
-        Backs up media files from the default Windows photo and video directories.
+        Orchestrates the complete media backup process by performing sequential backup operations.
+        
+        This class method coordinates the backup workflow:
+        1. Retrieves default media source directories
+        2. Sets a standard backup directory
+        3. Ensures the backup directory exists
+        4. Collects media files from source directories
+        5. Copies media files to the backup directory
+        6. Logs the completion of the backup process
+        
+        Returns:
+            None: Performs backup operations without returning a value
+        
+        Raises:
+            OSError: If directory creation or file operations fail
+            PermissionError: If insufficient permissions for file/directory operations
         """
         source_dirs = cls.__get_default_paths()
         backup_directory = "MediaBackup"

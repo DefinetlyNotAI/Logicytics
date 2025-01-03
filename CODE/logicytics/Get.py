@@ -10,23 +10,26 @@ class Get:
     def list_of_files(directory: str, extensions: tuple | bool = True, append_file_list: list = None,
                       exclude_files: list = None) -> list:
         """
-        Retrieves a list of files in the specified directory that have the specified extensions.
-
-        If the extensions parameter is set to 'all',
-        all files in the directory are returned.
-
-        Else, only files with the specified extensions are returned.
-        Files starting with an underscore (_) and the file Logicytics.py
-        are excluded from the list.
-
-        Parameters:
-            directory (str): The path of the directory to search.
-            append_file_list (list): The list to append the filenames to.
-            extensions (tuple): The extensions of the files to search for or True to search for all files.
-            exclude_files (list): The files to exclude from the list.
-        Returns:
-            list: The list of filenames with the specified extensions.
-        """
+                      Retrieves a list of files in the specified directory based on given extensions and exclusion criteria.
+                      
+                      Supports two modes of file retrieval:
+                      1. When `extensions` is `True`, retrieves all files recursively from the directory.
+                      2. When `extensions` is a tuple, retrieves files matching specific extensions while applying exclusion rules.
+                      
+                      Parameters:
+                          directory (str): Path of the directory to search for files.
+                          extensions (tuple | bool, optional): File extensions to filter or True to retrieve all files. Defaults to True.
+                          append_file_list (list, optional): Existing list to append found filenames to. Creates a new list if not provided. Defaults to None.
+                          exclude_files (list, optional): List of filenames to exclude from results. Defaults to None.
+                      
+                      Returns:
+                          list: A list of filenames matching the specified criteria.
+                      
+                      Exclusion rules:
+                          - Ignores files starting with an underscore (_)
+                          - Excludes "Logicytics.py"
+                          - Skips files specified in `exclude_files`
+                      """
         append_file_list = [] if not append_file_list else append_file_list
 
         if isinstance(extensions, bool) and extensions:
@@ -50,13 +53,23 @@ class Get:
     def config_data() -> tuple[str, str, list[str], bool]:
         """
         Retrieves configuration data from the 'config.ini' file.
-
-        This method attempts to read the 'config.ini' file located in the current directory.
-        If the file is not found, it attempts to read the 'config.ini' file from the parent directory.
-        If neither file is found, the program exits with an error message.
-
+        
+        This method attempts to read the 'config.ini' file from multiple potential locations:
+        1. Current directory
+        2. Parent directory
+        3. Grandparent directory
+        
+        If the configuration file is not found in any of these locations, the program exits with an error message.
+        
         Returns:
-            tuple[str, str, list[str], bool]: A tuple containing the log level, version, and a list of files.
+            tuple[str, str, list[str], bool]: A tuple containing:
+                - Log level (str): Either "DEBUG" or "INFO"
+                - Version (str): System version from configuration
+                - Files (list[str]): List of files specified in configuration
+                - Delete old logs (bool): Flag indicating whether to delete old log files
+        
+        Raises:
+            SystemExit: If the 'config.ini' file cannot be found in any of the attempted locations
         """
 
         def get_config_data(config_file_name: str) -> tuple[str, str, list[str], bool]:

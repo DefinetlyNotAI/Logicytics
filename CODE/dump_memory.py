@@ -20,6 +20,25 @@ LIMIT_FILE_SIZE = 20  # Always in MiB
 
 # Capture RAM Snapshot
 def capture_ram_snapshot():
+    """
+    Captures and logs the current system memory statistics to a file.
+    
+    Retrieves detailed information about RAM and swap memory usage using psutil.
+    Writes memory statistics in gigabytes to 'Ram_Snapshot.txt', including:
+    - Total RAM
+    - Used RAM
+    - Available RAM
+    - Total Swap memory
+    - Used Swap memory
+    - Free Swap memory
+    - Percentage of RAM used
+    
+    Logs the process and handles potential file writing errors.
+    
+    Raises:
+        IOError: If unable to write to the output file
+        Exception: For any unexpected errors during memory snapshot capture
+    """
     log.info("Capturing RAM Snapshot...")
     memory = psutil.virtual_memory()
     swap = psutil.swap_memory()
@@ -40,6 +59,24 @@ def capture_ram_snapshot():
 
 # Gather system information
 def gather_system_info():
+    """
+    Gather and log detailed system information to a text file.
+    
+    This function collects system-specific details including architecture, 
+    operating system, machine type, processor information, and page size. 
+    The information is written to 'SystemRam_Info.txt' and logged for tracking.
+    
+    Returns:
+        None: Writes system information directly to a file.
+    
+    Raises:
+        Exception: Logs and handles any errors encountered during system 
+        information retrieval, ensuring graceful error reporting.
+    
+    Side Effects:
+        - Creates/overwrites 'SystemRam_Info.txt' with system details
+        - Logs information gathering process and potential errors
+    """
     log.info("Gathering system information...")
     try:
         sys_info = {
@@ -60,6 +97,29 @@ def gather_system_info():
 
 # Memory Dump (Windows-specific, using psutil)
 def memory_dump():
+    """
+    Perform a memory dump of the current process, capturing detailed metadata for each readable memory region.
+    
+    This function scans the memory regions of the current process and logs their metadata to 'Ram_Dump.txt'. 
+    It captures information such as start and end addresses, resident set size (RSS), permissions, 
+    associated file paths, and other region-specific details.
+    
+    Key Features:
+    - Retrieves memory map for the current process
+    - Filters and logs only readable memory regions
+    - Captures metadata for each memory region
+    - Supports file size limitation via LIMIT_FILE_SIZE constant
+    - Handles potential errors during memory scanning and file writing
+    
+    Notes:
+    - Writes metadata to 'Ram_Dump.txt' in the current working directory
+    - Truncates output if file size exceeds LIMIT_FILE_SIZE (if set)
+    - Logs errors encountered during the memory dump process
+    
+    Raises:
+        psutil.Error: If there are issues accessing process memory
+        Exception: For any unexpected errors during memory scanning
+    """
     log.info("Creating basic memory dump scan...")
     pid = os.getpid()
     try:
@@ -123,6 +183,19 @@ def memory_dump():
 # Main function to run all tasks
 @log.function
 def main():
+    """
+    Orchestrates the execution of system memory collection tasks.
+    
+    This function performs three primary operations:
+    1. Captures a snapshot of current RAM and swap memory statistics
+    2. Gathers detailed system information
+    3. Creates a memory dump of the current process
+    
+    The tasks are executed sequentially, with logging to track the start and completion of the entire process.
+    
+    No parameters.
+    No return value.
+    """
     log.info("Starting system memory collection tasks...")
     capture_ram_snapshot()
     gather_system_info()

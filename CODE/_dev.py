@@ -40,13 +40,24 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
 
 def _prompt_user(question: str, file_to_open: str = None, special: bool = False) -> bool:
     """
-        Prompts the user with a question and optionally opens a file if the answer is not 'yes'.
-        Args:
-            question (str): The question to ask the user.
-            file_to_open (str, optional): The file to open if the user doesn't answer 'yes'.
-        Returns:
-            bool: True if the user's answer is 'yes', otherwise False.
-        """
+    Prompts the user with a yes/no question and optionally opens a file.
+    
+    Parameters:
+        question (str): The question to be presented to the user.
+        file_to_open (str, optional): Path to a file that will be opened if the user does not respond affirmatively.
+        special (bool, optional): Flag to suppress the default reminder message when the user responds negatively.
+    
+    Returns:
+        bool: True if the user responds with 'yes' or 'Y', False otherwise.
+    
+    Raises:
+        Exception: Logs any unexpected errors during user interaction.
+    
+    Notes:
+        - Uses subprocess to open files on Windows systems
+        - Case-insensitive input handling for 'yes' responses
+        - Provides optional file opening and reminder messaging
+    """
     try:
         answer = input(question + " (Y)es or (N)o:- ")
         if not (answer.lower() == "yes" or answer.lower() == "y"):
@@ -65,9 +76,32 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
 @log_dev.function
 def dev_checks() -> None:
     """
-        Performs a series of checks to ensure that the developer has followed the required guidelines and best practices.
-        Returns:
-            bool: True if all checks pass, otherwise False.
+    Performs comprehensive developer checks to ensure code quality and project guidelines compliance.
+    
+    This function guides developers through a series of predefined checks, validates file additions, 
+    and updates project configuration. It performs the following key steps:
+    - Verify adherence to contributing guidelines
+    - Check file naming conventions
+    - Validate file placement
+    - Confirm docstring and comment coverage
+    - Assess feature modularity
+    - Categorize and display file changes
+    - Update project configuration file
+    
+    Raises:
+        None: Returns None if any check fails or an error occurs during the process.
+    
+    Side Effects:
+        - Creates necessary directories
+        - Prompts user for multiple confirmations
+        - Prints file change lists with color coding
+        - Updates configuration file with current files and version
+        - Logs warnings or errors during the process
+    
+    Example:
+        Typical usage is during project development to ensure consistent practices:
+        >>> dev_checks()
+        # Interactively guides developer through project checks
     """
     # Create the necessary directories if they do not exist
     FileManagement.mkdir()
