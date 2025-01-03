@@ -9,9 +9,6 @@ import os
 from collections import Counter
 from datetime import datetime
 
-import matplotlib.pyplot as plt
-from sentence_transformers import SentenceTransformer, util
-
 # Check if the script is being run directly, if not, set up the library
 if __name__ == '__main__':
     exit("This is a library, Please import rather than directly run.")
@@ -31,11 +28,11 @@ else:
     DEBUG_MODE = config.getboolean("Flag Settings", "model_debug")  # Debug mode for Sentence Transformer
     # File for storing user history data
     HISTORY_FILE = 'logicytics/User_History.json.gz'  # User history file
-    if DEBUG_MODE:
-        print(f"Loading Sentence Transformer model...")
     # Minimum accuracy threshold for flag suggestions
     MIN_ACCURACY_THRESHOLD = float(
         config.get("Flag Settings", "accuracy_min"))  # Minimum accuracy threshold for flag suggestions
+    if not 0 <= MIN_ACCURACY_THRESHOLD <= 100:
+        raise ValueError("accuracy_min must be between 0 and 100")
 
 
 class Match:
@@ -45,7 +42,23 @@ class Match:
         Get the similarity between the user input and the flag description.
         """
         # Encode the current user input and historical inputs
-        MODEL = SentenceTransformer(config.get("Flag Settings", "model_to_use"))
+        from sentence_transformers import SentenceTransformer, util
+
+        import logging  # Suppress logging messages from Sentence Transformer due to verbosity
+        # Set the logging level based on the debug mode, either DEBUG or ERROR (aka only important messages)
+        if DEBUG_MODE:
+            logging.getLogger("sentence_transformers").setLevel(logging.DEBUG)
+        else:
+            logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+
+        try:
+            MODEL = SentenceTransformer(config.get("Flag Settings", "model_to_use"))
+        except Exception as e:
+            print(f"Error: {e}")
+            print("Please check the model name in the config file.")
+            print(f"Model name {config.get('Flag Settings', 'model_to_use')} may not be valid.")
+            exit(1)
+
         user_embedding = MODEL.encode(user_input, convert_to_tensor=True, show_progress_bar=DEBUG_MODE)
         historical_embeddings = MODEL.encode(all_descriptions, convert_to_tensor=True, show_progress_bar=DEBUG_MODE)
 
@@ -95,6 +108,8 @@ class Match:
         """Generates a full summary and graph based on user history data."""
         # TODO Yet in beta
         # Load the decompressed history data using the load_history function
+        import matplotlib.pyplot as plt
+
         if not os.path.exists(HISTORY_FILE):
             exit("No history data found.")
 

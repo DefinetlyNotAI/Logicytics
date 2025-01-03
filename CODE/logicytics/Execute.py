@@ -6,7 +6,7 @@ from subprocess import CompletedProcess
 
 class Execute:
     @classmethod
-    def script(cls, script_path: str) -> list[list[str]] | None:
+    def script(cls, script_path: str) -> list[list[str, str]] | None:
         """
         Executes a script file and handles its output based on the file extension.
         Parameters:
