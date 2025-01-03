@@ -271,7 +271,15 @@ def save_packet_data_to_csv(file_path: str):
 
 
 # Function to visualize the graph of packet connections
-def visualize_graph(node_colors: str = None, node_sizes: str = None):
+def visualize_graph(node_colors: dict[str, str] | None = None,
+                    node_sizes: dict[str, int] | None = None,
+                    *,  # Force keyword arguments for the following parameters
+                    figsize: tuple[int, int] = (12, 8),
+                    font_size: int = 10,
+                    font_weight: str = "bold",
+                    title: str = "Network Connections Graph",
+                    output_file: str = "network_connections_graph.png",
+                    layout_func: callable = nx.spring_layout):
     """
     Visualizes the graph of packet connections with customizable node colors and sizes.
     
@@ -282,7 +290,13 @@ def visualize_graph(node_colors: str = None, node_sizes: str = None):
             If not provided, defaults to skyblue for all nodes.
         node_sizes (dict, optional): A dictionary mapping nodes to their display sizes. 
             If not provided, defaults to 3000 for all nodes.
-    
+        figsize (tuple, optional): The size of the figure in inches (width, height). Defaults to (12, 8).
+        font_size (int, optional): The font size for node labels. Defaults to 10.
+        font_weight (str, optional): The font weight for node labels. Defaults to 'bold'.
+        title (str, optional): The title of the graph. Defaults to 'Network Connections Graph'.
+        output_file (str, optional): The name of the output PNG file to save the graph visualization. Defaults to 'network_connections_graph.png'.
+        layout_func (callable, optional): The layout function to use for the graph. Defaults to nx.spring_layout.
+
     Side Effects:
         - Creates a matplotlib figure
         - Saves a PNG image file named 'network_connections_graph.png'
@@ -300,8 +314,8 @@ def visualize_graph(node_colors: str = None, node_sizes: str = None):
         custom_sizes = {'192.168.1.1': 5000, '10.0.0.1': 2000}
         visualize_graph(node_colors=custom_colors, node_sizes=custom_sizes)
     """
-    pos = nx.spring_layout(G)
-    plt.figure(figsize=(12, 8))
+    pos = layout_func(G)
+    plt.figure(figsize=figsize)
 
     if node_colors is None:
         node_colors = {node: "skyblue" for node in G.nodes()}
@@ -312,12 +326,12 @@ def visualize_graph(node_colors: str = None, node_sizes: str = None):
     node_color_list = [node_colors.get(node, "skyblue") for node in G.nodes()]
     node_size_list = [node_sizes.get(node, 3000) for node in G.nodes()]
 
-    nx.draw(G, pos, with_labels=True, node_size=node_size_list, node_color=node_color_list, font_size=10,
-            font_weight="bold")
+    nx.draw(G, pos, with_labels=True, node_size=node_size_list, node_color=node_color_list, font_size=font_size,
+            font_weight=font_weight)
     edge_labels = nx.get_edge_attributes(G, 'protocol')
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
-    plt.title("Network Connections Graph")
-    plt.savefig("network_connections_graph.png")
+    plt.title(title)
+    plt.savefig(output_file)
     plt.close()
 
 
@@ -327,17 +341,14 @@ def packet_sniffer():
     Initiates packet sniffing based on configuration settings.
     
     Reads network configuration parameters from a global config dictionary, including network interface, packet count, and timeout. Validates input parameters to ensure they are positive values. Attempts to start packet sniffing on the specified interface, with built-in error handling and interface name correction for common variations.
-    
-    Parameters:
-        None (uses global configuration)
-    
+
     Raises:
         SystemExit: If packet count or timeout values are invalid
         Exception: If there are issues with the network interface or packet sniffing process
     
     Side Effects:
         - Logs configuration and sniffing errors
-        - Attempts to auto-correct interface names
+        - Attempts to autocorrect interface names
         - Calls start_sniffing() to capture network packets
         - Exits the program if critical configuration errors are encountered
     """
@@ -370,7 +381,7 @@ def packet_sniffer():
             break
         except Exception as err:
             if attempt == 0 and interface in ("WiFi", "Wi-Fi"):
-                log.warning(f"Retrying with corrected interface name...")
+                log.warning("Retrying with corrected interface name...")
                 interface = correct_interface_name(interface)
             else:
                 log.error(f"Failed to sniff packets: {err}")

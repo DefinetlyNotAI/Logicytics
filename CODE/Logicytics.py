@@ -3,8 +3,8 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
-import threading
 import zipfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import Any
 
@@ -225,9 +225,6 @@ def generate_execution_list() -> list | list[str] | list[str | Any]:
     - 'depth': Comprehensive script execution with data mining and logging scripts
     - 'vulnscan_ai': Vulnerability scanning script only
     
-    Parameters:
-        None
-    
     Returns:
         list[str]: A list of script file paths to be executed, filtered and modified based on the current action.
     
@@ -293,34 +290,42 @@ def execute_scripts():
     """Executes the scripts in the execution list based on the action."""
     # Check weather to use threading or not, as well as execute code
     log.info("Starting Logicytics...")
+
     if ACTION == "threaded" or ACTION == "depth":
-        def threaded_execution(execution_list_thread, index_thread):
-            log.debug(f"Thread {index_thread} started")
+
+        def execute_single_script(script: str) -> tuple[str, Exception | None]:
+            """
+            Executes a single script and logs the result.
+
+            This function executes a single script and logs the result,
+            capturing any exceptions that occur during execution
+
+            Parameters:
+                script (str): The path to the script to be executed
+            """
+            log.debug(f"Executing {script}")
             try:
-                log.parse_execution(Execute.script(execution_list_thread[index_thread]))
-                log.info(f"{execution_list_thread[index_thread]} executed")
-            except UnicodeDecodeError as err:
-                log.error(f"Error in thread: {err}")
+                log.parse_execution(Execute.script(script))
+                log.info(f"{script} executed")
+                return script, None
             except Exception as err:
-                log.error(f"Error in thread: {err}")
-            log.debug(f"Thread {index_thread} finished")
+                log.error(f"Error executing {script}: {err}")
+                return script, err
 
         log.debug("Using threading")
-        threads = []
         execution_list = generate_execution_list()
-        for index, _ in enumerate(execution_list):
-            thread = threading.Thread(
-                target=threaded_execution,
-                args=(
-                    execution_list,
-                    index,
-                ),
-            )
-            threads.append(thread)
-            thread.start()
+        with ThreadPoolExecutor() as executor:
+            futures = {executor.submit(execute_single_script, script): script
+                       for script in execution_list}
 
-        for thread in threads:
-            thread.join()
+            for future in as_completed(futures):
+                script = futures[future]
+                result, error = future.result()
+                if error:
+                    log.error(f"Failed to execute {script}")
+                else:
+                    log.debug(f"Completed {script}")
+
     elif ACTION == "performance_check":
         execution_times = []
         execution_list = generate_execution_list()

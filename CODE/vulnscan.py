@@ -18,6 +18,11 @@ from logicytics import Log, DEBUG
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
+# TODO v3.1.0: Load models and then use caching to avoid reloading models
+
+# Ignore all warnings
+warnings.filterwarnings("ignore")
+
 
 def load_model(model_path_to_load: str) -> safe_open | torch.nn.Module:
     """
@@ -33,11 +38,6 @@ def load_model(model_path_to_load: str) -> safe_open | torch.nn.Module:
     
     Raises:
         ValueError: If the model file does not have a supported extension (.pkl, .safetensors, or .pth).
-    
-    Examples:
-        >>> model = load_model('path/to/model.pkl')
-        >>> model = load_model('path/to/model.safetensors')
-        >>> model = load_model('path/to/model.pth')
     """
     if model_path_to_load.endswith('.pkl'):
         return joblib.load(model_path_to_load)
@@ -83,8 +83,14 @@ def scan_path(model_path: str, scan_paths: str, vectorizer_path: str):
                 log.info(f"Loading vectorizer from {vectorizer_path}")
                 vectorizer_to_use = joblib.load(vectorizer_path)
         vulnscan(model_to_use, scan_paths, vectorizer_to_use)
+    except FileNotFoundError as err:
+        log.error(f"File not found while scanning {scan_paths}: {err}")
+    except PermissionError as err:
+        log.error(f"Permission denied while scanning {scan_paths}: {err}")
+    except (torch.serialization.pickle.UnpicklingError, RuntimeError) as err:
+        log.error(f"Model loading failed for {scan_paths}: {err}")
     except Exception as err:
-        log.error(f"Error scanning path {scan_paths}: {err}")
+        log.error(f"Unexpected error scanning {scan_paths}: {err}")
 
 
 def is_sensitive(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_content: str) -> tuple[bool, float, str]:
@@ -164,10 +170,10 @@ def vulnscan(model, SCAN_PATH, vectorizer):
     Raises:
         IOError: If there are issues writing to the 'Sensitive_File_Paths.txt' file
     """
-    log.info(f"Scanning {SCAN_PATH}")
+    log.debug(f"Scanning {SCAN_PATH}")
     result, probability, reason = scan_file(model, vectorizer, SCAN_PATH)
     if result:
-        log.info(f"File {SCAN_PATH} is sensitive with probability {probability:.2f}. Reason: {reason}")
+        log.debug(f"File {SCAN_PATH} is sensitive with probability {probability:.2f}. Reason: {reason}")
         if not os.path.exists("Sensitive_File_Paths.txt"):
             with open("Sensitive_File_Paths.txt", "w") as sensitive_file:
                 sensitive_file.write(f"{SCAN_PATH}\n\n")
@@ -196,17 +202,21 @@ if __name__ == "__main__":
         "C:\\Program Files (x86)"
     ]
 
-    for base_path in base_paths:
-        for root, _, files_main in os.walk(base_path):
-            for file_main in files_main:
-                paths.append(os.path.join(root, file_main))
+    # Use max_workers based on CPU count but cap it at a reasonable number
+    max_workers = min(32, os.cpu_count() * 2)
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(os.path.join, root, file_main) for base_path in base_paths for root, _, files_main in
+                   os.walk(base_path) for file_main in files_main]
+        for future in futures:
+            paths.append(future.result())
 
     # Start scanning
     log.warning("Starting scan - This may take hours and consume memory!!")
 
-    # Use max_workers based on CPU count but cap it at a reasonable number
-    max_workers = min(32, os.cpu_count() * 2)
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        total_paths = len(paths)
+        completed = 0
         futures = [
             executor.submit(
                 scan_path,
@@ -219,5 +229,9 @@ if __name__ == "__main__":
         for future in futures:
             try:
                 future.result()
+                completed += 1
+                if completed % 100 == 0:
+                    progress = (completed / total_paths) * 100
+                    log.info(f"Scan progress: {progress:.1f}% ({completed}/{total_paths})")
             except Exception as e:
                 log.error(f"Scan failed: {e}")

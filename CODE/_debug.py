@@ -185,9 +185,6 @@ def python_version():
     against predefined minimum and maximum version thresholds. It provides informative logging about
     the Python version status.
     
-    Parameters:
-        None
-    
     Logs:
         - Info: When Python version is within the recommended range (3.11.x to 3.12.x)
         - Warning: When Python version is below the minimum recommended version (< 3.11)

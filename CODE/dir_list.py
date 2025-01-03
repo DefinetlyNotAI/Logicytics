@@ -27,7 +27,8 @@ def run_command_threaded(directory: str, file: str, message: str, encoding: str 
     """
     log.info(f"Executing {message} for {directory}")
     try:
-        command = f"powershell -Command Get-ChildItem {directory} -Recurse"
+        safe_directory = directory.replace('"', '`"')  # Escape quotes
+        command = f'powershell -NoProfile -Command "Get-ChildItem \\""{safe_directory}\\"" -Recurse"'
         output = Execute.command(command)
         open(file, "a", encoding=encoding).write(output)
         log.info(f"{message} Successful for {directory} - {file}")
@@ -56,7 +57,7 @@ def command_threaded(base_directory: str, file: str, message: str, encoding: str
         - Handles potential errors during thread execution
     """
     try:
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=min(32, os.cpu_count() * 4)) as executor:
             subdirectories = [os.path.join(base_directory, d) for d in os.listdir(base_directory) if
                               os.path.isdir(os.path.join(base_directory, d))]
             futures = [executor.submit(run_command_threaded, subdir, file, message, encoding) for subdir in

@@ -1,6 +1,7 @@
 import os
 import platform
 import struct
+from datetime import datetime
 
 import psutil
 
@@ -15,6 +16,7 @@ if __name__ == "__main__":
 
 # If the file size exceeds this limit, the file will be truncated with a message
 # Put 0 to disable the limit
+# TODO v3.3.1: Make this take from config.ini
 LIMIT_FILE_SIZE = 20  # Always in MiB
 
 
@@ -85,6 +87,9 @@ def gather_system_info():
             'Machine': platform.machine(),
             'Processor': platform.processor(),
             'Page Size (bytes)': struct.calcsize("P"),
+            'CPU Count': psutil.cpu_count(),
+            'CPU Frequency': psutil.cpu_freq().current if psutil.cpu_freq() else 'N/A',
+            'Boot Time': datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S'),
         }
     except Exception as e:
         log.error(f"Error gathering system information: {e}")
@@ -134,7 +139,7 @@ def memory_dump():
                     free_space = psutil.disk_usage(".").free
                     if free_space < required_space:
                         log.error(f"Not enough disk space. Need {required_space / 1024 / 1024:.2f}MB")
-                    return
+                        return
 
                 # Check if the memory region is readable ('r' permission)
                 if 'r' in mem_region.perms:
@@ -161,9 +166,7 @@ def memory_dump():
                         if mem_region.path:
                             # Try to get device and inode-like info
                             file_path = mem_region.path
-                            # file_device = win32api.GetFileAttributes(file_path) if os.path.exists(file_path) else 'N/A'
                             region_metadata['   File Path'] = file_path
-                            # region_metadata['File Device'] = file_device
 
                     except Exception as e:
                         log.error(f"Error adding extra file information: {str(e)}")

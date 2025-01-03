@@ -79,7 +79,10 @@ if __name__ == "__main__":
 
     for log_type_main, output_file_main in threads_items:
         thread = threading.Thread(target=parse_event_logs, args=(log_type_main, output_file_main))
+        thread.daemon = True  # Don't hang if main thread exits
         threads.append(thread)
         thread.start()
     for thread in threads:
-        thread.join()
+        thread.join(timeout=600)  # Wait max 10 minutes per thread
+        if thread.is_alive():
+            log.error(f"Thread for {thread.name} timed out (10 minutes)!")
