@@ -248,12 +248,12 @@ def packet_sniffer():
     if packet_count <= 0 or timeout <= 0:
         try:
             log.error(
-                f"Oops! Can't work with these values:\n"
+                "Oops! Can't work with these values:\n"
                 f"- Packet count: {packet_count} {'❌ (must be > 0)' if packet_count <= 0 else '✅'}\n"
                 f"- Timeout: {timeout} {'❌ (must be > 0)' if timeout <= 0 else '✅'}"
             )
         except Exception:
-            log.error(f"Error reading configuration: Improper values for packet count or timeout")
+            log.error("Error reading configuration: Improper values for packet count or timeout")
         exit(1)
 
     try:
@@ -263,8 +263,11 @@ def packet_sniffer():
         if interface == "WiFi" or interface == "Wi-Fi":
             log.warning("Attempting to correct the interface name...")
             interface = "Wi-Fi" if interface == "WiFi" else "WiFi"
-            log.info(f"Interface name corrected to '{interface}'.")
-            start_sniffing(interface, packet_count, timeout)
+            log.info(f"Interface name auto-corrected to '{interface}', retrying packet sniffing...")
+            try:
+                start_sniffing(interface, packet_count, timeout)
+            except Exception as err:
+                log.error(f"Error sniffing packets on auto-corrected interface '{interface}': {err}")
 
 
 # Entry point of the script

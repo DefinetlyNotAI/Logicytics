@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 import logging
 import os
+import time
 from datetime import datetime
 from typing import Type
 
@@ -119,7 +120,7 @@ class Log:
 
     def __internal(self, message):
         """
-        Logs an internal message.
+        Logs an internal message. Internal messages are displayed in the console only.
 
         :param message: The internal message to be logged.
         """
@@ -138,6 +139,8 @@ class Log:
     def raw(self, message):
         """
         Logs a raw message directly to the log file.
+        This should only be called from within the Log class.
+        So do not use this method in your code.
 
         :param message: The raw message to be logged.
         """
@@ -150,7 +153,7 @@ class Log:
             try:
                 with open(self.filename, "a", encoding="utf-8") as f:
                     f.write(f"{str(message)}\n")
-            except UnicodeDecodeError or UnicodeEncodeError as UDE:
+            except (UnicodeDecodeError, UnicodeEncodeError) as UDE:
                 self.__internal(
                     f"UnicodeDecodeError: {UDE} - Message: {str(message)}"
                 )
@@ -221,7 +224,7 @@ class Log:
         :param type: The type of the log message.
         """
         if self.color and message != "None" and message is not None:
-            type_map = {"err": "error", "warn": "warning", "crit": "critical"}
+            type_map = {"err": "error", "warn": "warning", "crit": "critical", "except": "exception"}
             type = type_map.get(type.lower(), type)
             try:
                 getattr(self, type.lower())(str(message))
@@ -245,9 +248,11 @@ class Log:
             )
         raise exception_type(message)
 
-    def parse_execution(self, message_log: list[list[str]]):
+    def parse_execution(self, message_log: list[list[str, str]]):
         """
         Parses and logs a list of messages with their corresponding log types.
+        Only use this method if you have a list of lists where each inner list contains a message and its log type.
+        Use case include "Execute.script()" function.
 
         :param message_log: A list of lists, where each inner list contains a message and its log type.
         """
@@ -255,10 +260,15 @@ class Log:
             for message_list in message_log:
                 if len(message_list) == 2:
                     self.string(message_list[0], message_list[1])
+                else:
+                    self.__internal(
+                        f"Message List is not in the correct format: {message_list}"
+                    )
 
     def function(self, func: callable):
         """
-        A decorator that logs the execution of a function, including its start time, end time, and elapsed time.
+        A decorator that logs the execution of a function,
+        including its start time, end time, and elapsed time.
 
         :param func: The function to be decorated.
         :return: The wrapper function.
@@ -275,12 +285,12 @@ class Log:
             """
             if not callable(func):
                 self.exception(f"Function {func.__name__} is not callable.", TypeError)
-            start_time = datetime.now()
+            start_time = time.perf_counter()
             self.debug(f"Running the function {func.__name__}().")
             result = func(*args, **kwargs)
-            end_time = datetime.now()
+            end_time = time.perf_counter()
             elapsed_time = end_time - start_time
-            self.debug(f"Function {func.__name__}() executed in {elapsed_time}.")
+            self.debug(f"Function {func.__name__}() executed in {elapsed_time:.6f} seconds.")
             return result
 
         return wrapper

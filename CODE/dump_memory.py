@@ -9,6 +9,14 @@ from logicytics import Log, DEBUG
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
+# TODO v3.3.1
+#  psutil.virtual_memory(): used, free, percent, total
+#  psutil.swap_memory(): used, free, percent, total
+
+# If the file size exceeds this limit, the file will be truncated with a message
+# Put 0 to disable the limit
+LIMIT_FILE_SIZE = 20  # Always in MiB
+
 
 # Capture RAM Snapshot
 def capture_ram_snapshot():
@@ -23,6 +31,7 @@ def capture_ram_snapshot():
             file.write(f"Total Swap: {swap.total / (1024 ** 3):.2f} GB\n")
             file.write(f"Used Swap: {swap.used / (1024 ** 3):.2f} GB\n")
             file.write(f"Free Swap: {swap.free / (1024 ** 3):.2f} GB\n")
+            file.write(f"Percent RAM Used: {memory.percent:.2f}%\n")
         except Exception as e:
             log.error(f"Error writing RAM snapshot: {e}")
             file.write("Error writing RAM snapshot.")
@@ -56,6 +65,7 @@ def memory_dump():
     try:
         process = psutil.Process(pid)
         with open("Ram_Dump.txt", "wb") as dump_file:
+            total_size = 0
             for mem_region in process.memory_maps(grouped=False):
                 # Check if the memory region is readable ('r' permission)
                 if 'r' in mem_region.perms:
@@ -91,10 +101,15 @@ def memory_dump():
 
                     # Write the metadata to the dump file
                     try:
-                        dump_file.write(f"Memory Region Metadata:\n".encode())
-                        for key, value in region_metadata.items():
-                            dump_file.write(f"{key}: {value}\n".encode())
-                        dump_file.write(b"\n")
+                        metadata_str = "Memory Region Metadata:\n" + "\n".join(
+                            f"{key}: {value}" for key, value in region_metadata.items()) + "\n\n"
+                        metadata_bytes = metadata_str.encode()
+                        if total_size + len(metadata_bytes) > LIMIT_FILE_SIZE * 1024 * 1024 and LIMIT_FILE_SIZE != 0:
+                            dump_file.write(f"Truncated due to file exceeding {LIMIT_FILE_SIZE}\n"
+                                            "Additional memory regions not included.\n".encode())
+                            break
+                        dump_file.write(metadata_bytes)
+                        total_size += len(metadata_bytes)
                     except Exception as e:
                         log.error(f"Error writing memory region metadata: {str(e)}")
     except psutil.Error as e:

@@ -1,7 +1,6 @@
 import os
 import shutil
 import threading
-from os import mkdir
 
 import wmi  # Import the wmi library
 
@@ -51,6 +50,8 @@ def parse_event_logs(log_type: str, output_file: str):
                 f.write(str(event_data) + '\n\n')
 
         log.info(f"{log_type} events (Windows Events) have been written to {output_file}")
+    except wmi.x_wmi as err:
+        log.error(f"Error opening or reading the event log: {err}")
     except Exception as err:
         log.error(f"Fatal issue: {err}")
 
@@ -59,7 +60,7 @@ if __name__ == "__main__":
     try:
         if os.path.exists('event_logs'):
             shutil.rmtree('event_logs')
-        mkdir('event_logs')
+        os.mkdir('event_logs')
     except Exception as e:
         log.error(f"Fatal issue: {e}")
         exit(1)

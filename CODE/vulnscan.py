@@ -170,7 +170,7 @@ if __name__ == "__main__":
     ]
 
     for base_path in base_paths:
-        for root, dirs, files_main in os.walk(base_path):
+        for root, _, files_main in os.walk(base_path):
             for file_main in files_main:
                 paths.append(os.path.join(root, file_main))
 
