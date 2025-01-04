@@ -48,7 +48,10 @@ def MOD_EXAMPLE() -> None:
     pass  # Your code here with proper logging like the above log options
 
 
-MOD_EXAMPLE()
+# Not a must, but it is recommended to call your function at the end of the file using the following code
+# This is to ensure that the function is called only when directly executed and not when imported
+if __name__ == "__main__":
+    MOD_EXAMPLE()
 
 # Always remember to call your function at the end of the file and then leave a new line
 # This is to ensure that the function is called and the file is not empty

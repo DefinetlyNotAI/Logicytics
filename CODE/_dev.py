@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import configobj
 import subprocess
+
+import configobj
 
 from logicytics import Log, DEBUG, Get, FileManagement, CURRENT_FILES, VERSION
 
@@ -39,15 +40,26 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
 
 def _prompt_user(question: str, file_to_open: str = None, special: bool = False) -> bool:
     """
-        Prompts the user with a question and optionally opens a file if the answer is not 'yes'.
-        Args:
-            question (str): The question to ask the user.
-            file_to_open (str, optional): The file to open if the user doesn't answer 'yes'.
-        Returns:
-            bool: True if the user's answer is 'yes', otherwise False.
-        """
+    Prompts the user with a yes/no question and optionally opens a file.
+    
+    Parameters:
+        question (str): The question to be presented to the user.
+        file_to_open (str, optional): Path to a file that will be opened if the user does not respond affirmatively.
+        special (bool, optional): Flag to suppress the default reminder message when the user responds negatively.
+    
+    Returns:
+        bool: True if the user responds with 'yes' or 'Y', False otherwise.
+    
+    Raises:
+        Exception: Logs any unexpected errors during user interaction.
+    
+    Notes:
+        - Uses subprocess to open files on Windows systems
+        - Case-insensitive input handling for 'yes' responses
+        - Provides optional file opening and reminder messaging
+    """
     try:
-        answer = input(question + " (yes or no):- ")
+        answer = input(question + " (Y)es or (N)o:- ")
         if not (answer.lower() == "yes" or answer.lower() == "y"):
             if file_to_open:
                 subprocess.run(["start", file_to_open], shell=True)
@@ -61,11 +73,35 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
         log_dev.error(e)
 
 
+@log_dev.function
 def dev_checks() -> None:
     """
-        Performs a series of checks to ensure that the developer has followed the required guidelines and best practices.
-        Returns:
-            bool: True if all checks pass, otherwise False.
+    Performs comprehensive developer checks to ensure code quality and project guidelines compliance.
+    
+    This function guides developers through a series of predefined checks, validates file additions, 
+    and updates project configuration. It performs the following key steps:
+    - Verify adherence to contributing guidelines
+    - Check file naming conventions
+    - Validate file placement
+    - Confirm docstring and comment coverage
+    - Assess feature modularity
+    - Categorize and display file changes
+    - Update project configuration file
+    
+    Raises:
+        None: Returns None if any check fails or an error occurs during the process.
+    
+    Side Effects:
+        - Creates necessary directories
+        - Prompts user for multiple confirmations
+        - Prints file change lists with color coding
+        - Updates configuration file with current files and version
+        - Logs warnings or errors during the process
+    
+    Example:
+        Typical usage is during project development to ensure consistent practices:
+        >>> dev_checks()
+        # Interactively guides developer through project checks
     """
     # Create the necessary directories if they do not exist
     FileManagement.mkdir()
@@ -87,20 +123,21 @@ def dev_checks() -> None:
                 return None
 
         # Get the list of files in the current directory
-        files = Get.list_of_files(".", True)
+        EXCLUDE_FILES = ["logicytics\\User_History.json.gz", "logicytics\\User_History.json"]
+        files = Get.list_of_files(".", True, exclude_files=EXCLUDE_FILES)
         added_files, removed_files, normal_files = [], [], []
         clean_files_list = [file.replace('"', '') for file in CURRENT_FILES]
 
         for f in files:
             clean_f = f.replace('"', '')
-            if clean_f in clean_files_list:
+            if clean_f in clean_files_list and clean_f not in EXCLUDE_FILES:
                 normal_files.append(clean_f)
-            else:
+            elif clean_f not in EXCLUDE_FILES:
                 added_files.append(clean_f)
 
         for f in clean_files_list:
             clean_f = f.replace('"', '')
-            if clean_f not in files:
+            if clean_f not in files and clean_f not in EXCLUDE_FILES:
                 removed_files.append(clean_f)
 
         # Print the list of added, removed, and normal files in color
@@ -124,9 +161,10 @@ def dev_checks() -> None:
         print("\nGreat Job! Please tick the box in the GitHub PR request for completing steps in --dev")
     except Exception as e:
         # Log any exceptions that occur during the process
-        log_dev.exception(str(e))
+        log_dev.error(f"An error occurred: {e}")
 
 
-dev_checks()
-# Wait for the user to press Enter to exit the program
-input("\nPress Enter to exit the program... ")
+if __name__ == "__main__":
+    dev_checks()
+    # Wait for the user to press Enter to exit the program
+    input("\nPress Enter to exit the program... ")

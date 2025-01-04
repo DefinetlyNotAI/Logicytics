@@ -46,4 +46,5 @@ def ssh_miner():
     log.info("SSH Miner completed.")
 
 
-ssh_miner()
+if __name__ == "__main__":
+    ssh_miner()

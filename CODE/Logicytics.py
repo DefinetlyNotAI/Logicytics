@@ -3,8 +3,8 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
-import threading
 import zipfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import Any
 
@@ -75,35 +75,42 @@ class Health:
 
 def get_flags():
     """
-    Retrieves the command-line flags and sub-actions.
-
-    This function checks if the flags are provided as a tuple. If so, it attempts to unpack
-    the tuple into ACTION and SUB_ACTION. If an exception occurs, it sets SUB_ACTION to None.
-    If the flags are not a tuple, it prints the help message and exits the program.
-
+    Retrieves action and sub-action flags from the Flag module and sets global variables.
+    
+    This function extracts the current action and sub-action from the Flag module, setting global
+    ACTION and SUB_ACTION variables. It logs the retrieved values for debugging and tracing purposes.
+    
+    No parameters.
+    
+    Side effects:
+        - Sets global variables ACTION and SUB_ACTION
+        - Logs debug information about current action and sub-action
     """
     global ACTION, SUB_ACTION
-    if isinstance(Flag.data(), tuple):
-        try:
-            # Get flags
-            ACTION, SUB_ACTION = Flag.data()
-        except ValueError:
-            actions = Flag.data()
-            ACTION = actions[0]
-            SUB_ACTION = None
-    else:
-        parser = Flag.data()
-        parser.print_help()
-        input("Press Enter to exit...")
-        exit(1)
+    # Get flags_list
+    ACTION, SUB_ACTION = Flag.data()
+    log.debug(f"Action: {ACTION}")
+    log.debug(f"Sub-Action: {SUB_ACTION}")
 
 
 def special_execute(file_path: str):
     """
-    Executes a Python script in a new command prompt window.
-
-    Args:
-        file_path (str): The relative path to the Python script to be executed.
+    Execute a Python script in a new command prompt window.
+    
+    This function launches the specified Python script in a separate command prompt window, waits for its completion, and then exits the current process.
+    
+    Parameters:
+        file_path (str): The relative path to the Python script to be executed, 
+                         which will be resolved relative to the current script's directory.
+    
+    Side Effects:
+        - Opens a new command prompt window
+        - Runs the specified Python script
+        - Terminates the current process after script execution
+    
+    Raises:
+        FileNotFoundError: If the specified script path does not exist
+        subprocess.SubprocessError: If there are issues launching the subprocess
     """
     sr_current_dir = os.path.dirname(os.path.abspath(__file__))
     sr_script_path = os.path.join(sr_current_dir, file_path)
@@ -114,12 +121,23 @@ def special_execute(file_path: str):
 
 def handle_special_actions():
     """
-    Handles special actions based on the provided action flag.
-
-    This function checks the value of the `action` variable and performs
-    corresponding special actions such as opening debug, developer, or extra
-    tools menus, updating the repository, restoring backups, creating backups,
-    or unzipping extra files.
+    Handles special actions based on the current action flag.
+    
+    This function performs specific actions depending on the global `ACTION` variable:
+    - For "debug": Opens the debug menu by executing '_debug.py'
+    - For "dev": Opens the developer menu by executing '_dev.py'
+    - For "update": Updates the repository using Health.update() method
+    - For "restore": Displays a warning and opens the backup location
+    - For "backup": Creates backups of the CODE and MODS directories
+    
+    Side Effects:
+        - Logs informational, debug, warning, or error messages
+        - May execute external Python scripts
+        - May open file locations
+        - May terminate the program after completing special actions
+    
+    Raises:
+        SystemExit: Exits the program after completing certain special actions
     """
     # Special actions -> Quit
     if ACTION == "debug":
@@ -134,14 +152,6 @@ def handle_special_actions():
     if ACTION == "dev":
         log.info("Opening developer menu...")
         special_execute("_dev.py")
-
-    # Deprecated, remove in v3.3.0
-    if ACTION == "extra":
-        print("\033[91mDeprecationWarning: The `extra` feature has been removed! 🚫\n"
-              "Why? It didn't match our code quality standards.\n"
-              "What to use instead? Check out our new features with --help\033[0m")
-        input("Press Enter to exit...")
-        exit(0)
 
     if ACTION == "update":
         log.info("Updating...")
@@ -173,22 +183,22 @@ def handle_special_actions():
         input("Press Enter to exit...")
         exit(0)
 
-    # Deprecated, remove in v3.3.0
-    if ACTION == "unzip_extra":
-        print("\033[91mDeprecationWarning: The `unzip_extra` feature has been removed! 🚫\n"
-              "Why? It didn't match our code quality standards.\n"
-              "What to use instead? Check out our new features with --help\033[0m")
-        input("Press Enter to exit...")
-        exit(0)
-
 
 def check_privileges():
     """
     Checks if the script is running with administrative privileges and handles UAC (User Account Control) settings.
-
+    
     This function verifies if the script has admin privileges. If not, it either logs a warning (in debug mode) or
     prompts the user to run the script with admin privileges and exits. It also checks if UAC is enabled and logs
     warnings accordingly.
+    
+    Raises:
+        SystemExit: If the script is not running with admin privileges and not in debug mode.
+    
+    Notes:
+        - Requires the `Check` module with `admin()` and `uac()` methods
+        - Depends on global `DEBUG` configuration variable
+        - Logs warnings or critical messages based on privilege and UAC status
     """
     if not Check.admin():
         if DEBUG == "DEBUG":
@@ -205,16 +215,33 @@ def check_privileges():
 
 def generate_execution_list() -> list | list[str] | list[str | Any]:
     """
-    Creates an execution list based on the provided action.
-
+    Generate an execution list of scripts based on the specified action.
+    
+    This function dynamically creates a list of scripts to be executed by filtering and selecting
+    scripts based on the global ACTION variable. It supports different execution modes:
+    - 'minimal': A predefined set of lightweight scripts
+    - 'nopy': PowerShell and script-based scripts without Python
+    - 'modded': Includes scripts from the MODS directory
+    - 'depth': Comprehensive script execution with data mining and logging scripts
+    - 'vulnscan_ai': Vulnerability scanning script only
+    
     Returns:
-        list: The execution list of scripts to be executed.
+        list[str]: A list of script file paths to be executed, filtered and modified based on the current action.
+    
+    Raises:
+        ValueError: Implicitly if a script file cannot be removed from the initial list.
+    
+    Notes:
+        - Removes sensitive or unnecessary scripts from the initial file list
+        - Logs the final execution list for debugging purposes
+        - Warns users about potential long execution times for certain actions
     """
     execution_list = Get.list_of_files(".", extensions=(".py", ".exe", ".ps1", ".bat"))
     execution_list.remove("sensitive_data_miner.py")
     execution_list.remove("dir_list.py")
     execution_list.remove("tree.ps1")
     execution_list.remove("vulnscan.py")
+    execution_list.remove("event_log.py")
 
     if ACTION == "minimal":
         execution_list = [
@@ -248,6 +275,7 @@ def generate_execution_list() -> list | list[str] | list[str | Any]:
         execution_list.append("sensitive_data_miner.py")
         execution_list.append("dir_list.py")
         execution_list.append("tree.ps1")
+        execution_list.append("event_log.py")
         log.warning("This flag will use threading!")
 
     if ACTION == "vulnscan_ai":
@@ -262,34 +290,42 @@ def execute_scripts():
     """Executes the scripts in the execution list based on the action."""
     # Check weather to use threading or not, as well as execute code
     log.info("Starting Logicytics...")
+
     if ACTION == "threaded" or ACTION == "depth":
-        def threaded_execution(execution_list_thread, index_thread):
-            log.debug(f"Thread {index_thread} started")
+
+        def execute_single_script(script: str) -> tuple[str, Exception | None]:
+            """
+            Executes a single script and logs the result.
+
+            This function executes a single script and logs the result,
+            capturing any exceptions that occur during execution
+
+            Parameters:
+                script (str): The path to the script to be executed
+            """
+            log.debug(f"Executing {script}")
             try:
-                log.parse_execution(Execute.script(execution_list_thread[index_thread]))
-                log.info(f"{execution_list_thread[index_thread]} executed")
-            except UnicodeDecodeError as err:
-                log.error(f"Error in thread: {err}")
+                log.parse_execution(Execute.script(script))
+                log.info(f"{script} executed")
+                return script, None
             except Exception as err:
-                log.error(f"Error in thread: {err}")
-            log.debug(f"Thread {index_thread} finished")
+                log.error(f"Error executing {script}: {err}")
+                return script, err
 
         log.debug("Using threading")
-        threads = []
         execution_list = generate_execution_list()
-        for index, _ in enumerate(execution_list):
-            thread = threading.Thread(
-                target=threaded_execution,
-                args=(
-                    execution_list,
-                    index,
-                ),
-            )
-            threads.append(thread)
-            thread.start()
+        with ThreadPoolExecutor() as executor:
+            futures = {executor.submit(execute_single_script, script): script
+                       for script in execution_list}
 
-        for thread in threads:
-            thread.join()
+            for future in as_completed(futures):
+                script = futures[future]
+                result, error = future.result()
+                if error:
+                    log.error(f"Failed to execute {script}")
+                else:
+                    log.debug(f"Completed {script}")
+
     elif ACTION == "performance_check":
         execution_times = []
         execution_list = generate_execution_list()
@@ -367,8 +403,23 @@ def handle_sub_action():
     # log.warning("This feature is not implemented yet! Sorry")
 
 
-if __name__ == "__main__":
-    # Get flags and configs
+@log.function
+def Logicytics():
+    """
+    Orchestrates the complete Logicytics workflow, managing script execution, system actions, and user interactions.
+    
+    This function serves as the primary entry point for the Logicytics utility, coordinating a series of system-level operations:
+    - Retrieves command-line configuration flags
+    - Processes special actions
+    - Verifies system privileges
+    - Executes targeted scripts
+    - Compresses generated output files
+    - Handles final system sub-actions
+    - Provides a graceful exit mechanism
+    
+    Performs actions sequentially without returning a value, designed to be the main execution flow of the Logicytics utility.
+    """
+    # Get flags_list and configs
     get_flags()
     # Check for special actions
     handle_special_actions()
@@ -382,6 +433,10 @@ if __name__ == "__main__":
     handle_sub_action()
     # Finish
     input("Press Enter to exit...")
+
+
+if __name__ == "__main__":
+    Logicytics()
 else:
     log.error("This script cannot be imported!")
     exit(1)

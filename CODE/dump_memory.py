@@ -1,218 +1,220 @@
-import datetime
-import platform
-import ctypes
 import os
+import platform
+import struct
+from datetime import datetime
+
 import psutil
+
 from logicytics import Log, DEBUG
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
-    # Constants
-    PROCESS_QUERY_INFORMATION = 0x0400
-    PROCESS_VM_READ = 0x0010
-    MEM_COMMIT = 0x1000
-    PAGE_READWRITE = 0x04
+
+# TODO v3.3.1
+#  psutil.virtual_memory(): used, free, percent, total
+#  psutil.swap_memory(): used, free, percent, total
+
+# If the file size exceeds this limit, the file will be truncated with a message
+# Put 0 to disable the limit
+# TODO v3.3.1: Make this take from config.ini
+LIMIT_FILE_SIZE = 20  # Always in MiB
 
 
-# Function to save RAM content snapshot to a file
-@log.function
-def dump_ram_content():
+# Capture RAM Snapshot
+def capture_ram_snapshot():
     """
-    Capture the current state of the system's RAM and write it to a file.
-
-    This function gathers memory statistics, system-specific details, and writes
-    the information to a file named 'Ram_Snapshot.txt'.
+    Captures and logs the current system memory statistics to a file.
+    
+    Retrieves detailed information about RAM and swap memory usage using psutil.
+    Writes memory statistics in gigabytes to 'Ram_Snapshot.txt', including:
+    - Total RAM
+    - Used RAM
+    - Available RAM
+    - Total Swap memory
+    - Used Swap memory
+    - Free Swap memory
+    - Percentage of RAM used
+    
+    Logs the process and handles potential file writing errors.
+    
+    Raises:
+        IOError: If unable to write to the output file
+        Exception: For any unexpected errors during memory snapshot capture
     """
-    try:
-        # Generate a timestamp for the file
-        dump_file = "Ram_Snapshot.txt"
-
-        # Gather memory statistics using psutil
-        memory_info = psutil.virtual_memory()
-        swap_info = psutil.swap_memory()
-
-        # Get system-specific details
-        system_info = (
-            "System Information:\n"
-            "===================================\n"
-            f"OS: {platform.system()} {platform.release()}\n"
-            f"Architecture: {platform.architecture()[0]}\n"
-            f"Processor: {platform.processor()}\n"
-            f"Machine: {platform.machine()}\n\n"
-        )
-
-        # Prepare content to dump
-        dump_content = (
-            f"RAM Snapshot - {datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}\n"
-            "===================================\n"
-            f"{system_info}"
-            f"Total Memory: {memory_info.total / (1024 ** 3):.2f} GB\n"
-            f"Available Memory: {memory_info.available / (1024 ** 3):.2f} GB\n"
-            f"Used Memory: {memory_info.used / (1024 ** 3):.2f} GB\n"
-            f"Memory Usage: {memory_info.percent}%\n\n"
-            f"Swap Total: {swap_info.total / (1024 ** 3):.2f} GB\n"
-            f"Swap Used: {swap_info.used / (1024 ** 3):.2f} GB\n"
-            f"Swap Free: {swap_info.free / (1024 ** 3):.2f} GB\n"
-            f"Swap Usage: {swap_info.percent}%\n"
-        )
-
-        # Write the content to the file
-        with open(dump_file, "w", encoding="utf-8") as file:
-            file.write(dump_content)
-
-        log.info(f"RAM snapshot saved to: {dump_file}")
-
-    except Exception as e:
-        log.error(f"Error capturing RAM snapshot: {e}")
+    log.info("Capturing RAM Snapshot...")
+    memory = psutil.virtual_memory()
+    swap = psutil.swap_memory()
+    with open("Ram_Snapshot.txt", "w") as file:
+        try:
+            file.write(f"Total RAM: {memory.total / (1024 ** 3):.2f} GB\n")
+            file.write(f"Used RAM: {memory.used / (1024 ** 3):.2f} GB\n")
+            file.write(f"Available RAM: {memory.available / (1024 ** 3):.2f} GB\n")
+            file.write(f"Total Swap: {swap.total / (1024 ** 3):.2f} GB\n")
+            file.write(f"Used Swap: {swap.used / (1024 ** 3):.2f} GB\n")
+            file.write(f"Free Swap: {swap.free / (1024 ** 3):.2f} GB\n")
+            file.write(f"Percent RAM Used: {memory.percent:.2f}%\n")
+        except Exception as e:
+            log.error(f"Error writing RAM snapshot: {e}")
+            file.write("Error writing RAM snapshot.")
+    log.info("RAM Snapshot saved to Ram_Snapshot.txt")
 
 
-# Define structures for SystemInfo
-class SystemInfo(ctypes.Structure):
-    # noinspection PyUnresolvedReferences
+# Gather system information
+def gather_system_info():
     """
-        A ctypes Structure to hold system information.
-
-        Attributes:
-            wProcessorArchitecture (ctypes.c_ushort): Processor architecture.
-            wReserved (ctypes.c_ushort): Reserved.
-            dwPageSize (ctypes.c_ulong): Page size.
-            lpMinimumApplicationAddress (ctypes.c_void_p): Minimum application address.
-            lpMaximumApplicationAddress (ctypes.c_void_p): Maximum application address.
-            dwActiveProcessorMask (ctypes.POINTER(ctypes.c_ulong)): Active processor mask.
-            dwNumberOfProcessors (ctypes.c_ulong): Number of processors.
-            dwProcessorType (ctypes.c_ulong): Processor type.
-            dwAllocationGranularity (ctypes.c_ulong): Allocation granularity.
-            wProcessorLevel (ctypes.c_ushort): Processor level.
-            wProcessorRevision (ctypes.c_ushort): Processor revision.
-    """
-    _fields_ = [
-        ("wProcessorArchitecture", ctypes.c_ushort),
-        ("wReserved", ctypes.c_ushort),
-        ("dwPageSize", ctypes.c_ulong),
-        ("lpMinimumApplicationAddress", ctypes.c_void_p),
-        ("lpMaximumApplicationAddress", ctypes.c_void_p),
-        ("dwActiveProcessorMask", ctypes.POINTER(ctypes.c_ulong)),
-        ("dwNumberOfProcessors", ctypes.c_ulong),
-        ("dwProcessorType", ctypes.c_ulong),
-        ("dwAllocationGranularity", ctypes.c_ulong),
-        ("wProcessorLevel", ctypes.c_ushort),
-        ("wProcessorRevision", ctypes.c_ushort),
-    ]
-
-
-# Define BasicMemInfo
-class BasicMemInfo(ctypes.Structure):
-    # noinspection PyUnresolvedReferences
-    """
-        A ctypes Structure to hold basic memory information.
-
-        Attributes:
-            BaseAddress (ctypes.c_void_p): Base address.
-            AllocationBase (ctypes.c_void_p): Allocation base.
-            AllocationProtect (ctypes.c_ulong): Allocation protection.
-            RegionSize (ctypes.c_size_t): Region size.
-            State (ctypes.c_ulong): State.
-            Protect (ctypes.c_ulong): Protection.
-            Type (ctypes.c_ulong): Type.
-    """
-    _fields_ = [
-        ("BaseAddress", ctypes.c_void_p),
-        ("AllocationBase", ctypes.c_void_p),
-        ("AllocationProtect", ctypes.c_ulong),
-        ("RegionSize", ctypes.c_size_t),
-        ("State", ctypes.c_ulong),
-        ("Protect", ctypes.c_ulong),
-        ("Type", ctypes.c_ulong),
-    ]
-
-
-@log.function
-def get_system_info() -> SystemInfo:
-    """
-    Retrieve and return system information using the `GetSystemInfo` function from the Windows API.
-
+    Gather and log detailed system information to a text file.
+    
+    This function collects system-specific details including architecture, 
+    operating system, machine type, processor information, and page size. 
+    The information is written to 'SystemRam_Info.txt' and logged for tracking.
+    
     Returns:
-        SystemInfo: A `SystemInfo` structure containing details about the system's architecture,
-                    processor, memory, and other attributes.
+        None: Writes system information directly to a file.
+    
+    Raises:
+        Exception: Logs and handles any errors encountered during system 
+        information retrieval, ensuring graceful error reporting.
+    
+    Side Effects:
+        - Creates/overwrites 'SystemRam_Info.txt' with system details
+        - Logs information gathering process and potential errors
     """
-    system_info = SystemInfo()
-    ctypes.windll.kernel32.GetSystemInfo(ctypes.byref(system_info))
-    return system_info
+    log.info("Gathering system information...")
+    try:
+        sys_info = {
+            'Architecture': platform.architecture(),
+            'System': platform.system(),
+            'Machine': platform.machine(),
+            'Processor': platform.processor(),
+            'Page Size (bytes)': struct.calcsize("P"),
+            'CPU Count': psutil.cpu_count(),
+            'CPU Frequency': psutil.cpu_freq().current if psutil.cpu_freq() else 'N/A',
+            'Boot Time': datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S'),
+        }
+    except Exception as e:
+        log.error(f"Error gathering system information: {e}")
+        sys_info = {'Error': 'Failed to gather system information'}
+    with open("SystemRam_Info.txt", "w") as file:
+        for key, value in sys_info.items():
+            file.write(f"{key}: {value}\n")
+    log.info("System Information saved to SystemRam_Info.txt")
 
 
+# Memory Dump (Windows-specific, using psutil)
+def memory_dump():
+    """
+    Perform a memory dump of the current process, capturing detailed metadata for each readable memory region.
+    
+    This function scans the memory regions of the current process and logs their metadata to 'Ram_Dump.txt'. 
+    It captures information such as start and end addresses, resident set size (RSS), permissions, 
+    associated file paths, and other region-specific details.
+    
+    Key Features:
+    - Retrieves memory map for the current process
+    - Filters and logs only readable memory regions
+    - Captures metadata for each memory region
+    - Supports file size limitation via LIMIT_FILE_SIZE constant
+    - Handles potential errors during memory scanning and file writing
+    
+    Notes:
+    - Writes metadata to 'Ram_Dump.txt' in the current working directory
+    - Truncates output if file size exceeds LIMIT_FILE_SIZE (if set)
+    - Logs errors encountered during the memory dump process
+    
+    Raises:
+        psutil.Error: If there are issues accessing process memory
+        Exception: For any unexpected errors during memory scanning
+    """
+    log.info("Creating basic memory dump scan...")
+    pid = os.getpid()
+
+    try:
+        process = psutil.Process(pid)
+        with open("Ram_Dump.txt", "wb") as dump_file:
+            total_size = 0
+            for mem_region in process.memory_maps(grouped=False):
+                # Check available disk space
+                if os.path.exists("Ram_Dump.txt"):
+                    required_space = LIMIT_FILE_SIZE * 1024 * 1024 * 1.5  # 2x safety margin
+                    free_space = psutil.disk_usage(".").free
+                    if free_space < required_space:
+                        log.error(f"Not enough disk space. Need {required_space / 1024 / 1024:.2f}MB")
+                        return
+
+                # Check if the memory region is readable ('r' permission)
+                if 'r' in mem_region.perms:
+                    # Extract start and end addresses from the memory region string
+                    if '-' in mem_region.addr:
+                        start, end = [int(addr, 16) for addr in mem_region.addr.split('-')]
+                    else:
+                        start = int(mem_region.addr, 16)
+                        end = start + mem_region.rss
+
+                    # Gather memory region metadata
+                    region_metadata = {
+                        '   Start Address': hex(start),
+                        '   End Address': hex(end),
+                        '   RSS (bytes)': mem_region.rss,  # Using rss as size
+                        '   Permissions': mem_region.perms,
+                        '   Path': mem_region.path,  # Path is often available for shared memory regions
+                        '   Index': mem_region.index,
+                    }
+
+                    # Try getting more detailed memory information
+                    try:
+                        # Check if the memory region corresponds to a file and add file metadata
+                        if mem_region.path:
+                            # Try to get device and inode-like info
+                            file_path = mem_region.path
+                            region_metadata['   File Path'] = file_path
+
+                    except Exception as e:
+                        log.error(f"Error adding extra file information: {str(e)}")
+
+                    # Write the metadata to the dump file
+                    try:
+                        metadata_str = "Memory Region Metadata:\n" + "\n".join(
+                            f"{key}: {value}" for key, value in region_metadata.items()) + "\n\n"
+                        metadata_bytes = metadata_str.encode()
+                        if total_size + len(metadata_bytes) > LIMIT_FILE_SIZE * 1024 * 1024 and LIMIT_FILE_SIZE != 0:
+                            dump_file.write(f"Truncated due to file exceeding {LIMIT_FILE_SIZE}\n"
+                                            "Additional memory regions not included.\n".encode())
+                            break
+                        dump_file.write(metadata_bytes)
+                        total_size += len(metadata_bytes)
+                    except Exception as e:
+                        log.error(f"Error writing memory region metadata: {str(e)}")
+
+    except psutil.Error as e:
+        log.error(f"Error opening process memory: {str(e)}")
+    except Exception as e:
+        log.error(f"Error creating memory scan: {str(e)}")
+
+    log.info("Memory scan saved to Ram_Dump.txt")
+
+
+# Main function to run all tasks
 @log.function
-def read_memory():
+def main():
     """
-    Read the memory of the current process and write the content to a file.
-
-    This function opens the current process with the necessary permissions,
-    retrieves system information, and iterates through memory pages to read
+    Orchestrates the execution of system memory collection tasks.
+    
+    This function performs three primary operations:
+    1. Captures a snapshot of current RAM and swap memory statistics
+    2. Gathers detailed system information
+    3. Creates a memory dump of the current process
+    
+    The tasks are executed sequentially, with logging to track the start and completion of the entire process.
+    
+    No parameters.
+    No return value.
     """
-    # Open current process with permissions
-    process = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, os.getpid())
-    if not process:
-        log.error("Unable to open process for reading.")
-        return
-
-    # Get system info
-    system_info = get_system_info()
-    min_address = system_info.lpMinimumApplicationAddress
-    max_address = system_info.lpMaximumApplicationAddress
-    with open("SystemRam_Info.txt", "w") as sys_file:
-        sys_file.write("System Information:\n")
-        sys_file.write("===================================\n")
-        sys_file.write(f"Minimum Address: {min_address}\n")
-        sys_file.write(f"Maximum Address: {max_address}\n")
-        sys_file.write(f"Allocation Granularity: {system_info.dwAllocationGranularity}\n")
-        sys_file.write(f"Processor Architecture: {system_info.wProcessorArchitecture}\n")
-        sys_file.write(f"Number of Processors: {system_info.dwNumberOfProcessors}\n")
-        sys_file.write(f"Processor Type: {system_info.dwProcessorType}\n")
-        sys_file.write(f"Processor Level: {system_info.wProcessorLevel}\n")
-        sys_file.write(f"Processor Revision: {system_info.wProcessorRevision}\n")
-        sys_file.write(f"Page Size: {system_info.dwPageSize}\n")
-        sys_file.write(f"Active Processor Mask: {system_info.dwActiveProcessorMask.contents}\n")
-        sys_file.write(f"Reserved: {system_info.wReserved}\n")
-        sys_file.write("===================================\n")
-        sys_file.write(f"Raw SystemInfo: {system_info}\n")
-        sys_file.write("===================================\n")
-    log.debug(f"Memory Range: {min_address:#x} - {max_address:#x}")
-
-    # Iterate through memory pages
-    memory_info = BasicMemInfo()
-    address = min_address
-    with open("Ram_Dump.txt", "w") as dump_file:
-        while address < max_address:
-            result = ctypes.windll.kernel32.VirtualQueryEx(
-                process, ctypes.c_void_p(address), ctypes.byref(memory_info), ctypes.sizeof(memory_info)
-            )
-            if not result:
-                break
-
-            # Check if the memory is committed and readable
-            if memory_info.State == MEM_COMMIT and memory_info.Protect == PAGE_READWRITE:
-                buffer = ctypes.create_string_buffer(memory_info.RegionSize)
-                bytes_read = ctypes.c_size_t()
-                ctypes.windll.kernel32.ReadProcessMemory(
-                    process,
-                    ctypes.c_void_p(memory_info.BaseAddress),
-                    buffer,
-                    memory_info.RegionSize,
-                    ctypes.byref(bytes_read),
-                )
-                dump_file.write(str(buffer.raw[: bytes_read.value]))
-
-            address += memory_info.RegionSize
-
-    # Close the process handle
-    ctypes.windll.kernel32.CloseHandle(process)
-    log.info("Memory dump complete. Saved to 'ram_dump.txt'.")
-    log.warning("Encoding is in HEX")
+    log.info("Starting system memory collection tasks...")
+    capture_ram_snapshot()
+    gather_system_info()
+    memory_dump()
+    log.info("All tasks completed [dump_memory.py].")
 
 
 if __name__ == "__main__":
-    try:
-        log.info("Starting memory dump process...")
-        dump_ram_content()
-        read_memory()
-    except Exception as err:
-        log.error(f"Error during memory dump: {err}")
+    main()
