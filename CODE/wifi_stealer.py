@@ -6,19 +6,23 @@ if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
 
-@log.function
 def get_password(ssid: str) -> str | None:
     """
-    Retrieves the password associated with a given Wi-Fi SSID.
-
+    Retrieves the password for a specified Wi-Fi network.
+    
     Args:
-        ssid (str): The SSID of the Wi-Fi network.
-
+        ssid (str): The name (SSID) of the Wi-Fi network to retrieve the password for.
+    
     Returns:
-        str or None: The password associated with the SSID, or None if no password is found.
-
+        str or None: The Wi-Fi network password if found, otherwise None.
+    
     Raises:
-        Exception: If an error occurs while executing the command.
+        Exception: If an error occurs during command execution or password retrieval.
+    
+    Notes:
+        - Uses the Windows `netsh` command to extract network profile details
+        - Searches command output for "Key Content" to find the password
+        - Logs any errors encountered during the process
     """
     try:
         command_output = Execute.command(
@@ -33,16 +37,23 @@ def get_password(ssid: str) -> str | None:
         log.error(err)
 
 
-@log.function
 def parse_wifi_names(command_output: str) -> list:
     """
     Parses the output of the command to extract Wi-Fi profile names.
-
+    
     Args:
-        command_output (str): The output of the command "netsh wlan show profile".
-
+        command_output (str): The output of the command "netsh wlan show profile" containing Wi-Fi profile information.
+    
     Returns:
-        list: A list of Wi-Fi profile names.
+        list: A list of extracted Wi-Fi profile names, stripped of whitespace.
+    
+    Raises:
+        No explicit exceptions are raised by this function.
+    
+    Example:
+        >>> output = "All User Profile     : HomeNetwork\\nAll User Profile     : WorkWiFi"
+        >>> parse_wifi_names(output)
+        ['HomeNetwork', 'WorkWiFi']
     """
     wifi_names = []
 
@@ -55,17 +66,21 @@ def parse_wifi_names(command_output: str) -> list:
     return wifi_names
 
 
-@log.function
 def get_wifi_names() -> list:
     """
     Retrieves the names of all Wi-Fi profiles on the system.
-
-    This function executes the command "netsh wlan show profile" to retrieve the list of Wi-Fi profiles.
-    It then iterates over each line of the command output and checks if the line contains the string "All User Profile".
-    If it does, it extrActions()s the Wi-Fi profile name and appends it to the list of Wi-Fi names.
-
+    
+    Executes the "netsh wlan show profile" command to list available Wi-Fi network profiles. 
+    Parses the command output to extract individual profile names.
+    
     Returns:
-        list: A list of Wi-Fi profile names.
+        list: A list of Wi-Fi network profile names discovered on the system.
+    
+    Raises:
+        Exception: If an error occurs during the retrieval of Wi-Fi names.
+    
+    Example:
+        wifi_profiles = get_wifi_names()  # Returns ['HomeNetwork', 'CoffeeShop', ...]
     """
     try:
         log.info("Retrieving Wi-Fi names...")
@@ -98,4 +113,5 @@ def get_wifi_passwords():
                 log.error(e)
 
 
-get_wifi_passwords()
+if __name__ == "__main__":
+    get_wifi_passwords()

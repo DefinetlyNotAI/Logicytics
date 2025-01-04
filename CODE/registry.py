@@ -28,4 +28,5 @@ def backup_registry():
         log.error(f"Failed to back up the registry: {e}")
 
 
-backup_registry()
+if __name__ == "__main__":
+    backup_registry()
