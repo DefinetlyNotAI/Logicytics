@@ -73,6 +73,62 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
         log_dev.error(e)
 
 
+def _perform_checks() -> bool:
+    """
+    Performs a series of user prompts for various checks.
+    
+    Returns:
+        bool: True if all checks are confirmed by the user, False otherwise.
+    """
+    checks = [
+        ("Have you read the required contributing guidelines?", "../CONTRIBUTING.md"),
+        ("Have you made files you don't want to be run start with '_'?", "."),
+        ("Have you added the file to CODE dir?", "."),
+        ("Have you added docstrings and comments?", "../CONTRIBUTING.md"),
+        ("Is each file containing around 1 main feature?", "../CONTRIBUTING.md"),
+    ]
+
+    for question, file_to_open in checks:
+        if not _prompt_user(question, file_to_open):
+            log_dev.warning("Fix the issues and try again with the checklist.")
+            return False
+    return True
+
+
+def _handle_file_operations() -> None:
+    """
+    Handles file operations and logging for added, removed, and normal files.
+    """
+    EXCLUDE_FILES = ["logicytics\\User_History.json.gz", "logicytics\\User_History.json"]
+    files = Get.list_of_files(".", True, exclude_files=EXCLUDE_FILES)
+    added_files, removed_files, normal_files = [], [], []
+    clean_files_list = [file.replace('"', '') for file in CURRENT_FILES]
+
+    for f in files:
+        clean_f = f.replace('"', '')
+        if clean_f in clean_files_list and clean_f not in EXCLUDE_FILES:
+            normal_files.append(clean_f)
+        elif clean_f not in EXCLUDE_FILES:
+            added_files.append(clean_f)
+
+    for f in clean_files_list:
+        clean_f = f.replace('"', '')
+        if clean_f not in files and clean_f not in EXCLUDE_FILES:
+            removed_files.append(clean_f)
+
+    print("\n".join([f"\033[92m+ {file}\033[0m" for file in added_files]))  # Green +
+    print("\n".join([f"\033[91m- {file}\033[0m" for file in removed_files]))  # Red -
+    print("\n".join([f"* {file}" for file in normal_files]))
+
+    if not _prompt_user("Does the list above include your added files?"):
+        log_dev.critical("Something went wrong! Please contact support.")
+        return
+
+    _update_ini_file("config.ini", files, "files")
+    _update_ini_file("config.ini", input(f"Enter the new version of the project (Old version is {VERSION}): "), "version")
+    print("\nGreat Job! Please tick the box in the GitHub PR request for completing steps in --dev")
+
+
 @log_dev.function
 def dev_checks() -> None:
     """
@@ -103,65 +159,10 @@ def dev_checks() -> None:
         >>> dev_checks()
         # Interactively guides developer through project checks
     """
-    # Create the necessary directories if they do not exist
     FileManagement.mkdir()
-
-    # List of checks to be performed, each check is a tuple containing a question and a file to open if the answer is not 'yes'
-    checks = [
-        ("Have you read the required contributing guidelines?", "../CONTRIBUTING.md"),
-        ("Have you made files you don't want to be run start with '_'?", "."),
-        ("Have you added the file to CODE dir?", "."),
-        ("Have you added docstrings and comments?", "../CONTRIBUTING.md"),
-        ("Is each file containing around 1 main feature?", "../CONTRIBUTING.md"),
-    ]
-
-    try:
-        # Iterate through each check and prompt the user
-        for question, file_to_open in checks:
-            if not _prompt_user(question, file_to_open):
-                log_dev.warning("Fix the issues and try again with the checklist.")
-                return None
-
-        # Get the list of files in the current directory
-        EXCLUDE_FILES = ["logicytics\\User_History.json.gz", "logicytics\\User_History.json"]
-        files = Get.list_of_files(".", True, exclude_files=EXCLUDE_FILES)
-        added_files, removed_files, normal_files = [], [], []
-        clean_files_list = [file.replace('"', '') for file in CURRENT_FILES]
-
-        for f in files:
-            clean_f = f.replace('"', '')
-            if clean_f in clean_files_list and clean_f not in EXCLUDE_FILES:
-                normal_files.append(clean_f)
-            elif clean_f not in EXCLUDE_FILES:
-                added_files.append(clean_f)
-
-        for f in clean_files_list:
-            clean_f = f.replace('"', '')
-            if clean_f not in files and clean_f not in EXCLUDE_FILES:
-                removed_files.append(clean_f)
-
-        # Print the list of added, removed, and normal files in color
-        print("\n".join([f"\033[92m+ {file}\033[0m" for file in added_files]))  # Green +
-        print("\n".join([f"\033[91m- {file}\033[0m" for file in removed_files]))  # Red -
-        print("\n".join([f"* {file}" for file in normal_files]))
-
-        # Prompt the user to confirm if the list includes their added files
-        if not _prompt_user("Does the list above include your added files?"):
-            log_dev.critical("Something went wrong! Please contact support.")
-            return None
-
-        # Update the JSON file with the current list of files
-        _update_ini_file("config.ini", files, "files")
-
-        # Prompt the user to enter the new version of the project and update the JSON file
-        _update_ini_file("config.ini", input(f"Enter the new version of the project (Old version is {VERSION}): "),
-                         "version")
-
-        # Print a message indicating the completion of the steps
-        print("\nGreat Job! Please tick the box in the GitHub PR request for completing steps in --dev")
-    except Exception as e:
-        # Log any exceptions that occur during the process
-        log_dev.error(f"An error occurred: {e}")
+    if not _perform_checks():
+        return
+    _handle_file_operations()
 
 
 if __name__ == "__main__":
