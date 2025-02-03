@@ -17,6 +17,6 @@ sentence-transformers~=3.4.1
 colorlog~=6.9.0
 safetensors~=0.5.2
 WMI~=1.5.1
-prettytable~=3.13.0
+prettytable~=3.14.0
 pandas~=2.2.2
 scapy~=2.5.0
