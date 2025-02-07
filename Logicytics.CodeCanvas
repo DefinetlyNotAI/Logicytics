@@ -1,0 +1,908 @@
+{
+	"drawioXML": "<mxfile>\n  <diagram id=\"109o_xezEAEeFAA9eXbY\" name=\"Page-1\">\n    <mxGraphModel dx=\"3037\" dy=\"1668\" grid=\"0\" gridSize=\"10\" guides=\"1\" tooltips=\"1\" connect=\"0\" arrows=\"1\" fold=\"1\" page=\"0\" pageScale=\"1\" pageWidth=\"850\" pageHeight=\"1100\" math=\"0\" shadow=\"0\">\n      <root>\n        <mxCell id=\"0\" />\n        <mxCell id=\"1\" style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=9;fontColor=#FF9999;strokeWidth=1;strokeColor=#FFA5A2;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;align=left;verticalAlign=top;fillColor=none;spacing=0;spacingTop=-14;spacingLeft=15;arcSize=4;\" parent=\"0\" />\n        <UserObject label=\"CODE\" value=\"CODE\" id=\"F4K0c2GmPw5ppnL7WhxD-6\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=9;fontColor=#FF9999;strokeWidth=1;strokeColor=#FFA5A2;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;align=left;verticalAlign=top;fillColor=none;spacing=0;spacingTop=-14;spacingLeft=15;arcSize=4;\" parent=\"1\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"122.13618826845828\" width=\"2928.6265427509293\" height=\"680.8623156420895\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"logicytics\" value=\"logicytics\" id=\"F4K0c2GmPw5ppnL7WhxD-9\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=9;fontColor=#FF9999;strokeWidth=1;strokeColor=#FFA5A2;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;align=left;verticalAlign=top;fillColor=none;spacing=0;spacingTop=-14;spacingLeft=15;arcSize=4;\" parent=\"F4K0c2GmPw5ppnL7WhxD-6\" vertex=\"1\">\n            <mxGeometry x=\"2073.6265427509293\" y=\"126.44870105415532\" width=\"725\" height=\"483.41361458793415\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"Initalize helper classes!\" value=\"__init__.py\" id=\"F4K0c2GmPw5ppnL7WhxD-5\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=9;fontColor=#FF9999;strokeWidth=1;strokeColor=#FFA5A2;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;align=left;verticalAlign=top;fillColor=none;spacing=0;spacingTop=-14;spacingLeft=15;arcSize=4;\" parent=\"F4K0c2GmPw5ppnL7WhxD-9\" vertex=\"1\">\n            <mxGeometry x=\"130\" y=\"100.08028125460078\" width=\"220\" height=\"260\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"Init Flag!\" value=\"__init__.py {L15}\" id=\"CODE/logicytics/__init__.py-c340ff4e-bd54-4c7d-8aa2-e71c808b5110\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-5\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"49.99999999999999\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"Check\" value=\"__init__.py {L13}\" id=\"CODE/logicytics/__init__.py-d1e912de-2238-44f4-953a-49b823b179bc\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" vertex=\"1\" parent=\"F4K0c2GmPw5ppnL7WhxD-5\">\n            <mxGeometry x=\"50\" y=\"150\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"Flag.py\" value=\"Flag.py\" id=\"F4K0c2GmPw5ppnL7WhxD-7\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=9;fontColor=#FF9999;strokeWidth=1;strokeColor=#FFA5A2;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;align=left;verticalAlign=top;fillColor=none;spacing=0;spacingTop=-14;spacingLeft=15;arcSize=4;\" parent=\"F4K0c2GmPw5ppnL7WhxD-9\" vertex=\"1\">\n            <mxGeometry x=\"455\" y=\"50\" width=\"220\" height=\"160\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"Argument Parsing!\" value=\"Flag.py {L698:L741}\" id=\"CODE/logicytics/Flag.py-c0506c35-3c09-4f79-be88-634ac2fb9e95\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-7\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"50\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"Checks.py\" value=\"Checks.py\" id=\"6y_lKcpJHfu7yfdNqaQH-2\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=9;fontColor=#FF9999;strokeWidth=1;strokeColor=#FFA5A2;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;align=left;verticalAlign=top;fillColor=none;spacing=0;spacingTop=-14;spacingLeft=15;arcSize=4;\" parent=\"F4K0c2GmPw5ppnL7WhxD-9\" vertex=\"1\">\n            <mxGeometry x=\"455\" y=\"273.41361458793415\" width=\"220\" height=\"160\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"ADmin Function\" value=\"Checks.py {L12:L23}\" id=\"CODE/logicytics/Checks.py-a8e9ea4d-feae-4f72-84de-b8540bcb2959\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"6y_lKcpJHfu7yfdNqaQH-2\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"50\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"S8497ic9NJac3rzddQsJ-1\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;entryX=0.001;entryY=0.471;entryDx=0;entryDy=0;entryPerimeter=0;\" edge=\"1\" parent=\"F4K0c2GmPw5ppnL7WhxD-9\" source=\"CODE/logicytics/__init__.py-d1e912de-2238-44f4-953a-49b823b179bc\" target=\"6y_lKcpJHfu7yfdNqaQH-2\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"395\" y=\"280.0802812546008\" />\n              <mxPoint x=\"395\" y=\"326.7469479212675\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <mxCell id=\"S8497ic9NJac3rzddQsJ-2\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" edge=\"1\" parent=\"F4K0c2GmPw5ppnL7WhxD-9\" source=\"CODE/logicytics/__init__.py-c340ff4e-bd54-4c7d-8aa2-e71c808b5110\" target=\"F4K0c2GmPw5ppnL7WhxD-7\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"395\" y=\"180.08028125460078\" />\n              <mxPoint x=\"395\" y=\"156.66666666666666\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <mxCell id=\"F4K0c2GmPw5ppnL7WhxD-11\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"F4K0c2GmPw5ppnL7WhxD-6\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38\" target=\"F4K0c2GmPw5ppnL7WhxD-7\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"606.1321189591077\" y=\"163.3092640823515\" />\n              <mxPoint x=\"606.1321189591077\" y=\"100\" />\n              <mxPoint x=\"1873.6265427509293\" y=\"100\" />\n              <mxPoint x=\"1873.6265427509293\" y=\"100.1041754588218\" />\n              <mxPoint x=\"2008.6265427509293\" y=\"100.10417545882177\" />\n              <mxPoint x=\"2008.6265427509293\" y=\"205.67959162013057\" />\n              <mxPoint x=\"2163.6265427509293\" y=\"205.67959162013057\" />\n              <mxPoint x=\"2163.6265427509293\" y=\"205.52898230875607\" />\n              <mxPoint x=\"2468.6265427509293\" y=\"205.52898230875607\" />\n              <mxPoint x=\"2468.6265427509293\" y=\"229.78203438748864\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <UserObject label=\"Logicytics.py\" value=\"Logicytics.py\" id=\"F4K0c2GmPw5ppnL7WhxD-1\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=9;fontColor=#FF9999;strokeWidth=1;strokeColor=#FFA5A2;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;align=left;verticalAlign=top;fillColor=none;spacing=0;spacingTop=-14;spacingLeft=15;arcSize=4;\" parent=\"F4K0c2GmPw5ppnL7WhxD-6\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"49.999999999999986\" width=\"1913.6265427509293\" height=\"542.0000000000001\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"F4K0c2GmPw5ppnL7WhxD-2\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"250.66\" y=\"207.48597335904077\" />\n              <mxPoint x=\"250.66\" y=\"113.30926408235149\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <mxCell id=\"F4K0c2GmPw5ppnL7WhxD-3\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"260.65999999999997\" y=\"231.48597335904074\" />\n              <mxPoint x=\"260.65999999999997\" y=\"320.5199142338448\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <mxCell id=\"F4K0c2GmPw5ppnL7WhxD-4\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-80c727ac-b85a-4f41-8cbd-d8301ddebc9f\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"250.66\" y=\"243.48597335904074\" />\n              <mxPoint x=\"250.66\" y=\"462.0000000000001\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <mxCell id=\"F4K0c2GmPw5ppnL7WhxD-13\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\" />\n          </mxGeometry>\n        </mxCell>\n        <UserObject label=\"Program Start\" value=\"Logicytics.py {L406:L435}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"195.48597335904077\" width=\"160.66\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"55A-YmxGJri1_hDif9mR-3\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-ce0c0562-dd54-4146-af4b-b97bb6680e1b\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"1181.1321189591076\" y=\"120.78773588900268\" />\n              <mxPoint x=\"1181.1321189591076\" y=\"61\" />\n              <mxPoint x=\"566.1321189591077\" y=\"61\" />\n              <mxPoint x=\"566.1321189591077\" y=\"159.45032966000002\" />\n              <mxPoint x=\"711.1321189591077\" y=\"159.45032966000005\" />\n              <mxPoint x=\"711.1321189591077\" y=\"161.00000000000006\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <mxCell id=\"55A-YmxGJri1_hDif9mR-7\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"1498.6265427509293\" y=\"140.78753456\" />\n              <mxPoint x=\"1498.6265427509293\" y=\"241.08377939729525\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <UserObject label=\"generate_execution_list\" value=\"Logicytics.py {L216:L286}\" id=\"CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"1241.1321189591076\" y=\"100.78793721800534\" width=\"217.49442379182156\" height=\"59.99939601299202\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"F4K0c2GmPw5ppnL7WhxD-12\" value=\"if ACTION == &quot;backup&quot;\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=10;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\" />\n          </mxGeometry>\n        </mxCell>\n        <mxCell id=\"F4K0c2GmPw5ppnL7WhxD-17\" style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94-b9209307-a85e-42af-a26a-57d9d7beffda\" edge=\"1\">\n          <mxGeometry width=\"120\" height=\"60\" relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"556.1321189591077\" y=\"329.03982846768974\" />\n              <mxPoint x=\"556.1321189591077\" y=\"412.0000000000001\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <UserObject label=\"2. handle_special_actions\" value=\"Logicytics.py {L122:L185}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"310.65999999999997\" y=\"294.96017153231026\" width=\"205.4721189591078\" height=\"51.119485403069206\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"3. check_priveleges\" value=\"Logicytics.py {L187:L213}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-80c727ac-b85a-4f41-8cbd-d8301ddebc9f\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"343.7260594795539\" y=\"432.0000000000001\" width=\"139.34\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"1. get_flags\" value=\"Logicytics.py {L76:L93}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"347.8198513011152\" y=\"83.30956607585547\" width=\"131.15241635687732\" height=\"59.99939601299202\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"F4K0c2GmPw5ppnL7WhxD-16\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-988189a8-b525-492c-9e24-13b4b7de06cf\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\" />\n          </mxGeometry>\n        </mxCell>\n        <UserObject label=\"backup\" value=\"Logicytics.py {L23:L47}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"810.6171189591078\" y=\"282\" width=\"136.03\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"55A-YmxGJri1_hDif9mR-1\" value=\"if ACTION == performance_check\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=10;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;entryX=0.017;entryY=0.549;entryDx=0;entryDy=0;entryPerimeter=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"556.1321189591077\" y=\"209.48597335904077\" />\n              <mxPoint x=\"556.1321189591077\" y=\"169.45032966000002\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <mxCell id=\"55A-YmxGJri1_hDif9mR-5\" style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d\" edge=\"1\">\n          <mxGeometry width=\"120\" height=\"60\" relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"556.1321189591077\" y=\"229.48597335904077\" />\n              <mxPoint x=\"556.1321189591077\" y=\"261\" />\n              <mxPoint x=\"1498.6265427509293\" y=\"261\" />\n              <mxPoint x=\"1498.6265427509293\" y=\"251.08377939729525\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <UserObject label=\"4. execute_scripts\" value=\"Logicytics.py {L289:L361}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"367.6414126394052\" y=\"189.48597335904077\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"EXIT!&lt;br&gt;\" value=\"Logicytics.py {L184}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-988189a8-b525-492c-9e24-13b4b7de06cf\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"1241.1321189591076\" y=\"282\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"F4K0c2GmPw5ppnL7WhxD-18\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;entryX=-0.003;entryY=0.64;entryDx=0;entryDy=0;entryPerimeter=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94-b9209307-a85e-42af-a26a-57d9d7beffda\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-d7b77722-4dcc-4206-bfa4-bba978790eda\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\" />\n          </mxGeometry>\n        </mxCell>\n        <UserObject label=\"dev\" value=\"Logicytics.py {L152:L154}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94-b9209307-a85e-42af-a26a-57d9d7beffda\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"818.6321189591077\" y=\"382.0000000000001\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"special_execute&lt;br&gt;\" value=\"Logicytics.py {L95:L120}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-d7b77722-4dcc-4206-bfa4-bba978790eda\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"1289.8793308550185\" y=\"382.0000000000001\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"55A-YmxGJri1_hDif9mR-2\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;entryX=0.004;entryY=0.595;entryDx=0;entryDy=0;entryPerimeter=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da\" target=\"CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\" />\n          </mxGeometry>\n        </mxCell>\n        <UserObject label=\"performanc_check\" value=\"Logicytics.py {L329:L351}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=9;fontColor=#FF9999;strokeWidth=1;strokeColor=#FFA5A2;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;align=left;verticalAlign=top;fillColor=none;spacing=0;spacingTop=-14;spacingLeft=15;arcSize=4;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"621.1321189591077\" y=\"81.00000000000001\" width=\"520\" height=\"160\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"55A-YmxGJri1_hDif9mR-4\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-ce0c0562-dd54-4146-af4b-b97bb6680e1b\" target=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-ef758089-5062-4271-8b03-ece2352d3a94\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\" />\n          </mxGeometry>\n        </mxCell>\n        <UserObject label=\"Execute scripts\" value=\"Logicytics.py {L334}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-ce0c0562-dd54-4146-af4b-b97bb6680e1b\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da\" vertex=\"1\">\n            <mxGeometry x=\"130\" y=\"50.00000000000001\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"Write Output&lt;br&gt;\" value=\"Logicytics.py {L345:L349}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-ef758089-5062-4271-8b03-ece2352d3a94\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da\" vertex=\"1\">\n            <mxGeometry x=\"350\" y=\"50\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"55A-YmxGJri1_hDif9mR-6\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d\" target=\"CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"1823.6265427509293\" y=\"241.08377939729525\" />\n              <mxPoint x=\"1823.6265427509293\" y=\"119.18878637329524\" />\n              <mxPoint x=\"1498.6265427509293\" y=\"119.18878637329524\" />\n              <mxPoint x=\"1498.6265427509293\" y=\"120.78773588900268\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <UserObject label=\"Nopy Path&lt;br&gt;\" value=\"Logicytics.py {L352:L361}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=9;fontColor=#FF9999;strokeWidth=1;strokeColor=#FFA5A2;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;align=left;verticalAlign=top;fillColor=none;spacing=0;spacingTop=-14;spacingLeft=15;arcSize=4;\" parent=\"F4K0c2GmPw5ppnL7WhxD-1\" vertex=\"1\">\n            <mxGeometry x=\"1558.6265427509293\" y=\"139.18878637329524\" width=\"220\" height=\"260\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"execute scritpts\" value=\"Logicytics.py {L354}\" id=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-b18d0c76-f937-4e55-af3c-832e6521faa9\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"150\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"Logicytics.py {L258:L265}\" value=\"Logicytics.py {L258:L265}\" id=\"CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5-0e56ee06-7893-4544-b6ce-44001c219055\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"50\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"6y_lKcpJHfu7yfdNqaQH-3\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;\" parent=\"F4K0c2GmPw5ppnL7WhxD-6\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-80c727ac-b85a-4f41-8cbd-d8301ddebc9f\" target=\"6y_lKcpJHfu7yfdNqaQH-2\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"2008.6265427509293\" y=\"512.0000000000001\" />\n              <mxPoint x=\"2008.6265427509293\" y=\"506.5289823087561\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <mxCell id=\"F4K0c2GmPw5ppnL7WhxD-22\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;entryX=-0.017;entryY=0.54;entryDx=0;entryDy=0;entryPerimeter=0;\" parent=\"1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-d7b77722-4dcc-4206-bfa4-bba978790eda\" target=\"F4K0c2GmPw5ppnL7WhxD-21\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"1598.6265427509293\" y=\"584.1361882684585\" />\n              <mxPoint x=\"1598.6265427509293\" y=\"591.452243650277\" />\n              <mxPoint x=\"2068.6265427509293\" y=\"591.4522436502768\" />\n              <mxPoint x=\"2068.6265427509293\" y=\"751.9985039105477\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n        <mxCell id=\"F4K0c2GmPw5ppnL7WhxD-23\" value=\"special scripts&lt;br&gt;\" style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=9;fontColor=#FF9999;strokeWidth=1;strokeColor=#FFA5A2;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;align=left;verticalAlign=top;fillColor=none;spacing=0;spacingTop=-14;spacingLeft=15;arcSize=4;\" parent=\"1\" vertex=\"1\">\n          <mxGeometry x=\"3088.6265427509293\" y=\"671.9985039105477\" width=\"220\" height=\"160\" as=\"geometry\" />\n        </mxCell>\n        <UserObject label=\"_dev.py\" value=\"_dev.py\" id=\"F4K0c2GmPw5ppnL7WhxD-21\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"F4K0c2GmPw5ppnL7WhxD-23\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"50\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"55A-YmxGJri1_hDif9mR-11\" value=\"Scripts\" style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=9;fontColor=#FF9999;strokeWidth=1;strokeColor=#FFA5A2;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=1;align=left;verticalAlign=top;fillColor=none;spacing=0;spacingTop=-14;spacingLeft=15;arcSize=4;\" parent=\"1\" vertex=\"1\">\n          <mxGeometry x=\"3088.6265427509293\" y=\"49.999999999999986\" width=\"220\" height=\"360\" as=\"geometry\" />\n        </mxCell>\n        <UserObject label=\"netadapter.ps1\" value=\"netadapter.ps1\" id=\"55A-YmxGJri1_hDif9mR-9\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"55A-YmxGJri1_hDif9mR-11\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"150\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"browser_miner.ps1\" value=\"browser_miner.ps1\" id=\"55A-YmxGJri1_hDif9mR-8\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"55A-YmxGJri1_hDif9mR-11\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"250\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <UserObject label=\"property_scraper.ps1\" value=\"property_scraper.ps1\" id=\"55A-YmxGJri1_hDif9mR-10\">\n          <mxCell style=\"rounded=1;whiteSpace=wrap;html=1;container=1;glass=0;comic=0;fontSize=12;fontColor=#8A8382;strokeWidth=0.7;strokeColor=#999190;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontStyle=0;\" parent=\"55A-YmxGJri1_hDif9mR-11\" vertex=\"1\">\n            <mxGeometry x=\"50\" y=\"50\" width=\"120\" height=\"60\" as=\"geometry\" />\n          </mxCell>\n        </UserObject>\n        <mxCell id=\"55A-YmxGJri1_hDif9mR-12\" style=\"edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=1;sketch=0;jumpStyle=arc;jumpSize=17;orthogonalLoop=1;jettySize=auto;html=0;shadow=0;labelBackgroundColor=none;fontFamily=Poppins;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DPoppins;fontSize=37;fontColor=default;endArrow=block;endFill=1;endSize=5;sourcePerimeterSpacing=0;targetPerimeterSpacing=0;strokeColor=#A1A1A1;strokeWidth=2;arcSize=50;container=1;entryX=-0.007;entryY=0.473;entryDx=0;entryDy=0;entryPerimeter=0;\" parent=\"1\" source=\"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-b18d0c76-f937-4e55-af3c-832e6521faa9\" target=\"55A-YmxGJri1_hDif9mR-11\" edge=\"1\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <Array as=\"points\">\n              <mxPoint x=\"2068.6265427509293\" y=\"491.3249746417535\" />\n              <mxPoint x=\"2068.6265427509293\" y=\"227.5848893226136\" />\n              <mxPoint x=\"2888.6265427509293\" y=\"227.5848893226136\" />\n              <mxPoint x=\"2888.6265427509293\" y=\"227.78566618458407\" />\n              <mxPoint x=\"3023.6265427509293\" y=\"227.78566618458407\" />\n              <mxPoint x=\"3023.6265427509293\" y=\"230\" />\n            </Array>\n          </mxGeometry>\n        </mxCell>\n      </root>\n    </mxGraphModel>\n  </diagram>\n</mxfile>\n",
+	"fileName": "",
+	"fileURL": "local",
+	"repo": "Logicytics",
+	"branch": "main",
+	"owner": "DefinetlyNotAI",
+	"simulations": {
+		"Dev - special script": {
+			"name": "Dev - special script",
+			"simSteps": [
+				{
+					"simStepId": "4ba5831b-6da7-4733-b4f0-650a0b4de8b8",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391",
+					"simStepLabel": "Program Start",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "930fedff-b40b-478c-9853-2cb2166324e4",
+					"diagramNodeId": "F4K0c2GmPw5ppnL7WhxD-2",
+					"simStepLabel": "930fedff-b40b-478c-9853-2cb2166324e4",
+					"simStepDescription": "",
+					"isEdge": 1
+				},
+				{
+					"simStepId": "5f2b2361-08dc-4980-bc59-c51ffc824d77",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38",
+					"simStepLabel": "1. get_flags",
+					"simStepDescription": "<p>In this case, ACTION == “dev”!</p>",
+					"isEdge": false
+				},
+				{
+					"simStepId": "531e3d81-332d-497b-b25d-b7907e6ee569",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3",
+					"simStepLabel": "2. handle_special_actions",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "e4b16c19-9a0c-4e32-9833-fb1844ca3106",
+					"diagramNodeId": "F4K0c2GmPw5ppnL7WhxD-17",
+					"simStepLabel": "e4b16c19-9a0c-4e32-9833-fb1844ca3106",
+					"simStepDescription": "",
+					"isEdge": 1
+				},
+				{
+					"simStepId": "960246e2-2373-434a-a48c-8d3f957cb25e",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94-b9209307-a85e-42af-a26a-57d9d7beffda",
+					"simStepLabel": "dev",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "dcddfa67-fbba-43a3-89df-727f1b75b41e",
+					"diagramNodeId": "F4K0c2GmPw5ppnL7WhxD-18",
+					"simStepLabel": "dcddfa67-fbba-43a3-89df-727f1b75b41e",
+					"simStepDescription": "",
+					"isEdge": 1
+				},
+				{
+					"simStepId": "1f69aba2-0294-4d13-a905-e192e6b6ee70",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-d7b77722-4dcc-4206-bfa4-bba978790eda",
+					"simStepLabel": "special_execute",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "34b8da4e-cf3d-4ec9-8176-a2366cab440f",
+					"diagramNodeId": "F4K0c2GmPw5ppnL7WhxD-22",
+					"simStepLabel": "34b8da4e-cf3d-4ec9-8176-a2366cab440f",
+					"simStepDescription": "",
+					"isEdge": 1
+				},
+				{
+					"simStepId": "87b90c1f-f7d7-431e-9558-d40535adf20c",
+					"diagramNodeId": "F4K0c2GmPw5ppnL7WhxD-21",
+					"simStepLabel": "_dev.py",
+					"simStepDescription": "",
+					"isEdge": false
+				}
+			],
+			"simulationNodesAndEdges": {
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391": {
+					"simStepIds": [
+						"4ba5831b-6da7-4733-b4f0-650a0b4de8b8"
+					]
+				},
+				"F4K0c2GmPw5ppnL7WhxD-2": {
+					"simStepIds": [
+						"930fedff-b40b-478c-9853-2cb2166324e4"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38": {
+					"simStepIds": [
+						"5f2b2361-08dc-4980-bc59-c51ffc824d77"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3": {
+					"simStepIds": [
+						"531e3d81-332d-497b-b25d-b7907e6ee569"
+					]
+				},
+				"F4K0c2GmPw5ppnL7WhxD-17": {
+					"simStepIds": [
+						"e4b16c19-9a0c-4e32-9833-fb1844ca3106"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94-b9209307-a85e-42af-a26a-57d9d7beffda": {
+					"simStepIds": [
+						"960246e2-2373-434a-a48c-8d3f957cb25e"
+					]
+				},
+				"F4K0c2GmPw5ppnL7WhxD-18": {
+					"simStepIds": [
+						"dcddfa67-fbba-43a3-89df-727f1b75b41e"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-d7b77722-4dcc-4206-bfa4-bba978790eda": {
+					"simStepIds": [
+						"1f69aba2-0294-4d13-a905-e192e6b6ee70"
+					]
+				},
+				"F4K0c2GmPw5ppnL7WhxD-22": {
+					"simStepIds": [
+						"34b8da4e-cf3d-4ec9-8176-a2366cab440f"
+					]
+				},
+				"F4K0c2GmPw5ppnL7WhxD-21": {
+					"simStepIds": [
+						"87b90c1f-f7d7-431e-9558-d40535adf20c"
+					]
+				}
+			},
+			"description": ""
+		},
+		"Backup Path (Startup overview)": {
+			"name": "Backup Path (Startup overview)",
+			"simSteps": [
+				{
+					"simStepId": "1e81b998-f090-42f7-baf1-4c41d0b78e78",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391",
+					"simStepLabel": "Program Start",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "7d880337-e604-47fa-b1f8-556534193e17",
+					"diagramNodeId": "F4K0c2GmPw5ppnL7WhxD-2",
+					"simStepLabel": "7d880337-e604-47fa-b1f8-556534193e17",
+					"simStepDescription": "",
+					"isEdge": 1
+				},
+				{
+					"simStepId": "e2ee0e19-9d54-461a-9045-364223203ed2",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38",
+					"simStepLabel": "1. get_flags",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "f055d90e-d5ab-4bcd-820e-f6e0e1ca1896",
+					"diagramNodeId": "CODE/logicytics/Flag.py-c0506c35-3c09-4f79-be88-634ac2fb9e95",
+					"simStepLabel": "Argument Parsing!",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "a0896657-1763-463d-9914-bfc9971ae265",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3",
+					"simStepLabel": "2. handle_special_actions",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "7ed94cbf-45a3-4441-a730-2812bd2a212d",
+					"diagramNodeId": "F4K0c2GmPw5ppnL7WhxD-12",
+					"simStepLabel": "if ACTION == \"backup\"",
+					"simStepDescription": "",
+					"isEdge": 1
+				},
+				{
+					"simStepId": "c6ab86fc-bc6d-45b3-96f9-c4fde59a81b2",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94",
+					"simStepLabel": "backup",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "c4fc12ee-7843-4471-9ec6-38ad2fe6d1e3",
+					"diagramNodeId": "F4K0c2GmPw5ppnL7WhxD-16",
+					"simStepLabel": "c4fc12ee-7843-4471-9ec6-38ad2fe6d1e3",
+					"simStepDescription": "",
+					"isEdge": 1
+				},
+				{
+					"simStepId": "b948675f-fbf7-4a02-beb6-a3f911c7c09b",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-988189a8-b525-492c-9e24-13b4b7de06cf",
+					"simStepLabel": "EXIT!",
+					"simStepDescription": "",
+					"isEdge": false
+				}
+			],
+			"simulationNodesAndEdges": {
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391": {
+					"simStepIds": [
+						"1e81b998-f090-42f7-baf1-4c41d0b78e78"
+					]
+				},
+				"F4K0c2GmPw5ppnL7WhxD-2": {
+					"simStepIds": [
+						"7d880337-e604-47fa-b1f8-556534193e17"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38": {
+					"simStepIds": [
+						"e2ee0e19-9d54-461a-9045-364223203ed2"
+					]
+				},
+				"CODE/logicytics/Flag.py-c0506c35-3c09-4f79-be88-634ac2fb9e95": {
+					"simStepIds": [
+						"f055d90e-d5ab-4bcd-820e-f6e0e1ca1896"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3": {
+					"simStepIds": [
+						"a0896657-1763-463d-9914-bfc9971ae265"
+					]
+				},
+				"F4K0c2GmPw5ppnL7WhxD-12": {
+					"simStepIds": [
+						"7ed94cbf-45a3-4441-a730-2812bd2a212d"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94": {
+					"simStepIds": [
+						"c6ab86fc-bc6d-45b3-96f9-c4fde59a81b2"
+					]
+				},
+				"F4K0c2GmPw5ppnL7WhxD-16": {
+					"simStepIds": [
+						"c4fc12ee-7843-4471-9ec6-38ad2fe6d1e3"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-988189a8-b525-492c-9e24-13b4b7de06cf": {
+					"simStepIds": [
+						"b948675f-fbf7-4a02-beb6-a3f911c7c09b"
+					]
+				}
+			},
+			"description": ""
+		},
+		"NOPY check": {
+			"name": "NOPY check",
+			"simSteps": [
+				{
+					"simStepId": "a0e829a4-62a9-4ba5-8fd9-0cf58b8e4628",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391",
+					"simStepLabel": "Program Start",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "843320ce-5c8d-4205-8ff3-90c02f22e989",
+					"diagramNodeId": "F4K0c2GmPw5ppnL7WhxD-2",
+					"simStepLabel": "843320ce-5c8d-4205-8ff3-90c02f22e989",
+					"simStepDescription": "",
+					"isEdge": 1
+				},
+				{
+					"simStepId": "29bd8500-5e00-4e50-a09f-0d3c568ec8eb",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38",
+					"simStepLabel": "1. get_flags",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "057f758e-ab14-42ec-bf33-a3f68f20ddc7",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3",
+					"simStepLabel": "2. handle_special_actions",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "51057c1a-ddf1-4fa5-bd44-3a6f88ade42f",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-80c727ac-b85a-4f41-8cbd-d8301ddebc9f",
+					"simStepLabel": "3. check_priveleges",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "33f2c262-03a0-40a8-a4ed-0c1331a38055",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786",
+					"simStepLabel": "4. execute_scripts",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "1f4ee1c2-7bd3-4af4-b26f-054b74e92661",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d",
+					"simStepLabel": "Nopy Path",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "92549f14-0396-4c8c-9600-4e574596bc69",
+					"diagramNodeId": "CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5-0e56ee06-7893-4544-b6ce-44001c219055",
+					"simStepLabel": "Logicytics.py {L258:L265}",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "836fcadc-1c51-4ffa-803e-9cadd0005a92",
+					"diagramNodeId": "55A-YmxGJri1_hDif9mR-7",
+					"simStepLabel": "836fcadc-1c51-4ffa-803e-9cadd0005a92",
+					"simStepDescription": "",
+					"isEdge": 1
+				},
+				{
+					"simStepId": "49c42afd-f300-4760-bda5-9b3c4924a557",
+					"diagramNodeId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-b18d0c76-f937-4e55-af3c-832e6521faa9",
+					"simStepLabel": "execute scritpts",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "950b6518-6000-4ac2-9808-80c1ee65fe20",
+					"diagramNodeId": "55A-YmxGJri1_hDif9mR-10",
+					"simStepLabel": "property_scraper.ps1",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "37327466-3b2b-40e3-8cba-5fbb9391660c",
+					"diagramNodeId": "55A-YmxGJri1_hDif9mR-9",
+					"simStepLabel": "netadapter.ps1",
+					"simStepDescription": "",
+					"isEdge": false
+				},
+				{
+					"simStepId": "c3ba4eae-0af3-46bb-9d90-7a7fdf83e74f",
+					"diagramNodeId": "55A-YmxGJri1_hDif9mR-8",
+					"simStepLabel": "browser_miner.ps1",
+					"simStepDescription": "",
+					"isEdge": false
+				}
+			],
+			"simulationNodesAndEdges": {
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391": {
+					"simStepIds": [
+						"a0e829a4-62a9-4ba5-8fd9-0cf58b8e4628"
+					]
+				},
+				"F4K0c2GmPw5ppnL7WhxD-2": {
+					"simStepIds": [
+						"843320ce-5c8d-4205-8ff3-90c02f22e989"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38": {
+					"simStepIds": [
+						"29bd8500-5e00-4e50-a09f-0d3c568ec8eb"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3": {
+					"simStepIds": [
+						"057f758e-ab14-42ec-bf33-a3f68f20ddc7"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-80c727ac-b85a-4f41-8cbd-d8301ddebc9f": {
+					"simStepIds": [
+						"51057c1a-ddf1-4fa5-bd44-3a6f88ade42f"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786": {
+					"simStepIds": [
+						"33f2c262-03a0-40a8-a4ed-0c1331a38055"
+					]
+				},
+				"55A-YmxGJri1_hDif9mR-7": {
+					"simStepIds": [
+						"836fcadc-1c51-4ffa-803e-9cadd0005a92"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d": {
+					"simStepIds": [
+						"1f4ee1c2-7bd3-4af4-b26f-054b74e92661"
+					]
+				},
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-b18d0c76-f937-4e55-af3c-832e6521faa9": {
+					"simStepIds": [
+						"49c42afd-f300-4760-bda5-9b3c4924a557"
+					]
+				},
+				"55A-YmxGJri1_hDif9mR-10": {
+					"simStepIds": [
+						"950b6518-6000-4ac2-9808-80c1ee65fe20"
+					]
+				},
+				"55A-YmxGJri1_hDif9mR-9": {
+					"simStepIds": [
+						"37327466-3b2b-40e3-8cba-5fbb9391660c"
+					]
+				},
+				"55A-YmxGJri1_hDif9mR-8": {
+					"simStepIds": [
+						"c3ba4eae-0af3-46bb-9d90-7a7fdf83e74f"
+					]
+				},
+				"CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5-0e56ee06-7893-4544-b6ce-44001c219055": {
+					"simStepIds": [
+						"92549f14-0396-4c8c-9600-4e574596bc69"
+					]
+				}
+			},
+			"description": ""
+		}
+	},
+	"cellToPath": {
+		"F4K0c2GmPw5ppnL7WhxD-1": "CODE/Logicytics.py",
+		"F4K0c2GmPw5ppnL7WhxD-5": "CODE/logicytics/__init__.py",
+		"F4K0c2GmPw5ppnL7WhxD-6": "CODE",
+		"F4K0c2GmPw5ppnL7WhxD-7": "CODE/logicytics/Flag.py",
+		"F4K0c2GmPw5ppnL7WhxD-9": "CODE/logicytics",
+		"F4K0c2GmPw5ppnL7WhxD-21": "CODE/_dev.py",
+		"55A-YmxGJri1_hDif9mR-8": "CODE/browser_miner.ps1",
+		"55A-YmxGJri1_hDif9mR-9": "CODE/netadapter.ps1",
+		"55A-YmxGJri1_hDif9mR-10": "CODE/property_scraper.ps1",
+		"6y_lKcpJHfu7yfdNqaQH-2": "CODE/logicytics/Checks.py"
+	},
+	"repoData": {
+		"CODE/_dev.py": {
+			"path": "CODE/_dev.py",
+			"fileName": "_dev.py",
+			"cellName": "_dev.py",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-21",
+			"visible": true
+		},
+		"CODE/netadapter.ps1": {
+			"path": "CODE/netadapter.ps1",
+			"fileName": "netadapter.ps1",
+			"cellName": "netadapter.ps1",
+			"cellId": "55A-YmxGJri1_hDif9mR-9",
+			"visible": true
+		},
+		"CODE/Logicytics.py": {
+			"path": "CODE/Logicytics.py",
+			"fileName": "Logicytics.py",
+			"cellName": "Logicytics.py",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"visible": true,
+			"children": [
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391",
+				"CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-80c727ac-b85a-4f41-8cbd-d8301ddebc9f",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-988189a8-b525-492c-9e24-13b4b7de06cf",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94-b9209307-a85e-42af-a26a-57d9d7beffda",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-d7b77722-4dcc-4206-bfa4-bba978790eda",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-ce0c0562-dd54-4146-af4b-b97bb6680e1b",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-ef758089-5062-4271-8b03-ece2352d3a94",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d",
+				"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-b18d0c76-f937-4e55-af3c-832e6521faa9",
+				"CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5-0e56ee06-7893-4544-b6ce-44001c219055"
+			]
+		},
+		"CODE/property_scraper.ps1": {
+			"path": "CODE/property_scraper.ps1",
+			"fileName": "property_scraper.ps1",
+			"cellName": "property_scraper.ps1",
+			"cellId": "55A-YmxGJri1_hDif9mR-10",
+			"visible": true
+		},
+		"CODE/browser_miner.ps1": {
+			"path": "CODE/browser_miner.ps1",
+			"fileName": "browser_miner.ps1",
+			"cellName": "browser_miner.ps1",
+			"cellId": "55A-YmxGJri1_hDif9mR-8",
+			"visible": true
+		},
+		"CODE/logicytics/Flag.py": {
+			"path": "CODE/logicytics/Flag.py",
+			"fileName": "Flag.py",
+			"cellName": "Flag.py",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-7",
+			"visible": true,
+			"children": [
+				"CODE/logicytics/Flag.py-c0506c35-3c09-4f79-be88-634ac2fb9e95"
+			]
+		},
+		"CODE/logicytics/Checks.py": {
+			"path": "CODE/logicytics/Checks.py",
+			"fileName": "Checks.py",
+			"cellName": "Checks.py",
+			"cellId": "6y_lKcpJHfu7yfdNqaQH-2",
+			"visible": true,
+			"children": [
+				"CODE/logicytics/Checks.py-a8e9ea4d-feae-4f72-84de-b8540bcb2959"
+			]
+		},
+		"CODE/logicytics/__init__.py": {
+			"path": "CODE/logicytics/__init__.py",
+			"fileName": "__init__.py",
+			"cellName": "Initalize helper classes!",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-5",
+			"visible": true,
+			"children": [
+				"CODE/logicytics/__init__.py-c340ff4e-bd54-4c7d-8aa2-e71c808b5110",
+				"CODE/logicytics/__init__.py-d1e912de-2238-44f4-953a-49b823b179bc"
+			]
+		},
+		"CODE/logicytics": {
+			"path": "CODE/logicytics",
+			"fileName": "logicytics",
+			"cellName": "logicytics",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-9",
+			"visible": true
+		},
+		"CODE": {
+			"path": "CODE",
+			"fileName": "CODE",
+			"cellName": "CODE",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-6",
+			"visible": true
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391",
+			"fileName": "Logicytics.py",
+			"cellName": "Program Start",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391",
+			"visible": true,
+			"startLine": "406",
+			"endLine": "435",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5": {
+			"path": "CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5",
+			"fileName": "Logicytics.py",
+			"cellName": "generate_execution_list",
+			"cellId": "CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5",
+			"visible": true,
+			"startLine": "216",
+			"endLine": "286",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38",
+			"fileName": "Logicytics.py",
+			"cellName": "1. get_flags",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-6e57e826-1bc6-43a8-9bfb-23dd15fdcb38",
+			"visible": true,
+			"startLine": "76",
+			"endLine": "93",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"F4K0c2GmPw5ppnL7WhxD-2": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-2",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-2",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3",
+			"fileName": "Logicytics.py",
+			"cellName": "2. handle_special_actions",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3",
+			"visible": true,
+			"startLine": "122",
+			"endLine": "185",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"F4K0c2GmPw5ppnL7WhxD-3": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-3",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-3",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-80c727ac-b85a-4f41-8cbd-d8301ddebc9f": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-80c727ac-b85a-4f41-8cbd-d8301ddebc9f",
+			"fileName": "Logicytics.py",
+			"cellName": "3. check_priveleges",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-80c727ac-b85a-4f41-8cbd-d8301ddebc9f",
+			"visible": true,
+			"startLine": "187",
+			"endLine": "213",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"F4K0c2GmPw5ppnL7WhxD-4": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-4",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-4",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"F4K0c2GmPw5ppnL7WhxD-11": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-11",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-11",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-6"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94",
+			"fileName": "Logicytics.py",
+			"cellName": "backup",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94",
+			"visible": true,
+			"startLine": "23",
+			"endLine": "47",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"F4K0c2GmPw5ppnL7WhxD-12": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-12",
+			"cellName": "if ACTION == \"backup\"",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-12",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"CODE/logicytics/__init__.py-c340ff4e-bd54-4c7d-8aa2-e71c808b5110": {
+			"path": "CODE/logicytics/__init__.py-c340ff4e-bd54-4c7d-8aa2-e71c808b5110",
+			"fileName": "__init__.py",
+			"cellName": "Init Flag!",
+			"cellId": "CODE/logicytics/__init__.py-c340ff4e-bd54-4c7d-8aa2-e71c808b5110",
+			"visible": true,
+			"startLine": 15,
+			"endLine": 15,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-5",
+			"parentPath": "CODE/logicytics/__init__.py"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786",
+			"fileName": "Logicytics.py",
+			"cellName": "4. execute_scripts",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786",
+			"visible": true,
+			"startLine": "289",
+			"endLine": "361",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"F4K0c2GmPw5ppnL7WhxD-13": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-13",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-13",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-988189a8-b525-492c-9e24-13b4b7de06cf": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-988189a8-b525-492c-9e24-13b4b7de06cf",
+			"fileName": "Logicytics.py",
+			"cellName": "EXIT!",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-988189a8-b525-492c-9e24-13b4b7de06cf",
+			"visible": true,
+			"startLine": 184,
+			"endLine": 184,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"F4K0c2GmPw5ppnL7WhxD-16": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-16",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-16",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"CODE/logicytics/Flag.py-c0506c35-3c09-4f79-be88-634ac2fb9e95": {
+			"path": "CODE/logicytics/Flag.py-c0506c35-3c09-4f79-be88-634ac2fb9e95",
+			"fileName": "Flag.py",
+			"cellName": "Argument Parsing!",
+			"cellId": "CODE/logicytics/Flag.py-c0506c35-3c09-4f79-be88-634ac2fb9e95",
+			"visible": true,
+			"startLine": "698",
+			"endLine": "741",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-7",
+			"parentPath": "CODE/logicytics/Flag.py"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94-b9209307-a85e-42af-a26a-57d9d7beffda": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94-b9209307-a85e-42af-a26a-57d9d7beffda",
+			"fileName": "Logicytics.py",
+			"cellName": "dev",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-489fbb19-2adb-4060-aa8e-427570ecaa94-b9209307-a85e-42af-a26a-57d9d7beffda",
+			"visible": true,
+			"startLine": "152",
+			"endLine": "154",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"F4K0c2GmPw5ppnL7WhxD-17": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-17",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-17",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-d7b77722-4dcc-4206-bfa4-bba978790eda": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-d7b77722-4dcc-4206-bfa4-bba978790eda",
+			"fileName": "Logicytics.py",
+			"cellName": "special_execute",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-17ec5419-eb33-4612-87f5-fa2f5f3767c3-d7b77722-4dcc-4206-bfa4-bba978790eda",
+			"visible": true,
+			"startLine": "95",
+			"endLine": "120",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"F4K0c2GmPw5ppnL7WhxD-18": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-18",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-18",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"F4K0c2GmPw5ppnL7WhxD-19": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-19",
+			"cellName": "If&nbsp;",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-19",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-17"
+		},
+		"F4K0c2GmPw5ppnL7WhxD-22": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-22",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-22",
+			"visible": true
+		},
+		"F4K0c2GmPw5ppnL7WhxD-23": {
+			"path": "F4K0c2GmPw5ppnL7WhxD-23",
+			"cellName": "special scripts",
+			"cellId": "F4K0c2GmPw5ppnL7WhxD-23",
+			"visible": true
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da",
+			"fileName": "Logicytics.py",
+			"cellName": "performanc_check",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da",
+			"visible": true,
+			"startLine": "329",
+			"endLine": "351",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"55A-YmxGJri1_hDif9mR-1": {
+			"path": "55A-YmxGJri1_hDif9mR-1",
+			"cellName": "if ACTION == performance_check",
+			"cellId": "55A-YmxGJri1_hDif9mR-1",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"55A-YmxGJri1_hDif9mR-2": {
+			"path": "55A-YmxGJri1_hDif9mR-2",
+			"cellId": "55A-YmxGJri1_hDif9mR-2",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"55A-YmxGJri1_hDif9mR-3": {
+			"path": "55A-YmxGJri1_hDif9mR-3",
+			"cellId": "55A-YmxGJri1_hDif9mR-3",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-ce0c0562-dd54-4146-af4b-b97bb6680e1b": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-ce0c0562-dd54-4146-af4b-b97bb6680e1b",
+			"fileName": "Logicytics.py",
+			"cellName": "Execute scripts",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-ce0c0562-dd54-4146-af4b-b97bb6680e1b",
+			"visible": true,
+			"startLine": 334,
+			"endLine": 334,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-ef758089-5062-4271-8b03-ece2352d3a94": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-ef758089-5062-4271-8b03-ece2352d3a94",
+			"fileName": "Logicytics.py",
+			"cellName": "Write Output",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-ef758089-5062-4271-8b03-ece2352d3a94",
+			"visible": true,
+			"startLine": "345",
+			"endLine": "349",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"55A-YmxGJri1_hDif9mR-4": {
+			"path": "55A-YmxGJri1_hDif9mR-4",
+			"cellId": "55A-YmxGJri1_hDif9mR-4",
+			"visible": true,
+			"parentCellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d",
+			"fileName": "Logicytics.py",
+			"cellName": "Nopy Path",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-eee28cb0-e92d-4169-8561-cca486e747da-106e755b-6ddf-4b8d-bdbc-f171171abd8d",
+			"visible": true,
+			"startLine": "352",
+			"endLine": "361",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"55A-YmxGJri1_hDif9mR-5": {
+			"path": "55A-YmxGJri1_hDif9mR-5",
+			"cellName": "if ACTION == \"nopy\"",
+			"cellId": "55A-YmxGJri1_hDif9mR-5",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"55A-YmxGJri1_hDif9mR-6": {
+			"path": "55A-YmxGJri1_hDif9mR-6",
+			"cellId": "55A-YmxGJri1_hDif9mR-6",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"55A-YmxGJri1_hDif9mR-7": {
+			"path": "55A-YmxGJri1_hDif9mR-7",
+			"cellId": "55A-YmxGJri1_hDif9mR-7",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-b18d0c76-f937-4e55-af3c-832e6521faa9": {
+			"path": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-b18d0c76-f937-4e55-af3c-832e6521faa9",
+			"fileName": "Logicytics.py",
+			"cellName": "execute scritpts",
+			"cellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-b18d0c76-f937-4e55-af3c-832e6521faa9",
+			"visible": true,
+			"startLine": 354,
+			"endLine": 354,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"55A-YmxGJri1_hDif9mR-11": {
+			"path": "55A-YmxGJri1_hDif9mR-11",
+			"cellName": "Scripts",
+			"cellId": "55A-YmxGJri1_hDif9mR-11",
+			"visible": true
+		},
+		"55A-YmxGJri1_hDif9mR-12": {
+			"path": "55A-YmxGJri1_hDif9mR-12",
+			"cellId": "55A-YmxGJri1_hDif9mR-12",
+			"visible": true
+		},
+		"1_o4wiNsplG-G5EciqVj-1": {
+			"path": "1_o4wiNsplG-G5EciqVj-1",
+			"cellId": "1_o4wiNsplG-G5EciqVj-1",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1"
+		},
+		"CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5-0e56ee06-7893-4544-b6ce-44001c219055": {
+			"path": "CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5-0e56ee06-7893-4544-b6ce-44001c219055",
+			"fileName": "Logicytics.py",
+			"cellName": "Logicytics.py {L258:L265}",
+			"cellId": "CODE/Logicytics.py-880d1e92-270e-491d-9eaa-07d9af3cbba5-0e56ee06-7893-4544-b6ce-44001c219055",
+			"visible": true,
+			"startLine": "258",
+			"endLine": "265",
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-1",
+			"parentPath": "CODE/Logicytics.py"
+		},
+		"6y_lKcpJHfu7yfdNqaQH-1": {
+			"path": "6y_lKcpJHfu7yfdNqaQH-1",
+			"cellName": "New Node",
+			"cellId": "6y_lKcpJHfu7yfdNqaQH-1",
+			"visible": true,
+			"parentCellId": "CODE/Logicytics.py-83ebc4ca-42e0-4665-8fb0-43c1ec3b9391-55528c49-d569-405e-9587-8f8dd0c7d786-ce0c0562-dd54-4146-af4b-b97bb6680e1b"
+		},
+		"6y_lKcpJHfu7yfdNqaQH-3": {
+			"path": "6y_lKcpJHfu7yfdNqaQH-3",
+			"cellId": "6y_lKcpJHfu7yfdNqaQH-3",
+			"visible": true
+		},
+		"CODE/logicytics/Checks.py-a8e9ea4d-feae-4f72-84de-b8540bcb2959": {
+			"path": "CODE/logicytics/Checks.py-a8e9ea4d-feae-4f72-84de-b8540bcb2959",
+			"fileName": "Checks.py",
+			"cellName": "ADmin Function",
+			"cellId": "CODE/logicytics/Checks.py-a8e9ea4d-feae-4f72-84de-b8540bcb2959",
+			"visible": true,
+			"startLine": "12",
+			"endLine": "23",
+			"parentCellId": "6y_lKcpJHfu7yfdNqaQH-2",
+			"parentPath": "CODE/logicytics/Checks.py"
+		},
+		"CODE/logicytics/__init__.py-d1e912de-2238-44f4-953a-49b823b179bc": {
+			"path": "CODE/logicytics/__init__.py-d1e912de-2238-44f4-953a-49b823b179bc",
+			"fileName": "__init__.py",
+			"cellName": "Check",
+			"cellId": "CODE/logicytics/__init__.py-d1e912de-2238-44f4-953a-49b823b179bc",
+			"visible": true,
+			"startLine": 13,
+			"endLine": 13,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-5",
+			"parentPath": "CODE/logicytics/__init__.py"
+		},
+		"S8497ic9NJac3rzddQsJ-1": {
+			"path": "S8497ic9NJac3rzddQsJ-1",
+			"cellId": "S8497ic9NJac3rzddQsJ-1",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-9"
+		},
+		"S8497ic9NJac3rzddQsJ-2": {
+			"path": "S8497ic9NJac3rzddQsJ-2",
+			"cellId": "S8497ic9NJac3rzddQsJ-2",
+			"visible": true,
+			"parentCellId": "F4K0c2GmPw5ppnL7WhxD-9"
+		}
+	}
+}
