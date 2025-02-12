@@ -7,7 +7,7 @@
 
 | Task                                                                                         | Version | Might or Will be done? |
 |----------------------------------------------------------------------------------------------|---------|------------------------|
-| New feature: Psutil Network functions, most likely `net_info.py`                             | v3.4.0  | ✅                      |
+| Implement TODO in `dump_memory`                                                              | v3.4.1  | ✅                      |
 | Implement the 2 missing flags                                                                | v3.5.0  | ✅                      |
 | Move VulnScan tools and v3 module to separate repository, keep only the model and vectorizer | v3.5.0  | ✅                      |
 | Get any BETA features out of BETA                                                            | v3.6.0  | ✅                      |

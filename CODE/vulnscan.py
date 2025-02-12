@@ -18,7 +18,7 @@ from logicytics import Log, DEBUG
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
-# TODO v3.1.0: Load models and then use caching to avoid reloading models
+# TODO v3.4.0: Load models and then use caching to avoid reloading models
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
