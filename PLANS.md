@@ -7,7 +7,6 @@
 
 | Task                                                                                         | Version | Might or Will be done? |
 |----------------------------------------------------------------------------------------------|---------|------------------------|
-| Remove deprecated feature: `_generate_data.py`                                               | v3.4.0  | ✅                      |
 | New feature: Psutil Network functions, most likely `net_info.py`                             | v3.4.0  | ✅                      |
 | Implement the 2 missing flags                                                                | v3.5.0  | ✅                      |
 | Move VulnScan tools and v3 module to separate repository, keep only the model and vectorizer | v3.5.0  | ✅                      |
