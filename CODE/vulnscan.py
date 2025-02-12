@@ -12,60 +12,103 @@ import torch
 from safetensors import safe_open
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-# Set up logging
 from logicytics import Log, DEBUG
 
 if __name__ == "__main__":
     log = Log({"log_level": DEBUG})
 
-# TODO v3.4.0: Load models and then use caching to avoid reloading models
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
 
+# Caching dictionaries for model and vectorizer
+model_cache = {}
+vectorizer_cache = {}
+
+# Locks for thread-safe model and vectorizer loading
+model_lock = threading.Lock()
+vectorizer_lock = threading.Lock()
+
+# Global variables to hold loaded model and vectorizer
+model_to_use = None
+vectorizer_to_use = None
+
 
 def load_model(model_path_to_load: str) -> safe_open | torch.nn.Module:
     """
-    Load a machine learning model from the specified file path.
-    
-    Supports loading models from three different file formats: Pickle (.pkl), SafeTensors (.safetensors), and PyTorch (.pth) files.
-    
+    Load a machine learning model from the specified file path with caching.
+
     Parameters:
         model_path_to_load (str): Full file path to the model file to be loaded.
-    
+
     Returns:
-        safe_open | torch.nn.Module: Loaded model object, which can be a joblib, safetensors, or torch model.
-    
+        safe_open | torch.nn.Module: Loaded model object.
+
     Raises:
         ValueError: If the model file does not have a supported extension (.pkl, .safetensors, or .pth).
     """
+    # Check cache first
+    if model_path_to_load in model_cache:
+        log.info(f"Using cached model from {model_path_to_load}")
+        return model_cache[model_path_to_load]
+
+    # Load model if not cached
     if model_path_to_load.endswith('.pkl'):
-        return joblib.load(model_path_to_load)
+        model = joblib.load(model_path_to_load)
     elif model_path_to_load.endswith('.safetensors'):
-        return safe_open(model_path_to_load, framework='torch')
+        model = safe_open(model_path_to_load, framework='torch')
     elif model_path_to_load.endswith('.pth'):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=FutureWarning)
-            return torch.load(model_path_to_load, weights_only=False)
+            model = torch.load(model_path_to_load, weights_only=False)
     else:
         raise ValueError("Unsupported model file format. Use .pkl, .safetensors, or .pth")
+
+    # Cache the model
+    model_cache[model_path_to_load] = model
+    log.info(f"Loaded and cached model from {model_path_to_load}")
+    return model
+
+
+def load_vectorizer(vectorizer_path_to_load: str) -> TfidfVectorizer:
+    """
+    Load the vectorizer from the specified file path with caching.
+
+    Parameters:
+        vectorizer_path_to_load (str): Full file path to the vectorizer file to be loaded.
+
+    Returns:
+        TfidfVectorizer: Loaded vectorizer object.
+    """
+    # Check cache first
+    if vectorizer_path_to_load in vectorizer_cache:
+        log.info(f"Using cached vectorizer from {vectorizer_path_to_load}")
+        return vectorizer_cache[vectorizer_path_to_load]
+
+    # Load vectorizer if not cached
+    vectorizer = joblib.load(vectorizer_path_to_load)
+
+    # Cache the vectorizer
+    vectorizer_cache[vectorizer_path_to_load] = vectorizer
+    log.info(f"Loaded and cached vectorizer from {vectorizer_path_to_load}")
+    return vectorizer
 
 
 @log.function
 def scan_path(model_path: str, scan_paths: str, vectorizer_path: str):
     """
     Scan a specified path for sensitive content using a pre-trained machine learning model and vectorizer.
-    
-    This function handles loading the model and vectorizer if they are not already initialized, and then performs a vulnerability scan on the given path. It ensures thread-safe model and vectorizer loading using global locks.
-    
+
+    This function handles loading the model and vectorizer if they are not already initialized, and then performs a vulnerability scan on the given path.
+
     Args:
         model_path (str): Filesystem path to the machine learning model file to be used for scanning.
         scan_paths (str): Filesystem path to the file or directory that will be scanned for sensitive content.
         vectorizer_path (str): Filesystem path to the vectorizer file used for text feature extraction.
-    
+
     Raises:
         Exception: Captures and logs any errors that occur during the scanning process, preventing the entire scanning operation from halting.
-    
+
     Side Effects:
         - Loads global model and vectorizer if not already initialized
         - Logs information about model and vectorizer loading
@@ -74,14 +117,19 @@ def scan_path(model_path: str, scan_paths: str, vectorizer_path: str):
     """
     global model_to_use, vectorizer_to_use
     try:
-        with model_lock:
-            if model_to_use is None:
-                log.info(f"Loading model from {model_path}")
-                model_to_use = load_model(model_path)
-        with vectorizer_lock:
-            if vectorizer_to_use is None:
-                log.info(f"Loading vectorizer from {vectorizer_path}")
-                vectorizer_to_use = joblib.load(vectorizer_path)
+        # Load model and vectorizer if not already loaded
+        if model_to_use is None:
+            with model_lock:
+                if model_to_use is None:
+                    log.info(f"Loading model from {model_path}")
+                    model_to_use = load_model(model_path)
+
+        if vectorizer_to_use is None:
+            with vectorizer_lock:
+                if vectorizer_to_use is None:
+                    log.info(f"Loading vectorizer from {vectorizer_path}")
+                    vectorizer_to_use = load_vectorizer(vectorizer_path)
+
         vulnscan(model_to_use, scan_paths, vectorizer_to_use)
     except FileNotFoundError as err:
         log.error(f"File not found while scanning {scan_paths}: {err}")
@@ -153,20 +201,20 @@ def scan_file(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_path: st
 def vulnscan(model, SCAN_PATH, vectorizer):
     """
     Scan a file to determine if it contains sensitive content and log the results.
-    
+
     Args:
         model (object): Machine learning model used for content sensitivity classification.
         SCAN_PATH (str): Absolute or relative file path to be scanned for sensitive content.
         vectorizer (object): Text vectorization model to transform file content into feature representation.
-    
+
     Returns:
         None: Logs sensitive file details and appends file path to 'Sensitive_File_Paths.txt' if sensitive content is detected.
-    
+
     Side Effects:
         - Logs scanning information using the configured logger
         - Creates or appends to 'Sensitive_File_Paths.txt' when sensitive content is found
         - Writes sensitive file paths to the log file
-    
+
     Raises:
         IOError: If there are issues writing to the 'Sensitive_File_Paths.txt' file
     """
@@ -182,18 +230,9 @@ def vulnscan(model, SCAN_PATH, vectorizer):
 
 
 if __name__ == "__main__":
-    # Locks for model and vectorizer
-    log.info("Locking threads - Model and Vectorizer")
-    model_lock = threading.Lock()
-    vectorizer_lock = threading.Lock()
-
-    model_to_use = None
-    vectorizer_to_use = None
+    log.info("Loading Files - This may take some time and consume memory!!")
 
     # Start scanning
-    log.info("Getting paths to scan - This may take some time!!")
-
-    threads = []
     paths = []
     base_paths = [
         "C:\\Users\\",
@@ -202,9 +241,7 @@ if __name__ == "__main__":
         "C:\\Program Files (x86)"
     ]
 
-    # Use max_workers based on CPU count but cap it at a reasonable number
     max_workers = min(32, os.cpu_count() * 2)
-
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = [executor.submit(os.path.join, root, file_main) for base_path in base_paths for root, _, files_main in
                    os.walk(base_path) for file_main in files_main]
@@ -213,6 +250,7 @@ if __name__ == "__main__":
 
     # Start scanning
     log.warning("Starting scan - This may take hours and consume memory!!")
+    log.warning("THIS MAY TAKE HUGE AMOUNTS OF SPACE!!!")
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         total_paths = len(paths)
