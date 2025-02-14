@@ -12,6 +12,12 @@ sys_internal_executables = [
     "psloglist.exe",
 ]
 
+# Check if the executables exist
+sys_internal_executables = [
+    exe for exe in sys_internal_executables
+    if os.path.exists(os.path.join("SysInternal_Suite", exe))
+]
+
 
 @log.function
 def sys_internal():

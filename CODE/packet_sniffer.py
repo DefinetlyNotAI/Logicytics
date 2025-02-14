@@ -365,9 +365,9 @@ def packet_sniffer():
     if packet_count <= 0 or timeout <= 0:
         try:
             log.error(
-                "Oops! Can't work with these values:\n"
-                f"- Packet count: {packet_count} {'❌ (must be > 0)' if packet_count <= 0 else '✅'}\n"
-                f"- Timeout: {timeout} {'❌ (must be > 0)' if timeout <= 0 else '✅'}"
+                "Oops! Can't work with these values (Not your fault):\n"
+                f"          - Packet count: {packet_count} {'❌ (must be > 0)' if packet_count <= 0 else '✅'}\n"
+                f"          - Timeout: {timeout} {'❌ (must be > 0)' if timeout <= 0 else '✅'}"
             )
         except Exception:
             log.error("Error reading configuration: Improper values for packet count or timeout")
@@ -386,12 +386,15 @@ def packet_sniffer():
 
 
 # Entry point of the script
-# FIXME The finally statement should be improved to dodge errors
 if __name__ == "__main__":
     try:
         packet_sniffer()
     except Exception as e:
         log.error(e)
     finally:
-        if G:
-            plt.close()
+        # Clean up resources
+        try:
+            if G:
+                plt.close('all')  # Close all figures
+        except Exception as e:
+            log.error(f"Error during cleanup: {e}")

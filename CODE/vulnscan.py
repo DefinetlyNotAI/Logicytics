@@ -126,7 +126,7 @@ def scan_path(model_path: str, scan_paths: str, vectorizer_path: str):
                     log.info(f"Loading vectorizer from {vectorizer_path}")
                     vectorizer_to_use = load_vectorizer(vectorizer_path)
 
-        vulnscan(model_to_use, scan_paths, vectorizer_to_use)
+        scan_vulnscan(model_to_use, scan_paths, vectorizer_to_use)
     except FileNotFoundError as err:
         log.error(f"File not found while scanning {scan_paths}: {err}")
     except PermissionError as err:
@@ -194,7 +194,7 @@ def scan_file(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_path: st
 
 
 @log.function
-def vulnscan(model, SCAN_PATH, vectorizer):
+def scan_vulnscan(model, SCAN_PATH, vectorizer):
     """
     Scan a file to determine if it contains sensitive content and log the results.
 
@@ -225,9 +225,75 @@ def vulnscan(model, SCAN_PATH, vectorizer):
             sensitive_file.write(f"{SCAN_PATH}\n")
 
 
-if __name__ == "__main__":
+@log.function
+def vulnscan(paths_to_scan: list[str]):
+    log.warning(
+        "Once again, remember that this script is a proof of concept and should not be used in production. Its in beta and not the most accurate.")
     log.info("Loading Files - This may take some time and consume memory!!")
 
+    try:
+        max_workers = min(32, os.cpu_count() * 2)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(os.path.join, root, file_main) for path_to_scan in paths_to_scan for
+                       root, _, files_main in
+                       os.walk(path_to_scan) for file_main in files_main]
+            for future in futures:
+                paths.append(future.result())
+    except Exception as e:
+        log.error(f"Scan failed: {e}")
+    finally:
+        try:
+            model_cache.clear()
+            vectorizer_cache.clear()
+            model_to_use = None
+            vectorizer_to_use = None
+            log.info("Scan complete!")
+        except Exception as e:
+            log.error(f"Scan cleanup failed: {e}")
+            log.warning("We recommend restarting your device to free up memory just in case.")
+
+    # Start scanning
+    log.warning("Starting scan - This may take hours and consume memory!!")
+    log.warning("THIS MAY TAKE HUGE AMOUNTS OF SPACE!!!")
+
+    try:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            total_paths = len(paths)
+            completed = 0
+            futures = [
+                executor.submit(
+                    scan_path,
+                    "VulnScan/Model SenseMini .3n3.pth",
+                    path,
+                    "VulnScan/Vectorizer .3n3.pkl"
+                )
+                for path in paths
+            ]
+            for future in futures:
+                try:
+                    future.result()
+                    completed += 1
+                    if completed % 100 == 0:
+                        progress = (completed / total_paths) * 100
+                        log.info(f"Scan progress: {progress:.1f}% ({completed}/{total_paths})")
+                except Exception as e:
+                    log.error(f"Scan failed: {e}")
+    except Exception as e:
+        log.error(f"Scan failed: {e}")
+    finally:
+        try:
+            model_cache.clear()
+            vectorizer_cache.clear()
+            model_to_use = None
+            vectorizer_to_use = None
+            log.info("Scan complete!")
+        except Exception as e:
+            log.error(f"Scan cleanup failed: {e}")
+            log.warning("We recommend restarting your device to free up memory just in case.")
+
+
+# Now supports importing for custom paths
+if __name__ == "__main__":
     # Start scanning
     paths = []
     base_paths = [
@@ -236,36 +302,4 @@ if __name__ == "__main__":
         "C:\\Program Files",
         "C:\\Program Files (x86)"
     ]
-
-    max_workers = min(32, os.cpu_count() * 2)
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [executor.submit(os.path.join, root, file_main) for base_path in base_paths for root, _, files_main in
-                   os.walk(base_path) for file_main in files_main]
-        for future in futures:
-            paths.append(future.result())
-
-    # Start scanning
-    log.warning("Starting scan - This may take hours and consume memory!!")
-    log.warning("THIS MAY TAKE HUGE AMOUNTS OF SPACE!!!")
-
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        total_paths = len(paths)
-        completed = 0
-        futures = [
-            executor.submit(
-                scan_path,
-                "VulnScan/Model SenseMini .3n3.pth",
-                path,
-                "VulnScan/Vectorizer .3n3.pkl"
-            )
-            for path in paths
-        ]
-        for future in futures:
-            try:
-                future.result()
-                completed += 1
-                if completed % 100 == 0:
-                    progress = (completed / total_paths) * 100
-                    log.info(f"Scan progress: {progress:.1f}% ({completed}/{total_paths})")
-            except Exception as e:
-                log.error(f"Scan failed: {e}")
+    vulnscan(base_paths)

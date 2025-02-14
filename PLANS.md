@@ -13,3 +13,4 @@
 | Get any BETA features out of BETA                                                            | v3.6.0  | ✅                      |
 | Remake VulnScan .pkl and .pth to be more accurate                                            | v3.6.0  | ✅                      |
 | Encrypted Volume Detection and Analysis, Advanced USB Device History Tracker                 | v3.7.0  | ✅                      |
+| Smush `sensitive data miner` with `vulnscan`                                                 | v3.7.0  | ✅                      |
