@@ -17,7 +17,8 @@ def wmic():
     None
     """
     data = Execute.command("wmic BIOS get Manufacturer,Name,Version /format:htable")
-    open("WMIC.html", "w").write(data)
+    with open("WMIC.html", "w") as file:
+        file.write(data)
     wmic_commands = [
         "wmic os get Caption,CSDVersion,ServicePackMajorVersion",
         "wmic computersystem get Model,Manufacturer,NumberOfProcessors",
@@ -25,11 +26,11 @@ def wmic():
         "wmic diskdrive get model,size",
     ]
     with open("wmic_output.txt", "w") as file:
-        for i in range(len(wmic_commands)):
-            log.info(f"Executing Command Number {i + 1}: {wmic_commands[i]}")
-            output = Execute.command(wmic_commands[i])
+        for index, command in enumerate(wmic_commands):
+            log.info(f"Executing Command Number {index + 1}: {command}")
+            output = Execute.command(command)
             file.write("-" * 190)
-            file.write(f"Command {i + 1}: {wmic_commands[i]}\n")
+            file.write(f"Command {index + 1}: {command}\n")
             file.write(output)
 
         file.write("-" * 190)

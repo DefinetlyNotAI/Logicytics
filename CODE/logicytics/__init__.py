@@ -16,7 +16,7 @@ Flag = Flag()
 
 DEBUG, VERSION, CURRENT_FILES, DELETE_LOGS = Get.config_data()
 
-__show_trace = True if DEBUG == "DEBUG" else False
+__show_trace = DEBUG == "DEBUG"
 
 
 def deprecated(removal_version: str, reason: str, show_trace: bool = __show_trace) -> callable:

@@ -10,13 +10,17 @@ import requests
 
 from logicytics import Log, DEBUG, VERSION, Check
 
+log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                        "ACCESS\\LOGS\\DEBUG\\DEBUG.log")
 log = Log(
     {"log_level": DEBUG,
-     "filename": "../ACCESS/LOGS/DEBUG/DEBUG.log",
-     "truncate_message": False}
+     "filename": log_path,
+     "truncate_message": False,
+     "delete_log": True}
 )
 
 
+# TODO Reorganise me
 class HealthCheck:
     @staticmethod
     def __version_tuple(version: str) -> tuple[int, int, int | str, str]:
@@ -255,11 +259,6 @@ def debug():
     - Checks system and Python version compatibility
     - Provides insights into system configuration and potential security settings
     """
-    # Clear Debug Log
-    log_path = "../ACCESS/LOGS/DEBUG/DEBUG.log"
-    if os.path.exists(log_path):
-        os.remove(log_path)
-
     # Online Configuration Check
     config = get_online_config()
     if config:
