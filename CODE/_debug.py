@@ -10,12 +10,11 @@ import requests
 
 from logicytics import Log, DEBUG, VERSION, Check
 
-if __name__ == "__main__":
-    log_debug = Log(
-        {"log_level": DEBUG,
-         "filename": "../ACCESS/LOGS/DEBUG/DEBUG.log",
-         "truncate_message": False}
-    )
+log = Log(
+    {"log_level": DEBUG,
+     "filename": "../ACCESS/LOGS/DEBUG/DEBUG.log",
+     "truncate_message": False}
+)
 
 
 class HealthCheck:
@@ -40,7 +39,7 @@ class HealthCheck:
             else:
                 return tuple(map(int, version.split('.'))) + ("release",)
         except Exception as err:
-            log_debug.error(f"Failed to parse version: {err}")
+            log.error(f"Failed to parse version: {err}")
             return 0, 0, 0, "error"
 
     @staticmethod
@@ -53,9 +52,9 @@ class HealthCheck:
             required_files (list[str]): List of required file names with relative paths.
         """
         try:
-            log_debug.debug(f"Checking directory: {directory}")
+            log.debug(f"Checking directory: {directory}")
             if not os.path.exists(directory):
-                log_debug.error(f"Directory {directory} does not exist.")
+                log.error(f"Directory {directory} does not exist.")
 
             # Gather all files with relative paths
             actual_files = []
@@ -65,7 +64,7 @@ class HealthCheck:
                     actual_files.append(
                         relative_path.replace("\\", "/").replace('"', ''))  # Normalize paths for comparison
 
-            log_debug.debug(f"Actual files found: {actual_files}")
+            log.debug(f"Actual files found: {actual_files}")
 
             # Track missing and extra files
             missing_files = []
@@ -80,23 +79,24 @@ class HealthCheck:
                 if required_file not in actual_files:
                     missing_files.append(required_file)
 
-            log_debug.debug(f"Missing files: {missing_files}")
+            log.debug(f"Missing files: {missing_files}")
 
             # Check for extra files
             for actual_file in actual_files:
                 if actual_file not in normalized_required_files:
                     extra_files.append(actual_file)
 
-            log_debug.debug(f"Extra files: {extra_files}")
+            log.debug(f"Extra files: {extra_files}")
 
             if missing_files:
-                log_debug.error(f"Missing files: {', '.join(missing_files)}")
+                log.error(f"Missing files: {', '.join(missing_files)}")
             if extra_files:
-                log_debug.warning(f"Extra files found: {', '.join(extra_files)}")
-            log_debug.info("All required files are present.")
+                log.warning(f"Extra files found: {', '.join(extra_files)}")
+            if not missing_files and not extra_files:
+                log.info("All required files are present.")
 
         except Exception as e:
-            log_debug.error(f"Unexpected error during file check: {e}")
+            log.error(f"Unexpected error during file check: {e}")
 
     @classmethod
     def versions(cls, local_version: str, remote_version: str):
@@ -112,24 +112,24 @@ class HealthCheck:
         remote_version_tuple = cls.__version_tuple(remote_version)
 
         if "error" in local_version_tuple or "error" in remote_version_tuple:
-            log_debug.error("Version parsing error.")
+            log.error("Version parsing error.")
             return
 
         try:
             if "snapshot" in local_version_tuple or "snapshot" in remote_version_tuple:
-                log_debug.warning("Snapshot versions are unstable.")
+                log.warning("Snapshot versions are unstable.")
 
             if local_version_tuple == remote_version_tuple:
-                log_debug.info(f"Version is up to date. Your Version: {local_version}")
+                log.info(f"Version is up to date. Your Version: {local_version}")
             elif local_version_tuple > remote_version_tuple:
-                log_debug.warning("Version is ahead of the repository. "
-                                  f"Your Version: {local_version}, "
-                                  f"Repository Version: {remote_version}")
+                log.warning("Version is ahead of the repository. "
+                            f"Your Version: {local_version}, "
+                            f"Repository Version: {remote_version}")
             else:
-                log_debug.error("Version is behind the repository. "
-                                f"Your Version: {local_version}, Repository Version: {remote_version}")
+                log.error("Version is behind the repository. "
+                          f"Your Version: {local_version}, Repository Version: {remote_version}")
         except Exception as e:
-            log_debug.error(f"Version comparison error: {e}")
+            log.error(f"Version comparison error: {e}")
 
 
 class DebugCheck:
@@ -146,21 +146,21 @@ class DebugCheck:
                 raise FileNotFoundError("Directory does not exist")
 
             contents = os.listdir(path)
-            log_debug.debug(str(contents))
+            log.debug(str(contents))
 
             has_zip = any(file.endswith(".zip") for file in contents)
             has_exe = any(file.endswith(".exe") for file in contents)
 
             if any(file.endswith(".ignore") for file in contents):
-                log_debug.warning("A `.sys.ignore` file was found - Ignoring")
+                log.warning("A `.sys.ignore` file was found - Ignoring")
             elif has_zip and not has_exe:
-                log_debug.error("Only zip files - Missing EXEs due to no `ignore` file")
+                log.error("Only zip files - Missing EXEs due to no `ignore` file")
             elif has_zip and has_exe:
-                log_debug.info("Both zip and exe files - All good")
+                log.info("Both zip and exe files - All good")
             else:
-                log_debug.error("SysInternal Binaries Not Found: Missing Files - Corruption detected")
+                log.error("SysInternal Binaries Not Found: Missing Files - Corruption detected")
         except Exception as e:
-            log_debug.error(f"Unexpected error: {e}")
+            log.error(f"Unexpected error: {e}")
 
     @staticmethod
     def cpu_info() -> tuple[str, str, str]:
@@ -205,13 +205,13 @@ def python_version():
     try:
         major, minor = map(int, version.split(".")[:2])
         if MIN_VERSION <= (major, minor) < MAX_VERSION:
-            log_debug.info(f"Python Version: {version} - Perfect")
+            log.info(f"Python Version: {version} - Perfect")
         elif (major, minor) < MIN_VERSION:
-            log_debug.warning(f"Python Version: {version} - Recommended: 3.11.x")
+            log.warning(f"Python Version: {version} - Recommended: 3.11.x")
         else:
-            log_debug.error(f"Python Version: {version} - Incompatible")
+            log.error(f"Python Version: {version} - Incompatible")
     except Exception as e:
-        log_debug.error(f"Failed to parse Python Version: {e}")
+        log.error(f"Failed to parse Python Version: {e}")
 
 
 def get_online_config() -> dict | None:
@@ -228,11 +228,11 @@ def get_online_config() -> dict | None:
         config.read_string(requests.get(url, timeout=15).text)
         return config
     except requests.exceptions.RequestException as e:
-        log_debug.error(f"Connection error: {e}")
+        log.error(f"Connection error: {e}")
         return None
 
 
-@log_debug.function
+@log.function
 def debug():
     """
     Executes a comprehensive system debug routine, performing various checks and logging system information.
@@ -273,25 +273,25 @@ def debug():
     DebugCheck.sys_internal_binaries("SysInternal_Suite")
 
     # System Checks
-    log_debug.info("Admin privileges found" if Check.admin() else "Admin privileges not found")
-    log_debug.info("UAC enabled" if Check.uac() else "UAC disabled")
-    log_debug.info(f"Execution path: {psutil.__file__}")
-    log_debug.info(f"Global execution path: {sys.executable}")
-    log_debug.info(f"Local execution path: {sys.prefix}")
-    log_debug.info(
+    log.info("Admin privileges found" if Check.admin() else "Admin privileges not found")
+    log.info("UAC enabled" if Check.uac() else "UAC disabled")
+    log.info(f"Execution path: {psutil.__file__}")
+    log.info(f"Global execution path: {sys.executable}")
+    log.info(f"Local execution path: {sys.prefix}")
+    log.info(
         "Running in a virtual environment" if sys.prefix != sys.base_prefix else "Not running in a virtual environment")
-    log_debug.info(
-        "Execution policy is unrestricted" if Check.execution_policy() else "Execution policy is not unrestricted")
+    log.info(
+        "Execution policy is unrestricted" if Check.execution_policy() else "Execution policy is restricted")
 
     # Python Version Check
     python_version()
 
     # CPU Info
     for info in DebugCheck.cpu_info():
-        log_debug.info(info)
+        log.info(info)
 
     # Final Debug Status
-    log_debug.info(f"Debug: {DEBUG}")
+    log.info(f"Log Level: {DEBUG}")
 
 
 if __name__ == "__main__":

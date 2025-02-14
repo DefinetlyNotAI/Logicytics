@@ -4,10 +4,7 @@ import subprocess
 
 import configobj
 
-from logicytics import Log, DEBUG, Get, FileManagement, CURRENT_FILES, VERSION
-
-if __name__ == "__main__":
-    log_dev = Log({"log_level": DEBUG})
+from logicytics import log, Get, FileManagement, CURRENT_FILES, VERSION
 
 
 def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
@@ -27,15 +24,15 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
         elif key == "version":
             config["System Settings"][key] = new_data
         else:
-            log_dev.error(f"Invalid key: {key}")
+            log.error(f"Invalid key: {key}")
             return
         config.write()
     except FileNotFoundError:
-        log_dev.error(f"File not found: {filename}")
+        log.error(f"File not found: {filename}")
     except configobj.ConfigObjError as e:
-        log_dev.error(f"Error parsing INI file: {filename}, {e}")
+        log.error(f"Error parsing INI file: {filename}, {e}")
     except Exception as e:
-        log_dev.error(f"An error occurred: {e}")
+        log.error(f"An error occurred: {e}")
 
 
 def _prompt_user(question: str, file_to_open: str = None, special: bool = False) -> bool:
@@ -70,7 +67,7 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
             return False
         return True
     except Exception as e:
-        log_dev.error(e)
+        log.error(e)
 
 
 def _perform_checks() -> bool:
@@ -90,7 +87,7 @@ def _perform_checks() -> bool:
 
     for question, file_to_open in checks:
         if not _prompt_user(question, file_to_open):
-            log_dev.warning("Fix the issues and try again with the checklist.")
+            log.warning("Fix the issues and try again with the checklist.")
             return False
     return True
 
@@ -121,15 +118,16 @@ def _handle_file_operations() -> None:
     print("\n".join([f"* {file}" for file in normal_files]))
 
     if not _prompt_user("Does the list above include your added files?"):
-        log_dev.critical("Something went wrong! Please contact support.")
+        log.critical("Something went wrong! Please contact support.")
         return
 
     _update_ini_file("config.ini", files, "files")
-    _update_ini_file("config.ini", input(f"Enter the new version of the project (Old version is {VERSION}): "), "version")
+    _update_ini_file("config.ini", input(f"Enter the new version of the project (Old version is {VERSION}): "),
+                     "version")
     print("\nGreat Job! Please tick the box in the GitHub PR request for completing steps in --dev")
 
 
-@log_dev.function
+@log.function
 def dev_checks() -> None:
     """
     Performs comprehensive developer checks to ensure code quality and project guidelines compliance.

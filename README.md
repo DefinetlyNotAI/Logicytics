@@ -213,6 +213,7 @@ Here are some of the data points that Logicytics extracts:
 | dump_memory.py           | Dumps some memory as well as log some RAM details                                                                    | Not completely good yet... |
 | bluetooth_details.py     | Gets the PNP Device ID, Status, Manufacturer, Device ID, Name, Description of all paired bluetooth devices           |                            |
 | bluetooth_logger.py      | Collect, log, and analyze Bluetooth-related data, by accessing the Windows registry and Event Viewer.                |                            |
+| network_psutil.py        | The `network_psutil.py` file collects and logs various network-related information.                                  |                            |
 
 This is not an exhaustive list, 
 but it should give you a good idea of what data Logicytics is capable of extracting.

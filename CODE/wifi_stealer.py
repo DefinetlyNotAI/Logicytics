@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from logicytics import Log, DEBUG, Execute
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log, Execute
 
 
 def get_password(ssid: str) -> str | None:
