@@ -13,10 +13,8 @@ from prettytable import PrettyTable
 from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS
 
 # Initialization
-FileManagement.mkdir()
-log = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
-ACTION = None
-SUB_ACTION = None
+log_main = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
+ACTION, SUB_ACTION = None, None
 
 
 class Health:
@@ -89,8 +87,8 @@ def get_flags():
     global ACTION, SUB_ACTION
     # Get flags_list
     ACTION, SUB_ACTION = Flag.data()
-    log.debug(f"Action: {ACTION}")
-    log.debug(f"Sub-Action: {SUB_ACTION}")
+    log_main.debug(f"Action: {ACTION}")
+    log_main.debug(f"Sub-Action: {SUB_ACTION}")
 
 
 def special_execute(file_path: str):
@@ -141,31 +139,31 @@ def handle_special_actions():
     """
     # Special actions -> Quit
     if ACTION == "debug":
-        log.info("Opening debug menu...")
+        log_main.info("Opening debug menu...")
         special_execute("_debug.py")
 
     messages = Check.sys_internal_zip()
     if messages:
         # If there are messages, log them with debug
-        log.debug(messages)
+        log_main.debug(messages)
 
     if ACTION == "dev":
-        log.info("Opening developer menu...")
+        log_main.info("Opening developer menu...")
         special_execute("_dev.py")
 
     if ACTION == "update":
-        log.info("Updating...")
+        log_main.info("Updating...")
         message, log_type = Health.update()
-        log.string(message, log_type)
+        log_main.string(message, log_type)
         if log_type == "info":
-            log.info("Update complete!")
+            log_main.info("Update complete!")
         else:
-            log.error("Update failed!")
+            log_main.error("Update failed!")
         input("Press Enter to exit...")
         exit(0)
 
     if ACTION == "restore":
-        log.warning(
+        log_main.warning(
             "Sorry, this feature is yet to be implemented. You can manually Restore your backups, We will open "
             "the location for you"
         )
@@ -174,12 +172,12 @@ def handle_special_actions():
         exit(1)
 
     if ACTION == "backup":
-        log.info("Backing up...")
+        log_main.info("Backing up...")
         Health.backup(".", "Default_Backup")
-        log.debug("Backup complete -> CODE dir")
+        log_main.debug("Backup complete -> CODE dir")
         Health.backup("../MODS", "Mods_Backup")
-        log.debug("Backup complete -> MODS dir")
-        log.info("Backup complete!")
+        log_main.debug("Backup complete -> MODS dir")
+        log_main.info("Backup complete!")
         input("Press Enter to exit...")
         exit(0)
 
@@ -202,15 +200,15 @@ def check_privileges():
     """
     if not Check.admin():
         if DEBUG == "DEBUG":
-            log.warning("Running in debug mode, continuing without admin privileges - This may cause issues")
+            log_main.warning("Running in debug mode, continuing without admin privileges - This may cause issues")
         else:
-            log.critical(
+            log_main.critical(
                 "Please run this script with admin privileges - To ignore this message, run with DEBUG in config")
             input("Press Enter to exit...")
             exit(1)
 
     if Check.uac():
-        log.warning("UAC is enabled, this may cause issues - Please disable UAC if possible")
+        log_main.warning("UAC is enabled, this may cause issues - Please disable UAC if possible")
 
 
 def generate_execution_list() -> list | list[str] | list[str | Any]:
@@ -271,25 +269,26 @@ def generate_execution_list() -> list | list[str] | list[str | Any]:
                                            append_file_list=execution_list)
 
     if ACTION == "depth":
-        log.warning("This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards.")
+        log_main.warning(
+            "This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards.")
         execution_list.append("sensitive_data_miner.py")
         execution_list.append("dir_list.py")
         execution_list.append("tree.ps1")
         execution_list.append("event_log.py")
-        log.warning("This flag will use threading!")
+        log_main.warning("This flag will use threading!")
 
     if ACTION == "vulnscan_ai":
         # Only vulnscan detector
         execution_list = ["vulnscan.py"]
 
-    log.debug(f"The following will be executed: {execution_list}")
+    log_main.debug(f"The following will be executed: {execution_list}")
     return execution_list
 
 
 def execute_scripts():
     """Executes the scripts in the execution list based on the action."""
     # Check weather to use threading or not, as well as execute code
-    log.info("Starting Logicytics...")
+    log_main.info("Starting Logicytics...")
 
     if ACTION == "threaded" or ACTION == "depth":
 
@@ -303,16 +302,16 @@ def execute_scripts():
             Parameters:
                 script (str): The path to the script to be executed
             """
-            log.debug(f"Executing {script}")
+            log_main.debug(f"Executing {script}")
             try:
-                log.parse_execution(Execute.script(script))
-                log.info(f"{script} executed")
+                log_main.parse_execution(Execute.script(script))
+                log_main.info(f"{script} executed")
                 return script, None
             except Exception as err:
-                log.error(f"Error executing {script}: {err}")
+                log_main.error(f"Error executing {script}: {err}")
                 return script, err
 
-        log.debug("Using threading")
+        log_main.debug("Using threading")
         execution_list = generate_execution_list()
         with ThreadPoolExecutor() as executor:
             futures = {executor.submit(execute_single_script, script): script
@@ -322,20 +321,20 @@ def execute_scripts():
                 script = futures[future]
                 result, error = future.result()
                 if error:
-                    log.error(f"Failed to execute {script}")
+                    log_main.error(f"Failed to execute {script}")
                 else:
-                    log.debug(f"Completed {script}")
+                    log_main.debug(f"Completed {script}")
 
     elif ACTION == "performance_check":
         execution_times = []
         execution_list = generate_execution_list()
         for file in range(len(execution_list)):
             start_time = datetime.now()
-            log.parse_execution(Execute.script(execution_list[file]))
+            log_main.parse_execution(Execute.script(execution_list[file]))
             end_time = datetime.now()
             elapsed_time = end_time - start_time
             execution_times.append((file, elapsed_time))
-            log.info(f"{execution_list[file]} executed in {elapsed_time}")
+            log_main.info(f"{execution_list[file]} executed in {elapsed_time}")
 
         table = PrettyTable()
         table.field_names = ["Script", "Execution Time"]
@@ -348,35 +347,35 @@ def execute_scripts():
         ) as f:
             f.write(table.get_string())
 
-        log.info("Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE")
+        log_main.info("Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE")
     else:
         try:
             execution_list = generate_execution_list()
             for script in execution_list:  # Loop through List
-                log.parse_execution(Execute.script(script))
-                log.info(f"{script} executed")
+                log_main.parse_execution(Execute.script(script))
+                log_main.info(f"{script} executed")
         except UnicodeDecodeError as e:
-            log.error(f"Error in code: {e}")
+            log_main.error(f"Error in code: {e}")
         except Exception as e:
-            log.error(f"Error in code: {e}")
+            log_main.error(f"Error in code: {e}")
 
 
 def zip_generated_files():
     """Zips generated files based on the action."""
 
     def zip_and_log(directory: str, name: str):
-        log.debug(f"Zipping directory '{directory}' with name '{name}' under action '{ACTION}'")
+        log_main.debug(f"Zipping directory '{directory}' with name '{name}' under action '{ACTION}'")
         zip_values = FileManagement.Zip.and_hash(
             directory,
             name,
             ACTION if ACTION is not None else f"ERROR_NO_ACTION_SPECIFIED_{datetime.now().isoformat()}"
         )
         if isinstance(zip_values, str):
-            log.error(zip_values)
+            log_main.error(zip_values)
         else:
             zip_loc, hash_loc = zip_values
-            log.info(zip_loc)
-            log.debug(hash_loc)
+            log_main.info(zip_loc)
+            log_main.debug(hash_loc)
 
     if ACTION == "modded":
         zip_and_log("..\\MODS", "MODS")
@@ -390,8 +389,8 @@ def handle_sub_action():
     This function checks the value of the `sub_action` variable and performs
     corresponding sub-actions such as shutting down or rebooting the system.
     """
-    log.info("Completed successfully!")
-    log.newline()
+    log_main.info("Completed successfully!")
+    log_main.newline()
     if ACTION == "performance_check":
         return  # Do not handle sub actions for performance check
     if SUB_ACTION == "shutdown":
@@ -403,7 +402,7 @@ def handle_sub_action():
     # log.warning("This feature is not implemented yet! Sorry")
 
 
-@log.function
+@log_main.function
 def Logicytics():
     """
     Orchestrates the complete Logicytics workflow, managing script execution, system actions, and user interactions.
@@ -438,5 +437,5 @@ def Logicytics():
 if __name__ == "__main__":
     Logicytics()
 else:
-    log.error("This script cannot be imported!")
+    log_main.error("This script cannot be imported!")
     exit(1)

@@ -16,8 +16,10 @@ Flag = Flag()
 
 DEBUG, VERSION, CURRENT_FILES, DELETE_LOGS = Get.config_data()
 
+__show_trace = True if DEBUG == "DEBUG" else False
 
-def deprecated(removal_version: str, reason: str, show_trace: bool = True if DEBUG == "DEBUG" else False) -> callable:
+
+def deprecated(removal_version: str, reason: str, show_trace: bool = __show_trace) -> callable:
     """
     Decorator function that marks a function as deprecated
     and provides a warning when the function is called.
@@ -81,3 +83,8 @@ def deprecated(removal_version: str, reason: str, show_trace: bool = True if DEB
         return wrapper
 
     return decorator
+
+
+FileManagement.mkdir()
+DEBUG, *_ = Get.config_data()
+log = Log({"log_level": DEBUG})

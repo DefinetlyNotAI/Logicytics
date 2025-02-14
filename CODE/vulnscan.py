@@ -12,11 +12,7 @@ import torch
 from safetensors import safe_open
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from logicytics import Log, DEBUG
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
-
+from logicytics import log
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")

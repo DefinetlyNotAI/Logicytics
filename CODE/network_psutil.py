@@ -4,10 +4,7 @@ import time
 
 import psutil
 
-from logicytics import Log, DEBUG, Execute
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log, Execute
 
 
 def __save_data(filename: str, data: str, father_dir_name: str = "network_data"):
@@ -16,6 +13,7 @@ def __save_data(filename: str, data: str, father_dir_name: str = "network_data")
         f.write(data)
 
 
+# TODO: Split me up into helper functions
 @log.function
 def get_network_info():
     try:
@@ -89,7 +87,6 @@ def get_network_info():
         ip_config_data = f"Hostname: {hostname}\nIP Address: {ip_address}\n"
         __save_data("hostname_ip.txt", ip_config_data)
         log.info("Hostname and IP address saved.")
-
     except Exception as e:
         log.error(f"Error getting network info: {e}")
 
