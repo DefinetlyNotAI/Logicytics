@@ -3,12 +3,8 @@
 
 # Other Imports if needed or necessary go here
 
-# This imports everything needed including the unique logger called by log - It is not optional
 # To know more check the WiKi
-from logicytics import *
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log  # And more if needed
 
 # Your actual code, must be able to run without any interference by outside actions
 # USE log.debug, log.info, log.error, log.warning and log.critical and log.string as well
@@ -48,7 +44,7 @@ def MOD_EXAMPLE() -> None:
     pass  # Your code here with proper logging like the above log options
 
 
-# Not a must, but it is recommended to call your function at the end of the file using the following code
+# It is recommended to call your function at the end of the file using the following code
 # This is to ensure that the function is called only when directly executed and not when imported
 if __name__ == "__main__":
     MOD_EXAMPLE()
