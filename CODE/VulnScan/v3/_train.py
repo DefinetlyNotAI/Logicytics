@@ -19,10 +19,10 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.tree import DecisionTreeClassifier
 from torch.utils.data import Dataset, DataLoader
 
-# NN seems to be the best choice for this task
-
 # Set up logging
 from logicytics import Log, DEBUG
+
+# NN seems to be the best choice for this task
 
 logger = Log(
     {"log_level": DEBUG,
@@ -31,6 +31,7 @@ logger = Log(
          "%(log_color)s%(levelname)-8s%(reset)s %(yellow)s%(asctime)s %(blue)s%(message)s",
      }
 )
+vectorizer = None
 
 
 # Dataset Class for PyTorch models
@@ -361,7 +362,8 @@ def validate_data():
         logger.error("CUDA must be a boolean")
         exit(1)
 
-    allowed_models = ["NeuralNetwork", "LogReg", "RandomForest", "ExtraTrees", "GBM", "XGBoost", "DecisionTree", "NaiveBayes"]
+    allowed_models = ["NeuralNetwork", "LogReg", "RandomForest", "ExtraTrees", "GBM", "XGBoost", "DecisionTree",
+                      "NaiveBayes"]
     if MODEL_NAME not in allowed_models:
         logger.error(f"MODEL_NAME must be one of: {', '.join(allowed_models)}")
         exit(1)

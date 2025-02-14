@@ -1,7 +1,4 @@
-from logicytics import Log, DEBUG, Execute
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log, Execute
 
 
 @log.function

@@ -5,10 +5,7 @@ from datetime import datetime
 
 import psutil
 
-from logicytics import Log, DEBUG
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log
 
 # TODO v3.4.1
 #  psutil.virtual_memory(): used, free, percent, total

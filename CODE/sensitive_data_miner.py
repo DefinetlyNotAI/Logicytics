@@ -3,10 +3,7 @@ import shutil
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from logicytics import Log, DEBUG
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log
 
 # List of allowed extensions
 allowed_extensions = [
@@ -49,10 +46,10 @@ class Mine:
         path_list = []
         try:
             path_list = os.listdir(root)
-        except WindowsError as e:
-            if DEBUG:
-                # Log the error if in debug mode, as it is a common occurrence.
-                log.warning(f"Permission Denied: {e}")
+        except (WindowsError, PermissionError) as e:
+            log.warning(f"Permission Denied: {e}")
+        except Exception as e:
+            log.error(f"Failed to access directory: {e}")
 
         for filename in path_list:
             file_path = root / filename

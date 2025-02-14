@@ -3,10 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 
-from logicytics import Log, DEBUG
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log
 
 
 @log.function

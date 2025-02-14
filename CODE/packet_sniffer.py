@@ -8,10 +8,7 @@ import pandas as pd
 from scapy.all import sniff, conf
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 
-from logicytics import Log, DEBUG
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log
 
 # Read configuration from config.ini
 config = ConfigParser()
@@ -24,6 +21,7 @@ packet_data = []  # List to store packet information
 G = nx.Graph()  # Initialize a graph
 
 
+# TODO Turn to a class
 # Function to process and log packet details
 def log_packet(packet: IP):
     """
@@ -388,6 +386,7 @@ def packet_sniffer():
 
 
 # Entry point of the script
+# FIXME The finally statement should be improved to dodge errors
 if __name__ == "__main__":
     try:
         packet_sniffer()
