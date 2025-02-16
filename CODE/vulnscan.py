@@ -1,305 +1,205 @@
 from __future__ import annotations
 
-import mimetypes
 import os
 import threading
 import warnings
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import joblib
 import numpy as np
 import torch
 from safetensors import safe_open
-from sklearn.feature_extraction.text import TfidfVectorizer
+from tqdm import tqdm
 
 from logicytics import log
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
 
-# Caching dictionaries for model and vectorizer
-model_cache = {}
-vectorizer_cache = {}
 
-# Locks for thread-safe model and vectorizer loading
-model_lock = threading.Lock()
-vectorizer_lock = threading.Lock()
+# TODO: v3.4.2
+#  apply Batch file reading,
+#  Use Asynchronous File Scanning,
+#  Optimize Model Loading and Caching,
+#  Improve Feature Extraction
 
-# Global variables to hold loaded model and vectorizer
-model_to_use = None
-vectorizer_to_use = None
+# TODO: v3.4.1
+#  also add a global variable called MAX_FILE_SIZE, if its none ignore it, else only scan files under that file size (default at 50MB)
+#  max_workers = os.cpu_count(),
 
 
-def load_model(model_path_to_load: str) -> safe_open | torch.nn.Module:
+class SensitiveDataScanner:
     """
-    Load a machine learning model from the specified file path with caching.
-
-    Parameters:
-        model_path_to_load (str): Full file path to the model file to be loaded.
-
-    Returns:
-        safe_open | torch.nn.Module: Loaded model object.
-
-    Raises:
-        ValueError: If the model file does not have a supported extension (.pkl, .safetensors, or .pth).
+    Class for scanning files for sensitive content using a trained model.
     """
-    # Check cache first
-    if model_path_to_load in model_cache:
-        log.info(f"Using cached model from {model_path_to_load}")
-        return model_cache[model_path_to_load]
 
-    # Load model if not cached
-    if model_path_to_load.endswith('.pkl'):
-        model = joblib.load(model_path_to_load)
-    elif model_path_to_load.endswith('.safetensors'):
-        model = safe_open(model_path_to_load, framework='torch')
-    elif model_path_to_load.endswith('.pth'):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=FutureWarning)
-            model = torch.load(model_path_to_load, weights_only=False)
-    else:
-        raise ValueError("Unsupported model file format. Use .pkl, .safetensors, or .pth")
+    def __init__(self, model_path: str, vectorizer_path: str):
+        self.model_path = model_path
+        self.vectorizer_path = vectorizer_path
 
-    # Cache the model
-    model_cache[model_path_to_load] = model
-    log.info(f"Loaded and cached model from {model_path_to_load}")
-    return model
+        self.model_cache = {}
+        self.vectorizer_cache = {}
 
+        self.model_lock = threading.Lock()
+        self.vectorizer_lock = threading.Lock()
 
-def load_vectorizer(vectorizer_path_to_load: str) -> TfidfVectorizer:
-    """
-    Load the vectorizer from the specified file path with caching.
+        self.model = None
+        self.vectorizer = None
+        self.load_model()
+        self.load_vectorizer()
 
-    Parameters:
-        vectorizer_path_to_load (str): Full file path to the vectorizer file to be loaded.
+    def load_model(self) -> None:
+        """Loads and caches the ML model."""
+        if self.model_path in self.model_cache:
+            log.info(f"Using cached model from {self.model_path}")
+            self.model = self.model_cache[self.model_path]
+            return
 
-    Returns:
-        TfidfVectorizer: Loaded vectorizer object.
-    """
-    # Check cache first
-    if vectorizer_path_to_load in vectorizer_cache:
-        log.info(f"Using cached vectorizer from {vectorizer_path_to_load}")
-        return vectorizer_cache[vectorizer_path_to_load]
+        if self.model_path.endswith('.pkl'):
+            self.model = joblib.load(self.model_path)
+        elif self.model_path.endswith('.safetensors'):
+            self.model = safe_open(self.model_path, framework='torch')
+        elif self.model_path.endswith('.pth'):
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=FutureWarning)
+                self.model = torch.load(self.model_path, weights_only=False)
+        else:
+            raise ValueError("Unsupported model file format. Use .pkl, .safetensors, or .pth")
 
-    # Load vectorizer if not cached
-    vectorizer = joblib.load(vectorizer_path_to_load)
+        self.model_cache[self.model_path] = self.model
+        log.info(f"Loaded and cached model from {self.model_path}")
 
-    # Cache the vectorizer
-    vectorizer_cache[vectorizer_path_to_load] = vectorizer
-    log.info(f"Loaded and cached vectorizer from {vectorizer_path_to_load}")
-    return vectorizer
+    def load_vectorizer(self) -> None:
+        """Loads and caches the vectorizer."""
+        if self.vectorizer_path in self.vectorizer_cache:
+            log.info(f"Using cached vectorizer from {self.vectorizer_path}")
+            self.vectorizer = self.vectorizer_cache[self.vectorizer_path]
+            return
 
+        self.vectorizer = joblib.load(self.vectorizer_path)
+        self.vectorizer_cache[self.vectorizer_path] = self.vectorizer
+        log.info(f"Loaded and cached vectorizer from {self.vectorizer_path}")
 
-@log.function
-def scan_path(model_path: str, scan_paths: str, vectorizer_path: str):
-    """
-    Scan a specified path for sensitive content using a pre-trained machine learning model and vectorizer.
-
-    This function handles loading the model and vectorizer if they are not already initialized, and then performs a vulnerability scan on the given path.
-
-    Args:
-        model_path (str): Filesystem path to the machine learning model file to be used for scanning.
-        scan_paths (str): Filesystem path to the file or directory that will be scanned for sensitive content.
-        vectorizer_path (str): Filesystem path to the vectorizer file used for text feature extraction.
-
-    Raises:
-        Exception: Captures and logs any errors that occur during the scanning process, preventing the entire scanning operation from halting.
-
-    Side Effects:
-        - Loads global model and vectorizer if not already initialized
-        - Logs information about model and vectorizer loading
-        - Calls vulnscan() to perform actual file scanning
-        - Logs any errors encountered during scanning
-    """
-    global model_to_use, vectorizer_to_use
-    try:
-        # Load model and vectorizer if not already loaded
-        if model_to_use is None:
-            with model_lock:
-                if model_to_use is None:
-                    log.info(f"Loading model from {model_path}")
-                    model_to_use = load_model(model_path)
-
-        if vectorizer_to_use is None:
-            with vectorizer_lock:
-                if vectorizer_to_use is None:
-                    log.info(f"Loading vectorizer from {vectorizer_path}")
-                    vectorizer_to_use = load_vectorizer(vectorizer_path)
-
-        scan_vulnscan(model_to_use, scan_paths, vectorizer_to_use)
-    except FileNotFoundError as err:
-        log.error(f"File not found while scanning {scan_paths}: {err}")
-    except PermissionError as err:
-        log.error(f"Permission denied while scanning {scan_paths}: {err}")
-    except (torch.serialization.pickle.UnpicklingError, RuntimeError) as err:
-        log.error(f"Model loading failed for {scan_paths}: {err}")
-    except Exception as err:
-        log.error(f"Unexpected error scanning {scan_paths}: {err}")
-
-
-def is_sensitive(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_content: str) -> tuple[bool, float, str]:
-    """
-    Determine if the file content is sensitive using the provided model and vectorizer.
-
-    Args:
-        model: Machine learning model.
-        vectorizer: Vectorizer to transform file content.
-        file_content (str): Content of the file to be analyzed.
-
-    Returns:
-        tuple: (True if the content is sensitive, False otherwise, prediction probability, reason).
-    """
-    if isinstance(model, torch.nn.Module):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model.to(device)
-        features = vectorizer.transform([file_content])
-        model.eval()
-        with torch.no_grad():
-            features_tensor = torch.tensor(features.toarray(), dtype=torch.float32).to(device)
-            prediction = model(features_tensor)
-            probability = torch.softmax(prediction, dim=1).max().item()
+    def is_sensitive(self, file_content: str) -> tuple[bool, float, str]:
+        """Determines if a file's content is sensitive using the model."""
+        if isinstance(self.model, torch.nn.Module):
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.model.to(device)
+            features = self.vectorizer.transform([file_content])
+            self.model.eval()
+            with torch.no_grad():
+                features_tensor = torch.tensor(features.toarray(), dtype=torch.float32).to(device)
+                prediction = self.model(features_tensor)
+                probability = torch.softmax(prediction, dim=1).max().item()
+                top_features = np.argsort(features.toarray()[0])[-5:]
+                reason = ", ".join([self.vectorizer.get_feature_names_out()[i] for i in top_features])
+                return prediction.argmax(dim=1).item() == 1, probability, reason
+        else:
+            features = self.vectorizer.transform([file_content])
+            prediction = self.model.predict_proba(features)
+            probability = prediction.max()
             top_features = np.argsort(features.toarray()[0])[-5:]
-            reason = ", ".join([vectorizer.get_feature_names_out()[i] for i in top_features])
-            return prediction.argmax(dim=1).item() == 1, probability, reason
-    else:
-        features = vectorizer.transform([file_content])
-        prediction = model.predict_proba(features)
-        probability = prediction.max()
-        top_features = np.argsort(features.toarray()[0])[-5:]
-        reason = ", ".join([vectorizer.get_feature_names_out()[i] for i in top_features])
-        return model.predict(features)[0] == 1, probability, reason
+            reason = ", ".join([self.vectorizer.get_feature_names_out()[i] for i in top_features])
+            return self.model.predict(features)[0] == 1, probability, reason
+
+    def scan_file(self, file_path: str) -> tuple[bool, float, str]:
+        """Scans a file for sensitive content."""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
+                content = file.read()
+            return self.is_sensitive(content)
+        except Exception as e:
+            log.error(f"Failed to scan {file_path}: {e}")
+            return False, 0.0, "Error reading file"
+
+    def cleanup(self):
+        """Clears caches and resets model & vectorizer."""
+        self.model_cache.clear()
+        self.vectorizer_cache.clear()
+        self.model = None
+        self.vectorizer = None
+        log.info("Cleanup complete!")
 
 
-def scan_file(model: torch.nn.Module, vectorizer: TfidfVectorizer, file_path: str) -> tuple[bool, float, str]:
+class VulnScan:
     """
-    Scan a single file to determine if it contains sensitive content.
-
-    Args:
-        model: Machine learning model.
-        vectorizer: Vectorizer to transform file content.
-        file_path (str): Path to the file to be scanned.
-
-    Returns:
-        tuple: (True if the file is sensitive, False otherwise, prediction probability).
+    Class for scanning directories for sensitive files using SensitiveDataScanner.
     """
-    mime_type, _ = mimetypes.guess_type(file_path)
-    if mime_type and mime_type.startswith('text'):
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
-            content = file.read()
-        return is_sensitive(model, vectorizer, content)
-    else:
-        with open(file_path, 'r', errors='ignore') as file:
-            content = file.read()
-        return is_sensitive(model, vectorizer, content)
 
+    def __init__(self, model_path: str, vectorizer_path: str):
+        self.scanner = SensitiveDataScanner(model_path, vectorizer_path)
 
-@log.function
-def scan_vulnscan(model, SCAN_PATH, vectorizer):
-    """
-    Scan a file to determine if it contains sensitive content and log the results.
-
-    Args:
-        model (object): Machine learning model used for content sensitivity classification.
-        SCAN_PATH (str): Absolute or relative file path to be scanned for sensitive content.
-        vectorizer (object): Text vectorization model to transform file content into feature representation.
-
-    Returns:
-        None: Logs sensitive file details and appends file path to 'Sensitive_File_Paths.txt' if sensitive content is detected.
-
-    Side Effects:
-        - Logs scanning information using the configured logger
-        - Creates or appends to 'Sensitive_File_Paths.txt' when sensitive content is found
-        - Writes sensitive file paths to the log file
-
-    Raises:
-        IOError: If there are issues writing to the 'Sensitive_File_Paths.txt' file
-    """
-    log.debug(f"Scanning {SCAN_PATH}")
-    result, probability, reason = scan_file(model, vectorizer, SCAN_PATH)
-    if result:
-        log.debug(f"File {SCAN_PATH} is sensitive with probability {probability:.2f}. Reason: {reason}")
-        if not os.path.exists("Sensitive_File_Paths.txt"):
-            with open("Sensitive_File_Paths.txt", "w") as sensitive_file:
-                sensitive_file.write(f"{SCAN_PATH}\n\n")
-        with open("Sensitive_File_Paths.txt", "a") as sensitive_file:
-            sensitive_file.write(f"{SCAN_PATH}\n")
-
-
-@log.function
-def vulnscan(paths_to_scan: list[str]):
-    log.warning(
-        "Once again, remember that this script is a proof of concept and should not be used in production. Its in beta and not the most accurate.")
-    log.info("Loading Files - This may take some time and consume memory!!")
-
-    try:
+    @log.function
+    def scan_directory(self, scan_paths: list[str]) -> None:
+        """Scans multiple directories for sensitive files."""
         max_workers = min(32, os.cpu_count() * 2)
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(os.path.join, root, file_main) for path_to_scan in paths_to_scan for
-                       root, _, files_main in
-                       os.walk(path_to_scan) for file_main in files_main]
-            for future in futures:
-                paths.append(future.result())
-    except Exception as e:
-        log.error(f"Scan failed: {e}")
-    finally:
+
         try:
-            model_cache.clear()
-            vectorizer_cache.clear()
-            model_to_use = None
-            vectorizer_to_use = None
-            log.info("Scan complete!")
+            # Collect all files to scan using concurrent futures for file discovery
+            all_files = []
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = []
+                for scan_path in scan_paths:
+                    for root, _, files in os.walk(scan_path):
+                        for file in files:
+                            futures.append(executor.submit(os.path.join, root, file))
+
+                for future in as_completed(futures):
+                    all_files.append(future.result())
+
+            log.info(f"Files collected successfully: {len(all_files)}")
+
         except Exception as e:
-            log.error(f"Scan cleanup failed: {e}")
-            log.warning("We recommend restarting your device to free up memory just in case.")
+            log.error(f"Failed to collect files: {e}")
+            return
 
-    # Start scanning
-    log.warning("Starting scan - This may take hours and consume memory!!")
-    log.warning("THIS MAY TAKE HUGE AMOUNTS OF SPACE!!!")
+        log.info(f"Scanning {len(all_files)} files...")
 
-    try:
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            total_paths = len(paths)
-            completed = 0
-            futures = [
-                executor.submit(
-                    scan_path,
-                    "VulnScan/Model SenseMini .3n3.pth",
-                    path,
-                    "VulnScan/Vectorizer .3n3.pkl"
-                )
-                for path in paths
-            ]
-            for future in futures:
-                try:
-                    future.result()
-                    completed += 1
-                    if completed % 100 == 0:
-                        progress = (completed / total_paths) * 100
-                        log.info(f"Scan progress: {progress:.1f}% ({completed}/{total_paths})")
-                except Exception as e:
-                    log.error(f"Scan failed: {e}")
-    except Exception as e:
-        log.error(f"Scan failed: {e}")
-    finally:
         try:
-            model_cache.clear()
-            vectorizer_cache.clear()
-            model_to_use = None
-            vectorizer_to_use = None
-            log.info("Scan complete!")
+            # Use ThreadPoolExecutor to scan files concurrently, reducing the overhead
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {}
+
+                # Submit scan tasks with tqdm updating per file
+                with tqdm(total=len(all_files), desc="\033[32mINFO\033[0m     \033[94mSubmitting Scan Tasks\033[0m",
+                          unit="file", bar_format="{l_bar} {bar} {n_fmt}/{total_fmt}") as submit_pbar:
+                    for file in all_files:
+                        future = executor.submit(self.scanner.scan_file, file)
+                        futures[future] = file
+                        submit_pbar.update(1)  # Update after each file is submitted
+
+                # Scan progress tracking
+                with tqdm(total=len(all_files), desc="\033[32mINFO\033[0m     \033[94mScanning Files\033[0m",
+                          unit="file", bar_format="{l_bar} {bar} {n_fmt}/{total_fmt}") as scan_pbar:
+                    for future in as_completed(futures):
+                        try:
+                            result, probability, reason = future.result()
+                            if result:
+                                file_path = futures[future]
+                                log.debug(
+                                    f"Sensitive file detected: {file_path} (Confidence: {probability:.2f}). Reason: {reason}")
+
+                                # Save to list in bulk or periodically (instead of on each result)
+                                with open("Sensitive_File_Paths.txt", "a") as sensitive_file:
+                                    sensitive_file.write(f"{file_path}\n")
+
+                        except Exception as e:
+                            log.error(f"Scan failed: {e}")
+
+                        scan_pbar.update(1)  # Update scanning progress
+
         except Exception as e:
-            log.error(f"Scan cleanup failed: {e}")
-            log.warning("We recommend restarting your device to free up memory just in case.")
+            log.error(f"Scanning error: {e}")
+
+        self.scanner.cleanup()
 
 
-# Now supports importing for custom paths
 if __name__ == "__main__":
-    # Start scanning
-    paths = []
     base_paths = [
         "C:\\Users\\",
         "C:\\Windows\\Logs",
         "C:\\Program Files",
         "C:\\Program Files (x86)"
     ]
-    vulnscan(base_paths)
+    vulnscan = VulnScan("VulnScan/Model SenseMini .3n3.pth", "VulnScan/Vectorizer .3n3.pkl")
+    vulnscan.scan_directory(base_paths)

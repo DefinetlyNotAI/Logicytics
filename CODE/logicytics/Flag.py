@@ -156,7 +156,7 @@ class _Match:
             - Requires matplotlib for graph generation
             - Attempts to save graph in multiple predefined directory paths
         """
-        # TODO Yet in beta
+        # TODO Yet in beta - v3.6.0
         # Load the decompressed history data using the load_history function
         import matplotlib.pyplot as plt
 

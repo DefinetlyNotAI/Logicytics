@@ -27,7 +27,7 @@ class NetworkInfo:
             self.__measure_network_bandwidth_usage()
             self.__fetch_hostname_and_ip()
         except Exception as e:
-            log.error(f"Error getting network info: {e}")
+            log.error(f"Error getting network info: {e}, Type: {type(e).__name__}")
 
     @staticmethod
     def __save_data(filename: str, data: str, father_dir_name: str = "network_data"):
@@ -125,24 +125,36 @@ class NetworkInfo:
         self.__save_data("network_connections_with_processes.txt", connections_data)
         log.info("Network connections with process info saved.")
 
-    def __measure_network_bandwidth_usage(self):
+    def __measure_network_bandwidth_usage(self, sample_count: int = 5, interval: float = 1.0):
         """
         Measures and saves the average network bandwidth usage.
+
+        Args:
+            sample_count: Number of samples to take (default: 5)
+            interval: Time between samples in seconds (default: 1.0)
         """
+        # TODO v3.4.1: Allow config.ini to set values
         log.debug("Measuring network bandwidth usage...")
         samples = []
-        for _ in range(5):
+        for _ in range(sample_count):
             net1 = psutil.net_io_counters()
-            time.sleep(1)
+            time.sleep(interval)
             net2 = psutil.net_io_counters()
             samples.append({
                 'up': (net2.bytes_sent - net1.bytes_sent) / 1024,
                 'down': (net2.bytes_recv - net1.bytes_recv) / 1024
             })
-        avg_up = sum(s['up'] for s in samples) / len(samples)
-        avg_down = sum(s['down'] for s in samples) / len(samples)
+        if samples:
+            avg_up = sum(s['up'] for s in samples) / len(samples)
+            avg_down = sum(s['down'] for s in samples) / len(samples)
+            max_up = max(s['up'] for s in samples)
+            max_down = max(s['down'] for s in samples)
+        else:
+            avg_up = avg_down = max_up = max_down = 0
         bandwidth_data = f"Average Upload Speed: {avg_up:.2f} KB/s\n"
         bandwidth_data += f"Average Download Speed: {avg_down:.2f} KB/s\n"
+        bandwidth_data += f"Peak Upload Speed: {max_up:.2f} KB/s\n"
+        bandwidth_data += f"Peak Download Speed: {max_down:.2f} KB/s\n"
         self.__save_data("network_bandwidth_usage.txt", bandwidth_data)
         log.info("Network bandwidth usage saved.")
 

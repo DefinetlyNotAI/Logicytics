@@ -386,10 +386,11 @@ class Sniff:
 def cleanup():
     # Clean up resources
     try:
-        if G:
-            plt.close('all')  # Close all figures
+        plt.close('all')  # Close all figures
     except Exception as err:
         log.error(f"Error during cleanup: {err}")
+    finally:
+        G.clear()  # Clear the graph to free memory
 
 
 # Entry point of the script
