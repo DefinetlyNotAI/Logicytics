@@ -1,10 +1,23 @@
 from __future__ import annotations
 
+import re
 import subprocess
 
 import configobj
 
 from logicytics import log, Get, FileManagement, CURRENT_FILES, VERSION
+
+
+def color_print(text, color="reset"):
+    colors = {
+        "reset": "\033[0m",
+        "red": "\033[31m",
+        "green": "\033[32m",
+        "yellow": "\033[33m",
+    }
+
+    color_code = colors.get(color.lower(), colors["reset"])
+    print(f"{color_code}{text}{colors['reset']}")
 
 
 def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
@@ -24,15 +37,15 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
         elif key == "version":
             config["System Settings"][key] = new_data
         else:
-            log.error(f"Invalid key: {key}")
+            color_print(f"[!] Invalid key: {key}", "yellow")
             return
         config.write()
     except FileNotFoundError:
-        log.error(f"File not found: {filename}")
+        color_print(f"[x] INI file not found", "red")
     except configobj.ConfigObjError as e:
-        log.error(f"Error parsing INI file: {filename}, {e}")
+        color_print(f"[x] Parsing INI file failed: {e}", "red")
     except Exception as e:
-        log.error(f"An error occurred: {e}")
+        color_print(f"[x] {e}", "red")
 
 
 def _prompt_user(question: str, file_to_open: str = None, special: bool = False) -> bool:
@@ -56,18 +69,18 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
         - Provides optional file opening and reminder messaging
     """
     try:
-        answer = input(question + " (Y)es or (N)o:- ")
+        answer = input(f"\033[36m[?] {question} (y)es or (n)o:- \033[0m")
         if not (answer.lower() == "yes" or answer.lower() == "y"):
             if file_to_open:
                 subprocess.run(["start", file_to_open], shell=True)
             if not special:
-                print(
-                    "Please ensure you fix the issues/problem and try again with the checklist."
+                color_print(
+                    "[x] Please ensure you fix the issues/problem and try again with the checklist.", "red"
                 )
             return False
         return True
     except Exception as e:
-        log.error(e)
+        color_print(f"[x] {e}", "red")
 
 
 def _perform_checks() -> bool:
@@ -87,7 +100,6 @@ def _perform_checks() -> bool:
 
     for question, file_to_open in checks:
         if not _prompt_user(question, file_to_open):
-            log.warning("Fix the issues and try again with the checklist.")
             return False
     return True
 
@@ -118,13 +130,18 @@ def _handle_file_operations() -> None:
     print("\n".join([f"* {file}" for file in normal_files]))
 
     if not _prompt_user("Does the list above include your added files?"):
-        log.critical("Something went wrong! Please contact support.")
+        color_print("[x] Something went wrong! Please contact support.", "red")
         return
 
     _update_ini_file("config.ini", files, "files")
-    _update_ini_file("config.ini", input(f"Enter the new version of the project (Old version is {VERSION}): "),
-                     "version")
-    print("\nGreat Job! Please tick the box in the GitHub PR request for completing steps in --dev")
+    while True:
+        version = input(f"\033[36m[?] Enter the new version of the project (Old version is {VERSION}): \033[0m")
+        if re.match(r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$', version):
+            _update_ini_file("config.ini", version, "version")
+            break
+        else:
+            color_print("[!] Please enter a valid version number (e.g., 1.2.3)", "yellow")
+    color_print("\n[-] Great Job! Please tick the box in the GitHub PR request for completing steps in --dev", "green")
 
 
 @log.function
@@ -151,11 +168,6 @@ def dev_checks() -> None:
         - Prints file change lists with color coding
         - Updates configuration file with current files and version
         - Logs warnings or errors during the process
-    
-    Example:
-        Typical usage is during project development to ensure consistent practices:
-        >>> dev_checks()
-        # Interactively guides developer through project checks
     """
     FileManagement.mkdir()
     if not _perform_checks():
