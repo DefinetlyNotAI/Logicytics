@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import configparser
 import os.path
 from pathlib import Path
 
@@ -49,59 +48,3 @@ class Get:
                 append_file_list.append(filename)
         return append_file_list
 
-    @staticmethod
-    def config_data() -> tuple[str, str, list[str], bool]:
-        """
-        Retrieves configuration data from the 'config.ini' file.
-        
-        This method attempts to read the 'config.ini' file from multiple potential locations:
-        1. Current directory
-        2. Parent directory
-        3. Grandparent directory
-        
-        If the configuration file is not found in any of these locations, the program exits with an error message.
-        
-        Returns:
-            tuple[str, str, list[str], bool]: A tuple containing:
-                - Log level (str): Either "DEBUG" or "INFO"
-                - Version (str): System version from configuration
-                - Files (list[str]): List of files specified in configuration
-                - Delete old logs (bool): Flag indicating whether to delete old log files
-        
-        Raises:
-            SystemExit: If the 'config.ini' file cannot be found in any of the attempted locations
-        """
-
-        def get_config_data(config_file_name: str) -> tuple[str, str, list[str], bool]:
-            """
-            Reads configuration data from the specified 'config.ini' file.
-
-            Args:
-                config_file_name (str): The name of the configuration file to read.
-
-            Returns:
-                tuple[str, str, list[str], bool]: A tuple containing the log level, version, and a list of files.
-            """
-            config = configparser.ConfigParser()
-            config.read(config_file_name)
-
-            log_using_debug = config.getboolean("Settings", "log_using_debug")
-            delete_old_logs = config.getboolean("Settings", "delete_old_logs")
-            version = config.get("System Settings", "version")
-            files = config.get("System Settings", "files").split(", ")
-
-            log_using_debug = "DEBUG" if log_using_debug else "INFO"
-
-            return log_using_debug, version, files, delete_old_logs
-
-        try:
-            return get_config_data("config.ini")
-        except Exception:
-            try:
-                return get_config_data("../config.ini")
-            except Exception:
-                try:
-                    return get_config_data("../../config.ini")
-                except Exception:
-                    print("The config.ini file is not found.")
-                    exit(1)

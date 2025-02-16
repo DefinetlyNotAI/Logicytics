@@ -93,8 +93,7 @@ class FileManagement:
             """
             excluded_extensions = (".py", ".exe", ".bat", ".ps1", ".pkl", ".pth")
             excluded_prefixes = ("config.ini", "SysInternal_Suite",
-                                 "__pycache__", "logicytics", "VulnScan",
-                                 "Vectorizer features")
+                                 "__pycache__", "logicytics", "VulnScan")
 
             return [
                 f for f in os.listdir(path)
@@ -128,7 +127,7 @@ class FileManagement:
                         zip_file.write(os.path.join(path, file))
 
         @staticmethod
-        def __remove_files(path: str, files: list):
+        def __remove_files(path: str, files: list) -> str | None:
             """
             Removes the specified files from the given path.
 
@@ -204,8 +203,8 @@ class FileManagement:
             Returns:
                 tuple or str: A tuple containing success messages or an error message.
             """
-            today = datetime.now()
-            filename = f"Logicytics_{name}_{flag}_{today.strftime('%Y-%m-%d_%H-%M-%S')}"
+            time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            filename = f"Logicytics_{name}_{flag}_{time}"
             files_to_zip = cls.__get_files_to_zip(path)
             cls.__create_zip_file(path, files_to_zip, filename)
             check = cls.__remove_files(path, files_to_zip)

@@ -20,3 +20,4 @@ WMI~=1.5.1
 prettytable~=3.14.0
 pandas~=2.2.2
 scapy~=2.5.0
+psutil~=6.1.1

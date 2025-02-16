@@ -2,10 +2,7 @@ import datetime
 import re
 import subprocess
 
-from logicytics import Log, DEBUG
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log
 
 
 # Utility function to log data to a file
@@ -117,11 +114,6 @@ def get_paired_bluetooth_devices():
     
     Raises:
         Exception: If there are issues running the PowerShell command or parsing the output.
-    
-    Example:
-        >>> devices = get_paired_bluetooth_devices()
-        >>> print(devices)
-        ['Name: Wireless Headphones, MAC: 001122334455', 'Name: Bluetooth Speaker, MAC: 667788990011']
     """
     command = (
         'Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq "OK" } | Select-Object Name, DeviceID'

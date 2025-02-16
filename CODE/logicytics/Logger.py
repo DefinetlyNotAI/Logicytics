@@ -14,6 +14,21 @@ class Log:
     """
     A logging class that supports colored output using the colorlog library.
     """
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        """
+        Ensures that only one instance of the Log class is created (Singleton pattern).
+
+        :param cls: The class being instantiated.
+        :param args: Positional arguments.
+        :param kwargs: Keyword arguments.
+        :return: The single instance of the Log class.
+        """
+        if cls._instance is None:
+            cls._instance = super(Log, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
 
     def __init__(self, config: dict = None):
         """
@@ -21,15 +36,23 @@ class Log:
 
         :param config: A dictionary containing configuration options.
         """
+        if self._initialized and config is None:
+            return
+        self._initialized = True
+        if config:
+            self.reset()
+        # log_path_relative variable takes Logger.py full path, goes up twice then joins with ACCESS\\LOGS\\Logicytics.log
+        log_path_relative = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                                         "ACCESS\\LOGS\\Logicytics.log")
         config = config or {
-            "filename": "../ACCESS/LOGS/Logicytics.log",
+            "filename": log_path_relative,
             "use_colorlog": True,
             "log_level": "INFO",
             "debug_color": "cyan",
             "info_color": "green",
             "warning_color": "yellow",
             "error_color": "red",
-            "critical_color": "red",
+            "critical_color": "bold_red",
             "exception_color": "red",
             "colorlog_fmt_parameters": "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
             "truncate_message": True,
@@ -41,7 +64,8 @@ class Log:
         logging.addLevelName(self.INTERNAL_LOG_LEVEL, "INTERNAL")
         self.color = config.get("use_colorlog", True)
         self.truncate = config.get("truncate_message", True)
-        self.filename = config.get("filename", "../ACCESS/LOGS/Logicytics.log")
+
+        self.filename = config.get("filename", log_path_relative)
         if self.color:
             logger = colorlog.getLogger()
             logger.setLevel(getattr(logging, config["log_level"].upper(), logging.INFO))
@@ -52,7 +76,7 @@ class Log:
                 "INFO": config.get("info_color", "green"),
                 "WARNING": config.get("warning_color", "yellow"),
                 "ERROR": config.get("error_color", "red"),
-                "CRITICAL": config.get("critical_color", "red"),
+                "CRITICAL": config.get("critical_color", "bold_red"),
                 "EXCEPTION": config.get("exception_color", "red"),
             }
 
@@ -93,6 +117,15 @@ class Log:
                     + "\n"
                 )
         self.newline()
+
+    @staticmethod
+    def reset():
+        """
+        Resets the logger by removing all existing handlers.
+        """
+        logger = logging.getLogger()
+        for handler in logger.handlers[:]:
+            logger.removeHandler(handler)
 
     @staticmethod
     def __timestamp() -> str:
@@ -301,7 +334,7 @@ class Log:
             )
         raise exception_type(message)
 
-    def parse_execution(self, message_log: list[list[str, str]]):
+    def execution(self, message_log: list[list[str, str]]):
         """
         Parse and log multiple messages with their corresponding log types.
         

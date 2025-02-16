@@ -1,11 +1,7 @@
 import os
 import subprocess
 
-from logicytics import Log, DEBUG
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
-
+from logicytics import log
 
 sys_internal_executables = [
     "psfile.exe",
@@ -14,6 +10,12 @@ sys_internal_executables = [
     "pslist.exe",
     "PsLoggedon.exe",
     "psloglist.exe",
+]
+
+# Check if the executables exist
+sys_internal_executables = [
+    exe for exe in sys_internal_executables
+    if os.path.exists(os.path.join("SysInternal_Suite", exe))
 ]
 
 

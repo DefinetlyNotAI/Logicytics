@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import configparser
 import os
 import shutil
 import subprocess
@@ -13,25 +14,190 @@ from prettytable import PrettyTable
 from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS
 
 # Initialization
-FileManagement.mkdir()
 log = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
-ACTION = None
-SUB_ACTION = None
+ACTION, SUB_ACTION = None, None
+config = configparser.ConfigParser()
+config.read("config.ini")
+MAX_WORKERS = config.get("Settings", "max_workers", fallback=None)
+log.debug(f"MAX_WORKERS: {MAX_WORKERS}")
 
 
-class Health:
+class ExecuteScript:
+    def __init__(self):
+        self.execution_list = self.generate_execution_list()
+
+    @staticmethod
+    def generate_execution_list() -> list | list[str] | list[str | Any]:
+        """
+        Generate an execution list of scripts based on the specified action.
+
+        This function dynamically creates a list of scripts to be executed by filtering and selecting
+        scripts based on the global ACTION variable. It supports different execution modes:
+        - 'minimal': A predefined set of lightweight scripts
+        - 'nopy': PowerShell and script-based scripts without Python
+        - 'modded': Includes scripts from the MODS directory
+        - 'depth': Comprehensive script execution with data mining and logging scripts
+        - 'vulnscan_ai': Vulnerability scanning script only
+
+        Returns:
+            list[str]: A list of script file paths to be executed, filtered and modified based on the current action.
+
+        Raises:
+            ValueError: Implicitly if a script file cannot be removed from the initial list.
+
+        Notes:
+            - Removes sensitive or unnecessary scripts from the initial file list
+            - Logs the final execution list for debugging purposes
+            - Warns users about potential long execution times for certain actions
+        """
+        execution_list = Get.list_of_files(".", extensions=(".py", ".exe", ".ps1", ".bat"))
+        execution_list.remove("sensitive_data_miner.py")
+        execution_list.remove("dir_list.py")
+        execution_list.remove("tree.ps1")
+        execution_list.remove("vulnscan.py")
+        execution_list.remove("event_log.py")
+
+        if ACTION == "minimal":
+            execution_list = [
+                "cmd_commands.py",
+                "registry.py",
+                "tasklist.py",
+                "wmic.py",
+                "netadapter.ps1",
+                "property_scraper.ps1",
+                "window_feature_miner.ps1",
+                "event_log.py",
+            ]
+
+        if ACTION == "nopy":
+            execution_list = [
+                "browser_miner.ps1",
+                "netadapter.ps1",
+                "property_scraper.ps1",
+                "window_feature_miner.ps1",
+                "tree.ps1"
+            ]
+
+        if ACTION == "modded":
+            # Add all files in MODS to execution list
+            execution_list = Get.list_of_files("../MODS",
+                                               extensions=(".py", ".exe", ".ps1", ".bat"),
+                                               append_file_list=execution_list)
+
+        if ACTION == "depth":
+            log.warning(
+                "This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards.")
+            execution_list.append("sensitive_data_miner.py")
+            execution_list.append("dir_list.py")
+            execution_list.append("tree.ps1")
+            execution_list.append("event_log.py")
+            log.warning("This flag will use threading!")
+
+        if ACTION == "vulnscan_ai":
+            # Only vulnscan detector
+            execution_list = ["vulnscan.py"]
+
+        log.debug(f"The following will be executed: {execution_list}")
+        return execution_list
+
+    @staticmethod
+    def __script_handler(script: str) -> tuple[str, Exception | None]:
+        """
+        Executes a single script and logs the result, capturing any exceptions that occur during execution.
+
+        Parameters:
+            script (str): The path to the script to be executed
+        """
+        log.debug(f"Executing {script}")
+        try:
+            log.execution(Execute.script(script))
+            log.info(f"{script} executed successfully")
+            return script, None
+        except Exception as err:
+            log.error(f"Error executing {script}: {err}")
+            return script, err
+
+    def handler(self):
+        """Executes the scripts in the execution list based on the action."""
+        log.info("Starting Logicytics...")
+
+        if ACTION == "threaded" or ACTION == "depth":
+            self.__threaded()
+        elif ACTION == "performance_check":
+            self.__performance()
+        else:
+            self.__default()
+
+    def __threaded(self):
+        """Executes scripts in parallel using threading."""
+        log.debug("Using threading")
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = {executor.submit(self.__script_handler, script): script
+                       for script in self.execution_list}
+
+            for future in as_completed(futures):
+                script = futures[future]
+                result, error = future.result()
+                if error:
+                    log.error(f"Failed to execute {script}")
+                else:
+                    log.debug(f"Completed {script}")
+
+    def __default(self):
+        """Executes scripts sequentially."""
+        try:
+            for script in self.execution_list:
+                result, error = self.__script_handler(script)
+                if error:
+                    log.error(f"Failed to execute {script}")
+                else:
+                    log.debug(f"Completed {script}")
+        except UnicodeDecodeError as e:
+            log.error(f"Error in script execution (Unicode): {e}")
+        except Exception as e:
+            log.error(f"Error in script execution: {e}")
+
+    def __performance(self):
+        """Checks performance of each script."""
+        execution_times = []
+
+        for file in range(len(self.execution_list)):
+            start_time = datetime.now()
+            log.execution(Execute.script(self.execution_list[file]))
+            end_time = datetime.now()
+            elapsed_time = end_time - start_time
+            execution_times.append((self.execution_list[file], elapsed_time))
+            log.info(f"{self.execution_list[file]} executed in {elapsed_time}")
+
+        table = PrettyTable()
+        table.field_names = ["Script", "Execution Time"]
+        for script, elapsed_time in execution_times:
+            table.add_row([script, elapsed_time])
+
+        try:
+            with open(
+                    f"../ACCESS/LOGS/PERFORMANCE/Performance_Summary_"
+                    f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt", "w"
+            ) as f:
+                f.write(table.get_string())
+            log.info("Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE")
+        except Exception as e:
+            log.error(f"Error writing performance log: {e}")
+
+
+class SpecialAction:
     @staticmethod
     def backup(directory: str, name: str):
         """
-        Creates a backup of a specified directory by zipping its contents and moving it to a designated backup location.
+            Creates a backup of a specified directory by zipping its contents and moving it to a designated backup location.
 
-        Args:
-            directory (str): The path to the directory to be backed up.
-            name (str): The name of the backup file.
+            Args:
+                directory (str): The path to the directory to be backed up.
+                name (str): The name of the backup file.
 
-        Returns:
-            None
-        """
+            Returns:
+                None
+            """
         # Check if backup exists, delete it if so
         if os.path.exists(f"../ACCESS/BACKUP/{name}.zip"):
             os.remove(f"../ACCESS/BACKUP/{name}.zip")
@@ -49,14 +215,14 @@ class Health:
     @staticmethod
     def update() -> tuple[str, str]:
         """
-        Updates the repository by pulling the latest changes from the remote repository.
+            Updates the repository by pulling the latest changes from the remote repository.
 
-        This function navigates to the parent directory, pulls the latest changes using Git,
-        and then returns to the current working directory.
+            This function navigates to the parent directory, pulls the latest changes using Git,
+            and then returns to the current working directory.
 
-        Returns:
-            str: The output from the git pull command.
-        """
+            Returns:
+                str: The output from the git pull command.
+            """
         # Check if git command is available
         if subprocess.run(["git", "--version"], capture_output=True).returncode != 0:
             return "Git is not installed or not available in the PATH.", "error"
@@ -71,6 +237,32 @@ class Health:
         output = subprocess.run(["git", "pull"], capture_output=True).stdout.decode()
         os.chdir(current_dir)
         return output, "info"
+
+    @staticmethod
+    def execute_new_window(file_path: str):
+        """
+        Execute a Python script in a new command prompt window.
+
+        This function launches the specified Python script in a separate command prompt window, waits for its completion, and then exits the current process.
+
+        Parameters:
+            file_path (str): The relative path to the Python script to be executed,
+                             which will be resolved relative to the current script's directory.
+
+        Side Effects:
+            - Opens a new command prompt window
+            - Runs the specified Python script
+            - Terminates the current process after script execution
+
+        Raises:
+            FileNotFoundError: If the specified script path does not exist
+            subprocess.SubprocessError: If there are issues launching the subprocess
+        """
+        sr_current_dir = os.path.dirname(os.path.abspath(__file__))
+        sr_script_path = os.path.join(sr_current_dir, file_path)
+        sr_process = subprocess.Popen(["cmd.exe", "/c", "start", "python", sr_script_path])
+        sr_process.wait()
+        exit(0)
 
 
 def get_flags():
@@ -91,32 +283,6 @@ def get_flags():
     ACTION, SUB_ACTION = Flag.data()
     log.debug(f"Action: {ACTION}")
     log.debug(f"Sub-Action: {SUB_ACTION}")
-
-
-def special_execute(file_path: str):
-    """
-    Execute a Python script in a new command prompt window.
-    
-    This function launches the specified Python script in a separate command prompt window, waits for its completion, and then exits the current process.
-    
-    Parameters:
-        file_path (str): The relative path to the Python script to be executed, 
-                         which will be resolved relative to the current script's directory.
-    
-    Side Effects:
-        - Opens a new command prompt window
-        - Runs the specified Python script
-        - Terminates the current process after script execution
-    
-    Raises:
-        FileNotFoundError: If the specified script path does not exist
-        subprocess.SubprocessError: If there are issues launching the subprocess
-    """
-    sr_current_dir = os.path.dirname(os.path.abspath(__file__))
-    sr_script_path = os.path.join(sr_current_dir, file_path)
-    sr_process = subprocess.Popen(["cmd.exe", "/c", "start", "python", sr_script_path])
-    sr_process.wait()
-    exit(0)
 
 
 def handle_special_actions():
@@ -142,7 +308,7 @@ def handle_special_actions():
     # Special actions -> Quit
     if ACTION == "debug":
         log.info("Opening debug menu...")
-        special_execute("_debug.py")
+        SpecialAction.execute_new_window("_debug.py")
 
     messages = Check.sys_internal_zip()
     if messages:
@@ -151,11 +317,11 @@ def handle_special_actions():
 
     if ACTION == "dev":
         log.info("Opening developer menu...")
-        special_execute("_dev.py")
+        SpecialAction.execute_new_window("_dev.py")
 
     if ACTION == "update":
         log.info("Updating...")
-        message, log_type = Health.update()
+        message, log_type = SpecialAction.update()
         log.string(message, log_type)
         if log_type == "info":
             log.info("Update complete!")
@@ -175,9 +341,9 @@ def handle_special_actions():
 
     if ACTION == "backup":
         log.info("Backing up...")
-        Health.backup(".", "Default_Backup")
+        SpecialAction.backup(".", "Default_Backup")
         log.debug("Backup complete -> CODE dir")
-        Health.backup("../MODS", "Mods_Backup")
+        SpecialAction.backup("../MODS", "Mods_Backup")
         log.debug("Backup complete -> MODS dir")
         log.info("Backup complete!")
         input("Press Enter to exit...")
@@ -211,154 +377,6 @@ def check_privileges():
 
     if Check.uac():
         log.warning("UAC is enabled, this may cause issues - Please disable UAC if possible")
-
-
-def generate_execution_list() -> list | list[str] | list[str | Any]:
-    """
-    Generate an execution list of scripts based on the specified action.
-    
-    This function dynamically creates a list of scripts to be executed by filtering and selecting
-    scripts based on the global ACTION variable. It supports different execution modes:
-    - 'minimal': A predefined set of lightweight scripts
-    - 'nopy': PowerShell and script-based scripts without Python
-    - 'modded': Includes scripts from the MODS directory
-    - 'depth': Comprehensive script execution with data mining and logging scripts
-    - 'vulnscan_ai': Vulnerability scanning script only
-    
-    Returns:
-        list[str]: A list of script file paths to be executed, filtered and modified based on the current action.
-    
-    Raises:
-        ValueError: Implicitly if a script file cannot be removed from the initial list.
-    
-    Notes:
-        - Removes sensitive or unnecessary scripts from the initial file list
-        - Logs the final execution list for debugging purposes
-        - Warns users about potential long execution times for certain actions
-    """
-    execution_list = Get.list_of_files(".", extensions=(".py", ".exe", ".ps1", ".bat"))
-    execution_list.remove("sensitive_data_miner.py")
-    execution_list.remove("dir_list.py")
-    execution_list.remove("tree.ps1")
-    execution_list.remove("vulnscan.py")
-    execution_list.remove("event_log.py")
-
-    if ACTION == "minimal":
-        execution_list = [
-            "cmd_commands.py",
-            "registry.py",
-            "tasklist.py",
-            "wmic.py",
-            "netadapter.ps1",
-            "property_scraper.ps1",
-            "window_feature_miner.ps1",
-            "event_log.py",
-        ]
-
-    if ACTION == "nopy":
-        execution_list = [
-            "browser_miner.ps1",
-            "netadapter.ps1",
-            "property_scraper.ps1",
-            "window_feature_miner.ps1",
-            "tree.ps1"
-        ]
-
-    if ACTION == "modded":
-        # Add all files in MODS to execution list
-        execution_list = Get.list_of_files("../MODS",
-                                           extensions=(".py", ".exe", ".ps1", ".bat"),
-                                           append_file_list=execution_list)
-
-    if ACTION == "depth":
-        log.warning("This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards.")
-        execution_list.append("sensitive_data_miner.py")
-        execution_list.append("dir_list.py")
-        execution_list.append("tree.ps1")
-        execution_list.append("event_log.py")
-        log.warning("This flag will use threading!")
-
-    if ACTION == "vulnscan_ai":
-        # Only vulnscan detector
-        execution_list = ["vulnscan.py"]
-
-    log.debug(f"The following will be executed: {execution_list}")
-    return execution_list
-
-
-def execute_scripts():
-    """Executes the scripts in the execution list based on the action."""
-    # Check weather to use threading or not, as well as execute code
-    log.info("Starting Logicytics...")
-
-    if ACTION == "threaded" or ACTION == "depth":
-
-        def execute_single_script(script: str) -> tuple[str, Exception | None]:
-            """
-            Executes a single script and logs the result.
-
-            This function executes a single script and logs the result,
-            capturing any exceptions that occur during execution
-
-            Parameters:
-                script (str): The path to the script to be executed
-            """
-            log.debug(f"Executing {script}")
-            try:
-                log.parse_execution(Execute.script(script))
-                log.info(f"{script} executed")
-                return script, None
-            except Exception as err:
-                log.error(f"Error executing {script}: {err}")
-                return script, err
-
-        log.debug("Using threading")
-        execution_list = generate_execution_list()
-        with ThreadPoolExecutor() as executor:
-            futures = {executor.submit(execute_single_script, script): script
-                       for script in execution_list}
-
-            for future in as_completed(futures):
-                script = futures[future]
-                result, error = future.result()
-                if error:
-                    log.error(f"Failed to execute {script}")
-                else:
-                    log.debug(f"Completed {script}")
-
-    elif ACTION == "performance_check":
-        execution_times = []
-        execution_list = generate_execution_list()
-        for file in range(len(execution_list)):
-            start_time = datetime.now()
-            log.parse_execution(Execute.script(execution_list[file]))
-            end_time = datetime.now()
-            elapsed_time = end_time - start_time
-            execution_times.append((file, elapsed_time))
-            log.info(f"{execution_list[file]} executed in {elapsed_time}")
-
-        table = PrettyTable()
-        table.field_names = ["Script", "Execution Time"]
-        for file, elapsed_time in execution_times:
-            table.add_row([file, elapsed_time])
-
-        with open(
-                f"../ACCESS/LOGS/PERFORMANCE/Performance_Summary_"
-                f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt", "w"
-        ) as f:
-            f.write(table.get_string())
-
-        log.info("Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE")
-    else:
-        try:
-            execution_list = generate_execution_list()
-            for script in execution_list:  # Loop through List
-                log.parse_execution(Execute.script(script))
-                log.info(f"{script} executed")
-        except UnicodeDecodeError as e:
-            log.error(f"Error in code: {e}")
-        except Exception as e:
-            log.error(f"Error in code: {e}")
 
 
 def zip_generated_files():
@@ -426,7 +444,7 @@ def Logicytics():
     # Check for privileges and errors
     check_privileges()
     # Execute scripts
-    execute_scripts()
+    ExecuteScript().handler()
     # Zip generated files
     zip_generated_files()
     # Finish with sub actions

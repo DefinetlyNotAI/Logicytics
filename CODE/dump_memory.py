@@ -5,18 +5,15 @@ from datetime import datetime
 
 import psutil
 
-from logicytics import Log, DEBUG
+from logicytics import log
 
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
-
-# TODO v3.3.1
+# TODO v3.4.1
 #  psutil.virtual_memory(): used, free, percent, total
 #  psutil.swap_memory(): used, free, percent, total
 
 # If the file size exceeds this limit, the file will be truncated with a message
 # Put 0 to disable the limit
-# TODO v3.3.1: Make this take from config.ini
+# TODO v3.4.1: Make this take from config.ini
 LIMIT_FILE_SIZE = 20  # Always in MiB
 
 

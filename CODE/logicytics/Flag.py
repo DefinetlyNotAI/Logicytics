@@ -35,7 +35,7 @@ else:
         raise ValueError("accuracy_min must be between 0 and 100")
 
 
-class Match:
+class _Match:
     @staticmethod
     def __get_sim(user_input: str, all_descriptions: list[str]) -> list[float]:
         """
@@ -140,7 +140,7 @@ class Match:
         - Saves the graph visualization to a PNG file
         
         Parameters:
-            cls (Match): The class instance containing historical data methods
+            cls (_Match): The class instance containing historical data methods
         
         Raises:
             SystemExit: If no history data file is found
@@ -156,7 +156,7 @@ class Match:
             - Requires matplotlib for graph generation
             - Attempts to save graph in multiple predefined directory paths
         """
-        # TODO Yet in beta
+        # TODO Yet in beta - v3.6.0
         # Load the decompressed history data using the load_history function
         import matplotlib.pyplot as plt
 
@@ -286,6 +286,7 @@ class Match:
         if not SAVE_PREFERENCES:
             return
         history_data = cls.load_history()
+        matched_flag = matched_flag.replace("--", "")
 
         # Ensure that interactions is a dictionary (not a list)
         if not isinstance(history_data['interactions'], dict):
@@ -660,14 +661,14 @@ class Flag:
         # Map the user-provided description to the closest valid flag
         flags_list = [f"--{flag}" for flag in valid_flags]
         descriptions_list = [f"Run Logicytics with {flag}" for flag in valid_flags]
-        flag_received, accuracy_received = Match.flag(user_input_desc, flags_list, descriptions_list)
+        flag_received, accuracy_received = _Match.flag(user_input_desc, flags_list, descriptions_list)
         if DEBUG_MODE:
             print(f"User input: {user_input_desc}\nMatched flag: {flag_received}\nAccuracy: {accuracy_received:.2f}%\n")
         else:
             print(f"Matched flag: {flag_received} (Accuracy: {accuracy_received:.2f}%)\n")
 
     @staticmethod
-    def show_help_menu(return_output: bool = False):
+    def show_help_menu(return_output: bool = False) -> str | None:
         """
         Display the help menu for the Logicytics application.
         
@@ -757,12 +758,12 @@ class Flag:
             Example:
                 update_data_history('--verbose')  # Increments usage count for '--verbose' flag
             """
-            history_data = Match.load_history()
+            history_data = _Match.load_history()
             # Ensure the flag exists in the flags_usage counter and increment it
-            if matched_flag not in history_data['flags_usage']:
-                history_data['flags_usage'][matched_flag] = 0
-            history_data['flags_usage'][matched_flag] += 1
-            Match.save_history(history_data)
+            if matched_flag.replace("--", "") not in history_data['flags_usage']:
+                history_data['flags_usage'][matched_flag.replace("--", "")] = 0
+            history_data['flags_usage'][matched_flag.replace("--", "")] += 1
+            _Match.save_history(history_data)
 
         if len(used_flags) == 2:
             for flag in used_flags:

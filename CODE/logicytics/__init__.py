@@ -1,4 +1,6 @@
+import configparser
 import functools
+import os
 import traceback
 
 from logicytics.Checks import Check
@@ -14,10 +16,56 @@ Check = Check()
 FileManagement = FileManagement()
 Flag = Flag()
 
-DEBUG, VERSION, CURRENT_FILES, DELETE_LOGS = Get.config_data()
+
+def config_data() -> tuple[str, str, list[str], bool]:
+    """
+    Retrieves configuration data from the 'config.ini' file.
+
+    If the configuration file is not found in any of these locations,
+    the program exits with an error message.
+
+    Returns:
+        tuple[str, str, list[str], bool]: A tuple containing:
+            - Log level (str): Either "DEBUG" or "INFO"
+            - Version (str): System version from configuration
+            - Files (list[str]): List of files specified in configuration
+            - Delete old logs (bool): Flag indicating whether to delete old log files
+
+    Raises:
+        SystemExit: If the 'config.ini' file cannot be found in any of the attempted locations
+    """
+
+    def config_path():
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(script_dir)
+        configs_path = os.path.join(parent_dir, "config.ini")
+
+        if os.path.exists(configs_path):
+            return configs_path
+        else:
+            print("The config.ini file is not found in the expected location.")
+            exit(1)
+
+    config = configparser.ConfigParser()
+    path = config_path()
+    config.read(path)
+
+    log_using_debug = config.getboolean("Settings", "log_using_debug")
+    delete_old_logs = config.getboolean("Settings", "delete_old_logs")
+    version = config.get("System Settings", "version")
+    files = config.get("System Settings", "files").split(", ")
+
+    log_using_debug = "DEBUG" if log_using_debug else "INFO"
+
+    return log_using_debug, version, files, delete_old_logs
 
 
-def deprecated(removal_version: str, reason: str, show_trace: bool = True if DEBUG == "DEBUG" else False) -> callable:
+DEBUG, VERSION, CURRENT_FILES, DELETE_LOGS = config_data()
+
+__show_trace = DEBUG == "DEBUG"
+
+
+def deprecated(removal_version: str, reason: str, show_trace: bool = __show_trace) -> callable:
     """
     Decorator function that marks a function as deprecated
     and provides a warning when the function is called.
@@ -81,3 +129,7 @@ def deprecated(removal_version: str, reason: str, show_trace: bool = True if DEB
         return wrapper
 
     return decorator
+
+
+FileManagement.mkdir()
+log = Log({"log_level": DEBUG})

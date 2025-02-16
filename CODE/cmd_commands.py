@@ -1,7 +1,4 @@
-from logicytics import Log, DEBUG, Execute
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log, Execute
 
 
 @log.function
@@ -21,7 +18,8 @@ def command(file: str, commands: str, message: str, encoding: str = "UTF-8") -> 
     log.info(f"Executing {message}")
     try:
         output = Execute.command(commands)
-        open(file, "w", encoding=encoding).write(output)
+        with open(file, "w", encoding=encoding) as f:
+            f.write(output)
         log.info(f"{message} Successful - {file}")
     except Exception as e:
         log.error(f"Error while getting {message}: {e}")
