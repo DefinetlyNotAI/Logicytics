@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import configparser
 import os.path
 from pathlib import Path
 
@@ -49,50 +48,3 @@ class Get:
                 append_file_list.append(filename)
         return append_file_list
 
-    @staticmethod
-    def __script_dir():
-        """Returns the directory of the current script, even if imported."""
-        return os.path.dirname(os.path.abspath(__file__))
-
-    @classmethod
-    def __config_path(cls):
-        script_dir = cls.__script_dir()
-        parent_dir = os.path.dirname(script_dir)
-        path = os.path.join(parent_dir, "config.ini")
-
-        if os.path.exists(path):
-            return path
-        else:
-            print("The config.ini file is not found in the expected location.")
-            exit(1)
-
-    @classmethod
-    def config_data(cls) -> tuple[str, str, list[str], bool]:
-        """
-        Retrieves configuration data from the 'config.ini' file.
-        
-        If the configuration file is not found in any of these locations,
-        the program exits with an error message.
-        
-        Returns:
-            tuple[str, str, list[str], bool]: A tuple containing:
-                - Log level (str): Either "DEBUG" or "INFO"
-                - Version (str): System version from configuration
-                - Files (list[str]): List of files specified in configuration
-                - Delete old logs (bool): Flag indicating whether to delete old log files
-        
-        Raises:
-            SystemExit: If the 'config.ini' file cannot be found in any of the attempted locations
-        """
-        config = configparser.ConfigParser()
-        path = cls.__config_path()
-        config.read(path)
-
-        log_using_debug = config.getboolean("Settings", "log_using_debug")
-        delete_old_logs = config.getboolean("Settings", "delete_old_logs")
-        version = config.get("System Settings", "version")
-        files = config.get("System Settings", "files").split(", ")
-
-        log_using_debug = "DEBUG" if log_using_debug else "INFO"
-
-        return log_using_debug, version, files, delete_old_logs
