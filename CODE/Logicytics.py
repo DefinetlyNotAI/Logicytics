@@ -17,10 +17,8 @@ log = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
 ACTION, SUB_ACTION = None, None
 
 
-class Health:
-    @staticmethod
-    def backup(directory: str, name: str):
-        """
+def backup(directory: str, name: str):
+    """
         Creates a backup of a specified directory by zipping its contents and moving it to a designated backup location.
 
         Args:
@@ -30,23 +28,23 @@ class Health:
         Returns:
             None
         """
-        # Check if backup exists, delete it if so
-        if os.path.exists(f"../ACCESS/BACKUP/{name}.zip"):
-            os.remove(f"../ACCESS/BACKUP/{name}.zip")
+    # Check if backup exists, delete it if so
+    if os.path.exists(f"../ACCESS/BACKUP/{name}.zip"):
+        os.remove(f"../ACCESS/BACKUP/{name}.zip")
 
-        # Zip the directory and move it to the backup location
-        with zipfile.ZipFile(f"{name}.zip", "w") as zip_file:
-            for root, dirs, files in os.walk(directory):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    relative_path = os.path.relpath(str(file_path), start=os.getcwd())
-                    zip_file.write(str(file_path), arcname=relative_path)
+    # Zip the directory and move it to the backup location
+    with zipfile.ZipFile(f"{name}.zip", "w") as zip_file:
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                file_path = os.path.join(root, file)
+                relative_path = os.path.relpath(str(file_path), start=os.getcwd())
+                zip_file.write(str(file_path), arcname=relative_path)
 
-        shutil.move(f"{name}.zip", "../ACCESS/BACKUP")
+    shutil.move(f"{name}.zip", "../ACCESS/BACKUP")
 
-    @staticmethod
-    def update() -> tuple[str, str]:
-        """
+
+def update() -> tuple[str, str]:
+    """
         Updates the repository by pulling the latest changes from the remote repository.
 
         This function navigates to the parent directory, pulls the latest changes using Git,
@@ -55,20 +53,20 @@ class Health:
         Returns:
             str: The output from the git pull command.
         """
-        # Check if git command is available
-        if subprocess.run(["git", "--version"], capture_output=True).returncode != 0:
-            return "Git is not installed or not available in the PATH.", "error"
+    # Check if git command is available
+    if subprocess.run(["git", "--version"], capture_output=True).returncode != 0:
+        return "Git is not installed or not available in the PATH.", "error"
 
-        # Check if the project is a git repository
-        if not os.path.exists(os.path.join(os.getcwd(), "../.git")):
-            return "This project is not a git repository. The update flag uses git.", "error"
+    # Check if the project is a git repository
+    if not os.path.exists(os.path.join(os.getcwd(), "../.git")):
+        return "This project is not a git repository. The update flag uses git.", "error"
 
-        current_dir = os.getcwd()
-        parent_dir = os.path.dirname(current_dir)
-        os.chdir(parent_dir)
-        output = subprocess.run(["git", "pull"], capture_output=True).stdout.decode()
-        os.chdir(current_dir)
-        return output, "info"
+    current_dir = os.getcwd()
+    parent_dir = os.path.dirname(current_dir)
+    os.chdir(parent_dir)
+    output = subprocess.run(["git", "pull"], capture_output=True).stdout.decode()
+    os.chdir(current_dir)
+    return output, "info"
 
 
 def get_flags():
@@ -153,7 +151,7 @@ def handle_special_actions():
 
     if ACTION == "update":
         log.info("Updating...")
-        message, log_type = Health.update()
+        message, log_type = update()
         log.string(message, log_type)
         if log_type == "info":
             log.info("Update complete!")
@@ -173,9 +171,9 @@ def handle_special_actions():
 
     if ACTION == "backup":
         log.info("Backing up...")
-        Health.backup(".", "Default_Backup")
+        backup(".", "Default_Backup")
         log.debug("Backup complete -> CODE dir")
-        Health.backup("../MODS", "Mods_Backup")
+        backup("../MODS", "Mods_Backup")
         log.debug("Backup complete -> MODS dir")
         log.info("Backup complete!")
         input("Press Enter to exit...")
@@ -285,36 +283,44 @@ def generate_execution_list() -> list | list[str] | list[str | Any]:
     return execution_list
 
 
-def execute_scripts():
-    """Executes the scripts in the execution list based on the action."""
-    # Check weather to use threading or not, as well as execute code
-    log.info("Starting Logicytics...")
+class ExecuteScript:
+    @staticmethod
+    def __single_handler(script: str) -> tuple[str, Exception | None]:
+        """
+        Executes a single script and logs the result.
 
-    if ACTION == "threaded" or ACTION == "depth":
+        This function executes a single script and logs the result,
+        capturing any exceptions that occur during execution
 
-        def execute_single_script(script: str) -> tuple[str, Exception | None]:
-            """
-            Executes a single script and logs the result.
+        Parameters:
+            script (str): The path to the script to be executed
+        """
+        log.debug(f"Executing {script}")
+        try:
+            log.execution(Execute.script(script))
+            log.info(f"{script} executed")
+            return script, None
+        except Exception as err:
+            log.error(f"Error executing {script}: {err}")
+            return script, err
 
-            This function executes a single script and logs the result,
-            capturing any exceptions that occur during execution
+    def handler(self):
+        """Executes the scripts in the execution list based on the action."""
+        # Check weather to use threading or not, as well as execute code
+        log.info("Starting Logicytics...")
 
-            Parameters:
-                script (str): The path to the script to be executed
-            """
-            log.debug(f"Executing {script}")
-            try:
-                log.parse_execution(Execute.script(script))
-                log.info(f"{script} executed")
-                return script, None
-            except Exception as err:
-                log.error(f"Error executing {script}: {err}")
-                return script, err
+        if ACTION == "threaded" or ACTION == "depth":
+            self.__threaded()
+        elif ACTION == "performance_check":
+            self.__performance()
+        else:
+            self.__default()
 
+    def __threaded(self):
         log.debug("Using threading")
         execution_list = generate_execution_list()
         with ThreadPoolExecutor() as executor:
-            futures = {executor.submit(execute_single_script, script): script
+            futures = {executor.submit(self.__single_handler, script): script
                        for script in execution_list}
 
             for future in as_completed(futures):
@@ -325,12 +331,25 @@ def execute_scripts():
                 else:
                     log.debug(f"Completed {script}")
 
-    elif ACTION == "performance_check":
+    @staticmethod
+    def __default():
+        try:
+            execution_list = generate_execution_list()
+            for script in execution_list:  # Loop through List
+                log.execution(Execute.script(script))
+                log.info(f"{script} executed")
+        except UnicodeDecodeError as e:
+            log.error(f"Error in code: {e}")
+        except Exception as e:
+            log.error(f"Error in code: {e}")
+
+    @staticmethod
+    def __performance():
         execution_times = []
         execution_list = generate_execution_list()
         for file in range(len(execution_list)):
             start_time = datetime.now()
-            log.parse_execution(Execute.script(execution_list[file]))
+            log.execution(Execute.script(execution_list[file]))
             end_time = datetime.now()
             elapsed_time = end_time - start_time
             execution_times.append((file, elapsed_time))
@@ -348,16 +367,6 @@ def execute_scripts():
             f.write(table.get_string())
 
         log.info("Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE")
-    else:
-        try:
-            execution_list = generate_execution_list()
-            for script in execution_list:  # Loop through List
-                log.parse_execution(Execute.script(script))
-                log.info(f"{script} executed")
-        except UnicodeDecodeError as e:
-            log.error(f"Error in code: {e}")
-        except Exception as e:
-            log.error(f"Error in code: {e}")
 
 
 def zip_generated_files():
@@ -425,7 +434,7 @@ def Logicytics():
     # Check for privileges and errors
     check_privileges()
     # Execute scripts
-    execute_scripts()
+    ExecuteScript().handler()
     # Zip generated files
     zip_generated_files()
     # Finish with sub actions

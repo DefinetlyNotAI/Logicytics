@@ -286,6 +286,7 @@ class _Match:
         if not SAVE_PREFERENCES:
             return
         history_data = cls.load_history()
+        matched_flag = matched_flag.replace("--", "")
 
         # Ensure that interactions is a dictionary (not a list)
         if not isinstance(history_data['interactions'], dict):
@@ -759,9 +760,9 @@ class Flag:
             """
             history_data = _Match.load_history()
             # Ensure the flag exists in the flags_usage counter and increment it
-            if matched_flag not in history_data['flags_usage']:
-                history_data['flags_usage'][matched_flag] = 0
-            history_data['flags_usage'][matched_flag] += 1
+            if matched_flag.replace("--", "") not in history_data['flags_usage']:
+                history_data['flags_usage'][matched_flag.replace("--", "")] = 0
+            history_data['flags_usage'][matched_flag.replace("--", "")] += 1
             _Match.save_history(history_data)
 
         if len(used_flags) == 2:

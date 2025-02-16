@@ -334,7 +334,7 @@ class Log:
             )
         raise exception_type(message)
 
-    def parse_execution(self, message_log: list[list[str, str]]):
+    def execution(self, message_log: list[list[str, str]]):
         """
         Parse and log multiple messages with their corresponding log types.
         
