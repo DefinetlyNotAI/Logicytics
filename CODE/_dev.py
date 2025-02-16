@@ -41,7 +41,7 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
             return
         config.write()
     except FileNotFoundError:
-        color_print(f"[x] INI file not found", "red")
+        color_print("[x] INI file not found", "red")
     except configobj.ConfigObjError as e:
         color_print(f"[x] Parsing INI file failed: {e}", "red")
     except Exception as e:
