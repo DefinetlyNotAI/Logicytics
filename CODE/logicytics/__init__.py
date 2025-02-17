@@ -17,6 +17,13 @@ FileManagement = FileManagement()
 Flag = Flag()
 
 
+class ObjectLoadError(Exception):
+    """Raised when an Object fails to load."""
+
+    def __init__(self, message="Failed to load object"):
+        super().__init__(message)
+
+
 def config_data() -> tuple[str, str, list[str], bool]:
     """
     Retrieves configuration data from the 'config.ini' file.
@@ -86,13 +93,13 @@ def deprecated(removal_version: str, reason: str, show_trace: bool = __show_trac
     def decorator(func: callable) -> callable:
         """
         Decorator function that marks a function as deprecated and provides a warning when the function is called.
-        
+
         Args:
             func (callable): The function to be decorated with a deprecation warning.
-        
+
         Returns:
             callable: A wrapper function that preserves the original function's metadata and prints a deprecation warning.
-        
+
         Notes:
             - Uses functools.wraps to preserve the original function's metadata
             - Prints a colorized deprecation warning to stderr
@@ -103,14 +110,14 @@ def deprecated(removal_version: str, reason: str, show_trace: bool = __show_trac
         def wrapper(*args, **kwargs) -> callable:
             """
             Wraps a deprecated function to print a warning message before execution.
-            
+
             Args:
                 *args: Positional arguments passed to the original function.
                 **kwargs: Keyword arguments passed to the original function.
-            
+
             Returns:
                 The return value of the original function after printing a deprecation warning.
-            
+
             Warns:
                 Prints a colored deprecation warning to stderr with details about:
                 - Function name being deprecated

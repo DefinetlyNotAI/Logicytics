@@ -15,13 +15,14 @@ config = ConfigParser()
 config.read('config.ini')
 config = config['PacketSniffer Settings']
 
-# Global configuration
-conf.verb = 0  # Turn off verbosity for clean output
-packet_data = []  # List to store packet information
-G = nx.Graph()  # Initialize a graph
-
 
 class Sniff:
+    # Global configuration
+    def __init__(self):
+        conf.verb = 0  # Turn off verbosity for clean output
+        self.packet_data = []  # List to store packet information
+        self.G = nx.Graph()  # Initialize a graph
+
     # Function to process and log packet details
     def __log_packet(self, packet: IP):
         """
@@ -58,7 +59,7 @@ class Sniff:
                     'src_port': self.__get_port_info(packet, 'sport'),
                     'dst_port': self.__get_port_info(packet, 'dport'),
                 }
-                packet_data.append(packet_info)
+                self.packet_data.append(packet_info)
                 self.__print_packet_summary(packet_info)
                 self.__add_to_graph(packet_info)
         except Exception as err:
@@ -145,8 +146,7 @@ class Sniff:
                   f"to {packet_info['dst_ip']} | Src Port: {packet_info['src_port']} | Dst Port: {packet_info['dst_port']}")
 
     # Function to add packet information to the graph
-    @staticmethod
-    def __add_to_graph(packet_info: dict):
+    def __add_to_graph(self, packet_info: dict):
         """
         Adds an edge to the network graph representing a connection between source and destination IPs.
 
@@ -167,7 +167,7 @@ class Sniff:
         src_ip = packet_info['src_ip']
         dst_ip = packet_info['dst_ip']
         protocol = packet_info['protocol']
-        G.add_edge(src_ip, dst_ip, protocol=protocol)
+        self.G.add_edge(src_ip, dst_ip, protocol=protocol)
 
     # Function to start sniffing packets
     def __start_sniffing(self, interface: str, packet_count: int = 10, timeout: int = 10):
@@ -237,8 +237,7 @@ class Sniff:
         self.__visualize_graph()
 
     # Function to save captured packet data to CSV
-    @staticmethod
-    def __save_packet_data_to_csv(file_path: str):
+    def __save_packet_data_to_csv(self, file_path: str):
         """
         Saves captured packet data to a CSV file.
 
@@ -258,17 +257,15 @@ class Sniff:
         Raises:
             IOError: Potential file writing permission or path-related errors (implicitly handled by pandas)
         """
-        global packet_data
-        if packet_data:
-            df = pd.DataFrame(packet_data)
+        if self.packet_data:
+            df = pd.DataFrame(self.packet_data)
             df.to_csv(file_path, index=False)
             log.info(f"Packet data saved to '{file_path}'.")
         else:
             log.warning("No packet data to save.")
 
     # Function to visualize the graph of packet connections
-    @staticmethod
-    def __visualize_graph(node_colors: dict[str, str] | None = None,
+    def __visualize_graph(self, node_colors: dict[str, str] | None = None,
                           node_sizes: dict[str, int] | None = None,
                           *,  # Force keyword arguments for the following parameters
                           figsize: tuple[int, int] = (12, 8),
@@ -311,22 +308,23 @@ class Sniff:
             custom_sizes = {'192.168.1.1': 5000, '10.0.0.1': 2000}
             visualize_graph(node_colors=custom_colors, node_sizes=custom_sizes)
         """
-        pos = layout_func(G)
+        pos = layout_func(self.G)
         plt.figure(figsize=figsize)
 
         if node_colors is None:
-            node_colors = {node: "skyblue" for node in G.nodes()}
+            node_colors = {node: "skyblue" for node in self.G.nodes()}
 
         if node_sizes is None:
-            node_sizes = {node: 3000 for node in G.nodes()}
+            node_sizes = {node: 3000 for node in self.G.nodes()}
 
-        node_color_list = [node_colors.get(node, "skyblue") for node in G.nodes()]
-        node_size_list = [node_sizes.get(node, 3000) for node in G.nodes()]
+        node_color_list = [node_colors.get(node, "skyblue") for node in self.G.nodes()]
+        node_size_list = [node_sizes.get(node, 3000) for node in self.G.nodes()]
 
-        nx.draw(G, pos, with_labels=True, node_size=node_size_list, node_color=node_color_list, font_size=font_size,
+        nx.draw(self.G, pos, with_labels=True, node_size=node_size_list, node_color=node_color_list,
+                font_size=font_size,
                 font_weight=font_weight)
-        edge_labels = nx.get_edge_attributes(G, 'protocol')
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+        edge_labels = nx.get_edge_attributes(self.G, 'protocol')
+        nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edge_labels)
         plt.title(title)
         plt.savefig(output_file)
         plt.close()
@@ -382,15 +380,14 @@ class Sniff:
                 else:
                     log.error(f"Failed to sniff packets: {err}")
 
-
-def cleanup():
-    # Clean up resources
-    try:
-        plt.close('all')  # Close all figures
-    except Exception as err:
-        log.error(f"Error during cleanup: {err}")
-    finally:
-        G.clear()  # Clear the graph to free memory
+    def cleanup(self):
+        # Clean up resources
+        try:
+            plt.close('all')  # Close all figures
+        except Exception as err:
+            log.error(f"Error during cleanup: {err}")
+        finally:
+            self.G.clear()  # Clear the graph to free memory
 
 
 # Entry point of the script
@@ -400,4 +397,4 @@ if __name__ == "__main__":
     except Exception as e:
         log.error(e)
     finally:
-        cleanup()
+        Sniff().cleanup()

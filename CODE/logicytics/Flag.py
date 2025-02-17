@@ -286,7 +286,7 @@ class _Match:
         if not SAVE_PREFERENCES:
             return
         history_data = cls.load_history()
-        matched_flag = matched_flag.replace("--", "")
+        matched_flag = matched_flag.lstrip('-')
 
         # Ensure that interactions is a dictionary (not a list)
         if not isinstance(history_data['interactions'], dict):
@@ -653,7 +653,8 @@ class Flag:
         # Get the closest valid flag match based on the user's input
         closest_matches = difflib.get_close_matches(user_input, valid_flags, n=1, cutoff=0.6)
         if closest_matches:
-            print(f"Invalid flag '{user_input}', Did you mean '--{closest_matches[0]}'?")
+            print(f"Invalid flag '{user_input}', Did you mean '--{closest_matches[0].replace('_', '-')}'?")
+            exit(1)
 
         # Prompt the user for a description if no close match is found
         user_input_desc = input("We can't find a match, Please provide a description: ").lower()
@@ -663,9 +664,10 @@ class Flag:
         descriptions_list = [f"Run Logicytics with {flag}" for flag in valid_flags]
         flag_received, accuracy_received = _Match.flag(user_input_desc, flags_list, descriptions_list)
         if DEBUG_MODE:
-            print(f"User input: {user_input_desc}\nMatched flag: {flag_received}\nAccuracy: {accuracy_received:.2f}%\n")
+            print(
+                f"User input: {user_input_desc}\nMatched flag: {flag_received.replace('_', '-')}\nAccuracy: {accuracy_received:.2f}%\n")
         else:
-            print(f"Matched flag: {flag_received} (Accuracy: {accuracy_received:.2f}%)\n")
+            print(f"Matched flag: {flag_received.replace('_', '-')} (Accuracy: {accuracy_received:.2f}%)\n")
 
     @staticmethod
     def show_help_menu(return_output: bool = False) -> str | None:

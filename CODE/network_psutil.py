@@ -1,6 +1,6 @@
+import asyncio
 import os
 import socket
-import time
 
 import psutil
 
@@ -125,7 +125,7 @@ class NetworkInfo:
         self.__save_data("network_connections_with_processes.txt", connections_data)
         log.info("Network connections with process info saved.")
 
-    def __measure_network_bandwidth_usage(self, sample_count: int = 5, interval: float = 1.0):
+    async def __measure_network_bandwidth_usage(self, sample_count: int = 5, interval: float = 1.0):
         """
         Measures and saves the average network bandwidth usage.
 
@@ -138,7 +138,7 @@ class NetworkInfo:
         samples = []
         for _ in range(sample_count):
             net1 = psutil.net_io_counters()
-            time.sleep(interval)
+            await asyncio.sleep(interval)
             net2 = psutil.net_io_counters()
             samples.append({
                 'up': (net2.bytes_sent - net1.bytes_sent) / 1024,

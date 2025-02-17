@@ -7,8 +7,8 @@ import subprocess
 import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
-from typing import Any
 
+import psutil
 from prettytable import PrettyTable
 
 from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS
@@ -18,16 +18,33 @@ log = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
 ACTION, SUB_ACTION = None, None
 config = configparser.ConfigParser()
 config.read("config.ini")
-MAX_WORKERS = config.get("Settings", "max_workers", fallback=None)
+MAX_WORKERS = config.getint("Settings", "max_workers", fallback=min(32, (os.cpu_count() or 1) + 4))
 log.debug(f"MAX_WORKERS: {MAX_WORKERS}")
 
 
 class ExecuteScript:
     def __init__(self):
-        self.execution_list = self.generate_execution_list()
+        self.execution_list = self.__generate_execution_list()
 
     @staticmethod
-    def generate_execution_list() -> list | list[str] | list[str | Any]:
+    def __safe_remove(file_name: str, file_list: list[str] | set[str]) -> list[str]:
+        file_set = set(file_list)
+        if file_name in file_set:
+            file_set.remove(file_name)
+        else:
+            log.critical(f"The file {file_name} should exist in this directory - But was not found!")
+        return list(file_set)
+
+    @staticmethod
+    def __safe_append(file_name: str, file_list: list[str] | set[str]) -> list[str]:
+        file_set = set(file_list)
+        if os.path.exists(file_name):
+            file_set.add(file_name)
+        else:
+            log.critical(f"Missing required file: {file_name}")
+        return list(file_set)
+
+    def __generate_execution_list(self) -> list[str]:
         """
         Generate an execution list of scripts based on the specified action.
 
@@ -51,11 +68,14 @@ class ExecuteScript:
             - Warns users about potential long execution times for certain actions
         """
         execution_list = Get.list_of_files(".", extensions=(".py", ".exe", ".ps1", ".bat"))
-        execution_list.remove("sensitive_data_miner.py")
-        execution_list.remove("dir_list.py")
-        execution_list.remove("tree.ps1")
-        execution_list.remove("vulnscan.py")
-        execution_list.remove("event_log.py")
+        files_to_remove = {
+            "sensitive_data_miner.py",
+            "dir_list.py",
+            "tree.ps1",
+            "vulnscan.py",
+            "event_log.py",
+        }
+        execution_list = [file for file in execution_list if file not in files_to_remove]
 
         if ACTION == "minimal":
             execution_list = [
@@ -69,7 +89,7 @@ class ExecuteScript:
                 "event_log.py",
             ]
 
-        if ACTION == "nopy":
+        elif ACTION == "nopy":
             execution_list = [
                 "browser_miner.ps1",
                 "netadapter.ps1",
@@ -78,24 +98,36 @@ class ExecuteScript:
                 "tree.ps1"
             ]
 
-        if ACTION == "modded":
+        elif ACTION == "modded":
             # Add all files in MODS to execution list
             execution_list = Get.list_of_files("../MODS",
                                                extensions=(".py", ".exe", ".ps1", ".bat"),
                                                append_file_list=execution_list)
 
-        if ACTION == "depth":
+        elif ACTION == "depth":
             log.warning(
                 "This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards.")
-            execution_list.append("sensitive_data_miner.py")
-            execution_list.append("dir_list.py")
-            execution_list.append("tree.ps1")
-            execution_list.append("event_log.py")
+            files_to_append = {
+                "sensitive_data_miner.py",
+                "dir_list.py",
+                "tree.ps1",
+                "event_log.py",
+            }
+            for file in files_to_append:
+                execution_list = self.__safe_append(file, execution_list)
             log.warning("This flag will use threading!")
 
-        if ACTION == "vulnscan_ai":
+        elif ACTION == "vulnscan_ai":
             # Only vulnscan detector
-            execution_list = ["vulnscan.py"]
+            if os.path.exists("vulnscan.py"):
+                execution_list = ["vulnscan.py"]
+            else:
+                log.critical("Vulnscan is missing...")
+                exit(1)
+
+        if len(execution_list) == 0:
+            log.critical("Nothing is in the execution list.. This is due to faulty code or corrupted Logicytics files!")
+            exit(1)
 
         log.debug(f"The following will be executed: {execution_list}")
         return execution_list
@@ -159,20 +191,32 @@ class ExecuteScript:
 
     def __performance(self):
         """Checks performance of each script."""
+        if DEBUG.lower() != "debug":
+            log.warning("Advised to turn on DEBUG logging!!")
+
         execution_times = []
+        memory_usage = []
+        process = psutil.Process()
 
         for file in range(len(self.execution_list)):
             start_time = datetime.now()
+            start_memory = process.memory_info().rss / 1024 / 1024  # MB
             log.execution(Execute.script(self.execution_list[file]))
             end_time = datetime.now()
+            end_memory = process.memory_info().rss / 1024 / 1024  # MB
             elapsed_time = end_time - start_time
+            memory_delta = end_memory - start_memory
+            memory_usage.append((self.execution_list[file], str(memory_delta)))
             execution_times.append((self.execution_list[file], elapsed_time))
             log.info(f"{self.execution_list[file]} executed in {elapsed_time}")
+            log.info(f"{self.execution_list[file]} used {memory_delta:.2f}MB of memory")
+            log.debug(f"Started with {start_memory}MB of memory and ended with {end_memory}MB of memory")
 
         table = PrettyTable()
-        table.field_names = ["Script", "Execution Time"]
+        table.field_names = ["Script", "Execution Time", "Memory Usage (MB)"]
         for script, elapsed_time in execution_times:
-            table.add_row([script, elapsed_time])
+            memory = next(m[1] for m in memory_usage if m[0] == script)
+            table.add_row([script, elapsed_time, f"{memory:.2f}"])
 
         try:
             with open(
@@ -180,6 +224,10 @@ class ExecuteScript:
                     f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt", "w"
             ) as f:
                 f.write(table.get_string())
+                f.write(
+                    "\nSome values may be negative, Reason may be due to external resources playing with memory usage, "
+                    "close background tasks to get more accurate readings")
+                f.write("Note: This is not a low-level memory logger, data here isn't 100% accurate!")
             log.info("Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE")
         except Exception as e:
             log.error(f"Error writing performance log: {e}")
@@ -454,7 +502,12 @@ def Logicytics():
 
 
 if __name__ == "__main__":
-    Logicytics()
+    try:
+        Logicytics()
+    except KeyboardInterrupt:
+        log.warning("Shutting down Logicytics utility with force causes many files to remain where they shouldn't")
+        log.warning("Please don't force shut Logicytics again - As we don't have a cleanup function yet.")
+        exit(0)
 else:
     log.error("This script cannot be imported!")
     exit(1)
