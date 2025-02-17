@@ -76,7 +76,11 @@ class SensitiveDataScanner:
             self.vectorizer = self.vectorizer_cache[self.vectorizer_path]
             return
 
-        self.vectorizer = joblib.load(self.vectorizer_path)
+        try:
+            self.vectorizer = joblib.load(self.vectorizer_path)
+        except Exception as e:
+            log.critical(f"Failed to load vectorizer from {self.vectorizer_path}: {e}")
+            exit(1)
         self.vectorizer_cache[self.vectorizer_path] = self.vectorizer
         log.info(f"Loaded and cached vectorizer from {self.vectorizer_path}")
 
@@ -171,6 +175,7 @@ class VulnScan:
                 # Scan progress tracking
                 with tqdm(total=len(all_files), desc="\033[32mINFO\033[0m     \033[94mScanning Files\033[0m",
                           unit="file", bar_format="{l_bar} {bar} {n_fmt}/{total_fmt}") as scan_pbar:
+                    sensitive_files = []
                     for future in as_completed(futures):
                         try:
                             result, probability, reason = future.result()
@@ -178,15 +183,18 @@ class VulnScan:
                                 file_path = futures[future]
                                 log.debug(
                                     f"Sensitive file detected: {file_path} (Confidence: {probability:.2f}). Reason: {reason}")
-
-                                # Save to list in bulk or periodically (instead of on each result)
-                                with open("Sensitive_File_Paths.txt", "a") as sensitive_file:
-                                    sensitive_file.write(f"{file_path}\n")
-
+                            sensitive_files.append(file_path)
                         except Exception as e:
                             log.error(f"Scan failed: {e}")
 
                         scan_pbar.update(1)  # Update scanning progress
+
+                    # Write all sensitive files at once
+                    with open("Sensitive_File_Paths.txt", "a") as sensitive_file:
+                        if sensitive_files:
+                            sensitive_file.write("\n".join(sensitive_files) + "\n")
+                        else:
+                            sensitive_file.write("Sadly no sensitive file's were detected.")
 
         except Exception as e:
             log.error(f"Scanning error: {e}")

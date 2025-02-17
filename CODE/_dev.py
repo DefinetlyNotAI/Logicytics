@@ -125,22 +125,32 @@ def _handle_file_operations() -> None:
         if clean_f not in files and clean_f not in EXCLUDE_FILES:
             removed_files.append(clean_f)
 
-    print("\n".join([f"\033[92m+ {file}\033[0m" for file in added_files]))  # Green +
-    print("\n".join([f"\033[91m- {file}\033[0m" for file in removed_files]))  # Red -
-    print("\n".join([f"* {file}" for file in normal_files]))
+    for file in added_files:
+        color_print(f"+ {file}", "green")
+    for file in removed_files:
+        color_print(f"- {file}", "red")
+    for file in normal_files:
+        print(f"* {file}")
 
     if not _prompt_user("Does the list above include your added files?"):
         color_print("[x] Something went wrong! Please contact support.", "red")
         return
 
+    max_attempts = 10
+    attempts = 0
     _update_ini_file("config.ini", files, "files")
     while True:
         version = input(f"\033[36m[?] Enter the new version of the project (Old version is {VERSION}): \033[0m")
+        if attempts >= max_attempts:
+            color_print("[x] Maximum attempts reached. Please run the script again.", "red")
+            exit()
         if re.match(r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$', version):
             _update_ini_file("config.ini", version, "version")
             break
         else:
             color_print("[!] Please enter a valid version number (e.g., 1.2.3)", "yellow")
+            attempts += 1
+            color_print(f"[!] {max_attempts - attempts} attempts remaining", "yellow")
     color_print("\n[-] Great Job! Please tick the box in the GitHub PR request for completing steps in --dev", "green")
 
 
