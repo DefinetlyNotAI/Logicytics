@@ -7,8 +7,10 @@
 
 | Task                                                                                         | Version | Might or Will be done? |
 |----------------------------------------------------------------------------------------------|---------|------------------------|
-| Implement TODO in `dump_memory`                                                              | v3.4.1  | ✅                      |
+| Implement TODOs for v3.4.3                                                                   | v3.4.1  | ✅                      |
+| Add docstrings to all functions as well as var types                                         | v3.4.1  | ✅                      |
 | Implement Cleanup functionality for Logicytics if KeyboardInterrupt occurs                   | v3.4.2  | ✅                      |
+| Implement TODOs for v3.4.2                                                                   | v3.4.2  | ✅                      |
 | Implement the 2 missing flags                                                                | v3.5.0  | ✅                      |
 | Move VulnScan tools and v3 module to separate repository, keep only the model and vectorizer | v3.5.0  | ✅                      |
 | Get any BETA features out of BETA                                                            | v3.6.0  | ✅                      |
