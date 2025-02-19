@@ -4,12 +4,7 @@ import threading
 
 import wmi  # Import the wmi library
 
-from logicytics import Log, DEBUG
-
-# Note: This script CANNOT be run without admin privileges
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log
 
 
 @log.function
