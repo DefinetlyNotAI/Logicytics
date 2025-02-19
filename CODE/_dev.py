@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 
@@ -8,16 +9,20 @@ import configobj
 from logicytics import log, Get, FileManagement, CURRENT_FILES, VERSION
 
 
-def color_print(text, color="reset"):
+def color_print(text, color="reset", is_input=False) -> None | str:
     colors = {
         "reset": "\033[0m",
         "red": "\033[31m",
         "green": "\033[32m",
         "yellow": "\033[33m",
+        "cyan": "\033[36m",
     }
 
     color_code = colors.get(color.lower(), colors["reset"])
-    print(f"{color_code}{text}{colors['reset']}")
+    if is_input:
+        return input(f"{color_code}{text}{colors['reset']}")
+    else:
+        print(f"{color_code}{text}{colors['reset']}")
 
 
 def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
@@ -31,7 +36,8 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
         None
     """
     try:
-        config = configobj.ConfigObj(filename, encoding='utf-8', write_empty_values=True)
+        config = configobj.ConfigObj(filename, encoding="utf-8", write_empty_values=True)
+
         if key == "files":
             config["System Settings"][key] = ", ".join(new_data)
         elif key == "version":
@@ -39,6 +45,7 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
         else:
             color_print(f"[!] Invalid key: {key}", "yellow")
             return
+
         config.write()
     except FileNotFoundError:
         color_print("[x] INI file not found", "red")
@@ -69,7 +76,7 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
         - Provides optional file opening and reminder messaging
     """
     try:
-        answer = input(f"\033[36m[?] {question} (y)es or (n)o:- \033[0m")
+        answer = color_print(f"[?] {question} (y)es or (n)o:- ", "cyan", is_input=True)
         if not (answer.lower() == "yes" or answer.lower() == "y"):
             if file_to_open:
                 subprocess.run(["start", file_to_open], shell=True)
@@ -91,11 +98,11 @@ def _perform_checks() -> bool:
         bool: True if all checks are confirmed by the user, False otherwise.
     """
     checks = [
-        ("Have you read the required contributing guidelines?", "../CONTRIBUTING.md"),
-        ("Have you made files you don't want to be run start with '_'?", "."),
-        ("Have you added the file to CODE dir?", "."),
-        ("Have you added docstrings and comments?", "../CONTRIBUTING.md"),
-        ("Is each file containing around 1 main feature?", "../CONTRIBUTING.md"),
+        ("[-] Have you read the required contributing guidelines?", "..\\CONTRIBUTING.md"),
+        ("[-] Have you made files you don't want to be run start with '_'?", "."),
+        ("[-] Have you added the file to CODE dir?", "."),
+        ("[-] Have you added docstrings and comments?", "..\\CONTRIBUTING.md"),
+        ("[-] Is each file containing around 1 main feature?", "..\\CONTRIBUTING.md"),
     ]
 
     for question, file_to_open in checks:
@@ -109,48 +116,49 @@ def _handle_file_operations() -> None:
     Handles file operations and logging for added, removed, and normal files.
     """
     EXCLUDE_FILES = ["logicytics\\User_History.json.gz", "logicytics\\User_History.json"]
-    files = Get.list_of_files(".", True, exclude_files=EXCLUDE_FILES)
+    files = Get.list_of_files(".", exclude_files=EXCLUDE_FILES)
     added_files, removed_files, normal_files = [], [], []
     clean_files_list = [file.replace('"', '') for file in CURRENT_FILES]
 
-    for f in files:
-        clean_f = f.replace('"', '')
-        if clean_f in clean_files_list and clean_f not in EXCLUDE_FILES:
-            normal_files.append(clean_f)
-        elif clean_f not in EXCLUDE_FILES:
-            added_files.append(clean_f)
+    files_set = set(os.path.abspath(f) for f in files)
+    clean_files_set = set(os.path.abspath(f) for f in clean_files_list)
 
-    for f in clean_files_list:
-        clean_f = f.replace('"', '')
-        if clean_f not in files and clean_f not in EXCLUDE_FILES:
-            removed_files.append(clean_f)
+    for file in files_set:
+        if file in clean_files_set and file not in EXCLUDE_FILES:
+            normal_files.append(file)
+        elif file not in clean_files_set and file not in EXCLUDE_FILES:
+            added_files.append(file)
 
-    for file in added_files:
-        color_print(f"+ {file}", "green")
-    for file in removed_files:
-        color_print(f"- {file}", "red")
-    for file in normal_files:
-        print(f"* {file}")
+    for file in clean_files_set:
+        if file not in files_set and file not in EXCLUDE_FILES:
+            removed_files.append(file)
 
-    if not _prompt_user("Does the list above include your added files?"):
+    print("\n".join([f"\033[92m+ {file}\033[0m" for file in added_files]))  # Green +
+    print("\n".join([f"\033[91m- {file}\033[0m" for file in removed_files]))  # Red -
+    print("\n".join([f"* {file}" for file in normal_files]))
+
+    if not _prompt_user("[-] Does the list above include your added files?"):
         color_print("[x] Something went wrong! Please contact support.", "red")
         return
 
     max_attempts = 10
     attempts = 0
     _update_ini_file("config.ini", files, "files")
+
     while True:
-        version = input(f"\033[36m[?] Enter the new version of the project (Old version is {VERSION}): \033[0m")
+        version = color_print(f"[?] Enter the new version of the project (Old version is {VERSION}): ", "cyan",
+                              is_input=True)
         if attempts >= max_attempts:
             color_print("[x] Maximum attempts reached. Please run the script again.", "red")
             exit()
-        if re.match(r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$', version):
+        if re.match(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$", version):
             _update_ini_file("config.ini", version, "version")
             break
         else:
             color_print("[!] Please enter a valid version number (e.g., 1.2.3)", "yellow")
             attempts += 1
             color_print(f"[!] {max_attempts - attempts} attempts remaining", "yellow")
+
     color_print("\n[-] Great Job! Please tick the box in the GitHub PR request for completing steps in --dev", "green")
 
 
@@ -188,4 +196,4 @@ def dev_checks() -> None:
 if __name__ == "__main__":
     dev_checks()
     # Wait for the user to press Enter to exit the program
-    input("\nPress Enter to exit the program... ")
+    input("\n[*] Press Enter to exit the program... ")

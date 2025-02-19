@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import configparser
 import os
 import shutil
 import subprocess
+import sys
 import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -11,14 +11,12 @@ from datetime import datetime
 import psutil
 from prettytable import PrettyTable
 
-from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS
+from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS, CONFIG
 
 # Initialization
 log = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
 ACTION, SUB_ACTION = None, None
-config = configparser.ConfigParser()
-config.read("config.ini")
-MAX_WORKERS = config.getint("Settings", "max_workers", fallback=min(32, (os.cpu_count() or 1) + 4))
+MAX_WORKERS = CONFIG.getint("Settings", "max_workers", fallback=min(32, (os.cpu_count() or 1) + 4))
 log.debug(f"MAX_WORKERS: {MAX_WORKERS}")
 
 
@@ -67,7 +65,8 @@ class ExecuteScript:
             - Logs the final execution list for debugging purposes
             - Warns users about potential long execution times for certain actions
         """
-        execution_list = Get.list_of_files(".", extensions=(".py", ".exe", ".ps1", ".bat"))
+        execution_list = Get.list_of_files(".", only_extensions=(".py", ".exe", ".ps1", ".bat"),
+                                           exclude_files=["Logicytics.py"])
         files_to_remove = {
             "sensitive_data_miner.py",
             "dir_list.py",
@@ -100,9 +99,8 @@ class ExecuteScript:
 
         elif ACTION == "modded":
             # Add all files in MODS to execution list
-            execution_list = Get.list_of_files("../MODS",
-                                               extensions=(".py", ".exe", ".ps1", ".bat"),
-                                               append_file_list=execution_list)
+            execution_list = Get.list_of_files("../MODS", only_extensions=(".py", ".exe", ".ps1", ".bat"),
+                                               append_file_list=execution_list, exclude_files=["Logicytics.py"])
 
         elif ACTION == "depth":
             log.warning(
@@ -169,11 +167,14 @@ class ExecuteScript:
 
             for future in as_completed(futures):
                 script = futures[future]
-                result, error = future.result()
-                if error:
-                    log.error(f"Failed to execute {script}")
-                else:
-                    log.debug(f"Completed {script}")
+                try:
+                    result, error = future.result()
+                    if error:
+                        log.error(f"Failed to execute {script}: {error}")
+                    else:
+                        log.debug(f"Completed {script}")
+                except Exception as e:
+                    log.error(f"Thread crashed while executing {script}: {e}")
 
     def __default(self):
         """Executes scripts sequentially."""
@@ -246,6 +247,10 @@ class SpecialAction:
             Returns:
                 None
             """
+        if not os.path.exists(directory):
+            log.critical(f"Directory {directory} does not exist!")
+            return
+
         # Check if backup exists, delete it if so
         if os.path.exists(f"../ACCESS/BACKUP/{name}.zip"):
             os.remove(f"../ACCESS/BACKUP/{name}.zip")
@@ -308,7 +313,7 @@ class SpecialAction:
         """
         sr_current_dir = os.path.dirname(os.path.abspath(__file__))
         sr_script_path = os.path.join(sr_current_dir, file_path)
-        sr_process = subprocess.Popen(["cmd.exe", "/c", "start", "python", sr_script_path])
+        sr_process = subprocess.Popen(["cmd.exe", "/c", "start", sys.executable, sr_script_path])
         sr_process.wait()
         exit(0)
 
@@ -507,6 +512,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         log.warning("Shutting down Logicytics utility with force causes many files to remain where they shouldn't")
         log.warning("Please don't force shut Logicytics again - As we don't have a cleanup function yet.")
+        # TODO v3.4.2 -> Cleanup function
         exit(0)
 else:
     log.error("This script cannot be imported!")
