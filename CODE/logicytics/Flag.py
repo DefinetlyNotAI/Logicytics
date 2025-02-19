@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import configparser
 import difflib
 import gzip
 import json
@@ -9,33 +8,26 @@ import os
 from collections import Counter
 from datetime import datetime
 
+from .Config import CONFIG
+
 # Check if the script is being run directly, if not, set up the library
 if __name__ == '__main__':
     exit("This is a library, Please import rather than directly run.")
 else:
-    # Set up constants and configurations
-    config = configparser.ConfigParser()
-    try:
-        config.read('config.ini')
-    except FileNotFoundError:
-        try:
-            config.read('../config.ini')
-        except FileNotFoundError:
-            exit("No configuration file found.")
     # Save user preferences?
-    SAVE_PREFERENCES = config.getboolean("Settings", "save_preferences")
+    SAVE_PREFERENCES = CONFIG.getboolean("Settings", "save_preferences")
     # Debug mode for Sentence Transformer
-    DEBUG_MODE = config.getboolean("Flag Settings", "model_debug")  # Debug mode for Sentence Transformer
+    DEBUG_MODE = CONFIG.getboolean("Flag Settings", "model_debug")  # Debug mode for Sentence Transformer
     # File for storing user history data
-    HISTORY_FILE = 'logicytics/User_History.json.gz'  # User history file
+    HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'User_History.json.gz')  # User history file
     # Minimum accuracy threshold for flag suggestions
     MIN_ACCURACY_THRESHOLD = float(
-        config.get("Flag Settings", "accuracy_min"))  # Minimum accuracy threshold for flag suggestions
+        CONFIG.get("Flag Settings", "accuracy_min"))  # Minimum accuracy threshold for flag suggestions
     if not 0 <= MIN_ACCURACY_THRESHOLD <= 100:
         raise ValueError("accuracy_min must be between 0 and 100")
 
 
-class Match:
+class _Match:
     @staticmethod
     def __get_sim(user_input: str, all_descriptions: list[str]) -> list[float]:
         """
@@ -69,11 +61,11 @@ class Match:
             logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 
         try:
-            MODEL = SentenceTransformer(config.get("Flag Settings", "model_to_use"))
+            MODEL = SentenceTransformer(CONFIG.get("Flag Settings", "model_to_use"))
         except Exception as e:
             print(f"Error: {e}")
             print("Please check the model name in the config file.")
-            print(f"Model name {config.get('Flag Settings', 'model_to_use')} may not be valid.")
+            print(f"Model name {CONFIG.get('Flag Settings', 'model_to_use')} may not be valid.")
             exit(1)
 
         user_embedding = MODEL.encode(user_input, convert_to_tensor=True, show_progress_bar=DEBUG_MODE)
@@ -140,7 +132,7 @@ class Match:
         - Saves the graph visualization to a PNG file
         
         Parameters:
-            cls (Match): The class instance containing historical data methods
+            cls (_Match): The class instance containing historical data methods
         
         Raises:
             SystemExit: If no history data file is found
@@ -156,7 +148,7 @@ class Match:
             - Requires matplotlib for graph generation
             - Attempts to save graph in multiple predefined directory paths
         """
-        # TODO Yet in beta
+        # TODO Yet in beta - v3.6.0
         # Load the decompressed history data using the load_history function
         import matplotlib.pyplot as plt
 
@@ -286,6 +278,7 @@ class Match:
         if not SAVE_PREFERENCES:
             return
         history_data = cls.load_history()
+        matched_flag = matched_flag.lstrip('-')
 
         # Ensure that interactions is a dictionary (not a list)
         if not isinstance(history_data['interactions'], dict):
@@ -454,6 +447,7 @@ class Flag:
                  "and not the best, use only if the device doesnt have python installed.",
         )
 
+        # TODO v3.6.0 -> Out of beta
         parser.add_argument(
             "--vulnscan-ai",
             action="store_true",
@@ -469,6 +463,7 @@ class Flag:
             help="Run Logicytics in minimal mode. Just bare essential scraping using only quick scripts",
         )
 
+        # TODO v3.6.0 -> Out of beta
         parser.add_argument(
             "--performance-check",
             action="store_true",
@@ -642,7 +637,7 @@ class Flag:
         Behavior:
             - If a close flag match exists, suggests the closest match
             - If no close match, prompts user for a description
-            - Uses the Match.flag method to find the most accurate flag based on description
+            - Uses the _Match.flag method to find the most accurate flag based on description
             - Prints matching results, with optional detailed output in debug mode
         
         Side Effects:
@@ -652,7 +647,8 @@ class Flag:
         # Get the closest valid flag match based on the user's input
         closest_matches = difflib.get_close_matches(user_input, valid_flags, n=1, cutoff=0.6)
         if closest_matches:
-            print(f"Invalid flag '{user_input}', Did you mean '--{closest_matches[0]}'?")
+            print(f"Invalid flag '{user_input}', Did you mean '--{closest_matches[0].replace('_', '-')}'?")
+            exit(1)
 
         # Prompt the user for a description if no close match is found
         user_input_desc = input("We can't find a match, Please provide a description: ").lower()
@@ -660,14 +656,15 @@ class Flag:
         # Map the user-provided description to the closest valid flag
         flags_list = [f"--{flag}" for flag in valid_flags]
         descriptions_list = [f"Run Logicytics with {flag}" for flag in valid_flags]
-        flag_received, accuracy_received = Match.flag(user_input_desc, flags_list, descriptions_list)
+        flag_received, accuracy_received = _Match.flag(user_input_desc, flags_list, descriptions_list)
         if DEBUG_MODE:
-            print(f"User input: {user_input_desc}\nMatched flag: {flag_received}\nAccuracy: {accuracy_received:.2f}%\n")
+            print(
+                f"User input: {user_input_desc}\nMatched flag: {flag_received.replace('_', '-')}\nAccuracy: {accuracy_received:.2f}%\n")
         else:
-            print(f"Matched flag: {flag_received} (Accuracy: {accuracy_received:.2f}%)\n")
+            print(f"Matched flag: {flag_received.replace('_', '-')} (Accuracy: {accuracy_received:.2f}%)\n")
 
     @staticmethod
-    def show_help_menu(return_output: bool = False):
+    def show_help_menu(return_output: bool = False) -> str | None:
         """
         Display the help menu for the Logicytics application.
         
@@ -757,12 +754,12 @@ class Flag:
             Example:
                 update_data_history('--verbose')  # Increments usage count for '--verbose' flag
             """
-            history_data = Match.load_history()
+            history_data = _Match.load_history()
             # Ensure the flag exists in the flags_usage counter and increment it
-            if matched_flag not in history_data['flags_usage']:
-                history_data['flags_usage'][matched_flag] = 0
-            history_data['flags_usage'][matched_flag] += 1
-            Match.save_history(history_data)
+            if matched_flag.replace("--", "") not in history_data['flags_usage']:
+                history_data['flags_usage'][matched_flag.replace("--", "")] = 0
+            history_data['flags_usage'][matched_flag.replace("--", "")] += 1
+            _Match.save_history(history_data)
 
         if len(used_flags) == 2:
             for flag in used_flags:

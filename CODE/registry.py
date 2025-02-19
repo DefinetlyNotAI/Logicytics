@@ -1,10 +1,7 @@
 import os
 import subprocess
 
-from logicytics import Log, DEBUG
-
-if __name__ == "__main__":
-    log = Log({"log_level": DEBUG})
+from logicytics import log
 
 
 @log.function
@@ -23,7 +20,7 @@ def backup_registry():
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         log.info(f"Registry backed up successfully to {export_path}. Output: {result.stdout}")
     except subprocess.CalledProcessError as e:
-        log.error(f"Failed to back up the registry: {e}. More details: {result.stderr}")
+        log.error(f"Failed to back up the registry: {e}.")
     except Exception as e:
         log.error(f"Failed to back up the registry: {e}")
 

