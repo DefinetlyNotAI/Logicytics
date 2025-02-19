@@ -37,7 +37,7 @@ def MOD_EXAMPLE() -> None:
     log.info("This is a info message")
     log.debug("This is a debug message")
     log.critical("This is a critical message")
-    # This is special, allows you to use strings to specify the log level, it is not recommended to use this
+    # This is special, allows you to use strings to specify the log level, it is not recommended to use these
     # Options are error, warning, info, debug, critical - It is case-insensitive and can be used with any of the log levels
     # Defaults with the log level of debug
     log.string("This is a random message", "ERROR")

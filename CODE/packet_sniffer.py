@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from configparser import ConfigParser
+import os
+import warnings
+from time import time
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -8,12 +10,13 @@ import pandas as pd
 from scapy.all import sniff, conf
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 
-from logicytics import log
+from logicytics import log, CONFIG
 
 # Read configuration from config.ini
-config = ConfigParser()
-config.read('config.ini')
-config = config['PacketSniffer Settings']
+CONFIG.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.ini"))
+config = CONFIG['PacketSniffer Settings']
+# Ignore all warnings (Wireshark issue)
+warnings.filterwarnings("ignore")
 
 
 class Sniff:
@@ -63,7 +66,7 @@ class Sniff:
                 self.__print_packet_summary(packet_info)
                 self.__add_to_graph(packet_info)
         except Exception as err:
-            log.error(f"Error processing packet: {err}")
+            log.error(f"Error processing packet {packet.summary() if hasattr(packet, 'summary') else 'Unknown'}: {err}")
 
     # Function to determine the protocol name
     @staticmethod
@@ -100,13 +103,13 @@ class Sniff:
 
     # Function to extract port information from a packet
     @staticmethod
-    def __get_port_info(packet: IP, port_type: str) -> int | None:
+    def __get_port_info(packet: IP, port_type: str = "sport") -> int | None:
         """
         Extracts the source or destination port from a captured packet.
 
         Parameters:
             packet (IP): The captured packet to analyze.
-            port_type (str): The type of port to extract ('sport' for source port, 'dport' for destination port).
+            port_type (str, optional): The type of port to extract ('sport' for source port, 'dport' for destination port). Defaults to 'sport'.
 
         Returns:
             int | None: The port number if available, otherwise None.
@@ -118,6 +121,10 @@ class Sniff:
             - Supports extracting ports from TCP and UDP layers
             - Returns None if the packet does not have TCP or UDP layers
         """
+        if port_type not in ('sport', 'dport'):
+            log.critical(
+                f"Invalid port_type '{port_type}'. Must be 'sport' or 'dport'. Using 'sport' as the port type (default).")
+            port_type = 'sport'
         log.debug(f"Port type: {port_type}")
         if packet.haslayer(TCP):
             return packet[TCP].sport if port_type == 'sport' else packet[TCP].dport
@@ -369,8 +376,14 @@ class Sniff:
                 log.error("Error reading configuration: Improper values for packet count or timeout")
             exit(1)
 
+        start_time = time()
+        # TODO v3.4.1 -> Config.ini controlled value
+        max_retry_time = 30  # seconds
         for attempt in range(2):  # Try original and corrected name
             try:
+                if time() - start_time > max_retry_time:
+                    log.error("Retry timeout exceeded")
+                    break
                 self.__start_sniffing(interface, packet_count, timeout)
                 break
             except Exception as err:
@@ -392,9 +405,10 @@ class Sniff:
 
 # Entry point of the script
 if __name__ == "__main__":
+    sniffer = Sniff()
     try:
-        Sniff().packets()
+        sniffer.packets()
     except Exception as e:
         log.error(e)
     finally:
-        Sniff().cleanup()
+        sniffer.cleanup()

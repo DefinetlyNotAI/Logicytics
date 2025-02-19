@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import configparser
 import difflib
 import gzip
 import json
@@ -9,28 +8,21 @@ import os
 from collections import Counter
 from datetime import datetime
 
+from .Config import CONFIG
+
 # Check if the script is being run directly, if not, set up the library
 if __name__ == '__main__':
     exit("This is a library, Please import rather than directly run.")
 else:
-    # Set up constants and configurations
-    config = configparser.ConfigParser()
-    try:
-        config.read('config.ini')
-    except FileNotFoundError:
-        try:
-            config.read('../config.ini')
-        except FileNotFoundError:
-            exit("No configuration file found.")
     # Save user preferences?
-    SAVE_PREFERENCES = config.getboolean("Settings", "save_preferences")
+    SAVE_PREFERENCES = CONFIG.getboolean("Settings", "save_preferences")
     # Debug mode for Sentence Transformer
-    DEBUG_MODE = config.getboolean("Flag Settings", "model_debug")  # Debug mode for Sentence Transformer
+    DEBUG_MODE = CONFIG.getboolean("Flag Settings", "model_debug")  # Debug mode for Sentence Transformer
     # File for storing user history data
-    HISTORY_FILE = 'logicytics/User_History.json.gz'  # User history file
+    HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'User_History.json.gz')  # User history file
     # Minimum accuracy threshold for flag suggestions
     MIN_ACCURACY_THRESHOLD = float(
-        config.get("Flag Settings", "accuracy_min"))  # Minimum accuracy threshold for flag suggestions
+        CONFIG.get("Flag Settings", "accuracy_min"))  # Minimum accuracy threshold for flag suggestions
     if not 0 <= MIN_ACCURACY_THRESHOLD <= 100:
         raise ValueError("accuracy_min must be between 0 and 100")
 
@@ -69,11 +61,11 @@ class _Match:
             logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 
         try:
-            MODEL = SentenceTransformer(config.get("Flag Settings", "model_to_use"))
+            MODEL = SentenceTransformer(CONFIG.get("Flag Settings", "model_to_use"))
         except Exception as e:
             print(f"Error: {e}")
             print("Please check the model name in the config file.")
-            print(f"Model name {config.get('Flag Settings', 'model_to_use')} may not be valid.")
+            print(f"Model name {CONFIG.get('Flag Settings', 'model_to_use')} may not be valid.")
             exit(1)
 
         user_embedding = MODEL.encode(user_input, convert_to_tensor=True, show_progress_bar=DEBUG_MODE)
@@ -455,6 +447,7 @@ class Flag:
                  "and not the best, use only if the device doesnt have python installed.",
         )
 
+        # TODO v3.6.0 -> Out of beta
         parser.add_argument(
             "--vulnscan-ai",
             action="store_true",
@@ -470,6 +463,7 @@ class Flag:
             help="Run Logicytics in minimal mode. Just bare essential scraping using only quick scripts",
         )
 
+        # TODO v3.6.0 -> Out of beta
         parser.add_argument(
             "--performance-check",
             action="store_true",
@@ -643,7 +637,7 @@ class Flag:
         Behavior:
             - If a close flag match exists, suggests the closest match
             - If no close match, prompts user for a description
-            - Uses the Match.flag method to find the most accurate flag based on description
+            - Uses the _Match.flag method to find the most accurate flag based on description
             - Prints matching results, with optional detailed output in debug mode
         
         Side Effects:
