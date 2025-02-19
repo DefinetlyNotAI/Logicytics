@@ -1,37 +1,10 @@
 from __future__ import annotations
 
-import functools
 import os
-import time
-
-
-def time_execution(func):
-    """
-    A decorator that logs the execution time of a function.
-
-    Usage:
-    @time_execution
-    def my_function():
-        ...
-
-    Or:
-    time_execution(my_function, *args, **kwargs)
-    """
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        print(f"Function '{func.__name__}' executed in {end_time - start_time:.6f} seconds")
-        return result
-
-    return wrapper
 
 
 class Get:
     @staticmethod
-    @time_execution
     def list_of_files(
             directory: str,
             only_extensions: list[str] = None,

@@ -25,7 +25,17 @@ log = Log({"log_level": DEBUG})
 class ObjectLoadError(Exception):
     """Raised when an Object fails to load."""
 
-    def __init__(self, message="Failed to load object"):
+    def __init__(self, message="Failed to load object", object_name=None):
+        """
+        Initialize the exception with a custom message and object details.
+
+        Args:
+            message (str): The error message
+            object_name (str, optional): Name of the object that failed to load
+        """
+        self.object_name = object_name
+        if object_name:
+            message = f"{message} (Object: {object_name})"
         super().__init__(message)
 
 

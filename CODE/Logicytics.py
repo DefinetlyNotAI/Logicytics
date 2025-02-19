@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import os
 import shutil
 import subprocess
@@ -197,14 +198,15 @@ class ExecuteScript:
 
         execution_times = []
         memory_usage = []
-        process = psutil.Process()
+        process = psutil.Process(os.getpid())
 
         for file in range(len(self.execution_list)):
+            gc.collect()
             start_time = datetime.now()
-            start_memory = process.memory_info().rss / 1024 / 1024  # MB
+            start_memory = process.memory_full_info().uss / 1024 / 1024  # MB
             log.execution(Execute.script(self.execution_list[file]))
             end_time = datetime.now()
-            end_memory = process.memory_info().rss / 1024 / 1024  # MB
+            end_memory = process.memory_full_info().uss / 1024 / 1024  # MB
             elapsed_time = end_time - start_time
             memory_delta = end_memory - start_memory
             memory_usage.append((self.execution_list[file], str(memory_delta)))
@@ -510,8 +512,8 @@ if __name__ == "__main__":
     try:
         Logicytics()
     except KeyboardInterrupt:
-        log.warning("Shutting down Logicytics utility with force causes many files to remain where they shouldn't")
-        log.warning("Please don't force shut Logicytics again - As we don't have a cleanup function yet.")
+        log.warning("⚠️ Force shutdown detected! Some temporary files might be left behind.")
+        log.warning("💡 Pro tip: Next time, let the program finish naturally.")
         # TODO v3.4.2 -> Cleanup function
         exit(0)
 else:
