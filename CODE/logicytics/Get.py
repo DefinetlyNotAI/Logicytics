@@ -11,6 +11,7 @@ class Get:
             append_file_list: list[str] = None,
             exclude_files: list[str] = None,
             exclude_extensions: list[str] = None,
+            exclude_dirs: list[str] = None,
     ) -> list[str]:
         """
         Retrieves a list of files in the specified directory based on given extensions and exclusion criteria.
@@ -21,6 +22,7 @@ class Get:
             append_file_list (list[str], optional): Existing list to append found filenames to. Defaults to None.
             exclude_files (list[str], optional): List of filenames to exclude from results. Defaults to None.
             exclude_extensions (list[str], optional): List of extensions to exclude from results. Defaults to None.
+            exclude_dirs (list[str], optional): List of directory names to ignore. Defaults to None.
 
         Returns:
             list[str]: A list of filenames matching the specified criteria.
@@ -28,12 +30,17 @@ class Get:
         Exclusion rules:
             - Ignores files starting with an underscore (_)
             - Skips files specified in `exclude_files`
+            - Skips directories specified in `ignore_dirs`
         """
         append_file_list = append_file_list or []
         exclude_files = set(exclude_files or [])
         exclude_extensions = set(exclude_extensions or [])
+        exclude_dirs = set(exclude_dirs or [])  # Set for faster lookup
 
-        for root, _, filenames in os.walk(directory):
+        for root, dirs, filenames in os.walk(directory):
+            # Remove ignored directories from the dirs list to prevent os.walk from entering them
+            dirs[:] = [d for d in dirs if d not in exclude_dirs]
+
             for filename in filenames:
                 if filename.startswith("_") or filename in exclude_files:
                     continue  # Skip excluded files
