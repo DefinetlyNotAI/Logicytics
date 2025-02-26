@@ -13,7 +13,7 @@ class NetworkInfo:
     """
 
     @log.function
-    def get(self):
+    async def get(self):
         """
         Gathers and saves various network-related information by calling multiple internal methods.
         """
@@ -24,7 +24,7 @@ class NetworkInfo:
             self.__fetch_network_interface_stats()
             self.__execute_external_network_command()
             self.__fetch_network_connections_with_process_info()
-            self.__measure_network_bandwidth_usage()
+            await self.__measure_network_bandwidth_usage()
             self.__fetch_hostname_and_ip()
         except Exception as e:
             log.error(f"Error getting network info: {e}, Type: {type(e).__name__}")
@@ -181,4 +181,9 @@ class NetworkInfo:
 
 
 if __name__ == "__main__":
-    NetworkInfo().get()
+    try:
+        asyncio.run(NetworkInfo().get())  # Use asyncio.run to run the async get method
+    except asyncio.CancelledError:
+        log.warning("Operation cancelled by user.")
+    except Exception as err:  # Catch all exceptions
+        log.error(f"An error occurred: {err}")

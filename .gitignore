@@ -322,3 +322,9 @@ $RECYCLE.BIN/
 /CODE/VulnScan/tools/NN features/
 /CODE/logicytics/User_History.json.gz
 /CODE/logicytics/User_History.json
+/CODE/SysInternal_Suite/psfile.exe
+/CODE/SysInternal_Suite/PsGetsid.exe
+/CODE/SysInternal_Suite/PsInfo.exe
+/CODE/SysInternal_Suite/pslist.exe
+/CODE/SysInternal_Suite/PsLoggedon.exe
+/CODE/SysInternal_Suite/psloglist.exe
