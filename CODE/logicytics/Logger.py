@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 import logging
 import os
+import re
 import time
 from datetime import datetime
 from typing import Type
@@ -99,13 +100,11 @@ class Log:
 
         if not os.path.exists(self.filename):
             self.newline()
-            self.raw(
-                "|     Timestamp     |  LOG Level  |"
-                + " " * 71
-                + "LOG Messages"
-                + " " * 71
-                + "|"
-            )
+            self._raw("|     Timestamp     |  LOG Level  |"
+                      + " " * 71
+                      + "LOG Messages"
+                      + " " * 71
+                      + "|")
         elif os.path.exists(self.filename) and config.get("delete_log", False):
             with open(self.filename, "w") as f:
                 f.write(
@@ -177,7 +176,7 @@ class Log:
         if self.color and message != "None" and message is not None:
             colorlog.debug(str(message))
 
-    def raw(self, message):
+    def _raw(self, message):
         """
         Log a raw message directly to the log file.
         
@@ -201,12 +200,16 @@ class Log:
         Raises:
             Logs internal errors for Unicode or file writing issues without stopping execution
         """
-        frame = inspect.stack()[1]
-        if frame.function == "<module>":
+        frame = inspect.currentframe().f_back
+        if frame and frame.f_code.co_name == "<module>":
             self.__internal(
                 f"Raw message called from a non-function - This is not recommended"
             )
-        if message != "None" and message is not None:
+        # Precompiled regex for ANSI escape codes
+        # Remove all ANSI escape sequences in one pass
+        message = re.compile(r'\033\[\d+(;\d+)*m').sub('', message)
+
+        if message and message != "None":
             try:
                 with open(self.filename, "a", encoding="utf-8") as f:
                     f.write(f"{str(message)}\n")
@@ -239,9 +242,7 @@ class Log:
         """
         if self.color and message != "None" and message is not None:
             colorlog.info(str(message))
-        self.raw(
-            f"[{self.__timestamp()}] > INFO:     | {self.__trunc_message(str(message))}"
-        )
+        self._raw(f"[{self.__timestamp()}] > INFO:     | {self.__trunc_message(str(message))}")
 
     def warning(self, message):
         """
@@ -251,9 +252,7 @@ class Log:
         """
         if self.color and message != "None" and message is not None:
             colorlog.warning(str(message))
-        self.raw(
-            f"[{self.__timestamp()}] > WARNING:  | {self.__trunc_message(str(message))}"
-        )
+        self._raw(f"[{self.__timestamp()}] > WARNING:  | {self.__trunc_message(str(message))}")
 
     def error(self, message):
         """
@@ -263,9 +262,7 @@ class Log:
         """
         if self.color and message != "None" and message is not None:
             colorlog.error(str(message))
-        self.raw(
-            f"[{self.__timestamp()}] > ERROR:    | {self.__trunc_message(str(message))}"
-        )
+        self._raw(f"[{self.__timestamp()}] > ERROR:    | {self.__trunc_message(str(message))}")
 
     def critical(self, message):
         """
@@ -275,9 +272,7 @@ class Log:
         """
         if self.color and message != "None" and message is not None:
             colorlog.critical(str(message))
-        self.raw(
-            f"[{self.__timestamp()}] > CRITICAL: | {self.__trunc_message(str(message))}"
-        )
+        self._raw(f"[{self.__timestamp()}] > CRITICAL: | {self.__trunc_message(str(message))}")
 
     def string(self, message, type: str):
         """
@@ -329,9 +324,8 @@ class Log:
             - Includes both the original message and the exception type in the log
         """
         if self.color and message != "None" and message is not None:
-            self.raw(
-                f"[{self.__timestamp()}] > EXCEPTION:| {self.__trunc_message(f'{message} -> Exception provoked: {str(exception_type)}')}"
-            )
+            self._raw(
+                f"[{self.__timestamp()}] > EXCEPTION:| {self.__trunc_message(f'{message} -> Exception provoked: {str(exception_type)}')}")
         raise exception_type(message)
 
     def execution(self, message_log: list[list[str, str]]):
