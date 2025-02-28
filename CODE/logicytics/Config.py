@@ -15,7 +15,7 @@ def __config_data() -> tuple[str, str, list[str], bool, str]:
             - Version (str): System version from configuration
             - Files (list[str]): List of files specified in configuration
             - Delete old logs (bool): Flag indicating whether to delete old log files
-            - CONFIG itself
+            - config itself
 
     Raises:
         SystemExit: If the 'config.ini' file cannot be found in any of the attempted locations
@@ -30,21 +30,21 @@ def __config_data() -> tuple[str, str, list[str], bool, str]:
             print("The config.ini file is not found in the expected location.")
             exit(1)
 
-    config = configparser.ConfigParser()
+    config_local = configparser.ConfigParser()
     path = _config_path()
-    config.read(path)
+    config_local.read(path)
 
-    log_using_debug = config.getboolean("Settings", "log_using_debug")
-    delete_old_logs = config.getboolean("Settings", "delete_old_logs")
-    version = config.get("System Settings", "version")
-    files = config.get("System Settings", "files").split(", ")
+    log_using_debug = config_local.getboolean("Settings", "log_using_debug")
+    delete_old_logs = config_local.getboolean("Settings", "delete_old_logs")
+    version = config_local.get("System Settings", "version")
+    files = config_local.get("System Settings", "files").split(", ")
 
     log_using_debug = "DEBUG" if log_using_debug else "INFO"
 
-    return log_using_debug, version, files, delete_old_logs, config
+    return log_using_debug, version, files, delete_old_logs, config_local
 
 
 # Check if the script is being run directly, if not, set up the library
 if __name__ == '__main__':
     exit("This is a library, Please import rather than directly run.")
-DEBUG, VERSION, CURRENT_FILES, DELETE_LOGS, CONFIG = __config_data()
+DEBUG, VERSION, CURRENT_FILES, DELETE_LOGS, config = __config_data()

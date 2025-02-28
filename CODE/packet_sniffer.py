@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-import warnings
 from time import time
 
 import matplotlib.pyplot as plt
@@ -10,13 +8,7 @@ import pandas as pd
 from scapy.all import sniff, conf
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 
-from logicytics import log, CONFIG
-
-# Read configuration from config.ini
-CONFIG.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.ini"))
-config = CONFIG['PacketSniffer Settings']
-# Ignore all warnings (Wireshark issue)
-warnings.filterwarnings("ignore")
+from logicytics import log, config
 
 
 class Sniff:
@@ -361,24 +353,24 @@ class Sniff:
             }
             return corrections.get(interface_name, interface_name)
 
-        interface = config['interface']
-        packet_count = int(config['packet_count'])
-        timeout = int(config['timeout'])
+        interface = config.get("PacketSniffer Settings", "interface")
+        packet_count = config.getint("PacketSniffer Settings", "packet_count")
+        timeout = config.getint("PacketSniffer Settings", "timeout")
+        max_retry_time = config.getint("PacketSniffer Settings", "max_retry_time")
 
-        if packet_count <= 0 or timeout <= 0:
+        if packet_count < 1 or timeout < 5 or max_retry_time < 10 or max_retry_time < timeout:
             try:
-                log.error(
-                    "Oops! Can't work with these values (Not your fault):\n"
-                    f"          - Packet count: {packet_count} {'❌ (must be > 0)' if packet_count <= 0 else '✅'}\n"
-                    f"          - Timeout: {timeout} {'❌ (must be > 0)' if timeout <= 0 else '✅'}"
+                log.critical(
+                    "Oops! Can't work with these values):\n"
+                    f"          - Packet count: {packet_count} {'❌ (must be > 0)' if packet_count < 1 else '✅'}\n"
+                    f"          - Timeout: {timeout} {'❌ (must be >= 5)' if timeout < 5 else '✅'}\n"
+                    f"          - Max Retry Time: {max_retry_time} {'❌ (must be >= 10 and larger than timeout)' if max_retry_time < 10 or max_retry_time < timeout else '✅'}"
                 )
             except Exception:
-                log.error("Error reading configuration: Improper values for packet count or timeout")
+                log.critical("Error reading configuration: Improper values for packet count or timeout")
             exit(1)
 
         start_time = time()
-        # TODO v3.4.1 -> Config.ini controlled value
-        max_retry_time = 30  # seconds
         for attempt in range(2):  # Try original and corrected name
             try:
                 if time() - start_time > max_retry_time:

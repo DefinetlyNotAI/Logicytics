@@ -12,12 +12,12 @@ from datetime import datetime
 import psutil
 from prettytable import PrettyTable
 
-from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS, CONFIG
+from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS, config
 
 # Initialization
 log = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
 ACTION, SUB_ACTION = None, None
-MAX_WORKERS = CONFIG.getint("Settings", "max_workers", fallback=min(32, (os.cpu_count() or 1) + 4))
+MAX_WORKERS = config.getint("Settings", "max_workers", fallback=min(32, (os.cpu_count() or 1) + 4))
 log.debug(f"MAX_WORKERS: {MAX_WORKERS}")
 
 

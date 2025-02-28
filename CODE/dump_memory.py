@@ -5,16 +5,17 @@ from datetime import datetime
 
 import psutil
 
-from logicytics import log
+from logicytics import log, config
 
 # TODO v3.4.1
 #  psutil.virtual_memory(): used, free, percent, total
 #  psutil.swap_memory(): used, free, percent, total
 
-# If the file size exceeds this limit, the file will be truncated with a message
-# Put 0 to disable the limit
-# TODO v3.4.1: Make this take from config.ini
-LIMIT_FILE_SIZE = 20  # Always in MiB
+LIMIT_FILE_SIZE = config.getint("DumpMemory Settings", "file_size_limit")  # Always in MiB
+SAFETY_MARGIN = config.getfloat("DumpMemory Settings", "file_size_safety")  # Always in MiB
+if SAFETY_MARGIN < 1:
+    log.critical("Invalid Safety Margin Inputted - Cannot proceed with dump memory")
+    exit(1)
 
 
 # Capture RAM Snapshot
@@ -41,7 +42,7 @@ def capture_ram_snapshot():
     log.info("Capturing RAM Snapshot...")
     memory = psutil.virtual_memory()
     swap = psutil.swap_memory()
-    with open("Ram_Snapshot.txt", "w") as file:
+    with open("memory_dumps/Ram_Snapshot.txt", "w") as file:
         try:
             file.write(f"Total RAM: {memory.total / (1024 ** 3):.2f} GB\n")
             file.write(f"Used RAM: {memory.used / (1024 ** 3):.2f} GB\n")
@@ -91,13 +92,13 @@ def gather_system_info():
     except Exception as e:
         log.error(f"Error gathering system information: {e}")
         sys_info = {'Error': 'Failed to gather system information'}
-    with open("SystemRam_Info.txt", "w") as file:
+    with open("memory_dumps/SystemRam_Info.txt", "w") as file:
         for key, value in sys_info.items():
             file.write(f"{key}: {value}\n")
     log.info("System Information saved to SystemRam_Info.txt")
 
 
-# Memory Dump (Windows-specific, using psutil)
+# Memory Dump
 def memory_dump():
     """
     Perform a memory dump of the current process, capturing detailed metadata for each readable memory region.
@@ -127,12 +128,12 @@ def memory_dump():
 
     try:
         process = psutil.Process(pid)
-        with open("Ram_Dump.txt", "wb") as dump_file:
+        with open("memory_dumps/Ram_Dump.txt", "wb") as dump_file:
             total_size = 0
             for mem_region in process.memory_maps(grouped=False):
                 # Check available disk space
                 if os.path.exists("Ram_Dump.txt"):
-                    required_space = LIMIT_FILE_SIZE * 1024 * 1024 * 1.5  # 2x safety margin
+                    required_space = LIMIT_FILE_SIZE * 1024 * 1024 * SAFETY_MARGIN  # 2x safety margin
                     free_space = psutil.disk_usage(".").free
                     if free_space < required_space:
                         log.error(f"Not enough disk space. Need {required_space / 1024 / 1024:.2f}MB")
@@ -206,6 +207,7 @@ def main():
     No parameters.
     No return value.
     """
+    os.makedirs("memory_dumps", exist_ok=True)
     log.info("Starting system memory collection tasks...")
     capture_ram_snapshot()
     gather_system_info()
