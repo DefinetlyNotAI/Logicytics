@@ -2,7 +2,7 @@ import functools
 import traceback
 
 from logicytics.Checks import Check
-from logicytics.Config import DEBUG, VERSION, CURRENT_FILES, DELETE_LOGS, CONFIG
+from logicytics.Config import DEBUG, VERSION, CURRENT_FILES, DELETE_LOGS, config
 from logicytics.Execute import Execute
 from logicytics.FileManagement import FileManagement
 from logicytics.Flag import Flag

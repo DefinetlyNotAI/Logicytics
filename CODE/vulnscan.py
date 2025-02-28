@@ -23,8 +23,6 @@ warnings.filterwarnings("ignore")
 #  Use Asynchronous File Scanning,
 #  Optimize Model Loading and Caching,
 #  Improve Feature Extraction
-
-# TODO: v3.4.1
 #  also add a global variable called MAX_FILE_SIZE, if its none ignore it, else only scan files under that file size (default at 50MB)
 #  add this to config.ini -> max_workers = min(32, os.cpu_count() * 2)
 #  add UNREADABLE_EXTENSIONS as well to config.ini
