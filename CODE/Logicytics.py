@@ -12,12 +12,12 @@ from datetime import datetime
 import psutil
 from prettytable import PrettyTable
 
-from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS, CONFIG
+from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS, config
 
 # Initialization
 log = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
 ACTION, SUB_ACTION = None, None
-MAX_WORKERS = CONFIG.getint("Settings", "max_workers", fallback=min(32, (os.cpu_count() or 1) + 4))
+MAX_WORKERS = config.getint("Settings", "max_workers", fallback=min(32, (os.cpu_count() or 1) + 4))
 log.debug(f"MAX_WORKERS: {MAX_WORKERS}")
 
 
@@ -67,7 +67,8 @@ class ExecuteScript:
             - Warns users about potential long execution times for certain actions
         """
         execution_list = Get.list_of_files(".", only_extensions=(".py", ".exe", ".ps1", ".bat"),
-                                           exclude_files=["Logicytics.py"])
+                                           exclude_files=["Logicytics.py"],
+                                           exclude_dirs=["logicytics", "SysInternal_Suite"])
         files_to_remove = {
             "sensitive_data_miner.py",
             "dir_list.py",
@@ -101,7 +102,8 @@ class ExecuteScript:
         elif ACTION == "modded":
             # Add all files in MODS to execution list
             execution_list = Get.list_of_files("../MODS", only_extensions=(".py", ".exe", ".ps1", ".bat"),
-                                               append_file_list=execution_list, exclude_files=["Logicytics.py"])
+                                               append_file_list=execution_list, exclude_files=["Logicytics.py"],
+                                               exclude_dirs=["logicytics", "SysInternal_Suite"])
 
         elif ACTION == "depth":
             log.warning(
@@ -128,6 +130,7 @@ class ExecuteScript:
             log.critical("Nothing is in the execution list.. This is due to faulty code or corrupted Logicytics files!")
             exit(1)
 
+        log.debug(f"Execution list length: {len(execution_list)}")
         log.debug(f"The following will be executed: {execution_list}")
         return execution_list
 
@@ -208,18 +211,32 @@ class ExecuteScript:
             end_time = datetime.now()
             end_memory = process.memory_full_info().uss / 1024 / 1024  # MB
             elapsed_time = end_time - start_time
-            memory_delta = end_memory - start_memory
-            memory_usage.append((self.execution_list[file], str(memory_delta)))
+            memory_delta = max(0, end_memory - start_memory)  # Clamps negative delta to 0
+            memory_usage.append((self.execution_list[file], f"{memory_delta}"))
             execution_times.append((self.execution_list[file], elapsed_time))
             log.info(f"{self.execution_list[file]} executed in {elapsed_time}")
-            log.info(f"{self.execution_list[file]} used {memory_delta:.2f}MB of memory")
-            log.debug(f"Started with {start_memory}MB of memory and ended with {end_memory}MB of memory")
+            try:
+                if (end_memory - start_memory) < 0:
+                    log.info(
+                        f"{self.execution_list[file]} used {memory_delta:.3f}MB of memory - \033[33mPossible Affected by outside processes\033[0m")
+                else:
+                    log.info(f"{self.execution_list[file]} used {memory_delta:.3f}MB of memory")
+            except Exception as e:
+                log.warning("Failed to log memory usage delta, reason: " + str(e))
+            log.debug(f"Started with {start_memory:.3f}MB of memory and ended with {end_memory:.3f}MB of memory")
 
         table = PrettyTable()
         table.field_names = ["Script", "Execution Time", "Memory Usage (MB)"]
         for script, elapsed_time in execution_times:
-            memory = next(m[1] for m in memory_usage if m[0] == script)
-            table.add_row([script, elapsed_time, f"{memory:.2f}"])
+            try:
+                memory = f"{float(next(m[1] for m in memory_usage if m[0] == script)):.3f}"
+            except StopIteration:
+                log.warning(f"No memory data found for {script}")
+                memory = "N/A"
+            except Exception as e:
+                log.warning(f"Failed to log memory usage for {script}, reason: " + str(e))
+                memory = "N/A"
+            table.add_row([script, elapsed_time, f"{memory}"])
 
         try:
             with open(
@@ -228,9 +245,9 @@ class ExecuteScript:
             ) as f:
                 f.write(table.get_string())
                 f.write(
-                    "\nSome values may be negative, Reason may be due to external resources playing with memory usage, "
-                    "close background tasks to get more accurate readings")
-                f.write("Note: This is not a low-level memory logger, data here isn't 100% accurate!")
+                    "\nSome values may be negative, Reason may be due to external resources playing with memory usage,\n"
+                    "Close background tasks to get more accurate readings\n\n")
+                f.write("Note: This is not a low-level memory logger, data here isn't 100% accurate!\n")
             log.info("Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE")
         except Exception as e:
             log.error(f"Error writing performance log: {e}")
@@ -434,10 +451,16 @@ def check_privileges():
         log.warning("UAC is enabled, this may cause issues - Please disable UAC if possible")
 
 
-def zip_generated_files():
-    """Zips generated files based on the action."""
+class ZIP:
+    @classmethod
+    def files(cls):
+        """Zips generated files based on the action."""
+        if ACTION == "modded":
+            cls.__and_log("..\\MODS", "MODS")
+        cls.__and_log(".", "CODE")
 
-    def zip_and_log(directory: str, name: str):
+    @staticmethod
+    def __and_log(directory: str, name: str):
         log.debug(f"Zipping directory '{directory}' with name '{name}' under action '{ACTION}'")
         zip_values = FileManagement.Zip.and_hash(
             directory,
@@ -450,10 +473,6 @@ def zip_generated_files():
             zip_loc, hash_loc = zip_values
             log.info(zip_loc)
             log.debug(hash_loc)
-
-    if ACTION == "modded":
-        zip_and_log("..\\MODS", "MODS")
-    zip_and_log(".", "CODE")
 
 
 def handle_sub_action():
@@ -472,8 +491,7 @@ def handle_sub_action():
     elif SUB_ACTION == "reboot":
         subprocess.call("shutdown /r /t 3", shell=False)
     # elif sub_action == "webhook":
-    # Implement this in future
-    # log.warning("This feature is not implemented yet! Sorry")
+    # TODO: Implement this in future v3.5
 
 
 @log.function
@@ -501,7 +519,7 @@ def Logicytics():
     # Execute scripts
     ExecuteScript().handler()
     # Zip generated files
-    zip_generated_files()
+    ZIP.files()
     # Finish with sub actions
     handle_sub_action()
     # Finish
