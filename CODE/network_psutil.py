@@ -4,7 +4,7 @@ import socket
 
 import psutil
 
-from logicytics import log, Execute
+from logicytics import log, Execute, config
 
 
 class NetworkInfo:
@@ -12,8 +12,12 @@ class NetworkInfo:
     A class to gather and save various network-related information.
     """
 
+    def __init__(self):
+        self.SAMPLE_COUNT = config.getint("NetWorkPsutil Settings", "sample_count")
+        self.INTERVAL = config.getfloat("NetWorkPsutil Settings", "interval")
+
     @log.function
-    def get(self):
+    async def get(self):
         """
         Gathers and saves various network-related information by calling multiple internal methods.
         """
@@ -24,7 +28,7 @@ class NetworkInfo:
             self.__fetch_network_interface_stats()
             self.__execute_external_network_command()
             self.__fetch_network_connections_with_process_info()
-            self.__measure_network_bandwidth_usage()
+            await self.__measure_network_bandwidth_usage(sample_count=self.SAMPLE_COUNT, interval=self.INTERVAL)
             self.__fetch_hostname_and_ip()
         except Exception as e:
             log.error(f"Error getting network info: {e}, Type: {type(e).__name__}")
@@ -133,7 +137,9 @@ class NetworkInfo:
             sample_count: Number of samples to take (default: 5)
             interval: Time between samples in seconds (default: 1.0)
         """
-        # TODO v3.4.1: Allow config.ini to set values
+        if sample_count < 1 or interval <= 0:
+            log.critical(
+                "Invalid values passed down from configuration for `NetworkInfo.__measure_network_bandwidth_usage()`")
         log.debug("Measuring network bandwidth usage...")
         samples = []
         for _ in range(sample_count):
@@ -181,4 +187,9 @@ class NetworkInfo:
 
 
 if __name__ == "__main__":
-    NetworkInfo().get()
+    try:
+        asyncio.run(NetworkInfo().get())  # Use asyncio.run to run the async get method
+    except asyncio.CancelledError:
+        log.warning("Operation cancelled by user.")
+    except Exception as err:  # Catch all exceptions
+        log.error(f"An error occurred: {err}")

@@ -8,7 +8,7 @@
 | Task                                                                                         | Version | Might or Will be done? |
 |----------------------------------------------------------------------------------------------|---------|------------------------|
 | Implement TODOs for v3.4.1                                                                   | v3.4.1  | ✅                      |
-| Add docstrings to all functions as well as var types                                         | v3.4.1  | ✅                      |
+| Add docstrings to all functions as well as var types                                         | v3.4.2  | ✅                      |
 | Implement Cleanup functionality for Logicytics if KeyboardInterrupt occurs                   | v3.4.2  | ✅                      |
 | Implement TODOs for v3.4.2                                                                   | v3.4.2  | ✅                      |
 | Implement logs for the logicytics lib, rather than prints                                    | v3.4.2  | ✅                      |

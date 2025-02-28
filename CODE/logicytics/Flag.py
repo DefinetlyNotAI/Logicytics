@@ -8,23 +8,23 @@ import os
 from collections import Counter
 from datetime import datetime
 
-from .Config import CONFIG
+from logicytics.Config import config
 
 # Check if the script is being run directly, if not, set up the library
 if __name__ == '__main__':
     exit("This is a library, Please import rather than directly run.")
 else:
     # Save user preferences?
-    SAVE_PREFERENCES = CONFIG.getboolean("Settings", "save_preferences")
+    SAVE_PREFERENCES = config.getboolean("Settings", "save_preferences")
     # Debug mode for Sentence Transformer
-    DEBUG_MODE = CONFIG.getboolean("Flag Settings", "model_debug")  # Debug mode for Sentence Transformer
+    DEBUG_MODE = config.getboolean("Flag Settings", "model_debug")  # Debug mode for Sentence Transformer
     # File for storing user history data
     HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'User_History.json.gz')  # User history file
     # Minimum accuracy threshold for flag suggestions
     MIN_ACCURACY_THRESHOLD = float(
-        CONFIG.get("Flag Settings", "accuracy_min"))  # Minimum accuracy threshold for flag suggestions
-    if not 0 <= MIN_ACCURACY_THRESHOLD <= 100:
-        raise ValueError("accuracy_min must be between 0 and 100")
+        config.get("Flag Settings", "accuracy_min"))  # Minimum accuracy threshold for flag suggestions
+    if not 1 <= MIN_ACCURACY_THRESHOLD <= 99:
+        raise ValueError("accuracy_min must be between 1 and 99")
 
 
 class _Match:
@@ -61,11 +61,11 @@ class _Match:
             logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 
         try:
-            MODEL = SentenceTransformer(CONFIG.get("Flag Settings", "model_to_use"))
+            MODEL = SentenceTransformer(config.get("Flag Settings", "model_to_use"))
         except Exception as e:
             print(f"Error: {e}")
             print("Please check the model name in the config file.")
-            print(f"Model name {CONFIG.get('Flag Settings', 'model_to_use')} may not be valid.")
+            print(f"Model name {config.get('Flag Settings', 'model_to_use')} may not be valid.")
             exit(1)
 
         user_embedding = MODEL.encode(user_input, convert_to_tensor=True, show_progress_bar=DEBUG_MODE)
