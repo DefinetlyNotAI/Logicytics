@@ -1,12 +1,13 @@
 import datetime
 import re
 import subprocess
+from typing import LiteralString
 
 from logicytics import log
 
 
 # Utility function to log data to a file
-def save_to_file(filename, section_title, data):
+def save_to_file(filename: str, section_title: str, data: str):
     """
     Appends data to a file with a section title.
     
@@ -35,7 +36,7 @@ def save_to_file(filename, section_title, data):
 
 
 # Utility function to run PowerShell commands
-def run_powershell_command(command):
+def run_powershell_command(command: str) -> None | list[LiteralString]:
     """
     Runs a PowerShell command and returns the output as a list of lines.
     
@@ -67,7 +68,7 @@ def run_powershell_command(command):
 
 
 # Unified parsing function for PowerShell output
-def parse_output(lines, regex, group_names):
+def parse_output(lines: list[LiteralString], regex: str, group_names: list[str]):
     """
     Parses the output lines using the provided regex and group names.
     
@@ -101,7 +102,7 @@ def parse_output(lines, regex, group_names):
 
 
 # Function to get paired Bluetooth devices
-def get_paired_bluetooth_devices():
+def get_paired_bluetooth_devices() -> list[str]:
     """
     Retrieves a list of paired Bluetooth devices with their names and MAC addresses.
     
@@ -167,41 +168,6 @@ def log_bluetooth():
     section_title = "Paired Bluetooth Devices"
     save_to_file(filename, section_title, paired_devices or ["No paired Bluetooth devices found."])
     log.debug(f"{section_title}: {paired_devices}")
-
-    # Collect and log event logs
-    def collect_logs(title: str, command: str):
-        """
-        Collects and logs event logs by executing a PowerShell command and saving the results.
-        
-        Args:
-            title (str): The title or description of the log section being collected.
-            command (str): The PowerShell command to execute for retrieving event logs.
-        
-        Behavior:
-            - Runs the specified PowerShell command using `run_powershell_command()`
-            - Saves the log results to a file using `save_to_file()`
-            - Logs an informational message about the log collection
-            - If no logs are found, saves a default "No logs found." message
-            - Uses the global `filename` variable for log file destination
-        
-        Raises:
-            Potential exceptions from `run_powershell_command()` and `save_to_file()` which are handled internally
-        """
-        logs = run_powershell_command(command)
-        save_to_file(filename, title, logs or ["No logs found."])
-        log.info(f"Getting {title}...")
-
-    collect_logs(
-        "Bluetooth Connection/Disconnection Logs",
-        'Get-WinEvent -LogName "Microsoft-Windows-Bluetooth-BthLEServices/Operational" '
-        '| Select-Object TimeCreated, Id, Message | Format-Table -AutoSize'
-    )
-
-    collect_logs(
-        "Bluetooth File Transfer Logs",
-        'Get-WinEvent -LogName "Microsoft-Windows-Bluetooth-BthLEServices/Operational" '
-        '| Select-String -Pattern "file.*transferred" | Format-Table -AutoSize'
-    )
 
     log.info("Finished Bluetooth data logging.")
 

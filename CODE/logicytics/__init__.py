@@ -7,19 +7,18 @@ from logicytics.Execute import Execute
 from logicytics.FileManagement import FileManagement
 from logicytics.Flag import Flag
 from logicytics.Get import Get
-from logicytics.Logger import Log
+from logicytics.Logger import log, Log
 
 # Check if the script is being run directly, if not, set up the library
 if __name__ == '__main__':
     exit("This is a library, Please import rather than directly run.")
-Execute = Execute()
-Get = Get()
-Check = Check()
-Flag = Flag()
-FileManagement = FileManagement()
+execute = Execute()
+get = Get()
+check = Check()
+flag = Flag()
+file_management = FileManagement()
 __show_trace = DEBUG == "DEBUG"
-FileManagement.mkdir()
-log = Log({"log_level": DEBUG})
+file_management.mkdir()
 
 
 class ObjectLoadError(Exception):
@@ -103,3 +102,6 @@ def deprecated(removal_version: str, reason: str, show_trace: bool = __show_trac
         return wrapper
 
     return decorator
+
+
+__all__ = ['execute', 'get', 'check', 'flag', 'file_management', 'deprecated', 'ObjectLoadError', 'log', 'Log']

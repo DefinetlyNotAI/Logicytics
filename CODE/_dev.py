@@ -6,7 +6,7 @@ import subprocess
 
 import configobj
 
-from logicytics import log, Get, FileManagement, CURRENT_FILES, VERSION
+from logicytics import log, get, file_management, CURRENT_FILES, VERSION
 
 
 def color_print(text, color="reset", is_input=False) -> None | str:
@@ -21,8 +21,8 @@ def color_print(text, color="reset", is_input=False) -> None | str:
     color_code = colors.get(color.lower(), colors["reset"])
     if is_input:
         return input(f"{color_code}{text}{colors['reset']}")
-    else:
-        print(f"{color_code}{text}{colors['reset']}")
+    print(f"{color_code}{text}{colors['reset']}")
+    return None
 
 
 def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
@@ -88,6 +88,7 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
         return True
     except Exception as e:
         color_print(f"[x] {e}", "red")
+        return None
 
 
 def _perform_checks() -> bool:
@@ -116,7 +117,8 @@ def _handle_file_operations() -> None:
     Handles file operations and logging for added, removed, and normal files.
     """
     EXCLUDE_FILES = ["logicytics\\User_History.json.gz", "logicytics\\User_History.json"]
-    files = Get.list_of_files(".", exclude_files=EXCLUDE_FILES, exclude_dirs=["SysInternal_Suite"])
+    files = get.list_of_files(".", exclude_files=EXCLUDE_FILES, exclude_dirs=["SysInternal_Suite"],
+                              exclude_extensions=[".pyc"])
     added_files, removed_files, normal_files = [], [], []
     clean_files_list = [file.replace('"', '') for file in CURRENT_FILES]
 
@@ -187,7 +189,7 @@ def dev_checks() -> None:
         - Updates configuration file with current files and version
         - Logs warnings or errors during the process
     """
-    FileManagement.mkdir()
+    file_management.mkdir()
     if not _perform_checks():
         return
     _handle_file_operations()

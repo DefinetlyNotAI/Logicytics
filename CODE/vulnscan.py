@@ -1,152 +1,118 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import threading
 import warnings
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
+import aiofiles
 import joblib
 import numpy as np
 import torch
 from safetensors import safe_open
 from tqdm import tqdm
 
-from logicytics import log
+from logicytics import log, config
 
-# Ignore all warnings
 warnings.filterwarnings("ignore")
 
+UNREADABLE_EXTENSIONS = config.get("VulnScan Settings", "unreadable_extensions").split(",")
+MAX_FILE_SIZE_MB = config.get("VulnScan Settings", "max_file_size_mb", fallback="None")
+raw_workers = config.get("VulnScan Settings", "max_workers", fallback="auto")
+max_workers = min(32, os.cpu_count() * 2) if raw_workers == "auto" else int(raw_workers)
 
-# TODO: v3.4.2
-#  apply Batch file reading,
-#  Use Asynchronous File Scanning,
-#  Optimize Model Loading and Caching,
-#  Improve Feature Extraction
-#  also add a global variable called MAX_FILE_SIZE, if its none ignore it, else only scan files under that file size (default at 50MB)
-#  add this to config.ini -> max_workers = min(32, os.cpu_count() * 2)
-#  add UNREADABLE_EXTENSIONS as well to config.ini
-
-UNREADABLE_EXTENSIONS = [
-    ".exe", ".dll", ".so",  # Executables & libraries
-    ".zip", ".tar", ".gz", ".7z", ".rar",  # Archives
-    ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp",  # Images
-    ".mp3", ".wav", ".flac", ".aac", ".ogg",  # Audio
-    ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv",  # Video
-    ".pdf",  # PDFs aren't plain text
-    ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",  # Microsoft Office files
-    ".odt", ".ods", ".odp",  # OpenDocument files
-    ".bin", ".dat", ".iso",  # Binary, raw data, disk images
-    ".class", ".pyc", ".o", ".obj",  # Compiled code
-    ".sqlite", ".db",  # Databases
-    ".ttf", ".otf", ".woff", ".woff2",  # Fonts
-    ".lnk", ".url"  # Links
-]
+if MAX_FILE_SIZE_MB != "None":
+    MAX_FILE_SIZE_MB = max(int(MAX_FILE_SIZE_MB), 1)
+else:
+    MAX_FILE_SIZE_MB = None
 
 
 class _SensitiveDataScanner:
-    """
-    Class for scanning files for sensitive content using a trained model.
-    """
-
     def __init__(self, model_path: str, vectorizer_path: str):
         self.model_path = model_path
         self.vectorizer_path = vectorizer_path
-
         self.model_cache = {}
         self.vectorizer_cache = {}
-
         self.model_lock = threading.Lock()
         self.vectorizer_lock = threading.Lock()
-
         self.model = None
         self.vectorizer = None
         self._load_model()
         self._load_vectorizer()
 
     def _load_model(self) -> None:
-        """Loads and caches the ML model."""
-        if self.model_path in self.model_cache:
-            log.info(f"Using cached model from {self.model_path}")
-            self.model = self.model_cache[self.model_path]
-            return
+        with self.model_lock:
+            if self.model_path in self.model_cache:
+                self.model = self.model_cache[self.model_path]
+                return
 
-        if self.model_path.endswith('.pkl'):
-            self.model = joblib.load(self.model_path)
-        elif self.model_path.endswith('.safetensors'):
-            self.model = safe_open(self.model_path, framework='torch')
-        elif self.model_path.endswith('.pth'):
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=FutureWarning)
-                self.model = torch.load(self.model_path, weights_only=False)
-        else:
-            raise ValueError("Unsupported model file format. Use .pkl, .safetensors, or .pth")
+            if self.model_path.endswith('.pkl'):
+                self.model = joblib.load(self.model_path)
+            elif self.model_path.endswith('.safetensors'):
+                self.model = safe_open(self.model_path, framework='torch')
+            elif self.model_path.endswith('.pth'):
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=FutureWarning)
+                    self.model = torch.load(self.model_path, weights_only=False)
+            else:
+                raise ValueError("Unsupported model file format")
 
-        self.model_cache[self.model_path] = self.model
-        log.info(f"Loaded and cached model from {self.model_path}")
+            self.model_cache[self.model_path] = self.model
 
     def _load_vectorizer(self) -> None:
-        """Loads and caches the vectorizer."""
-        if self.vectorizer_path in self.vectorizer_cache:
-            log.info(f"Using cached vectorizer from {self.vectorizer_path}")
-            self.vectorizer = self.vectorizer_cache[self.vectorizer_path]
-            return
+        with self.vectorizer_lock:
+            if self.vectorizer_path in self.vectorizer_cache:
+                self.vectorizer = self.vectorizer_cache[self.vectorizer_path]
+                return
 
-        try:
-            self.vectorizer = joblib.load(self.vectorizer_path)
-        except Exception as e:
-            log.critical(f"Failed to load vectorizer from {self.vectorizer_path}: {e}")
-            exit(1)
-        self.vectorizer_cache[self.vectorizer_path] = self.vectorizer
-        log.info(f"Loaded and cached vectorizer from {self.vectorizer_path}")
+            try:
+                self.vectorizer = joblib.load(self.vectorizer_path)
+            except Exception as e:
+                log.critical(f"Failed to load vectorizer: {e}")
+                exit(1)
 
-    def _is_sensitive(self, file_content: str) -> tuple[bool, float, str]:
-        """Determines if a file's content is sensitive using the model."""
+            self.vectorizer_cache[self.vectorizer_path] = self.vectorizer
+
+    def _extract_features(self, content: str):
+        return self.vectorizer.transform([content])
+
+    def _is_sensitive(self, content: str) -> tuple[bool, float, str]:
+        features = self._extract_features(content)
         if isinstance(self.model, torch.nn.Module):
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             self.model.to(device)
-            # Use sparse matrices to save memory
-            features = self.vectorizer.transform([file_content]).tocsr()
             self.model.eval()
-            with torch.no_grad():
-                # Convert sparse matrix to tensor more efficiently
-                features_tensor = torch.sparse_coo_tensor(
-                    torch.LongTensor([features.nonzero()[0], features.nonzero()[1]]),
-                    torch.FloatTensor(features.data),
-                    size=features.shape
-                ).to(device)
-                prediction = self.model(features_tensor)
-                probability = torch.softmax(prediction, dim=1).max().item()
-                # Get top features from sparse matrix directly
-                feature_scores = features.data
-                top_indices = np.argsort(feature_scores)[-5:]
-                reason = ", ".join([self.vectorizer.get_feature_names_out()[i] for i in top_indices])
-                return prediction.argmax(dim=1).item() == 1, probability, reason
-        else:
-            features = self.vectorizer.transform([file_content])
-            prediction = self.model.predict_proba(features)
-            probability = prediction.max()
-            top_features = np.argsort(features.toarray()[0])[-5:]
-            reason = ", ".join([self.vectorizer.get_feature_names_out()[i] for i in top_features])
-            return self.model.predict(features)[0] == 1, probability, reason
+            indices = torch.LongTensor(np.vstack(features.nonzero()))
+            values = torch.FloatTensor(features.data)
+            tensor = torch.sparse_coo_tensor(indices, values, size=features.shape).to(device)
 
-    def scan_file(self, file_path: str) -> tuple[bool, float, str]:
-        """Scans a file for sensitive content."""
+            with torch.no_grad():
+                pred = self.model(tensor)
+                prob = torch.softmax(pred, dim=1).max().item()
+                reason = ", ".join(self.vectorizer.get_feature_names_out()[i] for i in np.argsort(features.data)[-5:])
+                return pred.argmax(dim=1).item() == 1, prob, reason
+        else:
+            probs = self.model.predict_proba(features)
+            top_indices = np.argsort(features.toarray()[0])[-5:]
+            reason = ", ".join(self.vectorizer.get_feature_names_out()[i] for i in top_indices)
+            return self.model.predict(features)[0] == 1, probs.max(), reason
+
+    async def scan_file_async(self, file_path: str) -> tuple[bool, float, str]:
         try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
-                content = file.read()
+            async with aiofiles.open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = await f.read()
             return self._is_sensitive(content)
         except Exception as e:
             log.error(f"Failed to scan {file_path}: {e}")
-            return False, 0.0, "Error reading file"
+            return False, 0.0, "Error"
 
     def cleanup(self):
-        """Clears caches and resets model & vectorizer."""
         self.model_cache.clear()
         self.vectorizer_cache.clear()
         self.model = None
         self.vectorizer = None
-        log.info("Cleanup complete!")
+        log.info("Cleanup complete.")
 
 
 class VulnScan:
@@ -155,79 +121,57 @@ class VulnScan:
 
     @log.function
     def scan_directory(self, scan_paths: list[str]) -> None:
-        """Scans multiple directories for sensitive files."""
-        max_workers = min(32, os.cpu_count() * 2)
-        log.debug(f"max_workers={max_workers}")
+        log.info("Collecting files...")
+        all_files = []
 
-        log.info("Getting directories files...")
-        try:
-            # Fast file collection using ThreadPoolExecutor and efficient flattening
-            with ThreadPoolExecutor(max_workers=max_workers):
-                all_files = []
-                for path in scan_paths:
-                    try:
-                        all_files.extend([str(f) for f in Path(path).rglob('*') if f.is_file()])
-                    except Exception as e:
-                        log.warning(f"Error collecting files from {path}: {e}")
-                        continue  # Skip this path and continue with others
+        for path in scan_paths:
+            try:
+                all_files.extend(str(f) for f in Path(path).rglob('*') if f.is_file())
+                log.debug(f"Found {len(all_files)} files in {path}")
+            except Exception as e:
+                log.warning(f"Skipping path {path} due to error: {e}")
 
-                log.info(f"Files collected successfully: {len(all_files)}")
+        log.info(f"Collected {len(all_files)} files.")
 
-        except Exception as e:
-            log.error(f"Failed to collect files: {e}")
-            return
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_scan(all_files))
 
-        log.info(f"Scanning {len(all_files)} files...")
+    async def _async_scan(self, files: list[str]) -> None:
+        valid_files = []
 
-        try:
-            # Use ThreadPoolExecutor for scanning files concurrently
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = {}
-                total_len_modifiable = len(all_files)
+        for file in files:
+            try:
+                file_size_mb = os.path.getsize(file) / (1024 * 1024)
+                if MAX_FILE_SIZE_MB and file_size_mb > MAX_FILE_SIZE_MB:
+                    continue
+                if any(file.lower().endswith(ext) for ext in UNREADABLE_EXTENSIONS):
+                    continue
+                valid_files.append(file)
+            except Exception as e:
+                log.debug(f"Skipping file {file}: {e}")
 
-                # Submit scan tasks
-                with tqdm(total=total_len_modifiable,
-                          desc="\033[32mSCAN\033[0m     \033[94mSubmitting Scan Tasks\033[0m",
-                          unit="file", bar_format="{l_bar} {bar} {n_fmt}/{total_fmt}") as submit_pbar:
+        log.info(f"Valid files to scan: {len(valid_files)}")
 
-                    for file in all_files:
-                        if any(file.lower().endswith(ext) for ext in UNREADABLE_EXTENSIONS):
-                            log.debug(f"Skipping file '{file}'")
-                            total_len_modifiable -= 1
-                            submit_pbar.update(1)
-                            continue
+        semaphore = asyncio.Semaphore(max_workers)
+        sensitive_files = []
 
-                        futures[executor.submit(self.scanner.scan_file, file)] = file
-                        submit_pbar.update(1)
+        async def scan_worker(scan_file):
+            async with semaphore:
+                result, prob, reason = await self.scanner.scan_file_async(scan_file)
+                if result:
+                    log.debug(f"SENSITIVE: {scan_file} | Confidence: {prob:.2f} | Reason: {reason}")
+                    sensitive_files.append(scan_file)
 
-                # Scan progress tracking
-                log.info(f"Valid file count: {total_len_modifiable}")
-                with tqdm(total=total_len_modifiable, desc="\033[32mSCAN\033[0m     \033[94mScanning Files\033[0m",
-                          unit="file", bar_format="{l_bar} {bar} {n_fmt}/{total_fmt}") as scan_pbar:
+        tasks = [scan_worker(f) for f in valid_files]
 
-                    sensitive_files = []
-                    for future in as_completed(futures):
-                        try:
-                            result, probability, reason = future.result()
-                            if result:
-                                file_path = futures[future]
-                                log.debug(
-                                    f"Sensitive file detected: {file_path} (Confidence: {probability:.2f}). Reason: {reason}")
-                                sensitive_files.append(file_path)
-                        except Exception as e:
-                            log.error(f"Scan failed: {e}")
+        with tqdm(total=len(valid_files), desc="\033[32mSCAN\033[0m     \033[94mScanning Files\033[0m",
+                  unit="file", bar_format="{l_bar} {bar} {n_fmt}/{total_fmt}\n") as pbar:
+            for f in asyncio.as_completed(tasks):
+                await f
+                pbar.update(1)
 
-                        scan_pbar.update(1)
-
-                    # Write all sensitive files at once
-                    with open("Sensitive_File_Paths.txt", "a") as sensitive_file:
-                        if sensitive_files:
-                            sensitive_file.write("\n".join(sensitive_files) + "\n")
-                        else:
-                            sensitive_file.write("Sadly no sensitive file's were detected.")
-
-        except Exception as e:
-            log.error(f"Scanning error: {e}")
+        with open("Sensitive_File_Paths.txt", "a") as out:
+            out.write("\n".join(sensitive_files) + "\n" if sensitive_files else "No sensitive files detected.\n")
 
         self.scanner.cleanup()
 
@@ -243,5 +187,5 @@ if __name__ == "__main__":
         vulnscan = VulnScan("VulnScan/Model SenseMini .3n3.pth", "VulnScan/Vectorizer .3n3.pkl")
         vulnscan.scan_directory(base_paths)
     except KeyboardInterrupt:
-        log.warning("User interrupted. Please don't do this as it won't follow the code's cleanup process")
+        log.warning("User interrupted. Exiting gracefully.")
         exit(0)

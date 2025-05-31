@@ -4,7 +4,7 @@ import socket
 
 import psutil
 
-from logicytics import log, Execute, config
+from logicytics import log, execute, config
 
 
 class NetworkInfo:
@@ -107,7 +107,7 @@ class NetworkInfo:
         Executes an external network command and saves the output.
         """
         log.debug("Executing external network command...")
-        result = Execute.command("ipconfig")
+        result = execute.command("ipconfig")
         self.__save_data("network_command_output.txt", result)
         log.info("Network command output saved.")
 
