@@ -118,7 +118,8 @@ def _handle_file_operations() -> None:
     Handles file operations and logging for added, removed, and normal files.
     """
     EXCLUDE_FILES = ["logicytics\\User_History.json.gz", "logicytics\\User_History.json"]
-    files = Get.list_of_files(".", exclude_files=EXCLUDE_FILES, exclude_dirs=["SysInternal_Suite"])
+    files = Get.list_of_files(".", exclude_files=EXCLUDE_FILES, exclude_dirs=["SysInternal_Suite"],
+                              exclude_extensions=[".pyc"])
     added_files, removed_files, normal_files = [], [], []
     clean_files_list = [file.replace('"', '') for file in CURRENT_FILES]
 
