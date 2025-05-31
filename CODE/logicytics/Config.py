@@ -26,8 +26,7 @@ def __config_data() -> tuple[str, str, list[str], bool, str]:
 
         if os.path.exists(configs_path):
             return configs_path
-        else:
-            exit("The config.ini file is not found in the expected location.")
+        exit("The config.ini file is not found in the expected location.")
 
     config_local = configparser.ConfigParser()
     path = _config_path()
