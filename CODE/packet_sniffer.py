@@ -226,6 +226,7 @@ class Sniff:
                 return True  # Return True to stop sniffing
             self.__log_packet(packet)  # Call the existing log_packet function
             packet_counter += 1  # Increment the packet counter
+            return None
 
         # Start sniffing with the custom callback
         sniff(iface=interface, prn=packet_callback, count=packet_count, timeout=timeout)

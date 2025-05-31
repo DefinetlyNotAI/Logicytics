@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from typing import TextIO
 
 from logicytics import log
 
@@ -84,7 +85,7 @@ def _query_bluetooth_devices() -> bool | list[dict[str, str]]:
     return device_info_list
 
 
-def _write_device_info_to_file(devices, filename):
+def _write_device_info_to_file(devices: list[dict[str, str]], filename: str):
     """
     Writes the details of Bluetooth devices to a specified file.
     
@@ -109,7 +110,7 @@ def _write_device_info_to_file(devices, filename):
         log.error(f"Failed to write device information to file: {e}")
 
 
-def _write_single_device_info(file, device_info):
+def _write_single_device_info(file: TextIO, device_info: dict[str, str]):
     """
     Writes detailed information for a single Bluetooth device to the specified file.
     

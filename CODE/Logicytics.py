@@ -530,9 +530,10 @@ if __name__ == "__main__":
     try:
         Logicytics()
     except KeyboardInterrupt:
-        log.warning("⚠️ Force shutdown detected! Some temporary files might be left behind.")
-        log.warning("💡 Pro tip: Next time, let the program finish naturally.")
-        # TODO v3.4.2 -> Cleanup function
+        log.warning("Force shutdown detected! Some temporary files might be left behind.")
+        log.warning("Pro tip: Next time, let the program finish naturally.")
+        # Attempt cleanup -> Zip generated files
+        ZIP.files()
         exit(0)
 else:
     log.error("This script cannot be imported!")

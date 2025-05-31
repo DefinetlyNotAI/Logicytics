@@ -21,3 +21,5 @@ prettytable~=3.14.0
 pandas~=2.2.2
 scapy~=2.5.0
 psutil~=7.0.0
+configparser~=7.1.0
+aiofiles~=24.1.0

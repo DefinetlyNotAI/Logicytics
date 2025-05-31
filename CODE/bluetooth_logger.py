@@ -1,12 +1,13 @@
 import datetime
 import re
 import subprocess
+from typing import LiteralString
 
 from logicytics import log
 
 
 # Utility function to log data to a file
-def save_to_file(filename, section_title, data):
+def save_to_file(filename: str, section_title: str, data: str):
     """
     Appends data to a file with a section title.
     
@@ -35,7 +36,7 @@ def save_to_file(filename, section_title, data):
 
 
 # Utility function to run PowerShell commands
-def run_powershell_command(command):
+def run_powershell_command(command: str) -> None | list[LiteralString]:
     """
     Runs a PowerShell command and returns the output as a list of lines.
     
@@ -67,7 +68,7 @@ def run_powershell_command(command):
 
 
 # Unified parsing function for PowerShell output
-def parse_output(lines, regex, group_names):
+def parse_output(lines: list[LiteralString], regex: str, group_names: list[str]):
     """
     Parses the output lines using the provided regex and group names.
     
@@ -101,7 +102,7 @@ def parse_output(lines, regex, group_names):
 
 
 # Function to get paired Bluetooth devices
-def get_paired_bluetooth_devices():
+def get_paired_bluetooth_devices() -> list[str]:
     """
     Retrieves a list of paired Bluetooth devices with their names and MAC addresses.
     

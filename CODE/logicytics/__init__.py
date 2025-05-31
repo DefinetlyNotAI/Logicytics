@@ -7,7 +7,7 @@ from logicytics.Execute import Execute
 from logicytics.FileManagement import FileManagement
 from logicytics.Flag import Flag
 from logicytics.Get import Get
-from logicytics.Logger import Log
+from logicytics.Logger import log
 
 # Check if the script is being run directly, if not, set up the library
 if __name__ == '__main__':
@@ -19,7 +19,6 @@ Flag = Flag()
 FileManagement = FileManagement()
 __show_trace = DEBUG == "DEBUG"
 FileManagement.mkdir()
-log = Log({"log_level": DEBUG})
 
 
 class ObjectLoadError(Exception):

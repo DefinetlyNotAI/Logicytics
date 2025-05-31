@@ -10,6 +10,8 @@ from typing import Type
 
 import colorlog
 
+from logicytics.Config import DEBUG
+
 
 class Log:
     """
@@ -328,14 +330,14 @@ class Log:
                 f"[{self.__timestamp()}] > EXCEPTION:| {self.__trunc_message(f'{message} -> Exception provoked: {str(exception_type)}')}")
         raise exception_type(message)
 
-    def execution(self, message_log: list[list[str, str]]):
+    def execution(self, message_log: list[list[str]]):
         """
         Parse and log multiple messages with their corresponding log types.
         
         This method processes a list of messages, where each message is associated with a specific log type. It is designed for scenarios where multiple log entries need to be processed simultaneously, such as logging script execution results.
         
         Parameters:
-            message_log (list[list[str, str]]): A list of message entries. Each entry is a list containing two elements:
+            message_log (list[list[str]]): A list of message entries. Each entry is a list containing two elements:
                 - First element: The log message (str)
                 - Second element: The log type (str)
         
@@ -415,3 +417,6 @@ class Log:
             return result
 
         return wrapper
+
+
+log = Log({"log_level": DEBUG})
