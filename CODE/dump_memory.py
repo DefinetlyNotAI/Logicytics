@@ -79,7 +79,7 @@ def gather_system_info():
         log.error(f"Error gathering system information: {e}")
         sys_info = {'Error': 'Failed to gather system information'}
     try:
-        with open(os.path.join(DUMP_DIR, "SystemRam_Info.txt"), "w") as file:
+        with open(os.path.join(DUMP_DIR, "SystemRam_Info.txt"), "w", encoding="utf-8") as file:
             for key, value in sys_info.items():
                 file.write(f"{key}: {value}\n")
     except Exception as e:
@@ -98,7 +98,7 @@ def memory_dump():
     try:
         process = psutil.Process(pid)
         dump_path = os.path.join(DUMP_DIR, "Ram_Dump.txt")
-        with open(dump_path, "wb") as dump_file:
+        with open(dump_path, "wb", encoding="utf-8") as dump_file:
             total_size = 0
 
             # Disk space safety check

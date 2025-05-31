@@ -104,4 +104,4 @@ def deprecated(removal_version: str, reason: str, show_trace: bool = __show_trac
     return decorator
 
 
-__all__ = ['execute', 'get', 'check', 'flag', 'file_management', 'deprecated', 'ObjectLoadError']
+__all__ = ['execute', 'get', 'check', 'flag', 'file_management', 'deprecated', 'ObjectLoadError', 'log', 'Log']
