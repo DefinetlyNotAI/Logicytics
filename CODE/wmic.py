@@ -1,4 +1,4 @@
-from logicytics import log, Execute
+from logicytics import log, execute
 
 
 @log.function
@@ -16,7 +16,7 @@ def wmic():
     Returns:
     None
     """
-    data = Execute.command("wmic BIOS get Manufacturer,Name,Version /format:htable")
+    data = execute.command("wmic BIOS get Manufacturer,Name,Version /format:htable")
     with open("WMIC.html", "w") as file:
         file.write(data)
     wmic_commands = [
@@ -28,7 +28,7 @@ def wmic():
     with open("wmic_output.txt", "w") as file:
         for index, command in enumerate(wmic_commands):
             log.info(f"Executing Command Number {index + 1}: {command}")
-            output = Execute.command(command)
+            output = execute.command(command)
             file.write("-" * 190)
             file.write(f"Command {index + 1}: {command}\n")
             file.write(output)

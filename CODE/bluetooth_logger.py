@@ -169,41 +169,6 @@ def log_bluetooth():
     save_to_file(filename, section_title, paired_devices or ["No paired Bluetooth devices found."])
     log.debug(f"{section_title}: {paired_devices}")
 
-    # Collect and log event logs
-    def collect_logs(title: str, command: str):
-        """
-        Collects and logs event logs by executing a PowerShell command and saving the results.
-        
-        Args:
-            title (str): The title or description of the log section being collected.
-            command (str): The PowerShell command to execute for retrieving event logs.
-        
-        Behavior:
-            - Runs the specified PowerShell command using `run_powershell_command()`
-            - Saves the log results to a file using `save_to_file()`
-            - Logs an informational message about the log collection
-            - If no logs are found, saves a default "No logs found." message
-            - Uses the global `filename` variable for log file destination
-        
-        Raises:
-            Potential exceptions from `run_powershell_command()` and `save_to_file()` which are handled internally
-        """
-        logs = run_powershell_command(command)
-        save_to_file(filename, title, logs or ["No logs found."])
-        log.info(f"Getting {title}...")
-
-    collect_logs(
-        "Bluetooth Connection/Disconnection Logs",
-        'Get-WinEvent -LogName "Microsoft-Windows-Bluetooth-BthLEServices/Operational" '
-        '| Select-Object TimeCreated, Id, Message | Format-Table -AutoSize'
-    )
-
-    collect_logs(
-        "Bluetooth File Transfer Logs",
-        'Get-WinEvent -LogName "Microsoft-Windows-Bluetooth-BthLEServices/Operational" '
-        '| Select-String -Pattern "file.*transferred" | Format-Table -AutoSize'
-    )
-
     log.info("Finished Bluetooth data logging.")
 
 

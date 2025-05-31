@@ -9,7 +9,7 @@ import time
 import psutil
 import requests
 
-from logicytics import Log, DEBUG, VERSION, Check, config
+from logicytics import Log, DEBUG, VERSION, check, config
 
 log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ACCESS\\LOGS\\DEBUG\\DEBUG.log")
 log = Log({"log_level": DEBUG, "filename": log_path, "truncate_message": False, "delete_log": True})
@@ -206,15 +206,15 @@ def debug():
     SysInternalManager.check_binaries("SysInternal_Suite")
 
     # System Checks
-    log.info("Admin privileges found" if Check.admin() else "Admin privileges not found")
-    log.info("UAC enabled" if Check.uac() else "UAC disabled")
+    log.info("Admin privileges found" if check.admin() else "Admin privileges not found")
+    log.info("UAC enabled" if check.uac() else "UAC disabled")
     log.info(f"Execution path: {psutil.__file__}")
     log.info(f"Global execution path: {sys.executable}")
     log.info(f"Local execution path: {sys.prefix}")
     log.info(
         "Running in a virtual environment" if sys.prefix != sys.base_prefix else "Not running in a virtual environment")
     log.info(
-        "Execution policy is unrestricted" if Check.execution_policy() else "Execution policy is restricted")
+        "Execution policy is unrestricted" if check.execution_policy() else "Execution policy is restricted")
 
     # Python Version Check
     SystemInfoManager.python_version()

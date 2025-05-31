@@ -6,17 +6,21 @@ from subprocess import CompletedProcess
 
 class Execute:
     @classmethod
-    def script(cls, script_path: str) -> list[list[str]] | None:
+    def script(cls, script_path: str) -> list[tuple[str, str]] | None:
         """
         Execute a script file based on its file extension.
         
-        Executes Python and PowerShell scripts with different handling mechanisms. For Python scripts, runs the script and returns None. For PowerShell scripts, first unblocks the script and then executes it, returning a list of message-ID pairs.
+        Executes Python and PowerShell scripts with different handling mechanisms.
+        For Python scripts, runs the script and returns None.
+        For PowerShell scripts, first unblocks the script and then executes it,
+         returning a list of message-ID pairs.
         
         Parameters:
             script_path (str): Path to the script file to be executed.
         
         Returns:
-            list[list[str]] | None: A list of message-ID pairs for PowerShell scripts, or None for Python scripts.
+            list[list[str]] | None: A list of message-ID pairs for PowerShell scripts,
+             or None for Python scripts.
         
         Raises:
             Potential subprocess-related exceptions during script execution.

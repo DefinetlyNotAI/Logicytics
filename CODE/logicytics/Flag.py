@@ -690,9 +690,8 @@ class Flag:
         parser = Flag.__available_arguments()[1]
         if return_output:
             return parser.format_help()
-        else:
-            parser.print_help()
-            return None
+        parser.print_help()
+        return None
 
     @classmethod
     def data(cls) -> tuple[str, str | None]:

@@ -4,20 +4,17 @@ import struct
 from datetime import datetime
 
 import psutil
-from psutil._common import sswap
 
 from logicytics import log, config
 
 # Constants from config with validation
 LIMIT_FILE_SIZE = config.getint("DumpMemory Settings", "file_size_limit")  # MiB
 SAFETY_MARGIN = config.getfloat("DumpMemory Settings", "file_size_safety")  # MiB
+DUMP_DIR = config.get("DumpMemory Settings", "dump_directory", fallback="memory_dumps")
 
 if SAFETY_MARGIN < 1:
     log.critical("Invalid Safety Margin Inputted - Cannot proceed with dump memory")
     exit(1)
-
-DUMP_DIR = config.get("DumpMemory Settings", "dump_directory", fallback="memory_dumps")
-os.makedirs(DUMP_DIR, exist_ok=True)
 
 
 def capture_ram_snapshot():
@@ -41,7 +38,7 @@ def capture_ram_snapshot():
         Exception: For any unexpected errors during memory snapshot capture
     """
 
-    def memory_helper(mem_var: psutil.svmem | sswap, flavor_text: str, use_free_rather_than_available: bool = False):
+    def memory_helper(mem_var, flavor_text: str, use_free_rather_than_available: bool = False):
         file.write(f"Total {flavor_text}: {mem_var.total / (1024 ** 3):.2f} GB\n")
         file.write(f"Used {flavor_text}: {mem_var.used / (1024 ** 3):.2f} GB\n")
         if use_free_rather_than_available:
@@ -54,7 +51,7 @@ def capture_ram_snapshot():
     try:
         memory = psutil.virtual_memory()
         swap = psutil.swap_memory()
-        with open(os.path.join(DUMP_DIR, "Ram_Snapshot.txt"), "w") as file:
+        with open(os.path.join(DUMP_DIR, "Ram_Snapshot.txt"), "w", encoding="utf-8") as file:
             memory_helper(memory, "RAM")
             memory_helper(swap, "Swap Memory", use_free_rather_than_available=True)
     except Exception as e:

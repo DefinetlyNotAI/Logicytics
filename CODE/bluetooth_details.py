@@ -106,6 +106,7 @@ def _write_device_info_to_file(devices: list[dict[str, str]], filename: str):
         with open(filename, "w", encoding="UTF-8") as file:
             for device_info in devices:
                 _write_single_device_info(file, device_info)
+        log.info(f"Successfully wrote device details to '{filename}'")
     except Exception as e:
         log.error(f"Failed to write device information to file: {e}")
 

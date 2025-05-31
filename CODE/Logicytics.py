@@ -12,7 +12,7 @@ from datetime import datetime
 import psutil
 from prettytable import PrettyTable
 
-from logicytics import Log, Execute, Check, Get, FileManagement, Flag, DEBUG, DELETE_LOGS, config
+from logicytics import Log, execute, check, get, file_management, flag, DEBUG, DELETE_LOGS, config
 
 # Initialization
 log = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
@@ -66,7 +66,7 @@ class ExecuteScript:
             - Logs the final execution list for debugging purposes
             - Warns users about potential long execution times for certain actions
         """
-        execution_list = Get.list_of_files(".", only_extensions=(".py", ".exe", ".ps1", ".bat"),
+        execution_list = get.list_of_files(".", only_extensions=(".py", ".exe", ".ps1", ".bat"),
                                            exclude_files=["Logicytics.py"],
                                            exclude_dirs=["logicytics", "SysInternal_Suite"])
         files_to_remove = {
@@ -101,7 +101,7 @@ class ExecuteScript:
 
         elif ACTION == "modded":
             # Add all files in MODS to execution list
-            execution_list = Get.list_of_files("../MODS", only_extensions=(".py", ".exe", ".ps1", ".bat"),
+            execution_list = get.list_of_files("../MODS", only_extensions=(".py", ".exe", ".ps1", ".bat"),
                                                append_file_list=execution_list, exclude_files=["Logicytics.py"],
                                                exclude_dirs=["logicytics", "SysInternal_Suite"])
 
@@ -144,7 +144,7 @@ class ExecuteScript:
         """
         log.debug(f"Executing {script}")
         try:
-            log.execution(Execute.script(script))
+            log.execution(execute.script(script))
             log.info(f"{script} executed successfully")
             return script, None
         except Exception as err:
@@ -207,7 +207,7 @@ class ExecuteScript:
             gc.collect()
             start_time = datetime.now()
             start_memory = process.memory_full_info().uss / 1024 / 1024  # MB
-            log.execution(Execute.script(self.execution_list[file]))
+            log.execution(execute.script(self.execution_list[file]))
             end_time = datetime.now()
             end_memory = process.memory_full_info().uss / 1024 / 1024  # MB
             elapsed_time = end_time - start_time
@@ -352,7 +352,7 @@ def get_flags():
     """
     global ACTION, SUB_ACTION
     # Get flags_list
-    ACTION, SUB_ACTION = Flag.data()
+    ACTION, SUB_ACTION = flag.data()
     log.debug(f"Action: {ACTION}")
     log.debug(f"Sub-Action: {SUB_ACTION}")
 
@@ -382,7 +382,7 @@ def handle_special_actions():
         log.info("Opening debug menu...")
         SpecialAction.execute_new_window("_debug.py")
 
-    messages = Check.sys_internal_zip()
+    messages = check.sys_internal_zip()
     if messages:
         # If there are messages, log them with debug
         log.debug(messages)
@@ -407,7 +407,7 @@ def handle_special_actions():
             "Sorry, this feature is yet to be implemented. You can manually Restore your backups, We will open "
             "the location for you"
         )
-        FileManagement.open_file("../ACCESS/BACKUP/")
+        file_management.open_file("../ACCESS/BACKUP/")
         input("Press Enter to exit...")
         exit(1)
 
@@ -438,7 +438,7 @@ def check_privileges():
         - Depends on global `DEBUG` configuration variable
         - Logs warnings or critical messages based on privilege and UAC status
     """
-    if not Check.admin():
+    if not check.admin():
         if DEBUG == "DEBUG":
             log.warning("Running in debug mode, continuing without admin privileges - This may cause issues")
         else:
@@ -447,7 +447,7 @@ def check_privileges():
             input("Press Enter to exit...")
             exit(1)
 
-    if Check.uac():
+    if check.uac():
         log.warning("UAC is enabled, this may cause issues - Please disable UAC if possible")
 
 
@@ -462,7 +462,7 @@ class ZIP:
     @staticmethod
     def __and_log(directory: str, name: str):
         log.debug(f"Zipping directory '{directory}' with name '{name}' under action '{ACTION}'")
-        zip_values = FileManagement.Zip.and_hash(
+        zip_values = file_management.Zip.and_hash(
             directory,
             name,
             ACTION if ACTION is not None else f"ERROR_NO_ACTION_SPECIFIED_{datetime.now().isoformat()}"
@@ -531,8 +531,8 @@ if __name__ == "__main__":
         Logicytics()
     except KeyboardInterrupt:
         log.warning("Force shutdown detected! Some temporary files might be left behind.")
-        log.warning("Pro tip: Next time, let the program finish naturally.")
-        # Attempt cleanup -> Zip generated files
+        log.warning("Next time, let the program finish naturally for complete cleanup.")
+        # Emergency cleanup - zip generated files
         ZIP.files()
         exit(0)
 else:
