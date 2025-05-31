@@ -1,4 +1,4 @@
-from logicytics import log, Execute
+from logicytics import log, execute
 
 
 @log.function
@@ -17,7 +17,7 @@ def command(file: str, commands: str, message: str, encoding: str = "UTF-8") -> 
     """
     log.info(f"Executing {message}")
     try:
-        output = Execute.command(commands)
+        output = execute.command(commands)
         with open(file, "w", encoding=encoding) as f:
             f.write(output)
         log.info(f"{message} Successful - {file}")

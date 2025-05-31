@@ -10,6 +10,8 @@ from typing import Type
 
 import colorlog
 
+from logicytics.Config import DEBUG
+
 
 class Log:
     """
@@ -42,7 +44,8 @@ class Log:
         self._initialized = True
         if config:
             self.reset()
-        # log_path_relative variable takes Logger.py full path, goes up twice then joins with ACCESS\\LOGS\\Logicytics.log
+        # log_path_relative variable takes Logger.py full path,
+        # goes up twice then joins with ACCESS\\LOGS\\Logicytics.log
         log_path_relative = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                                          "ACCESS\\LOGS\\Logicytics.log")
         config = config or {
@@ -154,10 +157,13 @@ class Log:
         """
         Log an internal message exclusively to the console.
         
-        Internal messages are used for logging system states or debug information that should not be written to log files. These messages are only displayed in the console when color logging is enabled.
+        Internal messages are used for logging system states or debug information
+        that should not be written to log files.
+        These messages are only displayed in the console when color logging is enabled.
         
         Parameters:
-            message (str): The internal message to be logged. If the message is "None" or None, no logging occurs.
+            message (str): The internal message to be logged.
+            If the message is "None" or None, no logging occurs.
         
         Notes:
             - Requires color logging to be enabled
@@ -278,8 +284,9 @@ class Log:
         """
         Logs a message with a specified log type, supporting multiple type aliases.
         
-        This method allows logging messages with flexible type specifications, mapping aliases to standard log types
-        and handling potential errors in type selection. It supports logging with color if enabled.
+        This method allows logging messages with flexible type specifications,
+        mapping aliases to standard log types and handling potential errors in type selection.
+        It supports logging with color if enabled.
         
         Parameters:
             message (str): The message to be logged. Skipped if "None" or None.
@@ -328,14 +335,15 @@ class Log:
                 f"[{self.__timestamp()}] > EXCEPTION:| {self.__trunc_message(f'{message} -> Exception provoked: {str(exception_type)}')}")
         raise exception_type(message)
 
-    def execution(self, message_log: list[list[str, str]]):
+    def execution(self, message_log: list[tuple[str, str]]):
         """
         Parse and log multiple messages with their corresponding log types.
         
         This method processes a list of messages, where each message is associated with a specific log type. It is designed for scenarios where multiple log entries need to be processed simultaneously, such as logging script execution results.
         
         Parameters:
-            message_log (list[list[str, str]]): A list of message entries. Each entry is a list containing two elements:
+            message_log (list[tuple[str, str]]): A list of message entries.
+            Each entry is a list containing two elements:
                 - First element: The log message (str)
                 - Second element: The log type (str)
         
@@ -415,3 +423,6 @@ class Log:
             return result
 
         return wrapper
+
+
+log = Log({"log_level": DEBUG})

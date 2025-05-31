@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from logicytics import log, Execute
+from logicytics import log, execute
 
 
 def get_password(ssid: str) -> str | None:
@@ -22,7 +22,7 @@ def get_password(ssid: str) -> str | None:
         - Logs any errors encountered during the process
     """
     try:
-        command_output = Execute.command(
+        command_output = execute.command(
             f'netsh wlan show profile name="{ssid}" key=clear'
         )
         if command_output:
@@ -30,8 +30,10 @@ def get_password(ssid: str) -> str | None:
             for line in key_content:
                 if "Key Content" in line:
                     return line.split(":")[1].strip()
+        return None
     except Exception as err:
         log.error(err)
+        return None
 
 
 def parse_wifi_names(command_output: str) -> list:
@@ -43,14 +45,6 @@ def parse_wifi_names(command_output: str) -> list:
     
     Returns:
         list: A list of extracted Wi-Fi profile names, stripped of whitespace.
-    
-    Raises:
-        No explicit exceptions are raised by this function.
-    
-    Example:
-        >>> output = "All User Profile     : HomeNetwork\\nAll User Profile     : WorkWiFi"
-        >>> parse_wifi_names(output)
-        ['HomeNetwork', 'WorkWiFi']
     """
     wifi_names = []
 
@@ -81,11 +75,12 @@ def get_wifi_names() -> list:
     """
     try:
         log.info("Retrieving Wi-Fi names...")
-        wifi_names = parse_wifi_names(Execute.command("netsh wlan show profile"))
+        wifi_names = parse_wifi_names(execute.command("netsh wlan show profile"))
         log.info(f"Retrieved {len(wifi_names)} Wi-Fi names.")
         return wifi_names
     except Exception as err:
         log.error(err)
+        return []
 
 
 @log.function

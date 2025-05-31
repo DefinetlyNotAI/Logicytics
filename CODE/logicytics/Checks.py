@@ -42,8 +42,7 @@ class Check:
             )
             return result.returncode == 0 and result.stdout.strip().lower() == "unrestricted"
         except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
-            print(f"Failed to check execution policy: {e}")
-            exit(1)
+            exit(f"Failed to check execution policy: {e}")
 
     @staticmethod
     def uac() -> bool:
@@ -88,5 +87,6 @@ class Check:
             elif ignore_file:
                 return "Found .sys.ignore file, skipping SysInternal_Suite zip extraction"
 
+            return None
         except Exception as err:
             exit(f"Failed to unzip SysInternal_Suite: {err}")

@@ -1,7 +1,7 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-from logicytics import log, Execute
+from logicytics import log, execute
 
 
 def run_command_threaded(directory: str, file: str, message: str, encoding: str = "UTF-8") -> None:
@@ -26,7 +26,7 @@ def run_command_threaded(directory: str, file: str, message: str, encoding: str 
     try:
         safe_directory = directory.replace('"', '`"')  # Escape quotes
         command = f'powershell -NoProfile -Command "Get-ChildItem \\""{safe_directory}\\"" -Recurse"'
-        output = Execute.command(command)
+        output = execute.command(command)
         open(file, "a", encoding=encoding).write(output)
         log.info(f"{message} Successful for {directory} - {file}")
     except Exception as e:

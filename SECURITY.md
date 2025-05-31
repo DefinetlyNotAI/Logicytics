@@ -11,9 +11,9 @@ This section outlines the versions of our project that are currently supported w
 | 3.2.x   | ✖️        | Dec 19, 2024    |
 | 3.1.x   | ✖️        | Dec 11, 2024    |
 | 3.0.x   | ✖️        | Dec 6, 2024     |
-| 2.5.x   | ✖️        | Nov 25, 2024    |
-| 2.4.x   | ✖️        | Nov 12, 2024    |
-| 2.3.x   | ✖️        | Sep 21, 2024    |
+| 2.5.x   | ❌         | Nov 25, 2024    |
+| 2.4.x   | ❌         | Nov 12, 2024    |
+| 2.3.x   | ❌         | Sep 21, 2024    |
 | 2.2.x   | ❌         | Sep 9, 2024     |
 | 2.1.x   | ❌         | Aug 29, 2024    |
 | 2.0.x   | ❌         | Aug 25, 2024    |

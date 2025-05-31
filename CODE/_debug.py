@@ -9,10 +9,11 @@ import time
 import psutil
 import requests
 
-from logicytics import Log, DEBUG, VERSION, Check
+from logicytics import Log, DEBUG, VERSION, check, config
 
 log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ACCESS\\LOGS\\DEBUG\\DEBUG.log")
 log = Log({"log_level": DEBUG, "filename": log_path, "truncate_message": False, "delete_log": True})
+url = config.get("System Settings", "config_url")
 
 
 class VersionManager:
@@ -149,10 +150,9 @@ class ConfigManager:
         Retrieves configuration data from a remote repository.
         """
         try:
-            url = "https://raw.githubusercontent.com/DefinetlyNotAI/Logicytics/main/CODE/config.ini"
-            config = configparser.ConfigParser()
-            config.read_string(requests.get(url, timeout=15).text)
-            return config
+            _config = configparser.ConfigParser()
+            _config.read_string(requests.get(url, timeout=15).text)
+            return _config
         except requests.exceptions.RequestException as e:
             log.error(f"Connection error: {e}")
             return None
@@ -194,27 +194,27 @@ def debug():
     Executes a comprehensive system debug routine, performing various checks and logging system information.
     """
     # Online Configuration Check
-    config = ConfigManager.get_online_config()
-    if config:
-        HealthCheck.check_versions(VERSION, config["System Settings"]["version"])
+    _config = ConfigManager.get_online_config()
+    if _config:
+        HealthCheck.check_versions(VERSION, _config["System Settings"]["version"])
 
         # File Integrity Check
-        required_files = config["System Settings"].get("files", "").split(",")
+        required_files = _config["System Settings"].get("files", "").split(",")
         FileManager.check_required_files(".", required_files)
 
     # SysInternal Binaries Check
     SysInternalManager.check_binaries("SysInternal_Suite")
 
     # System Checks
-    log.info("Admin privileges found" if Check.admin() else "Admin privileges not found")
-    log.info("UAC enabled" if Check.uac() else "UAC disabled")
+    log.info("Admin privileges found" if check.admin() else "Admin privileges not found")
+    log.info("UAC enabled" if check.uac() else "UAC disabled")
     log.info(f"Execution path: {psutil.__file__}")
     log.info(f"Global execution path: {sys.executable}")
     log.info(f"Local execution path: {sys.prefix}")
     log.info(
         "Running in a virtual environment" if sys.prefix != sys.base_prefix else "Not running in a virtual environment")
     log.info(
-        "Execution policy is unrestricted" if Check.execution_policy() else "Execution policy is restricted")
+        "Execution policy is unrestricted" if check.execution_policy() else "Execution policy is restricted")
 
     # Python Version Check
     SystemInfoManager.python_version()
