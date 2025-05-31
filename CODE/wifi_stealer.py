@@ -30,8 +30,10 @@ def get_password(ssid: str) -> str | None:
             for line in key_content:
                 if "Key Content" in line:
                     return line.split(":")[1].strip()
+        return None
     except Exception as err:
         log.error(err)
+        return None
 
 
 def parse_wifi_names(command_output: str) -> list:
@@ -43,14 +45,6 @@ def parse_wifi_names(command_output: str) -> list:
     
     Returns:
         list: A list of extracted Wi-Fi profile names, stripped of whitespace.
-    
-    Raises:
-        No explicit exceptions are raised by this function.
-    
-    Example:
-        >>> output = "All User Profile     : HomeNetwork\\nAll User Profile     : WorkWiFi"
-        >>> parse_wifi_names(output)
-        ['HomeNetwork', 'WorkWiFi']
     """
     wifi_names = []
 
@@ -86,6 +80,7 @@ def get_wifi_names() -> list:
         return wifi_names
     except Exception as err:
         log.error(err)
+        return None
 
 
 @log.function

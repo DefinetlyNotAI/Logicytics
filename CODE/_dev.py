@@ -23,6 +23,7 @@ def color_print(text, color="reset", is_input=False) -> None | str:
         return input(f"{color_code}{text}{colors['reset']}")
     else:
         print(f"{color_code}{text}{colors['reset']}")
+        return None
 
 
 def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
@@ -88,6 +89,7 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
         return True
     except Exception as e:
         color_print(f"[x] {e}", "red")
+        return None
 
 
 def _perform_checks() -> bool:

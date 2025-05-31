@@ -9,6 +9,7 @@ from collections import Counter
 from datetime import datetime
 
 from logicytics.Config import config
+from logicytics.Logger import log
 
 # Check if the script is being run directly, if not, set up the library
 if __name__ == '__main__':
@@ -63,9 +64,9 @@ class _Match:
         try:
             MODEL = SentenceTransformer(config.get("Flag Settings", "model_to_use"))
         except Exception as e:
-            print(f"Error: {e}")
-            print("Please check the model name in the config file.")
-            print(f"Model name {config.get('Flag Settings', 'model_to_use')} may not be valid.")
+            log.critical(f"Error: {e}")
+            log.error("Please check the model name in the config file.")
+            log.error(f"Model name {config.get('Flag Settings', 'model_to_use')} may not be valid.")
             exit(1)
 
         user_embedding = MODEL.encode(user_input, convert_to_tensor=True, show_progress_bar=DEBUG_MODE)
@@ -164,9 +165,9 @@ class _Match:
         # Summary of flag usage
         total_interactions = sum(flags_usage.values())
 
-        print("User Interaction Summary:")
+        log.info("User Interaction Summary:-\n-------------------------------------------------")
         for flag, details in interactions.items():
-            print(f"\nFlag: {flag}")
+            log.info(f"\nFlag: {flag}")
 
             accuracies = [detail['accuracy'] for detail in details]
             device_names = [detail['device_name'] for detail in details]
@@ -176,15 +177,15 @@ class _Match:
             most_common_device = Counter(device_names).most_common(1)[0][0]
             average_user_input = Counter(user_inputs).most_common(1)[0][0]
 
-            print(f"  Average Accuracy: {average_accuracy:.2f}%")
-            print(f"  Most Common Device Name: {most_common_device}")
-            print(f"  Most Common User Input: {average_user_input}")
+            print(f"           Average Accuracy: {average_accuracy:.2f}%")
+            print(f"           Most Common Device Name: {most_common_device}")
+            print(f"           Most Common User Input: {average_user_input}")
 
         # Print the summary to the console
-        print(f"\n\nTotal Interactions with the match flag feature: {total_interactions}")
-        print("\nFlag Usage Summary:")
+        log.info(f"\n\nTotal Interactions with the match flag feature: {total_interactions}")
+        log.info("\nFlag Usage Summary:")
         for flag, count in flags_usage.items():
-            print(f"  {flag}: {count} times")
+            print(f"           {flag}: {count} times")
 
         # Generate the graph for flag usage
         flags = list(flags_usage.keys())
@@ -200,14 +201,14 @@ class _Match:
         # Save and display the graph
         try:
             plt.savefig('../ACCESS/DATA/Flag_usage_summary.png')
-            print("\nFlag Usage Summary Graph saved to 'ACCESS/DATA/Flag_usage_summary.png'")
+            log.info("\nFlag Usage Summary Graph saved to 'ACCESS/DATA/Flag_usage_summary.png'")
         except FileNotFoundError:
             try:
                 plt.savefig('../../ACCESS/DATA/Flag_usage_summary.png')
-                print("\nFlag Usage Summary Graph saved to 'ACCESS/DATA/Flag_usage_summary.png'")
+                log.info("\nFlag Usage Summary Graph saved to 'ACCESS/DATA/Flag_usage_summary.png'")
             except FileNotFoundError:
                 plt.savefig('Flag_usage_summary.png')
-                print("\nFlag Usage Summary Graph saved in current working directory as 'Flag_usage_summary.png'")
+                log.info("\nFlag Usage Summary Graph saved in current working directory as 'Flag_usage_summary.png'")
 
     @staticmethod
     def load_history() -> dict[str, any]:
@@ -360,8 +361,8 @@ class _Match:
         if best_accuracy < MIN_ACCURACY_THRESHOLD:
             suggested_flags = cls.__suggest_flags_based_on_history(user_input)
             if suggested_flags:
-                print(f"No Flags matched so suggestions based on historical data: "
-                      f"{', '.join(suggested_flags)}")
+                log.warning(f"No Flags matched so suggestions based on historical data: "
+                            f"{', '.join(suggested_flags)}")
 
         return best_match, best_accuracy
 
@@ -579,15 +580,15 @@ class Flag:
         }
 
         if any(special_flags) and not any(action_flags):
-            print("Invalid combination of flags_list: Special and Action flag exclusivity issue.")
+            log.error("Invalid combination of flags_list: Special and Action flag exclusivity issue.")
             exit(1)
 
         if any(exclusive_flags) and any(action_flags):
-            print("Invalid combination of flags_list: Exclusive and Action flag exclusivity issue.")
+            log.error("Invalid combination of flags_list: Exclusive and Action flag exclusivity issue.")
             exit(1)
 
         if any(exclusive_flags) and any(special_flags):
-            print("Invalid combination of flags_list: Exclusive and Special flag exclusivity issue.")
+            log.error("Invalid combination of flags_list: Exclusive and Special flag exclusivity issue.")
             exit(1)
 
         return any(special_flags)
@@ -647,7 +648,7 @@ class Flag:
         # Get the closest valid flag match based on the user's input
         closest_matches = difflib.get_close_matches(user_input, valid_flags, n=1, cutoff=0.6)
         if closest_matches:
-            print(f"Invalid flag '{user_input}', Did you mean '--{closest_matches[0].replace('_', '-')}'?")
+            log.warning(f"Invalid flag '{user_input}', Did you mean '--{closest_matches[0].replace('_', '-')}'?")
             exit(1)
 
         # Prompt the user for a description if no close match is found
@@ -658,10 +659,10 @@ class Flag:
         descriptions_list = [f"Run Logicytics with {flag}" for flag in valid_flags]
         flag_received, accuracy_received = _Match.flag(user_input_desc, flags_list, descriptions_list)
         if DEBUG_MODE:
-            print(
+            log.info(
                 f"User input: {user_input_desc}\nMatched flag: {flag_received.replace('_', '-')}\nAccuracy: {accuracy_received:.2f}%\n")
         else:
-            print(f"Matched flag: {flag_received.replace('_', '-')} (Accuracy: {accuracy_received:.2f}%)\n")
+            log.info(f"Matched flag: {flag_received.replace('_', '-')} (Accuracy: {accuracy_received:.2f}%)\n")
 
     @staticmethod
     def show_help_menu(return_output: bool = False) -> str | None:
@@ -691,6 +692,7 @@ class Flag:
             return parser.format_help()
         else:
             parser.print_help()
+            return None
 
     @classmethod
     def data(cls) -> tuple[str, str | None]:
@@ -720,13 +722,13 @@ class Flag:
         used_flags = [flag for flag in vars(args) if getattr(args, flag)]
 
         if not special_flag_used and len(used_flags) > 1:
-            print("Invalid combination of flags: Maximum 1 action flag allowed.")
+            log.error("Invalid combination of flags: Maximum 1 action flag allowed.")
             exit(1)
 
         if special_flag_used:
             used_flags = cls.__used_flags_logic(args)
             if len(used_flags) > 2:
-                print("Invalid combination of flags: Maximum 2 flag mixes allowed.")
+                log.error("Invalid combination of flags: Maximum 2 flag mixes allowed.")
                 exit(1)
 
         if not used_flags:
@@ -735,7 +737,7 @@ class Flag:
 
         # Update history with the matched flag(s)
         if not SAVE_PREFERENCES:
-            return
+            return None
 
         def update_data_history(matched_flag: str):
             """
