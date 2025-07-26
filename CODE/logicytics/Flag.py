@@ -517,22 +517,6 @@ class Flag:
             help="Execute Flag that will shutdown the device afterward",
         )
 
-        # Not yet Implemented
-        parser.add_argument(
-            "--webhook",
-            action="store_true",
-            help="Execute Flag that will send zip File via webhook "
-                 f"{cls.__colorify('- Not yet Implemented -', 'r')}",
-        )
-
-        parser.add_argument(
-            "--restore",
-            action="store_true",
-            help="Restore Logicytics files from the ACCESS/BACKUPS directory "
-                 f"{cls.__colorify('- Use on your own device only -', 'y')} "
-                 f"{cls.__colorify('- Not yet Implemented -', 'r')}",
-        )
-
         # Parse the arguments
         args, unknown = parser.parse_known_args()
         valid_flags = [action.dest for action in parser._actions if action.dest != 'help']

@@ -7,7 +7,6 @@
 
 | Task                                                                                                                                                                       | Version | Might or Will be done? |
 |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|------------------------|
-| Implement the 2 missing flags                                                                                                                                              | v3.5.0  | ✅                      |
 | Get any BETA features out of BETA                                                                                                                                          | v3.6.0  | ✅                      |
 | Replace Logger.py with Util that contains (tprint), also implement the ExceptionHandler and UpdateManager from Util                                                        | v3.6.0  | ✅                      |
 | Remake VulnScan .pkl and .pth to be more accurate                                                                                                                          | v3.6.0  | ❌                      |
