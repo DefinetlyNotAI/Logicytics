@@ -99,11 +99,11 @@ def _perform_checks() -> bool:
         bool: True if all checks are confirmed by the user, False otherwise.
     """
     checks = [
-        ("[-] Have you read the required contributing guidelines?", "..\\CONTRIBUTING.md"),
-        ("[-] Have you made files you don't want to be run start with '_'?", "."),
-        ("[-] Have you added the file to CODE dir?", "."),
-        ("[-] Have you added docstrings and comments?", "..\\CONTRIBUTING.md"),
-        ("[-] Is each file containing around 1 main feature?", "..\\CONTRIBUTING.md"),
+        ("Have you read the required contributing guidelines?", "..\\CONTRIBUTING.md"),
+        ("Have you made files you don't want to be run start with '_'?", "."),
+        ("Have you added the file to CODE dir?", "."),
+        ("Have you added docstrings and comments?", "..\\CONTRIBUTING.md"),
+        ("Is each file containing around 1 main feature?", "..\\CONTRIBUTING.md"),
     ]
 
     for question, file_to_open in checks:
@@ -139,7 +139,7 @@ def _handle_file_operations() -> None:
     print("\n".join([f"\033[91m- {file}\033[0m" for file in removed_files]))  # Red -
     print("\n".join([f"* {file}" for file in normal_files]))
 
-    if not _prompt_user("[-] Does the list above include your added files?"):
+    if not _prompt_user("Does the list above include your added files?"):
         color_print("[x] Something went wrong! Please contact support.", "red")
         return
 

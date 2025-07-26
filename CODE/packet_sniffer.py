@@ -112,8 +112,8 @@ class PacketSniffer:
                 )
                 log.info("Sniff complete.")
                 break
-            except Exception as e:
-                log.warning(f"Sniff failed on {iface}: {e}")
+            except Exception as err:
+                log.warning(f"Sniff failed on {iface}: {err}")
                 iface = self._correct_interface(iface)
         else:
             log.error("Max retry time exceeded.")

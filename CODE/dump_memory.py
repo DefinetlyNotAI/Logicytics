@@ -98,7 +98,7 @@ def memory_dump():
     try:
         process = psutil.Process(pid)
         dump_path = os.path.join(DUMP_DIR, "Ram_Dump.txt")
-        with open(dump_path, "wb", encoding="utf-8") as dump_file:
+        with open(dump_path, "wb") as dump_file:
             total_size = 0
 
             # Disk space safety check
