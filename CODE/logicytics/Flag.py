@@ -547,7 +547,6 @@ class Flag:
         special_flags = {
             args.reboot,
             args.shutdown,
-            args.webhook
         }
         action_flags = {
             args.default,
