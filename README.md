@@ -36,13 +36,13 @@ To install and setup Logicytics, follow these steps:
 
 > [!IMPORTANT]
 > We recommend Python Version `3.11` or higher, as the project is developed and tested on this version.
-> 
-> You must also install `pytorch` if you want to use the vulnscan feature, To install run the command `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124`
-> If the device has CUDA available (NVidea GPUs),
 >
-> Otherwise, run `pip3 install torch torchvision torchaudio` to use the CPU, ofcourse this is optional for normal
-> usage's,
-> until you require `vulnscan`
+> To use vulnscan, you will need `torch` - Installation instructions can be
+> found [here](https://pytorch.org/#fws_68845ae25b0fb).
+> If you have a supported GPU, it is recommended to install the Nvidea GPU version of PyTorch for better performance.
+>
+> Settings should be: `Stable -> Windows -> Pip -> Python` and if you have a supported CUDA version, select that too
+> else CPU.
 
 ### Prerequisites
 
