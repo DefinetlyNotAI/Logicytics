@@ -53,7 +53,6 @@ class _Match:
         """
         # Encode the current user input and historical inputs
         from sentence_transformers import SentenceTransformer, util
-
         import logging  # Suppress logging messages from Sentence Transformer due to verbosity
         # Set the logging level based on the debug mode, either DEBUG or ERROR (aka only important messages)
         if DEBUG_MODE:
@@ -211,14 +210,14 @@ class _Match:
                 log.info("\nFlag Usage Summary Graph saved in current working directory as 'Flag_usage_summary.png'")
 
     @staticmethod
-    def load_history() -> dict[str, any]:
+    def load_history() -> dict:
         """
         Load user interaction history from a gzipped JSON file.
         
         This method attempts to read and parse historical interaction data from a compressed JSON file. If the file is not found, it returns an empty history structure with an empty interactions dictionary and a zero-initialized flags usage counter.
         
         Returns:
-            dict[str, any]: A dictionary containing:
+            dict: A dictionary containing:
                 - 'interactions': A dictionary of past user interactions
                 - 'flags_usage': A Counter object tracking flag usage frequencies
         
@@ -233,7 +232,7 @@ class _Match:
             return {'interactions': {}, 'flags_usage': Counter()}
 
     @staticmethod
-    def save_history(history_data: dict[str, any]):
+    def save_history(history_data: dict):
         """
         Save user interaction history to a gzipped JSON file.
         
