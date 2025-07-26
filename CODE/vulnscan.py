@@ -4,12 +4,12 @@ import asyncio
 import os
 import threading
 import warnings
-from pathlib import Path
 
 import aiofiles
 import joblib
 import numpy as np
 import torch
+from pathlib import Path
 from safetensors import safe_open
 from tqdm import tqdm
 
@@ -184,7 +184,7 @@ if __name__ == "__main__":
             "C:\\Program Files",
             "C:\\Program Files (x86)"
         ]
-        vulnscan = VulnScan("VulnScan/Model SenseMini .3n3.pth", "VulnScan/Vectorizer .3n3.pkl")
+        vulnscan = VulnScan("vulnscan/Model SenseMini .3n3.pth", "vulnscan/Vectorizer .3n3.pkl")
         vulnscan.scan_directory(base_paths)
     except KeyboardInterrupt:
         log.warning("User interrupted. Exiting gracefully.")
