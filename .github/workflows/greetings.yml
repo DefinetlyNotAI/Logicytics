@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   greeting:
-    runs-on: windows-latest
+    runs-on: linux-latest
     permissions:
       issues: write
       pull-requests: write
