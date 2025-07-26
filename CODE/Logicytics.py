@@ -490,8 +490,6 @@ def handle_sub_action():
         subprocess.call("shutdown /s /t 3", shell=False)
     elif SUB_ACTION == "reboot":
         subprocess.call("shutdown /r /t 3", shell=False)
-    # elif sub_action == "webhook":
-    # TODO: Implement this in future v3.5
 
 
 @log.function

@@ -16,7 +16,7 @@ This comprehensive guide is here to equip you with everything you need to use Lo
 </div>
 <div style="text-align:center;" align="center">
     <a href="https://www.codefactor.io/repository/github/definetlynotai/logicytics"><img src="https://www.codefactor.io/repository/github/definetlynotai/logicytics/badge" alt="GitHub Repo CodeFactor Rating"></a>
-    <a href="https://codeclimate.com/github/DefinetlyNotAI/Logicytics/maintainability"><img src="https://api.codeclimate.com/v1/badges/ae2c436af07d00aabf00/maintainability"  alt="GitHub Repo CodeClimate Rating"/></a>
+    <a href="https://qlty.sh/gh/DefinetlyNotAI/projects/Logicytics"><img src="https://qlty.sh/gh/DefinetlyNotAI/projects/Logicytics/maintainability.svg" alt="Maintainability" /></a>
     <a href="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics"><img src="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics/badge"  alt="OpenSSF Best Practices Score"/></a>
     <a href="https://www.bestpractices.dev/projects/9451"><img src="https://www.bestpractices.dev/projects/9451/badge" alt="OpenSSF Best Practices Badge"></a>
 </div>
@@ -36,13 +36,13 @@ To install and setup Logicytics, follow these steps:
 
 > [!IMPORTANT]
 > We recommend Python Version `3.11` or higher, as the project is developed and tested on this version.
-> 
-> You must also install `pytorch` if you want to use the vulnscan feature, To install run the command `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124`
-> If the device has CUDA available (NVidea GPUs),
 >
-> Otherwise, run `pip3 install torch torchvision torchaudio` to use the CPU, ofcourse this is optional for normal
-> usage's,
-> until you require `vulnscan`
+> To use vulnscan, you will need `torch` - Installation instructions can be
+> found [here](https://pytorch.org/#fws_68845ae25b0fb).
+> If you have a supported GPU, it is recommended to install the Nvidea GPU version of PyTorch for better performance.
+>
+> Settings should be: `Stable -> Windows -> Pip -> Python` and if you have a supported CUDA version, select that too
+> else CPU.
 
 ### Prerequisites
 
