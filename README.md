@@ -16,7 +16,7 @@ This comprehensive guide is here to equip you with everything you need to use Lo
 </div>
 <div style="text-align:center;" align="center">
     <a href="https://www.codefactor.io/repository/github/definetlynotai/logicytics"><img src="https://www.codefactor.io/repository/github/definetlynotai/logicytics/badge" alt="GitHub Repo CodeFactor Rating"></a>
-    <a href="https://codeclimate.com/github/DefinetlyNotAI/Logicytics/maintainability"><img src="https://api.codeclimate.com/v1/badges/ae2c436af07d00aabf00/maintainability"  alt="GitHub Repo CodeClimate Rating"/></a>
+    <a href="https://qlty.sh/gh/DefinetlyNotAI/projects/Logicytics"><img src="https://qlty.sh/gh/DefinetlyNotAI/projects/Logicytics/maintainability.svg" alt="Maintainability" /></a>
     <a href="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics"><img src="https://api.securityscorecards.dev/projects/github.com/DefinetlyNotAI/Logicytics/badge"  alt="OpenSSF Best Practices Score"/></a>
     <a href="https://www.bestpractices.dev/projects/9451"><img src="https://www.bestpractices.dev/projects/9451/badge" alt="OpenSSF Best Practices Badge"></a>
 </div>
