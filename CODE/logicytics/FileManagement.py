@@ -30,6 +30,7 @@ class FileManagement:
                 subprocess.run(["start", file_path], shell=False)
             except Exception as e:
                 return f"Error opening file: {e}"
+        return None
 
     @staticmethod
     def mkdir():
@@ -145,6 +146,7 @@ class FileManagement:
                     os.remove(os.path.join(path, file))
                 except Exception as e:
                     return f"Error: {e}"
+            return None
 
         @staticmethod
         def __generate_sha256_hash(filename: str) -> str:
