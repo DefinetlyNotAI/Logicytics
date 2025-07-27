@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import gc
 import os
-import shutil
 import subprocess
 import sys
-import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
@@ -255,36 +253,6 @@ class ExecuteScript:
 
 class SpecialAction:
     @staticmethod
-    def backup(directory: str, name: str):
-        """
-            Creates a backup of a specified directory by zipping its contents and moving it to a designated backup location.
-
-            Args:
-                directory (str): The path to the directory to be backed up.
-                name (str): The name of the backup file.
-
-            Returns:
-                None
-            """
-        if not os.path.exists(directory):
-            log.critical(f"Directory {directory} does not exist!")
-            return
-
-        # Check if backup exists, delete it if so
-        if os.path.exists(f"../ACCESS/BACKUP/{name}.zip"):
-            os.remove(f"../ACCESS/BACKUP/{name}.zip")
-
-        # Zip the directory and move it to the backup location
-        with zipfile.ZipFile(f"{name}.zip", "w") as zip_file:
-            for root, dirs, files in os.walk(directory):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    relative_path = os.path.relpath(str(file_path), start=os.getcwd())
-                    zip_file.write(str(file_path), arcname=relative_path)
-
-        shutil.move(f"{name}.zip", "../ACCESS/BACKUP")
-
-    @staticmethod
     def update() -> tuple[str, str]:
         """
             Updates the repository by pulling the latest changes from the remote repository.
@@ -406,16 +374,6 @@ def handle_special_actions():
         flag.Match.generate_summary_and_graph()
         input("Press Enter to exit...")
         exit(1)
-
-    if ACTION == "backup":
-        log.info("Backing up...")
-        SpecialAction.backup(".", "Default_Backup")
-        log.debug("Backup complete -> CODE dir")
-        SpecialAction.backup("../MODS", "Mods_Backup")
-        log.debug("Backup complete -> MODS dir")
-        log.info("Backup complete!")
-        input("Press Enter to exit...")
-        exit(0)
 
 
 def check_privileges():

@@ -488,13 +488,6 @@ class Flag:
         )
 
         parser.add_argument(
-            "--backup",
-            action="store_true",
-            help="Backup Logicytics files to the ACCESS/BACKUPS directory "
-                 f"{cls.__colorify('- Use on your own device only -', 'y')}.",
-        )
-
-        parser.add_argument(
             "--update",
             action="store_true",
             help="Update Logicytics from GitHub, only if you have git properly installed "

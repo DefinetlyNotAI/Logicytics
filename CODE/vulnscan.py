@@ -8,6 +8,7 @@ import warnings
 import aiofiles
 import joblib
 import numpy as np
+# noinspection PyPackageRequirements
 import torch
 from pathlib import Path
 from safetensors import safe_open
