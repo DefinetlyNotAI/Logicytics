@@ -6,7 +6,7 @@ import subprocess
 
 import configobj
 
-from logicytics import log, get, file_management, CURRENT_FILES, VERSION
+from logicytics import log, get, CURRENT_FILES, VERSION
 
 
 def color_print(text, color="reset", is_input=False) -> None | str:
@@ -190,7 +190,6 @@ def dev_checks() -> None:
         - Updates configuration file with current files and version
         - Logs warnings or errors during the process
     """
-    file_management.mkdir()
     if not _perform_checks():
         return
     _handle_file_operations()

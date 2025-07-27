@@ -11,6 +11,7 @@ from typing import Type
 import colorlog
 
 from logicytics.Config import DEBUG
+from logicytics.FileManagement import FileManagement
 
 
 class Log:
@@ -39,6 +40,7 @@ class Log:
 
         :param config: A dictionary containing configuration options.
         """
+        FileManagement.mkdir()  # Ensure the necessary directories are created
         if self._initialized and config is None:
             return
         self._initialized = True

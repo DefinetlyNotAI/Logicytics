@@ -7,7 +7,6 @@
 
 | Task                                                                                                                                                                       | Version | Might or Will be done? |
 |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|------------------------|
-| Get any BETA features out of BETA                                                                                                                                          | v3.6.0  | ✅                      |
 | Remake VulnScan .pkl and .pth to be more accurate                                                                                                                          | v3.6.0  | ❌                      |
 | Encrypted Volume Detection and Analysis, Advanced USB Device History Tracker                                                                                               | v3.6.0  | ❌                      |
 | Merge `sensitive data miner` with `vulnscan` to be 1 tool                                                                                                                  | v4.0.0  | ✅                      |
