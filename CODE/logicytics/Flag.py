@@ -266,7 +266,7 @@ class Flag:
             """
             try:
                 with gzip.open(
-                    HISTORY_FILE, "rt", encoding="utf-8"
+                        HISTORY_FILE, "rt", encoding="utf-8"
                 ) as f:  # Use 'rt' mode for text read
                     return json.load(f)
             except FileNotFoundError:
@@ -291,7 +291,7 @@ class Flag:
             """
             if SAVE_PREFERENCES:
                 with gzip.open(
-                    HISTORY_FILE, "wt", encoding="utf-8"
+                        HISTORY_FILE, "wt", encoding="utf-8"
                 ) as f:  # Use 'wt' mode for text write
                     json.dump(history_data, f, indent=4)
 
@@ -351,7 +351,7 @@ class Flag:
 
         @classmethod
         def flag(
-            cls, user_input: str, flags: list[str], flag_description: list[str]
+                cls, user_input: str, flags: list[str], flag_description: list[str]
         ) -> tuple[str, float]:
             """
             Matches user input to flag descriptions using advanced semantic similarity.
@@ -438,7 +438,7 @@ class Flag:
 
     @classmethod
     def __available_arguments(
-        cls,
+            cls,
     ) -> tuple[argparse.Namespace, argparse.ArgumentParser]:
         """
         Defines and parses command-line arguments for the Logicytics application.
@@ -455,8 +455,8 @@ class Flag:
         # Define the argument parser
         parser = argparse.ArgumentParser(
             description="Logicytics, The most powerful tool for system data analysis. "
-            "This tool provides a comprehensive suite of features for analyzing system data, "
-            "including various modes for different levels of detail and customization.",
+                        "This tool provides a comprehensive suite of features for analyzing system data, "
+                        "including various modes for different levels of detail and customization.",
             allow_abbrev=False,
         )
 
@@ -465,37 +465,37 @@ class Flag:
             "--default",
             action="store_true",
             help="Runs Logicytics with its default settings and scripts. "
-            f"{cls.__colorify('- Recommended for most users -', 'b')}",
+                 f"{cls.__colorify('- Recommended for most users -', 'b')}",
         )
 
         parser.add_argument(
             "--threaded",
             action="store_true",
             help="Runs Logicytics using threads, where it runs in parallel, default settings though"
-            f"{cls.__colorify('- Recommended for some users -', 'b')}",
+                 f"{cls.__colorify('- Recommended for some users -', 'b')}",
         )
 
         parser.add_argument(
             "--modded",
             action="store_true",
             help="Runs the normal Logicytics, as well as any File in the MODS directory, "
-            "Used for custom scripts as well as default ones.",
+                 "Used for custom scripts as well as default ones.",
         )
 
         parser.add_argument(
             "--depth",
             action="store_true",
             help="This flag will run all default script's in threading mode, "
-            "as well as any clunky and huge code, which produces a lot of data "
-            f"{cls.__colorify('- Will take a long time -', 'y')}",
+                 "as well as any clunky and huge code, which produces a lot of data "
+                 f"{cls.__colorify('- Will take a long time -', 'y')}",
         )
 
         parser.add_argument(
             "--nopy",
             action="store_true",
             help="Run Logicytics using all non-python scripts, "
-            f"These may be {cls.__colorify('outdated', 'y')} "
-            "and not the best, use only if the device doesnt have python installed.",
+                 f"These may be {cls.__colorify('outdated', 'y')} "
+                 "and not the best, use only if the device doesnt have python installed.",
         )
 
         # TODO v3.6.0 -> Out of beta
@@ -503,9 +503,9 @@ class Flag:
             "--vulnscan-ai",
             action="store_true",
             help="Run's Logicytics new Sensitive data Detection AI, its a new feature that will "
-            "detect any files that are out of the ordinary, and logs their path. Runs threaded."
-            f"{cls.__colorify('- Beta Mode -', 'y')} "
-            f"{cls.__colorify('- Will take a long time -', 'y')}",
+                 "detect any files that are out of the ordinary, and logs their path. Runs threaded."
+                 f"{cls.__colorify('- Beta Mode -', 'y')} "
+                 f"{cls.__colorify('- Will take a long time -', 'y')}",
         )
 
         parser.add_argument(
@@ -518,7 +518,7 @@ class Flag:
             "--performance-check",
             action="store_true",
             help="Run's Logicytics default while testing its performance and time, "
-            "this then shows a table with the file names and time to executed. ",
+                 "this then shows a table with the file names and time to executed. ",
         )
 
         parser.add_argument(
@@ -532,24 +532,24 @@ class Flag:
             "--debug",
             action="store_true",
             help="Runs the Debugger, Will check for any issues, "
-            "warning etc, useful for debugging and issue reporting "
-            f"{cls.__colorify('- Use to get a special log file to report the bug -', 'b')}.",
+                 "warning etc, useful for debugging and issue reporting "
+                 f"{cls.__colorify('- Use to get a special log file to report the bug -', 'b')}.",
         )
 
         parser.add_argument(
             "--update",
             action="store_true",
             help="Update Logicytics from GitHub, only if you have git properly installed "
-            "and the project was downloaded via git "
-            f"{cls.__colorify('- Use on your own device only -', 'y')}.",
+                 "and the project was downloaded via git "
+                 f"{cls.__colorify('- Use on your own device only -', 'y')}.",
         )
 
         parser.add_argument(
             "--dev",
             action="store_true",
             help="Run Logicytics developer mod, this is only for people who want to "
-            "register their contributions properly. "
-            f"{cls.__colorify('- Use on your own device only -', 'y')}.",
+                 "register their contributions properly. "
+                 f"{cls.__colorify('- Use on your own device only -', 'y')}.",
         )
 
         # Define After-Execution Flags

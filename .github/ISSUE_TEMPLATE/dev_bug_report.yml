@@ -1,7 +1,7 @@
 name: Report a development bug
 description: Tell us about a bug or issue you may have identified while developing Logicytics.
 title: "Provide a general summary of the development issue"
-labels: ["progress/Unreviewed", "type/Development"]
+labels: [ "progress/Unreviewed", "type/Development" ]
 assignees: "DefinetlyNotAI"
 body:
   - type: checkboxes

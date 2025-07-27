@@ -8,7 +8,6 @@ import warnings
 import aiofiles
 import joblib
 import numpy as np
-
 # noinspection PyPackageRequirements
 import torch
 from pathlib import Path
@@ -125,7 +124,7 @@ class _SensitiveDataScanner:
     async def scan_file_async(self, file_path: str) -> tuple[bool, float, str]:
         try:
             async with aiofiles.open(
-                file_path, "r", encoding="utf-8", errors="ignore"
+                    file_path, "r", encoding="utf-8", errors="ignore"
             ) as f:
                 content = await f.read()
             return self._is_sensitive(content)
@@ -193,10 +192,10 @@ class VulnScan:
         tasks = [scan_worker(f) for f in valid_files]
 
         with tqdm(
-            total=len(valid_files),
-            desc="\033[32mSCAN\033[0m     \033[94mScanning Files\033[0m",
-            unit="file",
-            bar_format="{l_bar} {bar} {n_fmt}/{total_fmt}\n",
+                total=len(valid_files),
+                desc="\033[32mSCAN\033[0m     \033[94mScanning Files\033[0m",
+                unit="file",
+                bar_format="{l_bar} {bar} {n_fmt}/{total_fmt}\n",
         ) as pbar:
             for f in asyncio.as_completed(tasks):
                 await f

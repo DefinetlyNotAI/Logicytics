@@ -21,7 +21,7 @@ file_management = (
     FileManagement()
 )  # Initialize the FileManagement class for file operations
 __show_trace = (
-    DEBUG == "DEBUG"
+        DEBUG == "DEBUG"
 )  # Determine if stack traces should be shown based on the debug level
 
 
@@ -45,7 +45,7 @@ class ObjectLoadError(Exception):
 
 # Decorator for marking functions as deprecated [custom]
 def deprecated(
-    removal_version: str, reason: str, show_trace: bool = __show_trace
+        removal_version: str, reason: str, show_trace: bool = __show_trace
 ) -> callable:
     """
     Decorator function that marks a function as deprecated

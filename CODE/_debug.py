@@ -96,7 +96,7 @@ class FileManager:
 
     @staticmethod
     def compare_files(
-        actual_files: list[str], required_files: list[str]
+            actual_files: list[str], required_files: list[str]
     ) -> tuple[list[str], list[str]]:
         """
         Compares actual and required files, returning missing and extra files.

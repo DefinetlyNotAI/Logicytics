@@ -242,9 +242,9 @@ class ExecuteScript:
 
         try:
             with open(
-                f"../ACCESS/LOGS/PERFORMANCE/Performance_Summary_"
-                f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt",
-                "w",
+                    f"../ACCESS/LOGS/PERFORMANCE/Performance_Summary_"
+                    f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt",
+                    "w",
             ) as f:
                 f.write(table.get_string())
                 f.write("\nNote: This test only measures execution time.\n")
@@ -270,8 +270,8 @@ class SpecialAction:
         # Check if git command is available
         try:
             if (
-                subprocess.run(["git", "--version"], capture_output=True).returncode
-                != 0
+                    subprocess.run(["git", "--version"], capture_output=True).returncode
+                    != 0
             ):
                 return "Git is not installed or not available in the PATH.", "error"
         except FileNotFoundError:

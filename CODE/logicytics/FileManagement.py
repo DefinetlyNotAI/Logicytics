@@ -103,7 +103,7 @@ class FileManagement:
                 f
                 for f in os.listdir(path)
                 if not f.endswith(excluded_extensions)
-                and not f.startswith(excluded_prefixes)
+                   and not f.startswith(excluded_prefixes)
             ]
 
         @staticmethod
