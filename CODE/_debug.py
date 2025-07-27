@@ -9,10 +9,20 @@ import time
 import psutil
 import requests
 
-from logicytics import Log, DEBUG, VERSION, check, config
+from logicytics import Log, DEBUG, VERSION, check, config, get
 
-log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ACCESS\\LOGS\\DEBUG\\DEBUG.log")
-log = Log({"log_level": DEBUG, "filename": log_path, "truncate_message": False, "delete_log": True})
+log_path = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "ACCESS\\LOGS\\DEBUG\\DEBUG.log",
+)
+log = Log(
+    {
+        "log_level": DEBUG,
+        "filename": log_path,
+        "truncate_message": False,
+        "delete_log": True,
+    }
+)
 url = config.get("System Settings", "config_url")
 
 
@@ -24,12 +34,12 @@ class VersionManager:
         """
         try:
             if version.startswith("snapshot-"):
-                parts = version.split('-')[1].split('.')
+                parts = version.split("-")[1].split(".")
                 major, minor = map(int, parts[:2])
                 patch = parts[2] if len(parts) > 2 else "0"
                 return major, minor, patch, "snapshot"
             else:
-                return tuple(map(int, version.split('.'))) + ("release",)
+                return tuple(map(int, version.split("."))) + ("release",)
         except Exception as e:
             log.error(f"Failed to parse version: {e}")
             return 0, 0, 0, "error"
@@ -47,22 +57,33 @@ class FileManager:
                 log.error(f"Directory {directory} does not exist.")
                 return
 
-            actual_files = []
-            for root, _, files in os.walk(directory):
-                for file in files:
-                    relative_path = os.path.relpath(os.path.join(root, file), start=directory)
-                    actual_files.append(relative_path.replace("\\", "/").replace('"', ''))  # Normalize paths
+            # Use get.list_of_files to retrieve files, excluding specified files, dirs, and extensions
+            actual_files = get.list_of_files(
+                directory,
+                exclude_files=[
+                    "logicytics/User_History.json.gz",
+                    "logicytics/User_History.json",
+                ],
+                exclude_dirs=["SysInternal_Suite"],
+                exclude_extensions=[".pyc"],
+            )
+            actual_files = [
+                f.replace("\\", "/").replace('"', "") for f in actual_files
+            ]  # Normalize paths
 
             log.debug(f"Actual files found: {actual_files}")
-
             # Strip quotes and normalize paths for comparison
             normalized_required_files = [
-                required_file.strip().replace("\\", "/").replace('"', '')  # Remove quotes and normalize paths
+                required_file.strip()
+                .replace("\\", "/")
+                .replace('"', "")  # Remove quotes and normalize paths
                 for required_file in required_files
             ]
 
             # Compare files
-            missing_files, extra_files = FileManager.compare_files(actual_files, normalized_required_files)
+            missing_files, extra_files = FileManager.compare_files(
+                actual_files, normalized_required_files
+            )
 
             if missing_files:
                 log.error(f"Missing files: {', '.join(missing_files)}")
@@ -74,7 +95,9 @@ class FileManager:
             log.error(f"Unexpected error during file check: {e}")
 
     @staticmethod
-    def compare_files(actual_files: list[str], required_files: list[str]) -> tuple[list[str], list[str]]:
+    def compare_files(
+            actual_files: list[str], required_files: list[str]
+    ) -> tuple[list[str], list[str]]:
         """
         Compares actual and required files, returning missing and extra files.
         """
@@ -106,7 +129,9 @@ class SysInternalManager:
             elif has_zip and has_exe:
                 log.info("Both zip and exe files - All good")
             else:
-                log.error("SysInternal Binaries Not Found: Missing Files - Corruption detected")
+                log.error(
+                    "SysInternal Binaries Not Found: Missing Files - Corruption detected"
+                )
         except Exception as e:
             log.error(f"Unexpected error: {e}")
 
@@ -120,7 +145,7 @@ class SystemInfoManager:
         return (
             f"CPU Architecture: {platform.machine()}",
             f"CPU Vendor ID: {platform.system()}",
-            f"CPU Model: {platform.release()} {platform.version()}"
+            f"CPU Model: {platform.release()} {platform.version()}",
         )
 
     @staticmethod
@@ -130,11 +155,16 @@ class SystemInfoManager:
         """
         version = sys.version.split()[0]
         MIN_VERSION = (3, 11)
-        MAX_VERSION = (3, 13)
+        MAX_VERSION = (3, 14)
         try:
             major, minor = map(int, version.split(".")[:2])
             if MIN_VERSION <= (major, minor) < MAX_VERSION:
-                log.info(f"Python Version: {version} - Perfect")
+                if (major, minor) == MIN_VERSION:
+                    log.info(
+                        f"Python Version: {version} - Perfect (mainly tested on 3.11.x)"
+                    )
+                else:
+                    log.info(f"Python Version: {version} - Supported")
             elif (major, minor) < MIN_VERSION:
                 log.warning(f"Python Version: {version} - Recommended: 3.11.x")
             else:
@@ -178,12 +208,16 @@ class HealthCheck:
             if local_version_tuple == remote_version_tuple:
                 log.info(f"Version is up to date. Your Version: {local_version}")
             elif local_version_tuple > remote_version_tuple:
-                log.warning("Version is ahead of the repository. "
-                            f"Your Version: {local_version}, "
-                            f"Repository Version: {remote_version}")
+                log.warning(
+                    "Version is ahead of the repository. "
+                    f"Your Version: {local_version}, "
+                    f"Repository Version: {remote_version}"
+                )
             else:
-                log.error("Version is behind the repository. "
-                          f"Your Version: {local_version}, Repository Version: {remote_version}")
+                log.error(
+                    "Version is behind the repository. "
+                    f"Your Version: {local_version}, Repository Version: {remote_version}"
+                )
         except Exception as e:
             log.error(f"Version comparison error: {e}")
 
@@ -206,15 +240,23 @@ def debug():
     SysInternalManager.check_binaries("SysInternal_Suite")
 
     # System Checks
-    log.info("Admin privileges found" if check.admin() else "Admin privileges not found")
-    log.info("UAC enabled" if check.uac() else "UAC disabled")
+    log.info("Admin privileges found") if check.admin() else log.warning(
+        "Admin privileges not found"
+    )
+    log.info("UAC enabled") if check.uac() else log.warning("UAC disabled")
     log.info(f"Execution path: {psutil.__file__}")
     log.info(f"Global execution path: {sys.executable}")
     log.info(f"Local execution path: {sys.prefix}")
     log.info(
-        "Running in a virtual environment" if sys.prefix != sys.base_prefix else "Not running in a virtual environment")
+        "Running in a virtual environment"
+        if sys.prefix != sys.base_prefix
+        else "Not running in a virtual environment"
+    )
     log.info(
-        "Execution policy is unrestricted" if check.execution_policy() else "Execution policy is restricted")
+        "Execution policy is unrestricted"
+        if check.execution_policy()
+        else "Execution policy is restricted"
+    )
 
     # Python Version Check
     SystemInfoManager.python_version()

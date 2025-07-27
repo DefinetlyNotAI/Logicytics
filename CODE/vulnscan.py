@@ -8,6 +8,7 @@ import warnings
 import aiofiles
 import joblib
 import numpy as np
+# noinspection PyPackageRequirements
 import torch
 from pathlib import Path
 from safetensors import safe_open
@@ -17,7 +18,9 @@ from logicytics import log, config
 
 warnings.filterwarnings("ignore")
 
-UNREADABLE_EXTENSIONS = config.get("VulnScan Settings", "unreadable_extensions").split(",")
+UNREADABLE_EXTENSIONS = config.get("VulnScan Settings", "unreadable_extensions").split(
+    ","
+)
 MAX_FILE_SIZE_MB = config.get("VulnScan Settings", "max_file_size_mb", fallback="None")
 raw_workers = config.get("VulnScan Settings", "max_workers", fallback="auto")
 max_workers = min(32, os.cpu_count() * 2) if raw_workers == "auto" else int(raw_workers)
@@ -47,14 +50,27 @@ class _SensitiveDataScanner:
                 self.model = self.model_cache[self.model_path]
                 return
 
-            if self.model_path.endswith('.pkl'):
+            if self.model_path.endswith(".pkl"):
                 self.model = joblib.load(self.model_path)
-            elif self.model_path.endswith('.safetensors'):
-                self.model = safe_open(self.model_path, framework='torch')
-            elif self.model_path.endswith('.pth'):
+            elif self.model_path.endswith(".safetensors"):
+                self.model = safe_open(self.model_path, framework="torch")
+            elif self.model_path.endswith(".pth"):
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore", category=FutureWarning)
-                    self.model = torch.load(self.model_path, weights_only=False)
+                self.model = torch.load(
+                    self.model_path,
+                    map_location=torch.device(
+                        "cuda" if torch.cuda.is_available() else "cpu"
+                    ),
+                    weights_only=False,
+                )
+                if not torch.cuda.is_available() and torch.version.cuda:
+                    log.warning(
+                        "NVIDIA GPU detected but CUDA is not available. Check your PyTorch and CUDA installation to utilise as much power as possible."
+                    )
+                log.debug(
+                    f"Model using device: {torch.device('cuda' if torch.cuda.is_available() else 'cpu')}"
+                )
             else:
                 raise ValueError("Unsupported model file format")
 
@@ -85,22 +101,31 @@ class _SensitiveDataScanner:
             self.model.eval()
             indices = torch.LongTensor(np.vstack(features.nonzero()))
             values = torch.FloatTensor(features.data)
-            tensor = torch.sparse_coo_tensor(indices, values, size=features.shape).to(device)
+            tensor = torch.sparse_coo_tensor(indices, values, size=features.shape).to(
+                device
+            )
 
             with torch.no_grad():
                 pred = self.model(tensor)
                 prob = torch.softmax(pred, dim=1).max().item()
-                reason = ", ".join(self.vectorizer.get_feature_names_out()[i] for i in np.argsort(features.data)[-5:])
+                reason = ", ".join(
+                    self.vectorizer.get_feature_names_out()[i]
+                    for i in np.argsort(features.data)[-5:]
+                )
                 return pred.argmax(dim=1).item() == 1, prob, reason
         else:
             probs = self.model.predict_proba(features)
             top_indices = np.argsort(features.toarray()[0])[-5:]
-            reason = ", ".join(self.vectorizer.get_feature_names_out()[i] for i in top_indices)
+            reason = ", ".join(
+                self.vectorizer.get_feature_names_out()[i] for i in top_indices
+            )
             return self.model.predict(features)[0] == 1, probs.max(), reason
 
     async def scan_file_async(self, file_path: str) -> tuple[bool, float, str]:
         try:
-            async with aiofiles.open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            async with aiofiles.open(
+                    file_path, "r", encoding="utf-8", errors="ignore"
+            ) as f:
                 content = await f.read()
             return self._is_sensitive(content)
         except Exception as e:
@@ -126,7 +151,7 @@ class VulnScan:
 
         for path in scan_paths:
             try:
-                all_files.extend(str(f) for f in Path(path).rglob('*') if f.is_file())
+                all_files.extend(str(f) for f in Path(path).rglob("*") if f.is_file())
                 log.debug(f"Found {len(all_files)} files in {path}")
             except Exception as e:
                 log.warning(f"Skipping path {path} due to error: {e}")
@@ -159,19 +184,29 @@ class VulnScan:
             async with semaphore:
                 result, prob, reason = await self.scanner.scan_file_async(scan_file)
                 if result:
-                    log.debug(f"SENSITIVE: {scan_file} | Confidence: {prob:.2f} | Reason: {reason}")
+                    log.debug(
+                        f"SENSITIVE: {scan_file} | Confidence: {prob:.2f} | Reason: {reason}"
+                    )
                     sensitive_files.append(scan_file)
 
         tasks = [scan_worker(f) for f in valid_files]
 
-        with tqdm(total=len(valid_files), desc="\033[32mSCAN\033[0m     \033[94mScanning Files\033[0m",
-                  unit="file", bar_format="{l_bar} {bar} {n_fmt}/{total_fmt}\n") as pbar:
+        with tqdm(
+                total=len(valid_files),
+                desc="\033[32mSCAN\033[0m     \033[94mScanning Files\033[0m",
+                unit="file",
+                bar_format="{l_bar} {bar} {n_fmt}/{total_fmt}\n",
+        ) as pbar:
             for f in asyncio.as_completed(tasks):
                 await f
                 pbar.update(1)
 
         with open("Sensitive_File_Paths.txt", "a") as out:
-            out.write("\n".join(sensitive_files) + "\n" if sensitive_files else "No sensitive files detected.\n")
+            out.write(
+                "\n".join(sensitive_files) + "\n"
+                if sensitive_files
+                else "No sensitive files detected.\n"
+            )
 
         self.scanner.cleanup()
 
@@ -182,9 +217,9 @@ if __name__ == "__main__":
             "C:\\Users\\",
             "C:\\Windows\\Logs",
             "C:\\Program Files",
-            "C:\\Program Files (x86)"
+            "C:\\Program Files (x86)",
         ]
-        vulnscan = VulnScan("vulnscan/Model SenseMini .3n3.pth", "vulnscan/Vectorizer .3n3.pkl")
+        vulnscan = VulnScan("vulnscan/SenseMini.3n3.pth", "vulnscan/vectorizer.3n3.pkl")
         vulnscan.scan_directory(base_paths)
     except KeyboardInterrupt:
         log.warning("User interrupted. Exiting gracefully.")

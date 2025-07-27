@@ -14,8 +14,8 @@ $rootDrive = $env:SystemDrive
 # Prepare the data to be written to the File
 $data = @"
 Property(C): Windows Build = $buildNumber
-Property(C): Physical Memory = $($physicalMemory -as [int])
-Property(C): Virtual Memory = $($virtualMemory -as [int])
+Property(C): Physical Memory = $( $physicalMemory -as [int] )
+Property(C): Virtual Memory = $( $virtualMemory -as [int] )
 Property(C): Log on User = $userName
 Property(C): User SID = $userSid
 Property(C): User Language ID = $userLanguageId
