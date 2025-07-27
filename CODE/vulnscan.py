@@ -55,7 +55,15 @@ class _SensitiveDataScanner:
             elif self.model_path.endswith('.pth'):
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore", category=FutureWarning)
-                    self.model = torch.load(self.model_path, weights_only=False)
+                self.model = torch.load(
+                    self.model_path,
+                    map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+                    weights_only=False
+                )
+                if not torch.cuda.is_available() and torch.version.cuda and torch.backends.cudnn.is_available():
+                    log.warning(
+                        "NVIDIA GPU detected but CUDA is not available. Check your PyTorch and CUDA installation to utilise as much power as possible.")
+                log.debug(f"Model using device: {torch.device('cuda' if torch.cuda.is_available() else 'cpu')}")
             else:
                 raise ValueError("Unsupported model file format")
 
