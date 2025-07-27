@@ -28,345 +28,345 @@ else:
         raise ValueError("accuracy_min must be between 1 and 99")
 
 
-class _Match:
-    @staticmethod
-    def __get_sim(user_input: str, all_descriptions: list[str]) -> list[float]:
-        """
-        Compute cosine similarity between user input and flag descriptions using a Sentence Transformer model.
-        
-        This method encodes the user input and historical flag descriptions into embeddings and calculates their cosine similarities. It handles model loading, logging configuration, and error handling for the embedding process.
-        
-        Parameters:
-            user_input (str): The current user input to match against historical descriptions
-            all_descriptions (list[str]): A list of historical flag descriptions to compare
-        
-        Returns:
-            list[float]: A list of similarity scores between the user input and each historical description
-        
-        Raises:
-            SystemExit: If there is an error loading the specified Sentence Transformer model
-        
-        Notes:
-            - Uses the model specified in the configuration file
-            - Configures logging based on the global DEBUG_MODE setting
-            - Converts embeddings to tensors for efficient similarity computation
-        """
-        # Encode the current user input and historical inputs
-        from sentence_transformers import SentenceTransformer, util
-        import logging  # Suppress logging messages from Sentence Transformer due to verbosity
-        # Set the logging level based on the debug mode, either DEBUG or ERROR (aka only important messages)
-        if DEBUG_MODE:
-            logging.getLogger("sentence_transformers").setLevel(logging.DEBUG)
-        else:
-            logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
-
-        try:
-            MODEL = SentenceTransformer(config.get("Flag Settings", "model_to_use"))
-        except Exception as e:
-            log.critical(f"Error: {e}")
-            log.error("Please check the model name in the config file.")
-            log.error(f"Model name {config.get('Flag Settings', 'model_to_use')} may not be valid.")
-            exit(1)
-
-        user_embedding = MODEL.encode(user_input, convert_to_tensor=True, show_progress_bar=DEBUG_MODE)
-        historical_embeddings = MODEL.encode(all_descriptions, convert_to_tensor=True, show_progress_bar=DEBUG_MODE)
-
-        # Compute cosine similarities
-        similarities = util.pytorch_cos_sim(user_embedding, historical_embeddings).squeeze(0).tolist()
-        return similarities
-
-    @classmethod
-    def __suggest_flags_based_on_history(cls, user_input: str) -> list[str]:
-        """
-        Suggests flags based on historical data and similarity to the current input.
-        
-        This method analyzes historical user interactions to recommend relevant flags when preferences for saving history are enabled. It uses semantic similarity to find the most contextually related flags from past interactions.
-        
-        Parameters:
-            user_input (str): The current input for which suggestions are needed.
-        
-        Returns:
-            list[str]: A list of suggested flags derived from historical interactions, filtered by similarity threshold.
-        
-        Notes:
-            - Returns an empty list if history saving is disabled or no interaction history exists
-            - Uses cosine similarity with a minimum threshold of 0.3 to filter suggestions
-            - Limits suggestions to top 3 most similar historical inputs
-            - Removes duplicate flag suggestions
-        """
-        if not SAVE_PREFERENCES:
-            return []
-        history_data = cls.load_history()
-        if not history_data or 'interactions' not in history_data:
-            return []
-
-        interactions = history_data['interactions']
-        all_descriptions = []
-        all_flags = []
-
-        # Combine all flags and their respective user inputs
-        for flag, details in interactions.items():
-            all_flags.extend([flag] * len(details))
-            all_descriptions.extend([detail['user_input'] for detail in details])
-
-        # Encode the current user input and historical inputs
-        # Compute cosine similarities
-        similarities = cls.__get_sim(user_input, all_descriptions)
-
-        # Find the top 3 most similar historical inputs
-        top_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[:3]
-        suggested_flags = [all_flags[i] for i in top_indices if similarities[i] > 0.3]
-
-        # Remove duplicates and return suggestions
-        return list(dict.fromkeys(suggested_flags))
-
-    @classmethod
-    def _generate_summary_and_graph(cls):
-        """
-        Generates a comprehensive summary and visualization of user interaction history with command-line flags.
-        
-        This method processes historical interaction data, computes statistical insights, and creates a bar graph representing flag usage frequency. It performs the following key tasks:
-        - Loads historical interaction data from a compressed file
-        - Calculates and prints detailed statistics for each flag
-        - Generates a horizontal bar graph of flag usage counts
-        - Saves the graph visualization to a PNG file
-        
-        Parameters:
-            cls (_Match): The class instance containing historical data methods
-        
-        Raises:
-            SystemExit: If no history data file is found
-            FileNotFoundError: If unable to save the graph in default locations
-        
-        Side Effects:
-            - Prints detailed interaction summary to console
-            - Saves flag usage graph as a PNG image
-            - Uses matplotlib to create visualization
-        
-        Notes:
-            - Currently in beta stage of development
-            - Requires matplotlib for graph generation
-            - Attempts to save graph in multiple predefined directory paths
-        """
-        # TODO Yet in beta - v3.6.0
-        # Load the decompressed history data using the load_history function
-        import matplotlib.pyplot as plt
-
-        if not os.path.exists(HISTORY_FILE):
-            exit("No history data found.")
-
-        history_data = cls.load_history()
-
-        # Extract interactions and flag usage count
-        interactions = history_data['interactions']
-        flags_usage = history_data['flags_usage']
-
-        # Summary of flag usage
-        total_interactions = sum(flags_usage.values())
-
-        log.info("User Interaction Summary:-\n-------------------------------------------------")
-        for flag, details in interactions.items():
-            log.info(f"\nFlag: {flag}")
-
-            accuracies = [detail['accuracy'] for detail in details]
-            device_names = [detail['device_name'] for detail in details]
-            user_inputs = [detail['user_input'] for detail in details]
-
-            average_accuracy = sum(accuracies) / len(accuracies)
-            most_common_device = Counter(device_names).most_common(1)[0][0]
-            average_user_input = Counter(user_inputs).most_common(1)[0][0]
-
-            print(f"           Average Accuracy: {average_accuracy:.2f}%")
-            print(f"           Most Common Device Name: {most_common_device}")
-            print(f"           Most Common User Input: {average_user_input}")
-
-        # Print the summary to the console
-        log.info(f"\n\nTotal Interactions with the match flag feature: {total_interactions}")
-        log.info("\nFlag Usage Summary:")
-        for flag, count in flags_usage.items():
-            print(f"           {flag}: {count} times")
-
-        # Generate the graph for flag usage
-        flags = list(flags_usage.keys())
-        counts = list(flags_usage.values())
-
-        plt.figure(figsize=(10, 6))
-        plt.barh(flags, counts, color='skyblue')
-        plt.xlabel('Usage Count')
-        plt.title('Flag Usage Frequency')
-        plt.gca().invert_yaxis()  # Invert y-axis for better readability
-        plt.subplots_adjust(left=0.2, right=0.8, top=0.9, bottom=0.1)  # Adjust layout
-
-        # Save and display the graph
-        try:
-            plt.savefig('../ACCESS/DATA/Flag_usage_summary.png')
-            log.info("\nFlag Usage Summary Graph saved to 'ACCESS/DATA/Flag_usage_summary.png'")
-        except FileNotFoundError:
-            try:
-                plt.savefig('../../ACCESS/DATA/Flag_usage_summary.png')
-                log.info("\nFlag Usage Summary Graph saved to 'ACCESS/DATA/Flag_usage_summary.png'")
-            except FileNotFoundError:
-                plt.savefig('Flag_usage_summary.png')
-                log.info("\nFlag Usage Summary Graph saved in current working directory as 'Flag_usage_summary.png'")
-
-    @staticmethod
-    def load_history() -> dict:
-        """
-        Load user interaction history from a gzipped JSON file.
-        
-        This method attempts to read and parse historical interaction data from a compressed JSON file. If the file is not found, it returns an empty history structure with an empty interactions dictionary and a zero-initialized flags usage counter.
-        
-        Returns:
-            dict: A dictionary containing:
-                - 'interactions': A dictionary of past user interactions
-                - 'flags_usage': A Counter object tracking flag usage frequencies
-        
-        Raises:
-            json.JSONDecodeError: If the JSON file is malformed
-            gzip.BadGzipFile: If the gzipped file is corrupted
-        """
-        try:
-            with gzip.open(HISTORY_FILE, 'rt', encoding='utf-8') as f:  # Use 'rt' mode for text read
-                return json.load(f)
-        except FileNotFoundError:
-            return {'interactions': {}, 'flags_usage': Counter()}
-
-    @staticmethod
-    def save_history(history_data: dict):
-        """
-        Save user interaction history to a gzipped JSON file.
-        
-        This method writes the user history to a compressed JSON file only if saving preferences are enabled. 
-        The history is saved with an indentation of 4 spaces for readability.
-        
-        Parameters:
-            history_data (dict[str, any]): A dictionary containing user interaction history data to be saved.
-        
-        Notes:
-            - Saves only if SAVE_PREFERENCES is True
-            - Uses gzip compression to reduce file size
-            - Writes in UTF-8 encoding
-            - Indents JSON for human-readable format
-        """
-        if SAVE_PREFERENCES:
-            with gzip.open(HISTORY_FILE, 'wt', encoding='utf-8') as f:  # Use 'wt' mode for text write
-                json.dump(history_data, f, indent=4)
-
-    @classmethod
-    def update_history(cls, user_input: str, matched_flag: str, accuracy: float):
-        """
-        Update the user interaction history with details of a matched flag.
-        
-        This method records user interactions with flags, including timestamp, input, match accuracy,
-        and device information. It only updates history if save preferences are enabled.
-        
-        Parameters:
-            user_input (str): The original input text provided by the user.
-            matched_flag (str): The flag that was successfully matched to the user input.
-            accuracy (float): The similarity/match accuracy score for the flag.
-        
-        Side Effects:
-            - Modifies the history JSON file by adding a new interaction entry
-            - Increments the usage count for the matched flag
-            - Requires write access to the history file
-        
-        Notes:
-            - Skips history update if SAVE_PREFERENCES is False
-            - Creates new flag entries in history if they do not exist
-            - Uses current timestamp and logged-in user's device name
-        """
-        if not SAVE_PREFERENCES:
-            return
-        history_data = cls.load_history()
-        matched_flag = matched_flag.lstrip('-')
-
-        # Ensure that interactions is a dictionary (not a list)
-        if not isinstance(history_data['interactions'], dict):
-            history_data['interactions'] = {}
-
-        # Create a new interaction dictionary
-        interaction = {
-            'timestamp': datetime.now().strftime('%H:%M:%S - %d/%m/%Y'),
-            'user_input': user_input,
-            'accuracy': accuracy,
-            'device_name': os.getlogin()
-        }
-
-        # Ensure the flag exists in the interactions dictionary
-        if matched_flag not in history_data['interactions']:
-            history_data['interactions'][matched_flag] = []
-
-        # Append the new interaction to the flag's list of interactions
-        history_data['interactions'][matched_flag].append(interaction)
-
-        # Ensure the flag exists in the flags_usage counter and increment it
-        if matched_flag not in history_data['flags_usage']:
-            history_data['flags_usage'][matched_flag] = 0
-        history_data['flags_usage'][matched_flag] += 1
-
-        cls.save_history(history_data)
-
-    @classmethod
-    def flag(cls, user_input: str, flags: list[str], flag_description: list[str]) -> tuple[str, float]:
-        """
-        Matches user input to flag descriptions using advanced semantic similarity.
-        
-        Computes the best matching flag based on cosine similarity between the user input and flag descriptions. 
-        Handles matching with a minimum accuracy threshold and provides flag suggestions from historical data 
-        if no direct match is found.
-        
-        Parameters:
-            user_input (str): The input string to match against available flags.
-            flags (list[str]): List of available command flags.
-            flag_description (list[str]): Corresponding descriptions for each flag.
-        
-        Returns:
-            tuple[str, float]: A tuple containing:
-                - The best matched flag (or 'Nothing matched')
-                - Accuracy percentage of the match (0.0-100.0)
-        
-        Raises:
-            ValueError: If the number of flags and descriptions do not match.
-        
-        Side Effects:
-            - Updates user interaction history
-            - Prints flag suggestions if no direct match is found
-            - Requires a global MIN_ACCURACY_THRESHOLD to be defined
-        
-        Example:
-            matched_flag, accuracy = Flag.flag("show help", 
-                                               ["-h", "--verbose"], 
-                                               ["Display help", "Enable verbose output"])
-        """
-        if len(flags) != len(flag_description):
-            raise ValueError("flags and flag_description lists must be of the same length")
-
-        # Combine flags and descriptions for better matching context
-        combined_descriptions = [f"{flag} {desc}" for flag, desc in zip(flags, flag_description)]
-
-        # Encode user input and all descriptions
-        # Compute cosine similarities
-        similarities = cls.__get_sim(user_input, combined_descriptions)
-
-        # Find the best match
-        best_index = max(range(len(similarities)), key=lambda i: similarities[i])
-        best_accuracy = similarities[best_index] * 100
-        best_match = flags[best_index] if best_accuracy > MIN_ACCURACY_THRESHOLD else "Nothing matched"
-
-        # Update history
-        cls.update_history(user_input, best_match, best_accuracy)
-
-        # Suggest flags if accuracy is low
-        if best_accuracy < MIN_ACCURACY_THRESHOLD:
-            suggested_flags = cls.__suggest_flags_based_on_history(user_input)
-            if suggested_flags:
-                log.warning(f"No Flags matched so suggestions based on historical data: "
-                            f"{', '.join(suggested_flags)}")
-
-        return best_match, best_accuracy
-
-
 class Flag:
+    class Match:
+        @staticmethod
+        def __get_sim(user_input: str, all_descriptions: list[str]) -> list[float]:
+            """
+            Compute cosine similarity between user input and flag descriptions using a Sentence Transformer model.
+
+            This method encodes the user input and historical flag descriptions into embeddings and calculates their cosine similarities. It handles model loading, logging configuration, and error handling for the embedding process.
+
+            Parameters:
+                user_input (str): The current user input to match against historical descriptions
+                all_descriptions (list[str]): A list of historical flag descriptions to compare
+
+            Returns:
+                list[float]: A list of similarity scores between the user input and each historical description
+
+            Raises:
+                SystemExit: If there is an error loading the specified Sentence Transformer model
+
+            Notes:
+                - Uses the model specified in the configuration file
+                - Configures logging based on the global DEBUG_MODE setting
+                - Converts embeddings to tensors for efficient similarity computation
+            """
+            # Encode the current user input and historical inputs
+            from sentence_transformers import SentenceTransformer, util
+            import logging  # Suppress logging messages from Sentence Transformer due to verbosity
+            # Set the logging level based on the debug mode, either DEBUG or ERROR (aka only important messages)
+            if DEBUG_MODE:
+                logging.getLogger("sentence_transformers").setLevel(logging.DEBUG)
+            else:
+                logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+
+            try:
+                MODEL = SentenceTransformer(config.get("Flag Settings", "model_to_use"))
+            except Exception as e:
+                log.critical(f"Error: {e}")
+                log.error("Please check the model name in the config file.")
+                log.error(f"Model name {config.get('Flag Settings', 'model_to_use')} may not be valid.")
+                exit(1)
+
+            user_embedding = MODEL.encode(user_input, convert_to_tensor=True, show_progress_bar=DEBUG_MODE)
+            historical_embeddings = MODEL.encode(all_descriptions, convert_to_tensor=True, show_progress_bar=DEBUG_MODE)
+
+            # Compute cosine similarities
+            similarities = util.pytorch_cos_sim(user_embedding, historical_embeddings).squeeze(0).tolist()
+            return similarities
+
+        @classmethod
+        def __suggest_flags_based_on_history(cls, user_input: str) -> list[str]:
+            """
+            Suggests flags based on historical data and similarity to the current input.
+
+            This method analyzes historical user interactions to recommend relevant flags when preferences for saving history are enabled. It uses semantic similarity to find the most contextually related flags from past interactions.
+
+            Parameters:
+                user_input (str): The current input for which suggestions are needed.
+
+            Returns:
+                list[str]: A list of suggested flags derived from historical interactions, filtered by similarity threshold.
+
+            Notes:
+                - Returns an empty list if history saving is disabled or no interaction history exists
+                - Uses cosine similarity with a minimum threshold of 0.3 to filter suggestions
+                - Limits suggestions to top 3 most similar historical inputs
+                - Removes duplicate flag suggestions
+            """
+            if not SAVE_PREFERENCES:
+                return []
+            history_data = cls.load_history()
+            if not history_data or 'interactions' not in history_data:
+                return []
+
+            interactions = history_data['interactions']
+            all_descriptions = []
+            all_flags = []
+
+            # Combine all flags and their respective user inputs
+            for flag, details in interactions.items():
+                all_flags.extend([flag] * len(details))
+                all_descriptions.extend([detail['user_input'] for detail in details])
+
+            # Encode the current user input and historical inputs
+            # Compute cosine similarities
+            similarities = cls.__get_sim(user_input, all_descriptions)
+
+            # Find the top 3 most similar historical inputs
+            top_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[:3]
+            suggested_flags = [all_flags[i] for i in top_indices if similarities[i] > 0.3]
+
+            # Remove duplicates and return suggestions
+            return list(dict.fromkeys(suggested_flags))
+
+        @classmethod
+        def generate_summary_and_graph(cls):
+            """
+            Generates a comprehensive summary and visualization of user interaction history with command-line flags.
+
+            This method processes historical interaction data, computes statistical insights, and creates a bar graph representing flag usage frequency. It performs the following key tasks:
+            - Loads historical interaction data from a compressed file
+            - Calculates and prints detailed statistics for each flag
+            - Generates a horizontal bar graph of flag usage counts
+            - Saves the graph visualization to a PNG file
+
+            Parameters:
+                cls (_Match): The class instance containing historical data methods
+
+            Raises:
+                SystemExit: If no history data file is found
+                FileNotFoundError: If unable to save the graph in default locations
+
+            Side Effects:
+                - Prints detailed interaction summary to console
+                - Saves flag usage graph as a PNG image
+                - Uses matplotlib to create visualization
+
+            Notes:
+                - Currently in beta stage of development
+                - Requires matplotlib for graph generation
+                - Attempts to save graph in multiple predefined directory paths
+            """
+            # Load the decompressed history data using the load_history function
+            import matplotlib.pyplot as plt
+
+            if not os.path.exists(HISTORY_FILE):
+                exit("No history data found.")
+
+            history_data = cls.load_history()
+
+            # Extract interactions and flag usage count
+            interactions = history_data['interactions']
+            flags_usage = history_data['flags_usage']
+
+            # Summary of flag usage
+            total_interactions = sum(flags_usage.values())
+
+            log.info(
+                "--------------------------------------------------\n         Flag guessing statistics:\n         --------------------------------------------------")
+
+            for flag, details in interactions.items():
+                accuracies = [detail['accuracy'] for detail in details]
+                device_names = [detail['device_name'] for detail in details]
+                user_inputs = [detail['user_input'] for detail in details]
+
+                average_accuracy = sum(accuracies) / len(accuracies)
+                most_common_device = Counter(device_names).most_common(1)[0][0]
+                average_user_input = Counter(user_inputs).most_common(1)[0][0]
+                log.info(f"""Flag: {flag}
+             Average Accuracy: {average_accuracy:.2f}%
+             Most Common Device Name: {most_common_device}
+             Most Common User Input: {average_user_input}""")
+
+            # Print the summary to the console
+            log.info(
+                "--------------------------------------------------\n         User Interaction Summary:\n         --------------------------------------------------")
+
+            log.info(f"Total Interactions with the match flag feature: {total_interactions}")
+            flag_usage_summary = "\n".join([f"           {flag}: {count} times" for flag, count in flags_usage.items()])
+            log.info(f"Flag Usage Summary:\n{flag_usage_summary}")
+
+            # Generate the graph for flag usage
+            flags = list(flags_usage.keys())
+            counts = list(flags_usage.values())
+
+            plt.figure(figsize=(10, 6))
+            plt.barh(flags, counts, color='skyblue')
+            plt.xlabel('Usage Count')
+            plt.title('Flag Usage Frequency')
+            plt.gca().invert_yaxis()  # Invert y-axis for better readability
+            plt.subplots_adjust(left=0.2, right=0.8, top=0.9, bottom=0.1)  # Adjust layout
+
+            # Save and display the graph
+            try:
+                plt.savefig('../ACCESS/DATA/Flag_usage_summary.png')
+                log.info("Flag Usage Summary Graph saved to 'ACCESS/DATA/Flag_usage_summary.png'")
+            except FileNotFoundError:
+                try:
+                    plt.savefig('../../ACCESS/DATA/Flag_usage_summary.png')
+                    log.info("Flag Usage Summary Graph saved to 'ACCESS/DATA/Flag_usage_summary.png'")
+                except FileNotFoundError:
+                    plt.savefig('Flag_usage_summary.png')
+                    log.info("Flag Usage Summary Graph saved in current working directory as 'Flag_usage_summary.png'")
+
+        @staticmethod
+        def load_history() -> dict:
+            """
+            Load user interaction history from a gzipped JSON file.
+
+            This method attempts to read and parse historical interaction data from a compressed JSON file. If the file is not found, it returns an empty history structure with an empty interactions dictionary and a zero-initialized flags usage counter.
+
+            Returns:
+                dict: A dictionary containing:
+                    - 'interactions': A dictionary of past user interactions
+                    - 'flags_usage': A Counter object tracking flag usage frequencies
+
+            Raises:
+                json.JSONDecodeError: If the JSON file is malformed
+                gzip.BadGzipFile: If the gzipped file is corrupted
+            """
+            try:
+                with gzip.open(HISTORY_FILE, 'rt', encoding='utf-8') as f:  # Use 'rt' mode for text read
+                    return json.load(f)
+            except FileNotFoundError:
+                return {'interactions': {}, 'flags_usage': Counter()}
+
+        @staticmethod
+        def save_history(history_data: dict):
+            """
+            Save user interaction history to a gzipped JSON file.
+
+            This method writes the user history to a compressed JSON file only if saving preferences are enabled.
+            The history is saved with an indentation of 4 spaces for readability.
+
+            Parameters:
+                history_data (dict[str, any]): A dictionary containing user interaction history data to be saved.
+
+            Notes:
+                - Saves only if SAVE_PREFERENCES is True
+                - Uses gzip compression to reduce file size
+                - Writes in UTF-8 encoding
+                - Indents JSON for human-readable format
+            """
+            if SAVE_PREFERENCES:
+                with gzip.open(HISTORY_FILE, 'wt', encoding='utf-8') as f:  # Use 'wt' mode for text write
+                    json.dump(history_data, f, indent=4)
+
+        @classmethod
+        def update_history(cls, user_input: str, matched_flag: str, accuracy: float):
+            """
+            Update the user interaction history with details of a matched flag.
+
+            This method records user interactions with flags, including timestamp, input, match accuracy,
+            and device information. It only updates history if save preferences are enabled.
+
+            Parameters:
+                user_input (str): The original input text provided by the user.
+                matched_flag (str): The flag that was successfully matched to the user input.
+                accuracy (float): The similarity/match accuracy score for the flag.
+
+            Side Effects:
+                - Modifies the history JSON file by adding a new interaction entry
+                - Increments the usage count for the matched flag
+                - Requires write access to the history file
+
+            Notes:
+                - Skips history update if SAVE_PREFERENCES is False
+                - Creates new flag entries in history if they do not exist
+                - Uses current timestamp and logged-in user's device name
+            """
+            if not SAVE_PREFERENCES:
+                return
+            history_data = cls.load_history()
+            matched_flag = matched_flag.lstrip('-')
+
+            # Ensure that interactions is a dictionary (not a list)
+            if not isinstance(history_data['interactions'], dict):
+                history_data['interactions'] = {}
+
+            # Create a new interaction dictionary
+            interaction = {
+                'timestamp': datetime.now().strftime('%H:%M:%S - %d/%m/%Y'),
+                'user_input': user_input,
+                'accuracy': accuracy,
+                'device_name': os.getlogin()
+            }
+
+            # Ensure the flag exists in the interactions dictionary
+            if matched_flag not in history_data['interactions']:
+                history_data['interactions'][matched_flag] = []
+
+            # Append the new interaction to the flag's list of interactions
+            history_data['interactions'][matched_flag].append(interaction)
+
+            # Ensure the flag exists in the flags_usage counter and increment it
+            if matched_flag not in history_data['flags_usage']:
+                history_data['flags_usage'][matched_flag] = 0
+            history_data['flags_usage'][matched_flag] += 1
+
+            cls.save_history(history_data)
+
+        @classmethod
+        def flag(cls, user_input: str, flags: list[str], flag_description: list[str]) -> tuple[str, float]:
+            """
+            Matches user input to flag descriptions using advanced semantic similarity.
+
+            Computes the best matching flag based on cosine similarity between the user input and flag descriptions.
+            Handles matching with a minimum accuracy threshold and provides flag suggestions from historical data
+            if no direct match is found.
+
+            Parameters:
+                user_input (str): The input string to match against available flags.
+                flags (list[str]): List of available command flags.
+                flag_description (list[str]): Corresponding descriptions for each flag.
+
+            Returns:
+                tuple[str, float]: A tuple containing:
+                    - The best matched flag (or 'Nothing matched')
+                    - Accuracy percentage of the match (0.0-100.0)
+
+            Raises:
+                ValueError: If the number of flags and descriptions do not match.
+
+            Side Effects:
+                - Updates user interaction history
+                - Prints flag suggestions if no direct match is found
+                - Requires a global MIN_ACCURACY_THRESHOLD to be defined
+
+            Example:
+                matched_flag, accuracy = Flag.flag("show help",
+                                                   ["-h", "--verbose"],
+                                                   ["Display help", "Enable verbose output"])
+            """
+            if len(flags) != len(flag_description):
+                raise ValueError("flags and flag_description lists must be of the same length")
+
+            # Combine flags and descriptions for better matching context
+            combined_descriptions = [f"{flag} {desc}" for flag, desc in zip(flags, flag_description)]
+
+            # Encode user input and all descriptions
+            # Compute cosine similarities
+            similarities = cls.__get_sim(user_input, combined_descriptions)
+
+            # Find the best match
+            best_index = max(range(len(similarities)), key=lambda i: similarities[i])
+            best_accuracy = similarities[best_index] * 100
+            best_match = flags[best_index] if best_accuracy > MIN_ACCURACY_THRESHOLD else "Nothing matched"
+
+            # Update history
+            cls.update_history(user_input, best_match, best_accuracy)
+
+            # Suggest flags if accuracy is low
+            if best_accuracy < MIN_ACCURACY_THRESHOLD:
+                suggested_flags = cls.__suggest_flags_based_on_history(user_input)
+                if suggested_flags:
+                    log.warning(f"No Flags matched so suggestions based on historical data: "
+                                f"{', '.join(suggested_flags)}")
+
+            return best_match, best_accuracy
+
     @classmethod
     def __colorify(cls, text: str, color: str) -> str:
         """
@@ -472,6 +472,12 @@ class Flag:
                  f"{cls.__colorify('- Beta Mode -', 'y')}"
         )
 
+        parser.add_argument(
+            "--usage",
+            action="store_true",
+            help="Run's script that shows and gives your local statistics, on the flags used by you"
+        )
+
         # Define Side Flags
         parser.add_argument(
             "--debug",
@@ -555,7 +561,8 @@ class Flag:
             args.minimal,
             args.nopy,
             args.depth,
-            args.performance_check
+            args.performance_check,
+            args.usage
         }
         exclusive_flags = {
             args.vulnscan_ai,
@@ -639,7 +646,7 @@ class Flag:
         # Map the user-provided description to the closest valid flag
         flags_list = [f"--{flag}" for flag in valid_flags]
         descriptions_list = [f"Run Logicytics with {flag}" for flag in valid_flags]
-        flag_received, accuracy_received = _Match.flag(user_input_desc, flags_list, descriptions_list)
+        flag_received, accuracy_received = cls.Match.flag(user_input_desc, flags_list, descriptions_list)
         if DEBUG_MODE:
             log.info(
                 f"User input: {user_input_desc}\nMatched flag: {flag_received.replace('_', '-')}\nAccuracy: {accuracy_received:.2f}%\n")
@@ -737,12 +744,12 @@ class Flag:
             Example:
                 update_data_history('--verbose')  # Increments usage count for '--verbose' flag
             """
-            history_data = _Match.load_history()
+            history_data = cls.Match.load_history()
             # Ensure the flag exists in the flags_usage counter and increment it
             if matched_flag.replace("--", "") not in history_data['flags_usage']:
                 history_data['flags_usage'][matched_flag.replace("--", "")] = 0
             history_data['flags_usage'][matched_flag.replace("--", "")] += 1
-            _Match.save_history(history_data)
+            cls.Match.save_history(history_data)
 
         if len(used_flags) == 2:
             for flag in used_flags:

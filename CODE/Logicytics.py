@@ -402,12 +402,8 @@ def handle_special_actions():
         input("Press Enter to exit...")
         exit(0)
 
-    if ACTION == "restore":
-        log.warning(
-            "Sorry, this feature is yet to be implemented. You can manually Restore your backups, We will open "
-            "the location for you"
-        )
-        file_management.open_file("../ACCESS/BACKUP/")
+    if ACTION == "usage":
+        flag.Match.generate_summary_and_graph()
         input("Press Enter to exit...")
         exit(1)
 
