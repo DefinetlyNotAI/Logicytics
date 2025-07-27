@@ -92,7 +92,7 @@ class FileManagement:
             """
             excluded_extensions = (".py", ".exe", ".bat", ".ps1", ".pkl", ".pth")
             excluded_prefixes = ("config.ini", "SysInternal_Suite",
-                                 "__pycache__", "logicytics", "VulnScan")
+                                 "__pycache__", "logicytics", "vulnscan")
 
             return [
                 f for f in os.listdir(path)

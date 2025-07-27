@@ -185,7 +185,7 @@ if __name__ == "__main__":
             "C:\\Program Files",
             "C:\\Program Files (x86)"
         ]
-        vulnscan = VulnScan("vulnscan/Model SenseMini .3n3.pth", "vulnscan/Vectorizer .3n3.pkl")
+        vulnscan = VulnScan("vulnscan/SenseMini.3n3.pth", "vulnscan/vectorizer.3n3.pkl")
         vulnscan.scan_directory(base_paths)
     except KeyboardInterrupt:
         log.warning("User interrupted. Exiting gracefully.")
