@@ -417,7 +417,7 @@ def handle_sub_action():
     """
     log.info("Completed successfully!")
     log.newline()
-    # Do not handle sub actions for performance check
+    # Handle sub actions for all actions except performance check
     if ACTION != "performance_check":
         if SUB_ACTION == "shutdown":
             subprocess.call("shutdown /s /t 3", shell=False)
