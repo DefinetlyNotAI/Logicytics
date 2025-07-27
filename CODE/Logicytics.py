@@ -264,12 +264,18 @@ class SpecialAction:
                 str: The output from the git pull command.
             """
         # Check if git command is available
-        if subprocess.run(["git", "--version"], capture_output=True).returncode != 0:
+        try:
+            if subprocess.run(["git", "--version"], capture_output=True).returncode != 0:
+                return "Git is not installed or not available in the PATH.", "error"
+        except FileNotFoundError:
             return "Git is not installed or not available in the PATH.", "error"
 
         # Check if the project is a git repository
-        if not os.path.exists(os.path.join(os.getcwd(), "../.git")):
-            return "This project is not a git repository. The update flag uses git.", "error"
+        try:
+            if not os.path.exists(os.path.join(os.getcwd(), "../.git")):
+                return "This project is not a git repository. The update flag uses git.", "error"
+        except Exception as e:
+            return f"Error checking for git repository: {e}", "error"
 
         current_dir = os.getcwd()
         parent_dir = os.path.dirname(current_dir)
