@@ -9,12 +9,24 @@ from datetime import datetime
 
 from prettytable import PrettyTable
 
-from logicytics import Log, execute, check, get, file_management, flag, DEBUG, DELETE_LOGS, config
+from logicytics import (
+    Log,
+    execute,
+    check,
+    get,
+    file_management,
+    flag,
+    DEBUG,
+    DELETE_LOGS,
+    config,
+)
 
 # Initialization
 log = Log({"log_level": DEBUG, "delete_log": DELETE_LOGS})
 ACTION, SUB_ACTION = None, None
-MAX_WORKERS = config.getint("Settings", "max_workers", fallback=min(32, (os.cpu_count() or 1) + 4))
+MAX_WORKERS = config.getint(
+    "Settings", "max_workers", fallback=min(32, (os.cpu_count() or 1) + 4)
+)
 log.debug(f"MAX_WORKERS: {MAX_WORKERS}")
 
 
@@ -28,7 +40,9 @@ class ExecuteScript:
         if file_name in file_set:
             file_set.remove(file_name)
         else:
-            log.critical(f"The file {file_name} should exist in this directory - But was not found!")
+            log.critical(
+                f"The file {file_name} should exist in this directory - But was not found!"
+            )
         return list(file_set)
 
     @staticmethod
@@ -63,9 +77,12 @@ class ExecuteScript:
             - Logs the final execution list for debugging purposes
             - Warns users about potential long execution times for certain actions
         """
-        execution_list = get.list_of_files(".", only_extensions=(".py", ".exe", ".ps1", ".bat"),
-                                           exclude_files=["Logicytics.py"],
-                                           exclude_dirs=["logicytics", "SysInternal_Suite"])
+        execution_list = get.list_of_files(
+            ".",
+            only_extensions=(".py", ".exe", ".ps1", ".bat"),
+            exclude_files=["Logicytics.py"],
+            exclude_dirs=["logicytics", "SysInternal_Suite"],
+        )
         files_to_remove = {
             "sensitive_data_miner.py",
             "dir_list.py",
@@ -73,7 +90,9 @@ class ExecuteScript:
             "vulnscan.py",
             "event_log.py",
         }
-        execution_list = [file for file in execution_list if file not in files_to_remove]
+        execution_list = [
+            file for file in execution_list if file not in files_to_remove
+        ]
 
         if ACTION == "minimal":
             execution_list = [
@@ -93,18 +112,23 @@ class ExecuteScript:
                 "netadapter.ps1",
                 "property_scraper.ps1",
                 "window_feature_miner.ps1",
-                "tree.ps1"
+                "tree.ps1",
             ]
 
         elif ACTION == "modded":
             # Add all files in MODS to execution list
-            execution_list = get.list_of_files("../MODS", only_extensions=(".py", ".exe", ".ps1", ".bat"),
-                                               append_file_list=execution_list, exclude_files=["Logicytics.py"],
-                                               exclude_dirs=["logicytics", "SysInternal_Suite"])
+            execution_list = get.list_of_files(
+                "../MODS",
+                only_extensions=(".py", ".exe", ".ps1", ".bat"),
+                append_file_list=execution_list,
+                exclude_files=["Logicytics.py"],
+                exclude_dirs=["logicytics", "SysInternal_Suite"],
+            )
 
         elif ACTION == "depth":
             log.warning(
-                "This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards.")
+                "This flag will use clunky and huge scripts, and so may take a long time, but reap great rewards."
+            )
             files_to_append = {
                 "sensitive_data_miner.py",
                 "dir_list.py",
@@ -124,7 +148,9 @@ class ExecuteScript:
                 exit(1)
 
         if len(execution_list) == 0:
-            log.critical("Nothing is in the execution list.. This is due to faulty code or corrupted Logicytics files!")
+            log.critical(
+                "Nothing is in the execution list.. This is due to faulty code or corrupted Logicytics files!"
+            )
             exit(1)
 
         log.debug(f"Execution list length: {len(execution_list)}")
@@ -163,8 +189,10 @@ class ExecuteScript:
         """Executes scripts in parallel using threading."""
         log.debug("Using threading")
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-            futures = {executor.submit(self.__script_handler, script): script
-                       for script in self.execution_list}
+            futures = {
+                executor.submit(self.__script_handler, script): script
+                for script in self.execution_list
+            }
 
             for future in as_completed(futures):
                 script = futures[future]
@@ -214,12 +242,15 @@ class ExecuteScript:
 
         try:
             with open(
-                    f"../ACCESS/LOGS/PERFORMANCE/Performance_Summary_"
-                    f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt", "w"
+                f"../ACCESS/LOGS/PERFORMANCE/Performance_Summary_"
+                f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt",
+                "w",
             ) as f:
                 f.write(table.get_string())
                 f.write("\nNote: This test only measures execution time.\n")
-            log.info("Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE")
+            log.info(
+                "Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE"
+            )
         except Exception as e:
             log.error(f"Error writing performance log: {e}")
 
@@ -228,17 +259,20 @@ class SpecialAction:
     @staticmethod
     def update() -> tuple[str, str]:
         """
-            Updates the repository by pulling the latest changes from the remote repository.
+        Updates the repository by pulling the latest changes from the remote repository.
 
-            This function navigates to the parent directory, pulls the latest changes using Git,
-            and then returns to the current working directory.
+        This function navigates to the parent directory, pulls the latest changes using Git,
+        and then returns to the current working directory.
 
-            Returns:
-                str: The output from the git pull command.
-            """
+        Returns:
+            str: The output from the git pull command.
+        """
         # Check if git command is available
         try:
-            if subprocess.run(["git", "--version"], capture_output=True).returncode != 0:
+            if (
+                subprocess.run(["git", "--version"], capture_output=True).returncode
+                != 0
+            ):
                 return "Git is not installed or not available in the PATH.", "error"
         except FileNotFoundError:
             return "Git is not installed or not available in the PATH.", "error"
@@ -246,7 +280,10 @@ class SpecialAction:
         # Check if the project is a git repository
         try:
             if not os.path.exists(os.path.join(os.getcwd(), "../.git")):
-                return "This project is not a git repository. The update flag uses git.", "error"
+                return (
+                    "This project is not a git repository. The update flag uses git.",
+                    "error",
+                )
         except Exception as e:
             return f"Error checking for git repository: {e}", "error"
 
@@ -279,7 +316,9 @@ class SpecialAction:
         """
         sr_current_dir = os.path.dirname(os.path.abspath(__file__))
         sr_script_path = os.path.join(sr_current_dir, file_path)
-        sr_process = subprocess.Popen(["cmd.exe", "/c", "start", sys.executable, sr_script_path])
+        sr_process = subprocess.Popen(
+            ["cmd.exe", "/c", "start", sys.executable, sr_script_path]
+        )
         sr_process.wait()
         exit(0)
 
@@ -287,12 +326,12 @@ class SpecialAction:
 def get_flags():
     """
     Retrieves action and sub-action flags from the Flag module and sets global variables.
-    
+
     This function extracts the current action and sub-action from the Flag module, setting global
     ACTION and SUB_ACTION variables. It logs the retrieved values for debugging and tracing purposes.
-    
+
     No parameters.
-    
+
     Side effects:
         - Sets global variables ACTION and SUB_ACTION
         - Logs debug information about current action and sub-action
@@ -307,20 +346,20 @@ def get_flags():
 def handle_special_actions():
     """
     Handles special actions based on the current action flag.
-    
+
     This function performs specific actions depending on the global `ACTION` variable:
     - For "debug": Opens the debug menu by executing '_debug.py'
     - For "dev": Opens the developer menu by executing '_dev.py'
     - For "update": Updates the repository using Health.update() method
     - For "restore": Displays a warning and opens the backup location
     - For "backup": Creates backups of the CODE and MODS directories
-    
+
     Side Effects:
         - Logs informational, debug, warning, or error messages
         - May execute external Python scripts
         - May open file locations
         - May terminate the program after completing special actions
-    
+
     Raises:
         SystemExit: Exits the program after completing certain special actions
     """
@@ -358,14 +397,14 @@ def handle_special_actions():
 def check_privileges():
     """
     Checks if the script is running with administrative privileges and handles UAC (User Account Control) settings.
-    
+
     This function verifies if the script has admin privileges. If not, it either logs a warning (in debug mode) or
     prompts the user to run the script with admin privileges and exits. It also checks if UAC is enabled and logs
     warnings accordingly.
-    
+
     Raises:
         SystemExit: If the script is not running with admin privileges and not in debug mode.
-    
+
     Notes:
         - Requires the `Check` module with `admin()` and `uac()` methods
         - Depends on global `DEBUG` configuration variable
@@ -373,15 +412,20 @@ def check_privileges():
     """
     if not check.admin():
         if DEBUG == "DEBUG":
-            log.warning("Running in debug mode, continuing without admin privileges - This may cause issues")
+            log.warning(
+                "Running in debug mode, continuing without admin privileges - This may cause issues"
+            )
         else:
             log.critical(
-                "Please run this script with admin privileges - To ignore this message, run with DEBUG in config")
+                "Please run this script with admin privileges - To ignore this message, run with DEBUG in config"
+            )
             input("Press Enter to exit...")
             exit(1)
 
     if check.uac():
-        log.warning("UAC is enabled, this may cause issues - Please disable UAC if possible")
+        log.warning(
+            "UAC is enabled, this may cause issues - Please disable UAC if possible"
+        )
 
 
 class ZIP:
@@ -394,11 +438,15 @@ class ZIP:
 
     @staticmethod
     def __and_log(directory: str, name: str):
-        log.debug(f"Zipping directory '{directory}' with name '{name}' under action '{ACTION}'")
+        log.debug(
+            f"Zipping directory '{directory}' with name '{name}' under action '{ACTION}'"
+        )
         zip_values = file_management.Zip.and_hash(
             directory,
             name,
-            ACTION if ACTION is not None else f"ERROR_NO_ACTION_SPECIFIED_{datetime.now().isoformat()}"
+            ACTION
+            if ACTION is not None
+            else f"ERROR_NO_ACTION_SPECIFIED_{datetime.now().isoformat()}",
         )
         if isinstance(zip_values, str):
             log.error(zip_values)
@@ -429,7 +477,7 @@ def handle_sub_action():
 def Logicytics():
     """
     Orchestrates the complete Logicytics workflow, managing script execution, system actions, and user interactions.
-    
+
     This function serves as the primary entry point for the Logicytics utility, coordinating a series of system-level operations:
     - Retrieves command-line configuration flags
     - Processes special actions
@@ -438,7 +486,7 @@ def Logicytics():
     - Compresses generated output files
     - Handles final system sub-actions
     - Provides a graceful exit mechanism
-    
+
     Performs actions sequentially without returning a value, designed to be the main execution flow of the Logicytics utility.
     """
     # Get flags_list and configs
@@ -461,7 +509,9 @@ if __name__ == "__main__":
     try:
         Logicytics()
     except KeyboardInterrupt:
-        log.warning("Force shutdown detected! Some temporary files might be left behind.")
+        log.warning(
+            "Force shutdown detected! Some temporary files might be left behind."
+        )
         log.warning("Next time, let the program finish naturally for complete cleanup.")
         # Emergency cleanup - zip generated files
         ZIP.files()

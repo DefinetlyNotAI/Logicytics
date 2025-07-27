@@ -10,15 +10,19 @@ from logicytics.Get import Get
 from logicytics.Logger import log, Log
 
 # Check if the script is being run directly, if not, set up the library
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit("This is a library, Please import rather than directly run.")
 
 execute = Execute()  # Initialize the Execute class for executing commands
 get = Get()  # Initialize the Get class for retrieving data
 check = Check()  # Initialize the Check class for performing checks
 flag = Flag()  # Initialize the Flag class for managing cli flags
-file_management = FileManagement()  # Initialize the FileManagement class for file operations
-__show_trace = DEBUG == "DEBUG"  # Determine if stack traces should be shown based on the debug level
+file_management = (
+    FileManagement()
+)  # Initialize the FileManagement class for file operations
+__show_trace = (
+    DEBUG == "DEBUG"
+)  # Determine if stack traces should be shown based on the debug level
 
 
 # Exception for handling object loading errors
@@ -40,7 +44,9 @@ class ObjectLoadError(Exception):
 
 
 # Decorator for marking functions as deprecated [custom]
-def deprecated(removal_version: str, reason: str, show_trace: bool = __show_trace) -> callable:
+def deprecated(
+    removal_version: str, reason: str, show_trace: bool = __show_trace
+) -> callable:
     """
     Decorator function that marks a function as deprecated
     and provides a warning when the function is called.
@@ -94,7 +100,7 @@ def deprecated(removal_version: str, reason: str, show_trace: bool = __show_trac
             """
             message = f"\033[91mDeprecationWarning: A call to the deprecated function {func.__name__}() has been called, {reason}. Function will be removed at version {removal_version}\n"
             if show_trace:
-                stack = ''.join(traceback.format_stack()[:-1])
+                stack = "".join(traceback.format_stack()[:-1])
                 message += f"Called from:\n{stack}\033[0m"
             else:
                 message += "\033[0m"
@@ -106,4 +112,14 @@ def deprecated(removal_version: str, reason: str, show_trace: bool = __show_trac
     return decorator
 
 
-__all__ = ['execute', 'get', 'check', 'flag', 'file_management', 'deprecated', 'ObjectLoadError', 'log', 'Log']
+__all__ = [
+    "execute",
+    "get",
+    "check",
+    "flag",
+    "file_management",
+    "deprecated",
+    "ObjectLoadError",
+    "log",
+    "Log",
+]
