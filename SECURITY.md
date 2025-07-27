@@ -26,7 +26,6 @@ This section outlines the versions of our project that are currently supported w
 | 1.1.x   | ❌         | May 10, 2024       |
 | 1.0.x   | ❌         | May 4, 2024        |
 
-
 ### Key:
 
 | Key | Desc                                                |

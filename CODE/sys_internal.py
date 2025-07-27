@@ -49,9 +49,9 @@ def sys_internal():
 
                 # Optionally, handle errors if any
                 if (
-                    result.stderr.decode() != ""
-                    and result.returncode != 0
-                    and result.stderr.decode() is not None
+                        result.stderr.decode() != ""
+                        and result.returncode != 0
+                        and result.stderr.decode() is not None
                 ):
                     log.warning(f"{executable}: {result.stderr.decode()}")
                     outfile.write(f"{executable}:\n{result.stderr.decode()}")

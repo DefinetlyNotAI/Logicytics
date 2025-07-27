@@ -58,7 +58,7 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
 
 
 def _prompt_user(
-    question: str, file_to_open: str = None, special: bool = False
+        question: str, file_to_open: str = None, special: bool = False
 ) -> bool:
     """
     Prompts the user with a yes/no question and optionally opens a file.
