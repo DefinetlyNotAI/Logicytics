@@ -154,12 +154,12 @@ def _handle_file_operations() -> None:
         if re.match(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$", version):
             _update_ini_file("config.ini", version, "version")
             break
-        elif attempts >= max_attempts:
+        attempts += 1
+        if attempts >= max_attempts:
             color_print("[x] Maximum attempts reached. Please run the script again.", "red")
             exit()
         else:
             color_print("[!] Please enter a valid version number (e.g., 1.2.3)", "yellow")
-            attempts += 1
             color_print(f"[!] {max_attempts - attempts} attempts remaining", "yellow")
 
     color_print("\n[-] Great Job! Please tick the box in the GitHub PR request for completing steps in --dev", "green")
