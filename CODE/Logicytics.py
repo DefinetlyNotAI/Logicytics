@@ -7,7 +7,6 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
-import psutil
 from prettytable import PrettyTable
 
 from logicytics import Log, execute, check, get, file_management, flag, DEBUG, DELETE_LOGS, config
@@ -198,43 +197,20 @@ class ExecuteScript:
             log.warning("Advised to turn on DEBUG logging!!")
 
         execution_times = []
-        memory_usage = []
-        process = psutil.Process(os.getpid())
 
         for file in range(len(self.execution_list)):
             gc.collect()
             start_time = datetime.now()
-            start_memory = process.memory_full_info().uss / 1024 / 1024  # MB
             log.execution(execute.script(self.execution_list[file]))
             end_time = datetime.now()
-            end_memory = process.memory_full_info().uss / 1024 / 1024  # MB
             elapsed_time = end_time - start_time
-            memory_delta = max(0, end_memory - start_memory)  # Clamps negative delta to 0
-            memory_usage.append((self.execution_list[file], f"{memory_delta}"))
             execution_times.append((self.execution_list[file], elapsed_time))
             log.info(f"{self.execution_list[file]} executed in {elapsed_time}")
-            try:
-                if (end_memory - start_memory) < 0:
-                    log.info(
-                        f"{self.execution_list[file]} used {memory_delta:.3f}MB of memory - \033[33mPossible Affected by outside processes\033[0m")
-                else:
-                    log.info(f"{self.execution_list[file]} used {memory_delta:.3f}MB of memory")
-            except Exception as e:
-                log.warning("Failed to log memory usage delta, reason: " + str(e))
-            log.debug(f"Started with {start_memory:.3f}MB of memory and ended with {end_memory:.3f}MB of memory")
 
         table = PrettyTable()
-        table.field_names = ["Script", "Execution Time", "Memory Usage (MB)"]
+        table.field_names = ["Script", "Execution Time"]
         for script, elapsed_time in execution_times:
-            try:
-                memory = f"{float(next(m[1] for m in memory_usage if m[0] == script)):.3f}"
-            except StopIteration:
-                log.warning(f"No memory data found for {script}")
-                memory = "N/A"
-            except Exception as e:
-                log.warning(f"Failed to log memory usage for {script}, reason: " + str(e))
-                memory = "N/A"
-            table.add_row([script, elapsed_time, f"{memory}"])
+            table.add_row([script, elapsed_time])
 
         try:
             with open(
@@ -242,10 +218,7 @@ class ExecuteScript:
                     f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt", "w"
             ) as f:
                 f.write(table.get_string())
-                f.write(
-                    "\nSome values may be negative, Reason may be due to external resources playing with memory usage,\n"
-                    "Close background tasks to get more accurate readings\n\n")
-                f.write("Note: This is not a low-level memory logger, data here isn't 100% accurate!\n")
+                f.write("\nNote: This test only measures execution time.\n")
             log.info("Performance check complete! Performance log found in ACCESS/LOGS/PERFORMANCE")
         except Exception as e:
             log.error(f"Error writing performance log: {e}")
@@ -444,12 +417,12 @@ def handle_sub_action():
     """
     log.info("Completed successfully!")
     log.newline()
-    if ACTION == "performance_check":
-        return  # Do not handle sub actions for performance check
-    if SUB_ACTION == "shutdown":
-        subprocess.call("shutdown /s /t 3", shell=False)
-    elif SUB_ACTION == "reboot":
-        subprocess.call("shutdown /r /t 3", shell=False)
+    # Do not handle sub actions for performance check
+    if ACTION != "performance_check":
+        if SUB_ACTION == "shutdown":
+            subprocess.call("shutdown /s /t 3", shell=False)
+        elif SUB_ACTION == "reboot":
+            subprocess.call("shutdown /r /t 3", shell=False)
 
 
 @log.function

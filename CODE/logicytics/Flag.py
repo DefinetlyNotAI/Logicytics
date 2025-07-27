@@ -463,13 +463,11 @@ class Flag:
             help="Run Logicytics in minimal mode. Just bare essential scraping using only quick scripts",
         )
 
-        # TODO v3.6.0 -> Out of beta
         parser.add_argument(
             "--performance-check",
             action="store_true",
             help="Run's Logicytics default while testing its performance and time, "
                  "this then shows a table with the file names and time to executed. "
-                 f"{cls.__colorify('- Beta Mode -', 'y')}"
         )
 
         parser.add_argument(

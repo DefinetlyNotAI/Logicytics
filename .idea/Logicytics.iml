@@ -8,17 +8,17 @@
       <sourceFolder url="file://$MODULE_DIR$/CODE/libs" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CODE/_internal" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/TESTS" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/CODE/VulnScan/v3" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/CODE/VulnScan/v2-deprecated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CODE/vulnscan/v2-deprecated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CODE/vulnscan/v3" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/ACCESS" />
-      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/cves" />
-      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/albert" />
-      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/bert" />
-      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/distilbert" />
-      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/t5" />
-      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/tools/Vectorizer features" />
-      <excludeFolder url="file://$MODULE_DIR$/CODE/VulnScan/tools/NN features" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/vulnscan/albert" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/vulnscan/bert" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/vulnscan/cves" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/vulnscan/distilbert" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/vulnscan/t5" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/vulnscan/tools/NN features" />
+      <excludeFolder url="file://$MODULE_DIR$/CODE/vulnscan/tools/Vectorizer features" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.11" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
