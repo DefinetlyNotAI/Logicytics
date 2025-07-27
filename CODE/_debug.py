@@ -9,7 +9,7 @@ import time
 import psutil
 import requests
 
-from logicytics import Log, DEBUG, VERSION, check, config
+from logicytics import Log, DEBUG, VERSION, check, config, get
 
 log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ACCESS\\LOGS\\DEBUG\\DEBUG.log")
 log = Log({"log_level": DEBUG, "filename": log_path, "truncate_message": False, "delete_log": True})
@@ -47,14 +47,16 @@ class FileManager:
                 log.error(f"Directory {directory} does not exist.")
                 return
 
-            actual_files = []
-            for root, _, files in os.walk(directory):
-                for file in files:
-                    relative_path = os.path.relpath(os.path.join(root, file), start=directory)
-                    actual_files.append(relative_path.replace("\\", "/").replace('"', ''))  # Normalize paths
+            # Use get.list_of_files to retrieve files, excluding specified files, dirs, and extensions
+            actual_files = get.list_of_files(
+                directory,
+                exclude_files=["logicytics/User_History.json.gz", "logicytics/User_History.json"],
+                exclude_dirs=["SysInternal_Suite"],
+                exclude_extensions=[".pyc"]
+            )
+            actual_files = [f.replace("\\", "/").replace('"', '') for f in actual_files]  # Normalize paths
 
             log.debug(f"Actual files found: {actual_files}")
-
             # Strip quotes and normalize paths for comparison
             normalized_required_files = [
                 required_file.strip().replace("\\", "/").replace('"', '')  # Remove quotes and normalize paths
@@ -130,18 +132,20 @@ class SystemInfoManager:
         """
         version = sys.version.split()[0]
         MIN_VERSION = (3, 11)
-        MAX_VERSION = (3, 13)
+        MAX_VERSION = (3, 14)
         try:
             major, minor = map(int, version.split(".")[:2])
             if MIN_VERSION <= (major, minor) < MAX_VERSION:
-                log.info(f"Python Version: {version} - Perfect")
+                if (major, minor) == MIN_VERSION:
+                    log.info(f"Python Version: {version} - Perfect (mainly tested on 3.11.x)")
+                else:
+                    log.info(f"Python Version: {version} - Supported")
             elif (major, minor) < MIN_VERSION:
                 log.warning(f"Python Version: {version} - Recommended: 3.11.x")
             else:
                 log.error(f"Python Version: {version} - Incompatible")
         except Exception as e:
             log.error(f"Failed to parse Python Version: {e}")
-
 
 class ConfigManager:
     @staticmethod
@@ -206,8 +210,8 @@ def debug():
     SysInternalManager.check_binaries("SysInternal_Suite")
 
     # System Checks
-    log.info("Admin privileges found" if check.admin() else "Admin privileges not found")
-    log.info("UAC enabled" if check.uac() else "UAC disabled")
+    log.info("Admin privileges found") if check.admin() else log.warning("Admin privileges not found")
+    log.info("UAC enabled") if check.uac() else log.warning("UAC disabled")
     log.info(f"Execution path: {psutil.__file__}")
     log.info(f"Global execution path: {sys.executable}")
     log.info(f"Local execution path: {sys.prefix}")

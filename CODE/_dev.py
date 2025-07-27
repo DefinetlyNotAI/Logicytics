@@ -150,12 +150,13 @@ def _handle_file_operations() -> None:
     while True:
         version = color_print(f"[?] Enter the new version of the project (Old version is {VERSION}): ", "cyan",
                               is_input=True)
-        if attempts >= max_attempts:
-            color_print("[x] Maximum attempts reached. Please run the script again.", "red")
-            exit()
+
         if re.match(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$", version):
             _update_ini_file("config.ini", version, "version")
             break
+        elif attempts >= max_attempts:
+            color_print("[x] Maximum attempts reached. Please run the script again.", "red")
+            exit()
         else:
             color_print("[!] Please enter a valid version number (e.g., 1.2.3)", "yellow")
             attempts += 1
