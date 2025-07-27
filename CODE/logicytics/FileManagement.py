@@ -36,13 +36,13 @@ class FileManagement:
     def mkdir():
         """
         Creates the necessary directories for storing logs, and data.
-        
+
         This method ensures the existence of specific directory structures used by the application, including:
         - Log directories for general, debug, and performance logs
         - Data directories for storing hashes and zip files
-        
+
         The method uses `os.makedirs()` with `exist_ok=True` to create directories without raising an error if they already exist.
-        
+
         Returns:
             None: No return value. Directories are created as a side effect.
         """
@@ -91,12 +91,19 @@ class FileManagement:
                 list: A list of file and directory names to be zipped.
             """
             excluded_extensions = (".py", ".exe", ".bat", ".ps1", ".pkl", ".pth")
-            excluded_prefixes = ("config.ini", "SysInternal_Suite",
-                                 "__pycache__", "logicytics", "vulnscan")
+            excluded_prefixes = (
+                "config.ini",
+                "SysInternal_Suite",
+                "__pycache__",
+                "logicytics",
+                "vulnscan",
+            )
 
             return [
-                f for f in os.listdir(path)
-                if not f.endswith(excluded_extensions) and not f.startswith(excluded_prefixes)
+                f
+                for f in os.listdir(path)
+                if not f.endswith(excluded_extensions)
+                and not f.startswith(excluded_prefixes)
             ]
 
         @staticmethod
@@ -116,7 +123,10 @@ class FileManagement:
             def ignore_files(files_func):
                 for root, _, file_func in os.walk(os.path.join(path, files_func)):
                     for f in file_func:
-                        zip_file.write(os.path.join(root, f), os.path.relpath(os.path.join(root, f), path))
+                        zip_file.write(
+                            os.path.join(root, f),
+                            os.path.relpath(os.path.join(root, f), path),
+                        )
 
             with zipfile.ZipFile(f"{filename}.zip", "w") as zip_file:
                 for file in files:
@@ -203,7 +213,7 @@ class FileManagement:
             Returns:
                 tuple or str: A tuple containing success messages or an error message.
             """
-            time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             filename = f"Logicytics_{name}_{flag}_{time}"
             files_to_zip = cls.__get_files_to_zip(path)
             cls.__create_zip_file(path, files_to_zip, filename)
