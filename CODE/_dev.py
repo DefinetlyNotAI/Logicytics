@@ -6,7 +6,7 @@ import subprocess
 
 import configobj
 
-from logicytics import log, get, file_management, CURRENT_FILES, VERSION
+from logicytics import log, get, CURRENT_FILES, VERSION
 
 
 def color_print(text, color="reset", is_input=False) -> None | str:
@@ -36,7 +36,9 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
         None
     """
     try:
-        config = configobj.ConfigObj(filename, encoding="utf-8", write_empty_values=True)
+        config = configobj.ConfigObj(
+            filename, encoding="utf-8", write_empty_values=True
+        )
 
         if key == "files":
             config["System Settings"][key] = ", ".join(new_data)
@@ -55,21 +57,23 @@ def _update_ini_file(filename: str, new_data: list | str, key: str) -> None:
         color_print(f"[x] {e}", "red")
 
 
-def _prompt_user(question: str, file_to_open: str = None, special: bool = False) -> bool:
+def _prompt_user(
+        question: str, file_to_open: str = None, special: bool = False
+) -> bool:
     """
     Prompts the user with a yes/no question and optionally opens a file.
-    
+
     Parameters:
         question (str): The question to be presented to the user.
         file_to_open (str, optional): Path to a file that will be opened if the user does not respond affirmatively.
         special (bool, optional): Flag to suppress the default reminder message when the user responds negatively.
-    
+
     Returns:
         bool: True if the user responds with 'yes' or 'Y', False otherwise.
-    
+
     Raises:
         Exception: Logs any unexpected errors during user interaction.
-    
+
     Notes:
         - Uses subprocess to open files on Windows systems
         - Case-insensitive input handling for 'yes' responses
@@ -82,7 +86,8 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
                 subprocess.run(["start", file_to_open], shell=True)
             if not special:
                 color_print(
-                    "[x] Please ensure you fix the issues/problem and try again with the checklist.", "red"
+                    "[x] Please ensure you fix the issues/problem and try again with the checklist.",
+                    "red",
                 )
             return False
         return True
@@ -94,7 +99,7 @@ def _prompt_user(question: str, file_to_open: str = None, special: bool = False)
 def _perform_checks() -> bool:
     """
     Performs a series of user prompts for various checks.
-    
+
     Returns:
         bool: True if all checks are confirmed by the user, False otherwise.
     """
@@ -116,11 +121,18 @@ def _handle_file_operations() -> None:
     """
     Handles file operations and logging for added, removed, and normal files.
     """
-    EXCLUDE_FILES = ["logicytics\\User_History.json.gz", "logicytics\\User_History.json"]
-    files = get.list_of_files(".", exclude_files=EXCLUDE_FILES, exclude_dirs=["SysInternal_Suite"],
-                              exclude_extensions=[".pyc"])
+    EXCLUDE_FILES = [
+        "logicytics\\User_History.json.gz",
+        "logicytics\\User_History.json",
+    ]
+    files = get.list_of_files(
+        ".",
+        exclude_files=EXCLUDE_FILES,
+        exclude_dirs=["SysInternal_Suite"],
+        exclude_extensions=[".pyc"],
+    )
     added_files, removed_files, normal_files = [], [], []
-    clean_files_list = [file.replace('"', '') for file in CURRENT_FILES]
+    clean_files_list = [file.replace('"', "") for file in CURRENT_FILES]
 
     files_set = set(os.path.abspath(f) for f in files)
     clean_files_set = set(os.path.abspath(f) for f in clean_files_list)
@@ -148,28 +160,39 @@ def _handle_file_operations() -> None:
     _update_ini_file("config.ini", files, "files")
 
     while True:
-        version = color_print(f"[?] Enter the new version of the project (Old version is {VERSION}): ", "cyan",
-                              is_input=True)
-        if attempts >= max_attempts:
-            color_print("[x] Maximum attempts reached. Please run the script again.", "red")
-            exit()
+        version = color_print(
+            f"[?] Enter the new version of the project (Old version is {VERSION}): ",
+            "cyan",
+            is_input=True,
+        )
+
         if re.match(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$", version):
             _update_ini_file("config.ini", version, "version")
             break
+        attempts += 1
+        if attempts >= max_attempts:
+            color_print(
+                "[x] Maximum attempts reached. Please run the script again.", "red"
+            )
+            exit()
         else:
-            color_print("[!] Please enter a valid version number (e.g., 1.2.3)", "yellow")
-            attempts += 1
+            color_print(
+                "[!] Please enter a valid version number (e.g., 1.2.3)", "yellow"
+            )
             color_print(f"[!] {max_attempts - attempts} attempts remaining", "yellow")
 
-    color_print("\n[-] Great Job! Please tick the box in the GitHub PR request for completing steps in --dev", "green")
+    color_print(
+        "\n[-] Great Job! Please tick the box in the GitHub PR request for completing steps in --dev",
+        "green",
+    )
 
 
 @log.function
 def dev_checks() -> None:
     """
     Performs comprehensive developer checks to ensure code quality and project guidelines compliance.
-    
-    This function guides developers through a series of predefined checks, validates file additions, 
+
+    This function guides developers through a series of predefined checks, validates file additions,
     and updates project configuration. It performs the following key steps:
     - Verify adherence to contributing guidelines
     - Check file naming conventions
@@ -178,10 +201,10 @@ def dev_checks() -> None:
     - Assess feature modularity
     - Categorize and display file changes
     - Update project configuration file
-    
+
     Raises:
         None: Returns None if any check fails or an error occurs during the process.
-    
+
     Side Effects:
         - Creates necessary directories
         - Prompts user for multiple confirmations
@@ -189,7 +212,6 @@ def dev_checks() -> None:
         - Updates configuration file with current files and version
         - Logs warnings or errors during the process
     """
-    file_management.mkdir()
     if not _perform_checks():
         return
     _handle_file_operations()
