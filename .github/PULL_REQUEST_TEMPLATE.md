@@ -7,7 +7,8 @@
 
 - [ ] I have [searched](https://github.com/DefinetlyNotAI/Logicytics/pulls) for duplicate or closed issues.
 - [ ] I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md).
-- [ ] I have followed the instructions in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) about contributions.
+- [ ] I have followed the instructions in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) about
+  contributions.
 - [ ] I have updated the documentation accordingly, if required.
 - [ ] I have tested my code with the `--dev` flag, if required.
 

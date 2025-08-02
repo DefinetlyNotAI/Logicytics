@@ -6,6 +6,7 @@
 # To know more check the WiKi
 from logicytics import log  # And more if needed
 
+
 # Your actual code, must be able to run without any interference by outside actions
 # USE log.debug, log.info, log.error, log.warning and log.critical and log.string as well
 # You can choose to use any other of the code without issues
