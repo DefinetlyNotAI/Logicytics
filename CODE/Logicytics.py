@@ -441,6 +441,7 @@ class ZIP:
         log.debug(
             f"Zipping directory '{directory}' with name '{name}' under action '{ACTION}'"
         )
+        # noinspection PyUnreachableCode
         zip_values = file_management.Zip.and_hash(
             directory,
             name,
