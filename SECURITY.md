@@ -6,6 +6,7 @@ This section outlines the versions of our project that are currently supported w
 
 | Version | Supported | Major Release Date |
 |---------|-----------|--------------------|
+| 3.6.x   | ✅         | July 26, 2025      |
 | 3.5.x   | ✅         | July 26, 2025      |
 | 3.4.x   | ✖️        | January 3, 2025    |
 | 3.3.x   | ✖️        | January 3, 2025    |
