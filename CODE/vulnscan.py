@@ -28,7 +28,18 @@ SENSITIVE_THRESHOLD = float(
     config.get("VulnScan Settings", "threshold", fallback=0.6))  # Probability cutoff to consider a file sensitive
 
 # Paths
-ROOT_DIR = r"C:/"  # Folder to scan
+SENSITIVE_PATHS = [
+    r"C:\Users\%USERNAME%\Documents",
+    r"C:\Users\%USERNAME%\Desktop",
+    r"C:\Users\%USERNAME%\Downloads",
+    r"C:\Users\%USERNAME%\AppData\Roaming",
+    r"C:\Users\%USERNAME%\AppData\Local",
+    r"C:\Users\%USERNAME%\AppData\Local\Google\Chrome\User Data",
+    r"C:\Users\%USERNAME%\AppData\Roaming\Mozilla\Firefox\Profiles",
+    r"C:\Users\%USERNAME%\OneDrive",
+    r"C:\Users\%USERNAME%\Dropbox",
+    r"C:\Users\%USERNAME%\Google Drive",
+]
 SAVE_DIR = r"VulnScan_Files"  # Backup folder
 MODEL_PATH = r"vulnscan/Model_SenseMacro.4n1.pth"  # Your trained model checkpoint
 REPORT_JSON = "report.json"
@@ -144,7 +155,7 @@ def scan_directory(root):
 
 
 # ================== MAIN ==================
-if __name__ == "__main__":
+def main():
     log.info(f"Scanning directory: {ROOT_DIR} - This will take some time...")
     sensitive = scan_directory(ROOT_DIR)
 
@@ -174,3 +185,14 @@ if __name__ == "__main__":
     log.debug(f"Files copied into: {SAVE_DIR}")
     log.debug(f"JSON report saved as: {REPORT_JSON}")
     log.debug(f"CSV report saved as: {REPORT_CSV}")
+
+
+if __name__ == "__main__":
+    log.info(f"Starting VulnScan with {NUM_WORKERS} thread workers and {len(SENSITIVE_PATHS)}...")
+    for path in SENSITIVE_PATHS:
+        expanded_path = os.path.expandvars(path)
+        if os.path.exists(expanded_path):
+            ROOT_DIR = expanded_path
+            main()
+        else:
+            log.warning(f"Path does not exist and will be skipped: {expanded_path}")
