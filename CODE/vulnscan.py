@@ -186,7 +186,7 @@ def main():
 
 
 if __name__ == "__main__":
-    log.info(f"Starting VulnScan with {NUM_WORKERS} thread workers and {len(SENSITIVE_PATHS)}...")
+    log.info(f"Starting VulnScan with {NUM_WORKERS} thread workers and {len(SENSITIVE_PATHS)} paths...")
     for path in SENSITIVE_PATHS:
         expanded_path = os.path.expandvars(path)
         if os.path.exists(expanded_path):
