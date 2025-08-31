@@ -34,8 +34,6 @@ SENSITIVE_PATHS = [
     r"C:\Users\%USERNAME%\Downloads",
     r"C:\Users\%USERNAME%\AppData\Roaming",
     r"C:\Users\%USERNAME%\AppData\Local",
-    r"C:\Users\%USERNAME%\AppData\Local\Google\Chrome\User Data",
-    r"C:\Users\%USERNAME%\AppData\Roaming\Mozilla\Firefox\Profiles",
     r"C:\Users\%USERNAME%\OneDrive",
     r"C:\Users\%USERNAME%\Dropbox",
     r"C:\Users\%USERNAME%\Google Drive",
