@@ -1,35 +1,3 @@
-"""from __future__ import annotations
-
-import asyncio
-import os
-import threading
-import warnings
-
-import aiofiles
-import joblib
-import numpy as np
-# noinspection PyPackageRequirements
-import torch
-from pathlib import Path
-from safetensors import safe_open
-from tqdm import tqdm
-
-from logicytics import log, config
-
-warnings.filterwarnings("ignore")
-
-UNREADABLE_EXTENSIONS = config.get("VulnScan Settings", "unreadable_extensions").split(
-    ","
-)
-MAX_FILE_SIZE_MB = config.get("VulnScan Settings", "max_file_size_mb", fallback="None")
-raw_workers = config.get("VulnScan Settings", "max_workers", fallback="auto")
-max_workers = min(32, os.cpu_count() * 2) if raw_workers == "auto" else int(raw_workers)
-
-if MAX_FILE_SIZE_MB != "None":
-    MAX_FILE_SIZE_MB = max(int(MAX_FILE_SIZE_MB), 1)
-else:
-    MAX_FILE_SIZE_MB = None
-"""
 import csv
 import json
 import os
@@ -40,29 +8,35 @@ import torch
 from sentence_transformers import SentenceTransformer
 from torch import nn
 
+from logicytics import log, config
+
 # ================== GLOBAL SETTINGS ==================
-# Paths
-ROOT_DIR = r"C:\Users\Hp\Desktop\Shahm"  # Folder to scan
-BACKUP_DIR = r"C:\Users\Hp\Desktop\VulnScan_Files"  # Backup folder
-MODEL_PATH = r"vulnscan/Model_SenseMacro.4n1.pth"  # Your trained model checkpoint
 
 # File scan settings
-TEXT_EXTENSIONS = {".txt", ".log", ".csv", ".json", ".xml", ".html", ".md", ".cfg", ".ini", ".yml", ".yaml"}
-MAX_TEXT_LENGTH = 1000000  # Max characters per file to scan
-
+TEXT_EXTENSIONS = {
+    ".txt", ".log", ".csv", ".json", ".xml", ".html", ".md", ".cfg", ".ini", ".yml", ".yaml",
+    ".rtf", ".tex", ".rst", ".adoc", ".properties", ".conf", ".bat", ".ps1", ".sh", ".tsv",
+    ".dat", ".env", ".toml", ".dockerfile", ".gitignore", ".gitattributes", ".npmrc", ".editorconfig"
+}
+MAX_TEXT_LENGTH = config.get("VulnScan Settings", "text_char_limit", fallback=None)
+MAX_TEXT_LENGTH = int(MAX_TEXT_LENGTH) if MAX_TEXT_LENGTH not in (None, "None", "") else None
 # Threading
-NUM_WORKERS = 8  # Number of parallel threads for scanning
-
+NUM_WORKERS = config.get("VulnScan Settings", "max_workers", fallback="auto")
+NUM_WORKERS = min(32, os.cpu_count() * 2) if NUM_WORKERS == "auto" else int(NUM_WORKERS)
 # Classification threshold
-SENSITIVE_THRESHOLD = 0.5  # Probability cutoff to consider a file sensitive
+SENSITIVE_THRESHOLD = float(
+    config.get("VulnScan Settings", "threshold", fallback=0.6))  # Probability cutoff to consider a file sensitive
 
-# Reports
-REPORT_JSON = os.path.join(os.getcwd(), "report.json")
-REPORT_CSV = os.path.join(os.getcwd(), "report.csv")
+# Paths
+ROOT_DIR = r"C:/"  # Folder to scan
+SAVE_DIR = r"VulnScan_Files"  # Backup folder
+MODEL_PATH = r"vulnscan/Model_SenseMacro.4n1.pth"  # Your trained model checkpoint
+REPORT_JSON = "report.json"
+REPORT_CSV = "report.csv"
 
 # ================== DEVICE SETUP ==================
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"Using device: {DEVICE}")
+log.debug(f"Using device: {DEVICE}")
 
 
 # ================== MODEL DEFINITION ==================
@@ -93,7 +67,7 @@ model.eval()
 embed_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=DEVICE)
 
 # Make backup folder
-os.makedirs(BACKUP_DIR, exist_ok=True)
+os.makedirs(SAVE_DIR, exist_ok=True)
 
 
 # ================== FILE PROCESSING ==================
@@ -103,16 +77,17 @@ def process_file(filepath):
         if ext.lower() not in TEXT_EXTENSIONS:
             return None
 
-        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-            content = f.read()
+        with open(filepath, "r", encoding="utf-8", errors="ignore") as f_:
+            content = f_.read()
         if not content.strip():
             return None
 
         # Limit file length
-        content = content[:MAX_TEXT_LENGTH]
+        if MAX_TEXT_LENGTH is not None:
+            content = content[:MAX_TEXT_LENGTH]
 
         # Split content into lines
-        lines = [line for line in content.splitlines() if line.strip()]
+        lines = [line_ for line_ in content.splitlines() if line_.strip()]
         if not lines:
             return None
 
@@ -135,7 +110,7 @@ def process_file(filepath):
 
         # Backup file
         rel_path = os.path.relpath(filepath, ROOT_DIR)
-        backup_path = os.path.join(BACKUP_DIR, rel_path)
+        backup_path = os.path.join(SAVE_DIR, rel_path)
         os.makedirs(os.path.dirname(backup_path), exist_ok=True)
         shutil.copy2(filepath, backup_path)
 
@@ -147,7 +122,7 @@ def process_file(filepath):
         }
 
     except Exception as e:
-        print(f"[ERROR] Could not process {filepath}: {e}")
+        log.error(f"Could not process {filepath}: {e}")
     return None
 
 
@@ -170,7 +145,7 @@ def scan_directory(root):
 
 # ================== MAIN ==================
 if __name__ == "__main__":
-    print(f"Scanning directory: {ROOT_DIR}")
+    log.info(f"Scanning directory: {ROOT_DIR} - This will take some time...")
     sensitive = scan_directory(ROOT_DIR)
 
     # Save JSON report
@@ -187,11 +162,15 @@ if __name__ == "__main__":
             entry_csv["reason"] = " | ".join(entry["reason"])
             writer.writerow(entry_csv)
 
-    print("\nSensitive files detected and backed up:")
+    print()
+    log.debug("Sensitive files detected and backed up:")
     for entry in sensitive:
-        print(f" - {entry['file']} (prob={entry['probability']:.4f})")
+        log.debug(f" - {entry['file']} (prob={entry['probability']:.4f})")
         for line in entry["reason"]:
-            print(f"     -> {line}")
+            log.debug(f"     -> {line}")
 
-    print(f"\nBackup completed.\nFiles copied into: {BACKUP_DIR}")
-    print(f"Reports saved as:\n - {REPORT_JSON}\n - {REPORT_CSV}")
+    print()
+    log.info("Backup completed.\n")
+    log.debug(f"Files copied into: {SAVE_DIR}")
+    log.debug(f"JSON report saved as: {REPORT_JSON}")
+    log.debug(f"CSV report saved as: {REPORT_CSV}")
