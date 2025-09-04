@@ -25,35 +25,35 @@ class USBHistory:
     @staticmethod
     def _get_last_write_time(root_key, sub_key_path):
         """Return the precise last write time of a registry key, or None on failure."""
+        handle = ctypes.wintypes.HANDLE()
         try:
-            handle = ctypes.wintypes.HANDLE()
-            if ctypes.windll.advapi32.RegOpenKeyExW(root_key, sub_key_path, 0, winreg.KEY_READ,
-                                                    ctypes.byref(handle)) != 0:
+            advapi32 = ctypes.windll.advapi32
+            if advapi32.RegOpenKeyExW(root_key, sub_key_path, 0, winreg.KEY_READ, ctypes.byref(handle)) != 0:
                 return None
-
             ft = ctypes.wintypes.FILETIME()
-            if ctypes.windll.advapi32.RegQueryInfoKeyW(handle, None, None, None, None, None, None, None, None, None,
-                                                       None, ctypes.byref(ft)) != 0:
+            if advapi32.RegQueryInfoKeyW(handle, None, None, None, None, None, None, None, None, None, None,
+                                         ctypes.byref(ft)) != 0:
                 return None
-
             t = ((ft.dwHighDateTime << 32) + ft.dwLowDateTime) // 10
             return datetime(1601, 1, 1) + timedelta(microseconds=t)
-        except Exception:
-            return None
+        finally:
+            if handle:
+                ctypes.windll.advapi32.RegCloseKey(handle)
 
     @staticmethod
     def _enum_subkeys(root, path, warn_func):
         """Yield all subkeys of a registry key, logging warnings on errors."""
         try:
             with winreg.OpenKey(root, path) as key:
-                for i in range(1024):  # reasonable upper bound to avoid infinite loops
+                subkey_count, _, _ = winreg.QueryInfoKey(key)
+                for i in range(subkey_count):
                     try:
                         yield winreg.EnumKey(key, i)
                     except OSError as e:
-                        if e.winerror == 259:  # no more data
+                        if getattr(e, "winerror", None) == 259:  # ERROR_NO_MORE_ITEMS
                             break
                         warn_func(f"Error enumerating {path} index {i}: {e}")
-        except Exception as e:
+        except OSError as e:
             warn_func(f"Failed to open registry key {path}: {e}")
 
     @staticmethod

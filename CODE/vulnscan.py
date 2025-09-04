@@ -22,7 +22,7 @@ MAX_TEXT_LENGTH = config.get("VulnScan Settings", "text_char_limit", fallback=No
 MAX_TEXT_LENGTH = int(MAX_TEXT_LENGTH) if MAX_TEXT_LENGTH not in (None, "None", "") else None
 # Threading
 NUM_WORKERS = config.get("VulnScan Settings", "max_workers", fallback="auto")
-NUM_WORKERS = min(32, os.cpu_count() * 2) if NUM_WORKERS == "auto" else int(NUM_WORKERS)
+NUM_WORKERS = min(32, (os.cpu_count() or 1) * 2) if NUM_WORKERS == "auto" else int(NUM_WORKERS)
 # Classification threshold
 SENSITIVE_THRESHOLD = float(
     config.get("VulnScan Settings", "threshold", fallback=0.6))  # Probability cutoff to consider a file sensitive
