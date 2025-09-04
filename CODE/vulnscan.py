@@ -1,226 +1,196 @@
-from __future__ import annotations
-
-import asyncio
+import csv
+import json
 import os
-import threading
-import warnings
+import shutil
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import aiofiles
-import joblib
-import numpy as np
-# noinspection PyPackageRequirements
 import torch
-from pathlib import Path
-from safetensors import safe_open
-from tqdm import tqdm
+from sentence_transformers import SentenceTransformer
+from torch import nn
 
 from logicytics import log, config
 
-warnings.filterwarnings("ignore")
+# ================== GLOBAL SETTINGS ==================
 
-UNREADABLE_EXTENSIONS = config.get("VulnScan Settings", "unreadable_extensions").split(
-    ","
-)
-MAX_FILE_SIZE_MB = config.get("VulnScan Settings", "max_file_size_mb", fallback="None")
-raw_workers = config.get("VulnScan Settings", "max_workers", fallback="auto")
-max_workers = min(32, os.cpu_count() * 2) if raw_workers == "auto" else int(raw_workers)
+# File scan settings
+TEXT_EXTENSIONS = {
+    ".txt", ".log", ".csv", ".json", ".xml", ".html", ".md", ".cfg", ".ini", ".yml", ".yaml",
+    ".rtf", ".tex", ".rst", ".adoc", ".properties", ".conf", ".bat", ".ps1", ".sh", ".tsv",
+    ".dat", ".env", ".toml", ".dockerfile", ".gitignore", ".gitattributes", ".npmrc", ".editorconfig"
+}
+MAX_TEXT_LENGTH = config.get("VulnScan Settings", "text_char_limit", fallback=None)
+MAX_TEXT_LENGTH = int(MAX_TEXT_LENGTH) if MAX_TEXT_LENGTH not in (None, "None", "") else None
+# Threading
+NUM_WORKERS = config.get("VulnScan Settings", "max_workers", fallback="auto")
+NUM_WORKERS = min(32, (os.cpu_count() or 1) * 2) if NUM_WORKERS == "auto" else int(NUM_WORKERS)
+# Classification threshold
+SENSITIVE_THRESHOLD = float(
+    config.get("VulnScan Settings", "threshold", fallback=0.6))  # Probability cutoff to consider a file sensitive
 
-if MAX_FILE_SIZE_MB != "None":
-    MAX_FILE_SIZE_MB = max(int(MAX_FILE_SIZE_MB), 1)
-else:
-    MAX_FILE_SIZE_MB = None
+# Paths
+SENSITIVE_PATHS = [
+    r"C:\Users\%USERNAME%\Documents",
+    r"C:\Users\%USERNAME%\Desktop",
+    r"C:\Users\%USERNAME%\Downloads",
+    r"C:\Users\%USERNAME%\AppData\Roaming",
+    r"C:\Users\%USERNAME%\AppData\Local",
+    r"C:\Users\%USERNAME%\OneDrive",
+    r"C:\Users\%USERNAME%\Dropbox",
+    r"C:\Users\%USERNAME%\Google Drive",
+]
+SAVE_DIR = r"VulnScan_Files"  # Backup folder
+MODEL_PATH = r"vulnscan/Model_SenseMacro.4n1.pth"  # Your trained model checkpoint
+REPORT_JSON = "report.json"
+REPORT_CSV = "report.csv"
+
+# ================== DEVICE SETUP ==================
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+log.debug(f"Using device: {DEVICE}")
 
 
-class _SensitiveDataScanner:
-    def __init__(self, model_path: str, vectorizer_path: str):
-        self.model_path = model_path
-        self.vectorizer_path = vectorizer_path
-        self.model_cache = {}
-        self.vectorizer_cache = {}
-        self.model_lock = threading.Lock()
-        self.vectorizer_lock = threading.Lock()
-        self.model = None
-        self.vectorizer = None
-        self._load_model()
-        self._load_vectorizer()
+# ================== MODEL DEFINITION ==================
+class SimpleNN(nn.Module):
+    def __init__(self, input_dim):
+        super().__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(in_features=input_dim, out_features=256),
+            nn.ReLU(),
+            nn.Linear(in_features=256, out_features=64),
+            nn.ReLU(),
+            nn.Linear(in_features=64, out_features=1),
+        )
 
-    def _load_model(self) -> None:
-        with self.model_lock:
-            if self.model_path in self.model_cache:
-                self.model = self.model_cache[self.model_path]
-                return
+    def forward(self, x):
+        return self.fc(x)
 
-            if self.model_path.endswith(".pkl"):
-                self.model = joblib.load(self.model_path)
-            elif self.model_path.endswith(".safetensors"):
-                self.model = safe_open(self.model_path, framework="torch")
-            elif self.model_path.endswith(".pth"):
-                with warnings.catch_warnings():
-                    warnings.filterwarnings("ignore", category=FutureWarning)
-                self.model = torch.load(
-                    self.model_path,
-                    map_location=torch.device(
-                        "cuda" if torch.cuda.is_available() else "cpu"
-                    ),
-                    weights_only=False,
-                )
-                if not torch.cuda.is_available() and torch.version.cuda:
-                    log.warning(
-                        "NVIDIA GPU detected but CUDA is not available. Check your PyTorch and CUDA installation to utilise as much power as possible."
-                    )
-                log.debug(
-                    f"Model using device: {torch.device('cuda' if torch.cuda.is_available() else 'cpu')}"
-                )
-            else:
-                raise ValueError("Unsupported model file format")
 
-            self.model_cache[self.model_path] = self.model
+# ================== LOAD MODELS ==================
+# Load classifier
+checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
+model = SimpleNN(input_dim=384)
+model.load_state_dict(checkpoint["model_state_dict"])
+model.to(DEVICE)
+model.eval()
 
-    def _load_vectorizer(self) -> None:
-        with self.vectorizer_lock:
-            if self.vectorizer_path in self.vectorizer_cache:
-                self.vectorizer = self.vectorizer_cache[self.vectorizer_path]
-                return
+# Load embedding model
+embed_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=DEVICE)
 
-            try:
-                self.vectorizer = joblib.load(self.vectorizer_path)
-            except Exception as e:
-                log.critical(f"Failed to load vectorizer: {e}")
-                exit(1)
+# Make backup folder
+os.makedirs(SAVE_DIR, exist_ok=True)
 
-            self.vectorizer_cache[self.vectorizer_path] = self.vectorizer
 
-    def _extract_features(self, content: str):
-        return self.vectorizer.transform([content])
+# ================== FILE PROCESSING ==================
+def process_file(filepath):
+    try:
+        _, ext = os.path.splitext(filepath)
+        if ext.lower() not in TEXT_EXTENSIONS:
+            return None
 
-    def _is_sensitive(self, content: str) -> tuple[bool, float, str]:
-        features = self._extract_features(content)
-        if isinstance(self.model, torch.nn.Module):
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            self.model.to(device)
-            self.model.eval()
-            indices = torch.LongTensor(np.vstack(features.nonzero()))
-            values = torch.FloatTensor(features.data)
-            tensor = torch.sparse_coo_tensor(indices, values, size=features.shape).to(
-                device
-            )
+        with open(filepath, "r", encoding="utf-8", errors="ignore") as f_:
+            content = f_.read()
+        if not content.strip():
+            return None
 
+        # Limit file length
+        if MAX_TEXT_LENGTH is not None:
+            content = content[:MAX_TEXT_LENGTH]
+
+        # Split content into lines
+        lines = [line_ for line_ in content.splitlines() if line_.strip()]
+        if not lines:
+            return None
+
+        # Embed all lines
+        embeddings = embed_model.encode(lines, convert_to_tensor=True, device=DEVICE)
+
+        # Predict per line
+        probs = []
+        for emb in embeddings:
             with torch.no_grad():
-                pred = self.model(tensor)
-                prob = torch.softmax(pred, dim=1).max().item()
-                reason = ", ".join(
-                    self.vectorizer.get_feature_names_out()[i]
-                    for i in np.argsort(features.data)[-5:]
-                )
-                return pred.argmax(dim=1).item() == 1, prob, reason
-        else:
-            probs = self.model.predict_proba(features)
-            top_indices = np.argsort(features.toarray()[0])[-5:]
-            reason = ", ".join(
-                self.vectorizer.get_feature_names_out()[i] for i in top_indices
-            )
-            return self.model.predict(features)[0] == 1, probs.max(), reason
+                output = model(emb.unsqueeze(0))
+                probs.append(torch.sigmoid(output).item())
 
-    async def scan_file_async(self, file_path: str) -> tuple[bool, float, str]:
-        try:
-            async with aiofiles.open(
-                    file_path, "r", encoding="utf-8", errors="ignore"
-            ) as f:
-                content = await f.read()
-            return self._is_sensitive(content)
-        except Exception as e:
-            log.error(f"Failed to scan {file_path}: {e}")
-            return False, 0.0, "Error"
+        max_prob = max(probs)
+        if max_prob < SENSITIVE_THRESHOLD:
+            return None
 
-    def cleanup(self):
-        self.model_cache.clear()
-        self.vectorizer_cache.clear()
-        self.model = None
-        self.vectorizer = None
-        log.info("Cleanup complete.")
+        # Get top 5 lines contributing most
+        top_lines = [lines[i] for i, p in sorted(enumerate(probs), key=lambda x: x[1], reverse=True)[:5]]
+
+        # Backup file
+        rel_path = os.path.relpath(filepath, ROOT_DIR)
+        backup_path = os.path.join(SAVE_DIR, rel_path)
+        os.makedirs(os.path.dirname(backup_path), exist_ok=True)
+        shutil.copy2(filepath, backup_path)
+
+        return {
+            "file": filepath,
+            "probability": max_prob,
+            "copied_to": backup_path,
+            "reason": top_lines
+        }
+
+    except Exception as e:
+        log.error(f"Could not process {filepath}: {e}")
+    return None
 
 
-class VulnScan:
-    def __init__(self, model_path: str, vectorizer_path: str):
-        self.scanner = _SensitiveDataScanner(model_path, vectorizer_path)
+# ================== DIRECTORY SCAN ==================
+def scan_directory(root):
+    sensitive_files = []
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+        futures = []
+        for dirpath, _, filenames in os.walk(root):
+            for file in filenames:
+                futures.append(executor.submit(process_file, os.path.join(dirpath, file)))
 
-    @log.function
-    def scan_directory(self, scan_paths: list[str]) -> None:
-        log.info("Collecting files...")
-        all_files = []
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                sensitive_files.append(result)
 
-        for path in scan_paths:
-            try:
-                all_files.extend(str(f) for f in Path(path).rglob("*") if f.is_file())
-                log.debug(f"Found {len(all_files)} files in {path}")
-            except Exception as e:
-                log.warning(f"Skipping path {path} due to error: {e}")
+    return sensitive_files
 
-        log.info(f"Collected {len(all_files)} files.")
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_scan(all_files))
+# ================== MAIN ==================
+def main():
+    log.info(f"Scanning directory: {ROOT_DIR} - This will take some time...")
+    sensitive = scan_directory(ROOT_DIR)
 
-    async def _async_scan(self, files: list[str]) -> None:
-        valid_files = []
+    # Save JSON report
+    with open(REPORT_JSON, "w", encoding="utf-8") as f:
+        json.dump(sensitive, f, indent=2, ensure_ascii=False)
 
-        for file in files:
-            try:
-                file_size_mb = os.path.getsize(file) / (1024 * 1024)
-                if MAX_FILE_SIZE_MB and file_size_mb > MAX_FILE_SIZE_MB:
-                    continue
-                if any(file.lower().endswith(ext) for ext in UNREADABLE_EXTENSIONS):
-                    continue
-                valid_files.append(file)
-            except Exception as e:
-                log.debug(f"Skipping file {file}: {e}")
+    # Save CSV report
+    with open(REPORT_CSV, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["file", "probability", "copied_to", "reason"])
+        writer.writeheader()
+        for entry in sensitive:
+            # Join top lines as single string for CSV
+            entry_csv = entry.copy()
+            entry_csv["reason"] = " | ".join(entry["reason"])
+            writer.writerow(entry_csv)
 
-        log.info(f"Valid files to scan: {len(valid_files)}")
+    print()
+    log.debug("Sensitive files detected and backed up:")
+    for entry in sensitive:
+        log.debug(f" - {entry['file']} (prob={entry['probability']:.4f})")
+        for line in entry["reason"]:
+            log.debug(f"     -> {line}")
 
-        semaphore = asyncio.Semaphore(max_workers)
-        sensitive_files = []
-
-        async def scan_worker(scan_file):
-            async with semaphore:
-                result, prob, reason = await self.scanner.scan_file_async(scan_file)
-                if result:
-                    log.debug(
-                        f"SENSITIVE: {scan_file} | Confidence: {prob:.2f} | Reason: {reason}"
-                    )
-                    sensitive_files.append(scan_file)
-
-        tasks = [scan_worker(f) for f in valid_files]
-
-        with tqdm(
-                total=len(valid_files),
-                desc="\033[32mSCAN\033[0m     \033[94mScanning Files\033[0m",
-                unit="file",
-                bar_format="{l_bar} {bar} {n_fmt}/{total_fmt}\n",
-        ) as pbar:
-            for f in asyncio.as_completed(tasks):
-                await f
-                pbar.update(1)
-
-        with open("Sensitive_File_Paths.txt", "a") as out:
-            out.write(
-                "\n".join(sensitive_files) + "\n"
-                if sensitive_files
-                else "No sensitive files detected.\n"
-            )
-
-        self.scanner.cleanup()
+    print()
+    log.info("Backup completed.\n")
+    log.debug(f"Files copied into: {SAVE_DIR}")
+    log.debug(f"JSON report saved as: {REPORT_JSON}")
+    log.debug(f"CSV report saved as: {REPORT_CSV}")
 
 
 if __name__ == "__main__":
-    try:
-        base_paths = [
-            "C:\\Users\\",
-            "C:\\Windows\\Logs",
-            "C:\\Program Files",
-            "C:\\Program Files (x86)",
-        ]
-        vulnscan = VulnScan("vulnscan/SenseMini.3n3.pth", "vulnscan/vectorizer.3n3.pkl")
-        vulnscan.scan_directory(base_paths)
-    except KeyboardInterrupt:
-        log.warning("User interrupted. Exiting gracefully.")
-        exit(0)
+    log.info(f"Starting VulnScan with {NUM_WORKERS} thread workers and {len(SENSITIVE_PATHS)} paths...")
+    for path in SENSITIVE_PATHS:
+        expanded_path = os.path.expandvars(path)
+        if os.path.exists(expanded_path):
+            ROOT_DIR = expanded_path
+            main()
+        else:
+            log.warning(f"Path does not exist and will be skipped: {expanded_path}")

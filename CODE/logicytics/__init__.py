@@ -122,4 +122,5 @@ __all__ = [
     "ObjectLoadError",
     "log",
     "Log",
+    "config",
 ]
