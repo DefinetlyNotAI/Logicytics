@@ -498,7 +498,7 @@ class Flag:
                  "and not the best, use only if the device doesnt have python installed.",
         )
 
-        # TODO v3.6.0 -> Out of beta
+        # TODO v3.6.1 -> Out of beta
         parser.add_argument(
             "--vulnscan-ai",
             action="store_true",
