@@ -1,5 +1,5 @@
 configobj~=5.0.9
-configparser~=7.1.0
+configparser~=7.2.0
 psutil~=6.1.1
 requests~=2.32.4
 DateTime~=5.5
