@@ -16,5 +16,5 @@ matplotlib~=3.10.1
 networkx~=3.6.1
 pandas~=2.3.3
 cryptography~=46.0.3
-scapy~=2.7.0rc1
+scapy~=2.7.0
 sentence-transformers~=5.2.0
