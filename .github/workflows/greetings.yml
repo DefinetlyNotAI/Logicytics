@@ -1,6 +1,6 @@
 name: Greetings
 
-on: [ pull_request_target, issues ]
+on: [pull_request_target, issues]
 
 permissions:
   contents: read
@@ -13,12 +13,13 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76
         with:
           egress-policy: audit
 
-      - uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d # v3.1.0
+      - name: First Interaction Greeting
+        uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          issue-message: "Hi! Thanks for pointing out an issue/suggestion for the first time to Logicytics 🤗 We hope it goes as smoothly as possible."
-          pr-message: "Hi! Thanks for contributing for the first time to Logicytics 🤗 We hope it goes as smoothly as possible and appreciate your valuable contribution."
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_message: "Hi! Thanks for pointing out an issue/suggestion for the first time to Logicytics 🤗 We hope it goes as smoothly as possible."
+          pr_message: "Hi! Thanks for contributing for the first time to Logicytics 🤗 We hope it goes as smoothly as possible and appreciate your valuable contribution."
