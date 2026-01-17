@@ -1,9 +1,9 @@
-# Logicytics: System Data Harvester 📎
+# Logicytics: System Data Harvester
 
 Logicytics is a cutting-edge tool designed to
 meticulously harvest and collect a vast array of Windows system data for forensic analysis.
-Crafted with Python 🐍, it's an actively developed project that is dedicated
-to gathering as much sensitive data as possible and packaging it neatly into a ZIP file 📦.
+Crafted with Python, it's an actively developed project that is dedicated
+to gathering as much sensitive data as possible and packaging it neatly into a ZIP file.
 This comprehensive guide is here to equip you with everything you need to use Logicytics effectively.
 
 <div style="text-align:center;" align="center">
@@ -25,7 +25,7 @@ This comprehensive guide is here to equip you with everything you need to use Lo
 > By using this software, you agree to the license, and agree that you hold responsibility of how you use and modify the
 > code.
 
-## 🛠️ Installation and Setup 🛠️
+## Installation and Setup
 
 To install and setup Logicytics, follow these steps:
 
@@ -78,22 +78,22 @@ To install and setup Logicytics, follow these steps:
 
 ## Step-by-Step Installation and Usage
 
-1) Install Python 🐍
+1) Install Python
    If you don't have Python installed, you can download it from the <a href="https://www.python.org/downloads/">official
    website</a>.
    Make sure to select the option to "Add Python to PATH" during installation.
 
-2) Install Dependencies 📦
+2) Install Dependencies
    Logicytics requires Python modules. You can install all the required modules by running the following command in your
    terminal:
    `pip install -r requirements.txt`
 
-3) Run Logicytics 🚀
+3) Run Logicytics
    To run Logicytics, simply run the following command in your terminal:
    <code>python Logicytics.py -h</code>
    This opens a help menu.
 
-4) Run the Program 👾
+4) Run the Program
    Once you have run the program, you can run the program with the following command:
    `python Logicytics.py -h`
    Replace the flags with the ones you want to use.
@@ -103,10 +103,10 @@ To install and setup Logicytics, follow these steps:
 > Although it's really recommended to use admin, by setting debug in the config.json to true, you can bypass this
 > requirement
 
-5) Wait for magic to happen 🧙‍♀️
+5) Wait for magic to happen
    Logicytics will now run and gather data according to the flags you used.
 
-6) Enjoy the gathered data 🎉
+6) Enjoy the gathered data
    Once the program has finished running, you can find the gathered data in the "ACCESS/DATA" folder. Both Zip and Hash
    will be found there.
 
@@ -114,10 +114,10 @@ To install and setup Logicytics, follow these steps:
 > All Zips and Hashes follow a conventional naming mechanism that goes as follows
 > `Logicytics_{CODE-or-MODS}_{Flag-Used}_{Date-And-Time}.zip`
 
-7) Share the love ❤️
+7) Share the love
    If you like Logicytics, please consider sharing it with others or spreading the word about it.
 
-8) Contribute to the project 👥
+8) Contribute to the project
    If you have an idea or want to contribute to the project, you can submit an issue or PR on
    the <a href="https://github.com/DefinetlyNotAI/Logicytics">GitHub repository</a>.
 
@@ -130,7 +130,7 @@ Remove add and delete files, it's the safe directory where your backups, hashes,
 > Watch this [video](https://www.youtube.com/watch?v=XVTBmdTQqOs) to see a real life demo of Logicytics (Although the
 > tools and interface may be changed as it's an older version `2.1.1` - `2.3.3`)
 
-## 🔧 Configuration 🔧
+## Configuration
 
 Logicytics uses a config.ini file to store configurations. The config.ini is located in the CODE directory.
 
@@ -144,7 +144,7 @@ It is also used to store and save settings for other programs.
 > this is used to later check for corruption or bugs.
 > VERSION is the version of the project, used to check and pull for updates.
 
-## 🚀 Mods 🚀
+## Mods
 
 Mods are special files that are run with the `--modded` flag.
 These files are essentially scripts that are run after the main Logicytics.py script is run
@@ -172,7 +172,7 @@ you can add the script to the `MODS` directory, and it will be run with the `--m
 To check all the mods and how to make your own, you can check the `Logicytics.py` file and the Wiki.
 Also refer to the contributing.md for more info
 
-## 🛑 Troubleshooting 🛑
+## Troubleshooting
 
 If you are having issues, here are some troubleshooting tips:
 
@@ -222,7 +222,7 @@ found [here](https://github.com/DefinetlyNotAI/Logicytics/wiki/6-Code-tips-and-t
 > Always adhere to the [coding standards](https://github.com/DefinetlyNotAI/Logicytics/wiki/7-Advanced-Coding-Standards)
 > of Logicytics!
 
-## 🌟 Conclusion 🌟
+## Conclusion
 
 Logicytics is a powerful tool that can extract a wide variety of data from a Windows system.
 With its ability to extract data from various sources, Logicytics can be used for a variety of purposes,
@@ -234,13 +234,13 @@ for any Windows system administrator or forensic investigator.
 > Please remember that extracting data from a system without proper authorization is illegal and unethical.
 > Always obtain proper authorization before extracting any data from a system.
 
-## ❤️ Support Me ❤️
+## Support Me
 
 Please consider buying me a coffee or sponsoring me in GitHub sponsor,
 I am saving for my college funds, and I need your help!
 Supporters will be placed in the Credits ❤️
 
-### 🔗 Links
+### Links
 
 - [Project's Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
 - [Project's Future](PLANS.md)
