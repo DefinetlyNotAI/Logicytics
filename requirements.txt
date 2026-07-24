@@ -17,4 +17,4 @@ networkx~=3.6.1
 pandas~=3.0.5
 cryptography~=49.0.0
 scapy~=2.7.0
-sentence-transformers~=5.6.0
+sentence-transformers~=5.6.1
