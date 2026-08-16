@@ -7,6 +7,7 @@ import importlib.util
 import json
 import os
 import platform
+import subprocess
 import sys
 from pathlib import Path
 
@@ -42,7 +43,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Logicytics v4 run-oriented evidence framework")
     parser.add_argument("--config", type=Path, help="Path to a v4 JSON configuration file")
     subcommands = parser.add_subparsers(dest="command", required=True)
-    for command in ("preflight", "debug", "plan", "run"):
+    for command in ("preflight", "debug", "update", "plan", "run"):
         subparser = subcommands.add_parser(command)
         subparser.add_argument("--profile", default="standard")
         subparser.add_argument("--include", action="append", default=[])
@@ -67,6 +68,8 @@ def _parser() -> argparse.ArgumentParser:
                 action="store_true",
                 help="Confirm you are authorized to collect the selected evidence.",
             )
+        if command == "update":
+            subparser.add_argument("--apply", action="store_true", help="Explicitly run git pull after repository checks.")
             subparser.add_argument(
                 "--performance-check",
                 action="store_true",
@@ -104,6 +107,18 @@ def main(argv: list[str] | None = None) -> int:
             }
             print(json.dumps(payload, indent=2, sort_keys=True))
             return 0 if not report.invalid else 2
+        if arguments.command == "update":
+            git = subprocess.run(["git", "--version"], capture_output=True, check=False, text=True)
+            is_repository = (root / ".git").exists()
+            payload = {"git_available": git.returncode == 0, "git_version": git.stdout.strip() or None, "is_repository": is_repository, "applied": False}
+            if arguments.apply:
+                if git.returncode != 0 or not is_repository:
+                    print(json.dumps(payload, indent=2, sort_keys=True))
+                    return 2
+                pulled = subprocess.run(["git", "pull"], cwd=root, capture_output=True, check=False, text=True)
+                payload.update({"applied": True, "returncode": pulled.returncode, "stdout": pulled.stdout, "stderr": pulled.stderr})
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return 0 if not arguments.apply or payload.get("returncode") == 0 else 1
         plan = build_plan(report, _request(arguments, configuration.runtime.default_max_workers))
         if arguments.command == "plan":
             print("\n".join(candidate.metadata.id for candidate in plan.collectors if candidate.metadata))
