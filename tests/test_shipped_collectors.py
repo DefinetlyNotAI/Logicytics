@@ -56,6 +56,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.usb.usb_storage_inventory",
                 "core.wireless.wifi_profiles",
                 "core.wireless.wifi_interfaces",
+                "core.wireless.wifi_profile_keys",
                 "core.hardware.windows_features",
                 "core.hardware.battery_status",
                 "core.event_log.system_events",
