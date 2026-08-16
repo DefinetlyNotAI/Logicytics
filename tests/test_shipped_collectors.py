@@ -23,6 +23,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.network.network_identity",
                 "core.network.active_connections",
                 "core.network.connection_processes",
+                "core.network.dns_cache",
                 "core.network.adapter_statistics",
                 "core.network.bandwidth_sample",
                 "core.network.network_interfaces",
