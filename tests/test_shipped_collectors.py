@@ -33,6 +33,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.storage.logical_drives",
                 "core.storage.physical_disks",
                 "core.storage.mounted_volumes",
+                "core.storage.volume_details",
                 "core.system.system_info",
                 "core.system.system_details",
                 "core.system.bios_info",
