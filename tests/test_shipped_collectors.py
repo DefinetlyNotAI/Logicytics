@@ -29,6 +29,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.system.group_policy",
                 "core.usb.usb_storage_inventory",
                 "core.hardware.windows_features",
+                "core.event_log.system_events",
             },
             {candidate.metadata.id for candidate in report.valid if candidate.metadata},
         )
