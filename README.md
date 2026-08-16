@@ -29,7 +29,8 @@ rebuilt incrementally.
   `core.system.computer_system`,
   `core.system.installed_drivers`, and
   `core.system.group_policy`, `core.event_log.system_events`, and
-  `core.network.arp_cache`, plus `core.network.routing_table`.
+  `core.network.arp_cache`, `core.network.routing_table`, and
+  `core.storage.physical_disks`.
 
 ## Layout
 
