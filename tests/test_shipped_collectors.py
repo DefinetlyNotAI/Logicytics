@@ -19,6 +19,7 @@ class ShippedCollectorTests(unittest.TestCase):
         self.assertEqual(
             {
                 "core.bluetooth.paired_devices",
+                "core.bluetooth.bluetooth_addresses",
                 "core.network.network_identity",
                 "core.network.active_connections",
                 "core.network.connection_processes",

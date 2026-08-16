@@ -23,6 +23,7 @@ rebuilt incrementally.
   `core.memory.memory_snapshot`, `core.storage.logical_drives`, and deep-profile
   `core.hardware.windows_features`, `core.network.network_adapters`, and
   `core.bluetooth.paired_devices`, plus `core.usb.usb_storage_inventory`.
+  Deep-profile inventory also includes `core.bluetooth.bluetooth_addresses`.
   Deep-profile collection also includes `core.system.system_details`,
   `core.system.bios_info`,
   `core.system.operating_system`,
