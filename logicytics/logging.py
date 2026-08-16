@@ -55,3 +55,9 @@ def timed(logger: EventLogger, *, level: str = "info") -> Callable[[Callable[Par
             return value
         return wrapped
     return decorate
+
+
+def raise_logged(logger: EventLogger, exception_type: type[Exception], message: str, **fields: int | float | str) -> None:
+    """Record a structured exception event, then raise the requested exception type."""
+    logger.event("exception", message, exception_type=exception_type.__name__, **fields)
+    raise exception_type(message)

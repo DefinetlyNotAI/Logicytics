@@ -9,7 +9,7 @@ from pathlib import Path
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.file_listing import list_files
-from logicytics.logging import timed
+from logicytics.logging import raise_logged, timed
 from logicytics.configuration import default_config, load_config
 from logicytics.contracts import Capability, RunRequest
 from logicytics.discovery import preflight
@@ -60,6 +60,17 @@ class SystemInfoCollector(CoreCollector):
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_exception_helper_logs_before_raising(self) -> None:
+        """Exception helpers must preserve the requested exception type and context."""
+        events: list[tuple[str, str, dict[str, object]]] = []
+        class Logger:
+            def event(self, level: str, message: str, **fields: object) -> None:
+                events.append((level, message, fields))
+        with self.assertRaises(ValueError):
+            raise_logged(Logger(), ValueError, "invalid setting", setting="workers")
+        self.assertEqual("exception", events[0][0])
+        self.assertEqual("ValueError", events[0][2]["exception_type"])
+
     def test_timed_decorator_records_function_lifecycle(self) -> None:
         """Timing instrumentation must report start and finish through EventLogger."""
         events: list[tuple[str, str, dict[str, object]]] = []
