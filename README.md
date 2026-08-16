@@ -18,7 +18,8 @@ rebuilt incrementally.
 - Structured JSONL engine and collector logs.
 - Artifact registration with workspace boundaries, output limits, SHA-256 hashes,
   a run manifest, ZIP package, and package hash.
-- First shipped collector: `core.system.system_info`.
+- Shipped collectors: `core.system.system_info` and the capability-gated
+  `core.process.running_processes`.
 
 ## Layout
 
