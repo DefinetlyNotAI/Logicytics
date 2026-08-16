@@ -22,6 +22,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.network.network_identity",
                 "core.network.network_adapters",
                 "core.network.arp_cache",
+                "core.network.routing_table",
                 "core.memory.memory_snapshot",
                 "core.process.running_processes",
                 "core.storage.logical_drives",
