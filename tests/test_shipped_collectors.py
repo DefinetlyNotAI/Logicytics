@@ -40,6 +40,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.process.running_processes",
                 "core.process.detailed_processes",
                 "core.process.process_memory",
+                "core.process.memory_map",
                 "core.registry.installed_applications",
                 "core.registry.hklm_backup",
                 "core.registry.startup_applications",
