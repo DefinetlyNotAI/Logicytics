@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
+import os
+import platform
+import sys
 from pathlib import Path
 
 from logicytics.configuration import load_config
@@ -38,7 +42,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Logicytics v4 run-oriented evidence framework")
     parser.add_argument("--config", type=Path, help="Path to a v4 JSON configuration file")
     subcommands = parser.add_subparsers(dest="command", required=True)
-    for command in ("preflight", "plan", "run"):
+    for command in ("preflight", "debug", "plan", "run"):
         subparser = subcommands.add_parser(command)
         subparser.add_argument("--profile", default="standard")
         subparser.add_argument("--include", action="append", default=[])
@@ -87,6 +91,16 @@ def main(argv: list[str] | None = None) -> int:
                     {"path": str(candidate.path), "errors": candidate.static_errors or [candidate.runtime_error]}
                     for candidate in report.invalid
                 ],
+            }
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return 0 if not report.invalid else 2
+        if arguments.command == "debug":
+            payload = {
+                "configuration": configuration.to_manifest_dict(),
+                "environment": inspect_environment().to_dict(),
+                "python": {"executable": sys.executable, "implementation": platform.python_implementation(), "version": platform.python_version(), "prefix": sys.prefix, "virtual_environment": sys.prefix != sys.base_prefix, "psutil_available": importlib.util.find_spec("psutil") is not None, "cpu_count": os.cpu_count()},
+                "sysinternals": ensure_sysinternals(root).to_dict(),
+                "preflight": {"valid_collectors": len(report.valid), "invalid_collectors": len(report.invalid)},
             }
             print(json.dumps(payload, indent=2, sort_keys=True))
             return 0 if not report.invalid else 2
