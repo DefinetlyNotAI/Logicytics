@@ -28,6 +28,7 @@ rebuilt incrementally.
   `core.system.operating_system`,
   `core.system.computer_system`,
   `core.system.session_snapshot`,
+  `core.system.system_diagnostics`,
   `core.process.detailed_processes`,
   `core.network.active_connections`,
   `core.network.adapter_statistics`,
