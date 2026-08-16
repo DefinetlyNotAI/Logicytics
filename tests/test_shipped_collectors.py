@@ -60,6 +60,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.system.installed_updates",
                 "core.system.windows_services",
                 "core.system.windows_system_data_backup",
+                "core.diagnostics.sysinternals_report",
                 "core.system.group_policy",
                 "core.usb.usb_storage_inventory",
                 "core.wireless.wifi_profiles",
