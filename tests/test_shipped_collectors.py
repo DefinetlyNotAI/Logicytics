@@ -20,6 +20,7 @@ class ShippedCollectorTests(unittest.TestCase):
             {
                 "core.bluetooth.paired_devices",
                 "core.bluetooth.bluetooth_addresses",
+                "core.browser.browser_data_backup",
                 "core.network.network_identity",
                 "core.network.active_connections",
                 "core.network.connection_processes",
