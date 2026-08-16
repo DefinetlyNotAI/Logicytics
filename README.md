@@ -22,7 +22,7 @@ rebuilt incrementally.
   `core.process.running_processes` and `core.network.network_identity`, plus
   `core.memory.memory_snapshot`, `core.storage.logical_drives`, and deep-profile
   `core.hardware.windows_features`, `core.network.network_adapters`, and
-  `core.bluetooth.paired_devices`.
+  `core.bluetooth.paired_devices`, plus `core.usb.usb_storage_inventory`.
 
 ## Layout
 

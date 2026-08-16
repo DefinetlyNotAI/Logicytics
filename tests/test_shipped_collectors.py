@@ -25,6 +25,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.process.running_processes",
                 "core.storage.logical_drives",
                 "core.system.system_info",
+                "core.usb.usb_storage_inventory",
                 "core.hardware.windows_features",
             },
             {candidate.metadata.id for candidate in report.valid if candidate.metadata},
