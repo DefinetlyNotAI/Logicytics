@@ -14,6 +14,7 @@ from logicytics.environment import inspect_environment
 from logicytics.packaging import package_run
 from logicytics.planner import build_plan
 from logicytics.runtime import RunSupervisor
+from logicytics.sysinternals import ensure_sysinternals
 
 
 def _project_root() -> Path:
@@ -80,6 +81,7 @@ def main(argv: list[str] | None = None) -> int:
         if arguments.command == "preflight":
             payload = {
                 "environment": inspect_environment().to_dict(),
+                "sysinternals": ensure_sysinternals(root).to_dict(),
                 "valid": [candidate.metadata.id for candidate in report.valid if candidate.metadata],
                 "invalid": [
                     {"path": str(candidate.path), "errors": candidate.static_errors or [candidate.runtime_error]}

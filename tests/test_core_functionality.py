@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.file_listing import list_files
 from logicytics.logging import deprecated, raise_logged, timed
+from logicytics.sysinternals import ensure_sysinternals
 from logicytics.configuration import default_config, load_config
 from logicytics.contracts import Capability, CollectorMetadata, RunRequest, Specialty
 from logicytics.discovery import preflight
@@ -60,6 +62,19 @@ class SystemInfoCollector(CoreCollector):
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_sysinternals_archive_lifecycle_honors_ignore_and_extracts_safely(self) -> None:
+        """The local bundle must honor opt-out and extract only within its target directory."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / ".ignore-sysinternals").write_text("", encoding="utf-8")
+            self.assertEqual("ignored", ensure_sysinternals(root).status)
+            (root / ".ignore-sysinternals").unlink()
+            with zipfile.ZipFile(root / "SysinternalsSuite.zip", "w") as archive:
+                archive.writestr("PsInfo.exe", "fixture")
+            state = ensure_sysinternals(root)
+            self.assertEqual("extracted", state.status)
+            self.assertTrue((state.extraction_directory / "PsInfo.exe").is_file())
+
     def test_custom_specialty_is_plugin_only(self) -> None:
         """Plugins may extend specialties, but core metadata remains on the closed set."""
         metadata = CollectorMetadata(
