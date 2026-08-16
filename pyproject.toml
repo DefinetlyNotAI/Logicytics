@@ -1,0 +1,16 @@
+[project]
+name = "logicytics"
+version = "4.0.0a1"
+description = "A run-oriented Windows evidence collection framework."
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+logicytics = "logicytics.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

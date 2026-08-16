@@ -1,0 +1,70 @@
+"""Short-lived metadata probe used only after AST-based collector validation."""
+
+from __future__ import annotations
+
+import importlib.util
+import inspect
+import json
+import sys
+from pathlib import Path
+
+from logicytics.contracts import Collector, CollectorKind, CollectorMetadata, CoreCollector, PluginCollector
+
+
+def _load_module(path: Path):
+    module_name = f"logicytics_probe_{path.stem}"
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise ValueError("unable to create module specification")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _validate_contract(collector_type: type[Collector], kind: CollectorKind) -> CollectorMetadata:
+    required_base = CoreCollector if kind is CollectorKind.CORE else PluginCollector
+    if not issubclass(collector_type, required_base):
+        raise ValueError(f"collector must inherit from {required_base.__name__}")
+    for method_name, expected_parameters in {
+        "metadata": 0,
+        "validate": 1,
+        "collect": 1,
+        "cleanup": 1,
+    }.items():
+        method = getattr(collector_type, method_name, None)
+        if method is None:
+            raise ValueError(f"missing required method: {method_name}")
+        parameters = list(inspect.signature(method).parameters.values())
+        if method_name == "metadata":
+            parameters = parameters[1:] if parameters and parameters[0].name == "cls" else parameters
+        elif parameters and parameters[0].name == "self":
+            parameters = parameters[1:]
+        if len(parameters) != expected_parameters:
+            raise ValueError(f"{method_name} has an invalid signature")
+    metadata = collector_type.metadata()
+    if not isinstance(metadata, CollectorMetadata):
+        raise ValueError("metadata() must return CollectorMetadata")
+    return metadata
+
+
+def main() -> int:
+    """Validate a collector module and emit only JSON to stdout."""
+    try:
+        path = Path(sys.argv[1]).resolve()
+        kind = CollectorKind(sys.argv[2])
+        expected_class = sys.argv[3]
+        sys.path.insert(0, str(path.parent))
+        module = _load_module(path)
+        collector_type = getattr(module, expected_class, None)
+        if not inspect.isclass(collector_type):
+            raise ValueError(f"missing collector class: {expected_class}")
+        metadata = _validate_contract(collector_type, kind)
+        print(json.dumps({"metadata": metadata.to_dict()}, sort_keys=True))
+        return 0
+    except (IndexError, TypeError, ValueError, ImportError, OSError) as error:
+        print(str(error), file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
