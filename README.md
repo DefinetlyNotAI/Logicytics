@@ -20,7 +20,8 @@ rebuilt incrementally.
   a run manifest, ZIP package, and package hash.
 - Shipped collectors: `core.system.system_info` and the capability-gated
   `core.process.running_processes` and `core.network.network_identity`, plus
-  `core.memory.memory_snapshot` and `core.storage.logical_drives`.
+  `core.memory.memory_snapshot`, `core.storage.logical_drives`, and deep-profile
+  `core.hardware.windows_features`.
 
 ## Layout
 

@@ -23,6 +23,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.process.running_processes",
                 "core.storage.logical_drives",
                 "core.system.system_info",
+                "core.hardware.windows_features",
             },
             {candidate.metadata.id for candidate in report.valid if candidate.metadata},
         )
