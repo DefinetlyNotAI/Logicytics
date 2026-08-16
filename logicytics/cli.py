@@ -10,6 +10,7 @@ from logicytics.configuration import load_config
 from logicytics.contracts import Capability, RunRequest
 from logicytics.discovery import preflight
 from logicytics.errors import LogicyticsError
+from logicytics.environment import inspect_environment
 from logicytics.packaging import package_run
 from logicytics.planner import build_plan
 from logicytics.runtime import RunSupervisor
@@ -78,6 +79,7 @@ def main(argv: list[str] | None = None) -> int:
         report = preflight(root)
         if arguments.command == "preflight":
             payload = {
+                "environment": inspect_environment().to_dict(),
                 "valid": [candidate.metadata.id for candidate in report.valid if candidate.metadata],
                 "invalid": [
                     {"path": str(candidate.path), "errors": candidate.static_errors or [candidate.runtime_error]}
