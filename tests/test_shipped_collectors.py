@@ -48,6 +48,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.hardware.windows_features",
                 "core.event_log.system_events",
                 "core.event_log.application_events",
+                "core.event_log.security_events",
                 "core.encryption.bitlocker_status",
                 "core.encryption.bitlocker_volumes",
             },

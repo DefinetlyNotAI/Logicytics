@@ -36,6 +36,7 @@ rebuilt incrementally.
   `core.network.connection_processes`,
   `core.wireless.wifi_profiles`,
   `core.event_log.application_events`,
+  `core.event_log.security_events`,
   `core.system.installed_drivers`, and
   `core.system.group_policy`, `core.event_log.system_events`, and
   `core.network.arp_cache`, `core.network.routing_table`, and
