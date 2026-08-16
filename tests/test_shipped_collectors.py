@@ -34,6 +34,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.process.detailed_processes",
                 "core.process.process_memory",
                 "core.registry.installed_applications",
+                "core.registry.startup_applications",
                 "core.storage.logical_drives",
                 "core.storage.physical_disks",
                 "core.storage.mounted_volumes",
