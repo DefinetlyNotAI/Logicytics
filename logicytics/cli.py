@@ -25,7 +25,7 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
         include=tuple(arguments.include),
         exclude=tuple(arguments.exclude),
         enable_plugins=arguments.plugins,
-        max_workers=arguments.workers or default_workers,
+        max_workers=1 if getattr(arguments, "performance_check", False) else arguments.workers or default_workers,
         acknowledge_authorization=getattr(arguments, "acknowledge_authorization", False),
         approved_capabilities=tuple(Capability(value) for value in arguments.allow_capability),
     )
@@ -55,6 +55,11 @@ def _parser() -> argparse.ArgumentParser:
                 action="store_true",
                 help="Confirm you are authorized to collect the selected evidence.",
             )
+            subparser.add_argument(
+                "--performance-check",
+                action="store_true",
+                help="Run collectors sequentially and write a per-collector duration report.",
+            )
     return parser
 
 
@@ -80,6 +85,23 @@ def main(argv: list[str] | None = None) -> int:
             print("\n".join(candidate.metadata.id for candidate in plan.collectors if candidate.metadata))
             return 0
         outcome = RunSupervisor(root, configuration).run(plan)
+        if arguments.performance_check:
+            performance_path = outcome.run_directory / "logs" / "performance.json"
+            performance_path.write_text(
+                json.dumps(
+                    {
+                        "run_id": outcome.manifest.run_id,
+                        "collectors": [
+                            {"id": record.id, "status": record.status, "duration_seconds": record.duration_seconds}
+                            for record in outcome.manifest.collectors
+                        ],
+                    },
+                    indent=2,
+                    sort_keys=True,
+                ) + "\n",
+                encoding="utf-8",
+            )
+            print(f"Performance: {performance_path}")
         if configuration.runtime.package_completed_runs:
             package_path, hash_path = package_run(outcome)
             print(f"Package: {package_path}\nSHA-256: {hash_path}")
