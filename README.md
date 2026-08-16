@@ -22,6 +22,7 @@ rebuilt incrementally.
   `core.process.running_processes` and `core.network.network_identity`, plus
   `core.memory.memory_snapshot`, `core.storage.logical_drives`, and deep-profile
   `core.hardware.windows_features`, `core.network.network_adapters`, and
+  `core.hardware.battery_status`,
   `core.bluetooth.paired_devices`, plus `core.usb.usb_storage_inventory`.
   Deep-profile inventory also includes `core.bluetooth.bluetooth_addresses`.
   Deep-profile collection also includes `core.system.system_details`,
