@@ -32,6 +32,7 @@ rebuilt incrementally.
   `core.process.detailed_processes`,
   `core.process.process_memory`,
   `core.filesystem.system_drive_tree`,
+  `core.filesystem.system_drive_listing`,
   `core.network.active_connections`,
   `core.network.adapter_statistics`,
   `core.network.network_interfaces`,
