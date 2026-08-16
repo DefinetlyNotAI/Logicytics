@@ -21,6 +21,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.network.network_identity",
                 "core.memory.memory_snapshot",
                 "core.process.running_processes",
+                "core.storage.logical_drives",
                 "core.system.system_info",
             },
             {candidate.metadata.id for candidate in report.valid if candidate.metadata},
