@@ -25,6 +25,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.network.routing_table",
                 "core.memory.memory_snapshot",
                 "core.process.running_processes",
+                "core.process.detailed_processes",
                 "core.storage.logical_drives",
                 "core.storage.physical_disks",
                 "core.system.system_info",
