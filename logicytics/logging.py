@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
@@ -61,3 +62,16 @@ def raise_logged(logger: EventLogger, exception_type: type[Exception], message: 
     """Record a structured exception event, then raise the requested exception type."""
     logger.event("exception", message, exception_type=exception_type.__name__, **fields)
     raise exception_type(message)
+
+
+def deprecated(logger: EventLogger, *, removal_version: str, reason: str, include_stack: bool = False) -> Callable[[Callable[Parameters, Result]], Callable[Parameters, Result]]:
+    """Decorate a function so each invocation emits a structured deprecation warning."""
+    def decorate(function: Callable[Parameters, Result]) -> Callable[Parameters, Result]:
+        def wrapped(*args: Parameters.args, **kwargs: Parameters.kwargs) -> Result:
+            fields: dict[str, str] = {"function": function.__qualname__, "removal_version": removal_version, "reason": reason}
+            if include_stack:
+                fields["stack"] = "".join(traceback.format_stack(limit=8))
+            logger.event("warning", "function_deprecated", **fields)
+            return function(*args, **kwargs)
+        return wrapped
+    return decorate

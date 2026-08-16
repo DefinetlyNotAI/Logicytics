@@ -9,7 +9,7 @@ from pathlib import Path
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.file_listing import list_files
-from logicytics.logging import raise_logged, timed
+from logicytics.logging import deprecated, raise_logged, timed
 from logicytics.configuration import default_config, load_config
 from logicytics.contracts import Capability, RunRequest
 from logicytics.discovery import preflight
@@ -60,6 +60,19 @@ class SystemInfoCollector(CoreCollector):
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_deprecation_decorator_logs_removal_context(self) -> None:
+        """Deprecated functions must preserve behavior while reporting removal context."""
+        events: list[tuple[str, str, dict[str, object]]] = []
+        class Logger:
+            def event(self, level: str, message: str, **fields: object) -> None:
+                events.append((level, message, fields))
+        @deprecated(Logger(), removal_version="5.0", reason="replacement exists")
+        def old() -> str:
+            return "still works"
+        self.assertEqual("still works", old())
+        self.assertEqual("function_deprecated", events[0][1])
+        self.assertEqual("5.0", events[0][2]["removal_version"])
+
     def test_exception_helper_logs_before_raising(self) -> None:
         """Exception helpers must preserve the requested exception type and context."""
         events: list[tuple[str, str, dict[str, object]]] = []
