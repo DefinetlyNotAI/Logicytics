@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import ctypes
 import json
 import winreg
-from datetime import datetime, timezone
+from ctypes import wintypes
+from datetime import datetime, timedelta, timezone
 
 from logicytics import (
     Capability,
@@ -19,9 +21,21 @@ from logicytics.contracts import CollectorContext, CollectorStatus
 _USBSTOR_PATH = r"SYSTEM\CurrentControlSet\Enum\USBSTOR"
 
 
-def _enumerate_usb_storage() -> list[dict[str, str]]:
+def _registry_last_write(key: winreg.HKEYType) -> str | None:
+    """Return one registry key's last-write timestamp in UTC when Windows reports it."""
+    timestamp = wintypes.FILETIME()
+    result = ctypes.windll.advapi32.RegQueryInfoKeyW(
+        wintypes.HKEY(key.handle), None, None, None, None, None, None, None, None, None, None, ctypes.byref(timestamp)
+    )
+    if result != 0:
+        return None
+    ticks = (timestamp.dwHighDateTime << 32) | timestamp.dwLowDateTime
+    return (datetime(1601, 1, 1, tzinfo=timezone.utc) + timedelta(microseconds=ticks // 10)).isoformat()
+
+
+def _enumerate_usb_storage() -> list[dict[str, str | None]]:
     """Return USBSTOR device class, instance ID, and friendly name when readable."""
-    devices: list[dict[str, str]] = []
+    devices: list[dict[str, str | None]] = []
     with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, _USBSTOR_PATH) as root:
         class_index = 0
         while True:
@@ -44,13 +58,15 @@ def _enumerate_usb_storage() -> list[dict[str, str]]:
                     try:
                         with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, instance_path) as instance_key:
                             friendly_name = str(winreg.QueryValueEx(instance_key, "FriendlyName")[0])
+                            last_write = _registry_last_write(instance_key)
                     except OSError:
-                        pass
+                        last_write = None
                     devices.append(
                         {
                             "device_class": device_class,
                             "instance_id": instance_id,
                             "friendly_name": friendly_name,
+                            "last_write": last_write,
                         }
                     )
     return devices
@@ -67,7 +83,7 @@ class UsbStorageInventoryCollector(CoreCollector):
             name="USB storage inventory",
             version="4.0.0",
             specialty=Specialty.USB,
-            description="Reads USB storage device class, instance ID, and friendly name from USBSTOR.",
+            description="Reads USB storage device class, instance ID, friendly name, and last-write time from USBSTOR.",
             author="Logicytics",
             supported_platforms=("win32",),
             capabilities=(Capability.REGISTRY_READ,),
