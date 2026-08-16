@@ -150,6 +150,12 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
     if unknown:
         candidate.static_errors.append(f"unsupported public collector methods: {', '.join(unknown)}")
     required = {"metadata", "validate", "collect", "cleanup"}
+    expected_returns = {
+        "metadata": "CollectorMetadata",
+        "validate": "ValidationResult",
+        "collect": "CollectorResult",
+        "cleanup": "None",
+    }
     missing = sorted(required - set(methods))
     if missing:
         candidate.static_errors.append(f"missing required collector methods: {', '.join(missing)}")
@@ -158,6 +164,8 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
             candidate.static_errors.append(f"{name} requires a docstring")
         if method.returns is None:
             candidate.static_errors.append(f"{name} requires a return type annotation")
+        elif name in expected_returns and ast.unparse(method.returns).rsplit(".", 1)[-1] != expected_returns[name]:
+            candidate.static_errors.append(f"{name} must return {expected_returns[name]}")
         parameters = method.args.args
         expected_parameter_count = 1 if name == "metadata" else 2
         if len(parameters) != expected_parameter_count:
@@ -171,7 +179,8 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
                 candidate.static_errors.append("metadata must be a classmethod")
         else:
             context_parameter = parameters[1]
-            if context_parameter.arg != "context" or context_parameter.annotation is None:
+            annotation = ast.unparse(context_parameter.annotation).rsplit(".", 1)[-1] if context_parameter.annotation else None
+            if context_parameter.arg != "context" or annotation != "CollectorContext":
                 candidate.static_errors.append(f"{name} must accept an annotated context parameter")
 
 
