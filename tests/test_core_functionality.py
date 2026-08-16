@@ -8,6 +8,7 @@ from pathlib import Path
 
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
+from logicytics.file_listing import list_files
 from logicytics.configuration import default_config, load_config
 from logicytics.contracts import Capability, RunRequest
 from logicytics.discovery import preflight
@@ -58,6 +59,18 @@ class SystemInfoCollector(CoreCollector):
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_file_listing_filters_and_normalizes_files(self) -> None:
+        """Recursive file discovery must filter extensions and excluded directories."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "collectors").mkdir()
+            (root / "collectors" / "valid.py").write_text("", encoding="utf-8")
+            (root / "collectors" / "ignore.txt").write_text("", encoding="utf-8")
+            (root / ".venv").mkdir()
+            (root / ".venv" / "hidden.py").write_text("", encoding="utf-8")
+            files = list_files(root, extensions=(".py",), excluded_directories=(".venv",))
+            self.assertEqual((root / "collectors" / "valid.py",), files)
+
     def test_command_runner_captures_output_and_parses_structured_levels(self) -> None:
         """Core command execution must avoid a shell and preserve structured output."""
         result = run_command(("python", "-c", "print('INFO: collected'); print('ordinary')"))
