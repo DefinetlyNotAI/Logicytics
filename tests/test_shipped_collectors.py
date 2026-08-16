@@ -69,6 +69,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.event_log.application_events",
                 "core.event_log.security_events",
                 "core.filesystem.system_drive_tree",
+                "core.filesystem.sensitive_file_inventory",
                 "core.filesystem.system_drive_listing",
                 "core.encryption.bitlocker_status",
                 "core.encryption.bitlocker_volumes",
