@@ -25,6 +25,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.process.running_processes",
                 "core.storage.logical_drives",
                 "core.system.system_info",
+                "core.system.installed_drivers",
                 "core.usb.usb_storage_inventory",
                 "core.hardware.windows_features",
             },
