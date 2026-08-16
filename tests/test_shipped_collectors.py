@@ -21,6 +21,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.bluetooth.paired_devices",
                 "core.network.network_identity",
                 "core.network.network_adapters",
+                "core.network.arp_cache",
                 "core.memory.memory_snapshot",
                 "core.process.running_processes",
                 "core.storage.logical_drives",
