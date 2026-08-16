@@ -23,6 +23,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.network.active_connections",
                 "core.network.connection_processes",
                 "core.network.adapter_statistics",
+                "core.network.bandwidth_sample",
                 "core.network.network_interfaces",
                 "core.network.network_adapters",
                 "core.network.arp_cache",

@@ -35,6 +35,7 @@ rebuilt incrementally.
   `core.filesystem.system_drive_listing`,
   `core.network.active_connections`,
   `core.network.adapter_statistics`,
+  `core.network.bandwidth_sample`,
   `core.network.network_interfaces`,
   `core.network.connection_processes`,
   `core.wireless.wifi_profiles`,
