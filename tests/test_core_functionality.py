@@ -9,6 +9,7 @@ from pathlib import Path
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.file_listing import list_files
+from logicytics.logging import timed
 from logicytics.configuration import default_config, load_config
 from logicytics.contracts import Capability, RunRequest
 from logicytics.discovery import preflight
@@ -59,6 +60,18 @@ class SystemInfoCollector(CoreCollector):
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_timed_decorator_records_function_lifecycle(self) -> None:
+        """Timing instrumentation must report start and finish through EventLogger."""
+        events: list[tuple[str, str, dict[str, object]]] = []
+        class Logger:
+            def event(self, level: str, message: str, **fields: object) -> None:
+                events.append((level, message, fields))
+        @timed(Logger())
+        def add(left: int, right: int) -> int:
+            return left + right
+        self.assertEqual(3, add(1, 2))
+        self.assertEqual(["function_started", "function_finished"], [event[1] for event in events])
+
     def test_file_listing_filters_and_normalizes_files(self) -> None:
         """Recursive file discovery must filter extensions and excluded directories."""
         with tempfile.TemporaryDirectory() as temporary:

@@ -5,8 +5,14 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from time import perf_counter
+from typing import Callable, ParamSpec, TypeVar
 
 from logicytics.contracts import EventLogger
+
+
+Parameters = ParamSpec("Parameters")
+Result = TypeVar("Result")
 
 
 class FileEventLogger(EventLogger):
@@ -32,3 +38,20 @@ class FileEventLogger(EventLogger):
             payload["fields"] = fields
         with self.path.open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(payload, sort_keys=True) + "\n")
+
+
+def timed(logger: EventLogger, *, level: str = "info") -> Callable[[Callable[Parameters, Result]], Callable[Parameters, Result]]:
+    """Decorate a function so structured start, finish, error, and duration events are written."""
+    def decorate(function: Callable[Parameters, Result]) -> Callable[Parameters, Result]:
+        def wrapped(*args: Parameters.args, **kwargs: Parameters.kwargs) -> Result:
+            logger.event(level, "function_started", function=function.__qualname__)
+            started = perf_counter()
+            try:
+                value = function(*args, **kwargs)
+            except Exception as error:
+                logger.event("error", "function_failed", function=function.__qualname__, duration_seconds=round(perf_counter() - started, 6), error_type=type(error).__name__)
+                raise
+            logger.event(level, "function_finished", function=function.__qualname__, duration_seconds=round(perf_counter() - started, 6))
+            return value
+        return wrapped
+    return decorate
