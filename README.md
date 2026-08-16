@@ -30,6 +30,7 @@ rebuilt incrementally.
   `core.system.session_snapshot`,
   `core.process.detailed_processes`,
   `core.network.active_connections`,
+  `core.network.adapter_statistics`,
   `core.system.installed_drivers`, and
   `core.system.group_policy`, `core.event_log.system_events`, and
   `core.network.arp_cache`, `core.network.routing_table`, and
