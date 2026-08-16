@@ -20,12 +20,13 @@ def _project_root() -> Path:
 
 
 def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
+    profile = "minimal" if getattr(arguments, "minimal", False) else "deep" if getattr(arguments, "depth", False) else "standard" if getattr(arguments, "default_mode", False) or getattr(arguments, "threaded", False) else arguments.profile
     return RunRequest(
-        profile=arguments.profile,
+        profile=profile,
         include=tuple(arguments.include),
         exclude=tuple(arguments.exclude),
         enable_plugins=arguments.plugins,
-        max_workers=1 if getattr(arguments, "performance_check", False) else arguments.workers or default_workers,
+        max_workers=1 if getattr(arguments, "performance_check", False) or getattr(arguments, "default_mode", False) else arguments.workers or default_workers,
         acknowledge_authorization=getattr(arguments, "acknowledge_authorization", False),
         approved_capabilities=tuple(Capability(value) for value in arguments.allow_capability),
     )
@@ -50,6 +51,11 @@ def _parser() -> argparse.ArgumentParser:
             help="Approve an access capability requested by the selected collectors.",
         )
         if command == "run":
+            mode = subparser.add_mutually_exclusive_group()
+            mode.add_argument("--default", dest="default_mode", action="store_true", help="Run the standard built-in profile.")
+            mode.add_argument("--threaded", action="store_true", help="Run the standard built-in profile with configured parallel workers.")
+            mode.add_argument("--minimal", action="store_true", help="Run the minimal built-in profile.")
+            mode.add_argument("--depth", action="store_true", help="Run the deep built-in profile.")
             subparser.add_argument(
                 "--acknowledge-authorization",
                 action="store_true",
