@@ -19,6 +19,7 @@ class ShippedCollectorTests(unittest.TestCase):
         self.assertEqual(
             {
                 "core.network.network_identity",
+                "core.memory.memory_snapshot",
                 "core.process.running_processes",
                 "core.system.system_info",
             },

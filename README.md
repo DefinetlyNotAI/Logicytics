@@ -19,7 +19,8 @@ rebuilt incrementally.
 - Artifact registration with workspace boundaries, output limits, SHA-256 hashes,
   a run manifest, ZIP package, and package hash.
 - Shipped collectors: `core.system.system_info` and the capability-gated
-  `core.process.running_processes` and `core.network.network_identity`.
+  `core.process.running_processes` and `core.network.network_identity`, plus
+  `core.memory.memory_snapshot`.
 
 ## Layout
 
