@@ -79,14 +79,17 @@ class MemorySnapshotCollector(CoreCollector):
             "physical_memory": {
                 "total_bytes": status.ullTotalPhys,
                 "available_bytes": status.ullAvailPhys,
+                "used_bytes": status.ullTotalPhys - status.ullAvailPhys,
             },
             "page_file": {
                 "total_bytes": status.ullTotalPageFile,
                 "available_bytes": status.ullAvailPageFile,
+                "used_bytes": status.ullTotalPageFile - status.ullAvailPageFile,
             },
             "virtual_memory": {
                 "total_bytes": status.ullTotalVirtual,
                 "available_bytes": status.ullAvailVirtual,
+                "used_bytes": status.ullTotalVirtual - status.ullAvailVirtual,
             },
         }
         output = context.workspace / "memory_snapshot.json"
