@@ -33,6 +33,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.network.network_adapters",
                 "core.network.arp_cache",
                 "core.network.routing_table",
+                "core.packet.packet_capture",
                 "core.memory.memory_snapshot",
                 "core.media.media_backup",
                 "core.process.running_processes",
