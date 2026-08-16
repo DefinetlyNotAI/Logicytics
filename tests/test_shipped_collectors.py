@@ -32,6 +32,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.network.arp_cache",
                 "core.network.routing_table",
                 "core.memory.memory_snapshot",
+                "core.media.media_backup",
                 "core.process.running_processes",
                 "core.process.detailed_processes",
                 "core.process.process_memory",
