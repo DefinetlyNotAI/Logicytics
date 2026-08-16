@@ -41,6 +41,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.system.installed_drivers",
                 "core.system.group_policy",
                 "core.usb.usb_storage_inventory",
+                "core.wireless.wifi_profiles",
                 "core.hardware.windows_features",
                 "core.event_log.system_events",
             },
