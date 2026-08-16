@@ -25,6 +25,7 @@ rebuilt incrementally.
   `core.bluetooth.paired_devices`, plus `core.usb.usb_storage_inventory`.
   Deep-profile collection also includes `core.system.system_details`,
   `core.system.bios_info`,
+  `core.system.operating_system`,
   `core.system.installed_drivers`, and
   `core.system.group_policy`, `core.event_log.system_events`, and
   `core.network.arp_cache`, plus `core.network.routing_table`.
