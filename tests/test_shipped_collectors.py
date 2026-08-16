@@ -50,6 +50,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.event_log.system_events",
                 "core.event_log.application_events",
                 "core.event_log.security_events",
+                "core.filesystem.system_drive_tree",
                 "core.encryption.bitlocker_status",
                 "core.encryption.bitlocker_volumes",
             },
