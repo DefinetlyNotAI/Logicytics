@@ -30,6 +30,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.memory.memory_snapshot",
                 "core.process.running_processes",
                 "core.process.detailed_processes",
+                "core.process.process_memory",
                 "core.storage.logical_drives",
                 "core.storage.physical_disks",
                 "core.storage.mounted_volumes",
