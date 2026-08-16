@@ -17,7 +17,11 @@ class ShippedCollectorTests(unittest.TestCase):
         report = preflight(project_root)
         self.assertEqual((), report.invalid)
         self.assertEqual(
-            {"core.system.system_info", "core.process.running_processes"},
+            {
+                "core.network.network_identity",
+                "core.process.running_processes",
+                "core.system.system_info",
+            },
             {candidate.metadata.id for candidate in report.valid if candidate.metadata},
         )
 
