@@ -32,6 +32,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.system.bios_info",
                 "core.system.operating_system",
                 "core.system.computer_system",
+                "core.system.session_snapshot",
                 "core.system.installed_drivers",
                 "core.system.group_policy",
                 "core.usb.usb_storage_inventory",

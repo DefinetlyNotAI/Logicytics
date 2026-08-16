@@ -27,6 +27,7 @@ rebuilt incrementally.
   `core.system.bios_info`,
   `core.system.operating_system`,
   `core.system.computer_system`,
+  `core.system.session_snapshot`,
   `core.system.installed_drivers`, and
   `core.system.group_policy`, `core.event_log.system_events`, and
   `core.network.arp_cache`, `core.network.routing_table`, and
