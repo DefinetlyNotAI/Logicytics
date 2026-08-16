@@ -6,9 +6,11 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from pathlib import Path
+import re
 from typing import Any, Mapping
 
 CONTRACT_VERSION = "4.0"
+_CUSTOM_SPECIALTY = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
 
 
 class CollectorKind(StrEnum):
@@ -85,7 +87,7 @@ class CollectorMetadata:
     id: str
     name: str
     version: str
-    specialty: Specialty
+    specialty: Specialty | str
     description: str
     author: str
     supported_platforms: tuple[str, ...] = ("win32",)
@@ -101,15 +103,21 @@ class CollectorMetadata:
     def to_dict(self) -> dict[str, Any]:
         """Return JSON-safe metadata."""
         data = asdict(self)
-        data["specialty"] = self.specialty.value
+        data["specialty"] = self.specialty.value if isinstance(self.specialty, Specialty) else self.specialty
         data["capabilities"] = [capability.value for capability in self.capabilities]
         return data
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "CollectorMetadata":
+    def from_dict(cls, data: Mapping[str, Any], *, allow_custom_specialty: bool = False) -> "CollectorMetadata":
         """Build metadata returned by an isolated validation worker."""
         values = dict(data)
-        values["specialty"] = Specialty(values["specialty"])
+        specialty = values["specialty"]
+        try:
+            values["specialty"] = Specialty(specialty)
+        except ValueError:
+            if not allow_custom_specialty or not isinstance(specialty, str) or not _CUSTOM_SPECIALTY.fullmatch(specialty):
+                raise ValueError("collector specialty is unsupported")
+            values["specialty"] = specialty
         values["capabilities"] = tuple(Capability(capability) for capability in values.get("capabilities", ()))
         for field_name in (
             "supported_platforms",

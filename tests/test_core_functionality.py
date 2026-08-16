@@ -11,7 +11,7 @@ from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.file_listing import list_files
 from logicytics.logging import deprecated, raise_logged, timed
 from logicytics.configuration import default_config, load_config
-from logicytics.contracts import Capability, RunRequest
+from logicytics.contracts import Capability, CollectorMetadata, RunRequest, Specialty
 from logicytics.discovery import preflight
 from logicytics.errors import ArtifactError, PlanError, PreflightError
 from logicytics.packaging import package_run
@@ -60,6 +60,17 @@ class SystemInfoCollector(CoreCollector):
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_custom_specialty_is_plugin_only(self) -> None:
+        """Plugins may extend specialties, but core metadata remains on the closed set."""
+        metadata = CollectorMetadata(
+            id="plugin.example", name="Example", version="4.0.0", specialty=Specialty.SYSTEM,
+            description="Test metadata.", author="Test",
+        ).to_dict()
+        metadata["specialty"] = "evidence_graph"
+        self.assertEqual("evidence_graph", CollectorMetadata.from_dict(metadata, allow_custom_specialty=True).specialty)
+        with self.assertRaises(ValueError):
+            CollectorMetadata.from_dict(metadata)
+
     def test_deprecation_decorator_logs_removal_context(self) -> None:
         """Deprecated functions must preserve behavior while reporting removal context."""
         events: list[tuple[str, str, dict[str, object]]] = []

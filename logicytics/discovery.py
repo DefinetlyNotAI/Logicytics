@@ -229,7 +229,7 @@ def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
         return
     try:
         payload = json.loads(completed.stdout)
-        metadata = CollectorMetadata.from_dict(payload["metadata"])
+        metadata = CollectorMetadata.from_dict(payload["metadata"], allow_custom_specialty=candidate.kind is CollectorKind.PLUGIN)
     except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
         candidate.runtime_error = f"invalid validation response: {error}"
         return
