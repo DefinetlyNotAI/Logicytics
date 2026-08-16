@@ -44,6 +44,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.wireless.wifi_profiles",
                 "core.hardware.windows_features",
                 "core.event_log.system_events",
+                "core.event_log.application_events",
             },
             {candidate.metadata.id for candidate in report.valid if candidate.metadata},
         )
