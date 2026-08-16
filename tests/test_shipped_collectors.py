@@ -18,6 +18,7 @@ class ShippedCollectorTests(unittest.TestCase):
         self.assertEqual((), report.invalid)
         self.assertEqual(
             {
+                "core.bluetooth.paired_devices",
                 "core.network.network_identity",
                 "core.network.network_adapters",
                 "core.memory.memory_snapshot",

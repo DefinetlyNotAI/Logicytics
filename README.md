@@ -21,7 +21,8 @@ rebuilt incrementally.
 - Shipped collectors: `core.system.system_info` and the capability-gated
   `core.process.running_processes` and `core.network.network_identity`, plus
   `core.memory.memory_snapshot`, `core.storage.logical_drives`, and deep-profile
-  `core.hardware.windows_features`, plus `core.network.network_adapters`.
+  `core.hardware.windows_features`, `core.network.network_adapters`, and
+  `core.bluetooth.paired_devices`.
 
 ## Layout
 
