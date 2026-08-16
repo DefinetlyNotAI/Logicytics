@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from logicytics.artifacts import WorkspaceArtifactWriter
+from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.configuration import default_config, load_config
 from logicytics.contracts import Capability, RunRequest
 from logicytics.discovery import preflight
@@ -57,6 +58,12 @@ class SystemInfoCollector(CoreCollector):
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_command_runner_captures_output_and_parses_structured_levels(self) -> None:
+        """Core command execution must avoid a shell and preserve structured output."""
+        result = run_command(("python", "-c", "print('INFO: collected'); print('ordinary')"))
+        self.assertEqual(0, result.returncode)
+        self.assertEqual((("INFO", "collected"),), parse_level_messages(result.stdout))
+
     def test_configuration_schema_version_is_enforced(self) -> None:
         """Only the v4 configuration schema may be loaded for a v4 run."""
         with tempfile.TemporaryDirectory() as temporary:
