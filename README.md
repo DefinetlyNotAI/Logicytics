@@ -39,6 +39,7 @@ rebuilt incrementally.
   `core.system.group_policy`, `core.event_log.system_events`, and
   `core.network.arp_cache`, `core.network.routing_table`, and
   `core.storage.physical_disks`, and `core.storage.mounted_volumes`.
+  `core.encryption.bitlocker_status` is also available in the deep profile.
 
 ## Layout
 

@@ -46,6 +46,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.hardware.windows_features",
                 "core.event_log.system_events",
                 "core.event_log.application_events",
+                "core.encryption.bitlocker_status",
             },
             {candidate.metadata.id for candidate in report.valid if candidate.metadata},
         )
