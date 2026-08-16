@@ -10,6 +10,9 @@ from typing import Any, Mapping
 from logicytics.errors import PlanError
 
 
+SCHEMA_VERSION = 4
+
+
 @dataclass(frozen=True, slots=True)
 class RuntimeSettings:
     """Engine-wide limits that apply before a collector is started."""
@@ -24,6 +27,7 @@ class RuntimeSettings:
 class AppConfig:
     """Validated settings loaded from an optional JSON configuration file."""
 
+    schema_version: int
     runtime: RuntimeSettings
     collector_settings: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
 
@@ -40,7 +44,7 @@ class AppConfig:
 
 def default_config(project_root: Path) -> AppConfig:
     """Create safe defaults rooted at the checked-out project."""
-    return AppConfig(runtime=RuntimeSettings(output_root=project_root / "ACCESS" / "RUNS"))
+    return AppConfig(schema_version=SCHEMA_VERSION, runtime=RuntimeSettings(output_root=project_root / "ACCESS" / "RUNS"))
 
 
 def load_config(project_root: Path, config_path: Path | None = None) -> AppConfig:
@@ -54,6 +58,11 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
         raise PlanError(f"invalid configuration file {path}: {error}") from error
     if not isinstance(raw, dict):
         raise PlanError("configuration root must be a JSON object")
+    schema_version = raw.get("schema_version", SCHEMA_VERSION)
+    if not isinstance(schema_version, int):
+        raise PlanError("configuration schema_version must be an integer")
+    if schema_version != SCHEMA_VERSION:
+        raise PlanError(f"unsupported configuration schema_version {schema_version}; expected {SCHEMA_VERSION}")
 
     runtime_raw = raw.get("runtime", {})
     if not isinstance(runtime_raw, dict):
@@ -75,6 +84,7 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     ):
         raise PlanError("collectors configuration must map collector IDs to objects")
     return AppConfig(
+        schema_version=schema_version,
         runtime=RuntimeSettings(
             output_root=output_root,
             default_max_workers=default_workers,

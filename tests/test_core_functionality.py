@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from logicytics.artifacts import WorkspaceArtifactWriter
-from logicytics.configuration import default_config
+from logicytics.configuration import default_config, load_config
 from logicytics.contracts import Capability, RunRequest
 from logicytics.discovery import preflight
 from logicytics.errors import ArtifactError, PlanError, PreflightError
@@ -57,6 +57,17 @@ class SystemInfoCollector(CoreCollector):
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_configuration_schema_version_is_enforced(self) -> None:
+        """Only the v4 configuration schema may be loaded for a v4 run."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config_path = root / "logicytics.json"
+            config_path.write_text('{"schema_version": 3}', encoding="utf-8")
+            with self.assertRaises(PlanError):
+                load_config(root)
+            config_path.write_text('{"schema_version": 4, "collectors": {}}', encoding="utf-8")
+            self.assertEqual(4, load_config(root).schema_version)
+
     """Validate the foundation before real core collectors are added."""
 
     def test_artifacts_cannot_escape_collector_workspace(self) -> None:
