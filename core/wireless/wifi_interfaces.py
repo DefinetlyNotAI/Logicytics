@@ -14,9 +14,9 @@ def _is_access_denied(detail: str) -> bool:
     """Recognize common permission-denied wording from netsh output."""
     normalized = detail.casefold()
     return (
-        "permission denied" in normalized
-        or ("access" in normalized and "denied" in normalized)
-        or "requires elevation" in normalized
+            "permission denied" in normalized
+            or ("access" in normalized and "denied" in normalized)
+            or "requires elevation" in normalized
     )
 
 
@@ -61,7 +61,8 @@ class WifiInterfacesCollector(CoreCollector):
         if completed.returncode != 0:
             message = detail or completed.stdout.strip() or f"netsh exit code {completed.returncode}"
             if _is_access_denied(message):
-                return CollectorResult(CollectorStatus.SKIPPED, "Wi-Fi interface access was denied for the current account", errors=(message,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "Wi-Fi interface access was denied for the current account", errors=(message,))
             return CollectorResult(CollectorStatus.FAILED, "Wi-Fi interface query failed", errors=(message,))
 
         interfaces: list[dict[str, str]] = []

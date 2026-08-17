@@ -92,7 +92,8 @@ class WindowsFeaturesCollector(CoreCollector):
         output = context.workspace / "windows_features.json"
         output.write_text(json.dumps(features, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("windows_features_finished", feature_count=len(features), bytes_written=artifact.size_bytes)
+        context.report_progress("windows_features_finished", feature_count=len(features),
+                                bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("Windows optional features collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

@@ -79,12 +79,14 @@ class BitlockerVolumesCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "BitLocker volume access was denied for the current account", errors=(detail,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "BitLocker volume access was denied for the current account", errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "BitLocker volume query failed", errors=(detail,))
         try:
             volumes = json.loads(completed.stdout) if completed.stdout.strip() else []
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "BitLocker volume query returned invalid JSON", errors=(str(error),))
+            return CollectorResult(CollectorStatus.FAILED, "BitLocker volume query returned invalid JSON",
+                                   errors=(str(error),))
         if not isinstance(volumes, (dict, list)):
             return CollectorResult(CollectorStatus.FAILED, "BitLocker volume query returned an unexpected result")
         report = {

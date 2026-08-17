@@ -21,12 +21,11 @@ from logicytics.contracts import (
     CollectorContext,
     CollectorResult,
     CollectorStatus,
-    RunRequest,
     RunStatus,
     ValidationResult,
 )
-from logicytics.manifest import RunManifest, write_manifest, utc_now
 from logicytics.logging import FileEventLogger
+from logicytics.manifest import RunManifest, write_manifest, utc_now
 from logicytics.planner import RunPlan
 
 
@@ -212,16 +211,16 @@ class RunSupervisor:
         return RunOutcome(manifest=manifest, run_directory=run_directory, manifest_path=manifest_path)
 
     def _supervise(
-        self,
-        plan: RunPlan,
-        run_id: str,
-        workspace_root: Path,
-        artifact_root: Path,
-        cancellation_file: Path,
-        manifest: RunManifest,
-        manifest_path: Path,
-        records: dict[str, object],
-        run_logger: FileEventLogger,
+            self,
+            plan: RunPlan,
+            run_id: str,
+            workspace_root: Path,
+            artifact_root: Path,
+            cancellation_file: Path,
+            manifest: RunManifest,
+            manifest_path: Path,
+            records: dict[str, object],
+            run_logger: FileEventLogger,
     ) -> None:
         """Schedule bounded isolated workers and contain each terminal failure."""
         pending = list(plan.collectors)

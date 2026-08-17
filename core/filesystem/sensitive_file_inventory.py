@@ -10,9 +10,10 @@ from pathlib import Path
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 
-
-KEYWORDS = ("password", "secret", "code", "login", "api", "key", "token", "auth", "credential", "private", "certificate", "ssh", "pgp", "wallet")
-EXTENSIONS = {".txt", ".csv", ".json", ".xml", ".yml", ".yaml", ".ini", ".cfg", ".conf", ".log", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".db", ".sqlite", ".pem", ".key", ".ppk"}
+KEYWORDS = ("password", "secret", "code", "login", "api", "key", "token", "auth", "credential", "private",
+            "certificate", "ssh", "pgp", "wallet")
+EXTENSIONS = {".txt", ".csv", ".json", ".xml", ".yml", ".yaml", ".ini", ".cfg", ".conf", ".log", ".pdf", ".doc",
+              ".docx", ".xls", ".xlsx", ".zip", ".db", ".sqlite", ".pem", ".key", ".ppk"}
 MAX_FILE_BYTES = 10 * 1024 * 1024
 
 
@@ -33,10 +34,13 @@ class SensitiveFileInventoryCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the explicit-consent sensitive-file inventory artifact contract."""
         return CollectorMetadata(
-            id="core.filesystem.sensitive_file_inventory", name="Sensitive file inventory", version="4.0.0", specialty=Specialty.FILESYSTEM,
-            description="Finds and copies bounded supported files with sensitive-data keywords in their names.", author="Logicytics",
+            id="core.filesystem.sensitive_file_inventory", name="Sensitive file inventory", version="4.0.0",
+            specialty=Specialty.FILESYSTEM,
+            description="Finds and copies bounded supported files with sensitive-data keywords in their names.",
+            author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),
-            sensitive_data_categories=("credentials", "private_keys", "personal_documents"), default_profiles=("deep",), timeout_seconds=300, maximum_output_bytes=256 * 1024 * 1024,
+            sensitive_data_categories=("credentials", "private_keys", "personal_documents"), default_profiles=("deep",),
+            timeout_seconds=300, maximum_output_bytes=256 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -44,7 +48,8 @@ class SensitiveFileInventoryCollector(CoreCollector):
         if context.is_cancelled:
             return ValidationResult(False, reasons=("run cancellation was requested",))
         try:
-            if int(context.settings.get("max_directories", 5_000)) < 1 or int(context.settings.get("max_matches", 500)) < 1:
+            if int(context.settings.get("max_directories", 5_000)) < 1 or int(
+                    context.settings.get("max_matches", 500)) < 1:
                 return ValidationResult(False, reasons=("max_directories and max_matches must be positive",))
         except (TypeError, ValueError):
             return ValidationResult(False, reasons=("max_directories and max_matches must be integers",))
@@ -82,11 +87,16 @@ class SensitiveFileInventoryCollector(CoreCollector):
                     break
         destination_root = context.workspace / "sensitive_file_inventory"
         with ThreadPoolExecutor(max_workers=4) as executor:
-            copied = [item for item in executor.map(lambda source: _copy(source, destination_root / source.drive.replace(":", "") / source.relative_to(root)), matches) if item is not None]
+            copied = [item for item in executor.map(lambda source: _copy(source,
+                                                                         destination_root / source.drive.replace(":",
+                                                                                                                 "") / source.relative_to(
+                                                                             root)), matches) if item is not None]
         if not copied:
-            return CollectorResult(CollectorStatus.SKIPPED, "no sensitive-named supported files met the bounded inventory policy")
+            return CollectorResult(CollectorStatus.SKIPPED,
+                                   "no sensitive-named supported files met the bounded inventory policy")
         artifacts = tuple(context.artifacts.register_file(path) for path in copied)
-        context.report_progress("sensitive_file_inventory_finished", scanned_directories=scanned_directories, copied_files=len(artifacts), bytes_written=sum(item.size_bytes for item in artifacts))
+        context.report_progress("sensitive_file_inventory_finished", scanned_directories=scanned_directories,
+                                copied_files=len(artifacts), bytes_written=sum(item.size_bytes for item in artifacts))
         return CollectorResult.succeeded("sensitive file inventory collected", artifacts)
 
     def cleanup(self, context: CollectorContext) -> None:

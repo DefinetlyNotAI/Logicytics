@@ -65,12 +65,14 @@ class PhysicalDisksCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "physical-disk CIM access was denied for the current account", errors=(detail,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "physical-disk CIM access was denied for the current account", errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "physical-disk CIM query failed", errors=(detail,))
         try:
             physical_disks = json.loads(completed.stdout)
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "physical-disk CIM query returned invalid JSON", errors=(str(error),))
+            return CollectorResult(CollectorStatus.FAILED, "physical-disk CIM query returned invalid JSON",
+                                   errors=(str(error),))
         if not isinstance(physical_disks, (dict, list)):
             return CollectorResult(CollectorStatus.FAILED, "physical-disk CIM query returned an unexpected result")
         output = context.workspace / "physical_disks.json"

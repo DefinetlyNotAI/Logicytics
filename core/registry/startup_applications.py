@@ -44,9 +44,11 @@ class StartupApplicationsCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the registry-read startup-application artifact contract."""
         return CollectorMetadata(
-            id="core.registry.startup_applications", name="Startup applications", version="4.0.0", specialty=Specialty.REGISTRY,
+            id="core.registry.startup_applications", name="Startup applications", version="4.0.0",
+            specialty=Specialty.REGISTRY,
             description="Exports standard user and machine Run/RunOnce startup registry entries.", author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.REGISTRY_READ,), sensitive_data_categories=("system_configuration",),
+            supported_platforms=("win32",), capabilities=(Capability.REGISTRY_READ,),
+            sensitive_data_categories=("system_configuration",),
             default_profiles=("deep",), timeout_seconds=30, maximum_output_bytes=512 * 1024,
         )
 
@@ -63,9 +65,12 @@ class StartupApplicationsCollector(CoreCollector):
         context.report_progress("startup_applications_started")
         entries = _startup_entries()
         output = context.workspace / "startup_applications.json"
-        output.write_text(json.dumps({"collected_at": datetime.now(timezone.utc).isoformat(), "entries": entries}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output.write_text(
+            json.dumps({"collected_at": datetime.now(timezone.utc).isoformat(), "entries": entries}, indent=2,
+                       sort_keys=True) + "\n", encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("startup_applications_finished", entry_count=len(entries), bytes_written=artifact.size_bytes)
+        context.report_progress("startup_applications_finished", entry_count=len(entries),
+                                bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("startup applications collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

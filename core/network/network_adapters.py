@@ -59,7 +59,7 @@ class NetworkAdaptersCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"ipconfig exit code {completed.returncode}"
             if "permission denied" in detail.casefold() or (
-                "access" in detail.casefold() and "denied" in detail.casefold()
+                    "access" in detail.casefold() and "denied" in detail.casefold()
             ):
                 return CollectorResult(
                     CollectorStatus.SKIPPED,

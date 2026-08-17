@@ -51,16 +51,19 @@ class SystemDiagnosticsCollector(CoreCollector):
             "Machine = $env:PROCESSOR_IDENTIFIER; PageSizeBytes = [Environment]::SystemPageSize; ProcessorCount = $cpu.Count; "
             "Processors = $cpu; LastBootUpTime = $os.LastBootUpTime; CollectedAt = [DateTime]::UtcNow.ToString('o') } | ConvertTo-Json -Depth 5"
         )
-        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command], capture_output=True, check=False, text=True, timeout=40)
+        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+                                   capture_output=True, check=False, text=True, timeout=40)
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "system-diagnostics access was denied for the current account", errors=(detail,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "system-diagnostics access was denied for the current account", errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "system-diagnostics query failed", errors=(detail,))
         try:
             diagnostics = json.loads(completed.stdout)
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "system-diagnostics query returned invalid JSON", errors=(str(error),))
+            return CollectorResult(CollectorStatus.FAILED, "system-diagnostics query returned invalid JSON",
+                                   errors=(str(error),))
         if not isinstance(diagnostics, dict):
             return CollectorResult(CollectorStatus.FAILED, "system-diagnostics query returned an unexpected result")
         output = context.workspace / "system_diagnostics.json"

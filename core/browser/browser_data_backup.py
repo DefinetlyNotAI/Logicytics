@@ -9,8 +9,8 @@ from pathlib import Path
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 
-
-CHROMIUM_FILES = ("History", "History-journal", "Cookies", "Cookies-journal", "Login Data", "Login Data-journal", "Bookmarks", "Preferences")
+CHROMIUM_FILES = ("History", "History-journal", "Cookies", "Cookies-journal", "Login Data", "Login Data-journal",
+                  "Bookmarks", "Preferences")
 FIREFOX_FILES = ("places.sqlite", "cookies.sqlite", "logins.json", "key4.db", "prefs.js")
 MAX_FILE_BYTES = 50 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
@@ -38,7 +38,8 @@ class BrowserDataBackupCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the explicit-consent browser-data artifact contract."""
         return CollectorMetadata(
-            id="core.browser.browser_data_backup", name="Browser data backup", version="4.0.0", specialty=Specialty.BROWSER,
+            id="core.browser.browser_data_backup", name="Browser data backup", version="4.0.0",
+            specialty=Specialty.BROWSER,
             description="Copies bounded local profile evidence from Edge, Chrome, Firefox, Opera, and Opera GX.",
             author="Logicytics", supported_platforms=("win32",),
             capabilities=(Capability.FILESYSTEM_READ, Capability.BROWSER_DATA, Capability.SENSITIVE_FILES),
@@ -58,20 +59,28 @@ class BrowserDataBackupCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before browser data backup")
         local = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
         roaming = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
-        chromium_roots = (("chrome", local / "Google" / "Chrome" / "User Data"), ("edge", local / "Microsoft" / "Edge" / "User Data"), ("opera", roaming / "Opera Software" / "Opera Stable"), ("opera_gx", roaming / "Opera Software" / "Opera GX Stable"))
+        chromium_roots = (("chrome", local / "Google" / "Chrome" / "User Data"),
+                          ("edge", local / "Microsoft" / "Edge" / "User Data"),
+                          ("opera", roaming / "Opera Software" / "Opera Stable"),
+                          ("opera_gx", roaming / "Opera Software" / "Opera GX Stable"))
         copied: list[Path] = []
         copied_bytes = 0
         context.report_progress("browser_data_backup_started")
         for browser, root in chromium_roots:
             try:
-                profile_roots = [root] if browser.startswith("opera") else [path for path in root.iterdir() if path.is_dir() and (path.name == "Default" or path.name.startswith("Profile "))]
+                profile_roots = [root] if browser.startswith("opera") else [path for path in root.iterdir() if
+                                                                            path.is_dir() and (
+                                                                                        path.name == "Default" or path.name.startswith(
+                                                                                    "Profile "))]
             except OSError:
                 continue
             for profile in profile_roots:
                 for filename in CHROMIUM_FILES:
                     if context.is_cancelled:
                         return CollectorResult(CollectorStatus.CANCELLED, "cancelled during browser data backup")
-                    destination, copied_bytes = _copy_file(profile / filename, context.workspace / "browser_data" / browser / profile.name / filename, copied_bytes)
+                    destination, copied_bytes = _copy_file(profile / filename,
+                                                           context.workspace / "browser_data" / browser / profile.name / filename,
+                                                           copied_bytes)
                     if destination is not None:
                         copied.append(destination)
         firefox_profiles = roaming / "Mozilla" / "Firefox" / "Profiles"
@@ -81,13 +90,17 @@ class BrowserDataBackupCollector(CoreCollector):
             profiles = []
         for profile in profiles:
             for filename in FIREFOX_FILES:
-                destination, copied_bytes = _copy_file(profile / filename, context.workspace / "browser_data" / "firefox" / profile.name / filename, copied_bytes)
+                destination, copied_bytes = _copy_file(profile / filename,
+                                                       context.workspace / "browser_data" / "firefox" / profile.name / filename,
+                                                       copied_bytes)
                 if destination is not None:
                     copied.append(destination)
         if not copied:
-            return CollectorResult(CollectorStatus.SKIPPED, "no supported local browser profile data met the bounded backup policy")
+            return CollectorResult(CollectorStatus.SKIPPED,
+                                   "no supported local browser profile data met the bounded backup policy")
         artifacts = tuple(context.artifacts.register_file(path) for path in copied)
-        context.report_progress("browser_data_backup_finished", copied_files=len(artifacts), bytes_written=sum(item.size_bytes for item in artifacts))
+        context.report_progress("browser_data_backup_finished", copied_files=len(artifacts),
+                                bytes_written=sum(item.size_bytes for item in artifacts))
         return CollectorResult.succeeded("browser data backup collected", artifacts)
 
     def cleanup(self, context: CollectorContext) -> None:

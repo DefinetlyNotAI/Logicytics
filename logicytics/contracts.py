@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from pathlib import Path
-import re
 from typing import Any, Mapping
 
 CONTRACT_VERSION = "4.0"
@@ -115,15 +115,16 @@ class CollectorMetadata:
         try:
             values["specialty"] = Specialty(specialty)
         except ValueError:
-            if not allow_custom_specialty or not isinstance(specialty, str) or not _CUSTOM_SPECIALTY.fullmatch(specialty):
+            if not allow_custom_specialty or not isinstance(specialty, str) or not _CUSTOM_SPECIALTY.fullmatch(
+                    specialty):
                 raise ValueError("collector specialty is unsupported")
             values["specialty"] = specialty
         values["capabilities"] = tuple(Capability(capability) for capability in values.get("capabilities", ()))
         for field_name in (
-            "supported_platforms",
-            "sensitive_data_categories",
-            "dependencies",
-            "default_profiles",
+                "supported_platforms",
+                "sensitive_data_categories",
+                "dependencies",
+                "default_profiles",
         ):
             values[field_name] = tuple(values.get(field_name, ()))
         return cls(**values)
@@ -193,14 +194,14 @@ class CollectorContext:
     """The limited, per-worker interface exposed to a collector."""
 
     def __init__(
-        self,
-        run_id: str,
-        collector_id: str,
-        workspace: Path,
-        artifacts: "ArtifactWriter",
-        logger: EventLogger,
-        settings: Mapping[str, Any],
-        cancellation_file: Path,
+            self,
+            run_id: str,
+            collector_id: str,
+            workspace: Path,
+            artifacts: "ArtifactWriter",
+            logger: EventLogger,
+            settings: Mapping[str, Any],
+            cancellation_file: Path,
     ) -> None:
         self.run_id = run_id
         self.collector_id = collector_id

@@ -14,9 +14,9 @@ def _is_access_denied(detail: str) -> bool:
     """Recognize common Windows permission-denied or elevation-required wording."""
     normalized = detail.casefold()
     return (
-        "permission denied" in normalized
-        or ("access" in normalized and "denied" in normalized)
-        or "requires elevation" in normalized
+            "permission denied" in normalized
+            or ("access" in normalized and "denied" in normalized)
+            or "requires elevation" in normalized
     )
 
 
@@ -59,13 +59,16 @@ class WifiProfileKeysCollector(CoreCollector):
         if completed.returncode != 0:
             message = detail or f"netsh exit code {completed.returncode}"
             if _is_access_denied(message):
-                return CollectorResult(CollectorStatus.SKIPPED, "Wi-Fi profile-key access was denied for the current account", errors=(message,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "Wi-Fi profile-key access was denied for the current account", errors=(message,))
             return CollectorResult(CollectorStatus.FAILED, "Wi-Fi profile-key export failed", errors=(message,))
         profiles = sorted(path for path in export_directory.glob("*.xml") if path.is_file())
         if not profiles:
             return CollectorResult(CollectorStatus.SKIPPED, "no saved Wi-Fi profiles with key material were exported")
-        artifacts = tuple(context.artifacts.register_file(Path(profile), media_type="application/xml") for profile in profiles)
-        context.report_progress("wifi_profile_keys_finished", profile_count=len(artifacts), bytes_written=sum(item.size_bytes for item in artifacts))
+        artifacts = tuple(
+            context.artifacts.register_file(Path(profile), media_type="application/xml") for profile in profiles)
+        context.report_progress("wifi_profile_keys_finished", profile_count=len(artifacts),
+                                bytes_written=sum(item.size_bytes for item in artifacts))
         return CollectorResult.succeeded("saved Wi-Fi profile keys collected", artifacts)
 
     def cleanup(self, context: CollectorContext) -> None:

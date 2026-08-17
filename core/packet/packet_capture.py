@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import csv
-import select
 import socket
 import struct
 import time
+
+import select
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
@@ -25,8 +26,10 @@ def _packet_row(payload: bytes) -> dict[str, str] | None:
     destination = socket.inet_ntoa(payload[16:20])
     source_port = destination_port = ""
     if protocol in {6, 17} and len(payload) >= header_length + 4:
-        source_port, destination_port = (str(value) for value in struct.unpack("!HH", payload[header_length:header_length + 4]))
-    return {"source_ip": source, "destination_ip": destination, "protocol": names.get(protocol, str(protocol)), "source_port": source_port, "destination_port": destination_port, "packet_bytes": str(len(payload))}
+        source_port, destination_port = (str(value) for value in
+                                         struct.unpack("!HH", payload[header_length:header_length + 4]))
+    return {"source_ip": source, "destination_ip": destination, "protocol": names.get(protocol, str(protocol)),
+            "source_port": source_port, "destination_port": destination_port, "packet_bytes": str(len(payload))}
 
 
 class PacketCaptureCollector(CoreCollector):
@@ -38,8 +41,10 @@ class PacketCaptureCollector(CoreCollector):
         return CollectorMetadata(
             id="core.packet.packet_capture", name="IPv4 packet capture", version="4.0.0", specialty=Specialty.PACKET,
             description="Captures bounded IPv4 packet metadata without saving packet payloads.", author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.NETWORK, Capability.PACKET_CAPTURE, Capability.ELEVATED_PRIVILEGES),
-            sensitive_data_categories=("network_metadata",), default_profiles=("deep",), timeout_seconds=90, maximum_output_bytes=2 * 1024 * 1024,
+            supported_platforms=("win32",),
+            capabilities=(Capability.NETWORK, Capability.PACKET_CAPTURE, Capability.ELEVATED_PRIVILEGES),
+            sensitive_data_categories=("network_metadata",), default_profiles=("deep",), timeout_seconds=90,
+            maximum_output_bytes=2 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -81,10 +86,12 @@ class PacketCaptureCollector(CoreCollector):
                 if row is not None:
                     observations.append(row)
         except PermissionError as error:
-            return CollectorResult(CollectorStatus.SKIPPED, "raw packet capture requires an elevated account", errors=(str(error),))
+            return CollectorResult(CollectorStatus.SKIPPED, "raw packet capture requires an elevated account",
+                                   errors=(str(error),))
         except OSError as error:
             if error.winerror in {5, 10013}:
-                return CollectorResult(CollectorStatus.SKIPPED, "raw packet capture was denied for the current account", errors=(str(error),))
+                return CollectorResult(CollectorStatus.SKIPPED, "raw packet capture was denied for the current account",
+                                       errors=(str(error),))
             return CollectorResult(CollectorStatus.FAILED, "raw packet capture failed", errors=(str(error),))
         finally:
             if capture is not None:
@@ -95,11 +102,13 @@ class PacketCaptureCollector(CoreCollector):
                 capture.close()
         output = context.workspace / "packet_capture.csv"
         with output.open("w", newline="", encoding="utf-8") as stream:
-            writer = csv.DictWriter(stream, fieldnames=("source_ip", "destination_ip", "protocol", "source_port", "destination_port", "packet_bytes"))
+            writer = csv.DictWriter(stream, fieldnames=("source_ip", "destination_ip", "protocol", "source_port",
+                                                        "destination_port", "packet_bytes"))
             writer.writeheader()
             writer.writerows(observations)
         artifact = context.artifacts.register_file(output, media_type="text/csv")
-        context.report_progress("packet_capture_finished", observation_count=len(observations), bytes_written=artifact.size_bytes)
+        context.report_progress("packet_capture_finished", observation_count=len(observations),
+                                bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("packet metadata captured", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

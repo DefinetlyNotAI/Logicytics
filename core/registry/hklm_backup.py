@@ -13,9 +13,9 @@ def _is_access_denied(detail: str) -> bool:
     """Recognize Windows permission-denied or elevation-required wording."""
     normalized = detail.casefold()
     return (
-        "permission denied" in normalized
-        or ("access" in normalized and "denied" in normalized)
-        or "requires elevation" in normalized
+            "permission denied" in normalized
+            or ("access" in normalized and "denied" in normalized)
+            or "requires elevation" in normalized
     )
 
 
@@ -57,7 +57,8 @@ class HklmBackupCollector(CoreCollector):
         if completed.returncode != 0:
             message = detail or f"reg.exe exit code {completed.returncode}"
             if _is_access_denied(message):
-                return CollectorResult(CollectorStatus.SKIPPED, "HKLM registry export was denied for the current account", errors=(message,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "HKLM registry export was denied for the current account", errors=(message,))
             return CollectorResult(CollectorStatus.FAILED, "HKLM registry export failed", errors=(message,))
         if not output.is_file() or output.stat().st_size == 0:
             return CollectorResult(CollectorStatus.FAILED, "HKLM registry export produced no backup artifact")

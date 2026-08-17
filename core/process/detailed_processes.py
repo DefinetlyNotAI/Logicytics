@@ -59,13 +59,15 @@ class DetailedProcessesCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"tasklist exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "tasklist access was denied for the current account", errors=(detail,))
+                return CollectorResult(CollectorStatus.SKIPPED, "tasklist access was denied for the current account",
+                                       errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "detailed tasklist query failed", errors=(detail,))
         output = context.workspace / "detailed_processes.csv"
         output.write_text(completed.stdout, encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/csv")
         process_count = sum(1 for line in completed.stdout.splitlines() if line.strip())
-        context.report_progress("detailed_processes_finished", process_count=process_count, bytes_written=artifact.size_bytes)
+        context.report_progress("detailed_processes_finished", process_count=process_count,
+                                bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("detailed process list collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

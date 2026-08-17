@@ -24,10 +24,12 @@ class BluetoothHistoryCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the bounded Bluetooth-history JSON artifact contract."""
         return CollectorMetadata(
-            id="core.bluetooth.bluetooth_history", name="Bluetooth history snapshot", version="4.0.0", specialty=Specialty.BLUETOOTH,
+            id="core.bluetooth.bluetooth_history", name="Bluetooth history snapshot", version="4.0.0",
+            specialty=Specialty.BLUETOOTH,
             description="Exports a timestamped Bluetooth PnP snapshot; retained run packages provide historical evidence.",
             author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
-            sensitive_data_categories=("device_identifiers",), default_profiles=("deep",), timeout_seconds=45, maximum_output_bytes=512 * 1024,
+            sensitive_data_categories=("device_identifiers",), default_profiles=("deep",), timeout_seconds=45,
+            maximum_output_bytes=512 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -44,22 +46,27 @@ class BluetoothHistoryCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before Bluetooth-history collection")
         context.report_progress("bluetooth_history_started")
         command = "$ErrorActionPreference = 'Stop'; @(Get-PnpDevice -Class Bluetooth | Select-Object FriendlyName, InstanceId, Status, Problem, Present) | ConvertTo-Json -Depth 3"
-        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command], capture_output=True, check=False, text=True, timeout=40)
+        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+                                   capture_output=True, check=False, text=True, timeout=40)
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "Bluetooth-history access was denied for the current account", errors=(detail,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "Bluetooth-history access was denied for the current account", errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "Bluetooth-history query failed", errors=(detail,))
         try:
             devices = json.loads(completed.stdout) if completed.stdout.strip() else []
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "Bluetooth-history query returned invalid JSON", errors=(str(error),))
-        snapshot = {"collected_at": datetime.now(timezone.utc).isoformat(), "devices": devices if isinstance(devices, list) else [devices]}
+            return CollectorResult(CollectorStatus.FAILED, "Bluetooth-history query returned invalid JSON",
+                                   errors=(str(error),))
+        snapshot = {"collected_at": datetime.now(timezone.utc).isoformat(),
+                    "devices": devices if isinstance(devices, list) else [devices]}
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         output = context.workspace / f"bluetooth_history_{stamp}.json"
         output.write_text(json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("bluetooth_history_finished", device_count=len(snapshot["devices"]), bytes_written=artifact.size_bytes)
+        context.report_progress("bluetooth_history_finished", device_count=len(snapshot["devices"]),
+                                bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("Bluetooth history snapshot collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

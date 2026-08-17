@@ -119,7 +119,8 @@ class UsbStorageInventoryCollector(CoreCollector):
         output = context.workspace / "usb_storage_inventory.json"
         output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("usb_storage_inventory_finished", device_count=len(devices), bytes_written=artifact.size_bytes)
+        context.report_progress("usb_storage_inventory_finished", device_count=len(devices),
+                                bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("USB storage inventory collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

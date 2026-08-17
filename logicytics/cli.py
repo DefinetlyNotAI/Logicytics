@@ -14,8 +14,8 @@ from pathlib import Path
 from logicytics.configuration import load_config
 from logicytics.contracts import Capability, RunRequest
 from logicytics.discovery import preflight
-from logicytics.errors import LogicyticsError
 from logicytics.environment import inspect_environment
+from logicytics.errors import LogicyticsError
 from logicytics.packaging import package_run
 from logicytics.planner import build_plan
 from logicytics.runtime import RunSupervisor
@@ -27,13 +27,16 @@ def _project_root() -> Path:
 
 
 def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
-    profile = "minimal" if getattr(arguments, "minimal", False) else "deep" if getattr(arguments, "depth", False) else "standard" if getattr(arguments, "default_mode", False) or getattr(arguments, "threaded", False) else arguments.profile
+    profile = "minimal" if getattr(arguments, "minimal", False) else "deep" if getattr(arguments, "depth",
+                                                                                       False) else "standard" if getattr(
+        arguments, "default_mode", False) or getattr(arguments, "threaded", False) else arguments.profile
     return RunRequest(
         profile=profile,
         include=tuple(arguments.include),
         exclude=tuple(arguments.exclude),
         enable_plugins=arguments.plugins,
-        max_workers=1 if getattr(arguments, "performance_check", False) or getattr(arguments, "default_mode", False) else arguments.workers or default_workers,
+        max_workers=1 if getattr(arguments, "performance_check", False) or getattr(arguments, "default_mode",
+                                                                                   False) else arguments.workers or default_workers,
         acknowledge_authorization=getattr(arguments, "acknowledge_authorization", False),
         approved_capabilities=tuple(Capability(value) for value in arguments.allow_capability),
     )
@@ -59,8 +62,10 @@ def _parser() -> argparse.ArgumentParser:
         )
         if command == "run":
             mode = subparser.add_mutually_exclusive_group()
-            mode.add_argument("--default", dest="default_mode", action="store_true", help="Run the standard built-in profile.")
-            mode.add_argument("--threaded", action="store_true", help="Run the standard built-in profile with configured parallel workers.")
+            mode.add_argument("--default", dest="default_mode", action="store_true",
+                              help="Run the standard built-in profile.")
+            mode.add_argument("--threaded", action="store_true",
+                              help="Run the standard built-in profile with configured parallel workers.")
             mode.add_argument("--minimal", action="store_true", help="Run the minimal built-in profile.")
             mode.add_argument("--depth", action="store_true", help="Run the deep built-in profile.")
             subparser.add_argument(
@@ -69,7 +74,8 @@ def _parser() -> argparse.ArgumentParser:
                 help="Confirm you are authorized to collect the selected evidence.",
             )
         if command == "update":
-            subparser.add_argument("--apply", action="store_true", help="Explicitly run git pull after repository checks.")
+            subparser.add_argument("--apply", action="store_true",
+                                   help="Explicitly run git pull after repository checks.")
             subparser.add_argument(
                 "--performance-check",
                 action="store_true",
@@ -101,7 +107,11 @@ def main(argv: list[str] | None = None) -> int:
             payload = {
                 "configuration": configuration.to_manifest_dict(),
                 "environment": inspect_environment().to_dict(),
-                "python": {"executable": sys.executable, "implementation": platform.python_implementation(), "version": platform.python_version(), "prefix": sys.prefix, "virtual_environment": sys.prefix != sys.base_prefix, "psutil_available": importlib.util.find_spec("psutil") is not None, "cpu_count": os.cpu_count()},
+                "python": {"executable": sys.executable, "implementation": platform.python_implementation(),
+                           "version": platform.python_version(), "prefix": sys.prefix,
+                           "virtual_environment": sys.prefix != sys.base_prefix,
+                           "psutil_available": importlib.util.find_spec("psutil") is not None,
+                           "cpu_count": os.cpu_count()},
                 "sysinternals": ensure_sysinternals(root).to_dict(),
                 "preflight": {"valid_collectors": len(report.valid), "invalid_collectors": len(report.invalid)},
             }
@@ -110,13 +120,15 @@ def main(argv: list[str] | None = None) -> int:
         if arguments.command == "update":
             git = subprocess.run(["git", "--version"], capture_output=True, check=False, text=True)
             is_repository = (root / ".git").exists()
-            payload = {"git_available": git.returncode == 0, "git_version": git.stdout.strip() or None, "is_repository": is_repository, "applied": False}
+            payload = {"git_available": git.returncode == 0, "git_version": git.stdout.strip() or None,
+                       "is_repository": is_repository, "applied": False}
             if arguments.apply:
                 if git.returncode != 0 or not is_repository:
                     print(json.dumps(payload, indent=2, sort_keys=True))
                     return 2
                 pulled = subprocess.run(["git", "pull"], cwd=root, capture_output=True, check=False, text=True)
-                payload.update({"applied": True, "returncode": pulled.returncode, "stdout": pulled.stdout, "stderr": pulled.stderr})
+                payload.update({"applied": True, "returncode": pulled.returncode, "stdout": pulled.stdout,
+                                "stderr": pulled.stderr})
             print(json.dumps(payload, indent=2, sort_keys=True))
             return 0 if not arguments.apply or payload.get("returncode") == 0 else 1
         plan = build_plan(report, _request(arguments, configuration.runtime.default_max_workers))

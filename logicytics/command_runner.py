@@ -34,7 +34,8 @@ def parse_level_messages(output: str) -> tuple[tuple[str, str], ...]:
     for line in output.splitlines():
         level, separator, message = line.partition(":")
         normalized_level = level.strip().upper()
-        if not separator or normalized_level not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INTERNAL", "EXCEPTION"}:
+        if not separator or normalized_level not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INTERNAL",
+                                                     "EXCEPTION"}:
             continue
         messages.append((normalized_level, message.strip()))
     return tuple(messages)

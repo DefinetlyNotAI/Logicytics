@@ -8,7 +8,6 @@ from pathlib import Path
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 
-
 MAX_FILE_BYTES = 10 * 1024 * 1024
 MAX_ARCHIVE_SOURCE_BYTES = 128 * 1024 * 1024
 
@@ -42,7 +41,8 @@ class SshBackupCollector(CoreCollector):
         try:
             directory_exists = ssh_directory.is_dir()
         except OSError as error:
-            return CollectorResult(CollectorStatus.SKIPPED, "the current user's .ssh directory is inaccessible", errors=(str(error),))
+            return CollectorResult(CollectorStatus.SKIPPED, "the current user's .ssh directory is inaccessible",
+                                   errors=(str(error),))
         if not directory_exists:
             return CollectorResult(CollectorStatus.SKIPPED, "the current user has no .ssh directory")
         context.report_progress("ssh_backup_started")
@@ -54,7 +54,8 @@ class SshBackupCollector(CoreCollector):
             try:
                 candidates = sorted(ssh_directory.rglob("*"))
             except OSError as error:
-                return CollectorResult(CollectorStatus.SKIPPED, "the current user's .ssh directory is inaccessible", errors=(str(error),))
+                return CollectorResult(CollectorStatus.SKIPPED, "the current user's .ssh directory is inaccessible",
+                                       errors=(str(error),))
             for candidate in candidates:
                 if context.is_cancelled:
                     return CollectorResult(CollectorStatus.CANCELLED, "cancelled during SSH backup")

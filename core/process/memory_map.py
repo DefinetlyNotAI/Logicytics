@@ -13,16 +13,23 @@ from logicytics.contracts import CollectorContext, CollectorStatus
 
 
 class _MemoryBasicInformation(ctypes.Structure):
-    _fields_ = [("BaseAddress", wintypes.LPVOID), ("AllocationBase", wintypes.LPVOID), ("AllocationProtect", wintypes.DWORD), ("PartitionId", wintypes.WORD), ("RegionSize", ctypes.c_size_t), ("State", wintypes.DWORD), ("Protect", wintypes.DWORD), ("Type", wintypes.DWORD)]
+    _fields_ = [("BaseAddress", wintypes.LPVOID), ("AllocationBase", wintypes.LPVOID),
+                ("AllocationProtect", wintypes.DWORD), ("PartitionId", wintypes.WORD), ("RegionSize", ctypes.c_size_t),
+                ("State", wintypes.DWORD), ("Protect", wintypes.DWORD), ("Type", wintypes.DWORD)]
 
 
 class _ProcessMemoryCounters(ctypes.Structure):
-    _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD), ("PeakWorkingSetSize", ctypes.c_size_t), ("WorkingSetSize", ctypes.c_size_t), ("QuotaPeakPagedPoolUsage", ctypes.c_size_t), ("QuotaPagedPoolUsage", ctypes.c_size_t), ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t), ("QuotaNonPagedPoolUsage", ctypes.c_size_t), ("PagefileUsage", ctypes.c_size_t), ("PeakPagefileUsage", ctypes.c_size_t)]
+    _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD), ("PeakWorkingSetSize", ctypes.c_size_t),
+                ("WorkingSetSize", ctypes.c_size_t), ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPagedPoolUsage", ctypes.c_size_t), ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaNonPagedPoolUsage", ctypes.c_size_t), ("PagefileUsage", ctypes.c_size_t),
+                ("PeakPagefileUsage", ctypes.c_size_t)]
 
 
 def _permissions(protection: int) -> str:
     """Return a readable Windows page-protection summary."""
-    values = {0x02: "read", 0x04: "read_write", 0x08: "write_copy", 0x20: "execute_read", 0x40: "execute_read_write", 0x80: "execute_write_copy"}
+    values = {0x02: "read", 0x04: "read_write", 0x08: "write_copy", 0x20: "execute_read", 0x40: "execute_read_write",
+              0x80: "execute_write_copy"}
     return values.get(protection & 0xFF, "unreadable")
 
 
@@ -34,8 +41,10 @@ class MemoryMapCollector(CoreCollector):
         """Declare the bounded memory-region JSON artifact contract."""
         return CollectorMetadata(
             id="core.process.memory_map", name="Process memory map", version="4.0.0", specialty=Specialty.PROCESS,
-            description="Exports readable virtual-memory region addresses, sizes, permissions, paths, and process RSS.", author="Logicytics",
-            supported_platforms=("win32",), sensitive_data_categories=("process_metadata",), default_profiles=("deep",), timeout_seconds=90, maximum_output_bytes=64 * 1024 * 1024,
+            description="Exports readable virtual-memory region addresses, sizes, permissions, paths, and process RSS.",
+            author="Logicytics",
+            supported_platforms=("win32",), sensitive_data_categories=("process_metadata",), default_profiles=("deep",),
+            timeout_seconds=90, maximum_output_bytes=64 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -64,7 +73,8 @@ class MemoryMapCollector(CoreCollector):
         try:
             output_directory.relative_to(context.workspace.resolve())
         except ValueError:
-            return CollectorResult(CollectorStatus.FAILED, "memory-map dump_directory must stay inside the collector workspace")
+            return CollectorResult(CollectorStatus.FAILED,
+                                   "memory-map dump_directory must stay inside the collector workspace")
         kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
         psapi = ctypes.WinDLL("psapi", use_last_error=True)
         process = kernel32.GetCurrentProcess()
@@ -85,25 +95,31 @@ class MemoryMapCollector(CoreCollector):
             if readable:
                 mapped = ctypes.create_unicode_buffer(32_768)
                 mapped_length = psapi.GetMappedFileNameW(process, ctypes.c_void_p(base), mapped, len(mapped))
-                regions.append({"index": len(regions), "address": f"0x{base:016X}", "size_bytes": memory.RegionSize, "rss_bytes": counters.WorkingSetSize, "permissions": _permissions(memory.Protect), "mapped_path": mapped.value if mapped_length else None, "state": memory.State, "type": memory.Type})
+                regions.append({"index": len(regions), "address": f"0x{base:016X}", "size_bytes": memory.RegionSize,
+                                "rss_bytes": counters.WorkingSetSize, "permissions": _permissions(memory.Protect),
+                                "mapped_path": mapped.value if mapped_length else None, "state": memory.State,
+                                "type": memory.Type})
             next_address = base + memory.RegionSize
             if next_address <= address:
                 break
             address = next_address
         truncated = False
         while True:
-            serialized = json.dumps({"region_count": len(regions), "truncated": truncated, "regions": regions}, indent=2) + "\n"
+            serialized = json.dumps({"region_count": len(regions), "truncated": truncated, "regions": regions},
+                                    indent=2) + "\n"
             if len(serialized.encode("utf-8")) <= output_limit or not regions:
                 break
             regions.pop()
             truncated = True
         if shutil.disk_usage(context.workspace).free < len(serialized.encode("utf-8")) + safety_margin:
-            return CollectorResult(CollectorStatus.SKIPPED, "insufficient free disk space after configured memory-map safety margin")
+            return CollectorResult(CollectorStatus.SKIPPED,
+                                   "insufficient free disk space after configured memory-map safety margin")
         output_directory.mkdir(parents=True, exist_ok=True)
         output = output_directory / "memory_map.json"
         output.write_text(serialized, encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("memory_map_finished", region_count=len(regions), truncated=str(truncated).lower(), bytes_written=artifact.size_bytes)
+        context.report_progress("memory_map_finished", region_count=len(regions), truncated=str(truncated).lower(),
+                                bytes_written=artifact.size_bytes)
         summary = "process memory map collected" if not truncated else "process memory map collected with configured output truncation"
         return CollectorResult.succeeded(summary, (artifact,))
 

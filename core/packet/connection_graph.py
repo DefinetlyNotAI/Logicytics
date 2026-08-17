@@ -23,8 +23,10 @@ class ConnectionGraphCollector(CoreCollector):
         """Declare the subprocess-gated network graph artifact contract."""
         return CollectorMetadata(
             id="core.packet.connection_graph", name="Connection graph", version="4.0.0", specialty=Specialty.PACKET,
-            description="Exports a DOT source/destination graph with TCP or UDP protocol edge labels.", author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,), sensitive_data_categories=("network_metadata",),
+            description="Exports a DOT source/destination graph with TCP or UDP protocol edge labels.",
+            author="Logicytics",
+            supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
+            sensitive_data_categories=("network_metadata",),
             default_profiles=("deep",), timeout_seconds=45, maximum_output_bytes=2 * 1024 * 1024,
         )
 
@@ -45,7 +47,8 @@ class ConnectionGraphCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"netstat exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "connection graph access was denied for the current account", errors=(detail,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "connection graph access was denied for the current account", errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "connection graph query failed", errors=(detail,))
         edges: set[tuple[str, str, str]] = set()
         for line in completed.stdout.splitlines():
@@ -56,10 +59,14 @@ class ConnectionGraphCollector(CoreCollector):
             if destination in {"*:*", "*"}:
                 continue
             edges.add((source, destination, protocol.upper()))
+
         def quote(value: str) -> str:
             return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+
         lines = ["digraph connection_graph {", "  rankdir=LR;"]
-        lines.extend(f"  {quote(source)} -> {quote(destination)} [label={quote(protocol)}];" for source, destination, protocol in sorted(edges))
+        lines.extend(
+            f"  {quote(source)} -> {quote(destination)} [label={quote(protocol)}];" for source, destination, protocol in
+            sorted(edges))
         lines.append("}")
         output = context.workspace / "connection_graph.dot"
         output.write_text("\n".join(lines) + "\n", encoding="utf-8")

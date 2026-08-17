@@ -32,11 +32,11 @@ class WorkspaceArtifactWriter(ArtifactWriter):
     """Copies approved files from one collector workspace to the run artifact tree."""
 
     def __init__(
-        self,
-        collector_id: str,
-        workspace: Path,
-        artifact_root: Path,
-        maximum_output_bytes: int,
+            self,
+            collector_id: str,
+            workspace: Path,
+            artifact_root: Path,
+            maximum_output_bytes: int,
     ) -> None:
         self._collector_id = collector_id
         self._workspace = workspace.resolve()

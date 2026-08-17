@@ -24,8 +24,10 @@ class BatteryStatusCollector(CoreCollector):
         """Declare the subprocess-gated battery-status JSON artifact contract."""
         return CollectorMetadata(
             id="core.hardware.battery_status", name="Battery status", version="4.0.0", specialty=Specialty.HARDWARE,
-            description="Exports local battery name, status, charge, capacity, and estimated runtime metadata.", author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,), sensitive_data_categories=("system_configuration",),
+            description="Exports local battery name, status, charge, capacity, and estimated runtime metadata.",
+            author="Logicytics",
+            supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
+            sensitive_data_categories=("system_configuration",),
             default_profiles=("deep",), timeout_seconds=45, maximum_output_bytes=128 * 1024,
         )
 
@@ -47,16 +49,19 @@ class BatteryStatusCollector(CoreCollector):
             "Select-Object Name, BatteryStatus, EstimatedChargeRemaining, EstimatedRunTime, DesignCapacity, FullChargeCapacity, Status | "
             "ConvertTo-Json -Depth 3"
         )
-        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command], capture_output=True, check=False, text=True, timeout=40)
+        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+                                   capture_output=True, check=False, text=True, timeout=40)
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "battery-status access was denied for the current account", errors=(detail,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "battery-status access was denied for the current account", errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "battery-status query failed", errors=(detail,))
         try:
             batteries = json.loads(completed.stdout) if completed.stdout.strip() else []
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "battery-status query returned invalid JSON", errors=(str(error),))
+            return CollectorResult(CollectorStatus.FAILED, "battery-status query returned invalid JSON",
+                                   errors=(str(error),))
         if not isinstance(batteries, (dict, list)):
             return CollectorResult(CollectorStatus.FAILED, "battery-status query returned an unexpected result")
         output = context.workspace / "battery_status.json"

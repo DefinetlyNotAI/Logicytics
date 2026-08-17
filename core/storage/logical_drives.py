@@ -34,10 +34,10 @@ def _logical_drives() -> list[dict[str, int | str]]:
         total = ctypes.c_ulonglong()
         free = ctypes.c_ulonglong()
         if not ctypes.windll.kernel32.GetDiskFreeSpaceExW(
-            root,
-            ctypes.byref(available),
-            ctypes.byref(total),
-            ctypes.byref(free),
+                root,
+                ctypes.byref(available),
+                ctypes.byref(total),
+                ctypes.byref(free),
         ):
             continue
         drive_type_code = ctypes.windll.kernel32.GetDriveTypeW(root)

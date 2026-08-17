@@ -9,7 +9,6 @@ from pathlib import Path
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 
-
 MAX_FILE_BYTES = 100 * 1024 * 1024
 
 
@@ -20,10 +19,13 @@ class WindowsSystemDataBackupCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the explicit-consent Windows system-data backup contract."""
         return CollectorMetadata(
-            id="core.system.windows_system_data_backup", name="Windows system-data backup", version="4.0.0", specialty=Specialty.SYSTEM,
-            description="Copies bounded Group Policy, event-log, and Windows security-support evidence.", author="Logicytics",
+            id="core.system.windows_system_data_backup", name="Windows system-data backup", version="4.0.0",
+            specialty=Specialty.SYSTEM,
+            description="Copies bounded Group Policy, event-log, and Windows security-support evidence.",
+            author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),
-            sensitive_data_categories=("security_logs", "group_policy", "system_configuration"), default_profiles=("deep",), timeout_seconds=180, maximum_output_bytes=256 * 1024 * 1024,
+            sensitive_data_categories=("security_logs", "group_policy", "system_configuration"),
+            default_profiles=("deep",), timeout_seconds=180, maximum_output_bytes=256 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -45,7 +47,8 @@ class WindowsSystemDataBackupCollector(CoreCollector):
             ("event_logs", windows / "System32" / "winevt" / "Logs" / "Application.evtx"),
             ("event_logs", windows / "System32" / "winevt" / "Logs" / "Security.evtx"),
         ]
-        candidates.extend(("security_support", path) for path in (program_data / "Microsoft" / "Windows Defender" / "Support").glob("*.log"))
+        candidates.extend(("security_support", path) for path in
+                          (program_data / "Microsoft" / "Windows Defender" / "Support").glob("*.log"))
         copied: list[Path] = []
         context.report_progress("windows_system_data_backup_started")
         for label, source in candidates:
@@ -61,9 +64,11 @@ class WindowsSystemDataBackupCollector(CoreCollector):
                 continue
             copied.append(destination)
         if not copied:
-            return CollectorResult(CollectorStatus.SKIPPED, "no configured Windows system-data files met the bounded backup policy")
+            return CollectorResult(CollectorStatus.SKIPPED,
+                                   "no configured Windows system-data files met the bounded backup policy")
         artifacts = tuple(context.artifacts.register_file(path) for path in copied)
-        context.report_progress("windows_system_data_backup_finished", copied_files=len(artifacts), bytes_written=sum(item.size_bytes for item in artifacts))
+        context.report_progress("windows_system_data_backup_finished", copied_files=len(artifacts),
+                                bytes_written=sum(item.size_bytes for item in artifacts))
         return CollectorResult.succeeded("Windows system-data backup collected", artifacts)
 
     def cleanup(self, context: CollectorContext) -> None:

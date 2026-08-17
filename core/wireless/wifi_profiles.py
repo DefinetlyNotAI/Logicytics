@@ -59,13 +59,15 @@ class WifiProfilesCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"netsh exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "Wi-Fi profile access was denied for the current account", errors=(detail,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "Wi-Fi profile access was denied for the current account", errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "Wi-Fi profile query failed", errors=(detail,))
         output = context.workspace / "wifi_profiles.txt"
         output.write_text(completed.stdout, encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/plain")
         profile_count = sum(1 for line in completed.stdout.splitlines() if " : " in line)
-        context.report_progress("wifi_profiles_finished", profile_count=profile_count, bytes_written=artifact.size_bytes)
+        context.report_progress("wifi_profiles_finished", profile_count=profile_count,
+                                bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("saved Wi-Fi profiles collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

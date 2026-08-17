@@ -9,7 +9,6 @@ from typing import Any, Mapping
 
 from logicytics.errors import PlanError
 
-
 SCHEMA_VERSION = 4
 
 
@@ -44,7 +43,8 @@ class AppConfig:
 
 def default_config(project_root: Path) -> AppConfig:
     """Create safe defaults rooted at the checked-out project."""
-    return AppConfig(schema_version=SCHEMA_VERSION, runtime=RuntimeSettings(output_root=project_root / "ACCESS" / "RUNS"))
+    return AppConfig(schema_version=SCHEMA_VERSION,
+                     runtime=RuntimeSettings(output_root=project_root / "ACCESS" / "RUNS"))
 
 
 def load_config(project_root: Path, config_path: Path | None = None) -> AppConfig:
@@ -79,8 +79,8 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
 
     collector_settings = raw.get("collectors", {})
     if not isinstance(collector_settings, dict) or not all(
-        isinstance(key, str) and isinstance(value, dict)
-        for key, value in collector_settings.items()
+            isinstance(key, str) and isinstance(value, dict)
+            for key, value in collector_settings.items()
     ):
         raise PlanError("collectors configuration must map collector IDs to objects")
     return AppConfig(

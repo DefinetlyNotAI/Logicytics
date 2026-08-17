@@ -63,11 +63,11 @@ class RunManifest:
 
     @classmethod
     def create(
-        cls,
-        run_id: str,
-        request: Mapping[str, Any],
-        configuration: Mapping[str, Any],
-        collector_sources: list[tuple[str, Path]],
+            cls,
+            run_id: str,
+            request: Mapping[str, Any],
+            configuration: Mapping[str, Any],
+            collector_sources: list[tuple[str, Path]],
     ) -> "RunManifest":
         """Create the initial planned manifest before collection begins."""
         return cls(
@@ -76,7 +76,8 @@ class RunManifest:
             status=RunStatus.PLANNED,
             request=request,
             configuration=configuration,
-            collectors=[CollectorRecord(id=collector_id, source=str(source)) for collector_id, source in collector_sources],
+            collectors=[CollectorRecord(id=collector_id, source=str(source)) for collector_id, source in
+                        collector_sources],
             host={"platform": sys_platform(), "hostname": platform.node(), "python": platform.python_version()},
         )
 

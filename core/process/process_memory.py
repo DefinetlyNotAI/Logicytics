@@ -48,16 +48,19 @@ class ProcessMemoryCollector(CoreCollector):
             "Select-Object Id, ProcessName, WorkingSet64, PrivateMemorySize64, VirtualMemorySize64, HandleCount, CPU, StartTime | "
             "ConvertTo-Json -Depth 3"
         )
-        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command], capture_output=True, check=False, text=True, timeout=55)
+        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+                                   capture_output=True, check=False, text=True, timeout=55)
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "process-memory access was denied for the current account", errors=(detail,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "process-memory access was denied for the current account", errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "process-memory query failed", errors=(detail,))
         try:
             processes = json.loads(completed.stdout) if completed.stdout.strip() else []
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "process-memory query returned invalid JSON", errors=(str(error),))
+            return CollectorResult(CollectorStatus.FAILED, "process-memory query returned invalid JSON",
+                                   errors=(str(error),))
         if not isinstance(processes, (dict, list)):
             return CollectorResult(CollectorStatus.FAILED, "process-memory query returned an unexpected result")
         output = context.workspace / "process_memory.json"

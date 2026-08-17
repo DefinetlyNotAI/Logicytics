@@ -23,9 +23,12 @@ class InstalledUpdatesCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the subprocess-gated installed-updates JSON artifact contract."""
         return CollectorMetadata(
-            id="core.system.installed_updates", name="Installed Windows updates", version="4.0.0", specialty=Specialty.SYSTEM,
-            description="Exports local installed hotfix identifiers, descriptions, and install dates.", author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,), sensitive_data_categories=("system_configuration",),
+            id="core.system.installed_updates", name="Installed Windows updates", version="4.0.0",
+            specialty=Specialty.SYSTEM,
+            description="Exports local installed hotfix identifiers, descriptions, and install dates.",
+            author="Logicytics",
+            supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
+            sensitive_data_categories=("system_configuration",),
             default_profiles=("deep",), timeout_seconds=45, maximum_output_bytes=512 * 1024,
         )
 
@@ -43,16 +46,19 @@ class InstalledUpdatesCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before installed-update collection")
         context.report_progress("installed_updates_started")
         command = "Get-HotFix | Select-Object HotFixID, Description, InstalledBy, InstalledOn | ConvertTo-Json -Depth 3"
-        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command], capture_output=True, check=False, text=True, timeout=40)
+        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+                                   capture_output=True, check=False, text=True, timeout=40)
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "installed-update access was denied for the current account", errors=(detail,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "installed-update access was denied for the current account", errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "installed-update query failed", errors=(detail,))
         try:
             updates = json.loads(completed.stdout) if completed.stdout.strip() else []
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "installed-update query returned invalid JSON", errors=(str(error),))
+            return CollectorResult(CollectorStatus.FAILED, "installed-update query returned invalid JSON",
+                                   errors=(str(error),))
         if not isinstance(updates, (dict, list)):
             return CollectorResult(CollectorStatus.FAILED, "installed-update query returned an unexpected result")
         output = context.workspace / "installed_updates.json"

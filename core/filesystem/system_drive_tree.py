@@ -27,8 +27,10 @@ class SystemDriveTreeCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the filesystem-read, bounded system-drive tree artifact contract."""
         return CollectorMetadata(
-            id="core.filesystem.system_drive_tree", name="System drive tree", version="4.0.0", specialty=Specialty.FILESYSTEM,
-            description="Exports a configurable bounded recursive directory tree for the Windows system drive.", author="Logicytics",
+            id="core.filesystem.system_drive_tree", name="System drive tree", version="4.0.0",
+            specialty=Specialty.FILESYSTEM,
+            description="Exports a configurable bounded recursive directory tree for the Windows system drive.",
+            author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ,),
             sensitive_data_categories=("filesystem_metadata",), default_profiles=("deep",), timeout_seconds=120,
             maximum_output_bytes=8 * 1024 * 1024,
@@ -55,7 +57,8 @@ class SystemDriveTreeCollector(CoreCollector):
         skipped = 0
         truncated = False
         context.report_progress("system_drive_tree_started", max_entries=maximum_entries, max_depth=maximum_depth)
-        for current, directories, filenames in os.walk(root, topdown=True, followlinks=False, onerror=lambda _error: None):
+        for current, directories, filenames in os.walk(root, topdown=True, followlinks=False,
+                                                       onerror=lambda _error: None):
             if context.is_cancelled:
                 return CollectorResult(CollectorStatus.CANCELLED, "cancelled during system-drive tree collection")
             relative = Path(current).relative_to(root)
@@ -76,7 +79,8 @@ class SystemDriveTreeCollector(CoreCollector):
         output = context.workspace / "system_drive_tree.txt"
         output.write_text("\n".join(lines) + "\n", encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/plain")
-        context.report_progress("system_drive_tree_finished", entry_count=entries, skipped_directories=skipped, truncated=str(truncated).lower(), bytes_written=artifact.size_bytes)
+        context.report_progress("system_drive_tree_finished", entry_count=entries, skipped_directories=skipped,
+                                truncated=str(truncated).lower(), bytes_written=artifact.size_bytes)
         summary = "system-drive tree collected" if not truncated else "system-drive tree collected with configured entry limit"
         return CollectorResult.succeeded(summary, (artifact,))
 

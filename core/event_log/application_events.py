@@ -66,13 +66,16 @@ class ApplicationEventsCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "Application event-log access was denied for the current account", errors=(detail,))
+                return CollectorResult(CollectorStatus.SKIPPED,
+                                       "Application event-log access was denied for the current account",
+                                       errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "Application event-log query failed", errors=(detail,))
         output = context.workspace / "application_events.csv"
         output.write_text(completed.stdout, encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/csv")
         event_count = max(0, len(completed.stdout.splitlines()) - 1)
-        context.report_progress("application_events_finished", event_count=event_count, bytes_written=artifact.size_bytes)
+        context.report_progress("application_events_finished", event_count=event_count,
+                                bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("Application event-log sample collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

@@ -110,9 +110,11 @@ def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
     elif public_classes[0].name != expected_class:
         candidate.static_errors.append(f"collector class must be named {expected_class}")
     elif not any(
-        (isinstance(base, ast.Name) and base.id == ("CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
-        or (isinstance(base, ast.Attribute) and base.attr == ("CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
-        for base in public_classes[0].bases
+            (isinstance(base, ast.Name) and base.id == (
+            "CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
+            or (isinstance(base, ast.Attribute) and base.attr == (
+            "CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
+            for base in public_classes[0].bases
     ):
         candidate.static_errors.append("collector class must inherit from its required base class")
     elif public_classes:
@@ -175,11 +177,13 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
         if parameters[0].arg != expected_first:
             candidate.static_errors.append(f"{name} must begin with {expected_first}")
         if name == "metadata":
-            if not any(isinstance(decorator, ast.Name) and decorator.id == "classmethod" for decorator in method.decorator_list):
+            if not any(isinstance(decorator, ast.Name) and decorator.id == "classmethod" for decorator in
+                       method.decorator_list):
                 candidate.static_errors.append("metadata must be a classmethod")
         else:
             context_parameter = parameters[1]
-            annotation = ast.unparse(context_parameter.annotation).rsplit(".", 1)[-1] if context_parameter.annotation else None
+            annotation = ast.unparse(context_parameter.annotation).rsplit(".", 1)[
+                -1] if context_parameter.annotation else None
             if context_parameter.arg != "context" or annotation != "CollectorContext":
                 candidate.static_errors.append(f"{name} must accept an annotated context parameter")
 
@@ -229,7 +233,8 @@ def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
         return
     try:
         payload = json.loads(completed.stdout)
-        metadata = CollectorMetadata.from_dict(payload["metadata"], allow_custom_specialty=candidate.kind is CollectorKind.PLUGIN)
+        metadata = CollectorMetadata.from_dict(payload["metadata"],
+                                               allow_custom_specialty=candidate.kind is CollectorKind.PLUGIN)
     except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
         candidate.runtime_error = f"invalid validation response: {error}"
         return
@@ -242,11 +247,11 @@ def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
     elif candidate.kind is CollectorKind.CORE and metadata.specialty.value != candidate.path.parent.name:
         candidate.runtime_error = "core collector specialty must match its parent folder"
     elif candidate.kind is CollectorKind.CORE and metadata.id != (
-        f"core.{candidate.path.parent.name}.{candidate.path.stem}"
+            f"core.{candidate.path.parent.name}.{candidate.path.stem}"
     ):
         candidate.runtime_error = "core collector ID must match core/<specialty>/<filename>.py"
     elif candidate.kind is CollectorKind.PLUGIN and metadata.id != (
-        f"plugin.{candidate.path.parent.name if candidate.path.name == 'main.py' else candidate.path.stem}"
+            f"plugin.{candidate.path.parent.name if candidate.path.name == 'main.py' else candidate.path.stem}"
     ):
         candidate.runtime_error = "plugin collector ID must match its plugin folder or filename"
     else:

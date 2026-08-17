@@ -49,8 +49,10 @@ class SystemDriveListingCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the filesystem-read, threaded system-drive listing contract."""
         return CollectorMetadata(
-            id="core.filesystem.system_drive_listing", name="System drive listing", version="4.0.0", specialty=Specialty.FILESYSTEM,
-            description="Exports a configurable, bounded threaded recursive listing of the Windows system drive.", author="Logicytics",
+            id="core.filesystem.system_drive_listing", name="System drive listing", version="4.0.0",
+            specialty=Specialty.FILESYSTEM,
+            description="Exports a configurable, bounded threaded recursive listing of the Windows system drive.",
+            author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ,),
             sensitive_data_categories=("filesystem_metadata",), default_profiles=("deep",), timeout_seconds=180,
             maximum_output_bytes=8 * 1024 * 1024,
@@ -73,11 +75,13 @@ class SystemDriveListingCollector(CoreCollector):
         maximum_depth = _setting(context.settings, "max_depth", _DEFAULT_MAX_DEPTH, _HARD_MAX_DEPTH)
         workers = _setting(context.settings, "workers", _DEFAULT_WORKERS, _HARD_MAX_WORKERS)
         root = Path(os.environ.get("SystemDrive", "C:") + "\\")
-        lines = [f"# system_drive={root}", f"# max_entries={maximum_entries}", f"# max_depth={maximum_depth}", f"# workers={workers}"]
+        lines = [f"# system_drive={root}", f"# max_entries={maximum_entries}", f"# max_depth={maximum_depth}",
+                 f"# workers={workers}"]
         pending: dict[Future[tuple[list[str], list[Path]]], tuple[Path, int]] = {}
         entries = 0
         truncated = False
-        context.report_progress("system_drive_listing_started", max_entries=maximum_entries, max_depth=maximum_depth, workers=workers)
+        context.report_progress("system_drive_listing_started", max_entries=maximum_entries, max_depth=maximum_depth,
+                                workers=workers)
         with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="LogicyticsList") as executor:
             pending[executor.submit(_scan_directory, root)] = (root, 0)
             while pending and entries < maximum_entries:
@@ -104,7 +108,8 @@ class SystemDriveListingCollector(CoreCollector):
                 if context.is_cancelled:
                     for future in pending:
                         future.cancel()
-                    return CollectorResult(CollectorStatus.CANCELLED, "cancelled during system-drive listing collection")
+                    return CollectorResult(CollectorStatus.CANCELLED,
+                                           "cancelled during system-drive listing collection")
                 if truncated:
                     break
         if truncated:
@@ -112,7 +117,8 @@ class SystemDriveListingCollector(CoreCollector):
         output = context.workspace / "system_drive_listing.txt"
         output.write_text("\n".join(lines) + "\n", encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/plain")
-        context.report_progress("system_drive_listing_finished", entry_count=entries, truncated=str(truncated).lower(), bytes_written=artifact.size_bytes)
+        context.report_progress("system_drive_listing_finished", entry_count=entries, truncated=str(truncated).lower(),
+                                bytes_written=artifact.size_bytes)
         summary = "threaded system-drive listing collected" if not truncated else "threaded system-drive listing collected with configured entry limit"
         return CollectorResult.succeeded(summary, (artifact,))
 
