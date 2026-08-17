@@ -6,35 +6,35 @@ This section outlines the versions of our project that are currently supported w
 
 | Version | Supported | Major Release Date |
 |---------|-----------|--------------------|
-| 3.6.x   | ✅         | July 26, 2025      |
-| 3.5.x   | ✅         | July 26, 2025      |
-| 3.4.x   | ✖️        | January 3, 2025    |
-| 3.3.x   | ✖️        | January 3, 2025    |
-| 3.2.x   | ✖️        | Dec 19, 2024       |
-| 3.1.x   | ✖️        | Dec 11, 2024       |
-| 3.0.x   | ❌         | Dec 6, 2024        |
-| 2.5.x   | ❌         | Nov 25, 2024       |
-| 2.4.x   | ❌         | Nov 12, 2024       |
-| 2.3.x   | ❌         | Sep 21, 2024       |
-| 2.2.x   | ❌         | Sep 9, 2024        |
-| 2.1.x   | ❌         | Aug 29, 2024       |
-| 2.0.x   | ❌         | Aug 25, 2024       |
-| 1.6.x   | ❌         | Jun 18, 2024       |
-| 1.5.x   | ❌         | Jun 10, 2024       |
-| 1.4.x   | ❌         | May 30, 2024       |
-| 1.3.x   | ❌         | May 21, 2024       |
-| 1.2.x   | ❌         | May 16, 2024       |
-| 1.1.x   | ❌         | May 10, 2024       |
-| 1.0.x   | ❌         | May 4, 2024        |
+| 4.0.x   | ✅        | To be released     |
+| 3.6.x   | ✖️        | July 26, 2025      |
+| 3.5.x   | ✖️        | July 26, 2025      |
+| 3.4.x   | ❌        | January 3, 2025    |
+| 3.3.x   | ❌        | January 3, 2025    |
+| 3.2.x   | ❌        | Dec 19, 2024       |
+| 3.1.x   | ❌        | Dec 11, 2024       |
+| 3.0.x   | ❌        | Dec 6, 2024        |
+| 2.5.x   | ❌        | Nov 25, 2024       |
+| 2.4.x   | ❌        | Nov 12, 2024       |
+| 2.3.x   | ❌        | Sep 21, 2024       |
+| 2.2.x   | ❌        | Sep 9, 2024        |
+| 2.1.x   | ❌        | Aug 29, 2024       |
+| 2.0.x   | ❌        | Aug 25, 2024       |
+| 1.6.x   | ❌        | Jun 18, 2024       |
+| 1.5.x   | ❌        | Jun 10, 2024       |
+| 1.4.x   | ❌        | May 30, 2024       |
+| 1.3.x   | ❌        | May 21, 2024       |
+| 1.2.x   | ❌        | May 16, 2024       |
+| 1.1.x   | ❌        | May 10, 2024       |
+| 1.0.x   | ❌        | May 4, 2024        |
 
 ### Key:
 
 | Key | Desc                                                |
 |-----|-----------------------------------------------------|
-| ✅   | Supported for all security updates                  |
-| ⚠️  | Supported, but will leave support next major update |
+| ✅  | Supported for all security updates                  |
 | ✖️  | Only for major security issues (CVSS 8.0+)          |
-| ❌   | No longer supported for any security updates        |
+| ❌  | No longer supported for any security updates        |
 
 ## Reporting a Vulnerability
 
