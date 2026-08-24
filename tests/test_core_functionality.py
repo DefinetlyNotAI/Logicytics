@@ -226,6 +226,12 @@ class CoreFunctionalityTests(unittest.TestCase):
             package_path, hash_path = package_run(outcome)
             self.assertTrue(package_path.is_file())
             self.assertTrue(hash_path.is_file())
+            self.assertEqual(f"{package_path.name}", hash_path.read_text(encoding="ascii").split()[1])
+            with zipfile.ZipFile(package_path) as archive:
+                self.assertIsNone(archive.testzip())
+                self.assertIn("manifest.json", archive.namelist())
+                self.assertIn("summary.txt", archive.namelist())
+                self.assertEqual(1, len([name for name in archive.namelist() if name.startswith("artifacts/")]))
 
     def test_invalid_core_blocks_a_run_but_unselected_plugin_is_quarantined(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
