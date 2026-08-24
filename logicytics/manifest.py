@@ -34,6 +34,7 @@ class CollectorRecord:
     duration_seconds: float | None = None
     event_count: int = 0
     last_progress_at: str | None = None
+    heartbeat_at: str | None = None
 
     def apply_result(self, result: CollectorResult, duration_seconds: float | None = None) -> None:
         """Copy a worker result into this serializable record."""

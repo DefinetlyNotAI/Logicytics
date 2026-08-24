@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import importlib.util
+import json
 import multiprocessing
 import os
 import queue
@@ -45,6 +46,8 @@ class _ActiveWorker:
     started_at: float
     timeout_seconds: int
     workspace: Path
+    last_event_count: int = 0
+    last_heartbeat_at: float = 0.0
 
 
 def _load_collector(path: Path, expected_class: str):
@@ -262,6 +265,7 @@ class RunSupervisor:
                 )
                 records[candidate.metadata.id].status = "running"
                 records[candidate.metadata.id].started_at = utc_now()
+                records[candidate.metadata.id].heartbeat_at = utc_now()
                 process.start()
                 active[candidate.metadata.id] = _ActiveWorker(
                     candidate.metadata.id,
@@ -287,6 +291,8 @@ class RunSupervisor:
                     write_manifest(manifest_path, manifest)
 
             for collector_id, worker in tuple(active.items()):
+                if self._refresh_worker_progress(records[collector_id], worker):
+                    write_manifest(manifest_path, manifest)
                 if monotonic() - worker.started_at > worker.timeout_seconds:
                     self._terminate_process_tree(worker.process)
                     active.pop(collector_id)
@@ -324,17 +330,40 @@ class RunSupervisor:
         process.join(timeout=2)
 
     @staticmethod
+    def _refresh_worker_progress(record, worker: _ActiveWorker) -> bool:
+        """Persist worker liveness and any newly written structured progress events."""
+        changed = False
+        now = monotonic()
+        if now - worker.last_heartbeat_at >= 1:
+            record.heartbeat_at = utc_now()
+            worker.last_heartbeat_at = now
+            changed = True
+        events_path = worker.workspace / "events.jsonl"
+        if not events_path.exists():
+            return changed
+        try:
+            events = events_path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            return changed
+        if len(events) <= worker.last_event_count:
+            return changed
+        worker.last_event_count = len(events)
+        record.event_count = len(events)
+        try:
+            event = json.loads(events[-1])
+        except json.JSONDecodeError:
+            return changed
+        timestamp = event.get("at")
+        if isinstance(timestamp, str):
+            record.last_progress_at = timestamp
+            changed = True
+        return changed
+
+    @staticmethod
     def _apply_worker_result(record, result: CollectorResult, worker: _ActiveWorker) -> None:
         """Attach result, elapsed time, and progress accounting to one record."""
         record.apply_result(result, duration_seconds=round(monotonic() - worker.started_at, 3))
-        events_path = worker.workspace / "events.jsonl"
-        if events_path.exists():
-            events = events_path.read_text(encoding="utf-8").splitlines()
-            record.event_count = len(events)
-            if events:
-                import json
-
-                record.last_progress_at = json.loads(events[-1]).get("at")
+        RunSupervisor._refresh_worker_progress(record, worker)
 
     def _cancel_active(self, active, records, manifest, manifest_path, reason: str) -> None:
         for collector_id, worker in tuple(active.items()):
