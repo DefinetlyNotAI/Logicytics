@@ -47,6 +47,7 @@ class RunningProcessesCollectorTests(unittest.TestCase):
                 run_id="test-run",
                 collector_id="core.process.running_processes",
                 workspace=workspace,
+                temporary_directory=workspace / "tmp",
                 artifacts=_UnusedArtifactWriter(),
                 logger=_NoopLogger(),
                 settings={},

@@ -79,10 +79,13 @@ def _validate_contract(collector_type: type[Collector], kind: CollectorKind) -> 
     collector = collector_type()
     with tempfile.TemporaryDirectory(prefix="logicytics-validation-") as temporary:
         workspace = Path(temporary)
+        temporary_directory = workspace / "tmp"
+        temporary_directory.mkdir()
         context = CollectorContext(
             run_id="validation",
             collector_id=metadata.id,
             workspace=workspace,
+            temporary_directory=temporary_directory,
             artifacts=_ProbeArtifactWriter(),
             logger=_ProbeLogger(),
             settings={},

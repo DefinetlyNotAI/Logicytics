@@ -82,6 +82,8 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
     """Run a single collector in an isolated child process."""
     workspace = Path(str(payload["workspace"]))
     workspace.mkdir(parents=True, exist_ok=True)
+    temporary_directory = workspace / "tmp"
+    temporary_directory.mkdir(exist_ok=True)
     stdout_path = workspace / "stdout.log"
     stderr_path = workspace / "stderr.log"
     try:
@@ -99,6 +101,7 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                     run_id=str(payload["run_id"]),
                     collector_id=metadata.id,
                     workspace=workspace,
+                    temporary_directory=temporary_directory,
                     artifacts=writer,
                     logger=FileEventLogger(
                         workspace / "events.jsonl",

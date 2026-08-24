@@ -214,6 +214,7 @@ class CollectorContext:
             run_id: str,
             collector_id: str,
             workspace: Path,
+            temporary_directory: Path,
             artifacts: "ArtifactWriter",
             logger: EventLogger,
             settings: Mapping[str, Any],
@@ -222,6 +223,7 @@ class CollectorContext:
         self.run_id = run_id
         self.collector_id = collector_id
         self.workspace = workspace
+        self.temporary_directory = temporary_directory
         self.artifacts = artifacts
         self.logger = logger
         self.settings = settings
