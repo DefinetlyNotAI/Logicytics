@@ -863,8 +863,8 @@ appropriate default/deep/non-Python mode.
       debug output.
 - [ ] Recreate memory-dump settings for file-size limit, safety margin, and dump
       directory.
-- [ ] Recreate network sampling settings for count and interval.
-- [ ] Recreate packet-sniffer settings for interface, packet count, timeout, and
+- [x] Recreate network sampling settings for count and interval.
+- [x] Recreate packet-sniffer settings for interface, packet count, timeout, and
       retry duration.
 - [x] Version the configuration schema and provide migration/default handling.
 - [ ] Define stable output names and formats for every collector.
