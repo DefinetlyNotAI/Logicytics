@@ -30,7 +30,13 @@ class _ProbeLogger:
 class _ProbeArtifactWriter:
     """Reject evidence registration during preflight validation."""
 
-    def register_file(self, source: Path, *, media_type: str = "application/octet-stream"):
+    def register_file(
+            self,
+            source: Path,
+            *,
+            media_type: str = "application/octet-stream",
+            transformations: tuple[str, ...] = (),
+    ):
         """Prevent a validation method from registering collection artifacts."""
         raise RuntimeError("validate() must not register artifacts")
 

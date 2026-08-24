@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import tempfile
 import unittest
 import zipfile
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -228,6 +230,36 @@ class CoreFunctionalityTests(unittest.TestCase):
             with self.assertRaisesRegex(ArtifactError, "maximum_artifact_files"):
                 writer.register_file(second, media_type="text/plain")
 
+    def test_artifact_registration_records_validated_provenance(self) -> None:
+        """Artifact provenance is typed, immutable, and completed by the writer."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifact_root = root / "artifacts"
+            workspace.mkdir()
+            artifact_root.mkdir()
+            source = workspace / "report.json"
+            source.write_text("{}\n", encoding="utf-8")
+            with self.assertRaisesRegex(ArtifactError, "source_category"):
+                WorkspaceArtifactWriter("invalid", workspace, artifact_root, 1024, 1)
+            writer = WorkspaceArtifactWriter(
+                "plugin.example",
+                workspace,
+                artifact_root,
+                1024,
+                1,
+                source_category="evidence_graph",
+            )
+            with self.assertRaisesRegex(ArtifactError, "transformations"):
+                writer.register_file(source, transformations=["normalized"])  # type: ignore[arg-type]
+            artifact = writer.register_file(source, transformations=("normalized",))
+            self.assertEqual("evidence_graph", artifact.source_category)
+            datetime.fromisoformat(artifact.collected_at)
+            self.assertEqual(
+                ("normalized", "copied into run artifact store"),
+                artifact.transformations,
+            )
+
     def test_preflight_plan_run_and_package(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -271,6 +303,14 @@ class CoreFunctionalityTests(unittest.TestCase):
                 archived_bytes = archive.read(f"artifacts/{artifact.relative_path}")
                 self.assertEqual(artifact.size_bytes, len(archived_bytes))
                 self.assertEqual(artifact.sha256, hashlib.sha256(archived_bytes).hexdigest())
+                self.assertEqual("system", artifact.source_category)
+                datetime.fromisoformat(artifact.collected_at)
+                self.assertEqual(("copied into run artifact store",), artifact.transformations)
+                packaged_manifest = json.loads(archive.read("manifest.json"))
+                packaged_artifact = packaged_manifest["collectors"][0]["artifacts"][0]
+                self.assertEqual(artifact.source_category, packaged_artifact["source_category"])
+                self.assertEqual(artifact.collected_at, packaged_artifact["collected_at"])
+                self.assertEqual(list(artifact.transformations), packaged_artifact["transformations"])
                 record = outcome.manifest.collectors[0]
                 summary = archive.read("summary.txt").decode("utf-8")
                 self.assertIn(f"Status: {record.status}", summary)

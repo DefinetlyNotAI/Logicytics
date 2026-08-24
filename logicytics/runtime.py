@@ -71,6 +71,9 @@ def _artifact_from_dict(data: dict[str, object]) -> Artifact:
         size_bytes=int(data["size_bytes"]),
         media_type=str(data["media_type"]),
         collector_id=str(data["collector_id"]),
+        source_category=str(data["source_category"]),
+        collected_at=str(data["collected_at"]),
+        transformations=tuple(str(step) for step in data["transformations"]),
     )
 
 
@@ -103,6 +106,11 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                     Path(str(payload["artifact_root"])),
                     metadata.maximum_output_bytes,
                     metadata.maximum_artifact_files,
+                    source_category=(
+                        metadata.specialty.value
+                        if hasattr(metadata.specialty, "value")
+                        else metadata.specialty
+                    ),
                 )
                 context = CollectorContext(
                     run_id=str(payload["run_id"]),

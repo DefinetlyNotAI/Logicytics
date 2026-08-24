@@ -188,6 +188,9 @@ class Artifact:
     size_bytes: int
     media_type: str
     collector_id: str
+    source_category: str
+    collected_at: str
+    transformations: tuple[str, ...]
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -291,7 +294,13 @@ class ArtifactWriter(ABC):
     """The only supported route from a collector workspace into run artifacts."""
 
     @abstractmethod
-    def register_file(self, source: Path, *, media_type: str = "application/octet-stream") -> Artifact:
+    def register_file(
+            self,
+            source: Path,
+            *,
+            media_type: str = "application/octet-stream",
+            transformations: tuple[str, ...] = (),
+    ) -> Artifact:
         """Register a file created within the collector workspace."""
 
 

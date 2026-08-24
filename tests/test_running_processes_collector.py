@@ -15,7 +15,13 @@ from logicytics.contracts import ArtifactWriter, CollectorContext, CollectorStat
 class _UnusedArtifactWriter(ArtifactWriter):
     """Raise if a skipped collector unexpectedly attempts artifact registration."""
 
-    def register_file(self, source: Path, *, media_type: str = "application/octet-stream"):
+    def register_file(
+            self,
+            source: Path,
+            *,
+            media_type: str = "application/octet-stream",
+            transformations: tuple[str, ...] = (),
+    ):
         raise AssertionError("a skipped collector must not register artifacts")
 
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -38,8 +39,17 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             artifact_root: Path,
             maximum_output_bytes: int,
             maximum_artifact_files: int,
+            *,
+            source_category: str | None = None,
     ) -> None:
         self._collector_id = collector_id
+        collector_parts = collector_id.split(".", 2)
+        resolved_category = source_category if source_category is not None else (
+            collector_parts[1] if len(collector_parts) > 1 else ""
+        )
+        if not isinstance(resolved_category, str) or not resolved_category.strip():
+            raise ArtifactError("artifact source_category must be a non-empty string")
+        self._source_category = resolved_category
         self._workspace = workspace.resolve()
         self._artifact_root = artifact_root.resolve()
         self._maximum_output_bytes = maximum_output_bytes
@@ -52,7 +62,17 @@ class WorkspaceArtifactWriter(ArtifactWriter):
         """Return artifacts registered by this worker in registration order."""
         return tuple(self._artifacts)
 
-    def register_file(self, source: Path, *, media_type: str = "application/octet-stream") -> Artifact:
+    def register_file(
+            self,
+            source: Path,
+            *,
+            media_type: str = "application/octet-stream",
+            transformations: tuple[str, ...] = (),
+    ) -> Artifact:
+        if not isinstance(transformations, tuple) or any(
+                not isinstance(step, str) or not step.strip() for step in transformations
+        ):
+            raise ArtifactError("artifact transformations must be a tuple of non-empty strings")
         source = source.resolve()
         if not source.is_file() or not _is_within(source, self._workspace):
             raise ArtifactError("artifacts must be regular files inside the collector workspace")
@@ -76,6 +96,9 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             size_bytes=size_bytes,
             media_type=media_type,
             collector_id=self._collector_id,
+            source_category=self._source_category,
+            collected_at=datetime.now(timezone.utc).isoformat(),
+            transformations=(*transformations, "copied into run artifact store"),
         )
         self._bytes_registered += size_bytes
         self._artifacts.append(artifact)

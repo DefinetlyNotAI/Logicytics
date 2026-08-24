@@ -491,7 +491,7 @@ Windows platform allows.
 - [x] Include a machine-readable manifest and a human-readable summary report.
 - [x] Include collector status, skipped/failed reasons, and collection timestamps
       in the summary.
-- [ ] Preserve artifact provenance: collector ID, source category, collection time,
+- [x] Preserve artifact provenance: collector ID, source category, collection time,
       and transformation steps.
 - [x] Verify package contents against the manifest before marking the run complete.
 - [x] Use atomic writes and temporary package names so interrupted packaging cannot
