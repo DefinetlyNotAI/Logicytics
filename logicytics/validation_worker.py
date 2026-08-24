@@ -6,9 +6,33 @@ import importlib.util
 import inspect
 import json
 import sys
+import tempfile
 from pathlib import Path
 
-from logicytics.contracts import Collector, CollectorKind, CollectorMetadata, CoreCollector, PluginCollector
+from logicytics.contracts import (
+    Collector,
+    CollectorContext,
+    CollectorKind,
+    CollectorMetadata,
+    CoreCollector,
+    PluginCollector,
+    ValidationResult,
+)
+
+
+class _ProbeLogger:
+    """Discard structured events emitted during the side-effect-free validation probe."""
+
+    def event(self, level: str, message: str, **fields: int | float | str) -> None:
+        """Accept probe events without exposing them through the JSON-only worker output."""
+
+
+class _ProbeArtifactWriter:
+    """Reject evidence registration during preflight validation."""
+
+    def register_file(self, source: Path, *, media_type: str = "application/octet-stream"):
+        """Prevent a validation method from registering collection artifacts."""
+        raise RuntimeError("validate() must not register artifacts")
 
 
 def _load_module(path: Path):
@@ -50,6 +74,24 @@ def _validate_contract(collector_type: type[Collector], kind: CollectorKind) -> 
     metadata = collector_type.metadata()
     if not isinstance(metadata, CollectorMetadata):
         raise ValueError("metadata() must return CollectorMetadata")
+    collector = collector_type()
+    with tempfile.TemporaryDirectory(prefix="logicytics-validation-") as temporary:
+        workspace = Path(temporary)
+        context = CollectorContext(
+            run_id="validation",
+            collector_id=metadata.id,
+            workspace=workspace,
+            artifacts=_ProbeArtifactWriter(),
+            logger=_ProbeLogger(),
+            settings={},
+            cancellation_file=workspace / "cancelled",
+        )
+        try:
+            validation = collector.validate(context)
+        except Exception as error:
+            raise ValueError(f"validate() probe failed: {error}") from error
+    if not isinstance(validation, ValidationResult):
+        raise ValueError("validate() must return ValidationResult")
     return metadata
 
 

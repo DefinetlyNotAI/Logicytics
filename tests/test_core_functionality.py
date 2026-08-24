@@ -280,6 +280,21 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(1, len(report.invalid))
             self.assertIn("dependencies must be a classmethod", report.invalid[0].static_errors)
 
+    def test_preflight_rejects_malformed_validate_result(self) -> None:
+        """The isolated preflight probe must reject a non-ValidationResult response."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace("return ValidationResult(True)", "return CollectorResult.succeeded('invalid')"),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn("validate() must return ValidationResult", report.invalid[0].runtime_error or "")
+
     def test_preflight_rejects_collector_print_calls(self) -> None:
         """Collectors must emit structured events rather than write directly to stdout."""
         with tempfile.TemporaryDirectory() as temporary:
