@@ -930,7 +930,7 @@ appropriate default/deep/non-Python mode.
 - [ ] A failed collector cannot silently make the run appear successful.
 - [ ] A cancelled run leaves a recoverable partial-run report and cleans only its
       own temporary data.
-- [ ] A normal run creates a package, a matching SHA-256 hash, and a run manifest.
+- [x] A normal run creates a package, a matching SHA-256 hash, and a run manifest.
 - [ ] Debug/update/developer tools are separated from normal collection behavior.
 - [ ] The final v4.0 release is documented as a complete recreation of the feature
       surface listed here.
