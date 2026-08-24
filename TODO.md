@@ -928,7 +928,7 @@ appropriate default/deep/non-Python mode.
 - [ ] Every mode has an explicit collector inclusion matrix.
 - [ ] Every output has a documented path, format, and retention rule.
 - [x] A failed collector cannot silently make the run appear successful.
-- [ ] A cancelled run leaves a recoverable partial-run report and cleans only its
+- [x] A cancelled run leaves a recoverable partial-run report and cleans only its
       own temporary data.
 - [x] A normal run creates a package, a matching SHA-256 hash, and a run manifest.
 - [ ] Debug/update/developer tools are separated from normal collection behavior.
