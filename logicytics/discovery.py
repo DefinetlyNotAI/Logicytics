@@ -159,6 +159,7 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
         "validate": "ValidationResult",
         "collect": "CollectorResult",
         "estimate": "CollectionEstimate",
+        "dependencies": "tuple[str,...]",
         "cleanup": "None",
     }
     missing = sorted(required - set(methods))
@@ -169,20 +170,20 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
             candidate.static_errors.append(f"{name} requires a docstring")
         if method.returns is None:
             candidate.static_errors.append(f"{name} requires a return type annotation")
-        elif name in expected_returns and ast.unparse(method.returns).rsplit(".", 1)[-1] != expected_returns[name]:
+        elif name in expected_returns and ast.unparse(method.returns).replace(" ", "") != expected_returns[name]:
             candidate.static_errors.append(f"{name} must return {expected_returns[name]}")
         parameters = method.args.args
-        expected_parameter_count = 1 if name == "metadata" else 2
+        expected_parameter_count = 1 if name in {"metadata", "dependencies"} else 2
         if len(parameters) != expected_parameter_count:
             candidate.static_errors.append(f"{name} has an invalid parameter count")
             continue
-        expected_first = "cls" if name == "metadata" else "self"
+        expected_first = "cls" if name in {"metadata", "dependencies"} else "self"
         if parameters[0].arg != expected_first:
             candidate.static_errors.append(f"{name} must begin with {expected_first}")
-        if name == "metadata":
+        if name in {"metadata", "dependencies"}:
             if not any(isinstance(decorator, ast.Name) and decorator.id == "classmethod" for decorator in
                        method.decorator_list):
-                candidate.static_errors.append("metadata must be a classmethod")
+                candidate.static_errors.append(f"{name} must be a classmethod")
         else:
             context_parameter = parameters[1]
             annotation = ast.unparse(context_parameter.annotation).rsplit(".", 1)[

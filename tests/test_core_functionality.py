@@ -259,6 +259,27 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(1, len(report.invalid))
             self.assertIn("estimate must return CollectionEstimate", report.invalid[0].static_errors)
 
+    def test_preflight_rejects_invalid_dependencies_contract(self) -> None:
+        """Optional dependency declarations must remain typed class-level metadata."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    "    def cleanup(self, context: CollectorContext) -> None:",
+                    "    def dependencies(self) -> tuple[str, ...]:\n"
+                    "        \"\"\"Return an invalid instance-level dependency declaration.\"\"\"\n"
+                    "        return ()\n\n"
+                    "    def cleanup(self, context: CollectorContext) -> None:",
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn("dependencies must be a classmethod", report.invalid[0].static_errors)
+
     def test_preflight_rejects_collector_print_calls(self) -> None:
         """Collectors must emit structured events rather than write directly to stdout."""
         with tempfile.TemporaryDirectory() as temporary:

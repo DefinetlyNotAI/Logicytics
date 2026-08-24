@@ -265,6 +265,11 @@ class Collector(ABC):
         """Optionally estimate time and output without collecting evidence."""
         return CollectionEstimate(estimated_seconds=0, estimated_output_bytes=0)
 
+    @classmethod
+    def dependencies(cls) -> tuple[str, ...]:
+        """Optionally declare collector IDs that must complete before this collector."""
+        return ()
+
     def cleanup(self, context: CollectorContext) -> None:
         """Release collector-local resources. The engine owns filesystem cleanup."""
 

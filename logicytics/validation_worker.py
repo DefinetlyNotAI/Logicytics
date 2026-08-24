@@ -41,6 +41,12 @@ def _validate_contract(collector_type: type[Collector], kind: CollectorKind) -> 
             parameters = parameters[1:]
         if len(parameters) != expected_parameters:
             raise ValueError(f"{method_name} has an invalid signature")
+    dependencies = getattr(collector_type, "dependencies", None)
+    if dependencies is None or list(inspect.signature(dependencies).parameters.values()):
+        raise ValueError("dependencies has an invalid signature")
+    declared_dependencies = dependencies()
+    if not isinstance(declared_dependencies, tuple) or not all(isinstance(item, str) for item in declared_dependencies):
+        raise ValueError("dependencies() must return tuple[str, ...]")
     metadata = collector_type.metadata()
     if not isinstance(metadata, CollectorMetadata):
         raise ValueError("metadata() must return CollectorMetadata")
