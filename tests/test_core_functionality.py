@@ -232,6 +232,27 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(1, len(report.invalid))
             self.assertIn("collect must return CollectorResult", report.invalid[0].static_errors)
 
+    def test_preflight_rejects_wrong_collection_estimate_type(self) -> None:
+        """Optional estimates use the same strict typed contract as lifecycle methods."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    "    def cleanup(self, context: CollectorContext) -> None:",
+                    "    def estimate(self, context: CollectorContext) -> ValidationResult:\n"
+                    "        \"\"\"Return an invalid estimate type for this test.\"\"\"\n"
+                    "        return ValidationResult(valid=True)\n\n"
+                    "    def cleanup(self, context: CollectorContext) -> None:",
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn("estimate must return CollectionEstimate", report.invalid[0].static_errors)
+
     def test_preflight_rejects_collector_print_calls(self) -> None:
         """Collectors must emit structured events rather than write directly to stdout."""
         with tempfile.TemporaryDirectory() as temporary:

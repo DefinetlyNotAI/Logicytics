@@ -158,6 +158,7 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
         "metadata": "CollectorMetadata",
         "validate": "ValidationResult",
         "collect": "CollectorResult",
+        "estimate": "CollectionEstimate",
         "cleanup": "None",
     }
     missing = sorted(required - set(methods))

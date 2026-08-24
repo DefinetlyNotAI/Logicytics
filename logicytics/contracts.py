@@ -155,6 +155,22 @@ class ValidationResult:
 
 
 @dataclass(frozen=True, slots=True)
+class CollectionEstimate:
+    """A collector's optional, side-effect-free resource estimate."""
+
+    estimated_seconds: float
+    estimated_output_bytes: int
+    notes: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Reject estimates that cannot describe a possible collection run."""
+        if self.estimated_seconds < 0:
+            raise ValueError("estimated_seconds must not be negative")
+        if self.estimated_output_bytes < 0:
+            raise ValueError("estimated_output_bytes must not be negative")
+
+
+@dataclass(frozen=True, slots=True)
 class CollectorResult:
     """The normalized result returned by an isolated collector worker."""
 
@@ -244,6 +260,10 @@ class Collector(ABC):
     @abstractmethod
     def collect(self, context: CollectorContext) -> CollectorResult:
         """Collect evidence and return a normalized result."""
+
+    def estimate(self, context: CollectorContext) -> CollectionEstimate:
+        """Optionally estimate time and output without collecting evidence."""
+        return CollectionEstimate(estimated_seconds=0, estimated_output_bytes=0)
 
     def cleanup(self, context: CollectorContext) -> None:
         """Release collector-local resources. The engine owns filesystem cleanup."""
