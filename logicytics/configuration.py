@@ -106,6 +106,9 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
         raise PlanError("worker limits must be integers")
     if not 1 <= default_workers <= maximum_workers <= 64:
         raise PlanError("worker limits must satisfy 1 <= default <= maximum <= 64")
+    package_completed_runs = runtime_raw.get("package_completed_runs", True)
+    if not isinstance(package_completed_runs, bool):
+        raise PlanError("runtime package_completed_runs must be boolean")
 
     collector_settings = raw.get("collectors", {})
     if not isinstance(collector_settings, dict) or not all(
@@ -120,7 +123,7 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             output_root=output_root,
             default_max_workers=default_workers,
             maximum_workers=maximum_workers,
-            package_completed_runs=bool(runtime_raw.get("package_completed_runs", True)),
+            package_completed_runs=package_completed_runs,
         ),
         collector_settings=collector_settings,
     )

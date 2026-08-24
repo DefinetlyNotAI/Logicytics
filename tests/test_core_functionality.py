@@ -165,6 +165,9 @@ class CoreFunctionalityTests(unittest.TestCase):
                 load_config(root)
             config_path.write_text('{"schema_version": 4, "collectors": {}}', encoding="utf-8")
             self.assertEqual(4, load_config(root).schema_version)
+            config_path.write_text('{"schema_version":4,"runtime":{"package_completed_runs":"yes"}}', encoding="utf-8")
+            with self.assertRaisesRegex(PlanError, "package_completed_runs"):
+                load_config(root)
 
     def test_configuration_validates_bounded_network_and_packet_settings(self) -> None:
         """Collector-specific settings fail early rather than being silently coerced at runtime."""
