@@ -71,6 +71,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.wireless.wifi_interfaces",
                 "core.wireless.wifi_profile_keys",
                 "core.hardware.windows_features",
+                "core.hardware.display_adapters",
                 "core.hardware.battery_status",
                 "core.event_log.system_events",
                 "core.event_log.application_events",
