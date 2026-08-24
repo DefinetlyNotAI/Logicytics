@@ -494,7 +494,7 @@ Windows platform allows.
 - [ ] Preserve artifact provenance: collector ID, source category, collection time,
       and transformation steps.
 - [ ] Verify package contents against the manifest before marking the run complete.
-- [ ] Use atomic writes and temporary package names so interrupted packaging cannot
+- [x] Use atomic writes and temporary package names so interrupted packaging cannot
       look like a finished result.
 - [ ] Keep raw evidence, derived reports, logs, hashes, and metadata in separate
       package sections.
