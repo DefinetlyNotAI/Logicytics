@@ -52,6 +52,7 @@ class _ActiveWorker:
     parallel_safe: bool
     last_event_count: int = 0
     last_heartbeat_at: float = 0.0
+    exited_at: float | None = None
 
 
 def _load_collector(path: Path, expected_class: str):
@@ -274,6 +275,37 @@ class RunSupervisor:
                     break
                 candidate = pending[0]
                 assert candidate.metadata is not None
+                dependency_states = {
+                    dependency: records[dependency].status
+                    for dependency in candidate.metadata.dependencies
+                }
+                failed_dependencies = {
+                    dependency: status
+                    for dependency, status in dependency_states.items()
+                    if status in {"partial", "skipped", "cancelled", "failed"}
+                }
+                if failed_dependencies:
+                    pending.pop(0)
+                    details = ", ".join(
+                        f"{dependency}={status}"
+                        for dependency, status in sorted(failed_dependencies.items())
+                    )
+                    records[candidate.metadata.id].apply_result(
+                        CollectorResult(
+                            CollectorStatus.SKIPPED,
+                            "collector dependency was not satisfied",
+                            errors=(f"dependency did not succeed: {details}",),
+                        )
+                    )
+                    run_logger.event(
+                        "warning",
+                        "collector_dependency_unsatisfied",
+                        collector_id=candidate.metadata.id,
+                    )
+                    write_manifest(manifest_path, manifest)
+                    continue
+                if any(status != "succeeded" for status in dependency_states.values()):
+                    break
                 if active and not candidate.metadata.parallel_safe:
                     break
                 pending.pop(0)
@@ -340,6 +372,11 @@ class RunSupervisor:
                     write_manifest(manifest_path, manifest)
                 elif not worker.process.is_alive():
                     worker.process.join(timeout=1)
+                    if worker.exited_at is None:
+                        worker.exited_at = monotonic()
+                        continue
+                    if monotonic() - worker.exited_at < 1.0:
+                        continue
                     active.pop(collector_id)
                     self._apply_worker_result(
                         records[collector_id],

@@ -66,7 +66,14 @@ class SystemInfoCollector(CoreCollector):
 '''
 
 
-def _delayed_collector_source(filename: str, delay: float, *, parallel_safe: bool = True) -> str:
+def _delayed_collector_source(
+        filename: str,
+        delay: float,
+        *,
+        parallel_safe: bool = True,
+        dependencies: tuple[str, ...] = (),
+        fail: bool = False,
+) -> str:
     """Create a valid fixture collector with observable scheduling duration."""
     class_name = "".join(part.title() for part in filename.split("_"))
     source = _COLLECTOR.replace("SystemInfoCollector", f"{class_name}Collector")
@@ -74,12 +81,28 @@ def _delayed_collector_source(filename: str, delay: float, *, parallel_safe: boo
     source = source.replace("from pathlib import Path\n", "from pathlib import Path\nfrom time import sleep\n")
     source = source.replace(
         '            supported_platforms=("win32",),',
-        f'            supported_platforms=("win32",),\n            parallel_safe={parallel_safe!r},',
+        '            supported_platforms=("win32",),\n'
+        f'            dependencies={dependencies!r},\n'
+        f'            parallel_safe={parallel_safe!r},',
     )
-    return source.replace(
+    source = source.replace(
+        "    def validate(self, context: CollectorContext) -> ValidationResult:\n",
+        "    @classmethod\n"
+        "    def dependencies(cls) -> tuple[str, ...]:\n"
+        "        \"\"\"Return fixture dependencies for scheduler tests.\"\"\"\n"
+        f"        return {dependencies!r}\n\n"
+        "    def validate(self, context: CollectorContext) -> ValidationResult:\n",
+    )
+    source = source.replace(
         '        output = context.workspace / "system.txt"',
         f'        sleep({delay})\n        output = context.workspace / "system.txt"',
     )
+    if fail:
+        source = source.replace(
+            f'        sleep({delay})\n        output = context.workspace / "system.txt"',
+            f'        sleep({delay})\n        raise RuntimeError("dependency fixture failed")',
+        )
+    return source
 
 
 class CoreFunctionalityTests(unittest.TestCase):
@@ -430,6 +453,63 @@ class CoreFunctionalityTests(unittest.TestCase):
             last = records["core.system.z_parallel"]
             self.assertLessEqual(first.finished_at, serial.started_at)
             self.assertLessEqual(serial.finished_at, last.started_at)
+
+    def test_dependencies_finish_before_dependents_start(self) -> None:
+        """Topological order must become an execution barrier under bounded parallelism."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            dependency_id = "core.system.a_dependency"
+            (core_directory / "a_dependency.py").write_text(
+                _delayed_collector_source("a_dependency", 0.3),
+                encoding="utf-8",
+            )
+            (core_directory / "b_dependent.py").write_text(
+                _delayed_collector_source("b_dependent", 0.0, dependencies=(dependency_id,)),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+
+            dependency = records[dependency_id]
+            dependent = records["core.system.b_dependent"]
+            self.assertEqual("succeeded", dependent.status, dependent.errors)
+            self.assertIsNotNone(dependency.finished_at)
+            self.assertIsNotNone(dependent.started_at)
+            self.assertLessEqual(dependency.finished_at, dependent.started_at)
+
+    def test_failed_dependency_skips_dependent_without_launching_it(self) -> None:
+        """A failed prerequisite must contain failure and prevent dependent execution."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            dependency_id = "core.system.a_dependency"
+            (core_directory / "a_dependency.py").write_text(
+                _delayed_collector_source("a_dependency", 0.0, fail=True),
+                encoding="utf-8",
+            )
+            (core_directory / "b_dependent.py").write_text(
+                _delayed_collector_source("b_dependent", 0.0, dependencies=(dependency_id,)),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+
+            self.assertEqual("failed", records[dependency_id].status)
+            dependent = records["core.system.b_dependent"]
+            self.assertEqual("skipped", dependent.status)
+            self.assertIsNone(dependent.started_at)
+            self.assertTrue(any(dependency_id in error for error in dependent.errors))
 
     def test_failed_collector_is_manifested_and_never_reported_as_success(self) -> None:
         """An isolated collector crash must produce a durable failed run outcome."""
