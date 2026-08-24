@@ -15,9 +15,6 @@ from logicytics.contracts import CONTRACT_VERSION, CollectorKind, CollectorMetad
 
 _FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.py$")
 _VAGUE_NAMES = {"main.py", "misc.py", "stuff.py", "utils.py"}
-_FORBIDDEN_TOP_LEVEL_CALLS = {"exit", "quit", "input", "open", "print"}
-
-
 @dataclass(slots=True)
 class CollectorCandidate:
     """A file that may be a runnable collector."""
@@ -89,6 +86,72 @@ def _top_level_call_name(node: ast.Call) -> str | None:
     return None
 
 
+class _ImportTimeCallFinder(ast.NodeVisitor):
+    """Find calls whose expressions execute while Python imports a module."""
+
+    def __init__(self) -> None:
+        self.calls: list[ast.Call] = []
+
+    def visit_Call(self, node: ast.Call) -> None:
+        """Record a call and avoid duplicate nested call diagnostics."""
+        self.calls.append(node)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        """Inspect decorators, defaults, and annotations but not a function body."""
+        self._visit_callable_header(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        """Inspect async callable headers without treating deferred bodies as imports."""
+        self._visit_callable_header(node)
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        """Inspect lambda defaults without treating its deferred body as import-time work."""
+        self._visit_arguments(node.args)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        """Inspect class headers and class-body expressions evaluated at definition time."""
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        for base in node.bases:
+            self.visit(base)
+        for keyword in node.keywords:
+            self.visit(keyword.value)
+        for item in node.body:
+            if isinstance(item, ast.Expr) and isinstance(item.value, ast.Constant):
+                continue
+            self.visit(item)
+
+    def _visit_callable_header(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        self._visit_arguments(node.args)
+        if node.returns is not None:
+            self.visit(node.returns)
+
+    def _visit_arguments(self, arguments: ast.arguments) -> None:
+        for default in (*arguments.defaults, *arguments.kw_defaults):
+            if default is not None:
+                self.visit(default)
+        for argument in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs):
+            if argument.annotation is not None:
+                self.visit(argument.annotation)
+        if arguments.vararg is not None and arguments.vararg.annotation is not None:
+            self.visit(arguments.vararg.annotation)
+        if arguments.kwarg is not None and arguments.kwarg.annotation is not None:
+            self.visit(arguments.kwarg.annotation)
+
+
+def _validate_import_time_expressions(tree: ast.Module, candidate: CollectorCandidate) -> None:
+    """Reject calls that can collect, mutate, or exit before worker isolation exists."""
+    finder = _ImportTimeCallFinder()
+    finder.visit(tree)
+    for call in finder.calls:
+        name = _top_level_call_name(call) or ast.unparse(call.func)
+        candidate.static_errors.append(
+            f"forbidden import-time call: {name} (line {call.lineno})"
+        )
+
+
 def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
     expected_class = _pascal_case(path.name)
     candidate = CollectorCandidate(path=path, kind=kind, expected_class=expected_class)
@@ -122,20 +185,14 @@ def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
     elif public_classes:
         _validate_class_shape(public_classes[0], candidate)
 
+    _validate_import_time_expressions(tree, candidate)
     for item in tree.body:
         if isinstance(item, ast.Expr) and isinstance(item.value, ast.Constant):
             continue
         if isinstance(item, (ast.Assign, ast.AnnAssign)):
-            if any(isinstance(node, ast.Call) for node in ast.walk(item.value)):
-                candidate.static_errors.append("forbidden call in top-level assignment")
             continue
         if isinstance(item, (ast.Import, ast.ImportFrom, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
-        if isinstance(item, ast.Expr) and isinstance(item.value, ast.Call):
-            call_name = _top_level_call_name(item.value)
-            if call_name in _FORBIDDEN_TOP_LEVEL_CALLS or call_name:
-                candidate.static_errors.append(f"forbidden top-level call: {call_name or 'unknown'}")
-                continue
         candidate.static_errors.append(f"forbidden top-level statement: {type(item).__name__}")
     return candidate
 

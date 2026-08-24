@@ -332,6 +332,33 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(1, len(report.invalid))
             self.assertIn("collectors must not print; use structured progress or logging", report.invalid[0].static_errors)
 
+    def test_preflight_rejects_import_time_calls_in_headers_and_class_body(self) -> None:
+        """Collection-like work must not run before a worker has isolated the collector."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    "class SystemInfoCollector(CoreCollector):",
+                    "class SystemInfoCollector(CoreCollector, type(open('unexpected.txt'))):",
+                ).replace(
+                    "    @classmethod\n    def metadata",
+                    "    marker = input('unexpected prompt')\n\n    @classmethod\n    def metadata",
+                ).replace(
+                    "def validate(self, context: CollectorContext) -> ValidationResult:",
+                    "def validate(self, context: CollectorContext = open('another.txt')) -> ValidationResult:",
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            errors = report.invalid[0].static_errors
+            self.assertTrue(any("forbidden import-time call: type" in error for error in errors))
+            self.assertTrue(any("forbidden import-time call: input" in error for error in errors))
+            self.assertTrue(any("forbidden import-time call: open" in error for error in errors))
+
     def test_capability_gate_requires_explicit_approval(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
