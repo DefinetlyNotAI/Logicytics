@@ -8,6 +8,7 @@ import json
 import multiprocessing
 import os
 import queue
+import shutil
 import subprocess
 import traceback
 from dataclasses import asdict, dataclass
@@ -287,6 +288,7 @@ class RunSupervisor:
                 if worker is not None:
                     worker.process.join(timeout=1)
                     self._apply_worker_result(records[collector_id], _result_from_dict(message["result"]), worker)
+                    self._cleanup_worker_temporary_directory(worker)
                     run_logger.event("info", "collector_finished", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
 
@@ -301,9 +303,10 @@ class RunSupervisor:
                         CollectorResult(CollectorStatus.FAILED, "collector exceeded its declared timeout"),
                         worker,
                     )
+                    self._cleanup_worker_temporary_directory(worker)
                     run_logger.event("error", "collector_timed_out", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
-                elif not worker.process.is_alive() and worker.process.exitcode not in (None, 0):
+                elif not worker.process.is_alive():
                     worker.process.join(timeout=1)
                     active.pop(collector_id)
                     self._apply_worker_result(
@@ -311,9 +314,19 @@ class RunSupervisor:
                         CollectorResult(CollectorStatus.FAILED, "collector exited without a result"),
                         worker,
                     )
+                    self._cleanup_worker_temporary_directory(worker)
                     run_logger.event("error", "collector_exited_without_result", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
             sleep(0.01)
+
+    @staticmethod
+    def _cleanup_worker_temporary_directory(worker: _ActiveWorker) -> None:
+        """Remove only a terminal worker's private scratch directory, never its logs."""
+        temporary_directory = worker.workspace / "tmp"
+        try:
+            shutil.rmtree(temporary_directory, ignore_errors=True)
+        except OSError:
+            pass
 
     @staticmethod
     def _terminate_process_tree(process: multiprocessing.Process) -> None:
@@ -374,6 +387,7 @@ class RunSupervisor:
                 CollectorResult(CollectorStatus.CANCELLED, reason),
                 worker,
             )
+            self._cleanup_worker_temporary_directory(worker)
         write_manifest(manifest_path, manifest)
 
     def _cancel_records(self, records, manifest, manifest_path, reason: str) -> None:

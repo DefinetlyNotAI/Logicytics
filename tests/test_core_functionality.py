@@ -222,6 +222,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(1, len(outcome.manifest.artifact_list()))
             self.assertIsNotNone(outcome.manifest.collectors[0].heartbeat_at)
             self.assertIsNotNone(outcome.manifest.collectors[0].last_progress_at)
+            self.assertFalse((outcome.run_directory / "collectors" / "core_system_system_info" / "tmp").exists())
             package_path, hash_path = package_run(outcome)
             self.assertTrue(package_path.is_file())
             self.assertTrue(hash_path.is_file())
