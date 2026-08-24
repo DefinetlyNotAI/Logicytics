@@ -287,7 +287,7 @@ that fails any mandatory rule is not a collector and must not be launched.
 - [ ] Validate path, filename, module docstring, imports, public names, class
       inheritance, class name, metadata, method signatures, type annotations, and
       forbidden top-level statements.
-- [ ] Import each candidate in a short-lived validation subprocess with collection
+- [x] Import each candidate in a short-lived validation subprocess with collection
       disabled and with a restricted environment.
 - [x] Instantiate the class only after static validation succeeds.
 - [ ] Validate metadata, dependencies, supported platform, requested capabilities,
