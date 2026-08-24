@@ -927,7 +927,7 @@ appropriate default/deep/non-Python mode.
 - [ ] Every collector can be run directly and through the orchestrator.
 - [ ] Every mode has an explicit collector inclusion matrix.
 - [ ] Every output has a documented path, format, and retention rule.
-- [ ] A failed collector cannot silently make the run appear successful.
+- [x] A failed collector cannot silently make the run appear successful.
 - [ ] A cancelled run leaves a recoverable partial-run report and cleans only its
       own temporary data.
 - [x] A normal run creates a package, a matching SHA-256 hash, and a run manifest.
