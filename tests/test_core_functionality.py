@@ -232,6 +232,21 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(1, len(report.invalid))
             self.assertIn("collect must return CollectorResult", report.invalid[0].static_errors)
 
+    def test_preflight_rejects_collector_print_calls(self) -> None:
+        """Collectors must emit structured events rather than write directly to stdout."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace("return CollectorResult.succeeded(\"test artifact created\", (artifact,))", "print('unexpected output')\n        return CollectorResult.succeeded(\"test artifact created\", (artifact,))"),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn("collectors must not print; use structured progress or logging", report.invalid[0].static_errors)
+
     def test_capability_gate_requires_explicit_approval(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
