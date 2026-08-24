@@ -54,6 +54,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.system.bios_info",
                 "core.system.operating_system",
                 "core.system.computer_system",
+                "core.system.defender_status",
                 "core.system.session_snapshot",
                 "core.system.environment_posture",
                 "core.system.system_diagnostics",
