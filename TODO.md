@@ -447,7 +447,7 @@ Windows platform allows.
       registry-sensitive, and interactive collectors can be coordinated.
 - [ ] Prevent concurrent collectors from writing the same artifact path.
 - [ ] Use thread-safe artifact registration and structured event reporting.
-- [ ] Preserve deterministic manifest ordering even when collectors finish out of
+- [x] Preserve deterministic manifest ordering even when collectors finish out of
       order.
 - [ ] Define which collectors may run in parallel and which must run serially.
 - [ ] Provide a sequential mode for debugging and a bounded parallel mode for

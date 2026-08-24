@@ -354,6 +354,39 @@ class CoreFunctionalityTests(unittest.TestCase):
                     package_run(outcome)
             self.assertFalse(package_path.with_suffix(".zip.tmp").exists())
 
+    def test_parallel_completion_preserves_deterministic_manifest_order(self) -> None:
+        """Collector completion order must not reorder the preflighted execution plan."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+
+            def collector_source(filename: str, delay: float) -> str:
+                class_name = "".join(part.title() for part in filename.split("_"))
+                source = _COLLECTOR.replace("SystemInfoCollector", f"{class_name}Collector")
+                source = source.replace("core.system.system_info", f"core.system.{filename}")
+                source = source.replace("from pathlib import Path\n", "from pathlib import Path\nfrom time import sleep\n")
+                return source.replace(
+                    '        output = context.workspace / "system.txt"',
+                    f'        sleep({delay})\n        output = context.workspace / "system.txt"',
+                )
+
+            (core_directory / "a_slow.py").write_text(collector_source("a_slow", 0.6), encoding="utf-8")
+            (core_directory / "z_fast.py").write_text(collector_source("z_fast", 0.0), encoding="utf-8")
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(
+                report,
+                RunRequest(max_workers=2, acknowledge_authorization=True),
+            )
+            planned_ids = [candidate.metadata.id for candidate in plan.collectors]
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+
+            self.assertEqual(planned_ids, [record.id for record in outcome.manifest.collectors])
+            self.assertLess(records["core.system.z_fast"].finished_at, records["core.system.a_slow"].finished_at)
+
     def test_failed_collector_is_manifested_and_never_reported_as_success(self) -> None:
         """An isolated collector crash must produce a durable failed run outcome."""
         with tempfile.TemporaryDirectory() as temporary:
