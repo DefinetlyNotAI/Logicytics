@@ -74,6 +74,8 @@ def _validate_contract(collector_type: type[Collector], kind: CollectorKind) -> 
     metadata = collector_type.metadata()
     if not isinstance(metadata, CollectorMetadata):
         raise ValueError("metadata() must return CollectorMetadata")
+    if declared_dependencies != metadata.dependencies:
+        raise ValueError("dependencies() must match metadata.dependencies")
     collector = collector_type()
     with tempfile.TemporaryDirectory(prefix="logicytics-validation-") as temporary:
         workspace = Path(temporary)

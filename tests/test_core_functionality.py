@@ -280,6 +280,28 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(1, len(report.invalid))
             self.assertIn("dependencies must be a classmethod", report.invalid[0].static_errors)
 
+    def test_preflight_rejects_dependency_declaration_mismatch(self) -> None:
+        """The planner-facing metadata and optional dependency method must agree."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    "    def cleanup(self, context: CollectorContext) -> None:",
+                    "    @classmethod\n"
+                    "    def dependencies(cls) -> tuple[str, ...]:\n"
+                    "        \"\"\"Return a dependency absent from metadata for this test.\"\"\"\n"
+                    "        return ('core.system.missing',)\n\n"
+                    "    def cleanup(self, context: CollectorContext) -> None:",
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn("dependencies() must match metadata.dependencies", report.invalid[0].runtime_error or "")
+
     def test_preflight_rejects_malformed_validate_result(self) -> None:
         """The isolated preflight probe must reject a non-ValidationResult response."""
         with tempfile.TemporaryDirectory() as temporary:
