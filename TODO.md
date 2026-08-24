@@ -278,7 +278,7 @@ that fails any mandatory rule is not a collector and must not be launched.
 - [ ] Require all expected failures to become typed result/error values rather than
       process exits.
 - [x] Require docstrings for the class and every public method.
-- [ ] Reject import-time collection, threads, subprocesses, network calls, file
+- [x] Reject import-time collection, threads, subprocesses, network calls, file
       writes, registry writes, prompts, or `sys.exit()` calls.
 
 #### Static and runtime preflight validation
@@ -312,11 +312,11 @@ Windows platform allows.
 
 - [x] Launch each collector in its own worker process rather than importing and
       running all collectors in the main process.
-- [ ] Give each collector a private working directory:
+- [x] Give each collector a private working directory:
       `ACCESS/RUNS/<run-id>/collectors/<collector-id>/`.
-- [ ] Give each collector a private temporary directory, stdout/stderr capture,
+- [x] Give each collector a private temporary directory, stdout/stderr capture,
       structured event channel, and artifact staging area.
-- [ ] Pass only a serializable `CollectorContext`/request payload into the worker;
+- [x] Pass only a serializable `CollectorContext`/request payload into the worker;
       do not share mutable engine objects across collectors.
 - [ ] Enforce declared timeout, memory/output limits, file-count limits, and
       cancellation through the supervisor.
@@ -339,7 +339,7 @@ Windows platform allows.
 - [ ] Ensure a collector cannot call the main CLI, trigger reboot/shutdown, alter
       configuration, install packages, update the repository, or launch another
       collector through the public context API.
-- [ ] Provide a supervisor heartbeat and last-progress timestamp for every worker.
+- [x] Provide a supervisor heartbeat and last-progress timestamp for every worker.
 - [ ] Make the final package include the isolation result and failure reason for
       every selected collector.
 
