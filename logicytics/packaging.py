@@ -5,10 +5,13 @@ from __future__ import annotations
 import os
 import zipfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from logicytics.artifacts import sha256_file
 from logicytics.manifest import RunManifest, write_manifest
-from logicytics.runtime import RunOutcome
+
+if TYPE_CHECKING:
+    from logicytics.runtime import RunOutcome
 
 
 def _summary(manifest: RunManifest) -> str:
@@ -19,12 +22,12 @@ def _summary(manifest: RunManifest) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _artifact_sources(outcome: RunOutcome) -> list[tuple[Path, str]]:
+def _artifact_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[Path, str]]:
     """Resolve and verify every manifest-declared artifact before packaging it."""
     sources: list[tuple[Path, str]] = []
     archive_names: set[str] = set()
-    for artifact in outcome.manifest.artifact_list():
-        source = outcome.run_directory / "artifacts" / artifact.relative_path
+    for artifact in manifest.artifact_list():
+        source = run_directory / "artifacts" / artifact.relative_path
         archive_name = f"artifacts/{artifact.relative_path}"
         if archive_name in archive_names:
             raise ValueError(f"manifest contains duplicate artifact path: {artifact.relative_path}")
@@ -58,26 +61,26 @@ def _verify_archive(package_path: Path, expected_names: set[str]) -> None:
             raise ValueError("package integrity verification failed")
 
 
-def package_run(outcome: RunOutcome) -> tuple[Path, Path]:
+def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: Path) -> tuple[Path, Path]:
     """Package registered artifacts, manifest, and summary without scanning arbitrary files."""
-    package_directory = outcome.run_directory.parent.parent / "PACKAGES"
+    package_directory = run_directory.parent.parent / "PACKAGES"
     package_directory.mkdir(parents=True, exist_ok=True)
-    package_path = package_directory / f"{outcome.manifest.run_id}.zip"
+    package_path = package_directory / f"{manifest.run_id}.zip"
     hash_path = package_path.with_suffix(".zip.sha256")
-    outcome.manifest.package = {"path": str(package_path)}
-    write_manifest(outcome.manifest_path, outcome.manifest)
 
-    summary_path = outcome.run_directory / "summary.txt"
-    summary_path.write_text(_summary(outcome.manifest), encoding="utf-8")
-    artifact_sources = _artifact_sources(outcome)
-    log_sources = _log_sources(outcome.run_directory)
+    summary_path = run_directory / "summary.txt"
+    artifact_sources = _artifact_sources(run_directory, manifest)
+    log_sources = _log_sources(run_directory)
+    manifest.package = {"path": str(package_path)}
+    write_manifest(manifest_path, manifest)
+    summary_path.write_text(_summary(manifest), encoding="utf-8")
     expected_names = {"manifest.json", "summary.txt"}
     expected_names.update(archive_name for _, archive_name in artifact_sources)
     expected_names.update(archive_name for _, archive_name in log_sources)
     temporary_package = package_path.with_suffix(".zip.tmp")
     try:
         with zipfile.ZipFile(temporary_package, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.write(outcome.manifest_path, "manifest.json")
+            archive.write(manifest_path, "manifest.json")
             archive.write(summary_path, "summary.txt")
             for source, archive_name in (*artifact_sources, *log_sources):
                 archive.write(source, archive_name)
@@ -89,4 +92,11 @@ def package_run(outcome: RunOutcome) -> tuple[Path, Path]:
     temporary_hash = hash_path.with_suffix(".sha256.tmp")
     temporary_hash.write_text(f"{sha256_file(package_path)}  {package_path.name}\n", encoding="ascii")
     os.replace(temporary_hash, hash_path)
+    manifest.package = {"path": str(package_path), "sha256_path": str(hash_path)}
+    write_manifest(manifest_path, manifest)
     return package_path, hash_path
+
+
+def package_run(outcome: "RunOutcome") -> tuple[Path, Path]:
+    """Compatibility wrapper for callers holding a complete runtime outcome."""
+    return package_manifest(outcome.run_directory, outcome.manifest, outcome.manifest_path)

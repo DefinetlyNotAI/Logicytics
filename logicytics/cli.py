@@ -16,7 +16,6 @@ from logicytics.contracts import Capability, RunRequest
 from logicytics.discovery import preflight
 from logicytics.environment import inspect_environment
 from logicytics.errors import LogicyticsError
-from logicytics.packaging import package_run
 from logicytics.planner import build_plan
 from logicytics.runtime import RunSupervisor
 from logicytics.sysinternals import ensure_sysinternals
@@ -158,9 +157,11 @@ def main(argv: list[str] | None = None) -> int:
                 encoding="utf-8",
             )
             print(f"Performance: {performance_path}")
-        if configuration.runtime.package_completed_runs:
-            package_path, hash_path = package_run(outcome)
-            print(f"Package: {package_path}\nSHA-256: {hash_path}")
+        if outcome.manifest.package and "path" in outcome.manifest.package:
+            print(
+                f"Package: {outcome.manifest.package['path']}\n"
+                f"SHA-256: {outcome.manifest.package.get('sha256_path', 'unavailable')}"
+            )
         print(f"Run: {outcome.manifest_path}\nStatus: {outcome.manifest.status.value}")
         return 0 if outcome.manifest.status.value == "succeeded" else 1
     except (LogicyticsError, PermissionError, ValueError) as error:

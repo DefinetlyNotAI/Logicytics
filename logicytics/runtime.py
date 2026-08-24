@@ -11,6 +11,7 @@ import queue
 import shutil
 import subprocess
 import traceback
+import zipfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from time import monotonic, sleep
@@ -28,6 +29,7 @@ from logicytics.contracts import (
 )
 from logicytics.logging import FileEventLogger
 from logicytics.manifest import RunManifest, write_manifest, utc_now
+from logicytics.packaging import package_manifest
 from logicytics.planner import RunPlan
 
 
@@ -214,6 +216,19 @@ class RunSupervisor:
             self._cancel_records(records, manifest, manifest_path, "run cancelled by user")
 
         manifest.finalize_status()
+        if self.configuration.runtime.package_completed_runs:
+            try:
+                package_path, hash_path = package_manifest(run_directory, manifest, manifest_path)
+                run_logger.event(
+                    "info",
+                    "run_packaged",
+                    package_path=str(package_path),
+                    hash_path=str(hash_path),
+                )
+            except (OSError, ValueError, zipfile.BadZipFile) as error:
+                manifest.status = RunStatus.FAILED
+                manifest.package = {"status": "failed", "error": f"{type(error).__name__}: {error}"}
+                run_logger.event("error", "run_packaging_failed", error_type=type(error).__name__)
         write_manifest(manifest_path, manifest)
         run_logger.event("info", "run_finished", status=manifest.status.value, artifacts=manifest.total_artifact_bytes)
         return RunOutcome(manifest=manifest, run_directory=run_directory, manifest_path=manifest_path)
