@@ -870,7 +870,7 @@ appropriate default/deep/non-Python mode.
 - [ ] Define stable output names and formats for every collector.
 - [ ] Keep logs, hashes, packages, graphs, CSVs, HTML, text, and copied evidence
       discoverable under one run-specific output tree.
-- [ ] Include collection metadata: version, action, start/end times, host, user,
+- [x] Include collection metadata: version, action, start/end times, host, user,
       privilege state, enabled collectors, skipped collectors, and failures.
 
 ## 8. v4.0 delivery phases
