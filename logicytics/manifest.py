@@ -5,12 +5,14 @@ from __future__ import annotations
 import json
 import os
 import platform
+import ctypes
+import getpass
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-from logicytics.contracts import Artifact, CollectorResult, RunStatus
+from logicytics.contracts import CONTRACT_VERSION, Artifact, CollectorResult, RunStatus
 
 
 def utc_now() -> str:
@@ -58,6 +60,8 @@ class RunManifest:
     configuration: Mapping[str, Any]
     collectors: list[CollectorRecord]
     host: Mapping[str, str]
+    engine_version: str = CONTRACT_VERSION
+    action: str = "run"
     finished_at: str | None = None
     package: Mapping[str, str] | None = None
     total_artifact_bytes: int = 0
@@ -79,7 +83,13 @@ class RunManifest:
             configuration=configuration,
             collectors=[CollectorRecord(id=collector_id, source=str(source)) for collector_id, source in
                         collector_sources],
-            host={"platform": sys_platform(), "hostname": platform.node(), "python": platform.python_version()},
+            host={
+                "platform": sys_platform(),
+                "hostname": platform.node(),
+                "python": platform.python_version(),
+                "user": getpass.getuser(),
+                "is_administrator": _privilege_label(),
+            },
         )
 
     def finalize_status(self) -> None:
@@ -114,6 +124,14 @@ class RunManifest:
 def sys_platform() -> str:
     """Expose the runtime platform without importing platform in consumers."""
     return platform.system().lower()
+
+
+def _privilege_label() -> str:
+    """Return the local elevation state without starting external tools."""
+    try:
+        return "true" if ctypes.windll.shell32.IsUserAnAdmin() else "false"
+    except (AttributeError, OSError):
+        return "unknown"
 
 
 def write_manifest(path: Path, manifest: RunManifest) -> None:
