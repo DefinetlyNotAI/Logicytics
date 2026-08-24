@@ -34,6 +34,9 @@ def _validate_collector_settings(settings: Mapping[str, Mapping[str, Any]]) -> N
         raise PlanError("core.packet.packet_capture.packet_count must be an integer from 1 to 10000")
     if "timeout_seconds" in capture and not _bounded_number(capture["timeout_seconds"], minimum=1, maximum=60):
         raise PlanError("core.packet.packet_capture.timeout_seconds must be a number from 1 to 60")
+    if "retry_window_seconds" in capture and not _bounded_number(
+            capture["retry_window_seconds"], minimum=0, maximum=60):
+        raise PlanError("core.packet.packet_capture.retry_window_seconds must be a number from 0 to 60")
     if "interface" in capture and (
             not isinstance(capture["interface"], str) or not capture["interface"].strip()):
         raise PlanError("core.packet.packet_capture.interface must be a non-empty string")

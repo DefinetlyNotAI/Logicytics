@@ -180,11 +180,12 @@ class CoreFunctionalityTests(unittest.TestCase):
                 load_config(root)
             config_path.write_text(
                 '{"schema_version":4,"collectors":{"core.packet.packet_capture":'
-                '{"packet_count":10,"timeout_seconds":5,"interface":"127.0.0.1"}}}',
+                '{"packet_count":10,"timeout_seconds":5,"retry_window_seconds":2,"interface":"127.0.0.1"}}}',
                 encoding="utf-8",
             )
             settings = load_config(root).settings_for("core.packet.packet_capture")
             self.assertEqual(10, settings["packet_count"])
+            self.assertEqual(2, settings["retry_window_seconds"])
 
     def test_run_parser_accepts_performance_check(self) -> None:
         """The run command must expose the performance mode used by the request builder."""

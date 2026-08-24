@@ -54,10 +54,14 @@ class PacketCaptureCollector(CoreCollector):
         try:
             count = int(context.settings.get("packet_count", 100))
             timeout = float(context.settings.get("timeout_seconds", 10))
+            retry_window = float(context.settings.get("retry_window_seconds", 0))
         except (TypeError, ValueError):
-            return ValidationResult(False, reasons=("packet_count and timeout_seconds must be numeric",))
-        if not 1 <= count <= 10_000 or not 1 <= timeout <= 60:
-            return ValidationResult(False, reasons=("packet_count must be 1-10000 and timeout_seconds must be 1-60",))
+            return ValidationResult(False, reasons=("packet_count, timeout_seconds, and retry_window_seconds must be numeric",))
+        if not 1 <= count <= 10_000 or not 1 <= timeout <= 60 or not 0 <= retry_window <= 60:
+            return ValidationResult(
+                False,
+                reasons=("packet_count must be 1-10000, timeout_seconds 1-60, and retry_window_seconds 0-60",),
+            )
         return ValidationResult(True)
 
     def collect(self, context: CollectorContext) -> CollectorResult:
@@ -66,8 +70,14 @@ class PacketCaptureCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before packet capture")
         count = int(context.settings.get("packet_count", 100))
         timeout = float(context.settings.get("timeout_seconds", 10))
+        retry_window = float(context.settings.get("retry_window_seconds", 0))
         interface = str(context.settings.get("interface", socket.gethostbyname(socket.gethostname())))
-        context.report_progress("packet_capture_started", interface=interface, packet_count=count)
+        context.report_progress(
+            "packet_capture_started",
+            interface=interface,
+            packet_count=count,
+            retry_window_seconds=retry_window,
+        )
         capture: socket.socket | None = None
         observations: list[dict[str, str]] = []
         try:
@@ -76,13 +86,21 @@ class PacketCaptureCollector(CoreCollector):
             capture.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
             capture.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
             deadline = time.monotonic() + timeout
+            retry_deadline = time.monotonic() + retry_window
             while len(observations) < count and time.monotonic() < deadline:
                 if context.is_cancelled:
                     return CollectorResult(CollectorStatus.CANCELLED, "cancelled during packet capture")
                 ready, _, _ = select.select([capture], [], [], min(1.0, deadline - time.monotonic()))
                 if not ready:
                     continue
-                row = _packet_row(capture.recv(65_535))
+                try:
+                    payload = capture.recv(65_535)
+                except OSError:
+                    if time.monotonic() < retry_deadline:
+                        time.sleep(0.1)
+                        continue
+                    raise
+                row = _packet_row(payload)
                 if row is not None:
                     observations.append(row)
         except PermissionError as error:
