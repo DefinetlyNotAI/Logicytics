@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
 import zipfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, BinaryIO
 
 from logicytics.artifacts import sha256_file
 from logicytics.manifest import RunManifest, write_manifest
@@ -51,14 +52,29 @@ def _log_sources(run_directory: Path) -> list[tuple[Path, str]]:
     return sources
 
 
-def _verify_archive(package_path: Path, expected_names: set[str]) -> None:
-    """Confirm an atomically written package contains exactly its declared inputs."""
+def _sha256_stream(stream: BinaryIO) -> str:
+    """Hash an open binary stream without loading the evidence into memory."""
+    digest = hashlib.sha256()
+    for block in iter(lambda: stream.read(1024 * 1024), b""):
+        digest.update(block)
+    return digest.hexdigest()
+
+
+def _verify_archive(package_path: Path, manifest: RunManifest, expected_names: set[str]) -> None:
+    """Confirm packaged artifact bytes match the finalized manifest exactly."""
     with zipfile.ZipFile(package_path) as archive:
-        names = set(archive.namelist())
-        if names != expected_names:
+        name_list = archive.namelist()
+        if len(name_list) != len(set(name_list)) or set(name_list) != expected_names:
             raise ValueError("package contents do not match its manifest-led input set")
         if archive.testzip() is not None:
             raise ValueError("package integrity verification failed")
+        for artifact in manifest.artifact_list():
+            archive_name = f"artifacts/{artifact.relative_path}"
+            member = archive.getinfo(archive_name)
+            with archive.open(member) as stream:
+                digest = _sha256_stream(stream)
+            if member.file_size != artifact.size_bytes or digest != artifact.sha256:
+                raise ValueError(f"packaged artifact verification failed: {artifact.relative_path}")
 
 
 def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: Path) -> tuple[Path, Path]:
@@ -84,15 +100,20 @@ def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: 
             archive.write(summary_path, "summary.txt")
             for source, archive_name in (*artifact_sources, *log_sources):
                 archive.write(source, archive_name)
-        _verify_archive(temporary_package, expected_names)
+        _verify_archive(temporary_package, manifest, expected_names)
         os.replace(temporary_package, package_path)
     finally:
         if temporary_package.exists():
             temporary_package.unlink()
     temporary_hash = hash_path.with_suffix(".sha256.tmp")
-    temporary_hash.write_text(f"{sha256_file(package_path)}  {package_path.name}\n", encoding="ascii")
+    package_sha256 = sha256_file(package_path)
+    temporary_hash.write_text(f"{package_sha256}  {package_path.name}\n", encoding="ascii")
     os.replace(temporary_hash, hash_path)
-    manifest.package = {"path": str(package_path), "sha256_path": str(hash_path)}
+    manifest.package = {
+        "path": str(package_path),
+        "sha256_path": str(hash_path),
+        "sha256": package_sha256,
+    }
     write_manifest(manifest_path, manifest)
     return package_path, hash_path
 

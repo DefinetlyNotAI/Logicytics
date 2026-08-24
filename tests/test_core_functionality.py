@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import tempfile
 import unittest
 import zipfile
@@ -257,12 +258,56 @@ class CoreFunctionalityTests(unittest.TestCase):
             package_path, hash_path = package_run(outcome)
             self.assertTrue(package_path.is_file())
             self.assertTrue(hash_path.is_file())
-            self.assertEqual(f"{package_path.name}", hash_path.read_text(encoding="ascii").split()[1])
+            package_digest, sidecar_name = hash_path.read_text(encoding="ascii").split()
+            self.assertEqual(package_path.name, sidecar_name)
+            self.assertEqual(hashlib.sha256(package_path.read_bytes()).hexdigest(), package_digest)
+            self.assertEqual(package_digest, outcome.manifest.package["sha256"])
             with zipfile.ZipFile(package_path) as archive:
                 self.assertIsNone(archive.testzip())
                 self.assertIn("manifest.json", archive.namelist())
                 self.assertIn("summary.txt", archive.namelist())
                 self.assertEqual(1, len([name for name in archive.namelist() if name.startswith("artifacts/")]))
+                artifact = outcome.manifest.artifact_list()[0]
+                archived_bytes = archive.read(f"artifacts/{artifact.relative_path}")
+                self.assertEqual(artifact.size_bytes, len(archived_bytes))
+                self.assertEqual(artifact.sha256, hashlib.sha256(archived_bytes).hexdigest())
+
+    def test_package_excludes_unregistered_files_and_rejects_tampered_artifacts(self) -> None:
+        """Only manifest artifacts may enter a package, and their final bytes must match."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            report = preflight(root)
+            plan = build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            unregistered = outcome.run_directory / "artifacts" / "unregistered.txt"
+            unregistered.write_text("must not be packaged\n", encoding="utf-8")
+
+            package_path, _ = package_run(outcome)
+            with zipfile.ZipFile(package_path) as archive:
+                self.assertNotIn("artifacts/unregistered.txt", archive.namelist())
+
+            original_write = zipfile.ZipFile.write
+
+            def tampering_write(
+                    archive: zipfile.ZipFile,
+                    filename: str | Path,
+                    arcname: str | None = None,
+                    compress_type: int | None = None,
+                    compresslevel: int | None = None,
+            ) -> None:
+                if arcname and arcname.startswith("artifacts/"):
+                    archive.writestr(arcname, b"tampered artifact bytes")
+                    return
+                original_write(archive, filename, arcname, compress_type, compresslevel)
+
+            with patch.object(zipfile.ZipFile, "write", new=tampering_write):
+                with self.assertRaisesRegex(ValueError, "packaged artifact verification failed"):
+                    package_run(outcome)
+            self.assertFalse(package_path.with_suffix(".zip.tmp").exists())
 
     def test_failed_collector_is_manifested_and_never_reported_as_success(self) -> None:
         """An isolated collector crash must produce a durable failed run outcome."""

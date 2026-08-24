@@ -485,15 +485,15 @@ Windows platform allows.
 
 ### Improve packaging and evidence integrity
 
-- [ ] Package only finalized artifacts referenced by the manifest.
+- [x] Package only finalized artifacts referenced by the manifest.
 - [ ] Stream ZIP creation and hash calculation to support large runs.
-- [ ] Add per-artifact SHA-256 values and a package-level SHA-256 value.
-- [ ] Include a machine-readable manifest and a human-readable summary report.
+- [x] Add per-artifact SHA-256 values and a package-level SHA-256 value.
+- [x] Include a machine-readable manifest and a human-readable summary report.
 - [ ] Include collector status, skipped/failed reasons, and collection timestamps
       in the summary.
 - [ ] Preserve artifact provenance: collector ID, source category, collection time,
       and transformation steps.
-- [ ] Verify package contents against the manifest before marking the run complete.
+- [x] Verify package contents against the manifest before marking the run complete.
 - [x] Use atomic writes and temporary package names so interrupted packaging cannot
       look like a finished result.
 - [ ] Keep raw evidence, derived reports, logs, hashes, and metadata in separate
@@ -514,7 +514,7 @@ Windows platform allows.
       duplicate collectors, and invalid configurations.
 - [ ] Add run tests for sequential, bounded-parallel, cancellation, timeout,
       partial-failure, rerun, and cleanup behavior.
-- [ ] Add packaging tests proving that unregistered files cannot enter a package
+- [x] Add packaging tests proving that unregistered files cannot enter a package
       and that manifest hashes match the final bytes.
 - [ ] Add golden-output tests for stable text, CSV, HTML, graph, and manifest
       formats, allowing platform-specific values to be normalized.
