@@ -268,7 +268,7 @@ that fails any mandatory rule is not a collector and must not be launched.
   - [x] `validate(context: CollectorContext) -> ValidationResult`.
   - [x] `collect(context: CollectorContext) -> CollectorResult`.
   - [x] `cleanup(context: CollectorContext) -> None`.
-- [ ] Permit optional `estimate(context) -> CollectionEstimate` and
+- [x] Permit optional `estimate(context) -> CollectionEstimate` and
       `dependencies() -> tuple[str, ...]` methods only when they pass the contract
       validator.
 - [x] Require `collect()` to write through the artifact service and return artifact
@@ -277,28 +277,28 @@ that fails any mandatory rule is not a collector and must not be launched.
       console output as their API.
 - [ ] Require all expected failures to become typed result/error values rather than
       process exits.
-- [ ] Require docstrings for the class and every public method.
+- [x] Require docstrings for the class and every public method.
 - [ ] Reject import-time collection, threads, subprocesses, network calls, file
       writes, registry writes, prompts, or `sys.exit()` calls.
 
 #### Static and runtime preflight validation
 
-- [ ] Parse every discovered module with the Python AST before importing it.
+- [x] Parse every discovered module with the Python AST before importing it.
 - [ ] Validate path, filename, module docstring, imports, public names, class
       inheritance, class name, metadata, method signatures, type annotations, and
       forbidden top-level statements.
 - [ ] Import each candidate in a short-lived validation subprocess with collection
       disabled and with a restricted environment.
-- [ ] Instantiate the class only after static validation succeeds.
+- [x] Instantiate the class only after static validation succeeds.
 - [ ] Validate metadata, dependencies, supported platform, requested capabilities,
       output declarations, timeout, and size limits at runtime.
 - [ ] Run a no-op contract probe against `validate()` and reject unexpected side
       effects, hangs, exceptions, or malformed return values.
 - [ ] Produce a preflight report listing valid, quarantined, and invalid collectors,
       with exact file/line/rule failures.
-- [ ] Refuse to launch before collection if a core collector or explicitly selected
+- [x] Refuse to launch before collection if a core collector or explicitly selected
       plugin fails validation.
-- [ ] Never “best effort” execute a malformed collector because another collector
+- [x] Never “best effort” execute a malformed collector because another collector
       succeeded.
 - [ ] Cache validation only with a source hash, interpreter version, contract
       version, and configuration hash; invalidate the cache whenever any changes.
@@ -310,7 +310,7 @@ it does not mean that a collector automatically has permission to access anythin
 on the machine. Access must be declared, approved, and enforced as far as the
 Windows platform allows.
 
-- [ ] Launch each collector in its own worker process rather than importing and
+- [x] Launch each collector in its own worker process rather than importing and
       running all collectors in the main process.
 - [ ] Give each collector a private working directory:
       `ACCESS/RUNS/<run-id>/collectors/<collector-id>/`.
