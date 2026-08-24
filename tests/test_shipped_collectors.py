@@ -59,6 +59,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.system.system_diagnostics",
                 "core.system.installed_drivers",
                 "core.system.installed_updates",
+                "core.system.scheduled_tasks",
                 "core.system.windows_services",
                 "core.system.windows_system_data_backup",
                 "core.diagnostics.sysinternals_report",

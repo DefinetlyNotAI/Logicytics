@@ -69,6 +69,11 @@ def _parser() -> argparse.ArgumentParser:
             mode.add_argument("--minimal", action="store_true", help="Run the minimal built-in profile.")
             mode.add_argument("--depth", action="store_true", help="Run the deep built-in profile.")
             subparser.add_argument(
+                "--performance-check",
+                action="store_true",
+                help="Run serially and save per-collector duration measurements.",
+            )
+            subparser.add_argument(
                 "--acknowledge-authorization",
                 action="store_true",
                 help="Confirm you are authorized to collect the selected evidence.",

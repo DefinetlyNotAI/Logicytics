@@ -9,6 +9,7 @@ from pathlib import Path
 
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
+from logicytics.cli import _parser
 from logicytics.file_listing import list_files
 from logicytics.logging import deprecated, raise_logged, timed
 from logicytics.sysinternals import ensure_sysinternals
@@ -150,6 +151,11 @@ class CoreFunctionalityTests(unittest.TestCase):
                 load_config(root)
             config_path.write_text('{"schema_version": 4, "collectors": {}}', encoding="utf-8")
             self.assertEqual(4, load_config(root).schema_version)
+
+    def test_run_parser_accepts_performance_check(self) -> None:
+        """The run command must expose the performance mode used by the request builder."""
+        arguments = _parser().parse_args(["run", "--performance-check"])
+        self.assertTrue(arguments.performance_check)
 
     """Validate the foundation before real core collectors are added."""
 
