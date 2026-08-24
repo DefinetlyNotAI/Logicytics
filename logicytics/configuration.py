@@ -12,6 +12,33 @@ from logicytics.errors import PlanError
 SCHEMA_VERSION = 4
 
 
+def _positive_integer(value: object, *, minimum: int, maximum: int) -> bool:
+    """Whether a JSON value is a bounded integer rather than a boolean or coercion."""
+    return isinstance(value, int) and not isinstance(value, bool) and minimum <= value <= maximum
+
+
+def _bounded_number(value: object, *, minimum: float, maximum: float) -> bool:
+    """Whether a JSON value is a bounded finite numeric setting."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and minimum <= value <= maximum
+
+
+def _validate_collector_settings(settings: Mapping[str, Mapping[str, Any]]) -> None:
+    """Validate documented bounded settings before any worker receives them."""
+    bandwidth = settings.get("core.network.bandwidth_sample", {})
+    for key, maximum in (("sample_count", 10), ("interval_seconds", 5)):
+        if key in bandwidth and not _positive_integer(bandwidth[key], minimum=1, maximum=maximum):
+            raise PlanError(f"core.network.bandwidth_sample.{key} must be an integer from 1 to {maximum}")
+
+    capture = settings.get("core.packet.packet_capture", {})
+    if "packet_count" in capture and not _positive_integer(capture["packet_count"], minimum=1, maximum=10_000):
+        raise PlanError("core.packet.packet_capture.packet_count must be an integer from 1 to 10000")
+    if "timeout_seconds" in capture and not _bounded_number(capture["timeout_seconds"], minimum=1, maximum=60):
+        raise PlanError("core.packet.packet_capture.timeout_seconds must be a number from 1 to 60")
+    if "interface" in capture and (
+            not isinstance(capture["interface"], str) or not capture["interface"].strip()):
+        raise PlanError("core.packet.packet_capture.interface must be a non-empty string")
+
+
 @dataclass(frozen=True, slots=True)
 class RuntimeSettings:
     """Engine-wide limits that apply before a collector is started."""
@@ -83,6 +110,7 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             for key, value in collector_settings.items()
     ):
         raise PlanError("collectors configuration must map collector IDs to objects")
+    _validate_collector_settings(collector_settings)
     return AppConfig(
         schema_version=schema_version,
         runtime=RuntimeSettings(

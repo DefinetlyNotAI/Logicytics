@@ -166,6 +166,26 @@ class CoreFunctionalityTests(unittest.TestCase):
             config_path.write_text('{"schema_version": 4, "collectors": {}}', encoding="utf-8")
             self.assertEqual(4, load_config(root).schema_version)
 
+    def test_configuration_validates_bounded_network_and_packet_settings(self) -> None:
+        """Collector-specific settings fail early rather than being silently coerced at runtime."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config_path = root / "logicytics.json"
+            config_path.write_text(
+                '{"schema_version":4,"collectors":{"core.network.bandwidth_sample":'
+                '{"sample_count":11}}}',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(PlanError, "sample_count"):
+                load_config(root)
+            config_path.write_text(
+                '{"schema_version":4,"collectors":{"core.packet.packet_capture":'
+                '{"packet_count":10,"timeout_seconds":5,"interface":"127.0.0.1"}}}',
+                encoding="utf-8",
+            )
+            settings = load_config(root).settings_for("core.packet.packet_capture")
+            self.assertEqual(10, settings["packet_count"])
+
     def test_run_parser_accepts_performance_check(self) -> None:
         """The run command must expose the performance mode used by the request builder."""
         arguments = _parser().parse_args(["run", "--performance-check"])
