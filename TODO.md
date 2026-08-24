@@ -489,7 +489,7 @@ Windows platform allows.
 - [ ] Stream ZIP creation and hash calculation to support large runs.
 - [x] Add per-artifact SHA-256 values and a package-level SHA-256 value.
 - [x] Include a machine-readable manifest and a human-readable summary report.
-- [ ] Include collector status, skipped/failed reasons, and collection timestamps
+- [x] Include collector status, skipped/failed reasons, and collection timestamps
       in the summary.
 - [ ] Preserve artifact provenance: collector ID, source category, collection time,
       and transformation steps.

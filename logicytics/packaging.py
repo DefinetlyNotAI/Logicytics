@@ -16,9 +16,27 @@ if TYPE_CHECKING:
 
 
 def _summary(manifest: RunManifest) -> str:
-    lines = [f"Logicytics run: {manifest.run_id}", f"Status: {manifest.status.value}", "", "Collectors:"]
+    lines = [
+        f"Logicytics run: {manifest.run_id}",
+        f"Status: {manifest.status.value}",
+        f"Requested: {manifest.requested_at}",
+        f"Finished: {manifest.finished_at or 'not finalized'}",
+        "",
+        "Collectors:",
+    ]
     for record in manifest.collectors:
-        lines.append(f"- {record.id}: {record.status} — {record.summary or ''}".rstrip())
+        lines.extend(
+            [
+                f"- {record.id}",
+                f"  Status: {record.status}",
+                f"  Started: {record.started_at or 'not started'}",
+                f"  Finished: {record.finished_at or 'not finished'}",
+                f"  Summary: {record.summary or 'none'}",
+            ]
+        )
+        if record.errors:
+            lines.append("  Reasons:")
+            lines.extend(f"    - {' '.join(error.splitlines())}" for error in record.errors)
     lines.extend(["", f"Artifacts: {len(manifest.artifact_list())}"])
     return "\n".join(lines) + "\n"
 

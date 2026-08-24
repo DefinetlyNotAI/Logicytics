@@ -271,6 +271,11 @@ class CoreFunctionalityTests(unittest.TestCase):
                 archived_bytes = archive.read(f"artifacts/{artifact.relative_path}")
                 self.assertEqual(artifact.size_bytes, len(archived_bytes))
                 self.assertEqual(artifact.sha256, hashlib.sha256(archived_bytes).hexdigest())
+                record = outcome.manifest.collectors[0]
+                summary = archive.read("summary.txt").decode("utf-8")
+                self.assertIn(f"Status: {record.status}", summary)
+                self.assertIn(f"Started: {record.started_at}", summary)
+                self.assertIn(f"Finished: {record.finished_at}", summary)
 
     def test_package_excludes_unregistered_files_and_rejects_tampered_artifacts(self) -> None:
         """Only manifest artifacts may enter a package, and their final bytes must match."""
@@ -334,7 +339,15 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("failed", record.status)
             self.assertTrue(any("RuntimeError" in error for error in record.errors))
             self.assertIsNotNone(outcome.manifest.package)
-            self.assertTrue(Path(outcome.manifest.package["path"]).is_file())
+            package_path = Path(outcome.manifest.package["path"])
+            self.assertTrue(package_path.is_file())
+            with zipfile.ZipFile(package_path) as archive:
+                summary = archive.read("summary.txt").decode("utf-8")
+            self.assertIn("Status: failed", summary)
+            self.assertIn("Reasons:", summary)
+            self.assertIn("RuntimeError", summary)
+            self.assertIn(f"Started: {record.started_at}", summary)
+            self.assertIn(f"Finished: {record.finished_at}", summary)
 
     def test_cancelled_run_writes_a_recoverable_package_and_manifest(self) -> None:
         """Keyboard cancellation must affect only this run and preserve its partial report."""
@@ -355,7 +368,14 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("run cancelled by user", record.summary)
             self.assertTrue((outcome.run_directory / ".cancelled").is_file())
             self.assertIsNotNone(outcome.manifest.package)
-            self.assertTrue(Path(outcome.manifest.package["path"]).is_file())
+            package_path = Path(outcome.manifest.package["path"])
+            self.assertTrue(package_path.is_file())
+            with zipfile.ZipFile(package_path) as archive:
+                summary = archive.read("summary.txt").decode("utf-8")
+            self.assertIn("Status: cancelled", summary)
+            self.assertIn("Summary: run cancelled by user", summary)
+            self.assertIn("Started: not started", summary)
+            self.assertIn(f"Finished: {record.finished_at}", summary)
 
     def test_invalid_core_blocks_a_run_but_unselected_plugin_is_quarantined(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
