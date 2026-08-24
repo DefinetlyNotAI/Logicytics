@@ -49,6 +49,7 @@ class _ActiveWorker:
     started_at: float
     timeout_seconds: int
     workspace: Path
+    parallel_safe: bool
     last_event_count: int = 0
     last_heartbeat_at: float = 0.0
 
@@ -269,8 +270,13 @@ class RunSupervisor:
                     )
                 return
             while pending and len(active) < worker_limit:
-                candidate = pending.pop(0)
+                if any(not worker.parallel_safe for worker in active.values()):
+                    break
+                candidate = pending[0]
                 assert candidate.metadata is not None
+                if active and not candidate.metadata.parallel_safe:
+                    break
+                pending.pop(0)
                 workspace = workspace_root / candidate.metadata.id.replace(".", "_")
                 payload: dict[str, object] = {
                     "run_id": run_id,
@@ -297,9 +303,12 @@ class RunSupervisor:
                     monotonic(),
                     candidate.metadata.timeout_seconds,
                     workspace,
+                    candidate.metadata.parallel_safe,
                 )
                 run_logger.event("info", "collector_started", collector_id=candidate.metadata.id)
                 write_manifest(manifest_path, manifest)
+                if not candidate.metadata.parallel_safe:
+                    break
 
             try:
                 message = result_queue.get(timeout=0.1)

@@ -449,7 +449,7 @@ Windows platform allows.
 - [ ] Use thread-safe artifact registration and structured event reporting.
 - [x] Preserve deterministic manifest ordering even when collectors finish out of
       order.
-- [ ] Define which collectors may run in parallel and which must run serially.
+- [x] Define which collectors may run in parallel and which must run serially.
 - [ ] Provide a sequential mode for debugging and a bounded parallel mode for
       normal use; do not make parallelism a hidden behavior of a particular flag.
 

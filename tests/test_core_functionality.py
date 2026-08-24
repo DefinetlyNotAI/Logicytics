@@ -66,6 +66,22 @@ class SystemInfoCollector(CoreCollector):
 '''
 
 
+def _delayed_collector_source(filename: str, delay: float, *, parallel_safe: bool = True) -> str:
+    """Create a valid fixture collector with observable scheduling duration."""
+    class_name = "".join(part.title() for part in filename.split("_"))
+    source = _COLLECTOR.replace("SystemInfoCollector", f"{class_name}Collector")
+    source = source.replace("core.system.system_info", f"core.system.{filename}")
+    source = source.replace("from pathlib import Path\n", "from pathlib import Path\nfrom time import sleep\n")
+    source = source.replace(
+        '            supported_platforms=("win32",),',
+        f'            supported_platforms=("win32",),\n            parallel_safe={parallel_safe!r},',
+    )
+    return source.replace(
+        '        output = context.workspace / "system.txt"',
+        f'        sleep({delay})\n        output = context.workspace / "system.txt"',
+    )
+
+
 class CoreFunctionalityTests(unittest.TestCase):
     def test_sysinternals_archive_lifecycle_honors_ignore_and_extracts_safely(self) -> None:
         """The local bundle must honor opt-out and extract only within its target directory."""
@@ -362,18 +378,14 @@ class CoreFunctionalityTests(unittest.TestCase):
             core_directory.mkdir(parents=True)
             (root / "plugins").mkdir()
 
-            def collector_source(filename: str, delay: float) -> str:
-                class_name = "".join(part.title() for part in filename.split("_"))
-                source = _COLLECTOR.replace("SystemInfoCollector", f"{class_name}Collector")
-                source = source.replace("core.system.system_info", f"core.system.{filename}")
-                source = source.replace("from pathlib import Path\n", "from pathlib import Path\nfrom time import sleep\n")
-                return source.replace(
-                    '        output = context.workspace / "system.txt"',
-                    f'        sleep({delay})\n        output = context.workspace / "system.txt"',
-                )
-
-            (core_directory / "a_slow.py").write_text(collector_source("a_slow", 0.6), encoding="utf-8")
-            (core_directory / "z_fast.py").write_text(collector_source("z_fast", 0.0), encoding="utf-8")
+            (core_directory / "a_slow.py").write_text(
+                _delayed_collector_source("a_slow", 0.6),
+                encoding="utf-8",
+            )
+            (core_directory / "z_fast.py").write_text(
+                _delayed_collector_source("z_fast", 0.0),
+                encoding="utf-8",
+            )
             report = preflight(root)
             self.assertEqual((), report.invalid)
             plan = build_plan(
@@ -386,6 +398,38 @@ class CoreFunctionalityTests(unittest.TestCase):
 
             self.assertEqual(planned_ids, [record.id for record in outcome.manifest.collectors])
             self.assertLess(records["core.system.z_fast"].finished_at, records["core.system.a_slow"].finished_at)
+
+    def test_parallel_unsafe_collector_runs_without_worker_overlap(self) -> None:
+        """A collector declaring parallel_safe=False must run alone between bounded workers."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            fixtures = (
+                ("a_parallel", 0.3, True),
+                ("m_serial", 0.2, False),
+                ("z_parallel", 0.0, True),
+            )
+            for filename, delay, parallel_safe in fixtures:
+                (core_directory / f"{filename}.py").write_text(
+                    _delayed_collector_source(filename, delay, parallel_safe=parallel_safe),
+                    encoding="utf-8",
+                )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(
+                report,
+                RunRequest(max_workers=3, acknowledge_authorization=True),
+            )
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+
+            first = records["core.system.a_parallel"]
+            serial = records["core.system.m_serial"]
+            last = records["core.system.z_parallel"]
+            self.assertLessEqual(first.finished_at, serial.started_at)
+            self.assertLessEqual(serial.finished_at, last.started_at)
 
     def test_failed_collector_is_manifested_and_never_reported_as_success(self) -> None:
         """An isolated collector crash must produce a durable failed run outcome."""
