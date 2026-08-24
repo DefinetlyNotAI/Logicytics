@@ -240,6 +240,33 @@ class CoreFunctionalityTests(unittest.TestCase):
                 self.assertIn("summary.txt", archive.namelist())
                 self.assertEqual(1, len([name for name in archive.namelist() if name.startswith("artifacts/")]))
 
+    def test_failed_collector_is_manifested_and_never_reported_as_success(self) -> None:
+        """An isolated collector crash must produce a durable failed run outcome."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    'output = context.workspace / "system.txt"\n'
+                    '        output.write_text("ok\\n", encoding="utf-8")\n'
+                    '        artifact = context.artifacts.register_file(output, media_type="text/plain")\n'
+                    '        return CollectorResult.succeeded("test artifact created", (artifact,))',
+                    'raise RuntimeError("intentional test collector failure")',
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            plan = build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            self.assertEqual("failed", outcome.manifest.status.value)
+            record = outcome.manifest.collectors[0]
+            self.assertEqual("failed", record.status)
+            self.assertTrue(any("RuntimeError" in error for error in record.errors))
+            self.assertIsNotNone(outcome.manifest.package)
+            self.assertTrue(Path(outcome.manifest.package["path"]).is_file())
+
     def test_invalid_core_blocks_a_run_but_unselected_plugin_is_quarantined(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
