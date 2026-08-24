@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -264,10 +265,7 @@ def discover(project_root: Path) -> tuple[CollectorCandidate, ...]:
 
 def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
     engine_root = Path(__file__).resolve().parent.parent
-    inherited_pythonpath = os.environ.get("PYTHONPATH", "")
-    pythonpath = os.pathsep.join(
-        value for value in (str(engine_root), str(project_root), inherited_pythonpath) if value
-    )
+    pythonpath = os.pathsep.join((str(engine_root), str(project_root)))
     command = [
         sys.executable,
         "-m",
@@ -276,19 +274,32 @@ def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
         candidate.kind.value,
         candidate.expected_class,
     ]
-    try:
-        completed = subprocess.run(
-            command,
-            cwd=project_root,
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-            env={**os.environ, "PYTHONPATH": pythonpath, "LOGICYTICS_VALIDATION": "1"},
-        )
-    except (OSError, subprocess.TimeoutExpired) as error:
-        candidate.runtime_error = f"validation worker failed: {error}"
-        return
+    with tempfile.TemporaryDirectory(prefix="logicytics-preflight-") as temporary:
+        probe_directory = Path(temporary)
+        environment = {
+            "PYTHONPATH": pythonpath,
+            "LOGICYTICS_VALIDATION": "1",
+            "PATH": os.environ.get("PATH", ""),
+            "TEMP": str(probe_directory),
+            "TMP": str(probe_directory),
+            "PYTHONUTF8": "1",
+        }
+        for name in ("SYSTEMROOT", "WINDIR", "COMSPEC"):
+            if value := os.environ.get(name):
+                environment[name] = value
+        try:
+            completed = subprocess.run(
+                command,
+                cwd=probe_directory,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+                env=environment,
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            candidate.runtime_error = f"validation worker failed: {error}"
+            return
     if completed.returncode != 0:
         candidate.runtime_error = completed.stderr.strip() or "validation worker rejected collector"
         return

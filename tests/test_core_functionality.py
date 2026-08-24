@@ -6,6 +6,7 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
@@ -390,6 +391,30 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertTrue(any("forbidden import-time call: type" in error for error in errors))
             self.assertTrue(any("forbidden import-time call: input" in error for error in errors))
             self.assertTrue(any("forbidden import-time call: open" in error for error in errors))
+
+    def test_preflight_probe_uses_a_restricted_environment(self) -> None:
+        """Validation probes expose only documented preflight variables to collectors."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            source = _COLLECTOR.replace(
+                "from pathlib import Path",
+                "import os\nfrom pathlib import Path",
+            ).replace(
+                "        return ValidationResult(True)",
+                "        if os.environ.get('LOGICYTICS_VALIDATION') != '1':\n"
+                "            return ValidationResult(False, reasons=('validation flag missing',))\n"
+                "        if os.environ.get('LOGICYTICS_TEST_SECRET') is not None:\n"
+                "            return ValidationResult(False, reasons=('caller environment leaked',))\n"
+                "        return ValidationResult(True)",
+                1,
+            )
+            collector_path.write_text(source, encoding="utf-8")
+            with patch.dict("os.environ", {"LOGICYTICS_TEST_SECRET": "must-not-leak"}):
+                report = preflight(root)
+            self.assertEqual(1, len(report.valid), report.invalid)
 
     def test_capability_gate_requires_explicit_approval(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
