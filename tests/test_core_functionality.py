@@ -267,6 +267,27 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertIsNotNone(outcome.manifest.package)
             self.assertTrue(Path(outcome.manifest.package["path"]).is_file())
 
+    def test_cancelled_run_writes_a_recoverable_package_and_manifest(self) -> None:
+        """Keyboard cancellation must affect only this run and preserve its partial report."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            report = preflight(root)
+            plan = build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True))
+            supervisor = RunSupervisor(root, default_config(root))
+            with patch.object(supervisor, "_supervise", side_effect=KeyboardInterrupt):
+                outcome = supervisor.run(plan)
+            self.assertEqual("cancelled", outcome.manifest.status.value)
+            record = outcome.manifest.collectors[0]
+            self.assertEqual("cancelled", record.status)
+            self.assertEqual("run cancelled by user", record.summary)
+            self.assertTrue((outcome.run_directory / ".cancelled").is_file())
+            self.assertIsNotNone(outcome.manifest.package)
+            self.assertTrue(Path(outcome.manifest.package["path"]).is_file())
+
     def test_invalid_core_blocks_a_run_but_unselected_plugin_is_quarantined(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
