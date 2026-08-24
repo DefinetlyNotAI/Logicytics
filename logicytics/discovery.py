@@ -103,6 +103,8 @@ def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
         return candidate
     if ast.get_docstring(tree) is None:
         candidate.static_errors.append("module requires a docstring")
+    if any(isinstance(node, ast.Call) and _top_level_call_name(node) == "print" for node in ast.walk(tree)):
+        candidate.static_errors.append("collectors must not print; use structured progress or logging")
 
     public_classes = [item for item in tree.body if isinstance(item, ast.ClassDef) and not item.name.startswith("_")]
     if len(public_classes) != 1:
