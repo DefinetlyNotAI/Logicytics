@@ -96,6 +96,7 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                     workspace,
                     Path(str(payload["artifact_root"])),
                     metadata.maximum_output_bytes,
+                    metadata.maximum_artifact_files,
                 )
                 context = CollectorContext(
                     run_id=str(payload["run_id"]),

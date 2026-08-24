@@ -168,9 +168,26 @@ class CoreFunctionalityTests(unittest.TestCase):
             artifact_root.mkdir()
             outside = root / "outside.txt"
             outside.write_text("no", encoding="utf-8")
-            writer = WorkspaceArtifactWriter("core.system.test", workspace, artifact_root, 1024)
+            writer = WorkspaceArtifactWriter("core.system.test", workspace, artifact_root, 1024, 1)
             with self.assertRaises(ArtifactError):
                 writer.register_file(outside)
+
+    def test_artifact_registration_enforces_collector_file_count_limit(self) -> None:
+        """A collector cannot exceed its declared artifact count even with tiny files."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifact_root = root / "artifacts"
+            workspace.mkdir()
+            artifact_root.mkdir()
+            first = workspace / "first.txt"
+            second = workspace / "second.txt"
+            first.write_text("one", encoding="utf-8")
+            second.write_text("two", encoding="utf-8")
+            writer = WorkspaceArtifactWriter("core.system.test", workspace, artifact_root, 1024, 1)
+            writer.register_file(first, media_type="text/plain")
+            with self.assertRaisesRegex(ArtifactError, "maximum_artifact_files"):
+                writer.register_file(second, media_type="text/plain")
 
     def test_preflight_plan_run_and_package(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

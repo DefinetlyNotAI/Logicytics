@@ -97,6 +97,7 @@ class CollectorMetadata:
     default_profiles: tuple[str, ...] = ("standard",)
     timeout_seconds: int = 60
     maximum_output_bytes: int = 100 * 1024 * 1024
+    maximum_artifact_files: int = 500
     minimum_contract_version: str = CONTRACT_VERSION
     parallel_safe: bool = True
 

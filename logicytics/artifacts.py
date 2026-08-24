@@ -37,11 +37,13 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             workspace: Path,
             artifact_root: Path,
             maximum_output_bytes: int,
+            maximum_artifact_files: int,
     ) -> None:
         self._collector_id = collector_id
         self._workspace = workspace.resolve()
         self._artifact_root = artifact_root.resolve()
         self._maximum_output_bytes = maximum_output_bytes
+        self._maximum_artifact_files = maximum_artifact_files
         self._bytes_registered = 0
         self._artifacts: list[Artifact] = []
 
@@ -57,6 +59,8 @@ class WorkspaceArtifactWriter(ArtifactWriter):
         size_bytes = source.stat().st_size
         if self._bytes_registered + size_bytes > self._maximum_output_bytes:
             raise ArtifactError("collector output exceeds its declared maximum_output_bytes")
+        if len(self._artifacts) >= self._maximum_artifact_files:
+            raise ArtifactError("collector artifact count exceeds its declared maximum_artifact_files")
 
         relative_source = source.relative_to(self._workspace)
         safe_collector_id = self._collector_id.replace(".", "_")
