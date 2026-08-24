@@ -241,7 +241,7 @@ that fails any mandatory rule is not a collector and must not be launched.
 - [ ] Require plugin metadata to additionally declare requested capabilities,
       privilege level, sensitive-data categories, network access, estimated cost,
       timeout, maximum output, and minimum contract version.
-- [ ] Require IDs, names, specialties, and versions to match their schemas and
+- [x] Require IDs, names, specialties, and versions to match their schemas and
       reject duplicates or unsupported contract versions before launch.
 
 #### Specialty rules
