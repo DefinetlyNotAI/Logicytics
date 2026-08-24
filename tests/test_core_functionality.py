@@ -87,6 +87,19 @@ class CoreFunctionalityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             CollectorMetadata.from_dict(metadata)
 
+    def test_collector_metadata_rejects_invalid_identity_and_limits(self) -> None:
+        """Collector metadata must be a complete typed declaration rather than free text."""
+        common = dict(
+            id="core.system.example", name="Example", version="4.0.0", specialty=Specialty.SYSTEM,
+            description="Example collector.", author="tests",
+        )
+        with self.assertRaisesRegex(ValueError, "id has an invalid schema"):
+            CollectorMetadata(**{**common, "id": "example"})
+        with self.assertRaisesRegex(ValueError, "semantic versioning"):
+            CollectorMetadata(**{**common, "version": "four"})
+        with self.assertRaisesRegex(ValueError, "maximum_artifact_files"):
+            CollectorMetadata(**{**common, "maximum_artifact_files": 0})
+
     def test_deprecation_decorator_logs_removal_context(self) -> None:
         """Deprecated functions must preserve behavior while reporting removal context."""
         events: list[tuple[str, str, dict[str, object]]] = []

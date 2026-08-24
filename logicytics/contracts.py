@@ -11,6 +11,10 @@ from typing import Any, Mapping
 
 CONTRACT_VERSION = "4.0"
 _CUSTOM_SPECIALTY = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
+_COLLECTOR_ID = re.compile(r"^(?:core|plugin)\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)?$")
+_SEMANTIC_VERSION = re.compile(r"^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$")
+_CONTRACT_VERSION = re.compile(r"^\d+\.\d+$")
+_LABEL = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 
 
 class CollectorKind(StrEnum):
@@ -100,6 +104,49 @@ class CollectorMetadata:
     maximum_artifact_files: int = 500
     minimum_contract_version: str = CONTRACT_VERSION
     parallel_safe: bool = True
+
+    def __post_init__(self) -> None:
+        """Reject malformed metadata before it can enter planning or runtime."""
+        for name in ("id", "name", "version", "description", "author", "minimum_contract_version"):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value.strip() or "\n" in value or "\r" in value:
+                raise ValueError(f"metadata {name} must be a non-empty single-line string")
+        if not _COLLECTOR_ID.fullmatch(self.id):
+            raise ValueError("metadata id has an invalid schema")
+        if not _SEMANTIC_VERSION.fullmatch(self.version):
+            raise ValueError("metadata version must use semantic versioning")
+        if not _CONTRACT_VERSION.fullmatch(self.minimum_contract_version):
+            raise ValueError("metadata minimum_contract_version has an invalid schema")
+        if not isinstance(self.specialty, Specialty) and (
+                not isinstance(self.specialty, str) or not _CUSTOM_SPECIALTY.fullmatch(self.specialty)):
+            raise ValueError("metadata specialty has an invalid schema")
+        self._validate_labels("supported_platforms", self.supported_platforms, require_value=True)
+        self._validate_labels("sensitive_data_categories", self.sensitive_data_categories)
+        self._validate_labels("default_profiles", self.default_profiles, require_value=True)
+        if not isinstance(self.capabilities, tuple) or not all(
+                isinstance(capability, Capability) for capability in self.capabilities):
+            raise ValueError("metadata capabilities must be a tuple of Capability values")
+        if not isinstance(self.dependencies, tuple) or not all(
+                isinstance(dependency, str) and _COLLECTOR_ID.fullmatch(dependency)
+                for dependency in self.dependencies):
+            raise ValueError("metadata dependencies must be collector IDs")
+        if len(set(self.dependencies)) != len(self.dependencies) or self.id in self.dependencies:
+            raise ValueError("metadata dependencies must be unique and cannot include the collector itself")
+        for name in ("timeout_seconds", "maximum_output_bytes", "maximum_artifact_files"):
+            value = getattr(self, name)
+            if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+                raise ValueError(f"metadata {name} must be a positive integer")
+        if not isinstance(self.parallel_safe, bool):
+            raise ValueError("metadata parallel_safe must be boolean")
+
+    @staticmethod
+    def _validate_labels(name: str, values: tuple[str, ...], *, require_value: bool = False) -> None:
+        """Require unique lower-snake-case labels for selector-like metadata fields."""
+        if not isinstance(values, tuple) or (require_value and not values) or not all(
+                isinstance(value, str) and _LABEL.fullmatch(value) for value in values):
+            raise ValueError(f"metadata {name} must be a tuple of lowercase labels")
+        if len(set(values)) != len(values):
+            raise ValueError(f"metadata {name} must not contain duplicates")
 
     def to_dict(self) -> dict[str, Any]:
         """Return JSON-safe metadata."""
