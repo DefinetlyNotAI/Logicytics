@@ -32,6 +32,10 @@ def _summary(manifest: RunManifest) -> str:
             [
                 f"- {record.id}",
                 f"  Status: {record.status}",
+                f"  Isolation: {record.isolation_mode}",
+                f"  Worker PID: {record.worker_pid if record.worker_pid is not None else 'not started'}",
+                f"  Worker exit code: {record.worker_exit_code if record.worker_exit_code is not None else 'unknown'}",
+                f"  Termination: {record.termination_reason or 'not started'}",
                 f"  Attempts: {record.attempt_count}",
                 f"  Peak memory bytes: {record.peak_memory_bytes}",
                 f"  Started: {record.started_at or 'not started'}",

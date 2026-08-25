@@ -135,26 +135,55 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                     settings=dict(payload["settings"]),
                     cancellation_file=Path(str(payload["cancellation_file"])),
                 )
-                validation = collector.validate(context)
-                if not isinstance(validation, ValidationResult):
-                    raise TypeError("validate() must return ValidationResult")
-                if not validation.valid:
+                result: CollectorResult | None = None
+                lifecycle_errors: list[str] = []
+                failure_summary = "collector worker crashed"
+                try:
+                    validation = collector.validate(context)
+                    if not isinstance(validation, ValidationResult):
+                        raise TypeError("validate() must return ValidationResult")
+                    if not validation.valid:
+                        result = CollectorResult(
+                            status=CollectorStatus.SKIPPED,
+                            summary="collector prerequisites were not met",
+                            errors=validation.reasons,
+                        )
+                    elif context.is_cancelled:
+                        result = CollectorResult(CollectorStatus.CANCELLED, "cancelled before collection")
+                    else:
+                        context.logger.event("info", "collection_started")
+                        result = collector.collect(context)
+                        if not isinstance(result, CollectorResult):
+                            raise TypeError("collect() must return CollectorResult")
+                        if result.artifacts != writer.artifacts:
+                            raise TypeError("collector result artifacts must exactly match registered artifacts")
+                except BaseException as error:
+                    lifecycle_errors.extend((f"{type(error).__name__}: {error}", traceback.format_exc()))
+                finally:
+                    try:
+                        collector.cleanup(context)
+                    except BaseException as error:
+                        if not lifecycle_errors:
+                            failure_summary = "collector cleanup failed"
+                        lifecycle_errors.extend(
+                            (
+                                f"collector cleanup failed: {type(error).__name__}: {error}",
+                                traceback.format_exc(),
+                            )
+                        )
+                if lifecycle_errors:
                     result = CollectorResult(
-                        status=CollectorStatus.SKIPPED,
-                        summary="collector prerequisites were not met",
-                        errors=validation.reasons,
+                        CollectorStatus.FAILED,
+                        failure_summary,
+                        artifacts=writer.artifacts,
+                        errors=(*(result.errors if result is not None else ()), *lifecycle_errors),
                     )
-                elif context.is_cancelled:
-                    result = CollectorResult(CollectorStatus.CANCELLED, "cancelled before collection")
-                else:
-                    context.logger.event("info", "collection_started")
-                    result = collector.collect(context)
-                    if not isinstance(result, CollectorResult):
-                        raise TypeError("collect() must return CollectorResult")
-                    if result.artifacts != writer.artifacts:
-                        raise TypeError("collector result artifacts must exactly match registered artifacts")
-                collector.cleanup(context)
-                context.logger.event("info", "collection_finished", status=result.status.value)
+                assert result is not None
+                context.logger.event(
+                    "error" if result.status == CollectorStatus.FAILED else "info",
+                    "collection_finished",
+                    status=result.status.value,
+                )
         result_queue.put({"collector_id": metadata.id, "result": _serialize_result(result)})
     except BaseException as error:  # child processes must always report a terminal result
         result_queue.put(
@@ -412,6 +441,7 @@ class RunSupervisor:
                 records[candidate.metadata.id].heartbeat_at = utc_now()
                 records[candidate.metadata.id].attempt_count += 1
                 process.start()
+                records[candidate.metadata.id].worker_pid = process.pid
                 active[candidate.metadata.id] = _ActiveWorker(
                     candidate.metadata.id,
                     process,
@@ -464,6 +494,7 @@ class RunSupervisor:
                 if memory_bytes is not None and memory_bytes > worker.maximum_memory_bytes:
                     self._terminate_process_tree(worker.process)
                     active.pop(collector_id)
+                    records[collector_id].termination_reason = "memory_limit_exceeded"
                     self._apply_worker_result(
                         records[collector_id],
                         CollectorResult(
@@ -493,6 +524,7 @@ class RunSupervisor:
                 elif monotonic() - worker.started_at > worker.timeout_seconds:
                     self._terminate_process_tree(worker.process)
                     active.pop(collector_id)
+                    records[collector_id].termination_reason = "timeout_exceeded"
                     self._apply_worker_result(
                         records[collector_id],
                         CollectorResult(
@@ -524,6 +556,7 @@ class RunSupervisor:
                     if monotonic() - worker.exited_at < 1.0:
                         continue
                     active.pop(collector_id)
+                    records[collector_id].termination_reason = "exited_without_result"
                     self._apply_worker_result(
                         records[collector_id],
                         CollectorResult(CollectorStatus.FAILED, "collector exited without a result"),
@@ -617,6 +650,9 @@ class RunSupervisor:
                 "summary": record.summary,
                 "errors": list(record.errors),
                 "duration_seconds": record.duration_seconds,
+                "worker_pid": record.worker_pid,
+                "worker_exit_code": record.worker_exit_code,
+                "termination_reason": record.termination_reason,
             }
         )
         record.status = "retry_pending"
@@ -626,6 +662,9 @@ class RunSupervisor:
         record.started_at = None
         record.finished_at = None
         record.duration_seconds = None
+        record.worker_pid = None
+        record.worker_exit_code = None
+        record.termination_reason = None
         retry_not_before[record.id] = monotonic() + candidate.metadata.retry_delay_seconds
         pending.insert(0, candidate)
         run_logger.event(
@@ -701,12 +740,19 @@ class RunSupervisor:
     def _apply_worker_result(record, result: CollectorResult, worker: _ActiveWorker) -> None:
         """Attach result, elapsed time, and progress accounting to one record."""
         record.apply_result(result, duration_seconds=round(monotonic() - worker.started_at, 3))
+        record.worker_pid = worker.process.pid
+        record.worker_exit_code = worker.process.exitcode
+        if record.termination_reason is None:
+            record.termination_reason = (
+                "completed" if result.status == CollectorStatus.SUCCEEDED else result.status.value
+            )
         RunSupervisor._refresh_worker_progress(record, worker)
 
     def _cancel_active(self, active, records, manifest, manifest_path, reason: str) -> None:
         for collector_id, worker in tuple(active.items()):
             self._terminate_process_tree(worker.process)
             active.pop(collector_id)
+            records[collector_id].termination_reason = "cancelled"
             self._apply_worker_result(
                 records[collector_id],
                 CollectorResult(CollectorStatus.CANCELLED, reason),

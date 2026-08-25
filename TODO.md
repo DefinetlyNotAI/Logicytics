@@ -340,7 +340,7 @@ Windows platform allows.
       configuration, install packages, update the repository, or launch another
       collector through the public context API.
 - [x] Provide a supervisor heartbeat and last-progress timestamp for every worker.
-- [ ] Make the final package include the isolation result and failure reason for
+- [x] Make the final package include the isolation result and failure reason for
       every selected collector.
 
 ### Replace the current architectural model

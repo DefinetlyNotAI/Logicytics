@@ -38,6 +38,10 @@ class CollectorRecord:
     event_count: int = 0
     last_progress_at: str | None = None
     heartbeat_at: str | None = None
+    isolation_mode: str = "process"
+    worker_pid: int | None = None
+    worker_exit_code: int | None = None
+    termination_reason: str | None = None
     peak_memory_bytes: int = 0
     attempt_count: int = 0
     retry_history: list[dict[str, Any]] = field(default_factory=list)

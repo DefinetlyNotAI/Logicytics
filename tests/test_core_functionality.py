@@ -1315,6 +1315,11 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertTrue(
                 any("temporary collector failure" in error for error in record.retry_history[0]["errors"])
             )
+            self.assertIsInstance(record.worker_pid, int)
+            self.assertIsInstance(record.retry_history[0]["worker_pid"], int)
+            self.assertNotEqual(record.worker_pid, record.retry_history[0]["worker_pid"])
+            self.assertEqual("failed", record.retry_history[0]["termination_reason"])
+            self.assertEqual("completed", record.termination_reason)
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
                 packaged_record = json.loads(archive.read("manifest.json"))["collectors"][0]
                 summary = archive.read("summary.txt").decode("utf-8")
@@ -1373,6 +1378,121 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(1, record.attempt_count)
             self.assertEqual([], record.retry_history)
             self.assertTrue((outcome.run_directory / "artifacts" / "core_system_system_info" / "system.txt").is_file())
+            self.assertEqual(1, len(record.artifacts))
+            self.assertEqual(1, len(outcome.manifest.artifact_list()))
+            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                self.assertIn("artifacts/core_system_system_info/system.txt", archive.namelist())
+
+    def test_crashed_collector_runs_cleanup_and_packages_partial_evidence_and_isolation_results(self) -> None:
+        """A failed process finalizes once, preserves evidence, and cannot stop its neighbor."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            failing_source = _delayed_collector_source("a_failed", 0.0).replace(
+                '        return CollectorResult.succeeded("test artifact created", (artifact,))',
+                '        raise RuntimeError("collection failed after evidence registration")',
+            ).replace(
+                '        """Release test resources."""',
+                '        """Release test resources."""\n'
+                '        (context.workspace / "cleanup.marker").write_text("cleaned", encoding="utf-8")\n'
+                '        (context.temporary_directory / "scratch.txt").write_text("scratch", encoding="utf-8")',
+            )
+            (core_directory / "a_failed.py").write_text(failing_source, encoding="utf-8")
+            (core_directory / "z_independent.py").write_text(
+                _delayed_collector_source("z_independent", 0.0),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+            failed = records["core.system.a_failed"]
+            succeeded = records["core.system.z_independent"]
+            workspace = outcome.run_directory / "collectors" / "core_system_a_failed"
+
+            self.assertEqual("partial", outcome.manifest.status.value)
+            self.assertEqual("failed", failed.status)
+            self.assertEqual("succeeded", succeeded.status)
+            self.assertEqual("cleaned", (workspace / "cleanup.marker").read_text(encoding="utf-8"))
+            self.assertFalse((workspace / "tmp").exists())
+            self.assertEqual(1, len(failed.artifacts))
+            self.assertIn("RuntimeError", "\n".join(failed.errors))
+            self.assertEqual("process", failed.isolation_mode)
+            self.assertIsInstance(failed.worker_pid, int)
+            self.assertEqual("failed", failed.termination_reason)
+            self.assertEqual("completed", succeeded.termination_reason)
+            self.assertNotEqual(failed.worker_pid, succeeded.worker_pid)
+            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                packaged = {item["id"]: item for item in json.loads(archive.read("manifest.json"))["collectors"]}
+                summary = archive.read("summary.txt").decode("utf-8")
+                self.assertIn("artifacts/core_system_a_failed/system.txt", archive.namelist())
+            self.assertEqual("failed", packaged["core.system.a_failed"]["status"])
+            self.assertEqual("process", packaged["core.system.a_failed"]["isolation_mode"])
+            self.assertEqual(failed.worker_pid, packaged["core.system.a_failed"]["worker_pid"])
+            self.assertEqual("succeeded", packaged["core.system.z_independent"]["status"])
+            self.assertIn("Isolation: process", summary)
+            self.assertIn("Termination: failed", summary)
+            self.assertIn("collection failed after evidence registration", summary)
+
+    def test_cleanup_failure_preserves_original_collector_crash_and_independent_results(self) -> None:
+        """Cleanup errors must be reported without replacing the original failure."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            failing_source = _delayed_collector_source("a_failed", 0.0).replace(
+                '        return CollectorResult.succeeded("test artifact created", (artifact,))',
+                '        raise RuntimeError("original collection failure")',
+            ).replace(
+                '        """Release test resources."""',
+                '        """Release test resources."""\n'
+                '        raise ValueError("secondary cleanup failure")',
+            )
+            (core_directory / "a_failed.py").write_text(failing_source, encoding="utf-8")
+            (core_directory / "z_independent.py").write_text(
+                _delayed_collector_source("z_independent", 0.0),
+                encoding="utf-8",
+            )
+            plan = build_plan(preflight(root), RunRequest(max_workers=2, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+            errors = "\n".join(records["core.system.a_failed"].errors)
+
+            self.assertEqual("failed", records["core.system.a_failed"].status)
+            self.assertIn("RuntimeError: original collection failure", errors)
+            self.assertIn("collector cleanup failed: ValueError: secondary cleanup failure", errors)
+            self.assertEqual("succeeded", records["core.system.z_independent"].status)
+            self.assertEqual("partial", outcome.manifest.status.value)
+
+    def test_cleanup_failure_after_success_preserves_registered_evidence(self) -> None:
+        """A failed finalizer turns success into failure without discarding registered bytes."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '        """Release test resources."""',
+                    '        """Release test resources."""\n'
+                    '        raise RuntimeError("finalizer failed after collecting evidence")',
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            record = outcome.manifest.collectors[0]
+
+            self.assertEqual("failed", record.status)
+            self.assertEqual("collector cleanup failed", record.summary)
+            self.assertEqual(1, len(record.artifacts))
+            self.assertIn("finalizer failed after collecting evidence", "\n".join(record.errors))
+            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                self.assertIn("artifacts/core_system_system_info/system.txt", archive.namelist())
 
     def test_collector_timeout_preserves_independent_worker_results(self) -> None:
         """A timed-out worker is terminated without cancelling unrelated collection."""
@@ -1398,6 +1518,7 @@ class CoreFunctionalityTests(unittest.TestCase):
 
             self.assertEqual("failed", records["core.system.a_timeout"].status)
             self.assertTrue(any("timeout" in error for error in records["core.system.a_timeout"].errors))
+            self.assertEqual("timeout_exceeded", records["core.system.a_timeout"].termination_reason)
             self.assertEqual("succeeded", records["core.system.z_independent"].status)
             self.assertEqual("partial", outcome.manifest.status.value)
 
@@ -1428,6 +1549,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("failed", limited.status)
             self.assertGreater(limited.peak_memory_bytes, 1)
             self.assertTrue(any("maximum_memory_bytes=1" in error for error in limited.errors))
+            self.assertEqual("memory_limit_exceeded", limited.termination_reason)
             self.assertEqual("succeeded", records["core.system.z_independent"].status)
             self.assertEqual("partial", outcome.manifest.status.value)
 
