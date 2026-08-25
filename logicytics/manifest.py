@@ -34,6 +34,16 @@ class CollectorRecord:
     errors: list[str] = field(default_factory=list)
     artifacts: list[dict[str, Any]] = field(default_factory=list)
     metrics: Mapping[str, int | float | str] = field(default_factory=dict)
+    progress: dict[str, int | float] = field(
+        default_factory=lambda: {
+            "files_scanned": 0,
+            "files_copied": 0,
+            "bytes_written": 0,
+            "packets_observed": 0,
+            "events_processed": 0,
+            "elapsed_seconds": 0.0,
+        }
+    )
     duration_seconds: float | None = None
     event_count: int = 0
     last_progress_at: str | None = None

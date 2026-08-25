@@ -956,6 +956,71 @@ class CoreFunctionalityTests(unittest.TestCase):
             with self.assertRaisesRegex(FileNotFoundError, "performance report"):
                 package_run(outcome)
 
+    def test_collector_resource_progress_persists_in_manifest_summary_and_performance_report(self) -> None:
+        """Incremental progress fields remain visible live and in every packaged diagnostic."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace("from pathlib import Path\n", "from pathlib import Path\nfrom time import sleep\n").replace(
+                    '        output = context.workspace / "system.txt"',
+                    '        context.report_progress("scan_started", scanned_files=3)\n'
+                    '        sleep(0.2)\n'
+                    '        context.report_progress(\n'
+                    '            "scan_finished", scanned_files=9, copied_files=4, bytes_written=25,\n'
+                    '            observation_count=6, event_count=11,\n'
+                    '        )\n'
+                    '        sleep(0.2)\n'
+                    '        output = context.workspace / "system.txt"',
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(
+                preflight(root),
+                RunRequest(max_workers=1, acknowledge_authorization=True, performance_check=True),
+            )
+            snapshots: list[dict[str, object]] = []
+            from logicytics.manifest import write_manifest as original_write_manifest
+
+            def capture_manifest(path: Path, manifest: object) -> None:
+                snapshots.append(json.loads(json.dumps(manifest.to_dict())))
+                original_write_manifest(path, manifest)
+
+            with patch("logicytics.runtime.write_manifest", side_effect=capture_manifest):
+                outcome = RunSupervisor(root, default_config(root)).run(plan)
+            record = outcome.manifest.collectors[0]
+            expected = {
+                "files_scanned": 9,
+                "files_copied": 4,
+                "bytes_written": 25,
+                "packets_observed": 6,
+                "events_processed": 11,
+            }
+            for field, value in expected.items():
+                self.assertEqual(value, record.progress[field])
+            self.assertGreater(record.progress["elapsed_seconds"], 0)
+            self.assertTrue(
+                any(
+                    snapshot["collectors"][0]["status"] == "running"
+                    and snapshot["collectors"][0]["progress"]["files_scanned"] >= 3
+                    for snapshot in snapshots
+                )
+            )
+            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                packaged_record = json.loads(archive.read("manifest.json"))["collectors"][0]
+                report = json.loads(archive.read("logs/performance.json"))["collectors"][0]
+                summary = archive.read("summary.txt").decode("utf-8")
+            self.assertEqual(record.progress, packaged_record["progress"])
+            self.assertEqual(record.progress, report["progress"])
+            self.assertEqual(record.peak_memory_bytes, report["peak_memory_bytes"])
+            self.assertIn("Files scanned: 9", summary)
+            self.assertIn("Files copied: 4", summary)
+            self.assertIn("Bytes written: 25", summary)
+            self.assertIn("Packets observed: 6", summary)
+            self.assertIn("Events processed: 11", summary)
+
     def test_package_excludes_unregistered_files_and_rejects_tampered_artifacts(self) -> None:
         """Only manifest artifacts may enter a package, and their final bytes must match."""
         with tempfile.TemporaryDirectory() as temporary:

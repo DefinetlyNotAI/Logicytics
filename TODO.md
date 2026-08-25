@@ -434,7 +434,7 @@ Windows platform allows.
       itself is intentionally collected.
 - [ ] Never place credentials or raw sensitive evidence in console logs, exception
       messages, temporary filenames, or update requests.
-- [ ] Record resource usage and progress per collector: files scanned, files
+- [x] Record resource usage and progress per collector: files scanned, files
       copied, bytes written, packets observed, events processed, and elapsed time.
 - [ ] Make failures actionable by recording the collector ID, operation, platform
       error, remediation hint, and whether a retry is safe.

@@ -59,6 +59,7 @@ class _ActiveWorker:
     parallel_safe: bool
     reserved_output_bytes: int
     last_event_count: int = 0
+    last_event_offset: int = 0
     last_heartbeat_at: float = 0.0
     exited_at: float | None = None
 
@@ -421,6 +422,8 @@ class RunSupervisor:
                     "id": record.id,
                     "status": record.status,
                     "duration_seconds": record.duration_seconds,
+                    "peak_memory_bytes": record.peak_memory_bytes,
+                    "progress": record.progress,
                 }
                 for record in manifest.collectors
             ],
@@ -875,6 +878,10 @@ class RunSupervisor:
         """Persist worker liveness and any newly written structured progress events."""
         changed = False
         now = monotonic()
+        elapsed = round(now - worker.started_at, 3)
+        if elapsed > record.progress["elapsed_seconds"]:
+            record.progress["elapsed_seconds"] = elapsed
+            changed = True
         if now - worker.last_heartbeat_at >= 1:
             record.heartbeat_at = utc_now()
             worker.last_heartbeat_at = now
@@ -883,20 +890,43 @@ class RunSupervisor:
         if not events_path.exists():
             return changed
         try:
-            events = events_path.read_text(encoding="utf-8").splitlines()
+            with events_path.open("r", encoding="utf-8") as stream:
+                stream.seek(worker.last_event_offset)
+                events: list[str] = []
+                while line := stream.readline():
+                    if not line.endswith("\n"):
+                        break
+                    events.append(line)
+                    worker.last_event_offset = stream.tell()
         except OSError:
             return changed
-        if len(events) <= worker.last_event_count:
+        if not events:
             return changed
-        worker.last_event_count = len(events)
-        record.event_count = len(events)
-        try:
-            event = json.loads(events[-1])
-        except json.JSONDecodeError:
-            return changed
-        timestamp = event.get("at")
-        if isinstance(timestamp, str):
-            record.last_progress_at = timestamp
+        worker.last_event_count += len(events)
+        record.event_count = worker.last_event_count
+        aliases = {
+            "files_scanned": ("files_scanned", "scanned_files", "entry_count"),
+            "files_copied": ("files_copied", "copied_files"),
+            "bytes_written": ("bytes_written",),
+            "packets_observed": ("packets_observed", "observation_count", "packet_count"),
+            "events_processed": ("events_processed", "event_count"),
+        }
+        for line in events:
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            timestamp = event.get("at")
+            if isinstance(timestamp, str):
+                record.last_progress_at = timestamp
+            fields = event.get("fields", {})
+            if not isinstance(fields, dict):
+                continue
+            for name, alternatives in aliases.items():
+                for alternative in alternatives:
+                    value = fields.get(alternative)
+                    if isinstance(value, (int, float)) and not isinstance(value, bool) and value >= 0:
+                        record.progress[name] = max(record.progress[name], value)
             changed = True
         return changed
 
@@ -904,6 +934,12 @@ class RunSupervisor:
     def _apply_worker_result(record, result: CollectorResult, worker: _ActiveWorker) -> None:
         """Attach result, elapsed time, and progress accounting to one record."""
         record.apply_result(result, duration_seconds=round(monotonic() - worker.started_at, 3))
+        record.progress["bytes_written"] = max(
+            record.progress["bytes_written"],
+            sum(artifact.size_bytes for artifact in result.artifacts),
+        )
+        record.progress["files_copied"] = max(record.progress["files_copied"], len(result.artifacts))
+        record.progress["elapsed_seconds"] = max(record.progress["elapsed_seconds"], record.duration_seconds or 0.0)
         record.worker_pid = worker.process.pid
         record.worker_exit_code = worker.process.exitcode
         if record.termination_reason is None:
