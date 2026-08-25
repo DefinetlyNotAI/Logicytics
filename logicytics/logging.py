@@ -10,6 +10,7 @@ from time import perf_counter
 from typing import Callable, ParamSpec, TypeVar
 
 from logicytics.contracts import EventLogger
+from logicytics.redaction import redact_mapping, redact_text
 
 Parameters = ParamSpec("Parameters")
 Result = TypeVar("Result")
@@ -29,13 +30,13 @@ class FileEventLogger(EventLogger):
         payload: dict[str, object] = {
             "at": datetime.now(timezone.utc).isoformat(),
             "level": level.lower(),
-            "message": message,
+            "message": redact_text(message),
             "run_id": self.run_id,
         }
         if self.collector_id is not None:
             payload["collector_id"] = self.collector_id
         if fields:
-            payload["fields"] = fields
+            payload["fields"] = redact_mapping(fields)
         with self.path.open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(payload, sort_keys=True) + "\n")
 

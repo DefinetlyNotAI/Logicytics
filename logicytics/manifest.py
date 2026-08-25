@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from logicytics.contracts import CONTRACT_VERSION, Artifact, CollectorResult, RunStatus
+from logicytics.redaction import redact_mapping, redact_text
 
 
 def utc_now() -> str:
@@ -44,10 +45,10 @@ class CollectorRecord:
     def apply_result(self, result: CollectorResult, duration_seconds: float | None = None) -> None:
         """Copy a worker result into this serializable record."""
         self.status = result.status.value
-        self.summary = result.summary
-        self.errors = list(result.errors)
+        self.summary = redact_text(result.summary)
+        self.errors = [redact_text(error) for error in result.errors]
         self.artifacts = [artifact.to_dict() for artifact in result.artifacts]
-        self.metrics = dict(result.metrics)
+        self.metrics = redact_mapping(result.metrics)
         self.duration_seconds = duration_seconds
         self.finished_at = utc_now()
 

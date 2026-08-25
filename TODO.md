@@ -430,7 +430,7 @@ Windows platform allows.
       workspace or copying unintended locations.
 - [ ] Avoid loading entire command output, files, memory maps, or packet sets into
       memory when streaming is possible.
-- [ ] Redact secrets from logs and from diagnostic metadata even when the artifact
+- [x] Redact secrets from logs and from diagnostic metadata even when the artifact
       itself is intentionally collected.
 - [ ] Never place credentials or raw sensitive evidence in console logs, exception
       messages, temporary filenames, or update requests.

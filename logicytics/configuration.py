@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from logicytics.errors import PlanError
+from logicytics.redaction import redact_mapping
 
 SCHEMA_VERSION = 4
 DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES = 4 * 1024 * 1024 * 1024
@@ -71,7 +72,7 @@ class AppConfig:
         """Return a JSON-safe, non-secret configuration snapshot."""
         data = asdict(self)
         data["runtime"]["output_root"] = str(self.runtime.output_root)
-        return data
+        return redact_mapping(data)
 
 
 def default_config(project_root: Path) -> AppConfig:

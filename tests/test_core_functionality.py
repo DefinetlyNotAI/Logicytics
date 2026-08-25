@@ -16,7 +16,7 @@ from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.cli import _parser, _request
 from logicytics.file_listing import list_files
-from logicytics.logging import deprecated, raise_logged, timed
+from logicytics.logging import FileEventLogger, deprecated, raise_logged, timed
 from logicytics.sysinternals import ensure_sysinternals
 from logicytics.configuration import default_config, load_config
 from logicytics.contracts import Capability, CollectorMetadata, RunRequest, Specialty
@@ -296,6 +296,28 @@ class CoreFunctionalityTests(unittest.TestCase):
         self.assertEqual(3, add(1, 2))
         self.assertEqual(["function_started", "function_finished"], [event[1] for event in events])
 
+    def test_structured_event_logger_redacts_secret_fields_and_inline_credentials(self) -> None:
+        """Structured diagnostics must preserve useful fields without exposing secrets."""
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "events.jsonl"
+            logger = FileEventLogger(path, run_id="test-run", collector_id="core.system.private_keys")
+            logger.event(
+                "INFO",
+                "Authorization: Bearer bearer-value password=message-value",
+                password="field-value",
+                api_key="api-value",
+                ordinary="safe",
+            )
+            contents = path.read_text(encoding="utf-8")
+            for secret in ("bearer-value", "message-value", "field-value", "api-value"):
+                self.assertNotIn(secret, contents)
+            event = json.loads(contents)
+            self.assertEqual("info", event["level"])
+            self.assertEqual("core.system.private_keys", event["collector_id"])
+            self.assertEqual("[REDACTED]", event["fields"]["password"])
+            self.assertEqual("[REDACTED]", event["fields"]["api_key"])
+            self.assertEqual("safe", event["fields"]["ordinary"])
+
     def test_file_listing_filters_and_normalizes_files(self) -> None:
         """Recursive file discovery must filter extensions and excluded directories."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -327,6 +349,34 @@ class CoreFunctionalityTests(unittest.TestCase):
             config_path.write_text('{"schema_version":4,"runtime":{"package_completed_runs":"yes"}}', encoding="utf-8")
             with self.assertRaisesRegex(PlanError, "package_completed_runs"):
                 load_config(root)
+
+    def test_configuration_manifest_redacts_nested_secrets_without_mutating_worker_settings(self) -> None:
+        """Manifest snapshots hide credentials while collectors retain configured access."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_id = "core.system.private_keys"
+            settings = {
+                "password": "password-value",
+                "nested": {"refresh_token": "token-value", "cookie": "cookie-value"},
+                "private_key": "private-value",
+                "ordinary": "safe",
+            }
+            (root / "logicytics.json").write_text(
+                json.dumps({"schema_version": 4, "collectors": {collector_id: settings}}),
+                encoding="utf-8",
+            )
+            configuration = load_config(root)
+            self.assertEqual(settings, configuration.settings_for(collector_id))
+            snapshot = configuration.to_manifest_dict()
+            manifest_settings = snapshot["collector_settings"][collector_id]
+            self.assertEqual("[REDACTED]", manifest_settings["password"])
+            self.assertEqual("[REDACTED]", manifest_settings["nested"]["refresh_token"])
+            self.assertEqual("[REDACTED]", manifest_settings["nested"]["cookie"])
+            self.assertEqual("[REDACTED]", manifest_settings["private_key"])
+            self.assertEqual("safe", manifest_settings["ordinary"])
+            for secret in ("password-value", "token-value", "cookie-value", "private-value"):
+                self.assertNotIn(secret, json.dumps(snapshot))
+            self.assertEqual(settings, configuration.settings_for(collector_id))
 
     def test_configuration_rejects_boolean_workers_and_invalid_output_roots(self) -> None:
         """Runtime worker limits and output locations must retain strict JSON types."""
@@ -787,6 +837,91 @@ class CoreFunctionalityTests(unittest.TestCase):
                 self.assertIn(f"Status: {record.status}", summary)
                 self.assertIn(f"Started: {record.started_at}", summary)
                 self.assertIn(f"Finished: {record.finished_at}", summary)
+
+    def test_sensitive_artifact_bytes_are_preserved_while_packaged_diagnostics_are_redacted(self) -> None:
+        """Evidence retains intentional secrets, but no packaged diagnostics disclose them."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '        output = context.workspace / "system.txt"',
+                    '        password = context.settings["password"]\n'
+                    '        token = context.settings["nested"]["access_token"]\n'
+                    '        output = context.workspace / "system.txt"',
+                ).replace(
+                    '        artifact = context.artifacts.register_file(output, media_type="text/plain")',
+                    '        output.write_text(f"password={password} token={token}", encoding="utf-8")\n'
+                    '        context.logger.event("info", f"password={password}", access_token=token)\n'
+                    '        artifact = context.artifacts.register_file(output, media_type="text/plain")',
+                ).replace(
+                    '        return CollectorResult.succeeded("test artifact created", (artifact,))',
+                    '        return CollectorResult.succeeded(f"password={password}", (artifact,))',
+                ),
+                encoding="utf-8",
+            )
+            (root / "logicytics.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 4,
+                        "collectors": {
+                            "core.system.system_info": {
+                                "password": "evidence-password",
+                                "nested": {"access_token": "evidence-token"},
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, load_config(root)).run(plan)
+            self.assertEqual("succeeded", outcome.manifest.status.value)
+            self.assertEqual("password=[REDACTED]", outcome.manifest.collectors[0].summary)
+            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                artifact = outcome.manifest.artifact_list()[0]
+                self.assertEqual(
+                    "password=evidence-password token=evidence-token",
+                    archive.read(f"artifacts/{artifact.relative_path}").decode("utf-8"),
+                )
+                diagnostics = "\n".join(
+                    archive.read(name).decode("utf-8")
+                    for name in archive.namelist()
+                    if not name.startswith("artifacts/")
+                )
+                self.assertNotIn("evidence-password", diagnostics)
+                self.assertNotIn("evidence-token", diagnostics)
+                self.assertIn("[REDACTED]", diagnostics)
+
+    def test_worker_exception_secrets_are_redacted_from_manifest_and_package(self) -> None:
+        """Collector crashes remain actionable without leaking inline credentials."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '        output = context.workspace / "system.txt"',
+                    '        raise RuntimeError("password=crash-password token=crash-token")',
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            self.assertEqual("failed", outcome.manifest.collectors[0].status)
+            self.assertIn("RuntimeError", "\n".join(outcome.manifest.collectors[0].errors))
+            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                diagnostics = "\n".join(
+                    archive.read(name).decode("utf-8")
+                    for name in archive.namelist()
+                    if not name.startswith("artifacts/")
+                )
+                self.assertNotIn("crash-password", diagnostics)
+                self.assertNotIn("crash-token", diagnostics)
+                self.assertIn("[REDACTED]", diagnostics)
 
     def test_performance_report_is_finalized_before_automatic_packaging(self) -> None:
         """Performance-mode timing evidence must be present in the automatic ZIP."""
