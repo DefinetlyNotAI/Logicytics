@@ -1609,6 +1609,101 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("failed", outcome.manifest.collectors[0].status)
             self.assertIn("os.putenv", "\n".join(outcome.manifest.collectors[0].errors))
 
+    def test_worker_rejects_undeclared_subprocess_network_and_registry_capabilities(self) -> None:
+        """Privileged platform access must be declared in metadata, not merely imported."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            base = _COLLECTOR.replace(
+                "from pathlib import Path\n",
+                "from pathlib import Path\nimport socket\nimport subprocess\nimport sys\nimport winreg\n",
+            )
+            attempts = (
+                ("subprocess.run([sys.executable, '-c', 'pass'], check=False)", "subprocess capability"),
+                ("socket.socket()", "network capability"),
+                ("winreg.OpenKey(winreg.HKEY_CURRENT_USER, 'Software')", "registry_read capability"),
+            )
+            for operation, message in attempts:
+                with self.subTest(operation=operation):
+                    collector_path.write_text(
+                        base.replace(
+                            '        output = context.workspace / "system.txt"',
+                            f"        {operation}\n        output = context.workspace / \"system.txt\"",
+                        ),
+                        encoding="utf-8",
+                    )
+                    plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+                    outcome = RunSupervisor(root, default_config(root)).run(plan)
+                    self.assertEqual("failed", outcome.manifest.collectors[0].status)
+                    self.assertIn(message, "\n".join(outcome.manifest.collectors[0].errors))
+
+    def test_worker_rejects_raw_packet_socket_without_packet_capture_capability(self) -> None:
+        """General network approval must not silently authorize raw packet capture."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    "from pathlib import Path\n",
+                    "from pathlib import Path\nimport socket\nfrom logicytics import Capability\n",
+                ).replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n            capabilities=(Capability.NETWORK,),',
+                ).replace(
+                    '        output = context.workspace / "system.txt"',
+                    '        socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)\n'
+                    '        output = context.workspace / "system.txt"',
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(
+                preflight(root),
+                RunRequest(
+                    max_workers=1,
+                    acknowledge_authorization=True,
+                    approved_capabilities=(Capability.NETWORK,),
+                ),
+            )
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            self.assertEqual("failed", outcome.manifest.collectors[0].status)
+            self.assertIn("packet_capture capability", "\n".join(outcome.manifest.collectors[0].errors))
+
+    def test_worker_allows_an_explicitly_declared_and_approved_subprocess(self) -> None:
+        """A declared subprocess capability remains usable after explicit request approval."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    "from pathlib import Path\n",
+                    "from pathlib import Path\nimport subprocess\nimport sys\nfrom logicytics import Capability\n",
+                ).replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n            capabilities=(Capability.SUBPROCESS,),',
+                ).replace(
+                    '        output = context.workspace / "system.txt"',
+                    '        subprocess.run([sys.executable, "-c", "pass"], check=True)\n'
+                    '        output = context.workspace / "system.txt"',
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(
+                preflight(root),
+                RunRequest(
+                    max_workers=1,
+                    acknowledge_authorization=True,
+                    approved_capabilities=(Capability.SUBPROCESS,),
+                ),
+            )
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            self.assertEqual("succeeded", outcome.manifest.collectors[0].status)
+
     @unittest.skipUnless(os.name == "nt", "Windows collector subprocess-tree containment")
     def test_collector_timeout_terminates_spawned_subprocesses_without_stopping_peers(self) -> None:
         """A timed-out worker cannot leave its child alive or terminate independent collectors."""
@@ -1619,10 +1714,11 @@ class CoreFunctionalityTests(unittest.TestCase):
             (root / "plugins").mkdir()
             source = _delayed_collector_source("a_tree", 0.0).replace(
                 "from pathlib import Path\n",
-                "from pathlib import Path\nimport subprocess\nimport sys\n",
+                "from pathlib import Path\nimport subprocess\nimport sys\nfrom logicytics import Capability\n",
             ).replace(
                 '            supported_platforms=("win32",),',
-                '            supported_platforms=("win32",),\n            timeout_seconds=2,',
+                '            supported_platforms=("win32",),\n'
+                '            capabilities=(Capability.SUBPROCESS,),\n            timeout_seconds=2,',
             ).replace(
                 '        output = context.workspace / "system.txt"',
                 '        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])\n'
@@ -1637,7 +1733,14 @@ class CoreFunctionalityTests(unittest.TestCase):
             )
             report = preflight(root)
             self.assertEqual((), report.invalid)
-            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
+            plan = build_plan(
+                report,
+                RunRequest(
+                    max_workers=2,
+                    acknowledge_authorization=True,
+                    approved_capabilities=(Capability.SUBPROCESS,),
+                ),
+            )
             outcome = RunSupervisor(root, default_config(root)).run(plan)
             records = {record.id: record for record in outcome.manifest.collectors}
             child_pid = int(

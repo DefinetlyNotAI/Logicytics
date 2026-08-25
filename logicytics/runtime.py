@@ -11,6 +11,7 @@ import os
 import queue
 import signal
 import shutil
+import socket
 import subprocess
 import sys
 import traceback
@@ -24,6 +25,7 @@ from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.configuration import AppConfig
 from logicytics.contracts import (
     Artifact,
+    Capability,
     CollectorContext,
     CollectorResult,
     CollectorStatus,
@@ -68,8 +70,15 @@ class _WorkerMutationGuard:
     _DOUBLE_PATH_EVENTS = {"os.rename", "os.link", "os.symlink"}
     _BLOCKED_EVENTS = {"os.chdir", "os.putenv", "os.unsetenv", "os.system"}
 
-    def __init__(self, workspace: Path, artifact_root: Path, collector_id: str) -> None:
+    def __init__(
+            self,
+            workspace: Path,
+            artifact_root: Path,
+            collector_id: str,
+            capabilities: tuple[Capability, ...],
+    ) -> None:
         self.roots = (workspace.resolve(), (artifact_root / collector_id.replace(".", "_")).resolve())
+        self.capabilities = frozenset(capabilities)
         self.active = False
         sys.addaudithook(self._check_event)
 
@@ -85,6 +94,18 @@ class _WorkerMutationGuard:
     def _check_event(self, event: str, arguments: tuple[object, ...]) -> None:
         if not self.active:
             return
+        if event == "subprocess.Popen" and Capability.SUBPROCESS not in self.capabilities:
+            raise PermissionError("collector requires declared subprocess capability")
+        if event.startswith("socket.") and event in {
+            "socket.__new__", "socket.bind", "socket.connect", "socket.sendto", "socket.getaddrinfo"
+        }:
+            if Capability.NETWORK not in self.capabilities:
+                raise PermissionError("collector requires declared network capability")
+            if event == "socket.__new__" and len(arguments) > 2 and int(arguments[2]) == int(socket.SOCK_RAW):
+                if Capability.PACKET_CAPTURE not in self.capabilities:
+                    raise PermissionError("collector requires declared packet_capture capability")
+        if event.startswith("winreg.") and Capability.REGISTRY_READ not in self.capabilities:
+            raise PermissionError("collector requires declared registry_read capability")
         if event in self._BLOCKED_EVENTS:
             raise PermissionError(f"collector must not modify process state: {event}")
         if event == "open":
@@ -188,6 +209,7 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                     workspace,
                     Path(str(payload["artifact_root"])),
                     metadata.id,
+                    metadata.capabilities,
                 )
                 mutation_guard.active = True
                 try:
