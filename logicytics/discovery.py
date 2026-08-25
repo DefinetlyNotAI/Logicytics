@@ -9,13 +9,25 @@ import re
 import subprocess
 import sys
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from logicytics.contracts import CONTRACT_VERSION, CollectorKind, CollectorMetadata
 
 _FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.py$")
 _VAGUE_NAMES = {"main.py", "misc.py", "stuff.py", "utils.py"}
+
+
+@dataclass(frozen=True, slots=True)
+class ValidationDiagnostic:
+    """One stable, source-addressable collector validation failure."""
+
+    path: str
+    line: int
+    rule: str
+    message: str
+
+
 @dataclass(slots=True)
 class CollectorCandidate:
     """A file that may be a runnable collector."""
@@ -32,6 +44,30 @@ class CollectorCandidate:
         """Whether static and runtime validation both passed."""
         return not self.static_errors and self.metadata is not None and self.runtime_error is None
 
+    @property
+    def selection_id(self) -> str:
+        """Return the ID used to explicitly select this path even when metadata is invalid."""
+        if self.metadata is not None:
+            return self.metadata.id
+        owner = self.path.parent.name if self.path.name == "main.py" else self.path.stem
+        return f"{self.kind.value}.{owner}"
+
+    @property
+    def diagnostics(self) -> tuple[ValidationDiagnostic, ...]:
+        """Normalize free-form validator details into exact source diagnostics."""
+        messages = [*self.static_errors]
+        if self.runtime_error:
+            messages.append(self.runtime_error)
+        return tuple(
+            ValidationDiagnostic(
+                path=str(self.path),
+                line=_diagnostic_line(self.path, message),
+                rule=_diagnostic_rule(message, runtime=index >= len(self.static_errors)),
+                message=message,
+            )
+            for index, message in enumerate(messages)
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class PreflightReport:
@@ -46,6 +82,88 @@ class PreflightReport:
     @property
     def invalid(self) -> tuple[CollectorCandidate, ...]:
         return tuple(candidate for candidate in self.candidates if not candidate.valid)
+
+    def to_dict(
+            self,
+            *,
+            selected_plugins: tuple[str, ...] = (),
+            enable_plugins: bool = False,
+    ) -> dict[str, list[dict[str, object]]]:
+        """Classify invalid plugins as quarantined unless the request selects them."""
+        valid = [
+            {"id": candidate.metadata.id, "kind": candidate.kind.value, "path": str(candidate.path)}
+            for candidate in self.valid
+            if candidate.metadata is not None
+        ]
+        invalid: list[dict[str, object]] = []
+        quarantined: list[dict[str, object]] = []
+        selected = set(selected_plugins)
+        for candidate in self.invalid:
+            item = {
+                "id": candidate.selection_id,
+                "kind": candidate.kind.value,
+                "path": str(candidate.path),
+                "diagnostics": [asdict(diagnostic) for diagnostic in candidate.diagnostics],
+            }
+            if candidate.kind is CollectorKind.CORE or enable_plugins or candidate.selection_id in selected:
+                invalid.append(item)
+            else:
+                quarantined.append(item)
+        return {"valid": valid, "quarantined": quarantined, "invalid": invalid}
+
+
+def _diagnostic_rule(message: str, *, runtime: bool) -> str:
+    """Return a stable machine-readable rule for one validator message."""
+    if runtime:
+        return "runtime.contract"
+    normalized = message.casefold()
+    rules = (
+        ("filename", "static.filename"),
+        ("docstring", "static.docstring"),
+        ("print", "static.console_output"),
+        ("import-time", "static.import_time_side_effect"),
+        ("top-level", "static.top_level_statement"),
+        ("inherit", "static.inheritance"),
+        ("collector class", "static.class_name"),
+        ("return", "static.return_annotation"),
+        ("parameter", "static.method_signature"),
+        ("classmethod", "static.method_signature"),
+        ("method", "static.method_contract"),
+    )
+    return next((rule for marker, rule in rules if marker in normalized), "static.module_contract")
+
+
+def _diagnostic_line(path: Path, message: str) -> int:
+    """Locate the exact source line implicated by a normalized validation message."""
+    explicit = re.search(r"\(line (\d+)\)", message)
+    if explicit:
+        return int(explicit.group(1))
+    traceback_lines = re.findall(r'File "([^"]+)", line (\d+)', message)
+    resolved = path.resolve()
+    for source, line in reversed(traceback_lines):
+        try:
+            if Path(source).resolve() == resolved:
+                return int(line)
+        except OSError:
+            continue
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    except (OSError, UnicodeDecodeError, SyntaxError) as error:
+        return max(1, int(getattr(error, "lineno", 1) or 1))
+    method_match = re.match(r"(metadata|validate|collect|cleanup|estimate|dependencies)\b", message)
+    if method_match:
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == method_match.group(1):
+                return node.lineno
+    if "print" in message:
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and _top_level_call_name(node) == "print":
+                return node.lineno
+    if "class" in message or "inherit" in message:
+        collector_class = next((node for node in tree.body if isinstance(node, ast.ClassDef)), None)
+        if collector_class is not None:
+            return collector_class.lineno
+    return 1
 
 
 def _pascal_case(filename: str) -> str:

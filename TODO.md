@@ -294,7 +294,7 @@ that fails any mandatory rule is not a collector and must not be launched.
       output declarations, timeout, and size limits at runtime.
 - [x] Run a no-op contract probe against `validate()` and reject unexpected side
       effects, hangs, exceptions, or malformed return values.
-- [ ] Produce a preflight report listing valid, quarantined, and invalid collectors,
+- [x] Produce a preflight report listing valid, quarantined, and invalid collectors,
       with exact file/line/rule failures.
 - [x] Refuse to launch before collection if a core collector or explicitly selected
       plugin fails validation.

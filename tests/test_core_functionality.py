@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import ctypes
+import io
 import json
 import os
 import subprocess
@@ -18,7 +19,7 @@ from unittest.mock import patch
 from logicytics import packaging
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
-from logicytics.cli import _parser, _request
+from logicytics.cli import _parser, _request, main
 from logicytics.file_listing import list_files
 from logicytics.logging import FileEventLogger, deprecated, raise_logged, timed
 from logicytics.manifest import write_manifest
@@ -244,6 +245,11 @@ class CoreFunctionalityTests(unittest.TestCase):
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
             self.assertIn("resource_class", report.invalid[0].runtime_error)
+            diagnostic = report.invalid[0].diagnostics[0]
+            self.assertEqual("runtime.contract", diagnostic.rule)
+            self.assertEqual(str(collector_path), diagnostic.path)
+            self.assertGreater(diagnostic.line, 1)
+            self.assertIn("resource_class", diagnostic.message)
             with self.assertRaises(PreflightError):
                 build_plan(report, RunRequest())
 
@@ -2308,11 +2314,51 @@ class CoreFunctionalityTests(unittest.TestCase):
             plugin_path.parent.mkdir()
             plugin_path.write_text('"""Invalid plugin collector."""\n', encoding="utf-8")
             report = preflight(root)
+            payload = report.to_dict()
+            self.assertEqual(["core.system.system_info"], [item["id"] for item in payload["valid"]])
+            self.assertEqual([], payload["invalid"])
+            self.assertEqual(["plugin.broken_plugin"], [item["id"] for item in payload["quarantined"]])
+            diagnostic = payload["quarantined"][0]["diagnostics"][0]
+            self.assertEqual(str(plugin_path), diagnostic["path"])
+            self.assertEqual(1, diagnostic["line"])
+            self.assertEqual("static.class_name", diagnostic["rule"])
+            self.assertIn("exactly one public collector class", diagnostic["message"])
+            selected = report.to_dict(selected_plugins=("plugin.broken_plugin",))
+            self.assertEqual([], selected["quarantined"])
+            self.assertEqual(["plugin.broken_plugin"], [item["id"] for item in selected["invalid"]])
+            enabled = report.to_dict(enable_plugins=True)
+            self.assertEqual(["plugin.broken_plugin"], [item["id"] for item in enabled["invalid"]])
             plan = build_plan(report, RunRequest())
             self.assertEqual(
                 ["core.system.system_info"],
                 [candidate.metadata.id for candidate in plan.collectors],
             )
+
+    def test_preflight_cli_reports_quarantine_and_blocks_selected_invalid_plugins(self) -> None:
+        """The public preflight report exposes actionable diagnostics and fail-closed selection."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_path = root / "core" / "system" / "system_info.py"
+            core_path.parent.mkdir(parents=True)
+            core_path.write_text(_COLLECTOR, encoding="utf-8")
+            plugin_path = root / "plugins" / "broken_plugin.py"
+            plugin_path.parent.mkdir()
+            plugin_path.write_text('"""Invalid plugin collector."""\n', encoding="utf-8")
+
+            for arguments, expected_exit, key in (
+                    (["preflight"], 0, "quarantined"),
+                    (["preflight", "--include", "plugin.broken_plugin"], 2, "invalid"),
+                    (["preflight", "--plugins"], 2, "invalid"),
+            ):
+                with self.subTest(arguments=arguments):
+                    output = io.StringIO()
+                    with patch("logicytics.cli._project_root", return_value=root), patch("sys.stdout", output):
+                        exit_code = main(arguments)
+                    payload = json.loads(output.getvalue())
+                    self.assertEqual(expected_exit, exit_code)
+                    self.assertEqual("plugin.broken_plugin", payload[key][0]["id"])
+                    self.assertEqual(str(plugin_path), payload[key][0]["diagnostics"][0]["path"])
+                    self.assertIn("rule", payload[key][0]["diagnostics"][0])
 
     def test_preflight_rejects_wrong_lifecycle_return_type(self) -> None:
         """Lifecycle annotations must match the strict collector contract exactly."""
@@ -2328,6 +2374,18 @@ class CoreFunctionalityTests(unittest.TestCase):
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
             self.assertIn("collect must return CollectorResult", report.invalid[0].static_errors)
+            diagnostic = next(
+                item for item in report.invalid[0].diagnostics
+                if item.message == "collect must return CollectorResult"
+            )
+            source_lines = collector_path.read_text(encoding="utf-8").splitlines()
+            expected_line = next(
+                index for index, line in enumerate(source_lines, start=1)
+                if "def collect(self, context: CollectorContext) -> ValidationResult:" in line
+            )
+            self.assertEqual(expected_line, diagnostic.line)
+            self.assertEqual("static.return_annotation", diagnostic.rule)
+            self.assertEqual(str(collector_path), diagnostic.path)
 
     def test_preflight_rejects_wrong_collection_estimate_type(self) -> None:
         """Optional estimates use the same strict typed contract as lifecycle methods."""

@@ -120,17 +120,17 @@ def main(argv: list[str] | None = None) -> int:
         configuration = load_config(root, arguments.config)
         report = preflight(root)
         if arguments.command == "preflight":
+            validation = report.to_dict(
+                selected_plugins=tuple(arguments.include),
+                enable_plugins=arguments.plugins,
+            )
             payload = {
                 "environment": inspect_environment().to_dict(),
                 "sysinternals": ensure_sysinternals(root).to_dict(),
-                "valid": [candidate.metadata.id for candidate in report.valid if candidate.metadata],
-                "invalid": [
-                    {"path": str(candidate.path), "errors": candidate.static_errors or [candidate.runtime_error]}
-                    for candidate in report.invalid
-                ],
+                **validation,
             }
             print(json.dumps(payload, indent=2, sort_keys=True))
-            return 0 if not report.invalid else 2
+            return 0 if not validation["invalid"] else 2
         if arguments.command == "debug":
             payload = {
                 "configuration": configuration.to_manifest_dict(),
