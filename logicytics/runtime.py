@@ -12,6 +12,7 @@ import queue
 import signal
 import shutil
 import subprocess
+import sys
 import traceback
 import zipfile
 from dataclasses import asdict, dataclass
@@ -58,6 +59,48 @@ class _ActiveWorker:
     last_event_count: int = 0
     last_heartbeat_at: float = 0.0
     exited_at: float | None = None
+
+
+class _WorkerMutationGuard:
+    """Constrain audited collector mutations to its private workspace and evidence store."""
+
+    _PATH_EVENTS = {"os.mkdir", "os.remove", "os.rmdir", "os.chmod", "os.chown", "os.utime", "os.truncate"}
+    _DOUBLE_PATH_EVENTS = {"os.rename", "os.link", "os.symlink"}
+    _BLOCKED_EVENTS = {"os.chdir", "os.putenv", "os.unsetenv", "os.system"}
+
+    def __init__(self, workspace: Path, artifact_root: Path, collector_id: str) -> None:
+        self.roots = (workspace.resolve(), (artifact_root / collector_id.replace(".", "_")).resolve())
+        self.active = False
+        sys.addaudithook(self._check_event)
+
+    def _check_path(self, value: object) -> None:
+        if isinstance(value, int):
+            return
+        if not isinstance(value, (str, bytes, os.PathLike)):
+            raise PermissionError("collector filesystem mutation has an unsupported target")
+        path = Path(os.fsdecode(value)).resolve()
+        if not any(path == root or root in path.parents for root in self.roots):
+            raise PermissionError(f"collector filesystem mutation escapes its private workspace: {path}")
+
+    def _check_event(self, event: str, arguments: tuple[object, ...]) -> None:
+        if not self.active:
+            return
+        if event in self._BLOCKED_EVENTS:
+            raise PermissionError(f"collector must not modify process state: {event}")
+        if event == "open":
+            mode = arguments[1] if len(arguments) > 1 else None
+            flags = arguments[2] if len(arguments) > 2 else 0
+            writing = isinstance(mode, str) and any(flag in mode for flag in "wax+")
+            writing = writing or isinstance(flags, int) and bool(
+                flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND)
+            )
+            if writing:
+                self._check_path(arguments[0])
+        elif event in self._PATH_EVENTS:
+            self._check_path(arguments[0])
+        elif event in self._DOUBLE_PATH_EVENTS:
+            self._check_path(arguments[0])
+            self._check_path(arguments[1])
 
 
 def _load_collector(path: Path, expected_class: str):
@@ -141,6 +184,12 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                 result: CollectorResult | None = None
                 lifecycle_errors: list[str] = []
                 failure_summary = "collector worker crashed"
+                mutation_guard = _WorkerMutationGuard(
+                    workspace,
+                    Path(str(payload["artifact_root"])),
+                    metadata.id,
+                )
+                mutation_guard.active = True
                 try:
                     validation = collector.validate(context)
                     if not isinstance(validation, ValidationResult):
@@ -174,6 +223,8 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                                 traceback.format_exc(),
                             )
                         )
+                    finally:
+                        mutation_guard.active = False
                 if lifecycle_errors:
                     result = CollectorResult(
                         CollectorStatus.FAILED,

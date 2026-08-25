@@ -1555,6 +1555,60 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("succeeded", records["core.system.z_independent"].status)
             self.assertEqual("partial", outcome.manifest.status.value)
 
+    def test_collector_cannot_modify_peer_workspace_or_repository_files(self) -> None:
+        """Direct collector writes outside its private evidence roots fail without affecting peers."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            attempts = (
+                "context.workspace.parent / 'z_independent' / 'compromised.txt'",
+                f"Path({str(root / 'repository-compromised.txt')!r})",
+            )
+            for target in attempts:
+                with self.subTest(target=target):
+                    source = _delayed_collector_source("a_attacker", 0.0).replace(
+                        '        output = context.workspace / "system.txt"',
+                        f"        ({target}).write_text('compromised', encoding='utf-8')\n"
+                        '        output = context.workspace / "system.txt"',
+                    )
+                    (core_directory / "a_attacker.py").write_text(source, encoding="utf-8")
+                    (core_directory / "z_independent.py").write_text(
+                        _delayed_collector_source("z_independent", 0.0),
+                        encoding="utf-8",
+                    )
+                    plan = build_plan(preflight(root), RunRequest(max_workers=2, acknowledge_authorization=True))
+                    outcome = RunSupervisor(root, default_config(root)).run(plan)
+                    records = {record.id: record for record in outcome.manifest.collectors}
+                    self.assertEqual("failed", records["core.system.a_attacker"].status)
+                    self.assertIn("escapes its private workspace", "\n".join(records["core.system.a_attacker"].errors))
+                    self.assertEqual("succeeded", records["core.system.z_independent"].status)
+                    self.assertFalse((root / "repository-compromised.txt").exists())
+                    self.assertFalse(
+                        (outcome.run_directory / "collectors" / "z_independent" / "compromised.txt").exists()
+                    )
+
+    def test_collector_cannot_mutate_its_process_environment(self) -> None:
+        """A collector must not change process environment or working-directory policy."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace("from pathlib import Path\n", "from pathlib import Path\nimport os\n").replace(
+                    '        output = context.workspace / "system.txt"',
+                    '        os.environ["LOGICYTICS_COLLECTOR_MUTATION"] = "unexpected"\n'
+                    '        output = context.workspace / "system.txt"',
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            self.assertEqual("failed", outcome.manifest.collectors[0].status)
+            self.assertIn("os.putenv", "\n".join(outcome.manifest.collectors[0].errors))
+
     @unittest.skipUnless(os.name == "nt", "Windows collector subprocess-tree containment")
     def test_collector_timeout_terminates_spawned_subprocesses_without_stopping_peers(self) -> None:
         """A timed-out worker cannot leave its child alive or terminate independent collectors."""
