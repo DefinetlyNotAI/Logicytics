@@ -226,6 +226,8 @@ class CoreFunctionalityTests(unittest.TestCase):
                 ('{"schema_version":true}', "schema_version"),
                 ('{"schema_version":4,"runtime":{"default_max_workers":true}}', "worker limits"),
                 ('{"schema_version":4,"runtime":{"maximum_workers":true}}', "worker limits"),
+                ('{"schema_version":4,"runtime":{"maximum_run_output_bytes":true}}', "maximum_run_output_bytes"),
+                ('{"schema_version":4,"runtime":{"maximum_run_output_bytes":0}}', "maximum_run_output_bytes"),
                 ('{"schema_version":4,"runtime":{"output_root":false}}', "output_root"),
                 ('{"schema_version":4,"runtime":{"output_root":"   "}}', "output_root"),
             )
@@ -360,6 +362,90 @@ class CoreFunctionalityTests(unittest.TestCase):
                 writer.register_file(oversized)
             self.assertEqual((), writer.artifacts)
             self.assertEqual([], list(artifact_root.rglob("*")))
+
+    def test_artifact_registration_enforces_reserved_run_output_budget(self) -> None:
+        """A worker cannot copy evidence beyond its supervisor-reserved run quota."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifact_root = root / "artifacts"
+            workspace.mkdir()
+            artifact_root.mkdir()
+            source = workspace / "oversized.bin"
+            source.write_bytes(b"12345")
+            writer = WorkspaceArtifactWriter(
+                "core.system.test",
+                workspace,
+                artifact_root,
+                1024,
+                5,
+                run_output_budget_bytes=4,
+            )
+            with self.assertRaisesRegex(ArtifactError, "maximum_run_output_bytes"):
+                writer.register_file(source)
+            self.assertEqual([], list(artifact_root.rglob("*")))
+
+    def test_run_output_budget_bounds_concurrent_collector_evidence(self) -> None:
+        """Concurrent isolated workers must never exceed the configured run-wide cap."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            for filename in ("a_first", "b_second"):
+                source = _delayed_collector_source(filename, 0.1).replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n            maximum_output_bytes=4,',
+                )
+                (core_directory / f"{filename}.py").write_text(source, encoding="utf-8")
+            config_path = root / "logicytics.json"
+            config_path.write_text(
+                '{"schema_version":4,"runtime":{"maximum_run_output_bytes":7}}',
+                encoding="utf-8",
+            )
+            configuration = load_config(root)
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, configuration).run(plan)
+
+            records = {record.id: record for record in outcome.manifest.collectors}
+            self.assertEqual("succeeded", records["core.system.a_first"].status, records["core.system.a_first"].errors)
+            self.assertEqual("failed", records["core.system.b_second"].status)
+            self.assertTrue(
+                any("maximum_run_output_bytes" in error for error in records["core.system.b_second"].errors)
+            )
+            self.assertLessEqual(outcome.manifest.total_artifact_bytes, 7)
+
+    def test_exhausted_run_output_budget_skips_unstarted_collectors(self) -> None:
+        """A completely consumed run quota prevents later workers from launching."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            for filename in ("a_first", "b_second"):
+                source = _delayed_collector_source(filename, 0.0).replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n            maximum_output_bytes=4,',
+                )
+                (core_directory / f"{filename}.py").write_text(source, encoding="utf-8")
+            config_path = root / "logicytics.json"
+            config_path.write_text(
+                '{"schema_version":4,"runtime":{"maximum_run_output_bytes":4}}',
+                encoding="utf-8",
+            )
+            configuration = load_config(root)
+            plan = build_plan(preflight(root), RunRequest(max_workers=2, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, configuration).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+
+            self.assertEqual("succeeded", records["core.system.a_first"].status, records["core.system.a_first"].errors)
+            second = records["core.system.b_second"]
+            self.assertEqual("skipped", second.status)
+            self.assertIsNone(second.started_at)
+            self.assertTrue(any("maximum_run_output_bytes" in error for error in second.errors))
+            self.assertEqual(4, outcome.manifest.total_artifact_bytes)
 
     def test_isolated_worker_enforces_declared_individual_artifact_limit(self) -> None:
         """Metadata file limits must survive preflight and reach the isolated worker."""

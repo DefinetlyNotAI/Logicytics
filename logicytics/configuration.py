@@ -10,6 +10,8 @@ from typing import Any, Mapping
 from logicytics.errors import PlanError
 
 SCHEMA_VERSION = 4
+DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES = 4 * 1024 * 1024 * 1024
+MAXIMUM_RUN_OUTPUT_BYTES = 64 * 1024 * 1024 * 1024
 
 
 def _positive_integer(value: object, *, minimum: int, maximum: int) -> bool:
@@ -50,6 +52,7 @@ class RuntimeSettings:
     default_max_workers: int = 4
     maximum_workers: int = 16
     package_completed_runs: bool = True
+    maximum_run_output_bytes: int = DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,6 +119,16 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     package_completed_runs = runtime_raw.get("package_completed_runs", True)
     if not isinstance(package_completed_runs, bool):
         raise PlanError("runtime package_completed_runs must be boolean")
+    maximum_run_output_bytes = runtime_raw.get(
+        "maximum_run_output_bytes",
+        DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES,
+    )
+    if not _positive_integer(
+            maximum_run_output_bytes,
+            minimum=1,
+            maximum=MAXIMUM_RUN_OUTPUT_BYTES,
+    ):
+        raise PlanError("runtime maximum_run_output_bytes must be an integer from 1 to 68719476736")
 
     collector_settings = raw.get("collectors", {})
     if not isinstance(collector_settings, dict) or not all(
@@ -131,6 +144,7 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             default_max_workers=default_workers,
             maximum_workers=maximum_workers,
             package_completed_runs=package_completed_runs,
+            maximum_run_output_bytes=maximum_run_output_bytes,
         ),
         collector_settings=collector_settings,
     )

@@ -50,6 +50,7 @@ class _ActiveWorker:
     timeout_seconds: int
     workspace: Path
     parallel_safe: bool
+    reserved_output_bytes: int
     last_event_count: int = 0
     last_heartbeat_at: float = 0.0
     exited_at: float | None = None
@@ -114,6 +115,7 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                         else metadata.specialty
                     ),
                     maximum_artifact_bytes=metadata.maximum_artifact_bytes,
+                    run_output_budget_bytes=int(payload["run_output_budget_bytes"]),
                 )
                 context = CollectorContext(
                     run_id=str(payload["run_id"]),
@@ -262,6 +264,7 @@ class RunSupervisor:
         self._active_workers = active
         result_queue: multiprocessing.Queue = multiprocessing.get_context("spawn").Queue()
         worker_limit = min(plan.request.max_workers, self.configuration.runtime.maximum_workers)
+        committed_output_bytes = 0
         while pending or active:
             if cancellation_file.exists():
                 self._cancel_active(active, records, manifest, manifest_path, "run cancellation requested")
@@ -309,6 +312,31 @@ class RunSupervisor:
                     break
                 if active and not candidate.metadata.parallel_safe:
                     break
+                reserved_output_bytes = sum(worker.reserved_output_bytes for worker in active.values())
+                remaining_output_bytes = (
+                    self.configuration.runtime.maximum_run_output_bytes
+                    - committed_output_bytes
+                    - reserved_output_bytes
+                )
+                if remaining_output_bytes < 1:
+                    if active:
+                        break
+                    pending.pop(0)
+                    records[candidate.metadata.id].apply_result(
+                        CollectorResult(
+                            CollectorStatus.SKIPPED,
+                            "run output limit reached before collector could start",
+                            errors=("configured maximum_run_output_bytes was exhausted",),
+                        )
+                    )
+                    run_logger.event(
+                        "warning",
+                        "collector_run_output_limit_reached",
+                        collector_id=candidate.metadata.id,
+                    )
+                    write_manifest(manifest_path, manifest)
+                    continue
+                output_budget = min(candidate.metadata.maximum_output_bytes, remaining_output_bytes)
                 pending.pop(0)
                 workspace = workspace_root / candidate.metadata.id.replace(".", "_")
                 payload: dict[str, object] = {
@@ -320,6 +348,7 @@ class RunSupervisor:
                     "artifact_root": str(artifact_root),
                     "cancellation_file": str(cancellation_file),
                     "settings": dict(self.configuration.settings_for(candidate.metadata.id)),
+                    "run_output_budget_bytes": output_budget,
                 }
                 process = multiprocessing.get_context("spawn").Process(
                     target=_worker_entry,
@@ -337,6 +366,7 @@ class RunSupervisor:
                     candidate.metadata.timeout_seconds,
                     workspace,
                     candidate.metadata.parallel_safe,
+                    output_budget,
                 )
                 run_logger.event("info", "collector_started", collector_id=candidate.metadata.id)
                 write_manifest(manifest_path, manifest)
@@ -353,6 +383,7 @@ class RunSupervisor:
                 if worker is not None:
                     worker.process.join(timeout=1)
                     self._apply_worker_result(records[collector_id], _result_from_dict(message["result"]), worker)
+                    committed_output_bytes += self._collector_artifact_bytes(artifact_root, collector_id)
                     self._cleanup_worker_temporary_directory(worker)
                     run_logger.event("info", "collector_finished", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
@@ -368,6 +399,7 @@ class RunSupervisor:
                         CollectorResult(CollectorStatus.FAILED, "collector exceeded its declared timeout"),
                         worker,
                     )
+                    committed_output_bytes += self._collector_artifact_bytes(artifact_root, collector_id)
                     self._cleanup_worker_temporary_directory(worker)
                     run_logger.event("error", "collector_timed_out", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
@@ -384,10 +416,19 @@ class RunSupervisor:
                         CollectorResult(CollectorStatus.FAILED, "collector exited without a result"),
                         worker,
                     )
+                    committed_output_bytes += self._collector_artifact_bytes(artifact_root, collector_id)
                     self._cleanup_worker_temporary_directory(worker)
                     run_logger.event("error", "collector_exited_without_result", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
             sleep(0.01)
+
+    @staticmethod
+    def _collector_artifact_bytes(artifact_root: Path, collector_id: str) -> int:
+        """Count run-owned evidence, including files left by a failed collector."""
+        directory = artifact_root / collector_id.replace(".", "_")
+        if not directory.is_dir():
+            return 0
+        return sum(path.stat().st_size for path in directory.rglob("*") if path.is_file())
 
     @staticmethod
     def _cleanup_worker_temporary_directory(worker: _ActiveWorker) -> None:
