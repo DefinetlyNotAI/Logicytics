@@ -538,18 +538,103 @@ class CoreFunctionalityTests(unittest.TestCase):
         self.assertEqual((("INFO", "collected"),), parse_level_messages(result.stdout))
 
     def test_configuration_schema_version_is_enforced(self) -> None:
-        """Only the v4 configuration schema may be loaded for a v4 run."""
+        """Current v4 and explicitly migrated v3 schemas are accepted; other versions are not."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             config_path = root / "logicytics.json"
+            for unsupported in (0, 1, 2, 5):
+                with self.subTest(schema_version=unsupported):
+                    config_path.write_text(json.dumps({"schema_version": unsupported}), encoding="utf-8")
+                    with self.assertRaisesRegex(PlanError, "unsupported configuration schema_version"):
+                        load_config(root)
             config_path.write_text('{"schema_version": 3}', encoding="utf-8")
-            with self.assertRaises(PlanError):
-                load_config(root)
+            migrated = load_config(root)
+            self.assertEqual(4, migrated.schema_version)
+            self.assertEqual(3, migrated.migrated_from_schema)
             config_path.write_text('{"schema_version": 4, "collectors": {}}', encoding="utf-8")
-            self.assertEqual(4, load_config(root).schema_version)
+            current = load_config(root)
+            self.assertEqual(4, current.schema_version)
+            self.assertIsNone(current.migrated_from_schema)
             config_path.write_text('{"schema_version":4,"runtime":{"package_completed_runs":"yes"}}', encoding="utf-8")
             with self.assertRaisesRegex(PlanError, "package_completed_runs"):
                 load_config(root)
+
+    def test_legacy_configuration_migrates_runtime_and_collector_aliases_without_writing(self) -> None:
+        """A supported v3 configuration migrates once in memory and preserves its source bytes."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config_path = root / "logicytics.json"
+            settings = {"core.packet.packet_capture": {"packet_count": 7, "timeout_seconds": 5}}
+            original = json.dumps({
+                "schema_version": 3,
+                "workers": 3,
+                "max_workers": 6,
+                "output_root": "ACCESS/RUNS",
+                "collector_settings": settings,
+            }, indent=2)
+            config_path.write_text(original, encoding="utf-8")
+            configuration = load_config(root)
+
+            self.assertEqual(4, configuration.schema_version)
+            self.assertEqual(3, configuration.migrated_from_schema)
+            self.assertEqual(3, configuration.runtime.default_max_workers)
+            self.assertEqual(6, configuration.runtime.maximum_workers)
+            self.assertEqual(root / "output" / "data", configuration.runtime.output_root)
+            self.assertEqual(settings["core.packet.packet_capture"],
+                             configuration.settings_for("core.packet.packet_capture"))
+            self.assertEqual(original, config_path.read_text(encoding="utf-8"))
+            self.assertFalse((root / "output").exists())
+            self.assertEqual(3, configuration.to_manifest_dict()["migrated_from_schema"])
+
+    def test_legacy_configuration_rejects_ambiguous_unsafe_and_plugin_enabling_migrations(self) -> None:
+        """Migration cannot override settings, weaken validation, or silently enable extensions."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config_path = root / "logicytics.json"
+            invalid = (
+                ({"workers": 2, "worker_count": 3}, "conflicting settings"),
+                ({"workers": 2, "runtime": {"default_max_workers": 2}}, "conflicting settings"),
+                ({"runtime": {"workers": 2, "worker_count": 3}}, "conflicting settings"),
+                ({"collectors": {}, "collector_settings": {}}, "conflicting collectors"),
+                ({"enable_plugins": True}, "unsupported root"),
+                ({"workers": True}, "worker limits"),
+                ({"collector_settings": {"core.process.memory_map": {"dump_directory": "../outside"}}},
+                 "collector-workspace"),
+                ({"collector_settings": {"core.packet.packet_capture": {"packet_count": 0}}}, "packet_count"),
+            )
+            for legacy, message in invalid:
+                with self.subTest(legacy=legacy):
+                    config_path.write_text(json.dumps({"schema_version": 3, **legacy}), encoding="utf-8")
+                    with self.assertRaisesRegex(PlanError, message):
+                        load_config(root)
+                    self.assertFalse((root / "output").exists())
+
+    def test_migrated_configuration_run_preserves_manifest_provenance_and_legacy_evidence(self) -> None:
+        """Migrated collection stays isolated, packages normally, and never moves old evidence."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            legacy = root / "ACCESS" / "RUNS" / "previous.txt"
+            legacy.parent.mkdir(parents=True)
+            legacy.write_text("keep legacy evidence", encoding="utf-8")
+            config_path = root / "logicytics.json"
+            original = json.dumps({"schema_version": 3, "worker_count": 1, "output_root": "ACCESS/RUNS"})
+            config_path.write_text(original, encoding="utf-8")
+            configuration = load_config(root)
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, configuration).run(plan)
+
+            self.assertEqual(root / "output" / "data", outcome.run_directory.parent)
+            self.assertEqual(3, outcome.manifest.configuration["migrated_from_schema"])
+            self.assertEqual("keep legacy evidence", legacy.read_text(encoding="utf-8"))
+            self.assertEqual(original, config_path.read_text(encoding="utf-8"))
+            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                packaged = json.loads(archive.read("manifest.json"))
+            self.assertEqual(4, packaged["configuration"]["schema_version"])
+            self.assertEqual(3, packaged["configuration"]["migrated_from_schema"])
 
     def test_configuration_defaults_to_one_canonical_output_data_root(self) -> None:
         """Defaults and loaded settings share output/data while explicit roots remain supported."""

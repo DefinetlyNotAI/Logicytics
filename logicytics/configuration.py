@@ -22,6 +22,15 @@ _ROOT_FIELDS = frozenset({"schema_version", "runtime", "collectors"})
 _RUNTIME_FIELDS = frozenset({
     "output_root", "default_max_workers", "maximum_workers", "package_completed_runs", "maximum_run_output_bytes",
 })
+_LEGACY_ROOT_FIELDS = _ROOT_FIELDS.union({
+    "collector_settings", "workers", "worker_count", "max_workers", "output_root",
+    "package_completed_runs", "maximum_run_output_bytes",
+})
+_LEGACY_RUNTIME_ALIASES = MappingProxyType({
+    "workers": "default_max_workers",
+    "worker_count": "default_max_workers",
+    "max_workers": "maximum_workers",
+})
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,6 +142,47 @@ def _finite_json_number(value: str) -> float:
     return result
 
 
+def _assign_migrated_runtime(runtime: dict[str, Any], target: str, value: Any, source: str) -> None:
+    """Refuse legacy aliases that would silently override another runtime setting."""
+    if target in runtime:
+        raise PlanError(f"legacy configuration contains conflicting settings for {target}: {source}")
+    runtime[target] = value
+
+
+def _migrate_v3_configuration(raw: Mapping[str, Any], project_root: Path) -> dict[str, Any]:
+    """Upgrade the explicitly supported v3 shape without writing or activating collectors."""
+    unknown = sorted(set(raw) - _LEGACY_ROOT_FIELDS)
+    if unknown:
+        raise PlanError(f"legacy configuration contains unsupported root settings: {', '.join(unknown)}")
+    runtime_value = raw.get("runtime", {})
+    if not isinstance(runtime_value, dict):
+        raise PlanError("legacy runtime configuration must be an object")
+    runtime: dict[str, Any] = {}
+    for key, value in runtime_value.items():
+        _assign_migrated_runtime(runtime, _LEGACY_RUNTIME_ALIASES.get(key, key), value, f"runtime.{key}")
+    root_aliases = {
+        "workers": "default_max_workers",
+        "worker_count": "default_max_workers",
+        "max_workers": "maximum_workers",
+        "output_root": "output_root",
+        "package_completed_runs": "package_completed_runs",
+        "maximum_run_output_bytes": "maximum_run_output_bytes",
+    }
+    for source, target in root_aliases.items():
+        if source in raw:
+            _assign_migrated_runtime(runtime, target, raw[source], source)
+    if "collectors" in raw and "collector_settings" in raw:
+        raise PlanError("legacy configuration contains conflicting collectors and collector_settings sections")
+    collectors = raw.get("collectors", raw.get("collector_settings", {}))
+    output_root = runtime.get("output_root")
+    if isinstance(output_root, str):
+        candidate = Path(output_root)
+        relative_parts = tuple(part.casefold() for part in candidate.parts)
+        if relative_parts == ("access", "runs") or candidate == project_root / "ACCESS" / "RUNS":
+            runtime["output_root"] = str(project_root / "output" / "data")
+    return {"schema_version": SCHEMA_VERSION, "runtime": runtime, "collectors": collectors}
+
+
 @dataclass(frozen=True, slots=True)
 class RuntimeSettings:
     """Engine-wide limits that apply before a collector is started."""
@@ -151,6 +201,7 @@ class AppConfig:
     schema_version: int
     runtime: RuntimeSettings
     collector_settings: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
+    migrated_from_schema: int | None = None
 
     def settings_for(self, collector_id: str) -> Mapping[str, Any]:
         """Return the isolated settings declared for one collector."""
@@ -185,14 +236,22 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
         raise PlanError(f"invalid configuration file {path}: {error}") from error
     if not isinstance(raw, dict):
         raise PlanError("configuration root must be a JSON object")
-    unknown_root = sorted(set(raw) - _ROOT_FIELDS)
-    if unknown_root:
-        raise PlanError(f"configuration contains unsupported root settings: {', '.join(unknown_root)}")
     schema_version = raw.get("schema_version", SCHEMA_VERSION)
     if not isinstance(schema_version, int) or isinstance(schema_version, bool):
         raise PlanError("configuration schema_version must be an integer")
+    migrated_from_schema: int | None = None
+    if schema_version == 3:
+        raw = _migrate_v3_configuration(raw, project_root)
+        migrated_from_schema = schema_version
+        schema_version = SCHEMA_VERSION
     if schema_version != SCHEMA_VERSION:
-        raise PlanError(f"unsupported configuration schema_version {schema_version}; expected {SCHEMA_VERSION}")
+        raise PlanError(
+            f"unsupported configuration schema_version {schema_version}; expected {SCHEMA_VERSION} "
+            "or supported legacy schema 3"
+        )
+    unknown_root = sorted(set(raw) - _ROOT_FIELDS)
+    if unknown_root:
+        raise PlanError(f"configuration contains unsupported root settings: {', '.join(unknown_root)}")
 
     runtime_raw = raw.get("runtime", {})
     if not isinstance(runtime_raw, dict):
@@ -247,4 +306,5 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             maximum_run_output_bytes=maximum_run_output_bytes,
         ),
         collector_settings=collector_settings,
+        migrated_from_schema=migrated_from_schema,
     )

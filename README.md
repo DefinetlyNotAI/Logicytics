@@ -138,6 +138,13 @@ memory-map collector options are strictly typed and bounded before planning.
 Unknown engine fields, duplicate JSON keys, unsafe workspace paths, and invalid
 collector IDs fail closed; plugin-owned setting fields remain extensible.
 
+Schema-version `3` JSON files are migrated in memory without modifying the source
+file. Legacy `workers`/`worker_count`, `max_workers`, `output_root`, and
+`collector_settings` aliases become their v4 runtime or collector equivalents;
+the old `ACCESS/RUNS` default becomes `output/data`. Ambiguous aliases, unsafe
+values, unsupported versions, and implicit plugin-selection fields are rejected.
+Run manifests record `migrated_from_schema: 3` when this compatibility path runs.
+
 ## Collector rules
 
 Core collectors must live at `core/<specialty>/<collector_name>.py`. Each module

@@ -463,7 +463,7 @@ Windows platform allows.
 - [x] Provide named profiles such as `minimal`, `standard`, `deep`, and `offline`
       with documented collector membership.
 - [x] Allow explicit include/exclude collector selections to override a profile.
-- [ ] Version the configuration schema and migrate older configuration files.
+- [x] Version the configuration schema and migrate older configuration files.
 - [ ] Keep remote configuration optional, authenticated/validated, and out of the
       critical local collection path.
 - [ ] Never let a remote manifest silently add a collector to a user's run.
