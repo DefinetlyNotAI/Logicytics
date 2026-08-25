@@ -1014,6 +1014,37 @@ class CoreFunctionalityTests(unittest.TestCase):
                 self.assertNotIn("logs/unregistered.jsonl", archive.namelist())
                 self.assertNotIn("collectors/core_system_system_info/unregistered.jsonl", archive.namelist())
 
+    def test_package_sidecar_failure_restores_existing_verified_package(self) -> None:
+        """A failed hash publication cannot replace or corrupt a previously verified ZIP."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            package_path = Path(outcome.manifest.package["path"])
+            hash_path = Path(outcome.manifest.package["sha256_path"])
+            original_package = package_path.read_bytes()
+            original_hash = hash_path.read_bytes()
+            original_replace = os.replace
+
+            def fail_sidecar(source: str | Path, destination: str | Path) -> None:
+                if Path(destination) == hash_path and Path(source).suffix == ".tmp":
+                    raise OSError("simulated sidecar publication failure")
+                original_replace(source, destination)
+
+            with patch("logicytics.packaging.os.replace", side_effect=fail_sidecar):
+                with self.assertRaisesRegex(OSError, "sidecar publication failure"):
+                    package_run(outcome)
+            self.assertEqual(original_package, package_path.read_bytes())
+            self.assertEqual(original_hash, hash_path.read_bytes())
+            self.assertFalse(package_path.with_suffix(".zip.tmp").exists())
+            self.assertFalse(package_path.with_suffix(".zip.backup").exists())
+            self.assertFalse(hash_path.with_suffix(".sha256.tmp").exists())
+            self.assertFalse(hash_path.with_suffix(".sha256.backup").exists())
+
     def test_package_rejects_manifest_artifact_path_escape_and_forged_collector_ownership(self) -> None:
         """A modified manifest cannot package outside files or another collector's evidence."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -1092,7 +1123,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             outcome = RunSupervisor(root, default_config(root)).run(plan)
             artifact = outcome.manifest.artifact_list()[0]
             source = outcome.run_directory / "artifacts" / artifact.relative_path
-            expected_package_path = Path(outcome.manifest.package["path"])
+            expected_package_path = Path(outcome.manifest.package["path"]).with_suffix(".zip.tmp")
             original_open = Path.open
             read_sizes: list[tuple[Path, int]] = []
 

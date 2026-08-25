@@ -165,6 +165,7 @@ def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: 
     expected_names.update(archive_name for _, archive_name in artifact_sources)
     expected_names.update(archive_name for _, archive_name in log_sources)
     temporary_package = package_path.with_suffix(".zip.tmp")
+    temporary_hash = hash_path.with_suffix(".sha256.tmp")
     try:
         with zipfile.ZipFile(temporary_package, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             _stream_archive_member(archive, manifest_path, "manifest.json")
@@ -172,14 +173,36 @@ def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: 
             for source, archive_name in (*artifact_sources, *log_sources):
                 _stream_archive_member(archive, source, archive_name)
         _verify_archive(temporary_package, manifest, expected_names)
-        os.replace(temporary_package, package_path)
+        package_sha256 = sha256_file(temporary_package)
+        temporary_hash.write_text(f"{package_sha256}  {package_path.name}\n", encoding="ascii")
+        package_backup = package_path.with_suffix(".zip.backup")
+        hash_backup = hash_path.with_suffix(".sha256.backup")
+        try:
+            if package_path.exists():
+                os.replace(package_path, package_backup)
+            if hash_path.exists():
+                os.replace(hash_path, hash_backup)
+            os.replace(temporary_package, package_path)
+            os.replace(temporary_hash, hash_path)
+        except BaseException:
+            if package_path.exists():
+                package_path.unlink()
+            if hash_path.exists() and hash_backup.exists():
+                hash_path.unlink()
+            if package_backup.exists():
+                os.replace(package_backup, package_path)
+            if hash_backup.exists():
+                os.replace(hash_backup, hash_path)
+            raise
+        if package_backup.exists():
+            package_backup.unlink()
+        if hash_backup.exists():
+            hash_backup.unlink()
     finally:
         if temporary_package.exists():
             temporary_package.unlink()
-    temporary_hash = hash_path.with_suffix(".sha256.tmp")
-    package_sha256 = sha256_file(package_path)
-    temporary_hash.write_text(f"{package_sha256}  {package_path.name}\n", encoding="ascii")
-    os.replace(temporary_hash, hash_path)
+        if temporary_hash.exists():
+            temporary_hash.unlink()
     manifest.package = {
         "path": str(package_path),
         "sha256_path": str(hash_path),
