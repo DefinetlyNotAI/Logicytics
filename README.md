@@ -105,6 +105,18 @@ python -m logicytics run --profile standard --acknowledge-authorization `
   --allow-capability filesystem_read
 ```
 
+## Collection profiles
+
+- `minimal`: only collectors that explicitly declare essential local inventory.
+- `standard`: shipped core collectors that explicitly declare standard membership.
+- `deep`: extended collector-declared inventory; sensitive capabilities still
+  require explicit approval.
+- `offline`: collector-declared local inventory; network and packet-capture
+  capabilities remain forbidden even when explicitly included and approved.
+
+Plugin collectors never join any profile unless explicitly included or enabled
+with `--plugins`. Unknown profile names are rejected before collection begins.
+
 ## Collector rules
 
 Core collectors must live at `core/<specialty>/<collector_name>.py`. Each module

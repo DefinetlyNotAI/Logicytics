@@ -16,7 +16,7 @@ from logicytics.contracts import Capability, RunRequest
 from logicytics.discovery import preflight
 from logicytics.environment import inspect_environment
 from logicytics.errors import LogicyticsError
-from logicytics.planner import build_plan
+from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.runtime import RunSupervisor
 from logicytics.sysinternals import ensure_sysinternals
 
@@ -81,7 +81,12 @@ def _parser() -> argparse.ArgumentParser:
     subcommands = parser.add_subparsers(dest="command", required=True)
     for command in ("preflight", "debug", "update", "plan", "run"):
         subparser = subcommands.add_parser(command)
-        subparser.add_argument("--profile", default="standard")
+        subparser.add_argument(
+            "--profile",
+            default="standard",
+            choices=tuple(BUILTIN_PROFILES),
+            help="Named built-in collector membership and access policy.",
+        )
         subparser.add_argument("--include", action="append", default=[])
         subparser.add_argument("--exclude", action="append", default=[])
         subparser.add_argument("--plugins", action="store_true")

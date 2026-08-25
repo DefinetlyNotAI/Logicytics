@@ -460,7 +460,7 @@ Windows platform allows.
       collector's execution.
 - [ ] Separate product settings, profile settings, collector settings, and runtime
       overrides.
-- [ ] Provide named profiles such as `minimal`, `standard`, `deep`, and `offline`
+- [x] Provide named profiles such as `minimal`, `standard`, `deep`, and `offline`
       with documented collector membership.
 - [x] Allow explicit include/exclude collector selections to override a profile.
 - [ ] Version the configuration schema and migrate older configuration files.

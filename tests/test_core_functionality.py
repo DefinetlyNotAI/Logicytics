@@ -39,7 +39,7 @@ from logicytics.discovery import PreflightReport, preflight
 from logicytics.environment import EnvironmentReport
 from logicytics.errors import ArtifactError, PlanError, PreflightError
 from logicytics.packaging import package_run
-from logicytics.planner import build_plan
+from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.runtime import RunSupervisor
 
 
@@ -299,6 +299,73 @@ class CoreFunctionalityTests(unittest.TestCase):
                 RunRequest(profile="deep", approved_capabilities=(Capability.SENSITIVE_FILES,)),
             )
             self.assertEqual([sensitive_id], [item.metadata.id for item in deep.collectors])
+
+    def test_builtin_profiles_select_declared_members_and_reject_unknown_names(self) -> None:
+        """Only documented profiles resolve collector-declared membership before any run."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            memberships = {
+                "a_essential": ("minimal", "standard", "deep", "offline"),
+                "b_standard": ("standard", "deep"),
+                "z_deep": ("deep",),
+            }
+            for filename, profiles in memberships.items():
+                source = _delayed_collector_source(filename, 0.0).replace(
+                    '            supported_platforms=("win32",),',
+                    f'            supported_platforms=("win32",),\n            default_profiles={profiles!r},',
+                )
+                (core_directory / f"{filename}.py").write_text(source, encoding="utf-8")
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            expected = {
+                "minimal": ["core.system.a_essential"],
+                "standard": ["core.system.a_essential", "core.system.b_standard"],
+                "deep": ["core.system.a_essential", "core.system.b_standard", "core.system.z_deep"],
+                "offline": ["core.system.a_essential"],
+            }
+            self.assertEqual(set(expected), set(BUILTIN_PROFILES))
+            for profile, collector_ids in expected.items():
+                with self.subTest(profile=profile):
+                    plan = build_plan(report, RunRequest(profile=profile))
+                    self.assertEqual(collector_ids, [candidate.metadata.id for candidate in plan.collectors])
+            with self.assertRaisesRegex(PlanError, "unknown collection profile"):
+                build_plan(report, RunRequest(profile="invented"))
+            with patch("sys.stderr", new_callable=io.StringIO) as errors:
+                with self.assertRaises(SystemExit):
+                    _parser().parse_args(["plan", "--profile", "invented"])
+            self.assertIn("invalid choice", errors.getvalue())
+
+    def test_offline_profile_rejects_network_collectors_even_with_explicit_approval(self) -> None:
+        """Offline collection remains local-only regardless of include and capability overrides."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_id = "core.system.network_source"
+            source = _delayed_collector_source("network_source", 0.0).replace(
+                "from logicytics import CollectorMetadata",
+                "from logicytics import Capability, CollectorMetadata",
+            ).replace(
+                '            supported_platforms=("win32",),',
+                '            supported_platforms=("win32",),\n'
+                '            capabilities=(Capability.NETWORK,),\n'
+                '            default_profiles=("standard",),',
+            )
+            (core_directory / "network_source.py").write_text(source, encoding="utf-8")
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            standard = build_plan(report, RunRequest(approved_capabilities=(Capability.NETWORK,)))
+            self.assertEqual([collector_id], [candidate.metadata.id for candidate in standard.collectors])
+            self.assertEqual((), build_plan(report, RunRequest(profile="offline")).collectors)
+            with self.assertRaisesRegex(PlanError, "offline profile prohibits network-capable"):
+                build_plan(
+                    report,
+                    RunRequest(profile="offline", include=(collector_id,), approved_capabilities=(Capability.NETWORK,)),
+                )
 
     def test_preflight_rejects_unregistered_collector_resource_classes(self) -> None:
         """Invalid scheduling metadata blocks shipped collectors before any run starts."""

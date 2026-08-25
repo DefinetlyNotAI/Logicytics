@@ -7,11 +7,20 @@ import hashlib
 import json
 from dataclasses import asdict
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from logicytics.contracts import Capability, CollectorKind, RunRequest
 from logicytics.discovery import CollectorCandidate, PreflightReport
 from logicytics.environment import inspect_environment
 from logicytics.errors import PlanError, PreflightError
+
+BUILTIN_PROFILES = MappingProxyType({
+    "minimal": "Essential local system, memory, and storage inventory only.",
+    "standard": "Shipped core collectors explicitly declaring standard membership.",
+    "deep": "Extended declared inventory, subject to explicit capability approval.",
+    "offline": "Declared local-only inventory with network and packet access prohibited.",
+})
+_OFFLINE_PROHIBITED_CAPABILITIES = frozenset({Capability.NETWORK, Capability.PACKET_CAPTURE})
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +84,9 @@ def _topological_order(selected: dict[str, CollectorCandidate]) -> tuple[Collect
 
 def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
     """Fail closed for invalid selected work and resolve a dependency-safe plan."""
+    if request.profile not in BUILTIN_PROFILES:
+        supported = ", ".join(BUILTIN_PROFILES)
+        raise PlanError(f"unknown collection profile {request.profile!r}; supported profiles: {supported}")
     if request.max_workers < 1:
         raise PlanError("max_workers must be positive")
     valid = {candidate.metadata.id: candidate for candidate in report.valid if candidate.metadata is not None}
@@ -122,6 +134,11 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
                 pending_dependencies.append(dependency_id)
     for candidate in selected.values():
         assert candidate.metadata is not None
+        if request.profile == "offline":
+            prohibited = set(candidate.metadata.capabilities).intersection(_OFFLINE_PROHIBITED_CAPABILITIES)
+            if prohibited:
+                names = ", ".join(sorted(capability.value for capability in prohibited))
+                raise PlanError(f"offline profile prohibits network-capable collector {candidate.metadata.id}: {names}")
         if sys.platform not in candidate.metadata.supported_platforms:
             raise PlanError(f"{candidate.metadata.id} does not support {sys.platform}")
         missing_capabilities = set(candidate.metadata.capabilities) - set(request.approved_capabilities)
