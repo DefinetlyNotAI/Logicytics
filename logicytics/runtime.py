@@ -371,6 +371,7 @@ class RunSupervisor:
             self.configuration.to_manifest_dict(),
             [(candidate.metadata.id, candidate.path) for candidate in plan.collectors if candidate.metadata],
         )
+        write_manifest(manifest_path, manifest)
         manifest.status = RunStatus.RUNNING
         write_manifest(manifest_path, manifest)
         run_logger.event("info", "run_started", collectors=len(plan.collectors))

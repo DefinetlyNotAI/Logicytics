@@ -22,8 +22,12 @@ def _summary(manifest: RunManifest) -> str:
     lines = [
         f"Logicytics run: {manifest.run_id}",
         f"Status: {manifest.status.value}",
+        f"Cancellation requested: {str(manifest.cancellation_requested).lower()}",
         f"Requested: {manifest.requested_at}",
         f"Finished: {manifest.finished_at or 'not finalized'}",
+        f"Resolved collectors: {len(manifest.resolved_plan)}",
+        f"Skipped collectors: {len(manifest.skipped_collectors)}",
+        f"Errors: {len(manifest.errors)}",
         "",
         "Collectors:",
     ]

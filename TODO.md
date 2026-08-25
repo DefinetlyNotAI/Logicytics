@@ -377,13 +377,13 @@ Windows platform allows.
 
 ### Define the v4.0 run model
 
-- [ ] Create a unique run directory before collection starts:
+- [x] Create a unique run directory before collection starts:
       `ACCESS/RUNS/<run-id>/`.
-- [ ] Store raw collector output under a controlled artifact tree rather than in
+- [x] Store raw collector output under a controlled artifact tree rather than in
       the source tree or project root.
-- [ ] Create a run manifest at the beginning, update it as collectors start and
+- [x] Create a run manifest at the beginning, update it as collectors start and
       finish, and finalize it even after cancellation or partial failure.
-- [ ] Record requested profile, resolved collector plan, Logicytics version,
+- [x] Record requested profile, resolved collector plan, Logicytics version,
       configuration snapshot with secrets removed, host metadata, privilege state,
       start/end times, cancellation state, errors, skipped items, and artifact
       checksums.

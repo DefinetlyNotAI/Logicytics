@@ -21,6 +21,7 @@ from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.cli import _parser, _request
 from logicytics.file_listing import list_files
 from logicytics.logging import FileEventLogger, deprecated, raise_logged, timed
+from logicytics.manifest import write_manifest
 from logicytics.sysinternals import ensure_sysinternals
 from logicytics.configuration import default_config, load_config
 from logicytics.contracts import Capability, CollectorMetadata, ResourceClass, RunRequest, Specialty
@@ -930,8 +931,26 @@ class CoreFunctionalityTests(unittest.TestCase):
                 RunRequest(profile="standard", max_workers=1, acknowledge_authorization=True),
             )
             configuration = default_config(root)
-            outcome = RunSupervisor(root, configuration).run(plan)
+            persisted_states: list[str] = []
+
+            def capture_manifest_state(path, manifest):
+                persisted_states.append(manifest.status.value)
+                return write_manifest(path, manifest)
+
+            with patch("logicytics.runtime.write_manifest", side_effect=capture_manifest_state):
+                outcome = RunSupervisor(root, configuration).run(plan)
+            self.assertEqual("planned", persisted_states[0])
+            self.assertEqual("running", persisted_states[1])
+            self.assertEqual("succeeded", persisted_states[-1])
             self.assertEqual("succeeded", outcome.manifest.status.value)
+            self.assertEqual(("core.system.system_info",), outcome.manifest.resolved_plan)
+            self.assertFalse(outcome.manifest.cancellation_requested)
+            self.assertEqual([], outcome.manifest.errors)
+            self.assertEqual([], outcome.manifest.skipped_collectors)
+            self.assertEqual(configuration.runtime.output_root, outcome.run_directory.parent)
+            self.assertTrue(outcome.run_directory.is_absolute())
+            self.assertTrue((outcome.run_directory / "artifacts" / "core_system_system_info").is_dir())
+            self.assertFalse((root / "system.txt").exists())
             self.assertEqual(1, len(outcome.manifest.artifact_list()))
             self.assertEqual("run", outcome.manifest.action)
             self.assertEqual("4.0", outcome.manifest.engine_version)
@@ -964,6 +983,10 @@ class CoreFunctionalityTests(unittest.TestCase):
                 datetime.fromisoformat(artifact.collected_at)
                 self.assertEqual(("copied into run artifact store",), artifact.transformations)
                 packaged_manifest = json.loads(archive.read("manifest.json"))
+                self.assertEqual(["core.system.system_info"], packaged_manifest["resolved_plan"])
+                self.assertFalse(packaged_manifest["cancellation_requested"])
+                self.assertEqual([], packaged_manifest["errors"])
+                self.assertEqual([], packaged_manifest["skipped_collectors"])
                 packaged_artifact = packaged_manifest["collectors"][0]["artifacts"][0]
                 self.assertEqual(artifact.source_category, packaged_artifact["source_category"])
                 self.assertEqual(artifact.collected_at, packaged_artifact["collected_at"])
@@ -971,8 +994,14 @@ class CoreFunctionalityTests(unittest.TestCase):
                 record = outcome.manifest.collectors[0]
                 summary = archive.read("summary.txt").decode("utf-8")
                 self.assertIn(f"Status: {record.status}", summary)
+                self.assertIn("Cancellation requested: false", summary)
+                self.assertIn("Resolved collectors: 1", summary)
                 self.assertIn(f"Started: {record.started_at}", summary)
                 self.assertIn(f"Finished: {record.finished_at}", summary)
+
+            repeated = RunSupervisor(root, configuration).run(plan)
+            self.assertNotEqual(outcome.manifest.run_id, repeated.manifest.run_id)
+            self.assertNotEqual(outcome.run_directory, repeated.run_directory)
 
     def test_sensitive_artifact_bytes_are_preserved_while_packaged_diagnostics_are_redacted(self) -> None:
         """Evidence retains intentional secrets, but no packaged diagnostics disclose them."""
@@ -1049,6 +1078,9 @@ class CoreFunctionalityTests(unittest.TestCase):
             outcome = RunSupervisor(root, default_config(root)).run(plan)
             self.assertEqual("failed", outcome.manifest.collectors[0].status)
             self.assertIn("RuntimeError", "\n".join(outcome.manifest.collectors[0].errors))
+            self.assertEqual("core.system.system_info", outcome.manifest.errors[0]["collector_id"])
+            self.assertNotIn("crash-password", outcome.manifest.errors[0]["message"])
+            self.assertNotIn("crash-token", outcome.manifest.errors[0]["message"])
             failure = outcome.manifest.collectors[0].failure
             self.assertIsNotNone(failure)
             self.assertNotIn("crash-password", failure["platform_error"])
@@ -1600,6 +1632,16 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("skipped", dependent.status)
             self.assertIsNone(dependent.started_at)
             self.assertTrue(any(dependency_id in error for error in dependent.errors))
+            self.assertEqual(["core.system.b_dependent"], outcome.manifest.skipped_collectors)
+            self.assertEqual(
+                {dependency_id, "core.system.b_dependent"},
+                {error["collector_id"] for error in outcome.manifest.errors},
+            )
+            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                packaged = json.loads(archive.read("manifest.json"))
+                summary = archive.read("summary.txt").decode("utf-8")
+            self.assertEqual(["core.system.b_dependent"], packaged["skipped_collectors"])
+            self.assertIn("Skipped collectors: 1", summary)
 
     def test_failed_collector_is_manifested_and_never_reported_as_success(self) -> None:
         """An isolated collector crash must produce a durable failed run outcome."""
@@ -2224,6 +2266,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             with patch.object(supervisor, "_supervise", side_effect=KeyboardInterrupt):
                 outcome = supervisor.run(plan)
             self.assertEqual("cancelled", outcome.manifest.status.value)
+            self.assertTrue(outcome.manifest.cancellation_requested)
             record = outcome.manifest.collectors[0]
             self.assertEqual("cancelled", record.status)
             self.assertEqual("run cancelled by user", record.summary)
@@ -2233,7 +2276,10 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertTrue(package_path.is_file())
             with zipfile.ZipFile(package_path) as archive:
                 summary = archive.read("summary.txt").decode("utf-8")
+                packaged_manifest = json.loads(archive.read("manifest.json"))
+            self.assertTrue(packaged_manifest["cancellation_requested"])
             self.assertIn("Status: cancelled", summary)
+            self.assertIn("Cancellation requested: true", summary)
             self.assertIn("Summary: run cancelled by user", summary)
             self.assertIn("Started: not started", summary)
             self.assertIn(f"Finished: {record.finished_at}", summary)

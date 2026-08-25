@@ -117,9 +117,13 @@ class RunManifest:
     configuration: Mapping[str, Any]
     collectors: list[CollectorRecord]
     host: Mapping[str, str]
+    resolved_plan: tuple[str, ...] = ()
     engine_version: str = CONTRACT_VERSION
     action: str = "run"
     finished_at: str | None = None
+    cancellation_requested: bool = False
+    errors: list[dict[str, str]] = field(default_factory=list)
+    skipped_collectors: list[str] = field(default_factory=list)
     package: Mapping[str, str] | None = None
     total_artifact_bytes: int = 0
 
@@ -140,6 +144,7 @@ class RunManifest:
             configuration=configuration,
             collectors=[CollectorRecord(id=collector_id, source=str(source)) for collector_id, source in
                         collector_sources],
+            resolved_plan=tuple(collector_id for collector_id, _ in collector_sources),
             host={
                 "platform": sys_platform(),
                 "hostname": platform.node(),
@@ -160,6 +165,13 @@ class RunManifest:
             self.status = RunStatus.PARTIAL
         else:
             self.status = RunStatus.SUCCEEDED
+        self.cancellation_requested = "cancelled" in statuses
+        self.skipped_collectors = [record.id for record in self.collectors if record.status == "skipped"]
+        self.errors = [
+            {"collector_id": record.id, "status": record.status, "message": error}
+            for record in self.collectors
+            for error in record.errors
+        ]
         self.finished_at = utc_now()
         self.total_artifact_bytes = sum(artifact.size_bytes for artifact in self.artifact_list())
 
