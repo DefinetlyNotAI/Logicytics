@@ -59,7 +59,7 @@ def _artifact_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[
     return sources
 
 
-def _log_sources(run_directory: Path) -> list[tuple[Path, str]]:
+def _log_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[Path, str]]:
     """Return only run-owned structured logs, preserving their relative paths."""
     sources: list[tuple[Path, str]] = []
     for directory in (run_directory / "logs", run_directory / "collectors"):
@@ -67,6 +67,11 @@ def _log_sources(run_directory: Path) -> list[tuple[Path, str]]:
             continue
         for path in sorted(directory.rglob("*.jsonl")):
             sources.append((path, path.relative_to(run_directory).as_posix()))
+    if manifest.request.get("performance_check") is True:
+        performance_path = run_directory / "logs" / "performance.json"
+        if not performance_path.is_file():
+            raise FileNotFoundError("requested performance report is missing")
+        sources.append((performance_path, "logs/performance.json"))
     return sources
 
 
@@ -104,7 +109,7 @@ def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: 
 
     summary_path = run_directory / "summary.txt"
     artifact_sources = _artifact_sources(run_directory, manifest)
-    log_sources = _log_sources(run_directory)
+    log_sources = _log_sources(run_directory, manifest)
     manifest.package = {"path": str(package_path)}
     write_manifest(manifest_path, manifest)
     summary_path.write_text(_summary(manifest), encoding="utf-8")

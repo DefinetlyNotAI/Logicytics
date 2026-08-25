@@ -257,6 +257,7 @@ class RunRequest:
     max_workers: int = 4
     acknowledge_authorization: bool = False
     approved_capabilities: tuple[Capability, ...] = ()
+    performance_check: bool = False
 
     def __post_init__(self) -> None:
         """Reject malformed selections and execution policy before planning."""
@@ -273,11 +274,13 @@ class RunRequest:
                 raise ValueError(f"request {name} must not contain duplicate collector IDs")
         if set(self.include).intersection(self.exclude):
             raise ValueError("request include and exclude selections must not overlap")
-        for name in ("enable_plugins", "acknowledge_authorization"):
+        for name in ("enable_plugins", "acknowledge_authorization", "performance_check"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"request {name} must be boolean")
         if not isinstance(self.max_workers, int) or isinstance(self.max_workers, bool) or not 1 <= self.max_workers <= 64:
             raise ValueError("request max_workers must be an integer from 1 to 64")
+        if self.performance_check and self.max_workers != 1:
+            raise ValueError("request performance_check requires max_workers=1")
         if not isinstance(self.approved_capabilities, tuple) or not all(
                 isinstance(capability, Capability) for capability in self.approved_capabilities
         ):

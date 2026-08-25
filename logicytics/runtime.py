@@ -229,6 +229,8 @@ class RunSupervisor:
             self._cancel_records(records, manifest, manifest_path, "run cancelled by user")
 
         manifest.finalize_status()
+        if plan.request.performance_check:
+            self._write_performance_report(run_directory, manifest)
         if self.configuration.runtime.package_completed_runs:
             try:
                 package_path, hash_path = package_manifest(run_directory, manifest, manifest_path)
@@ -245,6 +247,23 @@ class RunSupervisor:
         write_manifest(manifest_path, manifest)
         run_logger.event("info", "run_finished", status=manifest.status.value, artifacts=manifest.total_artifact_bytes)
         return RunOutcome(manifest=manifest, run_directory=run_directory, manifest_path=manifest_path)
+
+    @staticmethod
+    def _write_performance_report(run_directory: Path, manifest: RunManifest) -> None:
+        """Finalize run-owned timing diagnostics before evidence packaging begins."""
+        performance_path = run_directory / "logs" / "performance.json"
+        payload = {
+            "run_id": manifest.run_id,
+            "collectors": [
+                {
+                    "id": record.id,
+                    "status": record.status,
+                    "duration_seconds": record.duration_seconds,
+                }
+                for record in manifest.collectors
+            ],
+        }
+        performance_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     def _supervise(
             self,

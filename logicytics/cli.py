@@ -38,6 +38,7 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
                                                                                    False) else arguments.workers or default_workers,
         acknowledge_authorization=getattr(arguments, "acknowledge_authorization", False),
         approved_capabilities=tuple(Capability(value) for value in arguments.allow_capability),
+        performance_check=getattr(arguments, "performance_check", False),
     )
 
 
@@ -142,20 +143,6 @@ def main(argv: list[str] | None = None) -> int:
         outcome = RunSupervisor(root, configuration).run(plan)
         if arguments.performance_check:
             performance_path = outcome.run_directory / "logs" / "performance.json"
-            performance_path.write_text(
-                json.dumps(
-                    {
-                        "run_id": outcome.manifest.run_id,
-                        "collectors": [
-                            {"id": record.id, "status": record.status, "duration_seconds": record.duration_seconds}
-                            for record in outcome.manifest.collectors
-                        ],
-                    },
-                    indent=2,
-                    sort_keys=True,
-                ) + "\n",
-                encoding="utf-8",
-            )
             print(f"Performance: {performance_path}")
         if outcome.manifest.package and "path" in outcome.manifest.package:
             print(

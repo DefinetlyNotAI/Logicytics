@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
-from logicytics.cli import _parser
+from logicytics.cli import _parser, _request
 from logicytics.file_listing import list_files
 from logicytics.logging import deprecated, raise_logged, timed
 from logicytics.sysinternals import ensure_sysinternals
@@ -248,6 +248,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             ({"include": (collector_id,), "exclude": (collector_id,)}, "overlap"),
             ({"enable_plugins": 1}, "enable_plugins"),
             ({"acknowledge_authorization": 1}, "acknowledge_authorization"),
+            ({"performance_check": 1}, "performance_check"),
+            ({"performance_check": True, "max_workers": 2}, "performance_check"),
             ({"max_workers": True}, "max_workers"),
             ({"max_workers": 65}, "max_workers"),
             ({"approved_capabilities": ("filesystem_read",)}, "approved_capabilities"),
@@ -307,6 +309,9 @@ class CoreFunctionalityTests(unittest.TestCase):
         """The run command must expose the performance mode used by the request builder."""
         arguments = _parser().parse_args(["run", "--performance-check"])
         self.assertTrue(arguments.performance_check)
+        request = _request(arguments, default_workers=4)
+        self.assertTrue(request.performance_check)
+        self.assertEqual(1, request.max_workers)
 
     """Validate the foundation before real core collectors are added."""
 
@@ -539,6 +544,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 self.assertIsNone(archive.testzip())
                 self.assertIn("manifest.json", archive.namelist())
                 self.assertIn("summary.txt", archive.namelist())
+                self.assertNotIn("logs/performance.json", archive.namelist())
                 self.assertEqual(1, len([name for name in archive.namelist() if name.startswith("artifacts/")]))
                 artifact = outcome.manifest.artifact_list()[0]
                 archived_bytes = archive.read(f"artifacts/{artifact.relative_path}")
@@ -557,6 +563,36 @@ class CoreFunctionalityTests(unittest.TestCase):
                 self.assertIn(f"Status: {record.status}", summary)
                 self.assertIn(f"Started: {record.started_at}", summary)
                 self.assertIn(f"Finished: {record.finished_at}", summary)
+
+    def test_performance_report_is_finalized_before_automatic_packaging(self) -> None:
+        """Performance-mode timing evidence must be present in the automatic ZIP."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            plan = build_plan(
+                preflight(root),
+                RunRequest(
+                    max_workers=1,
+                    acknowledge_authorization=True,
+                    performance_check=True,
+                ),
+            )
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            performance_path = outcome.run_directory / "logs" / "performance.json"
+            self.assertTrue(performance_path.is_file())
+            report = json.loads(performance_path.read_text(encoding="utf-8"))
+            self.assertEqual(outcome.manifest.run_id, report["run_id"])
+            self.assertEqual("core.system.system_info", report["collectors"][0]["id"])
+            self.assertIsNotNone(report["collectors"][0]["duration_seconds"])
+            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                packaged_report = json.loads(archive.read("logs/performance.json"))
+            self.assertEqual(report, packaged_report)
+            performance_path.unlink()
+            with self.assertRaisesRegex(FileNotFoundError, "performance report"):
+                package_run(outcome)
 
     def test_package_excludes_unregistered_files_and_rejects_tampered_artifacts(self) -> None:
         """Only manifest artifacts may enter a package, and their final bytes must match."""
