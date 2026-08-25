@@ -217,6 +217,38 @@ class CoreFunctionalityTests(unittest.TestCase):
             with self.assertRaises(PreflightError):
                 build_plan(report, RunRequest())
 
+    def test_authorization_error_summarizes_categories_and_sensitive_outputs(self) -> None:
+        """Collection consent must explain requested evidence before creating a workspace."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    "from logicytics import CollectorMetadata",
+                    "from logicytics import Capability, CollectorMetadata",
+                ).replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n'
+                    '            capabilities=(Capability.SENSITIVE_FILES,),\n'
+                    '            sensitive_data_categories=("credentials", "personal_documents"),\n'
+                    '            default_profiles=("deep",),',
+                ),
+                encoding="utf-8",
+            )
+            configuration = default_config(root)
+            plan = build_plan(
+                preflight(root),
+                RunRequest(profile="deep", approved_capabilities=(Capability.SENSITIVE_FILES,)),
+            )
+            with self.assertRaises(PermissionError) as rejected:
+                RunSupervisor(root, configuration).run(plan)
+            message = str(rejected.exception)
+            self.assertIn("--acknowledge-authorization", message)
+            self.assertIn("selected categories: system", message)
+            self.assertIn("sensitive outputs: credentials, personal_documents", message)
+            self.assertFalse(configuration.runtime.output_root.exists())
+
     def test_deprecation_decorator_logs_removal_context(self) -> None:
         """Deprecated functions must preserve behavior while reporting removal context."""
         events: list[tuple[str, str, dict[str, object]]] = []

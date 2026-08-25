@@ -188,7 +188,27 @@ class RunSupervisor:
     def run(self, plan: RunPlan) -> RunOutcome:
         """Execute a preflighted plan and persist the manifest throughout the run."""
         if plan.collectors and not plan.request.acknowledge_authorization:
-            raise PermissionError("collection requires acknowledge_authorization=True")
+            categories = sorted(
+                candidate.metadata.specialty.value
+                if hasattr(candidate.metadata.specialty, "value")
+                else candidate.metadata.specialty
+                for candidate in plan.collectors
+                if candidate.metadata is not None
+            )
+            sensitive_outputs = sorted(
+                {
+                    category
+                    for candidate in plan.collectors
+                    if candidate.metadata is not None
+                    for category in candidate.metadata.sensitive_data_categories
+                }
+            )
+            raise PermissionError(
+                "collection requires --acknowledge-authorization "
+                "(acknowledge_authorization=True); "
+                f"selected categories: {', '.join(dict.fromkeys(categories))}; "
+                f"sensitive outputs: {', '.join(sensitive_outputs) or 'none'}"
+            )
         if plan.request.max_workers > self.configuration.runtime.maximum_workers:
             raise ValueError("requested workers exceed configured maximum_workers")
         run_id = f"run-{uuid4().hex}"

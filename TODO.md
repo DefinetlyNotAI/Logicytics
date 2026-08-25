@@ -417,7 +417,7 @@ Windows platform allows.
 
 ### Make collection safe, bounded, and observable
 
-- [ ] Require an explicit consent/authorization acknowledgement before collection,
+- [x] Require an explicit consent/authorization acknowledgement before collection,
       with a clear summary of the selected categories and sensitive outputs.
 - [x] Mark collectors that may copy credentials, private keys, personal files,
       browser data, or packet contents as sensitive and make them opt-in for the
