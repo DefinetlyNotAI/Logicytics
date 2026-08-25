@@ -142,6 +142,12 @@ class CoreFunctionalityTests(unittest.TestCase):
             CollectorMetadata(**{**common, "version": "four"})
         with self.assertRaisesRegex(ValueError, "maximum_artifact_files"):
             CollectorMetadata(**{**common, "maximum_artifact_files": 0})
+        with self.assertRaisesRegex(ValueError, "maximum_artifact_bytes"):
+            CollectorMetadata(**{**common, "maximum_artifact_bytes": True})
+        with self.assertRaisesRegex(ValueError, "maximum_artifact_bytes"):
+            CollectorMetadata(**{**common, "maximum_output_bytes": 8, "maximum_artifact_bytes": 9})
+        metadata = CollectorMetadata(**{**common, "maximum_output_bytes": 8})
+        self.assertEqual(8, metadata.maximum_artifact_bytes)
 
     def test_deprecation_decorator_logs_removal_context(self) -> None:
         """Deprecated functions must preserve behavior while reporting removal context."""
@@ -331,6 +337,53 @@ class CoreFunctionalityTests(unittest.TestCase):
             writer.register_file(first, media_type="text/plain")
             with self.assertRaisesRegex(ArtifactError, "maximum_artifact_files"):
                 writer.register_file(second, media_type="text/plain")
+
+    def test_artifact_registration_enforces_individual_file_size_limit(self) -> None:
+        """A collector-specific file ceiling rejects large evidence before it is copied."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifact_root = root / "artifacts"
+            workspace.mkdir()
+            artifact_root.mkdir()
+            oversized = workspace / "oversized.bin"
+            oversized.write_bytes(b"12345")
+            writer = WorkspaceArtifactWriter(
+                "core.system.test",
+                workspace,
+                artifact_root,
+                1024,
+                5,
+                maximum_artifact_bytes=4,
+            )
+            with self.assertRaisesRegex(ArtifactError, "maximum_artifact_bytes"):
+                writer.register_file(oversized)
+            self.assertEqual((), writer.artifacts)
+            self.assertEqual([], list(artifact_root.rglob("*")))
+
+    def test_isolated_worker_enforces_declared_individual_artifact_limit(self) -> None:
+        """Metadata file limits must survive preflight and reach the isolated worker."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n            maximum_artifact_bytes=2,',
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+
+            record = outcome.manifest.collectors[0]
+            self.assertEqual("failed", record.status)
+            self.assertTrue(any("maximum_artifact_bytes" in error for error in record.errors))
+            self.assertEqual([], record.artifacts)
 
     def test_artifact_registration_records_validated_provenance(self) -> None:
         """Artifact provenance is typed, immutable, and completed by the writer."""

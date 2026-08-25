@@ -113,6 +113,7 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                         if hasattr(metadata.specialty, "value")
                         else metadata.specialty
                     ),
+                    maximum_artifact_bytes=metadata.maximum_artifact_bytes,
                 )
                 context = CollectorContext(
                     run_id=str(payload["run_id"]),

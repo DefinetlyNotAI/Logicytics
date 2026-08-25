@@ -41,6 +41,7 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             maximum_artifact_files: int,
             *,
             source_category: str | None = None,
+            maximum_artifact_bytes: int | None = None,
     ) -> None:
         self._collector_id = collector_id
         collector_parts = collector_id.split(".", 2)
@@ -53,6 +54,14 @@ class WorkspaceArtifactWriter(ArtifactWriter):
         self._workspace = workspace.resolve()
         self._artifact_root = artifact_root.resolve()
         self._maximum_output_bytes = maximum_output_bytes
+        self._maximum_artifact_bytes = (
+            maximum_output_bytes if maximum_artifact_bytes is None else maximum_artifact_bytes
+        )
+        if not isinstance(self._maximum_artifact_bytes, int) or isinstance(
+                self._maximum_artifact_bytes,
+                bool,
+        ) or not 1 <= self._maximum_artifact_bytes <= maximum_output_bytes:
+            raise ArtifactError("maximum_artifact_bytes must be a positive integer within maximum_output_bytes")
         self._maximum_artifact_files = maximum_artifact_files
         self._bytes_registered = 0
         self._artifacts: list[Artifact] = []
@@ -77,6 +86,8 @@ class WorkspaceArtifactWriter(ArtifactWriter):
         if not source.is_file() or not _is_within(source, self._workspace):
             raise ArtifactError("artifacts must be regular files inside the collector workspace")
         size_bytes = source.stat().st_size
+        if size_bytes > self._maximum_artifact_bytes:
+            raise ArtifactError("collector artifact exceeds its declared maximum_artifact_bytes")
         if self._bytes_registered + size_bytes > self._maximum_output_bytes:
             raise ArtifactError("collector output exceeds its declared maximum_output_bytes")
         if len(self._artifacts) >= self._maximum_artifact_files:

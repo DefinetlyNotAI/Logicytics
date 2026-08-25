@@ -101,6 +101,7 @@ class CollectorMetadata:
     default_profiles: tuple[str, ...] = ("standard",)
     timeout_seconds: int = 60
     maximum_output_bytes: int = 100 * 1024 * 1024
+    maximum_artifact_bytes: int | None = None
     maximum_artifact_files: int = 500
     minimum_contract_version: str = CONTRACT_VERSION
     parallel_safe: bool = True
@@ -132,10 +133,19 @@ class CollectorMetadata:
             raise ValueError("metadata dependencies must be collector IDs")
         if len(set(self.dependencies)) != len(self.dependencies) or self.id in self.dependencies:
             raise ValueError("metadata dependencies must be unique and cannot include the collector itself")
-        for name in ("timeout_seconds", "maximum_output_bytes", "maximum_artifact_files"):
+        if self.maximum_artifact_bytes is None:
+            object.__setattr__(self, "maximum_artifact_bytes", self.maximum_output_bytes)
+        for name in (
+                "timeout_seconds",
+                "maximum_output_bytes",
+                "maximum_artifact_bytes",
+                "maximum_artifact_files",
+        ):
             value = getattr(self, name)
             if not isinstance(value, int) or isinstance(value, bool) or value < 1:
                 raise ValueError(f"metadata {name} must be a positive integer")
+        if self.maximum_artifact_bytes > self.maximum_output_bytes:
+            raise ValueError("metadata maximum_artifact_bytes must not exceed maximum_output_bytes")
         if not isinstance(self.parallel_safe, bool):
             raise ValueError("metadata parallel_safe must be boolean")
 
