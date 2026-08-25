@@ -101,6 +101,7 @@ class CollectorMetadata:
     dependencies: tuple[str, ...] = ()
     default_profiles: tuple[str, ...] = ("standard",)
     timeout_seconds: int = 60
+    maximum_memory_bytes: int = 512 * 1024 * 1024
     maximum_output_bytes: int = 100 * 1024 * 1024
     maximum_artifact_bytes: int | None = None
     maximum_artifact_files: int = 500
@@ -142,6 +143,7 @@ class CollectorMetadata:
             object.__setattr__(self, "maximum_artifact_bytes", self.maximum_output_bytes)
         for name in (
                 "timeout_seconds",
+                "maximum_memory_bytes",
                 "maximum_output_bytes",
                 "maximum_artifact_bytes",
                 "maximum_artifact_files",

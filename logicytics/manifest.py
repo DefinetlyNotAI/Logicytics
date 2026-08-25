@@ -37,6 +37,7 @@ class CollectorRecord:
     event_count: int = 0
     last_progress_at: str | None = None
     heartbeat_at: str | None = None
+    peak_memory_bytes: int = 0
     attempt_count: int = 0
     retry_history: list[dict[str, Any]] = field(default_factory=list)
 

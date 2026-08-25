@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import ctypes
 import importlib.util
 import json
 import multiprocessing
@@ -49,6 +50,7 @@ class _ActiveWorker:
     process: multiprocessing.Process
     started_at: float
     timeout_seconds: int
+    maximum_memory_bytes: int
     workspace: Path
     parallel_safe: bool
     reserved_output_bytes: int
@@ -415,6 +417,7 @@ class RunSupervisor:
                     process,
                     monotonic(),
                     candidate.metadata.timeout_seconds,
+                    candidate.metadata.maximum_memory_bytes,
                     workspace,
                     candidate.metadata.parallel_safe,
                     output_budget,
@@ -452,7 +455,42 @@ class RunSupervisor:
             for collector_id, worker in tuple(active.items()):
                 if self._refresh_worker_progress(records[collector_id], worker):
                     write_manifest(manifest_path, manifest)
-                if monotonic() - worker.started_at > worker.timeout_seconds:
+                memory_bytes = self._worker_memory_bytes(worker.process)
+                if memory_bytes is not None:
+                    records[collector_id].peak_memory_bytes = max(
+                        records[collector_id].peak_memory_bytes,
+                        memory_bytes,
+                    )
+                if memory_bytes is not None and memory_bytes > worker.maximum_memory_bytes:
+                    self._terminate_process_tree(worker.process)
+                    active.pop(collector_id)
+                    self._apply_worker_result(
+                        records[collector_id],
+                        CollectorResult(
+                            CollectorStatus.FAILED,
+                            "collector exceeded its declared memory limit",
+                            errors=(
+                                f"collector working set {memory_bytes} exceeded "
+                                f"maximum_memory_bytes={worker.maximum_memory_bytes}",
+                            ),
+                        ),
+                        worker,
+                    )
+                    artifact_bytes = self._collector_artifact_bytes(artifact_root, collector_id)
+                    committed_output_bytes += artifact_bytes
+                    self._cleanup_worker_temporary_directory(worker)
+                    if not self._schedule_retry(
+                            candidates[collector_id],
+                            records[collector_id],
+                            artifact_bytes,
+                            pending,
+                            retry_not_before,
+                            cancellation_file,
+                            run_logger,
+                    ):
+                        run_logger.event("error", "collector_memory_limit_exceeded", collector_id=collector_id)
+                    write_manifest(manifest_path, manifest)
+                elif monotonic() - worker.started_at > worker.timeout_seconds:
                     self._terminate_process_tree(worker.process)
                     active.pop(collector_id)
                     self._apply_worker_result(
@@ -506,6 +544,50 @@ class RunSupervisor:
                         run_logger.event("error", "collector_exited_without_result", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
             sleep(0.01)
+
+    @staticmethod
+    def _worker_memory_bytes(process: multiprocessing.Process) -> int | None:
+        """Return one worker's resident working set using local OS facilities."""
+        if process.pid is None:
+            return None
+        if os.name == "nt":
+            class ProcessMemoryCounters(ctypes.Structure):
+                _fields_ = [
+                    ("cb", ctypes.c_ulong),
+                    ("PageFaultCount", ctypes.c_ulong),
+                    ("PeakWorkingSetSize", ctypes.c_size_t),
+                    ("WorkingSetSize", ctypes.c_size_t),
+                    ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                    ("PagefileUsage", ctypes.c_size_t),
+                    ("PeakPagefileUsage", ctypes.c_size_t),
+                ]
+
+            handle = ctypes.windll.kernel32.OpenProcess(0x0410, False, process.pid)
+            if not handle:
+                return None
+            try:
+                counters = ProcessMemoryCounters()
+                counters.cb = ctypes.sizeof(counters)
+                if not ctypes.windll.psapi.GetProcessMemoryInfo(
+                        handle,
+                        ctypes.byref(counters),
+                        counters.cb,
+                ):
+                    return None
+                return int(counters.WorkingSetSize)
+            finally:
+                ctypes.windll.kernel32.CloseHandle(handle)
+        status_path = Path(f"/proc/{process.pid}/status")
+        try:
+            for line in status_path.read_text(encoding="ascii").splitlines():
+                if line.startswith("VmRSS:"):
+                    return int(line.split()[1]) * 1024
+        except (OSError, ValueError, IndexError):
+            return None
+        return None
 
     @staticmethod
     def _schedule_retry(

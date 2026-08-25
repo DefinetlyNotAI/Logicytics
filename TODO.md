@@ -318,7 +318,7 @@ Windows platform allows.
       structured event channel, and artifact staging area.
 - [x] Pass only a serializable `CollectorContext`/request payload into the worker;
       do not share mutable engine objects across collectors.
-- [ ] Enforce declared timeout, memory/output limits, file-count limits, and
+- [x] Enforce declared timeout, memory/output limits, file-count limits, and
       cancellation through the supervisor.
 - [ ] Terminate and clean up only the failed collector's process and workspace when
       it crashes, hangs, exceeds limits, or is cancelled.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import tempfile
 import unittest
 import zipfile
@@ -143,6 +144,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             CollectorMetadata(**{**common, "version": "four"})
         with self.assertRaisesRegex(ValueError, "maximum_artifact_files"):
             CollectorMetadata(**{**common, "maximum_artifact_files": 0})
+        with self.assertRaisesRegex(ValueError, "maximum_memory_bytes"):
+            CollectorMetadata(**{**common, "maximum_memory_bytes": True})
         with self.assertRaisesRegex(ValueError, "maximum_artifact_bytes"):
             CollectorMetadata(**{**common, "maximum_artifact_bytes": True})
         with self.assertRaisesRegex(ValueError, "maximum_artifact_bytes"):
@@ -1123,6 +1126,36 @@ class CoreFunctionalityTests(unittest.TestCase):
 
             self.assertEqual("failed", records["core.system.a_timeout"].status)
             self.assertTrue(any("timeout" in error for error in records["core.system.a_timeout"].errors))
+            self.assertEqual("succeeded", records["core.system.z_independent"].status)
+            self.assertEqual("partial", outcome.manifest.status.value)
+
+    @unittest.skipUnless(os.name == "nt", "Windows working-set enforcement test")
+    def test_collector_memory_limit_preserves_independent_worker_results(self) -> None:
+        """A memory-limit violation terminates only the offending isolated worker."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            limited_source = _delayed_collector_source("a_limited", 2.0).replace(
+                '            supported_platforms=("win32",),',
+                '            supported_platforms=("win32",),\n            maximum_memory_bytes=1,',
+            )
+            (core_directory / "a_limited.py").write_text(limited_source, encoding="utf-8")
+            (core_directory / "z_independent.py").write_text(
+                _delayed_collector_source("z_independent", 0.0),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+
+            limited = records["core.system.a_limited"]
+            self.assertEqual("failed", limited.status)
+            self.assertGreater(limited.peak_memory_bytes, 1)
+            self.assertTrue(any("maximum_memory_bytes=1" in error for error in limited.errors))
             self.assertEqual("succeeded", records["core.system.z_independent"].status)
             self.assertEqual("partial", outcome.manifest.status.value)
 
