@@ -29,16 +29,28 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
     profile = "minimal" if getattr(arguments, "minimal", False) else "deep" if getattr(arguments, "depth",
                                                                                        False) else "standard" if getattr(
         arguments, "default_mode", False) or getattr(arguments, "threaded", False) else arguments.profile
+    sequential = getattr(arguments, "sequential", False)
+    parallel = getattr(arguments, "parallel", False)
+    performance_check = getattr(arguments, "performance_check", False)
+    default_mode = getattr(arguments, "default_mode", False)
+    if sequential and arguments.workers is not None and arguments.workers != 1:
+        raise ValueError("sequential execution requires --workers=1")
+    if parallel and (performance_check or default_mode):
+        raise ValueError("parallel execution conflicts with sequential performance/default mode")
+    if sequential and getattr(arguments, "threaded", False):
+        raise ValueError("sequential execution conflicts with legacy --threaded mode")
+    worker_count = 1 if sequential or performance_check or default_mode else arguments.workers or default_workers
+    if parallel and worker_count < 2:
+        raise ValueError("parallel execution requires at least two configured workers")
     return RunRequest(
         profile=profile,
         include=tuple(arguments.include),
         exclude=tuple(arguments.exclude),
         enable_plugins=arguments.plugins,
-        max_workers=1 if getattr(arguments, "performance_check", False) or getattr(arguments, "default_mode",
-                                                                                   False) else arguments.workers or default_workers,
+        max_workers=worker_count,
         acknowledge_authorization=getattr(arguments, "acknowledge_authorization", False),
         approved_capabilities=tuple(Capability(value) for value in arguments.allow_capability),
-        performance_check=getattr(arguments, "performance_check", False),
+        performance_check=performance_check,
     )
 
 
@@ -61,6 +73,17 @@ def _parser() -> argparse.ArgumentParser:
             help="Approve an access capability requested by the selected collectors.",
         )
         if command == "run":
+            execution = subparser.add_mutually_exclusive_group()
+            execution.add_argument(
+                "--sequential",
+                action="store_true",
+                help="Explicitly run isolated collectors one at a time for deterministic debugging.",
+            )
+            execution.add_argument(
+                "--parallel",
+                action="store_true",
+                help="Explicitly run isolated collectors with the configured bounded worker limit.",
+            )
             mode = subparser.add_mutually_exclusive_group()
             mode.add_argument("--default", dest="default_mode", action="store_true",
                               help="Run the standard built-in profile.")

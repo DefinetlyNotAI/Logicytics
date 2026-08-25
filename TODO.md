@@ -450,7 +450,7 @@ Windows platform allows.
 - [x] Preserve deterministic manifest ordering even when collectors finish out of
       order.
 - [x] Define which collectors may run in parallel and which must run serially.
-- [ ] Provide a sequential mode for debugging and a bounded parallel mode for
+- [x] Provide a sequential mode for debugging and a bounded parallel mode for
       normal use; do not make parallelism a hidden behavior of a particular flag.
 
 ### Make configuration and profiles understandable

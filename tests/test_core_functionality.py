@@ -529,6 +529,40 @@ class CoreFunctionalityTests(unittest.TestCase):
         self.assertTrue(request.performance_check)
         self.assertEqual(1, request.max_workers)
 
+    def test_run_parser_exposes_explicit_sequential_and_bounded_parallel_modes(self) -> None:
+        """Execution policy is selectable directly instead of relying on compatibility modes."""
+        parser = _parser()
+        sequential = _request(parser.parse_args(["run", "--sequential"]), default_workers=4)
+        parallel = _request(parser.parse_args(["run", "--parallel"]), default_workers=4)
+        bounded_parallel = _request(
+            parser.parse_args(["run", "--parallel", "--workers", "3"]),
+            default_workers=4,
+        )
+
+        self.assertEqual(1, sequential.max_workers)
+        self.assertEqual(4, parallel.max_workers)
+        self.assertEqual(3, bounded_parallel.max_workers)
+        self.assertEqual("standard", sequential.profile)
+        self.assertEqual("standard", parallel.profile)
+
+    def test_run_parser_rejects_conflicting_explicit_execution_modes(self) -> None:
+        """Contradictory worker policies fail before creating a collection plan."""
+        parser = _parser()
+        conflicts = (
+            (["run", "--sequential", "--workers", "2"], 4, "sequential execution"),
+            (["run", "--sequential", "--threaded"], 4, "legacy --threaded"),
+            (["run", "--parallel", "--performance-check"], 4, "performance/default"),
+            (["run", "--parallel", "--default"], 4, "performance/default"),
+            (["run", "--parallel", "--workers", "1"], 4, "at least two"),
+            (["run", "--parallel"], 1, "at least two"),
+        )
+        for arguments, default_workers, error in conflicts:
+            with self.subTest(arguments=arguments, default_workers=default_workers):
+                with self.assertRaisesRegex(ValueError, error):
+                    _request(parser.parse_args(arguments), default_workers=default_workers)
+        with patch("sys.stderr"), self.assertRaises(SystemExit):
+            parser.parse_args(["run", "--sequential", "--parallel"])
+
     """Validate the foundation before real core collectors are added."""
 
     def test_artifacts_cannot_escape_collector_workspace(self) -> None:
@@ -1359,6 +1393,37 @@ class CoreFunctionalityTests(unittest.TestCase):
 
             self.assertEqual(planned_ids, [record.id for record in outcome.manifest.collectors])
             self.assertLess(records["core.system.z_fast"].finished_at, records["core.system.a_slow"].finished_at)
+
+    def test_explicit_execution_modes_control_isolated_worker_overlap(self) -> None:
+        """First-class CLI policies determine real sequential versus bounded worker overlap."""
+        for execution_mode, expect_overlap in (("--sequential", False), ("--parallel", True)):
+            with self.subTest(execution_mode=execution_mode), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                core_directory = root / "core" / "system"
+                core_directory.mkdir(parents=True)
+                (root / "plugins").mkdir()
+                for filename in ("a_first", "z_second"):
+                    (core_directory / f"{filename}.py").write_text(
+                        _delayed_collector_source(filename, 0.3),
+                        encoding="utf-8",
+                    )
+                arguments = _parser().parse_args(
+                    ["run", execution_mode, "--acknowledge-authorization"]
+                )
+                request = _request(arguments, default_workers=2)
+                report = preflight(root)
+                self.assertEqual((), report.invalid)
+                outcome = RunSupervisor(root, default_config(root)).run(build_plan(report, request))
+                records = {record.id: record for record in outcome.manifest.collectors}
+                first = records["core.system.a_first"]
+                second = records["core.system.z_second"]
+
+                self.assertEqual("succeeded", first.status, first.errors)
+                self.assertEqual("succeeded", second.status, second.errors)
+                if expect_overlap:
+                    self.assertLess(second.started_at, first.finished_at)
+                else:
+                    self.assertLessEqual(first.finished_at, second.started_at)
 
     def test_parallel_unsafe_collector_runs_without_worker_overlap(self) -> None:
         """A collector declaring parallel_safe=False must run alone between bounded workers."""
