@@ -89,7 +89,7 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     if not isinstance(raw, dict):
         raise PlanError("configuration root must be a JSON object")
     schema_version = raw.get("schema_version", SCHEMA_VERSION)
-    if not isinstance(schema_version, int):
+    if not isinstance(schema_version, int) or isinstance(schema_version, bool):
         raise PlanError("configuration schema_version must be an integer")
     if schema_version != SCHEMA_VERSION:
         raise PlanError(f"unsupported configuration schema_version {schema_version}; expected {SCHEMA_VERSION}")
@@ -97,12 +97,19 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     runtime_raw = raw.get("runtime", {})
     if not isinstance(runtime_raw, dict):
         raise PlanError("runtime configuration must be an object")
-    output_root = Path(runtime_raw.get("output_root", project_root / "ACCESS" / "RUNS"))
+    output_root_value = runtime_raw.get("output_root", project_root / "ACCESS" / "RUNS")
+    if not isinstance(output_root_value, (str, Path)) or not str(output_root_value).strip():
+        raise PlanError("runtime output_root must be a non-empty path string")
+    output_root = Path(output_root_value)
     if not output_root.is_absolute():
         output_root = project_root / output_root
     default_workers = runtime_raw.get("default_max_workers", 4)
     maximum_workers = runtime_raw.get("maximum_workers", 16)
-    if not isinstance(default_workers, int) or not isinstance(maximum_workers, int):
+    if not _positive_integer(default_workers, minimum=1, maximum=64) or not _positive_integer(
+            maximum_workers,
+            minimum=1,
+            maximum=64,
+    ):
         raise PlanError("worker limits must be integers")
     if not 1 <= default_workers <= maximum_workers <= 64:
         raise PlanError("worker limits must satisfy 1 <= default <= maximum <= 64")

@@ -248,6 +248,33 @@ class RunRequest:
     acknowledge_authorization: bool = False
     approved_capabilities: tuple[Capability, ...] = ()
 
+    def __post_init__(self) -> None:
+        """Reject malformed selections and execution policy before planning."""
+        if not isinstance(self.profile, str) or not _LABEL.fullmatch(self.profile):
+            raise ValueError("request profile must be a lowercase profile label")
+        for name in ("include", "exclude"):
+            selections = getattr(self, name)
+            if not isinstance(selections, tuple) or not all(
+                    isinstance(collector_id, str) and _COLLECTOR_ID.fullmatch(collector_id)
+                    for collector_id in selections
+            ):
+                raise ValueError(f"request {name} must be a tuple of collector IDs")
+            if len(set(selections)) != len(selections):
+                raise ValueError(f"request {name} must not contain duplicate collector IDs")
+        if set(self.include).intersection(self.exclude):
+            raise ValueError("request include and exclude selections must not overlap")
+        for name in ("enable_plugins", "acknowledge_authorization"):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f"request {name} must be boolean")
+        if not isinstance(self.max_workers, int) or isinstance(self.max_workers, bool) or not 1 <= self.max_workers <= 64:
+            raise ValueError("request max_workers must be an integer from 1 to 64")
+        if not isinstance(self.approved_capabilities, tuple) or not all(
+                isinstance(capability, Capability) for capability in self.approved_capabilities
+        ):
+            raise ValueError("request approved_capabilities must be a tuple of Capability values")
+        if len(set(self.approved_capabilities)) != len(self.approved_capabilities):
+            raise ValueError("request approved_capabilities must not contain duplicates")
+
 
 class EventLogger(ABC):
     """A structured event sink scoped to one run or collector worker."""

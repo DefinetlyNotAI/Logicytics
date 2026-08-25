@@ -211,6 +211,69 @@ class CoreFunctionalityTests(unittest.TestCase):
             with self.assertRaisesRegex(PlanError, "package_completed_runs"):
                 load_config(root)
 
+    def test_configuration_rejects_boolean_workers_and_invalid_output_roots(self) -> None:
+        """Runtime worker limits and output locations must retain strict JSON types."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config_path = root / "logicytics.json"
+            invalid_configurations = (
+                ('{"schema_version":true}', "schema_version"),
+                ('{"schema_version":4,"runtime":{"default_max_workers":true}}', "worker limits"),
+                ('{"schema_version":4,"runtime":{"maximum_workers":true}}', "worker limits"),
+                ('{"schema_version":4,"runtime":{"output_root":false}}', "output_root"),
+                ('{"schema_version":4,"runtime":{"output_root":"   "}}', "output_root"),
+            )
+            for payload, message in invalid_configurations:
+                with self.subTest(payload=payload):
+                    config_path.write_text(payload, encoding="utf-8")
+                    with self.assertRaisesRegex(PlanError, message):
+                        load_config(root)
+
+    def test_run_request_rejects_invalid_selection_and_execution_policy(self) -> None:
+        """Run requests must be immutable, typed declarations before a plan exists."""
+        collector_id = "core.system.system_info"
+        invalid_requests = (
+            ({"profile": "Standard"}, "profile"),
+            ({"include": [collector_id]}, "include"),
+            ({"include": ("../system",)}, "include"),
+            ({"include": (collector_id, collector_id)}, "include"),
+            ({"include": (collector_id,), "exclude": (collector_id,)}, "overlap"),
+            ({"enable_plugins": 1}, "enable_plugins"),
+            ({"acknowledge_authorization": 1}, "acknowledge_authorization"),
+            ({"max_workers": True}, "max_workers"),
+            ({"max_workers": 65}, "max_workers"),
+            ({"approved_capabilities": ("filesystem_read",)}, "approved_capabilities"),
+            (
+                {"approved_capabilities": (Capability.FILESYSTEM_READ, Capability.FILESYSTEM_READ)},
+                "approved_capabilities",
+            ),
+        )
+        for options, message in invalid_requests:
+            with self.subTest(options=options):
+                with self.assertRaisesRegex(ValueError, message):
+                    RunRequest(**options)
+
+    def test_configured_worker_limit_blocks_oversized_run_before_workspace_creation(self) -> None:
+        """The configured maximum worker count bounds a run before any collector starts."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            config_path = root / "logicytics.json"
+            config_path.write_text(
+                '{"schema_version":4,"runtime":{"default_max_workers":1,"maximum_workers":2}}',
+                encoding="utf-8",
+            )
+            configuration = load_config(root)
+            self.assertEqual(1, configuration.runtime.default_max_workers)
+            self.assertEqual(2, configuration.runtime.maximum_workers)
+            plan = build_plan(preflight(root), RunRequest(max_workers=3, acknowledge_authorization=True))
+            with self.assertRaisesRegex(ValueError, "maximum_workers"):
+                RunSupervisor(root, configuration).run(plan)
+            self.assertFalse(configuration.runtime.output_root.exists())
+
     def test_configuration_validates_bounded_network_and_packet_settings(self) -> None:
         """Collector-specific settings fail early rather than being silently coerced at runtime."""
         with tempfile.TemporaryDirectory() as temporary:

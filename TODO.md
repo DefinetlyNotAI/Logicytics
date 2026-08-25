@@ -574,7 +574,7 @@ Windows platform allows.
 - [ ] Support `.py`, `.ps1`, `.exe`, and `.bat` collector types.
 - [ ] Exclude engine/library directories and underscore-prefixed helper files from
       automatic collector discovery.
-- [ ] Support a configurable worker limit for parallel collection.
+- [x] Support a configurable worker limit for parallel collection.
 - [ ] Provide per-collector success, failure, and duration information.
 
 ### Execution modes
