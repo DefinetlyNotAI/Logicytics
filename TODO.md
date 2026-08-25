@@ -422,7 +422,7 @@ Windows platform allows.
 - [x] Mark collectors that may copy credentials, private keys, personal files,
       browser data, or packet contents as sensitive and make them opt-in for the
       default profile.
-- [ ] Add per-collector timeouts, retry policies, maximum output size, maximum file
+- [x] Add per-collector timeouts, retry policies, maximum output size, maximum file
       size, maximum file count, and maximum total run size.
 - [ ] Add cancellation checks inside long filesystem walks, packet capture,
       memory collection, event-log queries, and copy loops.

@@ -29,6 +29,7 @@ def _summary(manifest: RunManifest) -> str:
             [
                 f"- {record.id}",
                 f"  Status: {record.status}",
+                f"  Attempts: {record.attempt_count}",
                 f"  Started: {record.started_at or 'not started'}",
                 f"  Finished: {record.finished_at or 'not finished'}",
                 f"  Summary: {record.summary or 'none'}",

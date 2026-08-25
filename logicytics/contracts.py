@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from math import isfinite
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
@@ -103,6 +104,8 @@ class CollectorMetadata:
     maximum_output_bytes: int = 100 * 1024 * 1024
     maximum_artifact_bytes: int | None = None
     maximum_artifact_files: int = 500
+    maximum_retries: int = 0
+    retry_delay_seconds: float = 0.0
     minimum_contract_version: str = CONTRACT_VERSION
     parallel_safe: bool = True
 
@@ -148,6 +151,15 @@ class CollectorMetadata:
                 raise ValueError(f"metadata {name} must be a positive integer")
         if self.maximum_artifact_bytes > self.maximum_output_bytes:
             raise ValueError("metadata maximum_artifact_bytes must not exceed maximum_output_bytes")
+        if not isinstance(self.maximum_retries, int) or isinstance(self.maximum_retries, bool) or not (
+                0 <= self.maximum_retries <= 3
+        ):
+            raise ValueError("metadata maximum_retries must be an integer from 0 to 3")
+        if not isinstance(self.retry_delay_seconds, (int, float)) or isinstance(
+                self.retry_delay_seconds,
+                bool,
+        ) or not isfinite(self.retry_delay_seconds) or not 0 <= self.retry_delay_seconds <= 30:
+            raise ValueError("metadata retry_delay_seconds must be a number from 0 to 30")
         if not isinstance(self.parallel_safe, bool):
             raise ValueError("metadata parallel_safe must be boolean")
 

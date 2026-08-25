@@ -149,6 +149,14 @@ class CoreFunctionalityTests(unittest.TestCase):
             CollectorMetadata(**{**common, "maximum_output_bytes": 8, "maximum_artifact_bytes": 9})
         with self.assertRaisesRegex(ValueError, "sensitive collectors"):
             CollectorMetadata(**{**common, "sensitive_data_categories": ("credentials",)})
+        for retries in (-1, 4, True):
+            with self.subTest(maximum_retries=retries):
+                with self.assertRaisesRegex(ValueError, "maximum_retries"):
+                    CollectorMetadata(**{**common, "maximum_retries": retries})
+        for retry_delay in (-1, 31, True, float("inf")):
+            with self.subTest(retry_delay_seconds=retry_delay):
+                with self.assertRaisesRegex(ValueError, "retry_delay_seconds"):
+                    CollectorMetadata(**{**common, "retry_delay_seconds": retry_delay})
         metadata = CollectorMetadata(**{**common, "maximum_output_bytes": 8})
         self.assertEqual(8, metadata.maximum_artifact_bytes)
 
@@ -996,6 +1004,127 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertIn("RuntimeError", summary)
             self.assertIn(f"Started: {record.started_at}", summary)
             self.assertIn(f"Finished: {record.finished_at}", summary)
+
+    def test_transient_collector_failure_retries_in_a_new_isolated_worker(self) -> None:
+        """An explicitly retryable collector may recover before any evidence is registered."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n'
+                    '            maximum_retries=1,\n'
+                    '            retry_delay_seconds=0.01,',
+                ).replace(
+                    '        output = context.workspace / "system.txt"',
+                    '        marker = context.workspace / "attempt.marker"\n'
+                    '        if not marker.exists():\n'
+                    '            marker.write_text("first attempt failed", encoding="utf-8")\n'
+                    '            raise RuntimeError("temporary collector failure")\n'
+                    '        output = context.workspace / "system.txt"',
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+
+            record = outcome.manifest.collectors[0]
+            self.assertEqual("succeeded", record.status, record.errors)
+            self.assertEqual(2, record.attempt_count)
+            self.assertEqual(1, len(record.retry_history))
+            self.assertTrue(
+                any("temporary collector failure" in error for error in record.retry_history[0]["errors"])
+            )
+            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                packaged_record = json.loads(archive.read("manifest.json"))["collectors"][0]
+                summary = archive.read("summary.txt").decode("utf-8")
+            self.assertEqual(2, packaged_record["attempt_count"])
+            self.assertEqual(1, len(packaged_record["retry_history"]))
+            self.assertIn("Attempts: 2", summary)
+
+    def test_retry_policy_stops_after_declared_attempt_limit(self) -> None:
+        """A repeatedly failing collector may not exceed its explicitly declared retry cap."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n            maximum_retries=1,',
+                ).replace(
+                    '        output = context.workspace / "system.txt"',
+                    '        raise RuntimeError("persistent collector failure")',
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            record = outcome.manifest.collectors[0]
+
+            self.assertEqual("failed", record.status)
+            self.assertEqual(2, record.attempt_count)
+            self.assertEqual(1, len(record.retry_history))
+            self.assertTrue(any("persistent collector failure" in error for error in record.errors))
+
+    def test_failed_collector_with_registered_evidence_is_never_retried(self) -> None:
+        """Evidence-producing failures must not be repeated or overwrite forensic state."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n            maximum_retries=2,',
+                ).replace(
+                    '        return CollectorResult.succeeded("test artifact created", (artifact,))',
+                    '        raise RuntimeError("failure after evidence registration")',
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            record = outcome.manifest.collectors[0]
+
+            self.assertEqual("failed", record.status)
+            self.assertEqual(1, record.attempt_count)
+            self.assertEqual([], record.retry_history)
+            self.assertTrue((outcome.run_directory / "artifacts" / "core_system_system_info" / "system.txt").is_file())
+
+    def test_collector_timeout_preserves_independent_worker_results(self) -> None:
+        """A timed-out worker is terminated without cancelling unrelated collection."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            timeout_source = _delayed_collector_source("a_timeout", 2.0).replace(
+                '            supported_platforms=("win32",),',
+                '            supported_platforms=("win32",),\n            timeout_seconds=1,',
+            )
+            (core_directory / "a_timeout.py").write_text(timeout_source, encoding="utf-8")
+            (core_directory / "z_independent.py").write_text(
+                _delayed_collector_source("z_independent", 0.0),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+
+            self.assertEqual("failed", records["core.system.a_timeout"].status)
+            self.assertTrue(any("timeout" in error for error in records["core.system.a_timeout"].errors))
+            self.assertEqual("succeeded", records["core.system.z_independent"].status)
+            self.assertEqual("partial", outcome.manifest.status.value)
 
     def test_cancelled_run_writes_a_recoverable_package_and_manifest(self) -> None:
         """Keyboard cancellation must affect only this run and preserve its partial report."""

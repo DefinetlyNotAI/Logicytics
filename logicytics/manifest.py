@@ -37,6 +37,8 @@ class CollectorRecord:
     event_count: int = 0
     last_progress_at: str | None = None
     heartbeat_at: str | None = None
+    attempt_count: int = 0
+    retry_history: list[dict[str, Any]] = field(default_factory=list)
 
     def apply_result(self, result: CollectorResult, duration_seconds: float | None = None) -> None:
         """Copy a worker result into this serializable record."""

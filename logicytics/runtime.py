@@ -27,8 +27,9 @@ from logicytics.contracts import (
     RunStatus,
     ValidationResult,
 )
+from logicytics.discovery import CollectorCandidate
 from logicytics.logging import FileEventLogger
-from logicytics.manifest import RunManifest, write_manifest, utc_now
+from logicytics.manifest import CollectorRecord, RunManifest, write_manifest, utc_now
 from logicytics.packaging import package_manifest
 from logicytics.planner import RunPlan
 
@@ -295,12 +296,18 @@ class RunSupervisor:
             cancellation_file: Path,
             manifest: RunManifest,
             manifest_path: Path,
-            records: dict[str, object],
+            records: dict[str, CollectorRecord],
             run_logger: FileEventLogger,
     ) -> None:
         """Schedule bounded isolated workers and contain each terminal failure."""
         pending = list(plan.collectors)
+        candidates = {
+            candidate.metadata.id: candidate
+            for candidate in plan.collectors
+            if candidate.metadata is not None
+        }
         active: dict[str, _ActiveWorker] = {}
+        retry_not_before: dict[str, float] = {}
         self._active_workers = active
         result_queue: multiprocessing.Queue = multiprocessing.get_context("spawn").Queue()
         worker_limit = min(plan.request.max_workers, self.configuration.runtime.maximum_workers)
@@ -319,6 +326,8 @@ class RunSupervisor:
                     break
                 candidate = pending[0]
                 assert candidate.metadata is not None
+                if monotonic() < retry_not_before.get(candidate.metadata.id, 0):
+                    break
                 dependency_states = {
                     dependency: records[dependency].status
                     for dependency in candidate.metadata.dependencies
@@ -378,6 +387,7 @@ class RunSupervisor:
                     continue
                 output_budget = min(candidate.metadata.maximum_output_bytes, remaining_output_bytes)
                 pending.pop(0)
+                retry_not_before.pop(candidate.metadata.id, None)
                 workspace = workspace_root / candidate.metadata.id.replace(".", "_")
                 payload: dict[str, object] = {
                     "run_id": run_id,
@@ -398,6 +408,7 @@ class RunSupervisor:
                 records[candidate.metadata.id].status = "running"
                 records[candidate.metadata.id].started_at = utc_now()
                 records[candidate.metadata.id].heartbeat_at = utc_now()
+                records[candidate.metadata.id].attempt_count += 1
                 process.start()
                 active[candidate.metadata.id] = _ActiveWorker(
                     candidate.metadata.id,
@@ -423,9 +434,19 @@ class RunSupervisor:
                 if worker is not None:
                     worker.process.join(timeout=1)
                     self._apply_worker_result(records[collector_id], _result_from_dict(message["result"]), worker)
-                    committed_output_bytes += self._collector_artifact_bytes(artifact_root, collector_id)
+                    artifact_bytes = self._collector_artifact_bytes(artifact_root, collector_id)
+                    committed_output_bytes += artifact_bytes
                     self._cleanup_worker_temporary_directory(worker)
-                    run_logger.event("info", "collector_finished", collector_id=collector_id)
+                    if not self._schedule_retry(
+                            candidates[collector_id],
+                            records[collector_id],
+                            artifact_bytes,
+                            pending,
+                            retry_not_before,
+                            cancellation_file,
+                            run_logger,
+                    ):
+                        run_logger.event("info", "collector_finished", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
 
             for collector_id, worker in tuple(active.items()):
@@ -436,12 +457,26 @@ class RunSupervisor:
                     active.pop(collector_id)
                     self._apply_worker_result(
                         records[collector_id],
-                        CollectorResult(CollectorStatus.FAILED, "collector exceeded its declared timeout"),
+                        CollectorResult(
+                            CollectorStatus.FAILED,
+                            "collector exceeded its declared timeout",
+                            errors=(f"collector exceeded its {worker.timeout_seconds}-second timeout",),
+                        ),
                         worker,
                     )
-                    committed_output_bytes += self._collector_artifact_bytes(artifact_root, collector_id)
+                    artifact_bytes = self._collector_artifact_bytes(artifact_root, collector_id)
+                    committed_output_bytes += artifact_bytes
                     self._cleanup_worker_temporary_directory(worker)
-                    run_logger.event("error", "collector_timed_out", collector_id=collector_id)
+                    if not self._schedule_retry(
+                            candidates[collector_id],
+                            records[collector_id],
+                            artifact_bytes,
+                            pending,
+                            retry_not_before,
+                            cancellation_file,
+                            run_logger,
+                    ):
+                        run_logger.event("error", "collector_timed_out", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
                 elif not worker.process.is_alive():
                     worker.process.join(timeout=1)
@@ -456,11 +491,68 @@ class RunSupervisor:
                         CollectorResult(CollectorStatus.FAILED, "collector exited without a result"),
                         worker,
                     )
-                    committed_output_bytes += self._collector_artifact_bytes(artifact_root, collector_id)
+                    artifact_bytes = self._collector_artifact_bytes(artifact_root, collector_id)
+                    committed_output_bytes += artifact_bytes
                     self._cleanup_worker_temporary_directory(worker)
-                    run_logger.event("error", "collector_exited_without_result", collector_id=collector_id)
+                    if not self._schedule_retry(
+                            candidates[collector_id],
+                            records[collector_id],
+                            artifact_bytes,
+                            pending,
+                            retry_not_before,
+                            cancellation_file,
+                            run_logger,
+                    ):
+                        run_logger.event("error", "collector_exited_without_result", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
             sleep(0.01)
+
+    @staticmethod
+    def _schedule_retry(
+            candidate: CollectorCandidate,
+            record: CollectorRecord,
+            artifact_bytes: int,
+            pending: list[CollectorCandidate],
+            retry_not_before: dict[str, float],
+            cancellation_file: Path,
+            run_logger: FileEventLogger,
+    ) -> bool:
+        """Retry only explicitly permitted failed attempts that produced no evidence."""
+        assert candidate.metadata is not None
+        if (
+                record.status != CollectorStatus.FAILED.value
+                or record.attempt_count > candidate.metadata.maximum_retries
+                or artifact_bytes != 0
+                or cancellation_file.exists()
+        ):
+            return False
+        record.retry_history.append(
+            {
+                "attempt": record.attempt_count,
+                "status": record.status,
+                "started_at": record.started_at,
+                "finished_at": record.finished_at,
+                "summary": record.summary,
+                "errors": list(record.errors),
+                "duration_seconds": record.duration_seconds,
+            }
+        )
+        record.status = "retry_pending"
+        record.summary = "collector retry scheduled"
+        record.errors = []
+        record.artifacts = []
+        record.started_at = None
+        record.finished_at = None
+        record.duration_seconds = None
+        retry_not_before[record.id] = monotonic() + candidate.metadata.retry_delay_seconds
+        pending.insert(0, candidate)
+        run_logger.event(
+            "warning",
+            "collector_retry_scheduled",
+            collector_id=record.id,
+            attempt=record.attempt_count + 1,
+        )
+        return True
 
     @staticmethod
     def _collector_artifact_bytes(artifact_root: Path, collector_id: str) -> int:
