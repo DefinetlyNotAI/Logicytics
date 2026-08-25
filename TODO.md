@@ -292,7 +292,7 @@ that fails any mandatory rule is not a collector and must not be launched.
 - [x] Instantiate the class only after static validation succeeds.
 - [ ] Validate metadata, dependencies, supported platform, requested capabilities,
       output declarations, timeout, and size limits at runtime.
-- [ ] Run a no-op contract probe against `validate()` and reject unexpected side
+- [x] Run a no-op contract probe against `validate()` and reject unexpected side
       effects, hangs, exceptions, or malformed return values.
 - [ ] Produce a preflight report listing valid, quarantined, and invalid collectors,
       with exact file/line/rule failures.

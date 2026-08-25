@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import inspect
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -39,6 +40,60 @@ class _ProbeArtifactWriter:
     ):
         """Prevent a validation method from registering collection artifacts."""
         raise RuntimeError("validate() must not register artifacts")
+
+
+class _ValidationSideEffectGuard:
+    """Reject audited mutations only while a collector validation method is active."""
+
+    _BLOCKED_EVENTS = {
+        "os.chmod",
+        "os.chown",
+        "os.link",
+        "os.mkdir",
+        "os.putenv",
+        "os.remove",
+        "os.rename",
+        "os.rmdir",
+        "os.symlink",
+        "os.truncate",
+        "os.unsetenv",
+        "socket.__new__",
+        "socket.bind",
+        "socket.connect",
+        "socket.sendto",
+        "subprocess.Popen",
+        "winreg.CreateKey",
+        "winreg.DeleteKey",
+        "winreg.DeleteValue",
+        "winreg.SetValue",
+    }
+
+    def __init__(self) -> None:
+        self.active = False
+
+    def __enter__(self) -> "_ValidationSideEffectGuard":
+        sys.addaudithook(self._reject_side_effect)
+        self.active = True
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.active = False
+
+    def _reject_side_effect(self, event: str, arguments: tuple[object, ...]) -> None:
+        if not self.active:
+            return
+        if event == "open":
+            mode = arguments[1] if len(arguments) > 1 else None
+            flags = arguments[2] if len(arguments) > 2 else 0
+            writing = isinstance(mode, str) and any(flag in mode for flag in "wax+")
+            writing = writing or isinstance(flags, int) and bool(
+                flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND)
+            )
+            if not writing:
+                return
+        elif event not in self._BLOCKED_EVENTS:
+            return
+        raise RuntimeError(f"validate() must not perform side effects: {event}")
 
 
 def _load_module(path: Path):
@@ -98,7 +153,8 @@ def _validate_contract(collector_type: type[Collector], kind: CollectorKind) -> 
             cancellation_file=workspace / "cancelled",
         )
         try:
-            validation = collector.validate(context)
+            with _ValidationSideEffectGuard():
+                validation = collector.validate(context)
         except Exception as error:
             raise ValueError(f"validate() probe failed: {error}") from error
     if not isinstance(validation, ValidationResult):

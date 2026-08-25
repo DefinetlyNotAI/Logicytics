@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -1704,6 +1705,81 @@ class CoreFunctionalityTests(unittest.TestCase):
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
             self.assertIn("validate() must return ValidationResult", report.invalid[0].runtime_error or "")
+
+    def test_preflight_rejects_validation_filesystem_process_network_and_environment_side_effects(self) -> None:
+        """No validation probe may mutate files, launch processes, open sockets, or alter its environment."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            outside = root / "outside.marker"
+            source = _COLLECTOR.replace(
+                "from pathlib import Path\n",
+                "from pathlib import Path\nimport os\nimport socket\nimport subprocess\n",
+            )
+            attempts = (
+                (f"Path({str(outside)!r}).write_text('unexpected', encoding='utf-8')", "open"),
+                ("(context.workspace / 'unexpected').mkdir()", "os.mkdir"),
+                ("subprocess.run(['python', '-c', 'pass'], check=False)", "subprocess.Popen"),
+                ("socket.socket()", "socket.__new__"),
+                ("os.environ['LOGICYTICS_PROBE_MUTATION'] = 'unexpected'", "os.putenv"),
+            )
+            for statement, event in attempts:
+                with self.subTest(event=event):
+                    collector_path.write_text(
+                        source.replace(
+                            "        return ValidationResult(True)",
+                            f"        {statement}\n        return ValidationResult(True)",
+                        ),
+                        encoding="utf-8",
+                    )
+                    report = preflight(root)
+                    self.assertEqual(1, len(report.invalid))
+                    self.assertIn("validate() must not perform side effects", report.invalid[0].runtime_error or "")
+                    self.assertIn(event, report.invalid[0].runtime_error or "")
+            self.assertFalse(outside.exists())
+
+    def test_preflight_rejects_validation_artifact_registration_and_exceptions(self) -> None:
+        """Artifact registration and ordinary validation exceptions block collection."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            attempts = (
+                ("context.artifacts.register_file(context.workspace / 'evidence.txt')", "must not register artifacts"),
+                ("raise RuntimeError('unexpected validation failure')", "unexpected validation failure"),
+            )
+            for statement, message in attempts:
+                with self.subTest(message=message):
+                    collector_path.write_text(
+                        _COLLECTOR.replace(
+                            "        return ValidationResult(True)",
+                            f"        {statement}\n        return ValidationResult(True)",
+                        ),
+                        encoding="utf-8",
+                    )
+                    report = preflight(root)
+                    self.assertEqual(1, len(report.invalid))
+                    self.assertIn(message, report.invalid[0].runtime_error or "")
+
+    def test_preflight_rejects_a_hanging_validation_worker(self) -> None:
+        """A timed-out validation subprocess must quarantine its collector before launch."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            with patch(
+                    "logicytics.discovery.subprocess.run",
+                    side_effect=subprocess.TimeoutExpired(["validation-worker"], timeout=10),
+            ):
+                report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn("validation worker failed", report.invalid[0].runtime_error or "")
+            self.assertIn("timed out", report.invalid[0].runtime_error or "")
 
     def test_preflight_rejects_collector_print_calls(self) -> None:
         """Collectors must emit structured events rather than write directly to stdout."""
