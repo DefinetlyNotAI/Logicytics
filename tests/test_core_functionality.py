@@ -34,7 +34,7 @@ from logicytics.contracts import (
     RunRequest,
     Specialty,
 )
-from logicytics.discovery import preflight
+from logicytics.discovery import PreflightReport, preflight
 from logicytics.environment import EnvironmentReport
 from logicytics.errors import ArtifactError, PlanError, PreflightError
 from logicytics.packaging import package_run
@@ -1025,6 +1025,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("succeeded", persisted_states[-1])
             self.assertEqual("succeeded", outcome.manifest.status.value)
             self.assertEqual(("core.system.system_info",), outcome.manifest.resolved_plan)
+            self.assertEqual(plan.fingerprint, outcome.manifest.plan_fingerprint)
+            self.assertEqual(64, len(plan.fingerprint))
             self.assertFalse(outcome.manifest.cancellation_requested)
             self.assertEqual([], outcome.manifest.errors)
             self.assertEqual([], outcome.manifest.skipped_collectors)
@@ -1065,6 +1067,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 self.assertEqual(("copied into run artifact store",), artifact.transformations)
                 packaged_manifest = json.loads(archive.read("manifest.json"))
                 self.assertEqual(["core.system.system_info"], packaged_manifest["resolved_plan"])
+                self.assertEqual(plan.fingerprint, packaged_manifest["plan_fingerprint"])
                 self.assertFalse(packaged_manifest["cancellation_requested"])
                 self.assertEqual([], packaged_manifest["errors"])
                 self.assertEqual([], packaged_manifest["skipped_collectors"])
@@ -1077,6 +1080,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 self.assertIn(f"Status: {record.status}", summary)
                 self.assertIn("Cancellation requested: false", summary)
                 self.assertIn("Resolved collectors: 1", summary)
+                self.assertIn(f"Plan fingerprint: {plan.fingerprint}", summary)
                 self.assertIn(f"Started: {record.started_at}", summary)
                 self.assertIn(f"Finished: {record.finished_at}", summary)
 
@@ -1784,6 +1788,97 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertIsNotNone(dependency.finished_at)
             self.assertIsNotNone(dependent.started_at)
             self.assertLessEqual(dependency.finished_at, dependent.started_at)
+
+    def test_dependency_closure_and_plan_fingerprint_are_deterministic(self) -> None:
+        """Diamond dependencies resolve once and hash identically regardless of discovery order."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            dependencies = {
+                "a_root": (),
+                "b_left": ("core.system.a_root",),
+                "c_right": ("core.system.a_root",),
+                "z_target": ("core.system.c_right", "core.system.b_left"),
+            }
+            for filename, required in dependencies.items():
+                (core_directory / f"{filename}.py").write_text(
+                    _delayed_collector_source(filename, 0.0, dependencies=required),
+                    encoding="utf-8",
+                )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            request = RunRequest(
+                include=("core.system.z_target",),
+                rerun_from="run-" + "a" * 32,
+                acknowledge_authorization=True,
+            )
+            first = build_plan(report, request)
+            reversed_plan = build_plan(PreflightReport(tuple(reversed(report.candidates))), request)
+            expected = (
+                "core.system.a_root",
+                "core.system.b_left",
+                "core.system.c_right",
+                "core.system.z_target",
+            )
+
+            self.assertEqual(expected, tuple(candidate.metadata.id for candidate in first.collectors))
+            self.assertEqual(expected, tuple(candidate.metadata.id for candidate in reversed_plan.collectors))
+            self.assertEqual(first.fingerprint, reversed_plan.fingerprint)
+            self.assertEqual(64, len(first.fingerprint))
+
+    def test_planner_rejects_excluded_missing_and_sensitive_dependency_conflicts(self) -> None:
+        """Dependency expansion cannot override explicit exclusions or sensitive opt-in boundaries."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            dependency_id = "core.system.a_dependency"
+            target_id = "core.system.z_target"
+            (core_directory / "a_dependency.py").write_text(
+                _delayed_collector_source("a_dependency", 0.0),
+                encoding="utf-8",
+            )
+            (core_directory / "z_target.py").write_text(
+                _delayed_collector_source("z_target", 0.0, dependencies=(dependency_id,)),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(PlanError, "explicitly excluded"):
+                build_plan(preflight(root), RunRequest(include=(target_id,), exclude=(dependency_id,)))
+            sensitive_source = _delayed_collector_source("a_dependency", 0.0).replace(
+                "from logicytics import CollectorMetadata,",
+                "from logicytics import Capability, CollectorMetadata,",
+            ).replace(
+                '            supported_platforms=("win32",),',
+                '            supported_platforms=("win32",),\n'
+                '            capabilities=(Capability.SENSITIVE_FILES,),\n'
+                '            sensitive_data_categories=("credentials",),\n'
+                '            default_profiles=("deep",),',
+            )
+            (core_directory / "a_dependency.py").write_text(sensitive_source, encoding="utf-8")
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            with self.assertRaisesRegex(PlanError, "sensitive dependency"):
+                build_plan(report, RunRequest(include=(target_id,), approved_capabilities=(Capability.SENSITIVE_FILES,)))
+            approved = build_plan(
+                report,
+                RunRequest(
+                    include=(target_id, dependency_id),
+                    approved_capabilities=(Capability.SENSITIVE_FILES,),
+                ),
+            )
+            self.assertEqual([dependency_id, target_id], [candidate.metadata.id for candidate in approved.collectors])
+            (core_directory / "a_dependency.py").unlink()
+            with self.assertRaisesRegex(PlanError, "unavailable collector"):
+                build_plan(preflight(root), RunRequest(include=(target_id,)))
+            (core_directory / "a_dependency.py").write_text(
+                _delayed_collector_source("a_dependency", 0.0, dependencies=(target_id,)),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(PlanError, "dependency cycle"):
+                build_plan(preflight(root), RunRequest(include=(target_id,)))
 
     def test_failed_dependency_skips_dependent_without_launching_it(self) -> None:
         """A failed prerequisite must contain failure and prevent dependent execution."""
@@ -2507,6 +2602,25 @@ class CoreFunctionalityTests(unittest.TestCase):
                 ["core.system.system_info"],
                 [candidate.metadata.id for candidate in plan.collectors],
             )
+
+    def test_invalid_selected_folder_or_enabled_plugin_blocks_planning(self) -> None:
+        """Folder-owned invalid plugins fail closed by logical ID and explicit enablement."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_path = root / "core" / "system" / "system_info.py"
+            core_path.parent.mkdir(parents=True)
+            core_path.write_text(_COLLECTOR, encoding="utf-8")
+            plugin_path = root / "plugins" / "broken_folder" / "main.py"
+            plugin_path.parent.mkdir(parents=True)
+            plugin_path.write_text('"""Invalid folder-owned plugin collector."""\n', encoding="utf-8")
+            report = preflight(root)
+
+            self.assertEqual("plugin.broken_folder", report.invalid[0].selection_id)
+            build_plan(report, RunRequest())
+            with self.assertRaises(PreflightError):
+                build_plan(report, RunRequest(include=("plugin.broken_folder",)))
+            with self.assertRaises(PreflightError):
+                build_plan(report, RunRequest(enable_plugins=True))
 
     def test_preflight_cli_reports_quarantine_and_blocks_selected_invalid_plugins(self) -> None:
         """The public preflight report exposes actionable diagnostics and fail-closed selection."""

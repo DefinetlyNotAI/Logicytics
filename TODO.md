@@ -359,7 +359,7 @@ Windows platform allows.
       paths owned by the run context.
 - [ ] Replace `print`, `exit`, and process-level shutdowns inside collectors with
       typed results and typed errors returned to the orchestrator.
-- [ ] Replace one giant execution-list algorithm with a planner that resolves
+- [x] Replace one giant execution-list algorithm with a planner that resolves
       collector dependencies, removes duplicates, validates conflicts, and emits a
       reproducible execution plan before any collection begins.
 - [ ] Replace mode names that imply implementation details with user-facing
@@ -395,7 +395,7 @@ Windows platform allows.
       successful or being silently discarded.
 - [x] Make reruns selectable by collector ID and keep rerun artifacts separate from
       the original run.
-- [ ] Make the run plan deterministic: the same request and configuration produce
+- [x] Make the run plan deterministic: the same request and configuration produce
       the same collector set and dependency order.
 
 ### Separate responsibilities into layers

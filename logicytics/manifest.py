@@ -118,6 +118,7 @@ class RunManifest:
     collectors: list[CollectorRecord]
     host: Mapping[str, str]
     resolved_plan: tuple[str, ...] = ()
+    plan_fingerprint: str | None = None
     engine_version: str = CONTRACT_VERSION
     action: str = "run"
     parent_run_id: str | None = None
@@ -137,6 +138,7 @@ class RunManifest:
             collector_sources: list[tuple[str, Path]],
             *,
             parent_run_id: str | None = None,
+            plan_fingerprint: str | None = None,
     ) -> "RunManifest":
         """Create the initial planned manifest before collection begins."""
         return cls(
@@ -148,6 +150,7 @@ class RunManifest:
             collectors=[CollectorRecord(id=collector_id, source=str(source)) for collector_id, source in
                         collector_sources],
             resolved_plan=tuple(collector_id for collector_id, _ in collector_sources),
+            plan_fingerprint=plan_fingerprint,
             action="rerun" if parent_run_id is not None else "run",
             parent_run_id=parent_run_id,
             host={

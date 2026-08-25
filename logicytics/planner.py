@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import sys
+import hashlib
+import json
+from dataclasses import asdict
 from dataclasses import dataclass
 
 from logicytics.contracts import Capability, CollectorKind, RunRequest
@@ -17,6 +20,17 @@ class RunPlan:
 
     request: RunRequest
     collectors: tuple[CollectorCandidate, ...]
+    fingerprint: str
+
+
+def _fingerprint(request: RunRequest, collectors: tuple[CollectorCandidate, ...]) -> str:
+    """Hash the immutable request and resolved metadata order into reproducibility evidence."""
+    payload = {
+        "request": asdict(request),
+        "collectors": [candidate.metadata.to_dict() for candidate in collectors if candidate.metadata is not None],
+    }
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def _selected_by_request(candidate: CollectorCandidate, request: RunRequest) -> bool:
@@ -64,11 +78,12 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
     if request.max_workers < 1:
         raise PlanError("max_workers must be positive")
     valid = {candidate.metadata.id: candidate for candidate in report.valid if candidate.metadata is not None}
-    requested_names = {collector_id.rsplit(".", 1)[-1] for collector_id in request.include}
     invalid_selected = [
         candidate
         for candidate in report.invalid
-        if candidate.kind is CollectorKind.CORE or candidate.path.stem in requested_names
+        if candidate.kind is CollectorKind.CORE
+        or candidate.selection_id in request.include
+        or (request.enable_plugins and candidate.kind is CollectorKind.PLUGIN)
     ]
     if invalid_selected:
         details = "; ".join(
@@ -84,6 +99,27 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
         for collector_id, candidate in valid.items()
         if _selected_by_request(candidate, request)
     }
+    pending_dependencies = list(selected)
+    while pending_dependencies:
+        collector_id = pending_dependencies.pop()
+        candidate = selected[collector_id]
+        assert candidate.metadata is not None
+        for dependency_id in candidate.metadata.dependencies:
+            if dependency_id in request.exclude:
+                raise PlanError(f"selected collector {collector_id} depends on explicitly excluded {dependency_id}")
+            dependency = valid.get(dependency_id)
+            if dependency is None:
+                raise PlanError(f"selected collector {collector_id} depends on unavailable collector {dependency_id}")
+            assert dependency.metadata is not None
+            if dependency.kind is CollectorKind.PLUGIN and not (
+                    request.enable_plugins or dependency_id in request.include
+            ):
+                raise PlanError(f"plugin dependency {dependency_id} must be explicitly selected or plugins enabled")
+            if dependency.metadata.sensitive_data_categories and dependency_id not in request.include:
+                raise PlanError(f"sensitive dependency {dependency_id} must be explicitly selected")
+            if dependency_id not in selected:
+                selected[dependency_id] = dependency
+                pending_dependencies.append(dependency_id)
     for candidate in selected.values():
         assert candidate.metadata is not None
         if sys.platform not in candidate.metadata.supported_platforms:
@@ -102,4 +138,5 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
             "selected collectors require an administrator account: "
             + ", ".join(elevated_collectors)
         )
-    return RunPlan(request=request, collectors=_topological_order(selected))
+    ordered = _topological_order(selected)
+    return RunPlan(request=request, collectors=ordered, fingerprint=_fingerprint(request, ordered))

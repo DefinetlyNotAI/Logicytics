@@ -28,6 +28,7 @@ def _summary(manifest: RunManifest) -> str:
         f"Requested: {manifest.requested_at}",
         f"Finished: {manifest.finished_at or 'not finalized'}",
         f"Resolved collectors: {len(manifest.resolved_plan)}",
+        f"Plan fingerprint: {manifest.plan_fingerprint or 'unavailable'}",
         f"Skipped collectors: {len(manifest.skipped_collectors)}",
         f"Errors: {len(manifest.errors)}",
         "",
