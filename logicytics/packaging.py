@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import zipfile
+from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, BinaryIO
 
@@ -16,6 +18,22 @@ if TYPE_CHECKING:
     from logicytics.runtime import RunOutcome
 
 _STREAM_BLOCK_BYTES = 1024 * 1024
+
+
+def _package_filename(manifest: RunManifest) -> str:
+    """Return a deterministic, filesystem-safe action and UTC run timestamp identity."""
+    if not isinstance(manifest.action, str) or not re.fullmatch(r"run|rerun", manifest.action):
+        raise ValueError("package action must be a supported run or rerun action")
+    if not isinstance(manifest.run_id, str) or not re.fullmatch(r"run-[0-9a-f]{32}", manifest.run_id):
+        raise ValueError("package run_id must be a valid run identifier")
+    try:
+        requested_at = datetime.fromisoformat(manifest.requested_at)
+    except (TypeError, ValueError) as error:
+        raise ValueError("package requested_at must be a valid timestamp") from error
+    if requested_at.tzinfo is None:
+        raise ValueError("package requested_at must include a timezone")
+    timestamp = requested_at.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+    return f"{manifest.action}-{timestamp}-{manifest.run_id}.zip"
 
 
 def _summary(manifest: RunManifest) -> str:
@@ -171,7 +189,7 @@ def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: 
     """Package registered artifacts, manifest, and summary without scanning arbitrary files."""
     package_directory = run_directory.parent
     package_directory.mkdir(parents=True, exist_ok=True)
-    package_path = package_directory / f"{manifest.run_id}.zip"
+    package_path = package_directory / _package_filename(manifest)
     hash_path = package_path.with_suffix(".zip.sha256")
 
     summary_path = run_directory / "summary.txt"

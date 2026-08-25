@@ -67,8 +67,8 @@ tests/                   # core integration tests
 output/                  # ignored generated evidence and diagnostics
   data/
     run-<id>/            # isolated run artifacts, manifest, and logs/
-    run-<id>.zip         # verified evidence package
-    run-<id>.zip.sha256  # SHA-256 package sidecar
+    run-<utc>-run-<id>.zip         # action/timestamp-named evidence package
+    run-<utc>-run-<id>.zip.sha256  # matching SHA-256 package sidecar
 ```
 
 ## Requirements
@@ -92,8 +92,10 @@ python -m logicytics run --profile standard --acknowledge-authorization
 `preflight` reports valid and quarantined collectors. `plan` resolves the exact
 collector order without collecting data. `run` requires an explicit authorization
 acknowledgement and writes each run below `output/data/run-<id>/`. Its verified
-ZIP package and SHA-256 sidecar are written alongside that run directory under
-the same `output/data/` root; collector workspaces and `logs/` remain run-scoped.
+ZIP package and SHA-256 sidecar use the action, UTC request timestamp, and run
+ID, and are written alongside that run directory under the same `output/data/`
+root; collector workspaces and `logs/` remain run-scoped. Explicit reruns use a
+`rerun-<utc>-run-<id>.zip` package identity.
 
 Collectors that request additional access must be explicitly approved, for
 example:

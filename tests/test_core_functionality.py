@@ -1112,6 +1112,10 @@ class CoreFunctionalityTests(unittest.TestCase):
             package_path, hash_path = package_run(outcome)
             self.assertTrue(package_path.is_file())
             self.assertTrue(hash_path.is_file())
+            requested_at = datetime.fromisoformat(outcome.manifest.requested_at)
+            timestamp = requested_at.strftime("%Y%m%dT%H%M%S.%fZ")
+            self.assertEqual(f"run-{timestamp}-{outcome.manifest.run_id}.zip", package_path.name)
+            self.assertEqual(f"{package_path.name}.sha256", hash_path.name)
             package_digest, sidecar_name = hash_path.read_text(encoding="ascii").split()
             self.assertEqual(package_path.name, sidecar_name)
             self.assertEqual(hashlib.sha256(package_path.read_bytes()).hexdigest(), package_digest)
@@ -1278,6 +1282,9 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual([selected_id], [record.id for record in rerun.manifest.collectors])
             self.assertNotEqual(original.run_directory, rerun.run_directory)
             self.assertNotEqual(original_package_path, Path(rerun.manifest.package["path"]))
+            self.assertTrue(original_package_path.name.startswith("run-"))
+            self.assertTrue(Path(rerun.manifest.package["path"]).name.startswith("rerun-"))
+            self.assertIn(rerun.manifest.run_id, Path(rerun.manifest.package["path"]).name)
             self.assertEqual(original_manifest, original.manifest_path.read_bytes())
             self.assertEqual(original_package, original_package_path.read_bytes())
             with zipfile.ZipFile(Path(rerun.manifest.package["path"])) as archive:
@@ -1589,6 +1596,56 @@ class CoreFunctionalityTests(unittest.TestCase):
             artifact["collector_id"] = "core.system.another"
             with self.assertRaisesRegex(ValueError, "collector ownership"):
                 package_run(outcome)
+
+    def test_package_name_rejects_unsafe_action_run_id_and_naive_timestamps(self) -> None:
+        """Manipulated manifest identity cannot escape the output root or obscure run timing."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            invalid = (
+                ("action", "../outside", "action"),
+                ("run_id", "../outside", "run_id"),
+                ("requested_at", "2026-01-01T00:00:00", "timezone"),
+                ("requested_at", "not a timestamp", "timestamp"),
+            )
+            for field, value, message in invalid:
+                with self.subTest(field=field, value=value):
+                    original = getattr(outcome.manifest, field)
+                    setattr(outcome.manifest, field, value)
+                    try:
+                        with self.assertRaisesRegex(ValueError, message):
+                            package_run(outcome)
+                    finally:
+                        setattr(outcome.manifest, field, original)
+            self.assertFalse((root / "outside").exists())
+
+    def test_package_preserves_nested_registered_artifact_directories(self) -> None:
+        """Deep collector-owned evidence paths survive catalog publication and ZIP creation."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '        output = context.workspace / "system.txt"',
+                    '        output = context.workspace / "nested" / "reports" / "system.txt"\n'
+                    '        output.parent.mkdir(parents=True)',
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            expected = "core_system_system_info/nested/reports/system.txt"
+            self.assertEqual(expected, outcome.manifest.artifact_list()[0].relative_path)
+            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                self.assertIn(f"artifacts/{expected}", archive.namelist())
+                self.assertEqual(expected, json.loads(archive.read("manifest.json"))["artifact_catalog"][0]["relative_path"])
 
     def test_package_rejects_forged_names_status_and_duplicate_catalog_identifiers(self) -> None:
         """A package is refused whenever its finalized evidence catalog is inconsistent."""

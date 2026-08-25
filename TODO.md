@@ -680,9 +680,9 @@ Windows platform allows.
       package.
 - [ ] Include generated files from CODE in the package.
 - [ ] Include MODS output in a separate MODS package during modded runs.
-- [ ] Preserve nested directory structure inside packages.
-- [ ] Name packages using the action and timestamp.
-- [ ] Generate a SHA-256 digest for each package and move both artifacts into the
+- [x] Preserve nested directory structure inside packages.
+- [x] Name packages using the action and timestamp.
+- [x] Generate a SHA-256 digest for each package and move both artifacts into the
       output/data output directories.
 - [ ] Provide a file-opening helper for viewing generated artifacts.
 - [ ] Implement the v4.0 temporary-workspace lifecycle: collectors write into a
@@ -887,7 +887,7 @@ appropriate default/deep/non-Python mode.
 
 - [ ] Implement CLI parsing, mode selection, execution scheduling, worker limits,
       performance reporting, and post-run actions.
-- [ ] Implement ZIP creation, SHA-256 hashing, package naming, metadata, and output
+- [x] Implement ZIP creation, SHA-256 hashing, package naming, metadata, and output
       relocation.
 - [ ] Implement the MODS discovery and packaging contract.
 
@@ -917,7 +917,7 @@ appropriate default/deep/non-Python mode.
 - [ ] Verify that every collector is represented in the CLI mode matrix and the
       v4.0 documentation.
 - [ ] Verify that packages contain generated evidence and metadata only.
-- [ ] Verify that hashes reproduce from the final package bytes.
+- [x] Verify that hashes reproduce from the final package bytes.
 - [ ] Update README, contribution guidance, configuration documentation, and the
       repository wiki for v4.0.
 
