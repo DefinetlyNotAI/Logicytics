@@ -120,6 +120,7 @@ class RunManifest:
     resolved_plan: tuple[str, ...] = ()
     engine_version: str = CONTRACT_VERSION
     action: str = "run"
+    parent_run_id: str | None = None
     finished_at: str | None = None
     cancellation_requested: bool = False
     errors: list[dict[str, str]] = field(default_factory=list)
@@ -134,6 +135,8 @@ class RunManifest:
             request: Mapping[str, Any],
             configuration: Mapping[str, Any],
             collector_sources: list[tuple[str, Path]],
+            *,
+            parent_run_id: str | None = None,
     ) -> "RunManifest":
         """Create the initial planned manifest before collection begins."""
         return cls(
@@ -145,6 +148,8 @@ class RunManifest:
             collectors=[CollectorRecord(id=collector_id, source=str(source)) for collector_id, source in
                         collector_sources],
             resolved_plan=tuple(collector_id for collector_id, _ in collector_sources),
+            action="rerun" if parent_run_id is not None else "run",
+            parent_run_id=parent_run_id,
             host={
                 "platform": sys_platform(),
                 "hostname": platform.node(),

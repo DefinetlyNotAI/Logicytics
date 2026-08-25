@@ -16,6 +16,7 @@ _COLLECTOR_ID = re.compile(r"^(?:core|plugin)\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_
 _SEMANTIC_VERSION = re.compile(r"^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$")
 _CONTRACT_VERSION = re.compile(r"^\d+\.\d+$")
 _LABEL = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
+_RUN_ID = re.compile(r"^run-[0-9a-f]{32}$")
 
 
 class CollectorKind(StrEnum):
@@ -350,6 +351,7 @@ class RunRequest:
     acknowledge_authorization: bool = False
     approved_capabilities: tuple[Capability, ...] = ()
     performance_check: bool = False
+    rerun_from: str | None = None
 
     def __post_init__(self) -> None:
         """Reject malformed selections and execution policy before planning."""
@@ -366,6 +368,12 @@ class RunRequest:
                 raise ValueError(f"request {name} must not contain duplicate collector IDs")
         if set(self.include).intersection(self.exclude):
             raise ValueError("request include and exclude selections must not overlap")
+        if self.rerun_from is not None and (
+                not isinstance(self.rerun_from, str) or not _RUN_ID.fullmatch(self.rerun_from)
+        ):
+            raise ValueError("request rerun_from must be a valid original run ID")
+        if self.rerun_from is not None and not self.include:
+            raise ValueError("request rerun_from requires explicit included collector IDs")
         for name in ("enable_plugins", "acknowledge_authorization", "performance_check"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"request {name} must be boolean")

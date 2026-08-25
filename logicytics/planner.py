@@ -26,6 +26,8 @@ def _selected_by_request(candidate: CollectorCandidate, request: RunRequest) -> 
         return False
     if metadata.id in request.include:
         return True
+    if request.rerun_from is not None:
+        return False
     if candidate.kind is CollectorKind.PLUGIN and not request.enable_plugins:
         return False
     return request.profile in metadata.default_profiles

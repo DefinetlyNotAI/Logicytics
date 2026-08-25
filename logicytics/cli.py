@@ -42,6 +42,26 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
     worker_count = 1 if sequential or performance_check or default_mode else arguments.workers or default_workers
     if parallel and worker_count < 2:
         raise ValueError("parallel execution requires at least two configured workers")
+    parent_run_id: str | None = None
+    if rerun_path := getattr(arguments, "rerun_from", None):
+        if not arguments.include:
+            raise ValueError("--rerun-from requires at least one explicit --include collector ID")
+        manifest_path = rerun_path / "manifest.json" if rerun_path.is_dir() else rerun_path
+        try:
+            previous = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise ValueError(f"original run manifest cannot be loaded: {error}") from error
+        if not isinstance(previous, dict) or not isinstance(previous.get("run_id"), str):
+            raise ValueError("original run manifest must contain a valid run_id")
+        if previous.get("status") not in {"succeeded", "partial", "failed", "cancelled"}:
+            raise ValueError("original run manifest must describe a finalized run")
+        resolved = previous.get("resolved_plan")
+        if not isinstance(resolved, list) or not all(isinstance(item, str) for item in resolved):
+            raise ValueError("original run manifest must contain a valid resolved_plan")
+        unknown = sorted(set(arguments.include) - set(resolved))
+        if unknown:
+            raise ValueError(f"rerun collectors were not present in the original run: {', '.join(unknown)}")
+        parent_run_id = previous["run_id"]
     return RunRequest(
         profile=profile,
         include=tuple(arguments.include),
@@ -51,6 +71,7 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
         acknowledge_authorization=getattr(arguments, "acknowledge_authorization", False),
         approved_capabilities=tuple(Capability(value) for value in arguments.allow_capability),
         performance_check=performance_check,
+        rerun_from=parent_run_id,
     )
 
 
@@ -73,6 +94,11 @@ def _parser() -> argparse.ArgumentParser:
             help="Approve an access capability requested by the selected collectors.",
         )
         if command == "run":
+            subparser.add_argument(
+                "--rerun-from",
+                type=Path,
+                help="Rerun explicitly included collector IDs from a finalized run manifest or directory.",
+            )
             execution = subparser.add_mutually_exclusive_group()
             execution.add_argument(
                 "--sequential",

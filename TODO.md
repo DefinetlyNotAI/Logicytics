@@ -393,7 +393,7 @@ Windows platform allows.
       `cancelled`, or `failed`.
 - [x] Allow partial runs to be packaged and clearly labeled instead of appearing
       successful or being silently discarded.
-- [ ] Make reruns selectable by collector ID and keep rerun artifacts separate from
+- [x] Make reruns selectable by collector ID and keep rerun artifacts separate from
       the original run.
 - [ ] Make the run plan deterministic: the same request and configuration produce
       the same collector set and dependency order.

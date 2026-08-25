@@ -21,6 +21,8 @@ _STREAM_BLOCK_BYTES = 1024 * 1024
 def _summary(manifest: RunManifest) -> str:
     lines = [
         f"Logicytics run: {manifest.run_id}",
+        f"Action: {manifest.action}",
+        f"Parent run: {manifest.parent_run_id or 'none'}",
         f"Status: {manifest.status.value}",
         f"Cancellation requested: {str(manifest.cancellation_requested).lower()}",
         f"Requested: {manifest.requested_at}",

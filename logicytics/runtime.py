@@ -370,6 +370,7 @@ class RunSupervisor:
             asdict(plan.request),
             self.configuration.to_manifest_dict(),
             [(candidate.metadata.id, candidate.path) for candidate in plan.collectors if candidate.metadata],
+            parent_run_id=plan.request.rerun_from,
         )
         write_manifest(manifest_path, manifest)
         manifest.status = RunStatus.RUNNING

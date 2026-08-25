@@ -512,6 +512,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             ({"performance_check": True, "max_workers": 2}, "performance_check"),
             ({"max_workers": True}, "max_workers"),
             ({"max_workers": 65}, "max_workers"),
+            ({"rerun_from": "../outside", "include": (collector_id,)}, "rerun_from"),
+            ({"rerun_from": "run-" + "a" * 32}, "explicit included"),
             ({"approved_capabilities": ("filesystem_read",)}, "approved_capabilities"),
             (
                 {"approved_capabilities": (Capability.FILESYSTEM_READ, Capability.FILESYSTEM_READ)},
@@ -606,6 +608,42 @@ class CoreFunctionalityTests(unittest.TestCase):
                     _request(parser.parse_args(arguments), default_workers=default_workers)
         with patch("sys.stderr"), self.assertRaises(SystemExit):
             parser.parse_args(["run", "--sequential", "--parallel"])
+
+    def test_rerun_request_rejects_unfinalized_unknown_and_unselected_original_work(self) -> None:
+        """Reruns require a finalized authentic-shaped manifest and explicit original collector IDs."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest_path = root / "manifest.json"
+            collector_id = "core.system.system_info"
+            valid_manifest = {
+                "run_id": "run-" + "a" * 32,
+                "status": "succeeded",
+                "resolved_plan": [collector_id],
+            }
+            manifest_path.write_text(json.dumps(valid_manifest), encoding="utf-8")
+            parser = _parser()
+
+            with self.assertRaisesRegex(ValueError, "explicit --include"):
+                _request(parser.parse_args(["run", "--rerun-from", str(manifest_path)]), 2)
+            with self.assertRaisesRegex(ValueError, "not present in the original"):
+                _request(
+                    parser.parse_args(
+                        ["run", "--rerun-from", str(manifest_path), "--include", "core.system.other"]
+                    ),
+                    2,
+                )
+            manifest_path.write_text(json.dumps({**valid_manifest, "status": "running"}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "finalized"):
+                _request(
+                    parser.parse_args(["run", "--rerun-from", str(manifest_path), "--include", collector_id]),
+                    2,
+                )
+            manifest_path.write_text("not json", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "cannot be loaded"):
+                _request(
+                    parser.parse_args(["run", "--rerun-from", str(manifest_path), "--include", collector_id]),
+                    2,
+                )
 
     """Validate the foundation before real core collectors are added."""
 
@@ -1088,6 +1126,62 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("partial", packaged["collectors"][0]["status"])
             self.assertIn("Status: partial", summary)
             self.assertIn("secondary evidence source was unavailable", summary)
+
+    def test_selected_collector_rerun_preserves_original_run_and_separates_evidence(self) -> None:
+        """Explicit reruns execute only selected original IDs and own a distinct evidence package."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            for filename in ("a_original", "z_selected"):
+                (core_directory / f"{filename}.py").write_text(
+                    _delayed_collector_source(filename, 0.0),
+                    encoding="utf-8",
+                )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            configuration = default_config(root)
+            original = RunSupervisor(root, configuration).run(
+                build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True))
+            )
+            original_manifest = original.manifest_path.read_bytes()
+            original_package_path = Path(original.manifest.package["path"])
+            original_package = original_package_path.read_bytes()
+            selected_id = "core.system.z_selected"
+            arguments = _parser().parse_args(
+                [
+                    "run",
+                    "--rerun-from",
+                    str(original.run_directory),
+                    "--include",
+                    selected_id,
+                    "--acknowledge-authorization",
+                    "--sequential",
+                ]
+            )
+            request = _request(arguments, default_workers=4)
+            self.assertEqual(original.manifest.run_id, request.rerun_from)
+            rerun = RunSupervisor(root, configuration).run(build_plan(report, request))
+
+            self.assertEqual("succeeded", rerun.manifest.status.value)
+            self.assertEqual("rerun", rerun.manifest.action)
+            self.assertEqual(original.manifest.run_id, rerun.manifest.parent_run_id)
+            self.assertEqual((selected_id,), rerun.manifest.resolved_plan)
+            self.assertEqual([selected_id], [record.id for record in rerun.manifest.collectors])
+            self.assertNotEqual(original.run_directory, rerun.run_directory)
+            self.assertNotEqual(original_package_path, Path(rerun.manifest.package["path"]))
+            self.assertEqual(original_manifest, original.manifest_path.read_bytes())
+            self.assertEqual(original_package, original_package_path.read_bytes())
+            with zipfile.ZipFile(Path(rerun.manifest.package["path"])) as archive:
+                packaged_manifest = json.loads(archive.read("manifest.json"))
+                summary = archive.read("summary.txt").decode("utf-8")
+                artifact_names = [name for name in archive.namelist() if name.startswith("artifacts/")]
+            self.assertEqual(original.manifest.run_id, packaged_manifest["parent_run_id"])
+            self.assertEqual("rerun", packaged_manifest["action"])
+            self.assertEqual(["artifacts/core_system_z_selected/system.txt"], artifact_names)
+            self.assertIn("Action: rerun", summary)
+            self.assertIn(f"Parent run: {original.manifest.run_id}", summary)
 
     def test_sensitive_artifact_bytes_are_preserved_while_packaged_diagnostics_are_redacted(self) -> None:
         """Evidence retains intentional secrets, but no packaged diagnostics disclose them."""
