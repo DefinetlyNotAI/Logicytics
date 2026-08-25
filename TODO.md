@@ -501,10 +501,10 @@ Windows platform allows.
 
 ### Improve the public API and testability
 
-- [ ] Make the package importable without starting a collection, opening files, or
+- [x] Make the package importable without starting a collection, opening files, or
       requiring Windows-only APIs at import time.
 - [ ] Replace singleton-heavy APIs with dependency injection where state matters.
-- [ ] Keep a small stable public API: configuration, planning, running, querying
+- [x] Keep a small stable public API: configuration, planning, running, querying
       run status, and reading artifacts.
 - [ ] Keep platform adapters mockable so collectors can be tested on non-Windows
       development machines.

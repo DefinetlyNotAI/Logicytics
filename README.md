@@ -117,6 +117,32 @@ python -m logicytics run --profile standard --acknowledge-authorization `
 Plugin collectors never join any profile unless explicitly included or enabled
 with `--plugins`. Unknown profile names are rejected before collection begins.
 
+## Public Python API
+
+Importing `logicytics` does not start collection, create output directories, or
+load the runtime supervisor. Application services are loaded only when their
+public names are requested:
+
+```python
+from pathlib import Path
+
+from logicytics import RunRequest, load_configuration, plan_run, query_run, read_artifact, run_collection
+
+root = Path.cwd()
+configuration = load_configuration(root)
+request = RunRequest(max_workers=1, acknowledge_authorization=True)
+plan = plan_run(root, request, configuration=configuration)
+outcome = run_collection(root, request, configuration=configuration)
+snapshot = query_run(root, outcome.manifest.run_id, configuration=configuration)
+contents = read_artifact(root, snapshot.run_id, snapshot.artifacts[0].id, configuration=configuration)
+```
+
+Planning enforces strict core/plugin preflight and configured worker bounds
+without creating evidence. Run queries validate the manifest, collector-owned
+artifact catalog, and configured output boundaries. Artifact reads are bounded
+(16 MiB by default, never more than 64 MiB) and verify the exact registered
+bytes against their manifest SHA-256 before returning evidence.
+
 ## Configuration
 
 An optional project-root `logicytics.json` uses schema version `4` and separates
