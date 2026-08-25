@@ -9,6 +9,7 @@ import json
 import multiprocessing
 import os
 import queue
+import signal
 import shutil
 import subprocess
 import traceback
@@ -95,6 +96,8 @@ def _result_from_dict(data: dict[str, object]) -> CollectorResult:
 
 def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queue) -> None:
     """Run a single collector in an isolated child process."""
+    if os.name != "nt":
+        os.setsid()
     workspace = Path(str(payload["workspace"]))
     workspace.mkdir(parents=True, exist_ok=True)
     temporary_directory = workspace / "tmp"
@@ -693,15 +696,70 @@ class RunSupervisor:
             pass
 
     @staticmethod
+    def _windows_descendants(parent_pid: int) -> tuple[int, ...]:
+        """Snapshot only descendants belonging to one isolated Windows worker."""
+        class ProcessEntry(ctypes.Structure):
+            _fields_ = [
+                ("dwSize", ctypes.c_ulong),
+                ("cntUsage", ctypes.c_ulong),
+                ("th32ProcessID", ctypes.c_ulong),
+                ("th32DefaultHeapID", ctypes.c_size_t),
+                ("th32ModuleID", ctypes.c_ulong),
+                ("cntThreads", ctypes.c_ulong),
+                ("th32ParentProcessID", ctypes.c_ulong),
+                ("pcPriClassBase", ctypes.c_long),
+                ("dwFlags", ctypes.c_ulong),
+                ("szExeFile", ctypes.c_wchar * 260),
+            ]
+
+        kernel = ctypes.windll.kernel32
+        snapshot = kernel.CreateToolhelp32Snapshot(0x00000002, 0)
+        if snapshot in (0, -1, ctypes.c_void_p(-1).value):
+            return ()
+        try:
+            entry = ProcessEntry()
+            entry.dwSize = ctypes.sizeof(entry)
+            relationships: dict[int, list[int]] = {}
+            valid = kernel.Process32FirstW(snapshot, ctypes.byref(entry))
+            while valid:
+                relationships.setdefault(int(entry.th32ParentProcessID), []).append(int(entry.th32ProcessID))
+                valid = kernel.Process32NextW(snapshot, ctypes.byref(entry))
+            descendants: list[int] = []
+            pending = [parent_pid]
+            while pending:
+                children = relationships.get(pending.pop(), [])
+                descendants.extend(children)
+                pending.extend(children)
+            return tuple(reversed(descendants))
+        finally:
+            kernel.CloseHandle(snapshot)
+
+    @staticmethod
     def _terminate_process_tree(process: multiprocessing.Process) -> None:
-        """Terminate a worker and, on Windows, any subprocesses it created."""
-        if process.pid is not None and os.name == "nt":
-            subprocess.run(
-                ["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                capture_output=True,
-                check=False,
-                text=True,
-            )
+        """Terminate one worker-owned process tree without touching peer workers."""
+        if process.pid is not None:
+            try:
+                if os.name == "nt":
+                    descendants = RunSupervisor._windows_descendants(process.pid)
+                    subprocess.run(
+                        ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                        capture_output=True,
+                        check=False,
+                        text=True,
+                        timeout=5,
+                    )
+                    for child_pid in descendants:
+                        handle = ctypes.windll.kernel32.OpenProcess(0x0001 | 0x100000, False, child_pid)
+                        if handle:
+                            try:
+                                ctypes.windll.kernel32.TerminateProcess(handle, 1)
+                                ctypes.windll.kernel32.WaitForSingleObject(handle, 2000)
+                            finally:
+                                ctypes.windll.kernel32.CloseHandle(handle)
+                else:
+                    os.killpg(process.pid, signal.SIGTERM)
+            except (OSError, subprocess.TimeoutExpired):
+                pass
         if process.is_alive():
             process.terminate()
         process.join(timeout=2)

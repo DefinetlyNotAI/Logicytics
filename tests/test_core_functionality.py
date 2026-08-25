@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import ctypes
 import json
 import os
 import subprocess
@@ -1553,6 +1554,55 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("timeout_exceeded", records["core.system.a_timeout"].termination_reason)
             self.assertEqual("succeeded", records["core.system.z_independent"].status)
             self.assertEqual("partial", outcome.manifest.status.value)
+
+    @unittest.skipUnless(os.name == "nt", "Windows collector subprocess-tree containment")
+    def test_collector_timeout_terminates_spawned_subprocesses_without_stopping_peers(self) -> None:
+        """A timed-out worker cannot leave its child alive or terminate independent collectors."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            source = _delayed_collector_source("a_tree", 0.0).replace(
+                "from pathlib import Path\n",
+                "from pathlib import Path\nimport subprocess\nimport sys\n",
+            ).replace(
+                '            supported_platforms=("win32",),',
+                '            supported_platforms=("win32",),\n            timeout_seconds=2,',
+            ).replace(
+                '        output = context.workspace / "system.txt"',
+                '        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])\n'
+                '        (context.workspace / "child.pid").write_text(str(child.pid), encoding="ascii")\n'
+                '        sleep(5)\n'
+                '        output = context.workspace / "system.txt"',
+            )
+            (core_directory / "a_tree.py").write_text(source, encoding="utf-8")
+            (core_directory / "z_independent.py").write_text(
+                _delayed_collector_source("z_independent", 0.0),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+            child_pid = int(
+                (outcome.run_directory / "collectors" / "core_system_a_tree" / "child.pid").read_text(
+                    encoding="ascii"
+                )
+            )
+            handle = ctypes.windll.kernel32.OpenProcess(0x1000, False, child_pid)
+            if handle:
+                try:
+                    exit_code = ctypes.c_ulong()
+                    self.assertTrue(ctypes.windll.kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)))
+                    self.assertNotEqual(259, exit_code.value, "collector subprocess survived worker termination")
+                finally:
+                    ctypes.windll.kernel32.CloseHandle(handle)
+
+            self.assertEqual("failed", records["core.system.a_tree"].status)
+            self.assertEqual("timeout_exceeded", records["core.system.a_tree"].termination_reason)
+            self.assertEqual("succeeded", records["core.system.z_independent"].status)
 
     @unittest.skipUnless(os.name == "nt", "Windows working-set enforcement test")
     def test_collector_memory_limit_preserves_independent_worker_results(self) -> None:

@@ -333,7 +333,7 @@ Windows platform allows.
       sensitive-file access.
 - [x] Require elevated privilege and explicit user approval for collectors that need
       it; do not grant administrator access to every plugin by default.
-- [ ] Capture subprocess trees so child processes do not survive a failed collector.
+- [x] Capture subprocess trees so child processes do not survive a failed collector.
 - [ ] Use OS/process isolation as the default boundary; treat Python-level import
       restrictions as validation and defense-in-depth, not as a complete sandbox.
 - [ ] Ensure a collector cannot call the main CLI, trigger reboot/shutdown, alter
