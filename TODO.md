@@ -328,7 +328,7 @@ Windows platform allows.
       logger configuration, environment, or execution plan.
 - [x] Restrict artifact registration to paths inside the collector workspace and
       copy/stream only approved artifacts into the run artifact store.
-- [ ] Provide declared capability gates for filesystem reads, registry reads,
+- [x] Provide declared capability gates for filesystem reads, registry reads,
       subprocesses, network capture, raw packet access, browser-data access, and
       sensitive-file access.
 - [x] Require elevated privilege and explicit user approval for collectors that need

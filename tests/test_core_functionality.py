@@ -1639,6 +1639,73 @@ class CoreFunctionalityTests(unittest.TestCase):
                     self.assertEqual("failed", outcome.manifest.collectors[0].status)
                     self.assertIn(message, "\n".join(outcome.manifest.collectors[0].errors))
 
+    def test_worker_enforces_external_browser_sensitive_and_private_key_read_capabilities(self) -> None:
+        """External evidence reads require filesystem access plus every applicable sensitive grant."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            ordinary = root / "outside.txt"
+            ordinary.write_text("ordinary evidence", encoding="utf-8")
+            browser = root / "Chrome" / "User Data" / "Default" / "Cookies"
+            browser.parent.mkdir(parents=True)
+            browser.write_text("browser evidence", encoding="utf-8")
+            private_key = root / ".ssh" / "id_ed25519"
+            private_key.parent.mkdir()
+            private_key.write_text("private evidence", encoding="utf-8")
+            cases = (
+                (ordinary, (), "filesystem_read capability"),
+                (ordinary, (Capability.FILESYSTEM_READ,), None),
+                (browser, (Capability.FILESYSTEM_READ,), "browser_data capability"),
+                (browser, (Capability.FILESYSTEM_READ, Capability.BROWSER_DATA), "sensitive_files capability"),
+                (
+                    private_key,
+                    (Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),
+                    "private_keys capability",
+                ),
+                (
+                    private_key,
+                    (Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES, Capability.PRIVATE_KEYS),
+                    None,
+                ),
+            )
+            for evidence, capabilities, denied in cases:
+                with self.subTest(evidence=evidence.name, capabilities=capabilities):
+                    declared = ", ".join(f"Capability.{capability.name}" for capability in capabilities)
+                    if len(capabilities) == 1:
+                        declared += ","
+                    collector_path.write_text(
+                        _COLLECTOR.replace(
+                            "from pathlib import Path\n",
+                            "from pathlib import Path\nfrom logicytics import Capability\n",
+                        ).replace(
+                            '            supported_platforms=("win32",),',
+                            f'            supported_platforms=("win32",),\n'
+                            f'            capabilities=({declared}),',
+                        ).replace(
+                            '        output = context.workspace / "system.txt"',
+                            f"        Path({str(evidence)!r}).read_text(encoding='utf-8')\n"
+                            '        output = context.workspace / "system.txt"',
+                        ),
+                        encoding="utf-8",
+                    )
+                    plan = build_plan(
+                        preflight(root),
+                        RunRequest(
+                            max_workers=1,
+                            acknowledge_authorization=True,
+                            approved_capabilities=capabilities,
+                        ),
+                    )
+                    outcome = RunSupervisor(root, default_config(root)).run(plan)
+                    record = outcome.manifest.collectors[0]
+                    if denied is None:
+                        self.assertEqual("succeeded", record.status, record.errors)
+                    else:
+                        self.assertEqual("failed", record.status)
+                        self.assertIn(denied, "\n".join(record.errors))
+
     def test_worker_rejects_raw_packet_socket_without_packet_capture_capability(self) -> None:
         """General network approval must not silently authorize raw packet capture."""
         with tempfile.TemporaryDirectory() as temporary:

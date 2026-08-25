@@ -76,8 +76,11 @@ class _WorkerMutationGuard:
             artifact_root: Path,
             collector_id: str,
             capabilities: tuple[Capability, ...],
+            collector_source: Path,
     ) -> None:
         self.roots = (workspace.resolve(), (artifact_root / collector_id.replace(".", "_")).resolve())
+        self.runtime_roots = (Path(sys.base_prefix).resolve(), Path(__file__).resolve().parent)
+        self.collector_source = collector_source.resolve()
         self.capabilities = frozenset(capabilities)
         self.active = False
         sys.addaudithook(self._check_event)
@@ -90,6 +93,31 @@ class _WorkerMutationGuard:
         path = Path(os.fsdecode(value)).resolve()
         if not any(path == root or root in path.parents for root in self.roots):
             raise PermissionError(f"collector filesystem mutation escapes its private workspace: {path}")
+
+    def _check_read(self, value: object) -> None:
+        if isinstance(value, int) or not isinstance(value, (str, bytes, os.PathLike)):
+            return
+        path = Path(os.fsdecode(value)).resolve()
+        if path == self.collector_source or any(
+                path == root or root in path.parents for root in (*self.roots, *self.runtime_roots)
+        ):
+            return
+        if Capability.FILESYSTEM_READ not in self.capabilities:
+            raise PermissionError("collector requires declared filesystem_read capability")
+        components = tuple(part.casefold() for part in path.parts)
+        browser_data = any(part in {"chrome", "edge", "firefox", "opera software", "opera gx"} for part in components)
+        private_key = ".ssh" in components or path.name.casefold() in {
+            "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa"
+        } or path.suffix.casefold() in {".pem", ".ppk"}
+        sensitive = private_key or browser_data or any(
+            label in path.name.casefold() for label in ("cookie", "credential", "password", "token", "secret", "login data")
+        )
+        if browser_data and Capability.BROWSER_DATA not in self.capabilities:
+            raise PermissionError("collector requires declared browser_data capability")
+        if sensitive and Capability.SENSITIVE_FILES not in self.capabilities:
+            raise PermissionError("collector requires declared sensitive_files capability")
+        if private_key and Capability.PRIVATE_KEYS not in self.capabilities:
+            raise PermissionError("collector requires declared private_keys capability")
 
     def _check_event(self, event: str, arguments: tuple[object, ...]) -> None:
         if not self.active:
@@ -117,6 +145,10 @@ class _WorkerMutationGuard:
             )
             if writing:
                 self._check_path(arguments[0])
+            else:
+                self._check_read(arguments[0])
+        elif event in {"os.listdir", "os.scandir"} and arguments:
+            self._check_read(arguments[0])
         elif event in self._PATH_EVENTS:
             self._check_path(arguments[0])
         elif event in self._DOUBLE_PATH_EVENTS:
@@ -210,6 +242,7 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                     Path(str(payload["artifact_root"])),
                     metadata.id,
                     metadata.capabilities,
+                    Path(str(payload["path"])),
                 )
                 mutation_guard.active = True
                 try:
