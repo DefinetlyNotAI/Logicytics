@@ -319,6 +319,7 @@ $RECYCLE.BIN/
 *.pyc
 /CODE/SysInternal_Suite/.sys.ignore
 /ACCESS/
+/output/
 /CODE/vulnscan/tools/NN features/
 /CODE/logicytics/User_History.json.gz
 /CODE/logicytics/User_History.json

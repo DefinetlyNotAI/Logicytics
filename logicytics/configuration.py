@@ -78,7 +78,7 @@ class AppConfig:
 def default_config(project_root: Path) -> AppConfig:
     """Create safe defaults rooted at the checked-out project."""
     return AppConfig(schema_version=SCHEMA_VERSION,
-                     runtime=RuntimeSettings(output_root=project_root / "ACCESS" / "RUNS"))
+                     runtime=RuntimeSettings(output_root=project_root / "output" / "data"))
 
 
 def load_config(project_root: Path, config_path: Path | None = None) -> AppConfig:
@@ -101,7 +101,7 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     runtime_raw = raw.get("runtime", {})
     if not isinstance(runtime_raw, dict):
         raise PlanError("runtime configuration must be an object")
-    output_root_value = runtime_raw.get("output_root", project_root / "ACCESS" / "RUNS")
+    output_root_value = runtime_raw.get("output_root", project_root / "output" / "data")
     if not isinstance(output_root_value, (str, Path)) or not str(output_root_value).strip():
         raise PlanError("runtime output_root must be a non-empty path string")
     output_root = Path(output_root_value)

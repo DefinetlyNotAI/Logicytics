@@ -172,7 +172,7 @@ def _verify_archive(package_path: Path, manifest: RunManifest, expected_names: s
 
 def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: Path) -> tuple[Path, Path]:
     """Package registered artifacts, manifest, and summary without scanning arbitrary files."""
-    package_directory = run_directory.parent.parent / "PACKAGES"
+    package_directory = run_directory.parent
     package_directory.mkdir(parents=True, exist_ok=True)
     package_path = package_directory / f"{manifest.run_id}.zip"
     hash_path = package_path.with_suffix(".zip.sha256")

@@ -449,6 +449,23 @@ class CoreFunctionalityTests(unittest.TestCase):
             with self.assertRaisesRegex(PlanError, "package_completed_runs"):
                 load_config(root)
 
+    def test_configuration_defaults_to_one_canonical_output_data_root(self) -> None:
+        """Defaults and loaded settings share output/data while explicit roots remain supported."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            expected = root / "output" / "data"
+            self.assertEqual(expected, default_config(root).runtime.output_root)
+            self.assertEqual(expected, load_config(root).runtime.output_root)
+            config_path = root / "logicytics.json"
+            config_path.write_text('{"schema_version":4,"runtime":{}}', encoding="utf-8")
+            self.assertEqual(expected, load_config(root).runtime.output_root)
+            config_path.write_text(
+                '{"schema_version":4,"runtime":{"output_root":"custom/evidence"}}',
+                encoding="utf-8",
+            )
+            self.assertEqual(root / "custom" / "evidence", load_config(root).runtime.output_root)
+            self.assertFalse(expected.exists())
+
     def test_configuration_manifest_redacts_nested_secrets_without_mutating_worker_settings(self) -> None:
         """Manifest snapshots hide credentials while collectors retain configured access."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -1031,6 +1048,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual([], outcome.manifest.errors)
             self.assertEqual([], outcome.manifest.skipped_collectors)
             self.assertEqual(configuration.runtime.output_root, outcome.run_directory.parent)
+            self.assertEqual(root / "output" / "data", outcome.run_directory.parent)
             self.assertTrue(outcome.run_directory.is_absolute())
             self.assertTrue((outcome.run_directory / "artifacts" / "core_system_system_info").is_dir())
             self.assertFalse((root / "system.txt").exists())
@@ -1045,6 +1063,12 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertIsNotNone(outcome.manifest.package)
             self.assertTrue(Path(outcome.manifest.package["path"]).is_file())
             self.assertTrue(Path(outcome.manifest.package["sha256_path"]).is_file())
+            self.assertEqual(outcome.run_directory.parent, Path(outcome.manifest.package["path"]).parent)
+            self.assertEqual(outcome.run_directory.parent, Path(outcome.manifest.package["sha256_path"]).parent)
+            self.assertTrue((outcome.run_directory / "logs" / "engine.jsonl").is_file())
+            self.assertFalse((root / "ACCESS").exists())
+            self.assertFalse((root / "output" / "RUNS").exists())
+            self.assertFalse((root / "output" / "PACKAGES").exists())
             package_path, hash_path = package_run(outcome)
             self.assertTrue(package_path.is_file())
             self.assertTrue(hash_path.is_file())
@@ -1087,6 +1111,38 @@ class CoreFunctionalityTests(unittest.TestCase):
             repeated = RunSupervisor(root, configuration).run(plan)
             self.assertNotEqual(outcome.manifest.run_id, repeated.manifest.run_id)
             self.assertNotEqual(outcome.run_directory, repeated.run_directory)
+
+    def test_configured_output_root_colocates_packages_without_touching_legacy_evidence(self) -> None:
+        """Custom roots own runs and ZIPs; old ACCESS evidence is neither moved nor deleted."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            legacy_evidence = root / "ACCESS" / "RUNS" / "legacy-evidence.txt"
+            legacy_evidence.parent.mkdir(parents=True)
+            legacy_evidence.write_text("preserve existing evidence", encoding="utf-8")
+            (root / "logicytics.json").write_text(
+                '{"schema_version":4,"runtime":{"output_root":"custom/evidence"}}',
+                encoding="utf-8",
+            )
+            configuration = load_config(root)
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, configuration).run(plan)
+            expected_root = root / "custom" / "evidence"
+            package_path = Path(outcome.manifest.package["path"])
+            hash_path = Path(outcome.manifest.package["sha256_path"])
+
+            self.assertEqual(expected_root, outcome.run_directory.parent)
+            self.assertEqual(expected_root, package_path.parent)
+            self.assertEqual(expected_root, hash_path.parent)
+            self.assertEqual("preserve existing evidence", legacy_evidence.read_text(encoding="utf-8"))
+            self.assertFalse((root / "custom" / "PACKAGES").exists())
+            self.assertEqual(
+                hashlib.sha256(package_path.read_bytes()).hexdigest(),
+                hash_path.read_text(encoding="ascii").split()[0],
+            )
 
     def test_partial_collector_evidence_is_packaged_and_clearly_labeled(self) -> None:
         """Partial terminal outcomes preserve evidence without masquerading as success."""

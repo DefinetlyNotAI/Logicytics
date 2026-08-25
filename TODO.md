@@ -313,7 +313,7 @@ Windows platform allows.
 - [x] Launch each collector in its own worker process rather than importing and
       running all collectors in the main process.
 - [x] Give each collector a private working directory:
-      `ACCESS/RUNS/<run-id>/collectors/<collector-id>/`.
+      `output/data/<run-id>/collectors/<collector-id>/`.
 - [x] Give each collector a private temporary directory, stdout/stderr capture,
       structured event channel, and artifact staging area.
 - [x] Pass only a serializable `CollectorContext`/request payload into the worker;
@@ -378,7 +378,7 @@ Windows platform allows.
 ### Define the v4.0 run model
 
 - [x] Create a unique run directory before collection starts:
-      `ACCESS/RUNS/<run-id>/`.
+      `output/data/<run-id>/`.
 - [x] Store raw collector output under a controlled artifact tree rather than in
       the source tree or project root.
 - [x] Create a run manifest at the beginning, update it as collectors start and
@@ -616,7 +616,7 @@ Windows platform allows.
 - [ ] Track per-flag usage counts.
 - [ ] Provide `--usage` statistics including total interactions, average accuracy,
       common device/input values, and per-flag frequency.
-- [ ] Generate a flag-usage bar graph in the ACCESS/DATA area.
+- [ ] Generate a flag-usage bar graph in the output/data area.
 - [ ] Allow model debug/progress output to be enabled independently from normal
       Logicytics debug logging.
 
@@ -659,7 +659,7 @@ Windows platform allows.
 
 - [ ] Provide a singleton logger shared by the engine and collectors.
 - [ ] Log to console with configurable colors and levels.
-- [ ] Log to ACCESS/LOGS/Logicytics.log.
+- [ ] Log to output/logs/Logicytics.log.
 - [ ] Support DEBUG, INFO, WARNING, ERROR, CRITICAL, INTERNAL, and EXCEPTION levels.
 - [ ] Include timestamps and structured, readable log rows.
 - [ ] Support log truncation controls and optional deletion of the previous log.
@@ -673,8 +673,8 @@ Windows platform allows.
 
 ### Output and packaging
 
-- [ ] Create ACCESS/LOGS, ACCESS/LOGS/DEBUG, ACCESS/LOGS/PERFORMANCE,
-      ACCESS/DATA/Zip, and ACCESS/DATA/Hashes automatically.
+- [ ] Create output/logs, output/logs/debug, output/logs/performance,
+      output/data/zip, and output/data/hashes automatically.
 - [ ] Collect generated files without including source code, executables, model
       files, configuration secrets, caches, or library internals in the evidence
       package.
@@ -683,7 +683,7 @@ Windows platform allows.
 - [ ] Preserve nested directory structure inside packages.
 - [ ] Name packages using the action and timestamp.
 - [ ] Generate a SHA-256 digest for each package and move both artifacts into the
-      ACCESS/DATA output directories.
+      output/data output directories.
 - [ ] Provide a file-opening helper for viewing generated artifacts.
 - [ ] Implement the v4.0 temporary-workspace lifecycle: collectors write into a
       run-specific temporary directory, the packager consumes that directory, and
@@ -881,7 +881,7 @@ appropriate default/deep/non-Python mode.
 - [ ] Implement configuration loading, structured logging, file discovery, command
       execution, privilege checks, cancellation, and error aggregation.
 - [ ] Implement the temporary run directory and cleanup lifecycle.
-- [ ] Rename ACCESS folder to output/ and LOGS/ to logs/, PACKAGES/ to data/ (and remove RUNS/ as it should be the same as data/)
+- [x] Rename ACCESS folder to output/ and LOGS/ to logs/, PACKAGES/ to data/ (and remove RUNS/ as it should be the same as data/)
 
 ### Phase 2 — Engine and packaging
 
