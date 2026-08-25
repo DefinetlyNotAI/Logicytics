@@ -455,8 +455,8 @@ Windows platform allows.
 
 ### Make configuration and profiles understandable
 
-- [ ] Replace scattered string lookups with a validated typed configuration object.
-- [ ] Fail at plan-validation time for invalid values, rather than during a
+- [x] Replace scattered string lookups with a validated typed configuration object.
+- [x] Fail at plan-validation time for invalid values, rather than during a
       collector's execution.
 - [ ] Separate product settings, profile settings, collector settings, and runtime
       overrides.

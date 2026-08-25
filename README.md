@@ -117,6 +117,27 @@ python -m logicytics run --profile standard --acknowledge-authorization `
 Plugin collectors never join any profile unless explicitly included or enabled
 with `--plugins`. Unknown profile names are rejected before collection begins.
 
+## Configuration
+
+An optional project-root `logicytics.json` uses schema version `4` and separates
+engine-wide `runtime` options from per-collector `collectors` settings:
+
+```json
+{
+  "schema_version": 4,
+  "runtime": {"default_max_workers": 4, "maximum_workers": 8},
+  "collectors": {
+    "core.filesystem.system_drive_tree": {"max_entries": 5000, "max_depth": 12},
+    "core.process.memory_map": {"max_regions": 5000, "dump_directory": "memory_maps"}
+  }
+}
+```
+
+Shipped filesystem, network, packet, sensitive-inventory, and metadata-only
+memory-map collector options are strictly typed and bounded before planning.
+Unknown engine fields, duplicate JSON keys, unsafe workspace paths, and invalid
+collector IDs fail closed; plugin-owned setting fields remain extensible.
+
 ## Collector rules
 
 Core collectors must live at `core/<specialty>/<collector_name>.py`. Each module

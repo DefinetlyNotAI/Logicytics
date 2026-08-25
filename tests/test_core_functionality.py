@@ -616,6 +616,106 @@ class CoreFunctionalityTests(unittest.TestCase):
                     with self.assertRaisesRegex(PlanError, message):
                         load_config(root)
 
+    def test_configuration_rejects_unknown_duplicate_and_non_finite_values(self) -> None:
+        """Ambiguous keys, typos, malformed IDs, and nonstandard JSON fail before planning."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config_path = root / "logicytics.json"
+            invalid = (
+                ('{"schema_version":4,"unexpected":true}', "unsupported root"),
+                ('{"schema_version":4,"runtime":{"worker_typo":2}}', "unsupported settings"),
+                ('{"schema_version":4,"schema_version":4}', "duplicate configuration key"),
+                ('{"schema_version":4,"runtime":{"maximum_workers":NaN}}', "non-finite"),
+                ('{"schema_version":4,"collectors":{"plugin.custom":{"value":1e999}}}', "non-finite"),
+                ('{"schema_version":4,"collectors":{"../escape":{}}}', "invalid collector ID"),
+                ('{"schema_version":4,"collectors":{"core.system.example":{"invalid-name":1}}}', "invalid setting name"),
+                ('{"schema_version":4,"collectors":{"core.packet.packet_capture":{"packet_typo":1}}}', "unsupported settings"),
+            )
+            for payload, message in invalid:
+                with self.subTest(payload=payload):
+                    config_path.write_text(payload, encoding="utf-8")
+                    with self.assertRaisesRegex(PlanError, message):
+                        load_config(root)
+                    self.assertFalse((root / "output").exists())
+            config_path.write_text(
+                '{"schema_version":4,"collectors":{"plugin.custom":{"extension_setting":"allowed"}}}',
+                encoding="utf-8",
+            )
+            self.assertEqual("allowed", load_config(root).settings_for("plugin.custom")["extension_setting"])
+
+    def test_configuration_validates_filesystem_and_sensitive_inventory_bounds(self) -> None:
+        """Traversal and sensitive inventory limits cannot silently coerce or expand in workers."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config_path = root / "logicytics.json"
+            invalid = (
+                ("core.filesystem.system_drive_tree", {"max_entries": True}, "max_entries"),
+                ("core.filesystem.system_drive_tree", {"max_depth": 33}, "max_depth"),
+                ("core.filesystem.system_drive_listing", {"workers": 9}, "workers"),
+                ("core.filesystem.system_drive_listing", {"max_entries": "100"}, "max_entries"),
+                ("core.filesystem.sensitive_file_inventory", {"max_directories": 50_001}, "max_directories"),
+                ("core.filesystem.sensitive_file_inventory", {"max_matches": 0}, "max_matches"),
+                ("core.filesystem.sensitive_file_inventory", {"root": "relative/path"}, "absolute"),
+            )
+            for collector_id, settings, message in invalid:
+                with self.subTest(collector_id=collector_id, settings=settings):
+                    config_path.write_text(
+                        json.dumps({"schema_version": 4, "collectors": {collector_id: settings}}),
+                        encoding="utf-8",
+                    )
+                    with self.assertRaisesRegex(PlanError, message):
+                        load_config(root)
+                    self.assertFalse((root / "output").exists())
+            valid = {
+                "core.filesystem.system_drive_tree": {"max_entries": 100, "max_depth": 3},
+                "core.filesystem.system_drive_listing": {"max_entries": 200, "max_depth": 4, "workers": 2},
+                "core.filesystem.sensitive_file_inventory": {
+                    "root": str(root), "max_directories": 100, "max_matches": 10,
+                },
+            }
+            config_path.write_text(json.dumps({"schema_version": 4, "collectors": valid}), encoding="utf-8")
+            configuration = load_config(root)
+            for collector_id, settings in valid.items():
+                self.assertEqual(settings, configuration.settings_for(collector_id))
+
+    def test_configuration_validates_metadata_only_memory_map_limits_and_workspace_paths(self) -> None:
+        """The existing metadata-only memory mapper rejects unsafe values before worker launch."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config_path = root / "logicytics.json"
+            collector_id = "core.process.memory_map"
+            invalid = (
+                ({"max_regions": True}, "max_regions"),
+                ({"max_regions": 100_001}, "max_regions"),
+                ({"output_limit_bytes": 1_023}, "output_limit_bytes"),
+                ({"output_limit_bytes": 64 * 1024 * 1024 + 1}, "output_limit_bytes"),
+                ({"disk_safety_margin_bytes": -1}, "disk_safety_margin_bytes"),
+                ({"disk_safety_margin_bytes": "100"}, "disk_safety_margin_bytes"),
+                ({"dump_directory": "../outside"}, "collector-workspace"),
+                ({"dump_directory": str(root)}, "collector-workspace"),
+                ({"dump_directory": "   "}, "non-empty"),
+            )
+            for settings, message in invalid:
+                with self.subTest(settings=settings):
+                    config_path.write_text(
+                        json.dumps({"schema_version": 4, "collectors": {collector_id: settings}}),
+                        encoding="utf-8",
+                    )
+                    with self.assertRaisesRegex(PlanError, message):
+                        load_config(root)
+                    self.assertFalse((root / "output").exists())
+            settings = {
+                "max_regions": 500,
+                "output_limit_bytes": 4096,
+                "disk_safety_margin_bytes": 0,
+                "dump_directory": "bounded/maps",
+            }
+            config_path.write_text(
+                json.dumps({"schema_version": 4, "collectors": {collector_id: settings}}),
+                encoding="utf-8",
+            )
+            self.assertEqual(settings, load_config(root).settings_for(collector_id))
+
     def test_run_request_rejects_invalid_selection_and_execution_policy(self) -> None:
         """Run requests must be immutable, typed declarations before a plan exists."""
         collector_id = "core.system.system_info"
