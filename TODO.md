@@ -436,7 +436,7 @@ Windows platform allows.
       messages, temporary filenames, or update requests.
 - [x] Record resource usage and progress per collector: files scanned, files
       copied, bytes written, packets observed, events processed, and elapsed time.
-- [ ] Make failures actionable by recording the collector ID, operation, platform
+- [x] Make failures actionable by recording the collector ID, operation, platform
       error, remediation hint, and whether a retry is safe.
 
 ### Make concurrency a planned capability

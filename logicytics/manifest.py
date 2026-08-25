@@ -32,6 +32,7 @@ class CollectorRecord:
     finished_at: str | None = None
     summary: str | None = None
     errors: list[str] = field(default_factory=list)
+    failure: dict[str, str | bool] | None = None
     artifacts: list[dict[str, Any]] = field(default_factory=list)
     metrics: Mapping[str, int | float | str] = field(default_factory=dict)
     progress: dict[str, int | float] = field(
@@ -63,8 +64,46 @@ class CollectorRecord:
         self.errors = [redact_text(error) for error in result.errors]
         self.artifacts = [artifact.to_dict() for artifact in result.artifacts]
         self.metrics = redact_mapping(result.metrics)
+        self.failure = self._failure_details() if self.status == "failed" else None
         self.duration_seconds = duration_seconds
         self.finished_at = utc_now()
+
+    def _failure_details(self) -> dict[str, str | bool]:
+        """Convert collector-specific failures into actionable, redacted guidance."""
+        platform_error = self.errors[0] if self.errors else self.summary or "unknown collector failure"
+        diagnostic = f"{self.summary or ''} {platform_error}".casefold()
+        operation = "collect"
+        remediation = "Inspect the collector traceback and correct the reported platform failure."
+        retry_safe = not self.artifacts
+        if "timeout" in diagnostic:
+            operation = "collect"
+            remediation = "Reduce the collection scope or increase the collector timeout before retrying."
+        elif "memory" in diagnostic or "working set" in diagnostic:
+            operation = "collect"
+            remediation = "Reduce the collection scope or increase its declared memory limit."
+        elif "cleanup" in diagnostic or "finaliz" in diagnostic:
+            operation = "cleanup"
+            remediation = "Inspect the private collector workspace and repair its cleanup prerequisites."
+            retry_safe = False
+        elif "permission" in diagnostic or "capability" in diagnostic or "access is denied" in diagnostic:
+            operation = "access"
+            remediation = "Declare and explicitly approve the required capability or run with authorized privileges."
+            retry_safe = False
+        elif "artifact" in diagnostic or "output limit" in diagnostic:
+            operation = "artifact_registration"
+            remediation = "Reduce evidence size/count or adjust the collector's declared artifact limits."
+            retry_safe = False
+        elif "validat" in diagnostic:
+            operation = "validate"
+            remediation = "Correct the collector configuration and platform prerequisites before retrying."
+            retry_safe = False
+        return {
+            "collector_id": self.id,
+            "operation": operation,
+            "platform_error": platform_error,
+            "remediation": remediation,
+            "retry_safe": retry_safe,
+        }
 
 
 @dataclass(slots=True)

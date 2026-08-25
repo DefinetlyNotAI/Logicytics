@@ -761,6 +761,7 @@ class RunSupervisor:
                 "finished_at": record.finished_at,
                 "summary": record.summary,
                 "errors": list(record.errors),
+                "failure": dict(record.failure) if record.failure is not None else None,
                 "duration_seconds": record.duration_seconds,
                 "worker_pid": record.worker_pid,
                 "worker_exit_code": record.worker_exit_code,
@@ -770,6 +771,7 @@ class RunSupervisor:
         record.status = "retry_pending"
         record.summary = "collector retry scheduled"
         record.errors = []
+        record.failure = None
         record.artifacts = []
         record.started_at = None
         record.finished_at = None

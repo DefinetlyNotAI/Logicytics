@@ -49,6 +49,15 @@ def _summary(manifest: RunManifest) -> str:
                 f"  Summary: {record.summary or 'none'}",
             ]
         )
+        if record.failure is not None:
+            lines.extend(
+                [
+                    f"  Failed operation: {record.failure['operation']}",
+                    f"  Platform error: {record.failure['platform_error']}",
+                    f"  Remediation: {record.failure['remediation']}",
+                    f"  Retry safe: {str(record.failure['retry_safe']).lower()}",
+                ]
+            )
         if record.errors:
             lines.append("  Reasons:")
             lines.extend(f"    - {' '.join(error.splitlines())}" for error in record.errors)

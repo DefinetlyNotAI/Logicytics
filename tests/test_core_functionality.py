@@ -916,7 +916,14 @@ class CoreFunctionalityTests(unittest.TestCase):
             outcome = RunSupervisor(root, default_config(root)).run(plan)
             self.assertEqual("failed", outcome.manifest.collectors[0].status)
             self.assertIn("RuntimeError", "\n".join(outcome.manifest.collectors[0].errors))
+            failure = outcome.manifest.collectors[0].failure
+            self.assertIsNotNone(failure)
+            self.assertNotIn("crash-password", failure["platform_error"])
+            self.assertNotIn("crash-token", failure["platform_error"])
+            self.assertIn("[REDACTED]", failure["platform_error"])
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+                packaged_record = json.loads(archive.read("manifest.json"))["collectors"][0]
+                self.assertEqual(failure, packaged_record["failure"])
                 diagnostics = "\n".join(
                     archive.read(name).decode("utf-8")
                     for name in archive.namelist()
@@ -1408,8 +1415,11 @@ class CoreFunctionalityTests(unittest.TestCase):
 
             record = outcome.manifest.collectors[0]
             self.assertEqual("succeeded", record.status, record.errors)
+            self.assertIsNone(record.failure)
             self.assertEqual(2, record.attempt_count)
             self.assertEqual(1, len(record.retry_history))
+            self.assertEqual("collect", record.retry_history[0]["failure"]["operation"])
+            self.assertTrue(record.retry_history[0]["failure"]["retry_safe"])
             self.assertTrue(
                 any("temporary collector failure" in error for error in record.retry_history[0]["errors"])
             )
@@ -1423,6 +1433,8 @@ class CoreFunctionalityTests(unittest.TestCase):
                 summary = archive.read("summary.txt").decode("utf-8")
             self.assertEqual(2, packaged_record["attempt_count"])
             self.assertEqual(1, len(packaged_record["retry_history"]))
+            self.assertIsNone(packaged_record["failure"])
+            self.assertTrue(packaged_record["retry_history"][0]["failure"]["retry_safe"])
             self.assertIn("Attempts: 2", summary)
 
     def test_retry_policy_stops_after_declared_attempt_limit(self) -> None:
@@ -1478,8 +1490,18 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertTrue((outcome.run_directory / "artifacts" / "core_system_system_info" / "system.txt").is_file())
             self.assertEqual(1, len(record.artifacts))
             self.assertEqual(1, len(outcome.manifest.artifact_list()))
+            self.assertEqual("core.system.system_info", record.failure["collector_id"])
+            self.assertEqual("collect", record.failure["operation"])
+            self.assertIn("failure after evidence registration", record.failure["platform_error"])
+            self.assertFalse(record.failure["retry_safe"])
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
                 self.assertIn("artifacts/core_system_system_info/system.txt", archive.namelist())
+                packaged = json.loads(archive.read("manifest.json"))["collectors"][0]
+                summary = archive.read("summary.txt").decode("utf-8")
+            self.assertEqual(record.failure, packaged["failure"])
+            self.assertIn("Failed operation: collect", summary)
+            self.assertIn("Retry safe: false", summary)
+            self.assertIn("Remediation:", summary)
 
     def test_crashed_collector_runs_cleanup_and_packages_partial_evidence_and_isolation_results(self) -> None:
         """A failed process finalizes once, preserves evidence, and cannot stop its neighbor."""
@@ -1589,6 +1611,9 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("collector cleanup failed", record.summary)
             self.assertEqual(1, len(record.artifacts))
             self.assertIn("finalizer failed after collecting evidence", "\n".join(record.errors))
+            self.assertEqual("cleanup", record.failure["operation"])
+            self.assertIn("cleanup", record.failure["remediation"])
+            self.assertFalse(record.failure["retry_safe"])
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
                 self.assertIn("artifacts/core_system_system_info/system.txt", archive.namelist())
 
@@ -1617,7 +1642,10 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("failed", records["core.system.a_timeout"].status)
             self.assertTrue(any("timeout" in error for error in records["core.system.a_timeout"].errors))
             self.assertEqual("timeout_exceeded", records["core.system.a_timeout"].termination_reason)
+            self.assertTrue(records["core.system.a_timeout"].failure["retry_safe"])
+            self.assertIn("timeout", records["core.system.a_timeout"].failure["remediation"])
             self.assertEqual("succeeded", records["core.system.z_independent"].status)
+            self.assertIsNone(records["core.system.z_independent"].failure)
             self.assertEqual("partial", outcome.manifest.status.value)
 
     def test_collector_cannot_modify_peer_workspace_or_repository_files(self) -> None:
@@ -1703,6 +1731,10 @@ class CoreFunctionalityTests(unittest.TestCase):
                     outcome = RunSupervisor(root, default_config(root)).run(plan)
                     self.assertEqual("failed", outcome.manifest.collectors[0].status)
                     self.assertIn(message, "\n".join(outcome.manifest.collectors[0].errors))
+                    failure = outcome.manifest.collectors[0].failure
+                    self.assertEqual("access", failure["operation"])
+                    self.assertIn("capability", failure["remediation"])
+                    self.assertFalse(failure["retry_safe"])
 
     def test_worker_enforces_external_browser_sensitive_and_private_key_read_capabilities(self) -> None:
         """External evidence reads require filesystem access plus every applicable sensitive grant."""
@@ -1921,6 +1953,9 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertGreater(limited.peak_memory_bytes, 1)
             self.assertTrue(any("maximum_memory_bytes=1" in error for error in limited.errors))
             self.assertEqual("memory_limit_exceeded", limited.termination_reason)
+            self.assertEqual("collect", limited.failure["operation"])
+            self.assertIn("memory limit", limited.failure["remediation"])
+            self.assertTrue(limited.failure["retry_safe"])
             self.assertEqual("succeeded", records["core.system.z_independent"].status)
             self.assertEqual("partial", outcome.manifest.status.value)
 
