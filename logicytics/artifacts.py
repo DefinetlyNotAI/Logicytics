@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -43,6 +44,7 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             source_category: str | None = None,
             maximum_artifact_bytes: int | None = None,
             run_output_budget_bytes: int | None = None,
+            cancellation_file: Path | None = None,
     ) -> None:
         self._collector_id = collector_id
         collector_parts = collector_id.split(".", 2)
@@ -71,6 +73,7 @@ class WorkspaceArtifactWriter(ArtifactWriter):
                 or run_output_budget_bytes < 1
         ):
             raise ArtifactError("run_output_budget_bytes must be a positive integer")
+        self._cancellation_file = cancellation_file
         self._bytes_registered = 0
         self._artifacts: list[Artifact] = []
 
@@ -90,32 +93,31 @@ class WorkspaceArtifactWriter(ArtifactWriter):
                 not isinstance(step, str) or not step.strip() for step in transformations
         ):
             raise ArtifactError("artifact transformations must be a tuple of non-empty strings")
+        self._check_cancellation()
         source = source.resolve()
         if not source.is_file() or not _is_within(source, self._workspace):
             raise ArtifactError("artifacts must be regular files inside the collector workspace")
-        size_bytes = source.stat().st_size
-        if size_bytes > self._maximum_artifact_bytes:
-            raise ArtifactError("collector artifact exceeds its declared maximum_artifact_bytes")
-        if self._bytes_registered + size_bytes > self._maximum_output_bytes:
-            raise ArtifactError("collector output exceeds its declared maximum_output_bytes")
-        if self._run_output_budget_bytes is not None and (
-                self._bytes_registered + size_bytes > self._run_output_budget_bytes
-        ):
-            raise ArtifactError("run output exceeds configured maximum_run_output_bytes")
+        source_stat = source.stat()
+        size_bytes = source_stat.st_size
+        self._check_output_limits(size_bytes)
         if len(self._artifacts) >= self._maximum_artifact_files:
             raise ArtifactError("collector artifact count exceeds its declared maximum_artifact_files")
 
         relative_source = source.relative_to(self._workspace)
         safe_collector_id = self._collector_id.replace(".", "_")
         destination = self._artifact_root / safe_collector_id / relative_source
+        if not _is_within(destination, self._artifact_root):
+            raise ArtifactError("artifact destination must remain inside the run artifact store")
         destination.parent.mkdir(parents=True, exist_ok=True)
+        if not _is_within(destination, self._artifact_root):
+            raise ArtifactError("artifact destination must remain inside the run artifact store")
         if destination.exists():
             destination = destination.with_name(f"{destination.stem}-{uuid4().hex[:8]}{destination.suffix}")
-        shutil.copy2(source, destination)
+        digest = self._copy_artifact(source, destination, size_bytes, source_stat.st_mtime_ns)
         artifact = Artifact(
             id=f"artifact.{uuid4().hex}",
             relative_path=destination.relative_to(self._artifact_root).as_posix(),
-            sha256=sha256_file(destination),
+            sha256=digest,
             size_bytes=size_bytes,
             media_type=media_type,
             collector_id=self._collector_id,
@@ -126,3 +128,53 @@ class WorkspaceArtifactWriter(ArtifactWriter):
         self._bytes_registered += size_bytes
         self._artifacts.append(artifact)
         return artifact
+
+    def _check_cancellation(self) -> None:
+        if self._cancellation_file is not None and self._cancellation_file.exists():
+            raise ArtifactError("artifact registration was cancelled")
+
+    def _check_output_limits(self, size_bytes: int) -> None:
+        if size_bytes > self._maximum_artifact_bytes:
+            raise ArtifactError("collector artifact exceeds its declared maximum_artifact_bytes")
+        if self._bytes_registered + size_bytes > self._maximum_output_bytes:
+            raise ArtifactError("collector output exceeds its declared maximum_output_bytes")
+        if self._run_output_budget_bytes is not None and (
+                self._bytes_registered + size_bytes > self._run_output_budget_bytes
+        ):
+            raise ArtifactError("run output exceeds configured maximum_run_output_bytes")
+
+    def _copy_artifact(
+            self,
+            source: Path,
+            destination: Path,
+            expected_size: int,
+            expected_modified_at: int,
+    ) -> str:
+        """Stream bounded evidence to an atomic destination while observing cancellation."""
+        temporary = destination.with_name(f".{destination.name}.{uuid4().hex}.tmp")
+        digest = hashlib.sha256()
+        copied_bytes = 0
+        try:
+            with source.open("rb") as source_stream, temporary.open("xb") as destination_stream:
+                while block := source_stream.read(1024 * 1024):
+                    self._check_cancellation()
+                    copied_bytes += len(block)
+                    self._check_output_limits(copied_bytes)
+                    if copied_bytes > expected_size:
+                        raise ArtifactError("artifact source changed during registration")
+                    destination_stream.write(block)
+                    digest.update(block)
+            final_stat = source.stat()
+            if (
+                    copied_bytes != expected_size
+                    or final_stat.st_size != expected_size
+                    or final_stat.st_mtime_ns != expected_modified_at
+            ):
+                raise ArtifactError("artifact source changed during registration")
+            shutil.copystat(source, temporary)
+            self._check_cancellation()
+            os.replace(temporary, destination)
+            return digest.hexdigest()
+        finally:
+            if temporary.exists():
+                temporary.unlink()

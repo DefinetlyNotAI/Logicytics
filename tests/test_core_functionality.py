@@ -427,6 +427,119 @@ class CoreFunctionalityTests(unittest.TestCase):
             writer = WorkspaceArtifactWriter("core.system.test", workspace, artifact_root, 1024, 1)
             with self.assertRaises(ArtifactError):
                 writer.register_file(outside)
+            linked_source = workspace / "linked-source.txt"
+            linked_source.symlink_to(outside)
+            with self.assertRaisesRegex(ArtifactError, "collector workspace"):
+                writer.register_file(linked_source)
+
+    def test_artifact_destination_symlink_cannot_escape_run_store(self) -> None:
+        """Pre-existing artifact junctions or symlinks must never redirect evidence outside the run."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifact_root = root / "artifacts"
+            outside = root / "outside"
+            workspace.mkdir()
+            artifact_root.mkdir()
+            outside.mkdir()
+            source = workspace / "report.txt"
+            source.write_text("evidence\n", encoding="utf-8")
+            (artifact_root / "core_system_test").symlink_to(outside, target_is_directory=True)
+            writer = WorkspaceArtifactWriter("core.system.test", workspace, artifact_root, 1024, 1)
+
+            with self.assertRaisesRegex(ArtifactError, "destination"):
+                writer.register_file(source)
+            self.assertEqual([], list(outside.iterdir()))
+
+    def test_cancelled_artifact_copy_never_publishes_partial_evidence(self) -> None:
+        """Cancellation must stop staging without creating a final or temporary artifact."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifact_root = root / "artifacts"
+            workspace.mkdir()
+            artifact_root.mkdir()
+            source = workspace / "report.txt"
+            source.write_text("evidence\n", encoding="utf-8")
+            cancellation_file = root / ".cancelled"
+            cancellation_file.touch()
+            writer = WorkspaceArtifactWriter(
+                "core.system.test",
+                workspace,
+                artifact_root,
+                1024,
+                1,
+                cancellation_file=cancellation_file,
+            )
+
+            with self.assertRaisesRegex(ArtifactError, "cancelled"):
+                writer.register_file(source)
+            self.assertEqual((), writer.artifacts)
+            self.assertEqual([], list(artifact_root.rglob("*")))
+
+    def test_mutating_artifact_source_cannot_bypass_declared_byte_limits(self) -> None:
+        """Growing an evidence file after its initial size check must not publish partial data."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifact_root = root / "artifacts"
+            workspace.mkdir()
+            artifact_root.mkdir()
+            source = workspace / "report.bin"
+            source.write_bytes(b"1234")
+            writer = WorkspaceArtifactWriter(
+                "core.system.test",
+                workspace,
+                artifact_root,
+                4,
+                1,
+            )
+            original_copy = writer._copy_artifact
+
+            def mutate_before_copy(*arguments):
+                source.write_bytes(b"12345")
+                return original_copy(*arguments)
+
+            with patch.object(writer, "_copy_artifact", side_effect=mutate_before_copy):
+                with self.assertRaisesRegex(ArtifactError, "maximum_artifact_bytes"):
+                    writer.register_file(source)
+            self.assertEqual((), writer.artifacts)
+            self.assertEqual([], list((artifact_root / "core_system_test").iterdir()))
+
+    def test_cancellation_during_streaming_removes_incomplete_artifact(self) -> None:
+        """Mid-transfer cancellation must remove temporary evidence and publish nothing."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifact_root = root / "artifacts"
+            workspace.mkdir()
+            artifact_root.mkdir()
+            source = workspace / "large.bin"
+            source.write_bytes(b"x" * (2 * 1024 * 1024))
+            cancellation_file = root / ".cancelled"
+            writer = WorkspaceArtifactWriter(
+                "core.system.test",
+                workspace,
+                artifact_root,
+                3 * 1024 * 1024,
+                1,
+                cancellation_file=cancellation_file,
+            )
+            original_check = writer._check_cancellation
+            checks = 0
+
+            def cancel_during_second_chunk() -> None:
+                nonlocal checks
+                checks += 1
+                if checks == 3:
+                    cancellation_file.touch()
+                original_check()
+
+            with patch.object(writer, "_check_cancellation", side_effect=cancel_during_second_chunk):
+                with self.assertRaisesRegex(ArtifactError, "cancelled"):
+                    writer.register_file(source)
+            self.assertEqual((), writer.artifacts)
+            self.assertEqual([], list((artifact_root / "core_system_test").iterdir()))
 
     def test_artifact_registration_enforces_collector_file_count_limit(self) -> None:
         """A collector cannot exceed its declared artifact count even with tiny files."""

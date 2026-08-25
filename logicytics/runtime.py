@@ -116,6 +116,7 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                     ),
                     maximum_artifact_bytes=metadata.maximum_artifact_bytes,
                     run_output_budget_bytes=int(payload["run_output_budget_bytes"]),
+                    cancellation_file=Path(str(payload["cancellation_file"])),
                 )
                 context = CollectorContext(
                     run_id=str(payload["run_id"]),

@@ -326,7 +326,7 @@ Windows platform allows.
       run manifest, while allowing independent collectors to finish.
 - [ ] Prevent a collector from changing another collector's files, result state,
       logger configuration, environment, or execution plan.
-- [ ] Restrict artifact registration to paths inside the collector workspace and
+- [x] Restrict artifact registration to paths inside the collector workspace and
       copy/stream only approved artifacts into the run artifact store.
 - [ ] Provide declared capability gates for filesystem reads, registry reads,
       subprocesses, network capture, raw packet access, browser-data access, and
@@ -426,7 +426,7 @@ Windows platform allows.
       size, maximum file count, and maximum total run size.
 - [ ] Add cancellation checks inside long filesystem walks, packet capture,
       memory collection, event-log queries, and copy loops.
-- [ ] Prevent path traversal and symlink/junction escapes from leaving the run
+- [x] Prevent path traversal and symlink/junction escapes from leaving the run
       workspace or copying unintended locations.
 - [ ] Avoid loading entire command output, files, memory maps, or packet sets into
       memory when streaming is possible.
