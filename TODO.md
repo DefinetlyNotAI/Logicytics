@@ -486,7 +486,7 @@ Windows platform allows.
 ### Improve packaging and evidence integrity
 
 - [x] Package only finalized artifacts referenced by the manifest.
-- [ ] Stream ZIP creation and hash calculation to support large runs.
+- [x] Stream ZIP creation and hash calculation to support large runs.
 - [x] Add per-artifact SHA-256 values and a package-level SHA-256 value.
 - [x] Include a machine-readable manifest and a human-readable summary report.
 - [x] Include collector status, skipped/failed reasons, and collection timestamps

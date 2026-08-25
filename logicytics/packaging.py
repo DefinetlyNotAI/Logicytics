@@ -5,14 +5,17 @@ from __future__ import annotations
 import hashlib
 import os
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, BinaryIO
 
 from logicytics.artifacts import sha256_file
+from logicytics.contracts import Artifact
 from logicytics.manifest import RunManifest, write_manifest
 
 if TYPE_CHECKING:
     from logicytics.runtime import RunOutcome
+
+_STREAM_BLOCK_BYTES = 1024 * 1024
 
 
 def _summary(manifest: RunManifest) -> str:
@@ -47,40 +50,79 @@ def _artifact_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[
     """Resolve and verify every manifest-declared artifact before packaging it."""
     sources: list[tuple[Path, str]] = []
     archive_names: set[str] = set()
-    for artifact in manifest.artifact_list():
-        source = run_directory / "artifacts" / artifact.relative_path
-        archive_name = f"artifacts/{artifact.relative_path}"
-        if archive_name in archive_names:
-            raise ValueError(f"manifest contains duplicate artifact path: {artifact.relative_path}")
-        if not source.is_file():
-            raise FileNotFoundError(f"manifest artifact is missing: {artifact.relative_path}")
-        if source.stat().st_size != artifact.size_bytes or sha256_file(source) != artifact.sha256:
-            raise ValueError(f"manifest artifact verification failed: {artifact.relative_path}")
-        archive_names.add(archive_name)
-        sources.append((source, archive_name))
+    artifact_root = (run_directory / "artifacts").resolve()
+    for record in manifest.collectors:
+        for item in record.artifacts:
+            artifact = Artifact(**item)
+            if artifact.collector_id != record.id:
+                raise ValueError(f"manifest artifact collector ownership is invalid: {artifact.relative_path}")
+            relative = PurePosixPath(artifact.relative_path)
+            owner = record.id.replace(".", "_")
+            if (
+                    not artifact.relative_path
+                    or "\\" in artifact.relative_path
+                    or relative.is_absolute()
+                    or ".." in relative.parts
+                    or relative.as_posix() != artifact.relative_path
+                    or len(relative.parts) < 2
+                    or relative.parts[0] != owner
+            ):
+                raise ValueError(f"manifest artifact escapes its collector-owned store: {artifact.relative_path}")
+            source = artifact_root.joinpath(*relative.parts)
+            if not source.is_file():
+                raise FileNotFoundError(f"manifest artifact is missing: {artifact.relative_path}")
+            try:
+                source.resolve(strict=True).relative_to(artifact_root / owner)
+            except (OSError, ValueError) as error:
+                raise ValueError(
+                    f"manifest artifact escapes its collector-owned store: {artifact.relative_path}"
+                ) from error
+            archive_name = f"artifacts/{relative.as_posix()}"
+            if archive_name in archive_names:
+                raise ValueError(f"manifest contains duplicate artifact path: {artifact.relative_path}")
+            if source.stat().st_size != artifact.size_bytes or sha256_file(source) != artifact.sha256:
+                raise ValueError(f"manifest artifact verification failed: {artifact.relative_path}")
+            archive_names.add(archive_name)
+            sources.append((source, archive_name))
     return sources
 
 
 def _log_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[Path, str]]:
-    """Return only run-owned structured logs, preserving their relative paths."""
+    """Return only the engine log and manifest-owned collector event channels."""
     sources: list[tuple[Path, str]] = []
-    for directory in (run_directory / "logs", run_directory / "collectors"):
-        if not directory.exists():
+    root = run_directory.resolve()
+    candidates = [root / "logs" / "engine.jsonl"]
+    candidates.extend(
+        root / "collectors" / record.id.replace(".", "_") / "events.jsonl"
+        for record in manifest.collectors
+    )
+    for path in candidates:
+        if not path.exists() and not path.is_symlink():
             continue
-        for path in sorted(directory.rglob("*.jsonl")):
-            sources.append((path, path.relative_to(run_directory).as_posix()))
+        if not path.is_file() or path.resolve(strict=True) != path:
+            raise ValueError(f"diagnostic log escapes its run-owned event channel: {path.name}")
+        sources.append((path, path.relative_to(root).as_posix()))
     if manifest.request.get("performance_check") is True:
-        performance_path = run_directory / "logs" / "performance.json"
+        performance_path = root / "logs" / "performance.json"
         if not performance_path.is_file():
             raise FileNotFoundError("requested performance report is missing")
+        if performance_path.resolve(strict=True) != performance_path:
+            raise ValueError("performance report escapes its run-owned log directory")
         sources.append((performance_path, "logs/performance.json"))
     return sources
+
+
+def _stream_archive_member(archive: zipfile.ZipFile, source: Path, archive_name: str) -> None:
+    """Copy one approved member into the archive using bounded evidence blocks."""
+    with source.open("rb") as reader, archive.open(archive_name, "w", force_zip64=True) as writer:
+        while block := reader.read(_STREAM_BLOCK_BYTES):
+            writer.write(block)
 
 
 def _sha256_stream(stream: BinaryIO) -> str:
     """Hash an open binary stream without loading the evidence into memory."""
     digest = hashlib.sha256()
-    for block in iter(lambda: stream.read(1024 * 1024), b""):
+    for block in iter(lambda: stream.read(_STREAM_BLOCK_BYTES), b""):
         digest.update(block)
     return digest.hexdigest()
 
@@ -121,10 +163,10 @@ def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: 
     temporary_package = package_path.with_suffix(".zip.tmp")
     try:
         with zipfile.ZipFile(temporary_package, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.write(manifest_path, "manifest.json")
-            archive.write(summary_path, "summary.txt")
+            _stream_archive_member(archive, manifest_path, "manifest.json")
+            _stream_archive_member(archive, summary_path, "summary.txt")
             for source, archive_name in (*artifact_sources, *log_sources):
-                archive.write(source, archive_name)
+                _stream_archive_member(archive, source, archive_name)
         _verify_archive(temporary_package, manifest, expected_names)
         os.replace(temporary_package, package_path)
     finally:

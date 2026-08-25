@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
+from logicytics import packaging
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.cli import _parser, _request
@@ -971,24 +972,160 @@ class CoreFunctionalityTests(unittest.TestCase):
             with zipfile.ZipFile(package_path) as archive:
                 self.assertNotIn("artifacts/unregistered.txt", archive.namelist())
 
-            original_write = zipfile.ZipFile.write
+            original_write = packaging._stream_archive_member
 
             def tampering_write(
                     archive: zipfile.ZipFile,
-                    filename: str | Path,
-                    arcname: str | None = None,
-                    compress_type: int | None = None,
-                    compresslevel: int | None = None,
+                    filename: Path,
+                    arcname: str,
             ) -> None:
-                if arcname and arcname.startswith("artifacts/"):
+                if arcname.startswith("artifacts/"):
                     archive.writestr(arcname, b"tampered artifact bytes")
                     return
-                original_write(archive, filename, arcname, compress_type, compresslevel)
+                original_write(archive, filename, arcname)
 
-            with patch.object(zipfile.ZipFile, "write", new=tampering_write):
+            with patch.object(packaging, "_stream_archive_member", new=tampering_write):
                 with self.assertRaisesRegex(ValueError, "packaged artifact verification failed"):
                     package_run(outcome)
             self.assertFalse(package_path.with_suffix(".zip.tmp").exists())
+
+    def test_package_excludes_unregistered_collector_and_engine_jsonl_files(self) -> None:
+        """Collector-created JSONL files cannot bypass the registered artifact contract."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            collector_workspace = outcome.run_directory / "collectors" / "core_system_system_info"
+            (collector_workspace / "unregistered.jsonl").write_text("secret workspace data", encoding="utf-8")
+            (outcome.run_directory / "logs" / "unregistered.jsonl").write_text(
+                "secret engine data",
+                encoding="utf-8",
+            )
+
+            package_path, _ = package_run(outcome)
+            with zipfile.ZipFile(package_path) as archive:
+                self.assertIn("logs/engine.jsonl", archive.namelist())
+                self.assertIn("collectors/core_system_system_info/events.jsonl", archive.namelist())
+                self.assertNotIn("logs/unregistered.jsonl", archive.namelist())
+                self.assertNotIn("collectors/core_system_system_info/unregistered.jsonl", archive.namelist())
+
+    def test_package_rejects_manifest_artifact_path_escape_and_forged_collector_ownership(self) -> None:
+        """A modified manifest cannot package outside files or another collector's evidence."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            artifact = outcome.manifest.collectors[0].artifacts[0]
+            original_path = artifact["relative_path"]
+            artifact["relative_path"] = "../outside.jsonl"
+            with self.assertRaisesRegex(ValueError, "escapes its collector-owned store"):
+                package_run(outcome)
+            artifact["relative_path"] = original_path
+            artifact["collector_id"] = "core.system.another"
+            with self.assertRaisesRegex(ValueError, "collector ownership"):
+                package_run(outcome)
+
+    def test_package_rejects_collector_event_log_symlinks_outside_the_run(self) -> None:
+        """A collector event-channel symlink must not smuggle external files into a ZIP."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            outside = root / "outside.jsonl"
+            outside.write_text("outside credentials", encoding="utf-8")
+            events = outcome.run_directory / "collectors" / "core_system_system_info" / "events.jsonl"
+            events.unlink()
+            events.symlink_to(outside)
+
+            with self.assertRaisesRegex(ValueError, "diagnostic log escapes"):
+                package_run(outcome)
+
+    def test_package_rejects_manifest_artifact_symlinks_outside_collector_storage(self) -> None:
+        """Matching bytes cannot make an externally redirected artifact safe to package."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            artifact = outcome.manifest.artifact_list()[0]
+            stored = outcome.run_directory / "artifacts" / artifact.relative_path
+            outside = root / "outside.txt"
+            outside.write_bytes(stored.read_bytes())
+            stored.unlink()
+            stored.symlink_to(outside)
+
+            with self.assertRaisesRegex(ValueError, "escapes its collector-owned store"):
+                package_run(outcome)
+
+    def test_package_streams_large_evidence_and_hashes_with_bounded_reads(self) -> None:
+        """Large artifacts must enter ZIP/hash verification without whole-file reads."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '        artifact = context.artifacts.register_file(output, media_type="text/plain")',
+                    '        output.write_bytes(b"x" * (2 * 1024 * 1024 + 17))\n'
+                    '        artifact = context.artifacts.register_file(output, media_type="text/plain")',
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            artifact = outcome.manifest.artifact_list()[0]
+            source = outcome.run_directory / "artifacts" / artifact.relative_path
+            expected_package_path = Path(outcome.manifest.package["path"])
+            original_open = Path.open
+            read_sizes: list[tuple[Path, int]] = []
+
+            class BoundedReader:
+                def __init__(self, stream: object, path: Path) -> None:
+                    self.stream = stream
+                    self.path = path
+
+                def __enter__(self) -> "BoundedReader":
+                    self.stream.__enter__()
+                    return self
+
+                def __exit__(self, *arguments: object) -> object:
+                    return self.stream.__exit__(*arguments)
+
+                def read(self, size: int = -1) -> bytes:
+                    if not 0 < size <= 1024 * 1024:
+                        raise AssertionError(f"unbounded evidence read requested: {size}")
+                    read_sizes.append((self.path, size))
+                    return self.stream.read(size)
+
+            def guarded_open(path: Path, *arguments: object, **options: object) -> object:
+                stream = original_open(path, *arguments, **options)
+                if path in {source, expected_package_path} and arguments and arguments[0] == "rb":
+                    return BoundedReader(stream, path)
+                return stream
+
+            with patch.object(Path, "open", new=guarded_open):
+                package_path, hash_path = package_run(outcome)
+            self.assertGreaterEqual(len(read_sizes), 6)
+            self.assertEqual({source, expected_package_path}, {path for path, _ in read_sizes})
+            self.assertEqual(artifact.size_bytes, 2 * 1024 * 1024 + 17)
+            self.assertTrue(package_path.is_file())
+            self.assertTrue(hash_path.is_file())
 
     def test_parallel_completion_preserves_deterministic_manifest_order(self) -> None:
         """Collector completion order must not reorder the preflighted execution plan."""
