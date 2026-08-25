@@ -445,8 +445,8 @@ Windows platform allows.
       pools inside collectors.
 - [x] Declare dependencies and resource classes so disk-heavy, network-heavy,
       registry-sensitive, and interactive collectors can be coordinated.
-- [ ] Prevent concurrent collectors from writing the same artifact path.
-- [ ] Use thread-safe artifact registration and structured event reporting.
+- [x] Prevent concurrent collectors from writing the same artifact path.
+- [x] Use thread-safe artifact registration and structured event reporting.
 - [x] Preserve deterministic manifest ordering even when collectors finish out of
       order.
 - [x] Define which collectors may run in parallel and which must run serially.

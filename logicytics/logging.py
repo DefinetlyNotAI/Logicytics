@@ -6,6 +6,7 @@ import json
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
+from threading import RLock
 from time import perf_counter
 from typing import Callable, ParamSpec, TypeVar
 
@@ -23,6 +24,7 @@ class FileEventLogger(EventLogger):
         self.path = path
         self.run_id = run_id
         self.collector_id = collector_id
+        self._event_lock = RLock()
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
     def event(self, level: str, message: str, **fields: int | float | str) -> None:
@@ -37,8 +39,9 @@ class FileEventLogger(EventLogger):
             payload["collector_id"] = self.collector_id
         if fields:
             payload["fields"] = redact_mapping(fields)
-        with self.path.open("a", encoding="utf-8") as stream:
-            stream.write(json.dumps(payload, sort_keys=True) + "\n")
+        with self._event_lock:
+            with self.path.open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(payload, sort_keys=True) + "\n")
 
 
 def timed(logger: EventLogger, *, level: str = "info") -> Callable[

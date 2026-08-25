@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import unittest
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -355,6 +356,23 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("[REDACTED]", event["fields"]["api_key"])
             self.assertEqual("safe", event["fields"]["ordinary"])
 
+    def test_structured_event_logger_serializes_concurrent_jsonl_events(self) -> None:
+        """Concurrent diagnostics stay complete, independently parseable, and redacted."""
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "events.jsonl"
+            logger = FileEventLogger(path, run_id="concurrent-run", collector_id="core.system.test")
+
+            def write_event(index: int) -> None:
+                logger.event("info", "collector_progress", sequence=index, password=f"secret-{index}")
+
+            with ThreadPoolExecutor(max_workers=12) as executor:
+                list(executor.map(write_event, range(120)))
+            events = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+
+            self.assertEqual(120, len(events))
+            self.assertEqual(set(range(120)), {event["fields"]["sequence"] for event in events})
+            self.assertTrue(all(event["fields"]["password"] == "[REDACTED]" for event in events))
+
     def test_file_listing_filters_and_normalizes_files(self) -> None:
         """Recursive file discovery must filter extensions and excluded directories."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -655,6 +673,53 @@ class CoreFunctionalityTests(unittest.TestCase):
             writer.register_file(first, media_type="text/plain")
             with self.assertRaisesRegex(ArtifactError, "maximum_artifact_files"):
                 writer.register_file(second, media_type="text/plain")
+
+    def test_concurrent_artifact_registration_allocates_unique_owned_paths(self) -> None:
+        """Simultaneous registration of one source cannot overwrite another catalog entry."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifact_root = root / "artifacts"
+            workspace.mkdir()
+            artifact_root.mkdir()
+            source = workspace / "shared.txt"
+            source.write_text("evidence", encoding="utf-8")
+            writer = WorkspaceArtifactWriter("core.system.test", workspace, artifact_root, 1024, 20)
+
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                artifacts = list(executor.map(lambda _: writer.register_file(source), range(20)))
+
+            paths = [artifact.relative_path for artifact in artifacts]
+            self.assertEqual(20, len(set(paths)))
+            self.assertEqual(20, len(writer.artifacts))
+            self.assertTrue(all((artifact_root / path).read_text(encoding="utf-8") == "evidence" for path in paths))
+
+    def test_concurrent_artifact_registration_cannot_bypass_file_or_byte_limits(self) -> None:
+        """Parallel callers observe one atomic quota and cannot overfill evidence storage."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifact_root = root / "artifacts"
+            workspace.mkdir()
+            artifact_root.mkdir()
+            source = workspace / "shared.txt"
+            source.write_text("123", encoding="utf-8")
+            writer = WorkspaceArtifactWriter("core.system.test", workspace, artifact_root, 6, 2)
+
+            def register(_: int) -> bool:
+                try:
+                    writer.register_file(source)
+                except ArtifactError:
+                    return False
+                return True
+
+            with ThreadPoolExecutor(max_workers=12) as executor:
+                outcomes = list(executor.map(register, range(24)))
+
+            self.assertEqual(2, sum(outcomes))
+            self.assertEqual(2, len(writer.artifacts))
+            self.assertEqual(6, sum(artifact.size_bytes for artifact in writer.artifacts))
+            self.assertEqual(2, len(list((artifact_root / "core_system_test").iterdir())))
 
     def test_artifact_registration_enforces_individual_file_size_limit(self) -> None:
         """A collector-specific file ceiling rejects large evidence before it is copied."""

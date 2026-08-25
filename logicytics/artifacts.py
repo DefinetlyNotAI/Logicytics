@@ -7,6 +7,7 @@ import os
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
+from threading import RLock
 from uuid import uuid4
 
 from logicytics.contracts import Artifact, ArtifactWriter
@@ -74,13 +75,15 @@ class WorkspaceArtifactWriter(ArtifactWriter):
         ):
             raise ArtifactError("run_output_budget_bytes must be a positive integer")
         self._cancellation_file = cancellation_file
+        self._registration_lock = RLock()
         self._bytes_registered = 0
         self._artifacts: list[Artifact] = []
 
     @property
     def artifacts(self) -> tuple[Artifact, ...]:
         """Return artifacts registered by this worker in registration order."""
-        return tuple(self._artifacts)
+        with self._registration_lock:
+            return tuple(self._artifacts)
 
     def register_file(
             self,
@@ -88,6 +91,17 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             *,
             media_type: str = "application/octet-stream",
             transformations: tuple[str, ...] = (),
+    ) -> Artifact:
+        """Serialize destination allocation, quota checks, publication, and catalog updates."""
+        with self._registration_lock:
+            return self._register_file(source, media_type=media_type, transformations=transformations)
+
+    def _register_file(
+            self,
+            source: Path,
+            *,
+            media_type: str,
+            transformations: tuple[str, ...],
     ) -> Artifact:
         if not isinstance(transformations, tuple) or any(
                 not isinstance(step, str) or not step.strip() for step in transformations
