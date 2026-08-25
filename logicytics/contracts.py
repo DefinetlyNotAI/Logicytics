@@ -272,9 +272,70 @@ class CollectorResult:
     errors: tuple[str, ...] = ()
     metrics: Mapping[str, int | float | str] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        """Reject malformed terminal results before they can cross a worker boundary."""
+        if not isinstance(self.status, CollectorStatus):
+            raise ValueError("collector result status must be a CollectorStatus value")
+        if not isinstance(self.summary, str) or not self.summary.strip():
+            raise ValueError("collector result summary must be a non-empty string")
+        if not isinstance(self.artifacts, tuple) or not all(isinstance(item, Artifact) for item in self.artifacts):
+            raise ValueError("collector result artifacts must be a tuple of Artifact values")
+        artifact_ids = tuple(item.id for item in self.artifacts)
+        artifact_paths = tuple(item.relative_path for item in self.artifacts)
+        if len(set(artifact_ids)) != len(artifact_ids) or len(set(artifact_paths)) != len(artifact_paths):
+            raise ValueError("collector result artifacts must have unique IDs and paths")
+        if not isinstance(self.errors, tuple) or not all(
+                isinstance(error, str) and error.strip() for error in self.errors
+        ):
+            raise ValueError("collector result errors must be a tuple of non-empty strings")
+        if not isinstance(self.metrics, Mapping) or not all(
+                isinstance(name, str) and name.strip()
+                and isinstance(value, (int, float, str))
+                and not isinstance(value, bool)
+                and (not isinstance(value, float) or isfinite(value))
+                for name, value in self.metrics.items()
+        ):
+            raise ValueError("collector result metrics must contain finite scalar values")
+
     @classmethod
     def succeeded(cls, summary: str, artifacts: tuple[Artifact, ...] = ()) -> "CollectorResult":
         return cls(CollectorStatus.SUCCEEDED, summary, artifacts)
+
+    @classmethod
+    def partial(
+            cls,
+            summary: str,
+            artifacts: tuple[Artifact, ...] = (),
+            *,
+            errors: tuple[str, ...] = (),
+    ) -> "CollectorResult":
+        """Return an explicitly incomplete result while preserving registered evidence."""
+        return cls(CollectorStatus.PARTIAL, summary, artifacts, errors=errors)
+
+    @classmethod
+    def skipped(cls, summary: str, *, errors: tuple[str, ...] = ()) -> "CollectorResult":
+        """Return an explicit prerequisite or policy skip."""
+        return cls(CollectorStatus.SKIPPED, summary, errors=errors)
+
+    @classmethod
+    def cancelled(
+            cls,
+            summary: str,
+            artifacts: tuple[Artifact, ...] = (),
+    ) -> "CollectorResult":
+        """Return explicit cancellation while retaining already registered evidence."""
+        return cls(CollectorStatus.CANCELLED, summary, artifacts)
+
+    @classmethod
+    def failed(
+            cls,
+            summary: str,
+            *,
+            errors: tuple[str, ...] = (),
+            artifacts: tuple[Artifact, ...] = (),
+    ) -> "CollectorResult":
+        """Return explicit failure while retaining already registered evidence."""
+        return cls(CollectorStatus.FAILED, summary, artifacts, errors=errors)
 
 
 @dataclass(frozen=True, slots=True)

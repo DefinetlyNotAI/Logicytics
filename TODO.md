@@ -389,9 +389,9 @@ Windows platform allows.
       checksums.
 - [ ] Give every collector an explicit lifecycle: validate, prepare, collect,
       finalize, report result.
-- [ ] Make collector results explicit: `succeeded`, `partial`, `skipped`,
+- [x] Make collector results explicit: `succeeded`, `partial`, `skipped`,
       `cancelled`, or `failed`.
-- [ ] Allow partial runs to be packaged and clearly labeled instead of appearing
+- [x] Allow partial runs to be packaged and clearly labeled instead of appearing
       successful or being silently discarded.
 - [ ] Make reruns selectable by collector ID and keep rerun artifacts separate from
       the original run.

@@ -25,7 +25,15 @@ from logicytics.logging import FileEventLogger, deprecated, raise_logged, timed
 from logicytics.manifest import write_manifest
 from logicytics.sysinternals import ensure_sysinternals
 from logicytics.configuration import default_config, load_config
-from logicytics.contracts import Capability, CollectorMetadata, ResourceClass, RunRequest, Specialty
+from logicytics.contracts import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CollectorStatus,
+    ResourceClass,
+    RunRequest,
+    Specialty,
+)
 from logicytics.discovery import preflight
 from logicytics.environment import EnvironmentReport
 from logicytics.errors import ArtifactError, PlanError, PreflightError
@@ -182,6 +190,35 @@ class CoreFunctionalityTests(unittest.TestCase):
         disk_metadata = CollectorMetadata(**{**common, "resource_class": ResourceClass.DISK_HEAVY})
         self.assertEqual("disk_heavy", disk_metadata.to_dict()["resource_class"])
         self.assertIs(ResourceClass.DISK_HEAVY, CollectorMetadata.from_dict(disk_metadata.to_dict()).resource_class)
+
+    def test_collector_results_expose_all_strict_typed_terminal_states(self) -> None:
+        """Every terminal collector outcome has an explicit, validated result constructor."""
+        outcomes = (
+            (CollectorResult.succeeded("complete"), CollectorStatus.SUCCEEDED),
+            (CollectorResult.partial("incomplete", errors=("one source unavailable",)), CollectorStatus.PARTIAL),
+            (CollectorResult.skipped("prerequisite unavailable"), CollectorStatus.SKIPPED),
+            (CollectorResult.cancelled("operator cancelled"), CollectorStatus.CANCELLED),
+            (CollectorResult.failed("collection failed", errors=("access denied",)), CollectorStatus.FAILED),
+        )
+        for result, status in outcomes:
+            with self.subTest(status=status):
+                self.assertIs(status, result.status)
+        invalid = (
+            ({"status": "succeeded", "summary": "complete"}, "status"),
+            ({"status": CollectorStatus.SUCCEEDED, "summary": ""}, "summary"),
+            ({"status": CollectorStatus.SUCCEEDED, "summary": "complete", "artifacts": []}, "artifacts"),
+            ({"status": CollectorStatus.FAILED, "summary": "failed", "errors": ["failure"]}, "errors"),
+            ({"status": CollectorStatus.FAILED, "summary": "failed", "errors": ("",)}, "errors"),
+            ({"status": CollectorStatus.PARTIAL, "summary": "partial", "metrics": {"count": True}}, "metrics"),
+            (
+                {"status": CollectorStatus.PARTIAL, "summary": "partial", "metrics": {"count": float("inf")}},
+                "metrics",
+            ),
+        )
+        for options, message in invalid:
+            with self.subTest(options=options):
+                with self.assertRaisesRegex(ValueError, message):
+                    CollectorResult(**options)
 
     def test_sensitive_collectors_require_explicit_profile_or_include_opt_in(self) -> None:
         """Default collection excludes sensitive evidence unless explicitly selected."""
@@ -1008,6 +1045,49 @@ class CoreFunctionalityTests(unittest.TestCase):
             repeated = RunSupervisor(root, configuration).run(plan)
             self.assertNotEqual(outcome.manifest.run_id, repeated.manifest.run_id)
             self.assertNotEqual(outcome.run_directory, repeated.run_directory)
+
+    def test_partial_collector_evidence_is_packaged_and_clearly_labeled(self) -> None:
+        """Partial terminal outcomes preserve evidence without masquerading as success."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '        return CollectorResult.succeeded("test artifact created", (artifact,))',
+                    '        return CollectorResult.partial(\n'
+                    '            "only one evidence source was available",\n'
+                    '            (artifact,),\n'
+                    '            errors=("secondary evidence source was unavailable",),\n'
+                    '        )',
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            outcome = RunSupervisor(root, default_config(root)).run(
+                build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True))
+            )
+            record = outcome.manifest.collectors[0]
+
+            self.assertEqual("partial", outcome.manifest.status.value)
+            self.assertEqual("partial", record.status)
+            self.assertEqual(1, len(record.artifacts))
+            self.assertIn("secondary evidence source", outcome.manifest.errors[0]["message"])
+            package_path = Path(outcome.manifest.package["path"])
+            self.assertTrue(package_path.is_file())
+            with zipfile.ZipFile(package_path) as archive:
+                packaged = json.loads(archive.read("manifest.json"))
+                summary = archive.read("summary.txt").decode("utf-8")
+                self.assertEqual(
+                    ["ok"],
+                    archive.read("artifacts/core_system_system_info/system.txt").decode("utf-8").splitlines(),
+                )
+            self.assertEqual("partial", packaged["status"])
+            self.assertEqual("partial", packaged["collectors"][0]["status"])
+            self.assertIn("Status: partial", summary)
+            self.assertIn("secondary evidence source was unavailable", summary)
 
     def test_sensitive_artifact_bytes_are_preserved_while_packaged_diagnostics_are_redacted(self) -> None:
         """Evidence retains intentional secrets, but no packaged diagnostics disclose them."""
