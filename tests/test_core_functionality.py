@@ -26,6 +26,7 @@ from logicytics.manifest import write_manifest
 from logicytics.sysinternals import ensure_sysinternals
 from logicytics.configuration import default_config, load_config
 from logicytics.contracts import (
+    Artifact,
     Capability,
     CollectorMetadata,
     CollectorResult,
@@ -219,6 +220,40 @@ class CoreFunctionalityTests(unittest.TestCase):
             with self.subTest(options=options):
                 with self.assertRaisesRegex(ValueError, message):
                     CollectorResult(**options)
+
+    def test_artifact_contract_rejects_malformed_catalog_metadata(self) -> None:
+        """Evidence records validate identity, MIME type, provenance, timestamps, and status."""
+        valid = {
+            "id": "artifact." + "a" * 32,
+            "relative_path": "core_system_example/report.json",
+            "sha256": "b" * 64,
+            "size_bytes": 2,
+            "media_type": "application/json",
+            "collector_id": "core.system.example",
+            "source_category": "system",
+            "collected_at": "2026-01-01T00:00:00+00:00",
+            "transformations": ("normalized",),
+            "name": "report.json",
+            "status": "registered",
+        }
+        invalid = (
+            ({"id": "artifact.invalid"}, "id"),
+            ({"sha256": "bad"}, "sha256"),
+            ({"size_bytes": True}, "size_bytes"),
+            ({"size_bytes": -1}, "size_bytes"),
+            ({"media_type": "not a mime type"}, "media_type"),
+            ({"collector_id": "another"}, "collector_id"),
+            ({"source_category": "System"}, "source_category"),
+            ({"collected_at": "2026-01-01T00:00:00"}, "timezone"),
+            ({"transformations": ["normalized"]}, "transformations"),
+            ({"name": "../report.json"}, "name"),
+            ({"status": "failed"}, "status"),
+        )
+        self.assertEqual("report.json", Artifact(**valid).name)
+        for changes, message in invalid:
+            with self.subTest(changes=changes):
+                with self.assertRaisesRegex(ValueError, message):
+                    Artifact(**{**valid, **changes})
 
     def test_sensitive_collectors_require_explicit_profile_or_include_opt_in(self) -> None:
         """Default collection excludes sensitive evidence unless explicitly selected."""
@@ -1007,7 +1042,12 @@ class CoreFunctionalityTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(ArtifactError, "transformations"):
                 writer.register_file(source, transformations=["normalized"])  # type: ignore[arg-type]
+            with self.assertRaisesRegex(ArtifactError, "media_type"):
+                writer.register_file(source, media_type="not a mime type")
+            self.assertEqual((), writer.artifacts)
             artifact = writer.register_file(source, transformations=("normalized",))
+            self.assertEqual("report.json", artifact.name)
+            self.assertEqual("registered", artifact.status)
             self.assertEqual("evidence_graph", artifact.source_category)
             datetime.fromisoformat(artifact.collected_at)
             self.assertEqual(
@@ -1096,9 +1136,16 @@ class CoreFunctionalityTests(unittest.TestCase):
                 self.assertEqual([], packaged_manifest["errors"])
                 self.assertEqual([], packaged_manifest["skipped_collectors"])
                 packaged_artifact = packaged_manifest["collectors"][0]["artifacts"][0]
+                catalog_artifact = packaged_manifest["artifact_catalog"][0]
                 self.assertEqual(artifact.source_category, packaged_artifact["source_category"])
                 self.assertEqual(artifact.collected_at, packaged_artifact["collected_at"])
                 self.assertEqual(list(artifact.transformations), packaged_artifact["transformations"])
+                self.assertEqual(artifact.id, catalog_artifact["id"])
+                self.assertEqual("system.txt", catalog_artifact["name"])
+                self.assertEqual("text/plain", catalog_artifact["media_type"])
+                self.assertEqual("registered", catalog_artifact["status"])
+                self.assertEqual("succeeded", catalog_artifact["producer_status"])
+                self.assertEqual("core.system.system_info", catalog_artifact["collector_id"])
                 record = outcome.manifest.collectors[0]
                 summary = archive.read("summary.txt").decode("utf-8")
                 self.assertIn(f"Status: {record.status}", summary)
@@ -1541,6 +1588,39 @@ class CoreFunctionalityTests(unittest.TestCase):
             artifact["relative_path"] = original_path
             artifact["collector_id"] = "core.system.another"
             with self.assertRaisesRegex(ValueError, "collector ownership"):
+                package_run(outcome)
+
+    def test_package_rejects_forged_names_status_and_duplicate_catalog_identifiers(self) -> None:
+        """A package is refused whenever its finalized evidence catalog is inconsistent."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '        return CollectorResult.succeeded("test artifact created", (artifact,))',
+                    '        second = context.workspace / "second.txt"\n'
+                    '        second.write_text("second", encoding="utf-8")\n'
+                    '        extra = context.artifacts.register_file(second, media_type="text/plain")\n'
+                    '        return CollectorResult.succeeded("test artifacts created", (artifact, extra))',
+                ),
+                encoding="utf-8",
+            )
+            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            first, second = outcome.manifest.collectors[0].artifacts
+            original_name = first["name"]
+            first["name"] = "forged.txt"
+            with self.assertRaisesRegex(ValueError, "name does not match"):
+                package_run(outcome)
+            first["name"] = original_name
+            first["status"] = "deleted"
+            with self.assertRaisesRegex(ValueError, "status must be registered"):
+                package_run(outcome)
+            first["status"] = "registered"
+            second["id"] = first["id"]
+            with self.assertRaisesRegex(ValueError, "duplicate artifact id"):
                 package_run(outcome)
 
     def test_package_rejects_collector_event_log_symlinks_outside_the_run(self) -> None:

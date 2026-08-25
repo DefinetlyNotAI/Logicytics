@@ -367,10 +367,10 @@ Windows platform allows.
       make profiles the canonical internal concept.
 - [ ] Replace a single shared mutable logger with run-scoped structured logging
       that can still be rendered to the existing console/log-file formats.
-- [ ] Replace ad hoc output filenames with an artifact catalog containing stable
+- [x] Replace ad hoc output filenames with an artifact catalog containing stable
       artifact IDs, human-readable names, MIME/type information, byte counts,
       timestamps, producer collector, and status.
-- [ ] Replace “zip whatever happens to be in CODE” with packaging the run's
+- [x] Replace “zip whatever happens to be in CODE” with packaging the run's
       artifact catalog and manifest only.
 - [ ] Replace cleanup based on deleting a discovered file list with ownership-based
       cleanup that can remove only the current run's temporary workspace.
@@ -408,9 +408,9 @@ Windows platform allows.
       services; do not import the main application or depend on global state.
 - [ ] **Platform layer:** centralize PowerShell, WMIC/WMI, registry, filesystem,
       process, network, and privilege access behind testable adapters.
-- [ ] **Artifact layer:** validate paths, stream output, normalize metadata, compute
+- [x] **Artifact layer:** validate paths, stream output, normalize metadata, compute
       checksums, enforce size limits, and register artifacts.
-- [ ] **Packaging layer:** consume the finalized artifact catalog and create ZIP,
+- [x] **Packaging layer:** consume the finalized artifact catalog and create ZIP,
       hash, manifest, and summary outputs.
 - [ ] **Maintenance layer:** keep update, debug, developer checks, and usage
       analytics from being coupled to normal collection.

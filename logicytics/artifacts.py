@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -103,6 +104,11 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             media_type: str,
             transformations: tuple[str, ...],
     ) -> Artifact:
+        if not isinstance(media_type, str) or not re.fullmatch(
+                r"[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*",
+                media_type,
+        ):
+            raise ArtifactError("artifact media_type must be a valid MIME type")
         if not isinstance(transformations, tuple) or any(
                 not isinstance(step, str) or not step.strip() for step in transformations
         ):
@@ -138,6 +144,7 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             source_category=self._source_category,
             collected_at=datetime.now(timezone.utc).isoformat(),
             transformations=(*transformations, "copied into run artifact store"),
+            name=destination.name,
         )
         self._bytes_registered += size_bytes
         self._artifacts.append(artifact)

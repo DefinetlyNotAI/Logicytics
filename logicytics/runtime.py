@@ -171,15 +171,17 @@ def _load_collector(path: Path, expected_class: str):
 
 def _artifact_from_dict(data: dict[str, object]) -> Artifact:
     return Artifact(
-        id=str(data["id"]),
-        relative_path=str(data["relative_path"]),
-        sha256=str(data["sha256"]),
-        size_bytes=int(data["size_bytes"]),
-        media_type=str(data["media_type"]),
-        collector_id=str(data["collector_id"]),
-        source_category=str(data["source_category"]),
-        collected_at=str(data["collected_at"]),
-        transformations=tuple(str(step) for step in data["transformations"]),
+        id=data["id"],
+        relative_path=data["relative_path"],
+        sha256=data["sha256"],
+        size_bytes=data["size_bytes"],
+        media_type=data["media_type"],
+        collector_id=data["collector_id"],
+        source_category=data["source_category"],
+        collected_at=data["collected_at"],
+        transformations=data["transformations"],
+        name=data["name"],
+        status=data["status"],
     )
 
 

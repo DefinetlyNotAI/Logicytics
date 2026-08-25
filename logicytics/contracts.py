@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from math import isfinite
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
@@ -17,6 +18,9 @@ _SEMANTIC_VERSION = re.compile(r"^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$")
 _CONTRACT_VERSION = re.compile(r"^\d+\.\d+$")
 _LABEL = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 _RUN_ID = re.compile(r"^run-[0-9a-f]{32}$")
+_ARTIFACT_ID = re.compile(r"^artifact\.[0-9a-f]{32}$")
+_ARTIFACT_SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_MEDIA_TYPE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*$")
 
 
 class CollectorKind(StrEnum):
@@ -233,6 +237,39 @@ class Artifact:
     source_category: str
     collected_at: str
     transformations: tuple[str, ...]
+    name: str
+    status: str = "registered"
+
+    def __post_init__(self) -> None:
+        """Reject malformed evidence records before worker or package publication."""
+        if not isinstance(self.id, str) or not _ARTIFACT_ID.fullmatch(self.id):
+            raise ValueError("artifact id must be a stable artifact identifier")
+        if not isinstance(self.relative_path, str) or not self.relative_path.strip():
+            raise ValueError("artifact relative_path must be a non-empty string")
+        if not isinstance(self.sha256, str) or not _ARTIFACT_SHA256.fullmatch(self.sha256):
+            raise ValueError("artifact sha256 must be a lowercase SHA-256 digest")
+        if not isinstance(self.size_bytes, int) or isinstance(self.size_bytes, bool) or self.size_bytes < 0:
+            raise ValueError("artifact size_bytes must be a non-negative integer")
+        if not isinstance(self.media_type, str) or not _MEDIA_TYPE.fullmatch(self.media_type):
+            raise ValueError("artifact media_type must be a valid MIME type")
+        if not isinstance(self.collector_id, str) or not _COLLECTOR_ID.fullmatch(self.collector_id):
+            raise ValueError("artifact collector_id must identify its producing collector")
+        if not isinstance(self.source_category, str) or not _LABEL.fullmatch(self.source_category):
+            raise ValueError("artifact source_category must be a lowercase category label")
+        if not isinstance(self.name, str) or not self.name.strip() or any(value in self.name for value in "\r\n/\\"):
+            raise ValueError("artifact name must be a safe human-readable filename")
+        if self.status != "registered":
+            raise ValueError("artifact status must be registered")
+        try:
+            collected_at = datetime.fromisoformat(self.collected_at)
+        except (TypeError, ValueError) as error:
+            raise ValueError("artifact collected_at must be an ISO-8601 timestamp") from error
+        if collected_at.tzinfo is None:
+            raise ValueError("artifact collected_at must include a timezone")
+        if not isinstance(self.transformations, tuple) or any(
+                not isinstance(step, str) or not step.strip() for step in self.transformations
+        ):
+            raise ValueError("artifact transformations must be a tuple of non-empty strings")
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

@@ -77,39 +77,36 @@ def _artifact_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[
     sources: list[tuple[Path, str]] = []
     archive_names: set[str] = set()
     artifact_root = (run_directory / "artifacts").resolve()
-    for record in manifest.collectors:
-        for item in record.artifacts:
-            artifact = Artifact(**item)
-            if artifact.collector_id != record.id:
-                raise ValueError(f"manifest artifact collector ownership is invalid: {artifact.relative_path}")
-            relative = PurePosixPath(artifact.relative_path)
-            owner = record.id.replace(".", "_")
-            if (
-                    not artifact.relative_path
-                    or "\\" in artifact.relative_path
-                    or relative.is_absolute()
-                    or ".." in relative.parts
-                    or relative.as_posix() != artifact.relative_path
-                    or len(relative.parts) < 2
-                    or relative.parts[0] != owner
-            ):
-                raise ValueError(f"manifest artifact escapes its collector-owned store: {artifact.relative_path}")
-            source = artifact_root.joinpath(*relative.parts)
-            if not source.is_file():
-                raise FileNotFoundError(f"manifest artifact is missing: {artifact.relative_path}")
-            try:
-                source.resolve(strict=True).relative_to(artifact_root / owner)
-            except (OSError, ValueError) as error:
-                raise ValueError(
-                    f"manifest artifact escapes its collector-owned store: {artifact.relative_path}"
-                ) from error
-            archive_name = f"artifacts/{relative.as_posix()}"
-            if archive_name in archive_names:
-                raise ValueError(f"manifest contains duplicate artifact path: {artifact.relative_path}")
-            if source.stat().st_size != artifact.size_bytes or sha256_file(source) != artifact.sha256:
-                raise ValueError(f"manifest artifact verification failed: {artifact.relative_path}")
-            archive_names.add(archive_name)
-            sources.append((source, archive_name))
+    for item in manifest.artifact_catalog():
+        artifact = Artifact(**{key: value for key, value in item.items() if key != "producer_status"})
+        relative = PurePosixPath(artifact.relative_path)
+        owner = artifact.collector_id.replace(".", "_")
+        if (
+                not artifact.relative_path
+                or "\\" in artifact.relative_path
+                or relative.is_absolute()
+                or ".." in relative.parts
+                or relative.as_posix() != artifact.relative_path
+                or len(relative.parts) < 2
+                or relative.parts[0] != owner
+        ):
+            raise ValueError(f"manifest artifact escapes its collector-owned store: {artifact.relative_path}")
+        source = artifact_root.joinpath(*relative.parts)
+        if not source.is_file():
+            raise FileNotFoundError(f"manifest artifact is missing: {artifact.relative_path}")
+        try:
+            source.resolve(strict=True).relative_to(artifact_root / owner)
+        except (OSError, ValueError) as error:
+            raise ValueError(
+                f"manifest artifact escapes its collector-owned store: {artifact.relative_path}"
+            ) from error
+        archive_name = f"artifacts/{relative.as_posix()}"
+        if archive_name in archive_names:
+            raise ValueError(f"manifest contains duplicate artifact path: {artifact.relative_path}")
+        if source.stat().st_size != artifact.size_bytes or sha256_file(source) != artifact.sha256:
+            raise ValueError(f"manifest artifact verification failed: {artifact.relative_path}")
+        archive_names.add(archive_name)
+        sources.append((source, archive_name))
     return sources
 
 

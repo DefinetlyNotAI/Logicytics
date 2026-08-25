@@ -9,7 +9,7 @@ import ctypes
 import getpass
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
 from logicytics.contracts import CONTRACT_VERSION, Artifact, CollectorResult, RunStatus
@@ -185,16 +185,45 @@ class RunManifest:
 
     def artifact_list(self) -> tuple[Artifact, ...]:
         """Return all registered artifacts reconstructed from the manifest."""
-        return tuple(
-            Artifact(**artifact)
-            for record in self.collectors
-            for artifact in record.artifacts
-        )
+        return tuple(Artifact(**{key: value for key, value in item.items() if key != "producer_status"})
+                     for item in self.artifact_catalog())
+
+    def artifact_catalog(self) -> tuple[dict[str, Any], ...]:
+        """Build the globally unique, ownership-validated run-wide evidence catalog."""
+        catalog: list[dict[str, Any]] = []
+        artifact_ids: set[str] = set()
+        artifact_paths: set[str] = set()
+        for record in self.collectors:
+            for item in record.artifacts:
+                artifact = Artifact(**item)
+                if artifact.collector_id != record.id:
+                    raise ValueError(f"manifest artifact collector ownership is invalid: {artifact.relative_path}")
+                relative = PurePosixPath(artifact.relative_path)
+                if (
+                        "\\" in artifact.relative_path
+                        or relative.is_absolute()
+                        or ".." in relative.parts
+                        or relative.as_posix() != artifact.relative_path
+                        or len(relative.parts) < 2
+                        or relative.parts[0] != record.id.replace(".", "_")
+                ):
+                    raise ValueError(f"manifest artifact escapes its collector-owned store: {artifact.relative_path}")
+                if artifact.name != relative.name:
+                    raise ValueError(f"manifest artifact name does not match its registered path: {artifact.name}")
+                if artifact.id in artifact_ids:
+                    raise ValueError(f"manifest contains duplicate artifact id: {artifact.id}")
+                if artifact.relative_path in artifact_paths:
+                    raise ValueError(f"manifest contains duplicate artifact path: {artifact.relative_path}")
+                artifact_ids.add(artifact.id)
+                artifact_paths.add(artifact.relative_path)
+                catalog.append({**artifact.to_dict(), "producer_status": record.status})
+        return tuple(catalog)
 
     def to_dict(self) -> dict[str, Any]:
         """Produce JSON-safe manifest data."""
         data = asdict(self)
         data["status"] = self.status.value
+        data["artifact_catalog"] = self.artifact_catalog()
         return data
 
 
