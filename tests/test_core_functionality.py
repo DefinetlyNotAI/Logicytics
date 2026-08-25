@@ -22,7 +22,7 @@ from logicytics.file_listing import list_files
 from logicytics.logging import FileEventLogger, deprecated, raise_logged, timed
 from logicytics.sysinternals import ensure_sysinternals
 from logicytics.configuration import default_config, load_config
-from logicytics.contracts import Capability, CollectorMetadata, RunRequest, Specialty
+from logicytics.contracts import Capability, CollectorMetadata, ResourceClass, RunRequest, Specialty
 from logicytics.discovery import preflight
 from logicytics.environment import EnvironmentReport
 from logicytics.errors import ArtifactError, PlanError, PreflightError
@@ -77,6 +77,7 @@ def _delayed_collector_source(
         *,
         parallel_safe: bool = True,
         dependencies: tuple[str, ...] = (),
+        resource_class: ResourceClass = ResourceClass.GENERAL,
         fail: bool = False,
 ) -> str:
     """Create a valid fixture collector with observable scheduling duration."""
@@ -85,9 +86,14 @@ def _delayed_collector_source(
     source = source.replace("core.system.system_info", f"core.system.{filename}")
     source = source.replace("from pathlib import Path\n", "from pathlib import Path\nfrom time import sleep\n")
     source = source.replace(
+        "from logicytics import CollectorMetadata,",
+        "from logicytics import CollectorMetadata, ResourceClass,",
+    )
+    source = source.replace(
         '            supported_platforms=("win32",),',
         '            supported_platforms=("win32",),\n'
         f'            dependencies={dependencies!r},\n'
+        f'            resource_class=ResourceClass.{resource_class.name},\n'
         f'            parallel_safe={parallel_safe!r},',
     )
     source = source.replace(
@@ -153,6 +159,10 @@ class CoreFunctionalityTests(unittest.TestCase):
             CollectorMetadata(**{**common, "maximum_artifact_bytes": True})
         with self.assertRaisesRegex(ValueError, "maximum_artifact_bytes"):
             CollectorMetadata(**{**common, "maximum_output_bytes": 8, "maximum_artifact_bytes": 9})
+        with self.assertRaisesRegex(ValueError, "resource_class"):
+            CollectorMetadata(**{**common, "resource_class": "disk_heavy"})
+        with self.assertRaisesRegex(ValueError, "ResourceClass"):
+            CollectorMetadata.from_dict({**CollectorMetadata(**common).to_dict(), "resource_class": "unknown"})
         with self.assertRaisesRegex(ValueError, "sensitive collectors"):
             CollectorMetadata(**{**common, "sensitive_data_categories": ("credentials",)})
         for retries in (-1, 4, True):
@@ -165,6 +175,10 @@ class CoreFunctionalityTests(unittest.TestCase):
                     CollectorMetadata(**{**common, "retry_delay_seconds": retry_delay})
         metadata = CollectorMetadata(**{**common, "maximum_output_bytes": 8})
         self.assertEqual(8, metadata.maximum_artifact_bytes)
+        self.assertIs(ResourceClass.GENERAL, metadata.resource_class)
+        disk_metadata = CollectorMetadata(**{**common, "resource_class": ResourceClass.DISK_HEAVY})
+        self.assertEqual("disk_heavy", disk_metadata.to_dict()["resource_class"])
+        self.assertIs(ResourceClass.DISK_HEAVY, CollectorMetadata.from_dict(disk_metadata.to_dict()).resource_class)
 
     def test_sensitive_collectors_require_explicit_profile_or_include_opt_in(self) -> None:
         """Default collection excludes sensitive evidence unless explicitly selected."""
@@ -210,6 +224,26 @@ class CoreFunctionalityTests(unittest.TestCase):
                 RunRequest(profile="deep", approved_capabilities=(Capability.SENSITIVE_FILES,)),
             )
             self.assertEqual([sensitive_id], [item.metadata.id for item in deep.collectors])
+
+    def test_preflight_rejects_unregistered_collector_resource_classes(self) -> None:
+        """Invalid scheduling metadata blocks shipped collectors before any run starts."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n            resource_class="disk_heavy",',
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn("resource_class", report.invalid[0].runtime_error)
+            with self.assertRaises(PreflightError):
+                build_plan(report, RunRequest())
 
     def test_preflight_rejects_sensitive_default_profile_collector(self) -> None:
         """A shipped collector cannot silently introduce sensitive default evidence."""
@@ -1292,6 +1326,93 @@ class CoreFunctionalityTests(unittest.TestCase):
             last = records["core.system.z_parallel"]
             self.assertLessEqual(first.finished_at, serial.started_at)
             self.assertLessEqual(serial.finished_at, last.started_at)
+
+    def test_conflicting_resource_classes_run_without_worker_overlap(self) -> None:
+        """Disk, network, and registry resource conflicts each serialize their owners."""
+        for resource_class in (
+                ResourceClass.DISK_HEAVY,
+                ResourceClass.NETWORK_HEAVY,
+                ResourceClass.REGISTRY_SENSITIVE,
+        ):
+            with self.subTest(resource_class=resource_class), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                core_directory = root / "core" / "system"
+                core_directory.mkdir(parents=True)
+                (root / "plugins").mkdir()
+                for filename in ("a_first", "z_second"):
+                    (core_directory / f"{filename}.py").write_text(
+                        _delayed_collector_source(filename, 0.15, resource_class=resource_class),
+                        encoding="utf-8",
+                    )
+                report = preflight(root)
+                self.assertEqual((), report.invalid)
+                plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
+                outcome = RunSupervisor(root, default_config(root)).run(plan)
+                records = {record.id: record for record in outcome.manifest.collectors}
+                first = records["core.system.a_first"]
+                second = records["core.system.z_second"]
+
+                self.assertEqual("succeeded", first.status, first.errors)
+                self.assertEqual("succeeded", second.status, second.errors)
+                self.assertLessEqual(first.finished_at, second.started_at)
+
+    def test_independent_resource_classes_preserve_bounded_parallelism(self) -> None:
+        """Different noninteractive resource owners can overlap in isolated workers."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            fixtures = (
+                ("a_disk", ResourceClass.DISK_HEAVY),
+                ("z_network", ResourceClass.NETWORK_HEAVY),
+            )
+            for filename, resource_class in fixtures:
+                (core_directory / f"{filename}.py").write_text(
+                    _delayed_collector_source(filename, 0.35, resource_class=resource_class),
+                    encoding="utf-8",
+                )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+
+            self.assertEqual("succeeded", records["core.system.a_disk"].status)
+            self.assertEqual("succeeded", records["core.system.z_network"].status)
+            self.assertLess(records["core.system.z_network"].started_at, records["core.system.a_disk"].finished_at)
+
+    def test_interactive_resource_class_runs_without_any_worker_overlap(self) -> None:
+        """Interactive collectors require an exclusive deterministic scheduler window."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            fixtures = (
+                ("a_disk", ResourceClass.DISK_HEAVY),
+                ("m_interactive", ResourceClass.INTERACTIVE),
+                ("z_general", ResourceClass.GENERAL),
+            )
+            for filename, resource_class in fixtures:
+                (core_directory / f"{filename}.py").write_text(
+                    _delayed_collector_source(filename, 0.15, resource_class=resource_class),
+                    encoding="utf-8",
+                )
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            plan = build_plan(report, RunRequest(max_workers=3, acknowledge_authorization=True))
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+
+            self.assertLessEqual(
+                records["core.system.a_disk"].finished_at,
+                records["core.system.m_interactive"].started_at,
+            )
+            self.assertLessEqual(
+                records["core.system.m_interactive"].finished_at,
+                records["core.system.z_general"].started_at,
+            )
 
     def test_dependencies_finish_before_dependents_start(self) -> None:
         """Topological order must become an execution barrier under bounded parallelism."""

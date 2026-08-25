@@ -85,6 +85,16 @@ class Capability(StrEnum):
     ELEVATED_PRIVILEGES = "elevated_privileges"
 
 
+class ResourceClass(StrEnum):
+    """Scheduling resources whose conflicting collectors cannot safely overlap."""
+
+    GENERAL = "general"
+    DISK_HEAVY = "disk_heavy"
+    NETWORK_HEAVY = "network_heavy"
+    REGISTRY_SENSITIVE = "registry_sensitive"
+    INTERACTIVE = "interactive"
+
+
 @dataclass(frozen=True, slots=True)
 class CollectorMetadata:
     """Declarative identity, limits, and permissions for one collector."""
@@ -109,6 +119,7 @@ class CollectorMetadata:
     retry_delay_seconds: float = 0.0
     minimum_contract_version: str = CONTRACT_VERSION
     parallel_safe: bool = True
+    resource_class: ResourceClass = ResourceClass.GENERAL
 
     def __post_init__(self) -> None:
         """Reject malformed metadata before it can enter planning or runtime."""
@@ -164,6 +175,8 @@ class CollectorMetadata:
             raise ValueError("metadata retry_delay_seconds must be a number from 0 to 30")
         if not isinstance(self.parallel_safe, bool):
             raise ValueError("metadata parallel_safe must be boolean")
+        if not isinstance(self.resource_class, ResourceClass):
+            raise ValueError("metadata resource_class must be a ResourceClass value")
 
     @staticmethod
     def _validate_labels(name: str, values: tuple[str, ...], *, require_value: bool = False) -> None:
@@ -179,6 +192,7 @@ class CollectorMetadata:
         data = asdict(self)
         data["specialty"] = self.specialty.value if isinstance(self.specialty, Specialty) else self.specialty
         data["capabilities"] = [capability.value for capability in self.capabilities]
+        data["resource_class"] = self.resource_class.value
         return data
 
     @classmethod
@@ -194,6 +208,7 @@ class CollectorMetadata:
                 raise ValueError("collector specialty is unsupported")
             values["specialty"] = specialty
         values["capabilities"] = tuple(Capability(capability) for capability in values.get("capabilities", ()))
+        values["resource_class"] = ResourceClass(values.get("resource_class", ResourceClass.GENERAL))
         for field_name in (
                 "supported_platforms",
                 "sensitive_data_categories",

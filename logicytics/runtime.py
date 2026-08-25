@@ -29,6 +29,7 @@ from logicytics.contracts import (
     CollectorContext,
     CollectorResult,
     CollectorStatus,
+    ResourceClass,
     RunStatus,
     ValidationResult,
 )
@@ -57,6 +58,7 @@ class _ActiveWorker:
     maximum_memory_bytes: int
     workspace: Path
     parallel_safe: bool
+    resource_class: ResourceClass
     reserved_output_bytes: int
     last_event_count: int = 0
     last_event_offset: int = 0
@@ -504,6 +506,18 @@ class RunSupervisor:
                     break
                 if active and not candidate.metadata.parallel_safe:
                     break
+                if active and (
+                        candidate.metadata.resource_class is ResourceClass.INTERACTIVE
+                        or any(worker.resource_class is ResourceClass.INTERACTIVE for worker in active.values())
+                        or (
+                            candidate.metadata.resource_class is not ResourceClass.GENERAL
+                            and any(
+                                worker.resource_class is candidate.metadata.resource_class
+                                for worker in active.values()
+                            )
+                        )
+                ):
+                    break
                 reserved_output_bytes = sum(worker.reserved_output_bytes for worker in active.values())
                 remaining_output_bytes = (
                     self.configuration.runtime.maximum_run_output_bytes
@@ -562,6 +576,7 @@ class RunSupervisor:
                     candidate.metadata.maximum_memory_bytes,
                     workspace,
                     candidate.metadata.parallel_safe,
+                    candidate.metadata.resource_class,
                     output_budget,
                 )
                 run_logger.event("info", "collector_started", collector_id=candidate.metadata.id)

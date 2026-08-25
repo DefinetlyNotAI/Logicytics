@@ -443,7 +443,7 @@ Windows platform allows.
 
 - [ ] Use a scheduler with bounded workers instead of creating independent thread
       pools inside collectors.
-- [ ] Declare dependencies and resource classes so disk-heavy, network-heavy,
+- [x] Declare dependencies and resource classes so disk-heavy, network-heavy,
       registry-sensitive, and interactive collectors can be coordinated.
 - [ ] Prevent concurrent collectors from writing the same artifact path.
 - [ ] Use thread-safe artifact registration and structured event reporting.
