@@ -5,8 +5,9 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass
 
-from logicytics.contracts import CollectorKind, RunRequest
+from logicytics.contracts import Capability, CollectorKind, RunRequest
 from logicytics.discovery import CollectorCandidate, PreflightReport
+from logicytics.environment import inspect_environment
 from logicytics.errors import PlanError, PreflightError
 
 
@@ -89,4 +90,14 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
         if missing_capabilities:
             required = ", ".join(sorted(capability.value for capability in missing_capabilities))
             raise PlanError(f"{candidate.metadata.id} requires unapproved capabilities: {required}")
+    elevated_collectors = sorted(
+        candidate.metadata.id
+        for candidate in selected.values()
+        if candidate.metadata is not None and Capability.ELEVATED_PRIVILEGES in candidate.metadata.capabilities
+    )
+    if elevated_collectors and inspect_environment().is_administrator is not True:
+        raise PlanError(
+            "selected collectors require an administrator account: "
+            + ", ".join(elevated_collectors)
+        )
     return RunPlan(request=request, collectors=_topological_order(selected))

@@ -20,6 +20,7 @@ from logicytics.sysinternals import ensure_sysinternals
 from logicytics.configuration import default_config, load_config
 from logicytics.contracts import Capability, CollectorMetadata, RunRequest, Specialty
 from logicytics.discovery import preflight
+from logicytics.environment import EnvironmentReport
 from logicytics.errors import ArtifactError, PlanError, PreflightError
 from logicytics.packaging import package_run
 from logicytics.planner import build_plan
@@ -1023,6 +1024,71 @@ class CoreFunctionalityTests(unittest.TestCase):
                 RunRequest(approved_capabilities=(Capability.FILESYSTEM_READ,)),
             )
             self.assertEqual(1, len(plan.collectors))
+
+    def test_elevated_collectors_require_approval_and_administrator_privileges(self) -> None:
+        """Privilege-sensitive collection must fail closed before launching a worker."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            secured_collector = _COLLECTOR.replace(
+                "from logicytics import CollectorMetadata",
+                "from logicytics import Capability, CollectorMetadata",
+            ).replace(
+                'supported_platforms=("win32",),',
+                'supported_platforms=("win32",), capabilities=(Capability.ELEVATED_PRIVILEGES,),',
+            )
+            collector_path.write_text(secured_collector, encoding="utf-8")
+            report = preflight(root)
+            with self.assertRaisesRegex(PlanError, "unapproved capabilities"):
+                build_plan(report, RunRequest())
+            approved = RunRequest(approved_capabilities=(Capability.ELEVATED_PRIVILEGES,))
+            for administrator_state in (False, None):
+                with self.subTest(administrator_state=administrator_state):
+                    environment = EnvironmentReport(administrator_state, True, None)
+                    with patch("logicytics.planner.inspect_environment", return_value=environment):
+                        with self.assertRaisesRegex(PlanError, "administrator account"):
+                            build_plan(report, approved)
+            with patch(
+                    "logicytics.planner.inspect_environment",
+                    return_value=EnvironmentReport(True, True, None),
+            ):
+                plan = build_plan(report, approved)
+            self.assertEqual(1, len(plan.collectors))
+
+    def test_unselected_privileged_plugin_never_requests_host_elevation(self) -> None:
+        """An opt-in privileged plugin must not affect an ordinary core-only plan."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            plugin_path = root / "plugins" / "admin_plugin.py"
+            plugin_path.parent.mkdir(parents=True)
+            source = _COLLECTOR.replace("CoreCollector", "PluginCollector")
+            source = source.replace("SystemInfoCollector", "AdminPluginCollector")
+            source = source.replace("core.system.system_info", "plugin.admin_plugin")
+            source = source.replace(
+                "from logicytics import CollectorMetadata",
+                "from logicytics import Capability, CollectorMetadata",
+            ).replace(
+                'supported_platforms=("win32",),',
+                'supported_platforms=("win32",), capabilities=(Capability.ELEVATED_PRIVILEGES,),',
+            )
+            plugin_path.write_text(source, encoding="utf-8")
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+            with patch("logicytics.planner.inspect_environment") as inspect:
+                plan = build_plan(report, RunRequest())
+            self.assertEqual((), plan.collectors)
+            inspect.assert_not_called()
+            enabled = RunRequest(
+                enable_plugins=True,
+                approved_capabilities=(Capability.ELEVATED_PRIVILEGES,),
+            )
+            with patch(
+                    "logicytics.planner.inspect_environment",
+                    return_value=EnvironmentReport(False, True, None),
+            ):
+                with self.assertRaisesRegex(PlanError, "administrator account"):
+                    build_plan(report, enabled)
 
 
 if __name__ == "__main__":

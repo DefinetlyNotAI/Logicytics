@@ -331,7 +331,7 @@ Windows platform allows.
 - [ ] Provide declared capability gates for filesystem reads, registry reads,
       subprocesses, network capture, raw packet access, browser-data access, and
       sensitive-file access.
-- [ ] Require elevated privilege and explicit user approval for collectors that need
+- [x] Require elevated privilege and explicit user approval for collectors that need
       it; do not grant administrator access to every plugin by default.
 - [ ] Capture subprocess trees so child processes do not survive a failed collector.
 - [ ] Use OS/process isolation as the default boundary; treat Python-level import
