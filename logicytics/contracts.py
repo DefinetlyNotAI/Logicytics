@@ -124,6 +124,8 @@ class CollectorMetadata:
         self._validate_labels("supported_platforms", self.supported_platforms, require_value=True)
         self._validate_labels("sensitive_data_categories", self.sensitive_data_categories)
         self._validate_labels("default_profiles", self.default_profiles, require_value=True)
+        if self.sensitive_data_categories and {"standard", "minimal"}.intersection(self.default_profiles):
+            raise ValueError("sensitive collectors must not belong to standard or minimal profiles")
         if not isinstance(self.capabilities, tuple) or not all(
                 isinstance(capability, Capability) for capability in self.capabilities):
             raise ValueError("metadata capabilities must be a tuple of Capability values")

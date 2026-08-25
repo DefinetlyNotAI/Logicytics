@@ -147,8 +147,75 @@ class CoreFunctionalityTests(unittest.TestCase):
             CollectorMetadata(**{**common, "maximum_artifact_bytes": True})
         with self.assertRaisesRegex(ValueError, "maximum_artifact_bytes"):
             CollectorMetadata(**{**common, "maximum_output_bytes": 8, "maximum_artifact_bytes": 9})
+        with self.assertRaisesRegex(ValueError, "sensitive collectors"):
+            CollectorMetadata(**{**common, "sensitive_data_categories": ("credentials",)})
         metadata = CollectorMetadata(**{**common, "maximum_output_bytes": 8})
         self.assertEqual(8, metadata.maximum_artifact_bytes)
+
+    def test_sensitive_collectors_require_explicit_profile_or_include_opt_in(self) -> None:
+        """Default collection excludes sensitive evidence unless explicitly selected."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            (core_directory / "a_standard.py").write_text(
+                _delayed_collector_source("a_standard", 0.0),
+                encoding="utf-8",
+            )
+            sensitive_id = "core.system.z_sensitive"
+            source = _delayed_collector_source("z_sensitive", 0.0).replace(
+                "from logicytics import CollectorMetadata",
+                "from logicytics import Capability, CollectorMetadata",
+            ).replace(
+                '            supported_platforms=("win32",),',
+                '            supported_platforms=("win32",),\n'
+                '            capabilities=(Capability.SENSITIVE_FILES,),\n'
+                '            sensitive_data_categories=("credentials",),\n'
+                '            default_profiles=("deep",),',
+            )
+            (core_directory / "z_sensitive.py").write_text(source, encoding="utf-8")
+            report = preflight(root)
+            self.assertEqual((), report.invalid)
+
+            standard = build_plan(report, RunRequest())
+            self.assertEqual(["core.system.a_standard"], [item.metadata.id for item in standard.collectors])
+            with self.assertRaisesRegex(PlanError, "unapproved capabilities"):
+                build_plan(report, RunRequest(include=(sensitive_id,)))
+            opted_in = build_plan(
+                report,
+                RunRequest(
+                    include=(sensitive_id,),
+                    exclude=("core.system.a_standard",),
+                    approved_capabilities=(Capability.SENSITIVE_FILES,),
+                ),
+            )
+            self.assertEqual([sensitive_id], [item.metadata.id for item in opted_in.collectors])
+            deep = build_plan(
+                report,
+                RunRequest(profile="deep", approved_capabilities=(Capability.SENSITIVE_FILES,)),
+            )
+            self.assertEqual([sensitive_id], [item.metadata.id for item in deep.collectors])
+
+    def test_preflight_rejects_sensitive_default_profile_collector(self) -> None:
+        """A shipped collector cannot silently introduce sensitive default evidence."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n'
+                    '            sensitive_data_categories=("credentials",),',
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn("sensitive collectors", report.invalid[0].runtime_error)
+            with self.assertRaises(PreflightError):
+                build_plan(report, RunRequest())
 
     def test_deprecation_decorator_logs_removal_context(self) -> None:
         """Deprecated functions must preserve behavior while reporting removal context."""

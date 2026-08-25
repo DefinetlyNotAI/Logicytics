@@ -419,7 +419,7 @@ Windows platform allows.
 
 - [ ] Require an explicit consent/authorization acknowledgement before collection,
       with a clear summary of the selected categories and sensitive outputs.
-- [ ] Mark collectors that may copy credentials, private keys, personal files,
+- [x] Mark collectors that may copy credentials, private keys, personal files,
       browser data, or packet contents as sensitive and make them opt-in for the
       default profile.
 - [ ] Add per-collector timeouts, retry policies, maximum output size, maximum file
@@ -462,7 +462,7 @@ Windows platform allows.
       overrides.
 - [ ] Provide named profiles such as `minimal`, `standard`, `deep`, and `offline`
       with documented collector membership.
-- [ ] Allow explicit include/exclude collector selections to override a profile.
+- [x] Allow explicit include/exclude collector selections to override a profile.
 - [ ] Version the configuration schema and migrate older configuration files.
 - [ ] Keep remote configuration optional, authenticated/validated, and out of the
       critical local collection path.
