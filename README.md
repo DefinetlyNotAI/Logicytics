@@ -179,6 +179,11 @@ from `CoreCollector`, provide documented and typed `metadata`, `validate`,
 `collect`, and `cleanup` methods, and use a matching ID/specialty. Plugins follow
 the equivalent `PluginCollector` contract.
 
+Collectors may import the public collector contracts, but not CLI, planning,
+runtime, packaging, configuration, or public application-control services. Even
+with an approved subprocess capability, workers cannot invoke Logicytics, another
+collector, repository/package managers, or system reboot/shutdown commands.
+
 Malformed core collectors block a run. Malformed unselected plugins are
 quarantined and listed by preflight; malformed explicitly selected plugins block
 the requested run. See [TODO.md](TODO.md) for the complete v4 recreation plan.

@@ -9,6 +9,8 @@ import json
 import multiprocessing
 import os
 import queue
+import re
+import shlex
 import signal
 import shutil
 import socket
@@ -72,6 +74,18 @@ class _WorkerMutationGuard:
     _PATH_EVENTS = {"os.mkdir", "os.remove", "os.rmdir", "os.chmod", "os.chown", "os.utime", "os.truncate"}
     _DOUBLE_PATH_EVENTS = {"os.rename", "os.link", "os.symlink"}
     _BLOCKED_EVENTS = {"os.chdir", "os.putenv", "os.unsetenv", "os.system"}
+    _FORBIDDEN_COMMANDS = {
+        "choco", "git", "npm", "pip", "pip3", "pnpm", "poetry", "shutdown", "uv", "winget", "yarn",
+    }
+    _FORBIDDEN_TOOL_REFERENCE = re.compile(
+        r"(?<![a-z0-9_.-])(?:choco|git|npm|pip(?:\d+(?:\.\d+)*)?|pnpm|poetry|shutdown|uv|winget|yarn)"
+        r"(?:\.exe|\.cmd|\.bat)?(?![a-z0-9_.-])",
+        re.IGNORECASE,
+    )
+    _FORBIDDEN_POWERSHELL = re.compile(
+        r"(?<![a-z0-9_-])(?:install-module|install-package|restart-computer|stop-computer|update-module)(?![a-z0-9_-])",
+        re.IGNORECASE,
+    )
 
     def __init__(
             self,
@@ -84,6 +98,14 @@ class _WorkerMutationGuard:
         self.roots = (workspace.resolve(), (artifact_root / collector_id.replace(".", "_")).resolve())
         self.runtime_roots = (Path(sys.base_prefix).resolve(), Path(__file__).resolve().parent)
         self.collector_source = collector_source.resolve()
+        source_tree = next(
+            (parent for parent in self.collector_source.parents if parent.name.casefold() in {"core", "plugins"}),
+            None,
+        )
+        self.collector_roots = () if source_tree is None else (
+            (source_tree.parent / "core").resolve(),
+            (source_tree.parent / "plugins").resolve(),
+        )
         self.capabilities = frozenset(capabilities)
         self.active = False
         sys.addaudithook(self._check_event)
@@ -122,11 +144,83 @@ class _WorkerMutationGuard:
         if private_key and Capability.PRIVATE_KEYS not in self.capabilities:
             raise PermissionError("collector requires declared private_keys capability")
 
+    @staticmethod
+    def _subprocess_tokens(arguments: tuple[object, ...]) -> tuple[str, ...]:
+        """Normalize cross-platform subprocess audit arguments without executing a shell."""
+        executable = arguments[0] if arguments else None
+        command = arguments[1] if len(arguments) > 1 else None
+        if isinstance(command, (list, tuple)):
+            tokens = tuple(str(item) for item in command)
+        elif isinstance(command, str):
+            try:
+                tokens = tuple(shlex.split(command, posix=os.name != "nt"))
+            except ValueError:
+                tokens = tuple(command.split())
+        else:
+            tokens = ()
+        if tokens:
+            return tokens
+        return (str(executable),) if isinstance(executable, (str, bytes, os.PathLike)) else ()
+
+    @staticmethod
+    def _command_stem(value: str) -> str:
+        """Return a case-insensitive executable label without Windows wrapper suffixes."""
+        name = Path(value.strip("\"'")).name.casefold()
+        for suffix in (".exe", ".com", ".cmd", ".bat"):
+            if name.endswith(suffix):
+                return name[:-len(suffix)]
+        return name
+
+    def _prohibited_subprocess(self, arguments: tuple[object, ...]) -> str | None:
+        """Classify commands forbidden even when ordinary subprocess access was approved."""
+        normalized = tuple(token.strip("\"'") for token in self._subprocess_tokens(arguments))
+        stems = tuple(self._command_stem(token) for token in normalized)
+        if any(stem in self._FORBIDDEN_COMMANDS for stem in stems):
+            stem = next(stem for stem in stems if stem in self._FORBIDDEN_COMMANDS)
+            return "system_power" if stem == "shutdown" else "repository_or_package_management"
+        if any(re.fullmatch(r"pip(?:\d+(?:\.\d+)*)?", stem) for stem in stems):
+            return "repository_or_package_management"
+        for index, token in enumerate(normalized[:-1]):
+            if token == "-m":
+                module = normalized[index + 1].casefold()
+                if module == "pip" or module.startswith("pip.") or module == "ensurepip":
+                    return "repository_or_package_management"
+                if module == "logicytics" or module.startswith("logicytics."):
+                    return "main_application"
+        command_text = " ".join(normalized)
+        if re.search(r"(?<![a-z0-9_.-])logicytics\.json(?![a-z0-9_.-])", command_text, re.IGNORECASE):
+            return "configuration_mutation"
+        if re.search(
+                r"(?<![a-z0-9_.\\/:-])logicytics(?:\.[a-z_][a-z0-9_]*)?(?![a-z0-9_.\\/:-])",
+                command_text,
+                re.IGNORECASE,
+        ):
+            return "main_application"
+        if self._FORBIDDEN_POWERSHELL.search(command_text):
+            return "system_power_or_package_management"
+        if tool := self._FORBIDDEN_TOOL_REFERENCE.search(command_text):
+            return "system_power" if tool.group(0).casefold().startswith("shutdown") \
+                else "repository_or_package_management"
+        for token in normalized:
+            candidate = Path(token)
+            if candidate.suffix.casefold() != ".py":
+                continue
+            try:
+                resolved = candidate.resolve()
+            except OSError:
+                continue
+            if any(resolved == root or root in resolved.parents for root in self.collector_roots):
+                return "collector_launch"
+        return None
+
     def _check_event(self, event: str, arguments: tuple[object, ...]) -> None:
         if not self.active:
             return
-        if event == "subprocess.Popen" and Capability.SUBPROCESS not in self.capabilities:
-            raise PermissionError("collector requires declared subprocess capability")
+        if event == "subprocess.Popen":
+            if Capability.SUBPROCESS not in self.capabilities:
+                raise PermissionError("collector requires declared subprocess capability")
+            if prohibited := self._prohibited_subprocess(arguments):
+                raise PermissionError(f"collector subprocess command is prohibited: {prohibited}")
         if event.startswith("socket.") and event in {
             "socket.__new__", "socket.bind", "socket.connect", "socket.sendto", "socket.getaddrinfo"
         }:

@@ -3092,6 +3092,99 @@ class CoreFunctionalityTests(unittest.TestCase):
             outcome = RunSupervisor(root, default_config(root)).run(plan)
             self.assertEqual("succeeded", outcome.manifest.collectors[0].status)
 
+    def test_worker_blocks_application_update_power_and_peer_collector_commands_without_stopping_peers(self) -> None:
+        """Subprocess approval cannot escape the collector role or affect an independent worker."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            peer_path = core_directory / "z_independent.py"
+            peer_path.write_text(_delayed_collector_source("z_independent", 0.0), encoding="utf-8")
+            protected_configuration = root / "logicytics.json"
+            attempts = (
+                ([sys.executable, "-m", "logicytics", "preflight"], "main_application"),
+                ([sys.executable, "-m", "pip", "--version"], "repository_or_package_management"),
+                (["git", "--version"], "repository_or_package_management"),
+                (["shutdown", "/?"], "system_power"),
+                (["cmd", "/c", "shutdown", "/?"], "system_power"),
+                (
+                    [
+                        sys.executable,
+                        "-c",
+                        f"from pathlib import Path; Path({str(protected_configuration)!r}).write_text('bad')",
+                    ],
+                    "configuration_mutation",
+                ),
+                ([sys.executable, str(peer_path)], "collector_launch"),
+            )
+            for command, category in attempts:
+                with self.subTest(command=command):
+                    attacker = _delayed_collector_source("a_attacker", 0.0).replace(
+                        "from pathlib import Path\n",
+                        "from pathlib import Path\nimport subprocess\nfrom logicytics import Capability\n",
+                    ).replace(
+                        '            supported_platforms=("win32",),',
+                        '            supported_platforms=("win32",),\n'
+                        '            capabilities=(Capability.SUBPROCESS,),',
+                    ).replace(
+                        '        output = context.workspace / "system.txt"',
+                        f"        subprocess.run({command!r}, check=True)\n"
+                        '        output = context.workspace / "system.txt"',
+                    )
+                    (core_directory / "a_attacker.py").write_text(attacker, encoding="utf-8")
+                    report = preflight(root)
+                    self.assertEqual((), report.invalid)
+                    plan = build_plan(
+                        report,
+                        RunRequest(
+                            max_workers=2,
+                            acknowledge_authorization=True,
+                            approved_capabilities=(Capability.SUBPROCESS,),
+                        ),
+                    )
+                    outcome = RunSupervisor(root, default_config(root)).run(plan)
+                    records = {record.id: record for record in outcome.manifest.collectors}
+
+                    self.assertEqual("failed", records["core.system.a_attacker"].status)
+                    self.assertIn(
+                        f"collector subprocess command is prohibited: {category}",
+                        "\n".join(records["core.system.a_attacker"].errors),
+                    )
+                    self.assertEqual("succeeded", records["core.system.z_independent"].status)
+                    self.assertEqual("partial", outcome.manifest.status.value)
+                    self.assertFalse(protected_configuration.exists())
+
+    def test_preflight_rejects_collector_imports_of_application_and_orchestration_services(self) -> None:
+        """Collectors may import public contracts but never the main application control surface."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            attempts = (
+                "import logicytics.cli",
+                "from logicytics import run_collection",
+                "from logicytics import packaging",
+                "import logicytics\nlogicytics.run_collection",
+                "import logicytics\nlogicytics.configuration",
+                "from logicytics.api import query_run",
+            )
+            for statement in attempts:
+                with self.subTest(statement=statement):
+                    collector_path.write_text(
+                        _COLLECTOR.replace("from pathlib import Path\n", f"from pathlib import Path\n{statement}\n"),
+                        encoding="utf-8",
+                    )
+                    report = preflight(root)
+                    self.assertEqual(1, len(report.invalid))
+                    self.assertIn("forbidden application import", "\n".join(report.invalid[0].static_errors))
+                    diagnostic = next(
+                        item for item in report.invalid[0].diagnostics
+                        if "forbidden application import" in item.message
+                    )
+                    self.assertEqual("static.engine_boundary", diagnostic.rule)
+
     @unittest.skipUnless(os.name == "nt", "Windows collector subprocess-tree containment")
     def test_collector_timeout_terminates_spawned_subprocesses_without_stopping_peers(self) -> None:
         """A timed-out worker cannot leave its child alive or terminate independent collectors."""

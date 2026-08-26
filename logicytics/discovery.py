@@ -16,6 +16,11 @@ from logicytics.contracts import CONTRACT_VERSION, CollectorKind, CollectorMetad
 
 _FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.py$")
 _VAGUE_NAMES = {"main.py", "misc.py", "stuff.py", "utils.py"}
+_APPLICATION_IMPORTS = {
+    "CollectorSnapshot", "RunSnapshot", "api", "artifacts", "cli", "configuration", "discovery", "environment",
+    "load_configuration", "manifest", "packaging", "plan_run", "planner", "query_run", "read_artifact", "runtime",
+    "run_collection", "validation_worker",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,6 +127,7 @@ def _diagnostic_rule(message: str, *, runtime: bool) -> str:
         ("docstring", "static.docstring"),
         ("print", "static.console_output"),
         ("import-time", "static.import_time_side_effect"),
+        ("application import", "static.engine_boundary"),
         ("top-level", "static.top_level_statement"),
         ("inherit", "static.inheritance"),
         ("collector class", "static.class_name"),
@@ -271,6 +277,44 @@ def _validate_import_time_expressions(tree: ast.Module, candidate: CollectorCand
         )
 
 
+def _validate_engine_boundary_imports(tree: ast.Module, candidate: CollectorCandidate) -> None:
+    """Keep collector modules on contracts only, never application or orchestration services."""
+    application_aliases: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.startswith("logicytics.") and alias.name != "logicytics.contracts":
+                    candidate.static_errors.append(
+                        f"forbidden application import: {alias.name} (line {node.lineno})"
+                    )
+                elif alias.name == "logicytics":
+                    application_aliases.add(alias.asname or "logicytics")
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if module.startswith("logicytics.") and module != "logicytics.contracts":
+                candidate.static_errors.append(
+                    f"forbidden application import: {module} (line {node.lineno})"
+                )
+            elif module == "logicytics":
+                forbidden = sorted(
+                    alias.name for alias in node.names if alias.name in _APPLICATION_IMPORTS
+                )
+                if forbidden:
+                    candidate.static_errors.append(
+                        f"forbidden application import: {', '.join(forbidden)} (line {node.lineno})"
+                    )
+    for node in ast.walk(tree):
+        if (
+                isinstance(node, ast.Attribute)
+                and isinstance(node.value, ast.Name)
+                and node.value.id in application_aliases
+                and node.attr in _APPLICATION_IMPORTS
+        ):
+            candidate.static_errors.append(
+                f"forbidden application import: {node.value.id}.{node.attr} (line {node.lineno})"
+            )
+
+
 def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
     expected_class = _pascal_case(path.name)
     candidate = CollectorCandidate(path=path, kind=kind, expected_class=expected_class)
@@ -305,6 +349,7 @@ def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
         _validate_class_shape(public_classes[0], candidate)
 
     _validate_import_time_expressions(tree, candidate)
+    _validate_engine_boundary_imports(tree, candidate)
     for item in tree.body:
         if isinstance(item, ast.Expr) and isinstance(item.value, ast.Constant):
             continue
