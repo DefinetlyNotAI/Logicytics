@@ -16,6 +16,7 @@ from logicytics.contracts import Capability, RunRequest
 from logicytics.discovery import preflight
 from logicytics.environment import inspect_environment
 from logicytics.errors import LogicyticsError
+from logicytics.manifest import MANIFEST_SCHEMA_VERSION
 from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.runtime import RunSupervisor
 from logicytics.sysinternals import ensure_sysinternals
@@ -53,6 +54,16 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
             raise ValueError(f"original run manifest cannot be loaded: {error}") from error
         if not isinstance(previous, dict) or not isinstance(previous.get("run_id"), str):
             raise ValueError("original run manifest must contain a valid run_id")
+        manifest_schema_version = previous.get("manifest_schema_version")
+        if (
+                not isinstance(manifest_schema_version, int)
+                or isinstance(manifest_schema_version, bool)
+                or manifest_schema_version != MANIFEST_SCHEMA_VERSION
+        ):
+            raise ValueError(
+                f"original run manifest uses unsupported schema_version {manifest_schema_version!r}; "
+                f"expected {MANIFEST_SCHEMA_VERSION}"
+            )
         if previous.get("status") not in {"succeeded", "partial", "failed", "cancelled"}:
             raise ValueError("original run manifest must describe a finalized run")
         resolved = previous.get("resolved_plan")

@@ -877,7 +877,7 @@ appropriate default/deep/non-Python mode.
 
 ### Phase 1 — Foundation
 
-- [ ] Define the v4.0 package layout and run manifest format.
+- [x] Define the v4.0 package layout and run manifest format.
 - [ ] Implement configuration loading, structured logging, file discovery, command
       execution, privilege checks, cancellation, and error aggregation.
 - [ ] Implement the temporary run directory and cleanup lifecycle.

@@ -15,6 +15,8 @@ from typing import Any, Mapping
 from logicytics.contracts import CONTRACT_VERSION, Artifact, CollectorResult, RunStatus
 from logicytics.redaction import redact_mapping, redact_text
 
+MANIFEST_SCHEMA_VERSION = 1
+
 
 def utc_now() -> str:
     """Return a stable UTC timestamp for manifests and records."""
@@ -117,6 +119,7 @@ class RunManifest:
     configuration: Mapping[str, Any]
     collectors: list[CollectorRecord]
     host: Mapping[str, str]
+    manifest_schema_version: int = MANIFEST_SCHEMA_VERSION
     resolved_plan: tuple[str, ...] = ()
     plan_fingerprint: str | None = None
     engine_version: str = CONTRACT_VERSION
@@ -222,6 +225,15 @@ class RunManifest:
 
     def to_dict(self) -> dict[str, Any]:
         """Produce JSON-safe manifest data."""
+        if (
+                not isinstance(self.manifest_schema_version, int)
+                or isinstance(self.manifest_schema_version, bool)
+                or self.manifest_schema_version != MANIFEST_SCHEMA_VERSION
+        ):
+            raise ValueError(
+                f"unsupported run manifest schema_version {self.manifest_schema_version!r}; "
+                f"expected {MANIFEST_SCHEMA_VERSION}"
+            )
         data = asdict(self)
         data["status"] = self.status.value
         data["artifact_catalog"] = self.artifact_catalog()

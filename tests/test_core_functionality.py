@@ -227,6 +227,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(RunStatus.SUCCEEDED, snapshot.status, outcome.manifest.package)
             self.assertEqual(outcome.run_directory, snapshot.run_directory)
             self.assertEqual(outcome.manifest_path, snapshot.manifest_path)
+            self.assertEqual(1, json.loads(outcome.manifest_path.read_text(encoding="utf-8"))["manifest_schema_version"])
             self.assertEqual(["core.system.system_info"], [item.collector_id for item in snapshot.collectors])
             self.assertEqual(["succeeded"], [item.status for item in snapshot.collectors])
             collector = snapshot.collectors[0]
@@ -307,6 +308,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             with self.assertRaisesRegex(PlanError, "identity"):
                 query_run(root, outcome.manifest.run_id)
             invalid_manifests = (
+                ("manifest_schema_version", 2, "unsupported run manifest schema_version"),
+                ("manifest_schema_version", True, "unsupported run manifest schema_version"),
                 ("status", [], "unsupported run status"),
                 ("resolved_plan", ["core.system.forged"], "resolved plan"),
                 ("total_artifact_bytes", 999, "total_artifact_bytes"),
@@ -320,6 +323,11 @@ class CoreFunctionalityTests(unittest.TestCase):
                     outcome.manifest_path.write_text(json.dumps(payload), encoding="utf-8")
                     with self.assertRaisesRegex(PlanError, message):
                         query_run(root, outcome.manifest.run_id)
+            payload = json.loads(original)
+            payload.pop("manifest_schema_version")
+            outcome.manifest_path.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(PlanError, "unsupported run manifest schema_version"):
+                query_run(root, outcome.manifest.run_id)
             invalid_collector_fields = (
                 ("started_at", "not-a-timestamp", "collector started_at"),
                 ("finished_at", None, "require finished_at"),
@@ -1208,6 +1216,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             manifest_path = root / "manifest.json"
             collector_id = "core.system.system_info"
             valid_manifest = {
+                "manifest_schema_version": 1,
                 "run_id": "run-" + "a" * 32,
                 "status": "succeeded",
                 "resolved_plan": [collector_id],
@@ -1230,6 +1239,17 @@ class CoreFunctionalityTests(unittest.TestCase):
                     parser.parse_args(["run", "--rerun-from", str(manifest_path), "--include", collector_id]),
                     2,
                 )
+            for schema_version in (None, True, 2):
+                with self.subTest(manifest_schema_version=schema_version):
+                    invalid_manifest = {**valid_manifest, "manifest_schema_version": schema_version}
+                    manifest_path.write_text(json.dumps(invalid_manifest), encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, "unsupported schema_version"):
+                        _request(
+                            parser.parse_args(
+                                ["run", "--rerun-from", str(manifest_path), "--include", collector_id]
+                            ),
+                            2,
+                        )
             manifest_path.write_text("not json", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "cannot be loaded"):
                 _request(
@@ -1769,12 +1789,16 @@ class CoreFunctionalityTests(unittest.TestCase):
                     self.assertEqual(artifact.sha256, hashlib.sha256(archive.read(archive_name)).hexdigest())
                 packaged = json.loads(archive.read("metadata/manifest.json"))
             self.assertEqual("1.0", packaged["package_layout_version"])
+            self.assertEqual(1, packaged["manifest_schema_version"])
             self.assertEqual("evidence/raw/", packaged["package_sections"]["raw_evidence"])
             self.assertEqual("evidence/derived/", packaged["package_sections"]["derived_reports"])
             self.assertEqual(
                 {"raw", "derived"},
                 {item["evidence_kind"] for item in packaged["artifact_catalog"]},
             )
+            outcome.manifest.manifest_schema_version = 2
+            with self.assertRaisesRegex(ValueError, "unsupported run manifest schema_version"):
+                outcome.manifest.to_dict()
 
     def test_configured_output_root_colocates_packages_without_touching_legacy_evidence(self) -> None:
         """Custom roots own runs and ZIPs; old ACCESS evidence is neither moved nor deleted."""

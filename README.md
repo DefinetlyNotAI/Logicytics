@@ -84,9 +84,13 @@ Each verified ZIP uses a versioned, non-overlapping layout. Registered source
 material is stored under `evidence/raw/`, generated collector output under
 `evidence/derived/`, the human summary under `reports/`, structured diagnostics
 under `logs/`, the per-artifact SHA-256 catalog under `hashes/`, and the
-machine-readable run manifest under `metadata/`. The manifest records both the
-layout version and every section path; the package SHA-256 remains an external
-sidecar because an archive cannot contain its own final digest.
+machine-readable run manifest under `metadata/`. Manifest schema version `1`
+records run identity, action, status, timestamps, the redacted request and
+configuration, host facts, resolved plan and fingerprint, collector lifecycle
+records, the artifact catalog, errors, and package metadata. Readers fail closed
+on absent, non-integer, or unsupported schema versions. The manifest separately
+records package layout version `1.0` and every section path; the package SHA-256
+remains an external sidecar because an archive cannot contain its own final digest.
 
 ## Requirements
 
