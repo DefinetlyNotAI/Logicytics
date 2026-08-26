@@ -66,9 +66,16 @@ logicytics/              # engine, contracts, planning, runtime, and packaging
 tests/                   # core integration tests
 output/                  # ignored generated evidence and diagnostics
   data/
-    run-<id>/            # isolated run artifacts, manifest, and logs/
-    run-<utc>-run-<id>.zip         # action/timestamp-named evidence package
-    run-<utc>-run-<id>.zip.sha256  # matching SHA-256 package sidecar
+    run-<id>/            # one self-contained run output tree
+      artifacts/         # collector-owned registered evidence store
+      collectors/        # private collector workspaces and event channels
+      logs/              # engine and performance diagnostics
+      reports/           # human-readable run summary
+      packages/
+        run-<utc>-run-<id>.zip         # verified evidence package
+      hashes/
+        artifacts.sha256               # packaged-artifact checksum catalog
+        run-<utc>-run-<id>.zip.sha256  # matching package SHA-256 sidecar
 ```
 
 Each verified ZIP uses a versioned, non-overlapping layout. Registered source
@@ -101,8 +108,8 @@ python -m logicytics run --profile standard --acknowledge-authorization
 collector order without collecting data. `run` requires an explicit authorization
 acknowledgement and writes each run below `output/data/run-<id>/`. Its verified
 ZIP package and SHA-256 sidecar use the action, UTC request timestamp, and run
-ID, and are written alongside that run directory under the same `output/data/`
-root; collector workspaces and `logs/` remain run-scoped. Explicit reruns use a
+ID, and are written into that run's `packages/` and `hashes/` directories;
+collector workspaces and `logs/` remain run-scoped. Explicit reruns use a
 `rerun-<utc>-run-<id>.zip` package identity.
 
 Collectors that request additional access must be explicitly approved, for

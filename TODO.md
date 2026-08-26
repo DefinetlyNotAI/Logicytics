@@ -868,7 +868,7 @@ appropriate default/deep/non-Python mode.
       retry duration.
 - [x] Version the configuration schema and provide migration/default handling.
 - [ ] Define stable output names and formats for every collector.
-- [ ] Keep logs, hashes, packages, graphs, CSVs, HTML, text, and copied evidence
+- [x] Keep logs, hashes, packages, graphs, CSVs, HTML, text, and copied evidence
       discoverable under one run-specific output tree.
 - [x] Include collection metadata: version, action, start/end times, host, user,
       privilege state, enabled collectors, skipped collectors, and failures.

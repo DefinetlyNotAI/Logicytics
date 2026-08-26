@@ -1576,8 +1576,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertIsNotNone(outcome.manifest.package)
             self.assertTrue(Path(outcome.manifest.package["path"]).is_file())
             self.assertTrue(Path(outcome.manifest.package["sha256_path"]).is_file())
-            self.assertEqual(outcome.run_directory.parent, Path(outcome.manifest.package["path"]).parent)
-            self.assertEqual(outcome.run_directory.parent, Path(outcome.manifest.package["sha256_path"]).parent)
+            self.assertEqual(outcome.run_directory / "packages", Path(outcome.manifest.package["path"]).parent)
+            self.assertEqual(outcome.run_directory / "hashes", Path(outcome.manifest.package["sha256_path"]).parent)
             self.assertTrue((outcome.run_directory / "logs" / "engine.jsonl").is_file())
             self.assertFalse((root / "ACCESS").exists())
             self.assertFalse((root / "output" / "RUNS").exists())
@@ -1725,8 +1725,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             hash_path = Path(outcome.manifest.package["sha256_path"])
 
             self.assertEqual(expected_root, outcome.run_directory.parent)
-            self.assertEqual(expected_root, package_path.parent)
-            self.assertEqual(expected_root, hash_path.parent)
+            self.assertEqual(outcome.run_directory / "packages", package_path.parent)
+            self.assertEqual(outcome.run_directory / "hashes", hash_path.parent)
             self.assertEqual("preserve existing evidence", legacy_evidence.read_text(encoding="utf-8"))
             self.assertFalse((root / "custom" / "PACKAGES").exists())
             self.assertEqual(
