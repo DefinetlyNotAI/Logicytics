@@ -81,6 +81,12 @@ class BrowserDataBackupCollector(CoreCollector):
                     destination, copied_bytes = _copy_file(profile / filename,
                                                            context.workspace / "browser_data" / browser / profile.name / filename,
                                                            copied_bytes)
+                    if context.is_cancelled:
+                        if destination is not None:
+                            destination.unlink(missing_ok=True)
+                        for copied_path in copied:
+                            copied_path.unlink(missing_ok=True)
+                        return CollectorResult(CollectorStatus.CANCELLED, "cancelled during browser data backup")
                     if destination is not None:
                         copied.append(destination)
         firefox_profiles = roaming / "Mozilla" / "Firefox" / "Profiles"
@@ -90,20 +96,35 @@ class BrowserDataBackupCollector(CoreCollector):
             profiles = []
         for profile in profiles:
             for filename in FIREFOX_FILES:
+                if context.is_cancelled:
+                    for copied_path in copied:
+                        copied_path.unlink(missing_ok=True)
+                    return CollectorResult(CollectorStatus.CANCELLED, "cancelled during browser data backup")
                 destination, copied_bytes = _copy_file(profile / filename,
                                                        context.workspace / "browser_data" / "firefox" / profile.name / filename,
                                                        copied_bytes)
+                if context.is_cancelled:
+                    if destination is not None:
+                        destination.unlink(missing_ok=True)
+                    for copied_path in copied:
+                        copied_path.unlink(missing_ok=True)
+                    return CollectorResult(CollectorStatus.CANCELLED, "cancelled during browser data backup")
                 if destination is not None:
                     copied.append(destination)
         if not copied:
             return CollectorResult(CollectorStatus.SKIPPED,
                                    "no supported local browser profile data met the bounded backup policy")
-        artifacts = tuple(
-            context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW) for path in copied
-        )
-        context.report_progress("browser_data_backup_finished", copied_files=len(artifacts),
-                                bytes_written=sum(item.size_bytes for item in artifacts))
-        return CollectorResult.succeeded("browser data backup collected", artifacts)
+        artifacts = []
+        for path in copied:
+            if context.is_cancelled:
+                for unpublished in copied[len(artifacts):]:
+                    unpublished.unlink(missing_ok=True)
+                return CollectorResult.cancelled("cancelled during browser-data registration", tuple(artifacts))
+            artifacts.append(context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW))
+        artifact_tuple = tuple(artifacts)
+        context.report_progress("browser_data_backup_finished", copied_files=len(artifact_tuple),
+                                bytes_written=sum(item.size_bytes for item in artifact_tuple))
+        return CollectorResult.succeeded("browser data backup collected", artifact_tuple)
 
     def cleanup(self, context: CollectorContext) -> None:
         """Leave copied evidence removal to the isolated workspace lifecycle."""

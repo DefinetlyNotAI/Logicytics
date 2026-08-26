@@ -16,6 +16,8 @@ rebuilt incrementally.
 - One process and private workspace per collector.
 - Explicit capability approval and collection authorization.
 - Structured JSONL engine and collector logs.
+- Cooperative cancellation across long walks, captures, queries, memory enumeration,
+  and source-copy loops, with unpublished sensitive bytes removed.
 - Artifact registration with workspace boundaries, output limits, SHA-256 hashes,
   a run manifest, ZIP package, and package hash.
 - Shipped collectors: `core.system.system_info` and the capability-gated

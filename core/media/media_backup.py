@@ -81,6 +81,11 @@ class MediaBackupCollector(CoreCollector):
                         suffix += 1
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(candidate, destination)
+                    if context.is_cancelled:
+                        destination.unlink(missing_ok=True)
+                        for copied_path in copied:
+                            copied_path.unlink(missing_ok=True)
+                        return CollectorResult(CollectorStatus.CANCELLED, "cancelled during media backup")
                     copied.append(destination)
                     copied_bytes += size
             except OSError:
@@ -90,12 +95,17 @@ class MediaBackupCollector(CoreCollector):
             if inaccessible_roots == len(source_roots):
                 reason = "the current user's Pictures and Videos folders are inaccessible"
             return CollectorResult(CollectorStatus.SKIPPED, reason)
-        artifacts = tuple(
-            context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW) for path in copied
-        )
+        artifacts = []
+        for path in copied:
+            if context.is_cancelled:
+                for unpublished in copied[len(artifacts):]:
+                    unpublished.unlink(missing_ok=True)
+                return CollectorResult.cancelled("cancelled during media registration", tuple(artifacts))
+            artifacts.append(context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW))
+        artifact_tuple = tuple(artifacts)
         context.report_progress("media_backup_finished", copied_files=len(artifacts), skipped_files=skipped_files,
-                                bytes_written=sum(item.size_bytes for item in artifacts))
-        return CollectorResult.succeeded("current-user media backup collected", artifacts)
+                                bytes_written=sum(item.size_bytes for item in artifact_tuple))
+        return CollectorResult.succeeded("current-user media backup collected", artifact_tuple)
 
     def cleanup(self, context: CollectorContext) -> None:
         """Leave copied evidence removal to the isolated workspace lifecycle."""

@@ -70,6 +70,8 @@ class SystemEventsCollector(CoreCollector):
             text=True,
             timeout=75,
         )
+        if context.is_cancelled:
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled during System event-log query")
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
@@ -81,6 +83,9 @@ class SystemEventsCollector(CoreCollector):
             return CollectorResult(CollectorStatus.FAILED, "System event-log query failed", errors=(detail,))
         output = context.workspace / "system_events.csv"
         output.write_text(completed.stdout, encoding="utf-8")
+        if context.is_cancelled:
+            output.unlink(missing_ok=True)
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled during System event-log export")
         artifact = context.artifacts.register_file(output, media_type="text/csv")
         event_count = max(0, len(completed.stdout.splitlines()) - 1)
         context.report_progress("system_events_finished", event_count=event_count, bytes_written=artifact.size_bytes)

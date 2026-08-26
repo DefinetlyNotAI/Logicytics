@@ -424,7 +424,7 @@ Windows platform allows.
       default profile.
 - [x] Add per-collector timeouts, retry policies, maximum output size, maximum file
       size, maximum file count, and maximum total run size.
-- [ ] Add cancellation checks inside long filesystem walks, packet capture,
+- [x] Add cancellation checks inside long filesystem walks, packet capture,
       memory collection, event-log queries, and copy loops.
 - [x] Prevent path traversal and symlink/junction escapes from leaving the run
       workspace or copying unintended locations.

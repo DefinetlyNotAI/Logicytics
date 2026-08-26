@@ -105,6 +105,8 @@ class MemoryMapCollector(CoreCollector):
             address = next_address
         truncated = False
         while True:
+            if context.is_cancelled:
+                return CollectorResult(CollectorStatus.CANCELLED, "cancelled during memory-map serialization")
             serialized = json.dumps({"region_count": len(regions), "truncated": truncated, "regions": regions},
                                     indent=2) + "\n"
             if len(serialized.encode("utf-8")) <= output_limit or not regions:
@@ -114,9 +116,14 @@ class MemoryMapCollector(CoreCollector):
         if shutil.disk_usage(context.workspace).free < len(serialized.encode("utf-8")) + safety_margin:
             return CollectorResult(CollectorStatus.SKIPPED,
                                    "insufficient free disk space after configured memory-map safety margin")
+        if context.is_cancelled:
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled before memory-map publication")
         output_directory.mkdir(parents=True, exist_ok=True)
         output = output_directory / "memory_map.json"
         output.write_text(serialized, encoding="utf-8")
+        if context.is_cancelled:
+            output.unlink(missing_ok=True)
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled during memory-map publication")
         artifact = context.artifacts.register_file(output, media_type="application/json")
         context.report_progress("memory_map_finished", region_count=len(regions), truncated=str(truncated).lower(),
                                 bytes_written=artifact.size_bytes)

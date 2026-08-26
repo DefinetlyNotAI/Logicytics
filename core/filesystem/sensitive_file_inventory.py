@@ -91,15 +91,25 @@ class SensitiveFileInventoryCollector(CoreCollector):
                                                                          destination_root / source.drive.replace(":",
                                                                                                                  "") / source.relative_to(
                                                                              root)), matches) if item is not None]
+        if context.is_cancelled:
+            for copied_path in copied:
+                copied_path.unlink(missing_ok=True)
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled during sensitive-file copy")
         if not copied:
             return CollectorResult(CollectorStatus.SKIPPED,
                                    "no sensitive-named supported files met the bounded inventory policy")
-        artifacts = tuple(
-            context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW) for path in copied
-        )
+        artifacts = []
+        for path in copied:
+            if context.is_cancelled:
+                for unpublished in copied[len(artifacts):]:
+                    unpublished.unlink(missing_ok=True)
+                return CollectorResult.cancelled("cancelled during sensitive-file registration", tuple(artifacts))
+            artifacts.append(context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW))
+        artifact_tuple = tuple(artifacts)
         context.report_progress("sensitive_file_inventory_finished", scanned_directories=scanned_directories,
-                                copied_files=len(artifacts), bytes_written=sum(item.size_bytes for item in artifacts))
-        return CollectorResult.succeeded("sensitive file inventory collected", artifacts)
+                                copied_files=len(artifact_tuple),
+                                bytes_written=sum(item.size_bytes for item in artifact_tuple))
+        return CollectorResult.succeeded("sensitive file inventory collected", artifact_tuple)
 
     def cleanup(self, context: CollectorContext) -> None:
         """Leave copied evidence removal to the isolated workspace lifecycle."""

@@ -118,12 +118,17 @@ class PacketCaptureCollector(CoreCollector):
                 except OSError:
                     pass
                 capture.close()
+        if context.is_cancelled:
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled before packet-capture serialization")
         output = context.workspace / "packet_capture.csv"
         with output.open("w", newline="", encoding="utf-8") as stream:
             writer = csv.DictWriter(stream, fieldnames=("source_ip", "destination_ip", "protocol", "source_port",
                                                         "destination_port", "packet_bytes"))
             writer.writeheader()
             writer.writerows(observations)
+        if context.is_cancelled:
+            output.unlink(missing_ok=True)
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled during packet-capture serialization")
         artifact = context.artifacts.register_file(output, media_type="text/csv")
         context.report_progress("packet_capture_finished", observation_count=len(observations),
                                 bytes_written=artifact.size_bytes)

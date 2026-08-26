@@ -50,6 +50,7 @@ class SshBackupCollector(CoreCollector):
         source_bytes = 0
         archived_files = 0
         skipped_files = 0
+        cancelled = False
         with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as output:
             try:
                 candidates = sorted(ssh_directory.rglob("*"))
@@ -58,7 +59,8 @@ class SshBackupCollector(CoreCollector):
                                        errors=(str(error),))
             for candidate in candidates:
                 if context.is_cancelled:
-                    return CollectorResult(CollectorStatus.CANCELLED, "cancelled during SSH backup")
+                    cancelled = True
+                    break
                 try:
                     is_file = candidate.is_file()
                     is_symlink = candidate.is_symlink()
@@ -72,10 +74,19 @@ class SshBackupCollector(CoreCollector):
                     skipped_files += 1
                     continue
                 output.write(candidate, arcname=candidate.relative_to(ssh_directory).as_posix())
+                if context.is_cancelled:
+                    cancelled = True
+                    break
                 source_bytes += size
                 archived_files += 1
+        if cancelled:
+            archive.unlink(missing_ok=True)
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled during SSH backup")
         if archived_files == 0:
             return CollectorResult(CollectorStatus.SKIPPED, "no SSH files met the bounded backup policy")
+        if context.is_cancelled:
+            archive.unlink(missing_ok=True)
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled before SSH-backup registration")
         artifact = context.artifacts.register_file(
             archive,
             media_type="application/zip",

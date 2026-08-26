@@ -63,6 +63,8 @@ class ApplicationEventsCollector(CoreCollector):
             text=True,
             timeout=75,
         )
+        if context.is_cancelled:
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled during Application event-log query")
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
@@ -72,6 +74,9 @@ class ApplicationEventsCollector(CoreCollector):
             return CollectorResult(CollectorStatus.FAILED, "Application event-log query failed", errors=(detail,))
         output = context.workspace / "application_events.csv"
         output.write_text(completed.stdout, encoding="utf-8")
+        if context.is_cancelled:
+            output.unlink(missing_ok=True)
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled during Application event-log export")
         artifact = context.artifacts.register_file(output, media_type="text/csv")
         event_count = max(0, len(completed.stdout.splitlines()) - 1)
         context.report_progress("application_events_finished", event_count=event_count,

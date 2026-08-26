@@ -62,16 +62,26 @@ class WindowsSystemDataBackupCollector(CoreCollector):
                 shutil.copy2(source, destination)
             except OSError:
                 continue
+            if context.is_cancelled:
+                destination.unlink(missing_ok=True)
+                for copied_path in copied:
+                    copied_path.unlink(missing_ok=True)
+                return CollectorResult(CollectorStatus.CANCELLED, "cancelled during Windows system-data backup")
             copied.append(destination)
         if not copied:
             return CollectorResult(CollectorStatus.SKIPPED,
                                    "no configured Windows system-data files met the bounded backup policy")
-        artifacts = tuple(
-            context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW) for path in copied
-        )
-        context.report_progress("windows_system_data_backup_finished", copied_files=len(artifacts),
-                                bytes_written=sum(item.size_bytes for item in artifacts))
-        return CollectorResult.succeeded("Windows system-data backup collected", artifacts)
+        artifacts = []
+        for path in copied:
+            if context.is_cancelled:
+                for unpublished in copied[len(artifacts):]:
+                    unpublished.unlink(missing_ok=True)
+                return CollectorResult.cancelled("cancelled during system-data registration", tuple(artifacts))
+            artifacts.append(context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW))
+        artifact_tuple = tuple(artifacts)
+        context.report_progress("windows_system_data_backup_finished", copied_files=len(artifact_tuple),
+                                bytes_written=sum(item.size_bytes for item in artifact_tuple))
+        return CollectorResult.succeeded("Windows system-data backup collected", artifact_tuple)
 
     def cleanup(self, context: CollectorContext) -> None:
         """Leave copied evidence removal to the isolated workspace lifecycle."""
