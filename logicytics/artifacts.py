@@ -11,7 +11,7 @@ from pathlib import Path
 from threading import RLock
 from uuid import uuid4
 
-from logicytics.contracts import Artifact, ArtifactWriter
+from logicytics.contracts import Artifact, ArtifactWriter, EvidenceKind
 from logicytics.errors import ArtifactError
 
 
@@ -91,17 +91,24 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             source: Path,
             *,
             media_type: str = "application/octet-stream",
+            evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
             transformations: tuple[str, ...] = (),
     ) -> Artifact:
         """Serialize destination allocation, quota checks, publication, and catalog updates."""
         with self._registration_lock:
-            return self._register_file(source, media_type=media_type, transformations=transformations)
+            return self._register_file(
+                source,
+                media_type=media_type,
+                evidence_kind=evidence_kind,
+                transformations=transformations,
+            )
 
     def _register_file(
             self,
             source: Path,
             *,
             media_type: str,
+            evidence_kind: EvidenceKind,
             transformations: tuple[str, ...],
     ) -> Artifact:
         if not isinstance(media_type, str) or not re.fullmatch(
@@ -109,6 +116,8 @@ class WorkspaceArtifactWriter(ArtifactWriter):
                 media_type,
         ):
             raise ArtifactError("artifact media_type must be a valid MIME type")
+        if not isinstance(evidence_kind, EvidenceKind):
+            raise ArtifactError("artifact evidence_kind must be an EvidenceKind value")
         if not isinstance(transformations, tuple) or any(
                 not isinstance(step, str) or not step.strip() for step in transformations
         ):
@@ -144,6 +153,7 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             source_category=self._source_category,
             collected_at=datetime.now(timezone.utc).isoformat(),
             transformations=(*transformations, "copied into run artifact store"),
+            evidence_kind=evidence_kind,
             name=destination.name,
         )
         self._bytes_registered += size_bytes

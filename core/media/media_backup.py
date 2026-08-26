@@ -6,7 +6,7 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".mp4"}
@@ -90,7 +90,9 @@ class MediaBackupCollector(CoreCollector):
             if inaccessible_roots == len(source_roots):
                 reason = "the current user's Pictures and Videos folders are inaccessible"
             return CollectorResult(CollectorStatus.SKIPPED, reason)
-        artifacts = tuple(context.artifacts.register_file(path) for path in copied)
+        artifacts = tuple(
+            context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW) for path in copied
+        )
         context.report_progress("media_backup_finished", copied_files=len(artifacts), skipped_files=skipped_files,
                                 bytes_written=sum(item.size_bytes for item in artifacts))
         return CollectorResult.succeeded("current-user media backup collected", artifacts)

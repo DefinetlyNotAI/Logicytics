@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 from shutil import which
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 
@@ -62,7 +62,12 @@ class HklmBackupCollector(CoreCollector):
             return CollectorResult(CollectorStatus.FAILED, "HKLM registry export failed", errors=(message,))
         if not output.is_file() or output.stat().st_size == 0:
             return CollectorResult(CollectorStatus.FAILED, "HKLM registry export produced no backup artifact")
-        artifact = context.artifacts.register_file(output, media_type="text/plain")
+        artifact = context.artifacts.register_file(
+            output,
+            media_type="text/plain",
+            evidence_kind=EvidenceKind.RAW,
+            transformations=("exported from the HKLM registry hive",),
+        )
         context.report_progress("hklm_backup_finished", bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("HKLM registry backup collected", (artifact,))
 

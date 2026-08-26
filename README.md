@@ -71,6 +71,14 @@ output/                  # ignored generated evidence and diagnostics
     run-<utc>-run-<id>.zip.sha256  # matching SHA-256 package sidecar
 ```
 
+Each verified ZIP uses a versioned, non-overlapping layout. Registered source
+material is stored under `evidence/raw/`, generated collector output under
+`evidence/derived/`, the human summary under `reports/`, structured diagnostics
+under `logs/`, the per-artifact SHA-256 catalog under `hashes/`, and the
+machine-readable run manifest under `metadata/`. The manifest records both the
+layout version and every section path; the package SHA-256 remains an external
+sidecar because an archive cannot contain its own final digest.
+
 ## Requirements
 
 - Python 3.11 or later.
@@ -183,6 +191,10 @@ Collectors may import the public collector contracts, but not CLI, planning,
 runtime, packaging, configuration, or public application-control services. Even
 with an approved subprocess capability, workers cannot invoke Logicytics, another
 collector, repository/package managers, or system reboot/shutdown commands.
+Generated output is registered as derived evidence by default. Collectors that
+preserve source material must explicitly register it with
+`evidence_kind=EvidenceKind.RAW`; its manifest record and ZIP section retain that
+classification across the isolated worker boundary.
 
 Malformed core collectors block a run. Malformed unselected plugins are
 quarantined and listed by preflight; malformed explicitly selected plugins block

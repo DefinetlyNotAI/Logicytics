@@ -5,7 +5,7 @@ from __future__ import annotations
 import zipfile
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 MAX_FILE_BYTES = 10 * 1024 * 1024
@@ -76,7 +76,12 @@ class SshBackupCollector(CoreCollector):
                 archived_files += 1
         if archived_files == 0:
             return CollectorResult(CollectorStatus.SKIPPED, "no SSH files met the bounded backup policy")
-        artifact = context.artifacts.register_file(archive, media_type="application/zip")
+        artifact = context.artifacts.register_file(
+            archive,
+            media_type="application/zip",
+            evidence_kind=EvidenceKind.RAW,
+            transformations=("archived from the current user's SSH directory",),
+        )
         context.report_progress(
             "ssh_backup_finished", archived_files=archived_files, skipped_files=skipped_files,
             source_bytes=source_bytes, bytes_written=artifact.size_bytes,

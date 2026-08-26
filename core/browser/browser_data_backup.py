@@ -6,7 +6,7 @@ import os
 import shutil
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 CHROMIUM_FILES = ("History", "History-journal", "Cookies", "Cookies-journal", "Login Data", "Login Data-journal",
@@ -98,7 +98,9 @@ class BrowserDataBackupCollector(CoreCollector):
         if not copied:
             return CollectorResult(CollectorStatus.SKIPPED,
                                    "no supported local browser profile data met the bounded backup policy")
-        artifacts = tuple(context.artifacts.register_file(path) for path in copied)
+        artifacts = tuple(
+            context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW) for path in copied
+        )
         context.report_progress("browser_data_backup_finished", copied_files=len(artifacts),
                                 bytes_written=sum(item.size_bytes for item in artifacts))
         return CollectorResult.succeeded("browser data backup collected", artifacts)

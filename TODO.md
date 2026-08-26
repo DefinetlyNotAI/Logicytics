@@ -496,7 +496,7 @@ Windows platform allows.
 - [x] Verify package contents against the manifest before marking the run complete.
 - [x] Use atomic writes and temporary package names so interrupted packaging cannot
       look like a finished result.
-- [ ] Keep raw evidence, derived reports, logs, hashes, and metadata in separate
+- [x] Keep raw evidence, derived reports, logs, hashes, and metadata in separate
       package sections.
 
 ### Improve the public API and testability

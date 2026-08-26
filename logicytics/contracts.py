@@ -51,6 +51,13 @@ class RunStatus(StrEnum):
     CANCELLED = "cancelled"
 
 
+class EvidenceKind(StrEnum):
+    """The package section that owns a registered evidence artifact."""
+
+    RAW = "raw"
+    DERIVED = "derived"
+
+
 class Specialty(StrEnum):
     """The closed set of supported collector specialties."""
 
@@ -237,6 +244,7 @@ class Artifact:
     source_category: str
     collected_at: str
     transformations: tuple[str, ...]
+    evidence_kind: EvidenceKind
     name: str
     status: str = "registered"
 
@@ -270,6 +278,22 @@ class Artifact:
                 not isinstance(step, str) or not step.strip() for step in self.transformations
         ):
             raise ValueError("artifact transformations must be a tuple of non-empty strings")
+        if not isinstance(self.evidence_kind, EvidenceKind):
+            raise ValueError("artifact evidence_kind must be an EvidenceKind value")
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "Artifact":
+        """Reconstruct a strict artifact after a JSON or worker boundary."""
+        values = dict(data)
+        transformations = values.get("transformations")
+        if not isinstance(transformations, (list, tuple)):
+            raise ValueError("artifact transformations must be an array or tuple")
+        values["transformations"] = tuple(transformations)
+        try:
+            values["evidence_kind"] = EvidenceKind(values["evidence_kind"])
+        except (KeyError, TypeError, ValueError) as error:
+            raise ValueError("artifact evidence_kind must be raw or derived") from error
+        return cls(**values)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -476,6 +500,7 @@ class ArtifactWriter(ABC):
             source: Path,
             *,
             media_type: str = "application/octet-stream",
+            evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
             transformations: tuple[str, ...] = (),
     ) -> Artifact:
         """Register a file created within the collector workspace."""

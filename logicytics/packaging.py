@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
 import zipfile
@@ -18,6 +19,9 @@ if TYPE_CHECKING:
     from logicytics.runtime import RunOutcome
 
 _STREAM_BLOCK_BYTES = 1024 * 1024
+_MANIFEST_ARCHIVE_PATH = "metadata/manifest.json"
+_SUMMARY_ARCHIVE_PATH = "reports/summary.txt"
+_ARTIFACT_HASH_ARCHIVE_PATH = "hashes/artifacts.sha256"
 
 
 def _package_filename(manifest: RunManifest) -> str:
@@ -96,7 +100,7 @@ def _artifact_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[
     archive_names: set[str] = set()
     artifact_root = (run_directory / "artifacts").resolve()
     for item in manifest.artifact_catalog():
-        artifact = Artifact(**{key: value for key, value in item.items() if key != "producer_status"})
+        artifact = Artifact.from_dict({key: value for key, value in item.items() if key != "producer_status"})
         relative = PurePosixPath(artifact.relative_path)
         owner = artifact.collector_id.replace(".", "_")
         if (
@@ -118,7 +122,7 @@ def _artifact_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[
             raise ValueError(
                 f"manifest artifact escapes its collector-owned store: {artifact.relative_path}"
             ) from error
-        archive_name = f"artifacts/{relative.as_posix()}"
+        archive_name = _artifact_archive_name(artifact)
         if archive_name in archive_names:
             raise ValueError(f"manifest contains duplicate artifact path: {artifact.relative_path}")
         if source.stat().st_size != artifact.size_bytes or sha256_file(source) != artifact.sha256:
@@ -128,21 +132,46 @@ def _artifact_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[
     return sources
 
 
+def _artifact_archive_name(artifact: Artifact) -> str:
+    """Map a typed artifact to its canonical evidence package section."""
+    return f"evidence/{artifact.evidence_kind.value}/{artifact.relative_path}"
+
+
+def _artifact_checksum_catalog(manifest: RunManifest) -> str:
+    """Return a deterministic SHA-256 catalog for every packaged evidence member."""
+    entries = sorted(
+        (_artifact_archive_name(artifact), artifact.sha256)
+        for artifact in manifest.artifact_list()
+    )
+    return "".join(f"{digest}  {archive_name}\n" for archive_name, digest in entries)
+
+
+def _write_text_atomic(path: Path, contents: str, *, encoding: str) -> None:
+    """Publish a run-owned report without exposing a partially written file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp")
+    temporary.write_text(contents, encoding=encoding, newline="\n")
+    os.replace(temporary, path)
+
+
 def _log_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[Path, str]]:
     """Return only the engine log and manifest-owned collector event channels."""
     sources: list[tuple[Path, str]] = []
     root = run_directory.resolve()
-    candidates = [root / "logs" / "engine.jsonl"]
+    candidates = [(root / "logs" / "engine.jsonl", "logs/engine.jsonl")]
     candidates.extend(
-        root / "collectors" / record.id.replace(".", "_") / "events.jsonl"
+        (
+            root / "collectors" / record.id.replace(".", "_") / "events.jsonl",
+            f"logs/collectors/{record.id.replace('.', '_')}/events.jsonl",
+        )
         for record in manifest.collectors
     )
-    for path in candidates:
+    for path, archive_name in candidates:
         if not path.exists() and not path.is_symlink():
             continue
         if not path.is_file() or path.resolve(strict=True) != path:
             raise ValueError(f"diagnostic log escapes its run-owned event channel: {path.name}")
-        sources.append((path, path.relative_to(root).as_posix()))
+        sources.append((path, archive_name))
     if manifest.request.get("performance_check") is True:
         performance_path = root / "logs" / "performance.json"
         if not performance_path.is_file():
@@ -176,8 +205,18 @@ def _verify_archive(package_path: Path, manifest: RunManifest, expected_names: s
             raise ValueError("package contents do not match its manifest-led input set")
         if archive.testzip() is not None:
             raise ValueError("package integrity verification failed")
+        try:
+            packaged_manifest = json.loads(archive.read(_MANIFEST_ARCHIVE_PATH))
+            checksum_catalog = archive.read(_ARTIFACT_HASH_ARCHIVE_PATH).decode("ascii")
+        except (KeyError, UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise ValueError("package metadata or artifact checksum catalog is invalid") from error
+        expected_manifest = json.loads(json.dumps(manifest.to_dict()))
+        if packaged_manifest != expected_manifest:
+            raise ValueError("packaged metadata does not match the finalized run manifest")
+        if checksum_catalog != _artifact_checksum_catalog(manifest):
+            raise ValueError("packaged artifact checksum catalog does not match the manifest")
         for artifact in manifest.artifact_list():
-            archive_name = f"artifacts/{artifact.relative_path}"
+            archive_name = _artifact_archive_name(artifact)
             member = archive.getinfo(archive_name)
             with archive.open(member) as stream:
                 digest = _sha256_stream(stream)
@@ -192,21 +231,24 @@ def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: 
     package_path = package_directory / _package_filename(manifest)
     hash_path = package_path.with_suffix(".zip.sha256")
 
-    summary_path = run_directory / "summary.txt"
+    summary_path = run_directory / "reports" / "summary.txt"
+    artifact_hash_path = run_directory / "hashes" / "artifacts.sha256"
     artifact_sources = _artifact_sources(run_directory, manifest)
     log_sources = _log_sources(run_directory, manifest)
     manifest.package = {"path": str(package_path)}
     write_manifest(manifest_path, manifest)
-    summary_path.write_text(_summary(manifest), encoding="utf-8")
-    expected_names = {"manifest.json", "summary.txt"}
+    _write_text_atomic(summary_path, _summary(manifest), encoding="utf-8")
+    _write_text_atomic(artifact_hash_path, _artifact_checksum_catalog(manifest), encoding="ascii")
+    expected_names = {_MANIFEST_ARCHIVE_PATH, _SUMMARY_ARCHIVE_PATH, _ARTIFACT_HASH_ARCHIVE_PATH}
     expected_names.update(archive_name for _, archive_name in artifact_sources)
     expected_names.update(archive_name for _, archive_name in log_sources)
     temporary_package = package_path.with_suffix(".zip.tmp")
     temporary_hash = hash_path.with_suffix(".sha256.tmp")
     try:
         with zipfile.ZipFile(temporary_package, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            _stream_archive_member(archive, manifest_path, "manifest.json")
-            _stream_archive_member(archive, summary_path, "summary.txt")
+            _stream_archive_member(archive, manifest_path, _MANIFEST_ARCHIVE_PATH)
+            _stream_archive_member(archive, summary_path, _SUMMARY_ARCHIVE_PATH)
+            _stream_archive_member(archive, artifact_hash_path, _ARTIFACT_HASH_ARCHIVE_PATH)
             for source, archive_name in (*artifact_sources, *log_sources):
                 _stream_archive_member(archive, source, archive_name)
         _verify_archive(temporary_package, manifest, expected_names)

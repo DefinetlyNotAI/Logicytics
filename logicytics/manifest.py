@@ -127,6 +127,7 @@ class RunManifest:
     errors: list[dict[str, str]] = field(default_factory=list)
     skipped_collectors: list[str] = field(default_factory=list)
     package: Mapping[str, str] | None = None
+    package_layout_version: str = "1.0"
     total_artifact_bytes: int = 0
 
     @classmethod
@@ -185,7 +186,7 @@ class RunManifest:
 
     def artifact_list(self) -> tuple[Artifact, ...]:
         """Return all registered artifacts reconstructed from the manifest."""
-        return tuple(Artifact(**{key: value for key, value in item.items() if key != "producer_status"})
+        return tuple(Artifact.from_dict({key: value for key, value in item.items() if key != "producer_status"})
                      for item in self.artifact_catalog())
 
     def artifact_catalog(self) -> tuple[dict[str, Any], ...]:
@@ -195,7 +196,7 @@ class RunManifest:
         artifact_paths: set[str] = set()
         for record in self.collectors:
             for item in record.artifacts:
-                artifact = Artifact(**item)
+                artifact = Artifact.from_dict(item)
                 if artifact.collector_id != record.id:
                     raise ValueError(f"manifest artifact collector ownership is invalid: {artifact.relative_path}")
                 relative = PurePosixPath(artifact.relative_path)
@@ -224,6 +225,14 @@ class RunManifest:
         data = asdict(self)
         data["status"] = self.status.value
         data["artifact_catalog"] = self.artifact_catalog()
+        data["package_sections"] = {
+            "raw_evidence": "evidence/raw/",
+            "derived_reports": "evidence/derived/",
+            "reports": "reports/",
+            "logs": "logs/",
+            "hashes": "hashes/",
+            "metadata": "metadata/",
+        }
         return data
 
 

@@ -115,9 +115,8 @@ def _artifact(raw: object, collector_id: str) -> Artifact:
     transformations = values.get("transformations")
     if not isinstance(transformations, list):
         raise PlanError("run manifest artifact transformations must be an array")
-    values["transformations"] = tuple(transformations)
     try:
-        artifact = Artifact(**values)
+        artifact = Artifact.from_dict(values)
     except (TypeError, ValueError) as error:
         raise PlanError(f"run manifest contains an invalid registered artifact: {error}") from error
     relative = PurePosixPath(artifact.relative_path)

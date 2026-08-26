@@ -264,19 +264,7 @@ def _load_collector(path: Path, expected_class: str):
 
 
 def _artifact_from_dict(data: dict[str, object]) -> Artifact:
-    return Artifact(
-        id=data["id"],
-        relative_path=data["relative_path"],
-        sha256=data["sha256"],
-        size_bytes=data["size_bytes"],
-        media_type=data["media_type"],
-        collector_id=data["collector_id"],
-        source_category=data["source_category"],
-        collected_at=data["collected_at"],
-        transformations=data["transformations"],
-        name=data["name"],
-        status=data["status"],
-    )
+    return Artifact.from_dict(data)
 
 
 def _result_from_dict(data: dict[str, object]) -> CollectorResult:

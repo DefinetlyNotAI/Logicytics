@@ -7,7 +7,7 @@ import shutil
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 KEYWORDS = ("password", "secret", "code", "login", "api", "key", "token", "auth", "credential", "private",
@@ -94,7 +94,9 @@ class SensitiveFileInventoryCollector(CoreCollector):
         if not copied:
             return CollectorResult(CollectorStatus.SKIPPED,
                                    "no sensitive-named supported files met the bounded inventory policy")
-        artifacts = tuple(context.artifacts.register_file(path) for path in copied)
+        artifacts = tuple(
+            context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW) for path in copied
+        )
         context.report_progress("sensitive_file_inventory_finished", scanned_directories=scanned_directories,
                                 copied_files=len(artifacts), bytes_written=sum(item.size_bytes for item in artifacts))
         return CollectorResult.succeeded("sensitive file inventory collected", artifacts)

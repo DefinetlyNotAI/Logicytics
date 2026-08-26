@@ -6,7 +6,7 @@ import os
 import shutil
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 MAX_FILE_BYTES = 100 * 1024 * 1024
@@ -66,7 +66,9 @@ class WindowsSystemDataBackupCollector(CoreCollector):
         if not copied:
             return CollectorResult(CollectorStatus.SKIPPED,
                                    "no configured Windows system-data files met the bounded backup policy")
-        artifacts = tuple(context.artifacts.register_file(path) for path in copied)
+        artifacts = tuple(
+            context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW) for path in copied
+        )
         context.report_progress("windows_system_data_backup_finished", copied_files=len(artifacts),
                                 bytes_written=sum(item.size_bytes for item in artifacts))
         return CollectorResult.succeeded("Windows system-data backup collected", artifacts)

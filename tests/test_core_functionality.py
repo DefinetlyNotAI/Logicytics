@@ -34,6 +34,7 @@ from logicytics.contracts import (
     CollectorMetadata,
     CollectorResult,
     CollectorStatus,
+    EvidenceKind,
     ResourceClass,
     RunRequest,
     RunStatus,
@@ -223,7 +224,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             outcome = run_collection(root, request, configuration=configuration)
             snapshot = query_run(root, outcome.manifest.run_id, configuration=configuration)
 
-            self.assertEqual(RunStatus.SUCCEEDED, snapshot.status)
+            self.assertEqual(RunStatus.SUCCEEDED, snapshot.status, outcome.manifest.package)
             self.assertEqual(outcome.run_directory, snapshot.run_directory)
             self.assertEqual(outcome.manifest_path, snapshot.manifest_path)
             self.assertEqual(["core.system.system_info"], [item.collector_id for item in snapshot.collectors])
@@ -444,6 +445,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             "source_category": "system",
             "collected_at": "2026-01-01T00:00:00+00:00",
             "transformations": ("normalized",),
+            "evidence_kind": EvidenceKind.DERIVED,
             "name": "report.json",
             "status": "registered",
         }
@@ -457,6 +459,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             ({"source_category": "System"}, "source_category"),
             ({"collected_at": "2026-01-01T00:00:00"}, "timezone"),
             ({"transformations": ["normalized"]}, "transformations"),
+            ({"evidence_kind": "derived"}, "evidence_kind"),
             ({"name": "../report.json"}, "name"),
             ({"status": "failed"}, "status"),
         )
@@ -843,7 +846,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("keep legacy evidence", legacy.read_text(encoding="utf-8"))
             self.assertEqual(original, config_path.read_text(encoding="utf-8"))
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                packaged = json.loads(archive.read("manifest.json"))
+                packaged = json.loads(archive.read("metadata/manifest.json"))
             self.assertEqual(4, packaged["configuration"]["schema_version"])
             self.assertEqual(3, packaged["configuration"]["migrated_from_schema"])
 
@@ -1507,11 +1510,18 @@ class CoreFunctionalityTests(unittest.TestCase):
                 writer.register_file(source, transformations=["normalized"])  # type: ignore[arg-type]
             with self.assertRaisesRegex(ArtifactError, "media_type"):
                 writer.register_file(source, media_type="not a mime type")
+            with self.assertRaisesRegex(ArtifactError, "evidence_kind"):
+                writer.register_file(source, evidence_kind="raw")  # type: ignore[arg-type]
             self.assertEqual((), writer.artifacts)
-            artifact = writer.register_file(source, transformations=("normalized",))
+            artifact = writer.register_file(
+                source,
+                evidence_kind=EvidenceKind.RAW,
+                transformations=("normalized",),
+            )
             self.assertEqual("report.json", artifact.name)
             self.assertEqual("registered", artifact.status)
             self.assertEqual("evidence_graph", artifact.source_category)
+            self.assertEqual(EvidenceKind.RAW, artifact.evidence_kind)
             datetime.fromisoformat(artifact.collected_at)
             self.assertEqual(
                 ("normalized", "copied into run artifact store"),
@@ -1585,18 +1595,21 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(package_digest, outcome.manifest.package["sha256"])
             with zipfile.ZipFile(package_path) as archive:
                 self.assertIsNone(archive.testzip())
-                self.assertIn("manifest.json", archive.namelist())
-                self.assertIn("summary.txt", archive.namelist())
+                self.assertIn("metadata/manifest.json", archive.namelist())
+                self.assertIn("reports/summary.txt", archive.namelist())
+                self.assertIn("hashes/artifacts.sha256", archive.namelist())
                 self.assertNotIn("logs/performance.json", archive.namelist())
-                self.assertEqual(1, len([name for name in archive.namelist() if name.startswith("artifacts/")]))
+                self.assertEqual(1, len([name for name in archive.namelist() if name.startswith("evidence/")]))
                 artifact = outcome.manifest.artifact_list()[0]
-                archived_bytes = archive.read(f"artifacts/{artifact.relative_path}")
+                archived_bytes = archive.read(
+                    f"evidence/{artifact.evidence_kind.value}/{artifact.relative_path}"
+                )
                 self.assertEqual(artifact.size_bytes, len(archived_bytes))
                 self.assertEqual(artifact.sha256, hashlib.sha256(archived_bytes).hexdigest())
                 self.assertEqual("system", artifact.source_category)
                 datetime.fromisoformat(artifact.collected_at)
                 self.assertEqual(("copied into run artifact store",), artifact.transformations)
-                packaged_manifest = json.loads(archive.read("manifest.json"))
+                packaged_manifest = json.loads(archive.read("metadata/manifest.json"))
                 self.assertEqual(["core.system.system_info"], packaged_manifest["resolved_plan"])
                 self.assertEqual(plan.fingerprint, packaged_manifest["plan_fingerprint"])
                 self.assertFalse(packaged_manifest["cancellation_requested"])
@@ -1614,7 +1627,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 self.assertEqual("succeeded", catalog_artifact["producer_status"])
                 self.assertEqual("core.system.system_info", catalog_artifact["collector_id"])
                 record = outcome.manifest.collectors[0]
-                summary = archive.read("summary.txt").decode("utf-8")
+                summary = archive.read("reports/summary.txt").decode("utf-8")
                 self.assertIn(f"Status: {record.status}", summary)
                 self.assertIn("Cancellation requested: false", summary)
                 self.assertIn("Resolved collectors: 1", summary)
@@ -1625,6 +1638,69 @@ class CoreFunctionalityTests(unittest.TestCase):
             repeated = RunSupervisor(root, configuration).run(plan)
             self.assertNotEqual(outcome.manifest.run_id, repeated.manifest.run_id)
             self.assertNotEqual(outcome.run_directory, repeated.run_directory)
+
+    def test_package_separates_typed_evidence_reports_logs_hashes_and_metadata(self) -> None:
+        """The versioned package layout is manifest-led and has no ambiguous root entries."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            source = _COLLECTOR.replace(
+                "CollectorResult, CoreCollector, Specialty",
+                "CollectorResult, CoreCollector, EvidenceKind, Specialty",
+            ).replace(
+                '        return CollectorResult.succeeded("test artifact created", (artifact,))',
+                '        raw = context.workspace / "source.bin"\n'
+                '        raw.write_bytes(b"raw evidence")\n'
+                '        raw_artifact = context.artifacts.register_file(\n'
+                '            raw, evidence_kind=EvidenceKind.RAW,\n'
+                '        )\n'
+                '        return CollectorResult.succeeded(\n'
+                '            "typed artifacts created", (artifact, raw_artifact),\n'
+                '        )',
+            )
+            collector_path.write_text(source, encoding="utf-8")
+            report = preflight(root)
+            self.assertEqual(1, len(report.valid), report.invalid)
+            outcome = RunSupervisor(root, default_config(root)).run(
+                build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True))
+            )
+            self.assertEqual("succeeded", outcome.manifest.status.value, outcome.manifest.package)
+
+            package_path = Path(outcome.manifest.package["path"])
+            with zipfile.ZipFile(package_path) as archive:
+                names = archive.namelist()
+                self.assertEqual(
+                    {"evidence", "hashes", "logs", "metadata", "reports"},
+                    {name.split("/", 1)[0] for name in names},
+                )
+                self.assertNotIn("manifest.json", names)
+                self.assertNotIn("summary.txt", names)
+                self.assertFalse(any(name.startswith("artifacts/") for name in names))
+                artifacts = outcome.manifest.artifact_list()
+                expected_catalog = "".join(
+                    f"{artifact.sha256}  evidence/{artifact.evidence_kind.value}/{artifact.relative_path}\n"
+                    for artifact in sorted(
+                        artifacts,
+                        key=lambda item: f"evidence/{item.evidence_kind.value}/{item.relative_path}",
+                    )
+                )
+                self.assertEqual(
+                    expected_catalog,
+                    archive.read("hashes/artifacts.sha256").decode("ascii"),
+                )
+                for artifact in artifacts:
+                    archive_name = f"evidence/{artifact.evidence_kind.value}/{artifact.relative_path}"
+                    self.assertEqual(artifact.sha256, hashlib.sha256(archive.read(archive_name)).hexdigest())
+                packaged = json.loads(archive.read("metadata/manifest.json"))
+            self.assertEqual("1.0", packaged["package_layout_version"])
+            self.assertEqual("evidence/raw/", packaged["package_sections"]["raw_evidence"])
+            self.assertEqual("evidence/derived/", packaged["package_sections"]["derived_reports"])
+            self.assertEqual(
+                {"raw", "derived"},
+                {item["evidence_kind"] for item in packaged["artifact_catalog"]},
+            )
 
     def test_configured_output_root_colocates_packages_without_touching_legacy_evidence(self) -> None:
         """Custom roots own runs and ZIPs; old ACCESS evidence is neither moved nor deleted."""
@@ -1690,11 +1766,11 @@ class CoreFunctionalityTests(unittest.TestCase):
             package_path = Path(outcome.manifest.package["path"])
             self.assertTrue(package_path.is_file())
             with zipfile.ZipFile(package_path) as archive:
-                packaged = json.loads(archive.read("manifest.json"))
-                summary = archive.read("summary.txt").decode("utf-8")
+                packaged = json.loads(archive.read("metadata/manifest.json"))
+                summary = archive.read("reports/summary.txt").decode("utf-8")
                 self.assertEqual(
                     ["ok"],
-                    archive.read("artifacts/core_system_system_info/system.txt").decode("utf-8").splitlines(),
+                    archive.read("evidence/derived/core_system_system_info/system.txt").decode("utf-8").splitlines(),
                 )
             self.assertEqual("partial", packaged["status"])
             self.assertEqual("partial", packaged["collectors"][0]["status"])
@@ -1751,12 +1827,12 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(original_manifest, original.manifest_path.read_bytes())
             self.assertEqual(original_package, original_package_path.read_bytes())
             with zipfile.ZipFile(Path(rerun.manifest.package["path"])) as archive:
-                packaged_manifest = json.loads(archive.read("manifest.json"))
-                summary = archive.read("summary.txt").decode("utf-8")
-                artifact_names = [name for name in archive.namelist() if name.startswith("artifacts/")]
+                packaged_manifest = json.loads(archive.read("metadata/manifest.json"))
+                summary = archive.read("reports/summary.txt").decode("utf-8")
+                artifact_names = [name for name in archive.namelist() if name.startswith("evidence/")]
             self.assertEqual(original.manifest.run_id, packaged_manifest["parent_run_id"])
             self.assertEqual("rerun", packaged_manifest["action"])
-            self.assertEqual(["artifacts/core_system_z_selected/system.txt"], artifact_names)
+            self.assertEqual(["evidence/derived/core_system_z_selected/system.txt"], artifact_names)
             self.assertIn("Action: rerun", summary)
             self.assertIn(f"Parent run: {original.manifest.run_id}", summary)
 
@@ -1806,12 +1882,12 @@ class CoreFunctionalityTests(unittest.TestCase):
                 artifact = outcome.manifest.artifact_list()[0]
                 self.assertEqual(
                     "password=evidence-password token=evidence-token",
-                    archive.read(f"artifacts/{artifact.relative_path}").decode("utf-8"),
+                    archive.read(f"evidence/{artifact.evidence_kind.value}/{artifact.relative_path}").decode("utf-8"),
                 )
                 diagnostics = "\n".join(
                     archive.read(name).decode("utf-8")
                     for name in archive.namelist()
-                    if not name.startswith("artifacts/")
+                    if not name.startswith("evidence/")
                 )
                 self.assertNotIn("evidence-password", diagnostics)
                 self.assertNotIn("evidence-token", diagnostics)
@@ -1844,12 +1920,12 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertNotIn("crash-token", failure["platform_error"])
             self.assertIn("[REDACTED]", failure["platform_error"])
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                packaged_record = json.loads(archive.read("manifest.json"))["collectors"][0]
+                packaged_record = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
                 self.assertEqual(failure, packaged_record["failure"])
                 diagnostics = "\n".join(
                     archive.read(name).decode("utf-8")
                     for name in archive.namelist()
-                    if not name.startswith("artifacts/")
+                    if not name.startswith("evidence/")
                 )
                 self.assertNotIn("crash-password", diagnostics)
                 self.assertNotIn("crash-token", diagnostics)
@@ -1938,9 +2014,9 @@ class CoreFunctionalityTests(unittest.TestCase):
                 )
             )
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                packaged_record = json.loads(archive.read("manifest.json"))["collectors"][0]
+                packaged_record = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
                 report = json.loads(archive.read("logs/performance.json"))["collectors"][0]
-                summary = archive.read("summary.txt").decode("utf-8")
+                summary = archive.read("reports/summary.txt").decode("utf-8")
             self.assertEqual(record.progress, packaged_record["progress"])
             self.assertEqual(record.progress, report["progress"])
             self.assertEqual(record.peak_memory_bytes, report["peak_memory_bytes"])
@@ -1966,7 +2042,7 @@ class CoreFunctionalityTests(unittest.TestCase):
 
             package_path, _ = package_run(outcome)
             with zipfile.ZipFile(package_path) as archive:
-                self.assertNotIn("artifacts/unregistered.txt", archive.namelist())
+                self.assertNotIn("evidence/derived/unregistered.txt", archive.namelist())
 
             original_write = packaging._stream_archive_member
 
@@ -1975,7 +2051,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                     filename: Path,
                     arcname: str,
             ) -> None:
-                if arcname.startswith("artifacts/"):
+                if arcname.startswith("evidence/"):
                     archive.writestr(arcname, b"tampered artifact bytes")
                     return
                 original_write(archive, filename, arcname)
@@ -2005,7 +2081,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             package_path, _ = package_run(outcome)
             with zipfile.ZipFile(package_path) as archive:
                 self.assertIn("logs/engine.jsonl", archive.namelist())
-                self.assertIn("collectors/core_system_system_info/events.jsonl", archive.namelist())
+                self.assertIn("logs/collectors/core_system_system_info/events.jsonl", archive.namelist())
                 self.assertNotIn("logs/unregistered.jsonl", archive.namelist())
                 self.assertNotIn("collectors/core_system_system_info/unregistered.jsonl", archive.namelist())
 
@@ -2107,8 +2183,11 @@ class CoreFunctionalityTests(unittest.TestCase):
             expected = "core_system_system_info/nested/reports/system.txt"
             self.assertEqual(expected, outcome.manifest.artifact_list()[0].relative_path)
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                self.assertIn(f"artifacts/{expected}", archive.namelist())
-                self.assertEqual(expected, json.loads(archive.read("manifest.json"))["artifact_catalog"][0]["relative_path"])
+                self.assertIn(f"evidence/derived/{expected}", archive.namelist())
+                self.assertEqual(
+                    expected,
+                    json.loads(archive.read("metadata/manifest.json"))["artifact_catalog"][0]["relative_path"],
+                )
 
     def test_package_rejects_forged_names_status_and_duplicate_catalog_identifiers(self) -> None:
         """A package is refused whenever its finalized evidence catalog is inconsistent."""
@@ -2569,8 +2648,8 @@ class CoreFunctionalityTests(unittest.TestCase):
                 {error["collector_id"] for error in outcome.manifest.errors},
             )
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                packaged = json.loads(archive.read("manifest.json"))
-                summary = archive.read("summary.txt").decode("utf-8")
+                packaged = json.loads(archive.read("metadata/manifest.json"))
+                summary = archive.read("reports/summary.txt").decode("utf-8")
             self.assertEqual(["core.system.b_dependent"], packaged["skipped_collectors"])
             self.assertIn("Skipped collectors: 1", summary)
 
@@ -2602,7 +2681,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             package_path = Path(outcome.manifest.package["path"])
             self.assertTrue(package_path.is_file())
             with zipfile.ZipFile(package_path) as archive:
-                summary = archive.read("summary.txt").decode("utf-8")
+                summary = archive.read("reports/summary.txt").decode("utf-8")
             self.assertIn("Status: failed", summary)
             self.assertIn("Reasons:", summary)
             self.assertIn("RuntimeError", summary)
@@ -2653,8 +2732,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("failed", record.retry_history[0]["termination_reason"])
             self.assertEqual("completed", record.termination_reason)
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                packaged_record = json.loads(archive.read("manifest.json"))["collectors"][0]
-                summary = archive.read("summary.txt").decode("utf-8")
+                packaged_record = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
+                summary = archive.read("reports/summary.txt").decode("utf-8")
             self.assertEqual(2, packaged_record["attempt_count"])
             self.assertEqual(1, len(packaged_record["retry_history"]))
             self.assertIsNone(packaged_record["failure"])
@@ -2719,9 +2798,9 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertIn("failure after evidence registration", record.failure["platform_error"])
             self.assertFalse(record.failure["retry_safe"])
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                self.assertIn("artifacts/core_system_system_info/system.txt", archive.namelist())
-                packaged = json.loads(archive.read("manifest.json"))["collectors"][0]
-                summary = archive.read("summary.txt").decode("utf-8")
+                self.assertIn("evidence/derived/core_system_system_info/system.txt", archive.namelist())
+                packaged = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
+                summary = archive.read("reports/summary.txt").decode("utf-8")
             self.assertEqual(record.failure, packaged["failure"])
             self.assertIn("Failed operation: collect", summary)
             self.assertIn("Retry safe: false", summary)
@@ -2770,9 +2849,12 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("completed", succeeded.termination_reason)
             self.assertNotEqual(failed.worker_pid, succeeded.worker_pid)
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                packaged = {item["id"]: item for item in json.loads(archive.read("manifest.json"))["collectors"]}
-                summary = archive.read("summary.txt").decode("utf-8")
-                self.assertIn("artifacts/core_system_a_failed/system.txt", archive.namelist())
+                packaged = {
+                    item["id"]: item
+                    for item in json.loads(archive.read("metadata/manifest.json"))["collectors"]
+                }
+                summary = archive.read("reports/summary.txt").decode("utf-8")
+                self.assertIn("evidence/derived/core_system_a_failed/system.txt", archive.namelist())
             self.assertEqual("failed", packaged["core.system.a_failed"]["status"])
             self.assertEqual("process", packaged["core.system.a_failed"]["isolation_mode"])
             self.assertEqual(failed.worker_pid, packaged["core.system.a_failed"]["worker_pid"])
@@ -2839,7 +2921,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertIn("cleanup", record.failure["remediation"])
             self.assertFalse(record.failure["retry_safe"])
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                self.assertIn("artifacts/core_system_system_info/system.txt", archive.namelist())
+                self.assertIn("evidence/derived/core_system_system_info/system.txt", archive.namelist())
 
     def test_collector_timeout_preserves_independent_worker_results(self) -> None:
         """A timed-out worker is terminated without cancelling unrelated collection."""
@@ -3299,8 +3381,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             package_path = Path(outcome.manifest.package["path"])
             self.assertTrue(package_path.is_file())
             with zipfile.ZipFile(package_path) as archive:
-                summary = archive.read("summary.txt").decode("utf-8")
-                packaged_manifest = json.loads(archive.read("manifest.json"))
+                summary = archive.read("reports/summary.txt").decode("utf-8")
+                packaged_manifest = json.loads(archive.read("metadata/manifest.json"))
             self.assertTrue(packaged_manifest["cancellation_requested"])
             self.assertIn("Status: cancelled", summary)
             self.assertIn("Cancellation requested: true", summary)

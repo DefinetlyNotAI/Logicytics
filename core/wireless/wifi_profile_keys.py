@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from shutil import which
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 
@@ -66,7 +66,11 @@ class WifiProfileKeysCollector(CoreCollector):
         if not profiles:
             return CollectorResult(CollectorStatus.SKIPPED, "no saved Wi-Fi profiles with key material were exported")
         artifacts = tuple(
-            context.artifacts.register_file(Path(profile), media_type="application/xml") for profile in profiles)
+            context.artifacts.register_file(
+                Path(profile), media_type="application/xml", evidence_kind=EvidenceKind.RAW
+            )
+            for profile in profiles
+        )
         context.report_progress("wifi_profile_keys_finished", profile_count=len(artifacts),
                                 bytes_written=sum(item.size_bytes for item in artifacts))
         return CollectorResult.succeeded("saved Wi-Fi profile keys collected", artifacts)
