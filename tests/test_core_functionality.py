@@ -229,6 +229,14 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(outcome.manifest_path, snapshot.manifest_path)
             self.assertEqual(["core.system.system_info"], [item.collector_id for item in snapshot.collectors])
             self.assertEqual(["succeeded"], [item.status for item in snapshot.collectors])
+            collector = snapshot.collectors[0]
+            self.assertIsNotNone(collector.started_at)
+            self.assertIsNotNone(collector.finished_at)
+            self.assertIsNotNone(collector.duration_seconds)
+            self.assertGreaterEqual(collector.duration_seconds, 0)
+            self.assertEqual("test artifact created", collector.summary)
+            self.assertEqual((), collector.errors)
+            self.assertIsNone(collector.failure)
             self.assertEqual(1, len(snapshot.artifacts))
             self.assertEqual(
                 b"ok" + os.linesep.encode("ascii"),
@@ -236,6 +244,47 @@ class CoreFunctionalityTests(unittest.TestCase):
             )
             with self.assertRaises(FrozenInstanceError):
                 snapshot.status = RunStatus.FAILED
+            with self.assertRaises(FrozenInstanceError):
+                collector.status = "failed"
+
+    def test_public_run_snapshot_and_cli_expose_verified_collector_failure_and_duration(self) -> None:
+        """Callers can inspect redacted lifecycle timing and actionable failure details without parsing manifests."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    '        output = context.workspace / "system.txt"',
+                    '        raise RuntimeError("fixture lifecycle failure")\n'
+                    '        output = context.workspace / "system.txt"',
+                ),
+                encoding="utf-8",
+            )
+            outcome = run_collection(root, RunRequest(max_workers=1, acknowledge_authorization=True))
+            snapshot = query_run(root, outcome.manifest.run_id)
+            collector = snapshot.collectors[0]
+
+            self.assertEqual("failed", collector.status)
+            self.assertIsNotNone(collector.duration_seconds)
+            self.assertGreaterEqual(collector.duration_seconds, 0)
+            self.assertIn("worker crashed", collector.summary)
+            self.assertTrue(any("fixture lifecycle failure" in error for error in collector.errors))
+            self.assertEqual("core.system.system_info", collector.failure.collector_id)
+            self.assertEqual("collect", collector.failure.operation)
+            self.assertIn("fixture lifecycle failure", collector.failure.platform_error)
+            self.assertTrue(collector.failure.remediation)
+            self.assertTrue(collector.failure.retry_safe)
+
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            output = io.StringIO()
+            with patch("logicytics.cli._project_root", return_value=root), patch("sys.stdout", output):
+                exit_code = main(["run", "--default", "--acknowledge-authorization"])
+            self.assertEqual(0, exit_code, output.getvalue())
+            self.assertIn("Collectors:", output.getvalue())
+            self.assertIn("core.system.system_info status=succeeded duration_seconds=", output.getvalue())
+            self.assertIn("summary=test artifact created", output.getvalue())
 
     def test_public_run_queries_reject_traversal_forged_identity_and_manifest_links(self) -> None:
         """Persisted status lookup cannot leave its configured run or trust a forged manifest."""
@@ -268,6 +317,31 @@ class CoreFunctionalityTests(unittest.TestCase):
                 with self.subTest(field=field):
                     payload = json.loads(original)
                     payload[field] = value
+                    outcome.manifest_path.write_text(json.dumps(payload), encoding="utf-8")
+                    with self.assertRaisesRegex(PlanError, message):
+                        query_run(root, outcome.manifest.run_id)
+            invalid_collector_fields = (
+                ("started_at", "not-a-timestamp", "collector started_at"),
+                ("finished_at", None, "require finished_at"),
+                ("duration_seconds", -1, "duration_seconds"),
+                ("summary", "", "summary"),
+                ("errors", [""], "errors"),
+                (
+                    "failure",
+                    {
+                        "collector_id": "core.system.system_info",
+                        "operation": "collect",
+                        "platform_error": "forged",
+                        "remediation": "forged",
+                        "retry_safe": True,
+                    },
+                    "must match failed status",
+                ),
+            )
+            for field, value, message in invalid_collector_fields:
+                with self.subTest(collector_field=field):
+                    payload = json.loads(original)
+                    payload["collectors"][0][field] = value
                     outcome.manifest_path.write_text(json.dumps(payload), encoding="utf-8")
                     with self.assertRaisesRegex(PlanError, message):
                         query_run(root, outcome.manifest.run_id)

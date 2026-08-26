@@ -575,7 +575,7 @@ Windows platform allows.
 - [ ] Exclude engine/library directories and underscore-prefixed helper files from
       automatic collector discovery.
 - [x] Support a configurable worker limit for parallel collection.
-- [ ] Provide per-collector success, failure, and duration information.
+- [x] Provide per-collector success, failure, and duration information.
 
 ### Execution modes
 

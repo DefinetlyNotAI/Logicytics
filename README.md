@@ -151,14 +151,21 @@ request = RunRequest(max_workers=1, acknowledge_authorization=True)
 plan = plan_run(root, request, configuration=configuration)
 outcome = run_collection(root, request, configuration=configuration)
 snapshot = query_run(root, outcome.manifest.run_id, configuration=configuration)
+for collector in snapshot.collectors:
+    print(collector.collector_id, collector.status, collector.duration_seconds, collector.summary)
+    if collector.failure is not None:
+        print(collector.failure.operation, collector.failure.remediation)
 contents = read_artifact(root, snapshot.run_id, snapshot.artifacts[0].id, configuration=configuration)
 ```
 
 Planning enforces strict core/plugin preflight and configured worker bounds
 without creating evidence. Run queries validate the manifest, collector-owned
-artifact catalog, and configured output boundaries. Artifact reads are bounded
-(16 MiB by default, never more than 64 MiB) and verify the exact registered
-bytes against their manifest SHA-256 before returning evidence.
+artifact catalog, per-collector timestamps, durations, summaries, errors,
+actionable failure details, and configured output boundaries. The command-line
+run summary prints the same redacted per-collector status, duration, summary,
+and failure guidance. Artifact reads are bounded (16 MiB by default, never more
+than 64 MiB) and verify the exact registered bytes against their manifest
+SHA-256 before returning evidence.
 
 ## Configuration
 

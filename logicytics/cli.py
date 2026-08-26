@@ -195,6 +195,20 @@ def main(argv: list[str] | None = None) -> int:
             print("\n".join(candidate.metadata.id for candidate in plan.collectors if candidate.metadata))
             return 0
         outcome = RunSupervisor(root, configuration).run(plan)
+        print("Collectors:")
+        for record in outcome.manifest.collectors:
+            duration = "not-started" if record.duration_seconds is None else f"{record.duration_seconds:.3f}"
+            print(
+                f"- {record.id} status={record.status} duration_seconds={duration} "
+                f"summary={record.summary or 'not-finished'}"
+            )
+            if record.failure is not None:
+                print(
+                    f"  failure operation={record.failure['operation']} "
+                    f"retry_safe={str(record.failure['retry_safe']).lower()} "
+                    f"platform_error={record.failure['platform_error']} "
+                    f"remediation={record.failure['remediation']}"
+                )
         if arguments.performance_check:
             performance_path = outcome.run_directory / "logs" / "performance.json"
             print(f"Performance: {performance_path}")

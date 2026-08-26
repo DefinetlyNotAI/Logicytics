@@ -18,7 +18,7 @@ from logicytics.contracts import (
 )
 
 _APPLICATION_EXPORTS = frozenset({
-    "CollectorSnapshot", "RunSnapshot", "load_configuration", "plan_run", "query_run", "read_artifact",
+    "CollectorFailureSnapshot", "CollectorSnapshot", "RunSnapshot", "load_configuration", "plan_run", "query_run", "read_artifact",
     "run_collection",
 })
 
@@ -39,6 +39,7 @@ __all__ = [
     "CollectionEstimate",
     "CollectorMetadata",
     "CollectorResult",
+    "CollectorFailureSnapshot",
     "CollectorSnapshot",
     "CoreCollector",
     "EvidenceKind",

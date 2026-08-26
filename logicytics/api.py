@@ -7,6 +7,7 @@ import json
 import re
 from dataclasses import dataclass
 from datetime import datetime
+from math import isfinite
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -25,11 +26,28 @@ _DEFAULT_ARTIFACT_READ_BYTES = 16 * 1024 * 1024
 
 
 @dataclass(frozen=True, slots=True)
+class CollectorFailureSnapshot:
+    """Immutable actionable failure details from one persisted collector result."""
+
+    collector_id: str
+    operation: str
+    platform_error: str
+    remediation: str
+    retry_safe: bool
+
+
+@dataclass(frozen=True, slots=True)
 class CollectorSnapshot:
-    """Immutable public status for one collector recorded in a persisted run."""
+    """Immutable public lifecycle details for one collector in a persisted run."""
 
     collector_id: str
     status: str
+    started_at: str | None
+    finished_at: str | None
+    duration_seconds: float | None
+    summary: str | None
+    errors: tuple[str, ...]
+    failure: CollectorFailureSnapshot | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -150,6 +168,68 @@ def _manifest_timestamp(value: object, field: str, *, optional: bool = False) ->
     return value
 
 
+def _collector_snapshot(record: dict[str, Any], collector_id: str, status: str) -> CollectorSnapshot:
+    """Validate and freeze persisted per-collector timing and failure information."""
+    started_at = _manifest_timestamp(record.get("started_at"), "collector started_at", optional=True)
+    finished_at = _manifest_timestamp(record.get("finished_at"), "collector finished_at", optional=True)
+    duration = record.get("duration_seconds")
+    if duration is not None and (
+            not isinstance(duration, (int, float))
+            or isinstance(duration, bool)
+            or not isfinite(duration)
+            or duration < 0
+    ):
+        raise PlanError("run manifest collector duration_seconds must be a finite non-negative number or null")
+    summary = record.get("summary")
+    if summary is not None and (not isinstance(summary, str) or not summary.strip()):
+        raise PlanError("run manifest collector summary must be a non-empty string or null")
+    raw_errors = record.get("errors")
+    if not isinstance(raw_errors, list) or not all(isinstance(error, str) and error.strip() for error in raw_errors):
+        raise PlanError("run manifest collector errors must be an array of non-empty strings")
+    terminal = status in {item.value for item in CollectorStatus}
+    if terminal and (finished_at is None or summary is None):
+        raise PlanError("finalized collector records require finished_at and summary")
+    if not terminal and (finished_at is not None or duration is not None):
+        raise PlanError("planned or running collector records cannot contain terminal timing")
+    if started_at is None and duration is not None:
+        raise PlanError("collector duration_seconds requires a started_at timestamp")
+
+    raw_failure = record.get("failure")
+    failure: CollectorFailureSnapshot | None = None
+    if raw_failure is not None:
+        required = {"collector_id", "operation", "platform_error", "remediation", "retry_safe"}
+        if not isinstance(raw_failure, dict) or set(raw_failure) != required:
+            raise PlanError("run manifest collector failure must contain the complete actionable failure contract")
+        if (
+                raw_failure.get("collector_id") != collector_id
+                or not all(
+                    isinstance(raw_failure.get(field), str) and raw_failure[field].strip()
+                    for field in ("operation", "platform_error", "remediation")
+                )
+                or not isinstance(raw_failure.get("retry_safe"), bool)
+        ):
+            raise PlanError("run manifest collector failure contains invalid actionable details")
+        failure = CollectorFailureSnapshot(
+            collector_id=collector_id,
+            operation=raw_failure["operation"],
+            platform_error=raw_failure["platform_error"],
+            remediation=raw_failure["remediation"],
+            retry_safe=raw_failure["retry_safe"],
+        )
+    if (status == CollectorStatus.FAILED.value) != (failure is not None):
+        raise PlanError("run manifest collector failure details must match failed status")
+    return CollectorSnapshot(
+        collector_id=collector_id,
+        status=status,
+        started_at=started_at,
+        finished_at=finished_at,
+        duration_seconds=None if duration is None else float(duration),
+        summary=summary,
+        errors=tuple(raw_errors),
+        failure=failure,
+    )
+
+
 def query_run(
         project_root: Path | str,
         run_id: str,
@@ -207,7 +287,7 @@ def query_run(
         ):
             raise PlanError("run manifest contains an invalid or duplicate collector record")
         collector_ids.add(collector_id)
-        collectors.append(CollectorSnapshot(collector_id, collector_status))
+        collectors.append(_collector_snapshot(record, collector_id, collector_status))
         for raw in record["artifacts"]:
             artifact = _artifact(raw, collector_id)
             if artifact.id in artifact_ids:
