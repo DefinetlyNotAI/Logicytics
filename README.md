@@ -155,6 +155,27 @@ python -m logicytics run --profile standard --acknowledge-authorization `
 Plugin collectors never join any profile unless explicitly included or enabled
 with `--plugins`. Unknown profile names are rejected before collection begins.
 
+## Execution modes
+
+`python -m logicytics --modes` prints the authoritative machine-readable mode
+matrix. New integrations should use `run --mode <name>`; the historical flags
+remain exact compatibility aliases.
+
+| Mode | Profile | Scheduling | Legacy alias | Additional behavior |
+| --- | --- | --- | --- | --- |
+| `standard` | standard | sequential | `--default` | deterministic standard run |
+| `balanced` | standard | bounded parallel | `--threaded` | configured worker pool |
+| `quick` | minimal | configured | `--minimal` | essential inventory |
+| `thorough` | deep | configured | `--depth` | extended slower inventory |
+| `offline` | offline | configured | none | forbids network access |
+| `extensions` | standard | configured | `--modded` | enables declared MODS |
+| `non-python` | standard | configured | `--nopy` | only non-Python MODS payloads |
+| `performance` | standard | sequential | `--performance-check` | duration report |
+
+Explicit `--profile`, `--include`, and `--exclude` remain available for advanced
+planning. A named mode cannot be combined with a different explicit profile or
+with its contradictory worker strategy.
+
 ## Public Python API
 
 Importing `logicytics` does not start collection, create output directories, or

@@ -350,7 +350,7 @@ Windows platform allows.
       contains the selected profile, explicit collector selections, concurrency,
       output policy, and post-run action; keep the mutable cancellation handle in
       the per-run `CollectorContext` rather than the immutable request.
-- [ ] Replace hard-coded filename lists and mode-specific branches with a typed
+- [x] Replace hard-coded filename lists and mode-specific branches with a typed
       collector registry. Each collector declares its ID, category, supported
       platforms, required privileges, estimated cost, dependencies, output types,
       default profiles, and whether it is safe to parallelize.
@@ -364,7 +364,7 @@ Windows platform allows.
 - [x] Replace one giant execution-list algorithm with a planner that resolves
       collector dependencies, removes duplicates, validates conflicts, and emits a
       reproducible execution plan before any collection begins.
-- [ ] Replace mode names that imply implementation details with user-facing
+- [x] Replace mode names that imply implementation details with user-facing
       collection profiles. Preserve compatibility aliases for existing flags, but
       make profiles the canonical internal concept.
 - [x] Replace a single shared mutable logger with run-scoped structured logging
@@ -525,8 +525,8 @@ Windows platform allows.
 
 ### Migration rules from the old design
 
-- [ ] Keep existing command-line flags as compatibility aliases during migration.
-- [ ] Map every legacy flag to a named v4.0 profile or explicit collector set.
+- [x] Keep existing command-line flags as compatibility aliases during migration.
+- [x] Map every legacy flag to a named v4.0 profile or explicit collector set.
 - [ ] Wrap legacy scripts in compatibility collectors before rewriting their data
       gathering logic.
 - [ ] Move one collector at a time from direct filesystem writes to artifact APIs.
@@ -890,7 +890,7 @@ appropriate default/deep/non-Python mode.
 
 ### Phase 2 — Engine and packaging
 
-- [ ] Implement CLI parsing, mode selection, execution scheduling, worker limits,
+- [x] Implement CLI parsing, mode selection, execution scheduling, worker limits,
       performance reporting, and post-run actions.
 - [x] Implement ZIP creation, SHA-256 hashing, package naming, metadata, and output
       relocation.

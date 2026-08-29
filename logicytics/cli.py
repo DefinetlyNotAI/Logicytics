@@ -29,6 +29,13 @@ from logicytics.maintenance import (
     maintenance_diagnostics,
     write_local_manifest,
 )
+from logicytics.modes import (
+    EXECUTION_MODES,
+    LEGACY_MODE_ALIASES,
+    ExecutionStrategy,
+    mode_matrix,
+    resolve_execution_mode,
+)
 from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.output_layout import ensure_output_layout
 from logicytics.runtime import RunSupervisor
@@ -40,22 +47,42 @@ def _project_root() -> Path:
 
 
 def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
-    profile = "minimal" if getattr(arguments, "minimal", False) else "deep" if getattr(arguments, "depth",
-                                                                                       False) else "standard" if getattr(
-        arguments, "default_mode", False) or getattr(arguments, "threaded", False) else arguments.profile
-    sequential = getattr(arguments, "sequential", False)
-    parallel = getattr(arguments, "parallel", False)
-    performance_check = getattr(arguments, "performance_check", False)
-    default_mode = getattr(arguments, "default_mode", False)
-    modded = getattr(arguments, "modded", False)
-    nopy = getattr(arguments, "nopy", False)
+    legacy_flags = {
+        flag: getattr(arguments, flag, False)
+        for flag in LEGACY_MODE_ALIASES
+    }
+    mode = resolve_execution_mode(getattr(arguments, "mode", None), legacy_flags)
+    explicit_profile = getattr(arguments, "profile", None)
+    if mode is not None and explicit_profile is not None:
+        raise ValueError("--profile cannot be combined with a named collection mode")
+    profile = mode.profile if mode is not None else explicit_profile or "standard"
+    explicit_sequential = getattr(arguments, "sequential", False)
+    explicit_parallel = getattr(arguments, "parallel", False)
+    if mode is not None:
+        if explicit_sequential and mode.strategy is ExecutionStrategy.PARALLEL:
+            if legacy_flags["threaded"]:
+                raise ValueError("sequential execution conflicts with legacy --threaded mode")
+            raise ValueError(f"{mode.name} mode requires configured parallel execution")
+        if explicit_parallel and mode.strategy is ExecutionStrategy.SEQUENTIAL:
+            if legacy_flags["performance_check"] or legacy_flags["default_mode"]:
+                raise ValueError(
+                    "parallel execution conflicts with sequential performance/default mode"
+                )
+            raise ValueError(f"{mode.name} mode requires sequential execution")
+    sequential = explicit_sequential or (
+        mode is not None and mode.strategy is ExecutionStrategy.SEQUENTIAL
+    )
+    parallel = explicit_parallel or (
+        mode is not None and mode.strategy is ExecutionStrategy.PARALLEL
+    )
+    performance_check = mode.performance_check if mode is not None else False
+    enable_mods = getattr(arguments, "mods", False) or (
+        mode.enable_mods if mode is not None else False
+    )
+    non_python_only = mode.non_python_only if mode is not None else False
     if sequential and arguments.workers is not None and arguments.workers != 1:
         raise ValueError("sequential execution requires --workers=1")
-    if parallel and (performance_check or default_mode):
-        raise ValueError("parallel execution conflicts with sequential performance/default mode")
-    if sequential and getattr(arguments, "threaded", False):
-        raise ValueError("sequential execution conflicts with legacy --threaded mode")
-    worker_count = 1 if sequential or performance_check or default_mode else arguments.workers or default_workers
+    worker_count = 1 if sequential else arguments.workers or default_workers
     if parallel and worker_count < 2:
         raise ValueError("parallel execution requires at least two configured workers")
     parent_run_id: str | None = None
@@ -93,8 +120,8 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
         include=tuple(arguments.include),
         exclude=tuple(arguments.exclude),
         enable_plugins=arguments.plugins,
-        enable_mods=getattr(arguments, "mods", False) or modded or nopy,
-        non_python_only=nopy,
+        enable_mods=enable_mods,
+        non_python_only=non_python_only,
         max_workers=worker_count,
         acknowledge_authorization=getattr(arguments, "acknowledge_authorization", False),
         approved_capabilities=tuple(Capability(value) for value in arguments.allow_capability),
@@ -119,13 +146,14 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Logicytics v4 run-oriented evidence framework")
     parser.add_argument("--config", type=Path, help="Path to a v4 JSON configuration file")
     parser.add_argument("--usage", action="store_true", help="Show local interaction statistics and create a usage graph.")
+    parser.add_argument("--modes", action="store_true", help="Show the typed execution-mode inclusion matrix.")
     parser.add_argument("--match", metavar="TEXT", help="Suggest the closest documented action for natural-language input.")
     subcommands = parser.add_subparsers(dest="command")
     for command in ("preflight", "debug", "update", "dev", "plan", "run"):
         subparser = subcommands.add_parser(command, help=f"Run the {command} action.")
         subparser.add_argument(
             "--profile",
-            default="standard",
+            default=None,
             choices=tuple(BUILTIN_PROFILES),
             help="Named built-in collector membership and access policy.",
         )
@@ -174,6 +202,11 @@ def _parser() -> argparse.ArgumentParser:
                 help="Explicitly run isolated collectors with the configured bounded worker limit.",
             )
             mode = subparser.add_mutually_exclusive_group()
+            mode.add_argument(
+                "--mode",
+                choices=tuple(EXECUTION_MODES),
+                help="Select one user-facing typed execution mode.",
+            )
             mode.add_argument("--default", dest="default_mode", action="store_true",
                               help="Run the standard built-in profile.")
             mode.add_argument("--threaded", action="store_true",
@@ -319,14 +352,17 @@ def main(argv: list[str] | None = None) -> int:
     """Run the selected preflight, planning, or supervised execution command."""
     parser = _parser()
     arguments = parser.parse_args(argv)
-    if arguments.usage and arguments.match:
-        parser.error("--usage cannot be combined with --match")
-    if arguments.command is not None and (arguments.usage or arguments.match):
-        parser.error("--usage and --match are standalone actions")
+    standalone_actions = sum(bool(value) for value in (arguments.usage, arguments.match, arguments.modes))
+    if standalone_actions > 1:
+        parser.error("--usage, --match, and --modes are mutually exclusive")
+    if arguments.command is not None and standalone_actions:
+        parser.error("--usage, --match, and --modes are standalone actions")
     if arguments.usage:
         arguments.command = "usage"
     elif arguments.match:
         arguments.command = "match"
+    elif arguments.modes:
+        arguments.command = "modes"
     if arguments.command is None:
         parser.print_help()
         return 0
@@ -366,6 +402,9 @@ def main(argv: list[str] | None = None) -> int:
             statistics = usage_statistics(load_history(history_path))
             graph_path = write_usage_graph(configuration.runtime.output_root / "flag_usage.svg", statistics)
             print(json.dumps({**statistics, "graph_path": str(graph_path)}, indent=2, sort_keys=True))
+            return 0
+        if arguments.command == "modes":
+            print(json.dumps(mode_matrix(), indent=2, sort_keys=True))
             return 0
         report = preflight(root, configuration_hash=configuration.fingerprint())
         if arguments.command == "preflight":
@@ -434,7 +473,7 @@ def main(argv: list[str] | None = None) -> int:
                     f"platform_error={record.failure['platform_error']} "
                     f"remediation={record.failure['remediation']}"
                 )
-        if arguments.performance_check:
+        if plan.request.performance_check:
             performance_path = outcome.run_directory / "logs" / "performance.json"
             print(f"Performance: {performance_path}")
         if outcome.manifest.package and "path" in outcome.manifest.package:

@@ -25,6 +25,8 @@ FLAG_DESCRIPTIONS: Mapping[str, str] = {
     "debug": "diagnostic environment configuration and integrity checks",
     "update": "check or explicitly update the Git checkout",
     "dev": "developer contribution manifest and version checks",
+    "mode": "select a user facing typed execution mode",
+    "modes": "show execution mode profiles scheduling and compatibility aliases",
 }
 _TOKEN = re.compile(r"[a-z0-9]+")
 

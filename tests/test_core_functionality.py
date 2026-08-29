@@ -79,6 +79,7 @@ from logicytics.environment import EnvironmentReport
 from logicytics.errors import ArtifactError, PlanError, PreflightError
 from logicytics.packaging import package_run
 from logicytics.output_layout import ensure_output_layout
+from logicytics.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
 from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.runtime import RunSupervisor
 
@@ -1818,6 +1819,68 @@ class CoreFunctionalityTests(unittest.TestCase):
         request = _request(arguments, default_workers=4)
         self.assertTrue(request.performance_check)
         self.assertEqual(1, request.max_workers)
+
+    def test_typed_mode_registry_maps_every_user_mode_and_legacy_alias(self) -> None:
+        """One immutable matrix owns profile, scheduling, MODS, and performance behavior."""
+        parser = _parser()
+        expected = {
+            "standard": ("standard", 1, False, False, False),
+            "balanced": ("standard", 4, False, False, False),
+            "quick": ("minimal", 4, False, False, False),
+            "thorough": ("deep", 4, False, False, False),
+            "offline": ("offline", 4, False, False, False),
+            "extensions": ("standard", 4, True, False, False),
+            "non-python": ("standard", 4, True, True, False),
+            "performance": ("standard", 1, False, False, True),
+        }
+        self.assertEqual(set(expected), set(EXECUTION_MODES))
+        self.assertEqual(set(expected), {item["name"] for item in mode_matrix()})
+        for name, contract in expected.items():
+            with self.subTest(mode=name):
+                request = _request(parser.parse_args(["run", "--mode", name]), 4)
+                self.assertEqual(
+                    contract,
+                    (
+                        request.profile,
+                        request.max_workers,
+                        request.enable_mods,
+                        request.non_python_only,
+                        request.performance_check,
+                    ),
+                )
+
+        alias_flags = {
+            "default_mode": "--default",
+            "threaded": "--threaded",
+            "minimal": "--minimal",
+            "depth": "--depth",
+            "modded": "--modded",
+            "nopy": "--nopy",
+            "performance_check": "--performance-check",
+        }
+        for field, mode_name in LEGACY_MODE_ALIASES.items():
+            with self.subTest(alias=alias_flags[field]):
+                legacy = _request(parser.parse_args(["run", alias_flags[field]]), 4)
+                named = _request(parser.parse_args(["run", "--mode", mode_name]), 4)
+                self.assertEqual(named, legacy)
+
+        with self.assertRaisesRegex(ValueError, "--profile"):
+            _request(parser.parse_args(["run", "--mode", "quick", "--profile", "deep"]), 4)
+        with patch("sys.stderr"), self.assertRaises(SystemExit):
+            parser.parse_args(["run", "--mode", "quick", "--minimal"])
+
+    def test_modes_action_prints_the_complete_machine_readable_matrix(self) -> None:
+        """Users and release checks can inspect the same authoritative mode registry."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            output = io.StringIO()
+            with patch("logicytics.cli._project_root", return_value=root), patch(
+                "sys.stdout", output
+            ):
+                self.assertEqual(0, main(["--modes"]))
+            payload = json.loads(output.getvalue())
+            self.assertEqual(list(EXECUTION_MODES), [item["name"] for item in payload])
+            self.assertTrue(all("legacy_aliases" in item for item in payload))
 
     def test_cli_without_action_prints_help_and_modes_are_parser_exclusive(self) -> None:
         """An empty invocation is useful while contradictory legacy actions fail immediately."""
