@@ -215,8 +215,13 @@ before asking Windows to open the file through its associated application.
 
 ## Configuration
 
-An optional project-root `logicytics.json` uses schema version `4` and separates
-engine-wide `runtime` options from per-collector `collectors` settings:
+An optional project-root `logicytics.json` uses schema version `4`. Product
+policy is split into immutable `runtime`, `interaction`, `maintenance`, and
+`logging` sections. Profile membership remains in the typed collector registry,
+per-collector options remain under `collectors`, and invocation-only overrides
+such as explicit selections, worker strategy, authorization, and capabilities
+remain in `RunRequest`; none of those runtime overrides mutate the loaded
+configuration.
 
 ```json
 {
@@ -238,13 +243,21 @@ engine-wide `runtime` options from per-collector `collectors` settings:
   },
   "collectors": {
     "core.filesystem.system_drive_tree": {"max_entries": 5000, "max_depth": 12},
-    "core.process.memory_map": {"max_regions": 5000, "dump_directory": "memory_maps"}
+    "core.process.memory_map": {
+      "max_regions": 5000,
+      "output_limit_bytes": 67108864,
+      "disk_safety_margin_bytes": 104857600,
+      "dump_directory": "memory_maps"
+    }
   }
 }
 ```
 
 Shipped filesystem, network, packet, sensitive-inventory, and metadata-only
 memory-map collector options are strictly typed and bounded before planning.
+The memory-map output limit, free-space safety margin, and dump directory are
+collector-scoped; the directory must be relative to that collector's isolated
+workspace.
 Unknown engine fields, duplicate JSON keys, unsafe workspace paths, and invalid
 collector IDs fail closed; plugin-owned setting fields remain extensible.
 

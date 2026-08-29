@@ -1742,6 +1742,40 @@ class CoreFunctionalityTests(unittest.TestCase):
             )
             self.assertEqual(settings, load_config(root).settings_for(collector_id))
 
+    def test_configuration_profile_collector_and_request_boundaries_are_isolated(self) -> None:
+        """Product, profile, collector, and invocation settings remain separate contracts."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_id = "core.process.memory_map"
+            collector_settings = {
+                "output_limit_bytes": 8192,
+                "disk_safety_margin_bytes": 4096,
+                "dump_directory": "maps",
+            }
+            (root / "logicytics.json").write_text(
+                json.dumps({
+                    "schema_version": 4,
+                    "runtime": {"default_max_workers": 3, "maximum_workers": 8},
+                    "collectors": {collector_id: collector_settings},
+                }),
+                encoding="utf-8",
+            )
+            configuration = load_config(root)
+            request = RunRequest(
+                profile="deep",
+                include=(collector_id,),
+                max_workers=1,
+                acknowledge_authorization=True,
+            )
+
+            self.assertEqual(3, configuration.runtime.default_max_workers)
+            self.assertEqual(collector_settings, configuration.settings_for(collector_id))
+            self.assertEqual("deep", request.profile)
+            self.assertEqual((collector_id,), request.include)
+            self.assertEqual(1, request.max_workers)
+            self.assertNotIn("profile", configuration.to_manifest_dict()["runtime"])
+            self.assertNotIn("max_workers", configuration.to_manifest_dict()["runtime"])
+
     def test_run_request_rejects_invalid_selection_and_execution_policy(self) -> None:
         """Run requests must be immutable, typed declarations before a plan exists."""
         collector_id = "core.system.system_info"

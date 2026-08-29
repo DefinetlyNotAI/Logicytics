@@ -460,7 +460,7 @@ Windows platform allows.
 - [x] Replace scattered string lookups with a validated typed configuration object.
 - [x] Fail at plan-validation time for invalid values, rather than during a
       collector's execution.
-- [ ] Separate product settings, profile settings, collector settings, and runtime
+- [x] Separate product settings, profile settings, collector settings, and runtime
       overrides.
 - [x] Provide named profiles such as `minimal`, `standard`, `deep`, and `offline`
       with documented collector membership.
@@ -866,7 +866,7 @@ appropriate default/deep/non-Python mode.
       and preference-history persistence.
 - [x] Recreate flag-matching settings for model name, minimum accuracy, and model
       debug output.
-- [ ] Recreate memory-dump settings for file-size limit, safety margin, and dump
+- [x] Recreate memory-dump settings for file-size limit, safety margin, and dump
       directory.
 - [x] Recreate network sampling settings for count and interval.
 - [x] Recreate packet-sniffer settings for interface, packet count, timeout, and
