@@ -1,0 +1,159 @@
+"""Local semantic flag matching, opt-in history, and usage reporting."""
+
+from __future__ import annotations
+
+import gzip
+import json
+import platform
+import re
+from collections import Counter
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from difflib import SequenceMatcher
+from pathlib import Path
+from typing import Iterable, Mapping
+
+FLAG_DESCRIPTIONS: Mapping[str, str] = {
+    "default": "standard collection sequentially",
+    "threaded": "standard collection with bounded parallel workers",
+    "minimal": "quick basic essential collection",
+    "depth": "deep exhaustive slow collection",
+    "nopy": "non Python PowerShell executable and batch collectors",
+    "modded": "normal collection plus opt in MODS extensions",
+    "performance-check": "sequential collector duration performance analysis",
+    "usage": "interaction statistics and flag usage graph",
+    "debug": "diagnostic environment configuration and integrity checks",
+    "update": "check or explicitly update the Git checkout",
+    "dev": "developer contribution manifest and version checks",
+}
+_TOKEN = re.compile(r"[a-z0-9]+")
+
+
+@dataclass(frozen=True, slots=True)
+class FlagMatch:
+    """One deterministic flag suggestion and its evidence."""
+
+    input: str
+    matched_flag: str | None
+    accuracy: float
+    source: str
+    model_name: str
+
+
+def _normalized(value: str) -> str:
+    return " ".join(_TOKEN.findall(value.casefold()))
+
+
+def _score(query: str, flag: str, description: str) -> float:
+    normalized_query = _normalized(query)
+    candidate = _normalized(f"{flag} {description}")
+    sequence = SequenceMatcher(None, normalized_query, candidate).ratio()
+    query_tokens = set(normalized_query.split())
+    candidate_tokens = set(candidate.split())
+    overlap = len(query_tokens.intersection(candidate_tokens)) / max(1, len(query_tokens))
+    flag_score = SequenceMatcher(None, normalized_query, _normalized(flag)).ratio()
+    return round(max(sequence, overlap, flag_score), 6)
+
+
+def match_flag(
+        user_input: str,
+        *,
+        threshold: float,
+        model_name: str,
+        history: Iterable[Mapping[str, object]] = (),
+) -> FlagMatch:
+    """Match names and descriptions, then consult prior accepted inputs when weak."""
+    if not isinstance(user_input, str) or not user_input.strip():
+        raise ValueError("semantic flag input must be non-empty")
+    ranked = sorted(
+        ((_score(user_input, flag, description), flag) for flag, description in FLAG_DESCRIPTIONS.items()),
+        key=lambda item: (-item[0], item[1]),
+    )
+    direct_score, direct_flag = ranked[0]
+    if direct_score >= threshold:
+        return FlagMatch(user_input, direct_flag, direct_score, "direct", model_name)
+    historical: list[tuple[float, str]] = []
+    for item in history:
+        old_input = item.get("input")
+        old_flag = item.get("matched_flag")
+        if isinstance(old_input, str) and isinstance(old_flag, str) and old_flag in FLAG_DESCRIPTIONS:
+            historical.append((SequenceMatcher(None, _normalized(user_input), _normalized(old_input)).ratio(), old_flag))
+    if historical:
+        history_score, history_flag = sorted(historical, key=lambda item: (-item[0], item[1]))[0]
+        if history_score > direct_score:
+            return FlagMatch(user_input, history_flag, round(history_score, 6), "history", model_name)
+    return FlagMatch(user_input, None, direct_score, "below_threshold", model_name)
+
+
+def load_history(path: Path) -> list[dict[str, object]]:
+    """Read bounded compressed local history; malformed history fails closed."""
+    if not path.exists():
+        return []
+    try:
+        with gzip.open(path, "rt", encoding="utf-8") as stream:
+            payload = json.load(stream)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return []
+    if not isinstance(payload, list):
+        return []
+    return [dict(item) for item in payload[-10_000:] if isinstance(item, dict)]
+
+
+def record_match(path: Path, match: FlagMatch) -> None:
+    """Atomically append one compressed, local-only interaction record."""
+    history = load_history(path)
+    history.append({
+        **asdict(match),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "device_name": platform.node() or "unknown",
+    })
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    with gzip.open(temporary, "wt", encoding="utf-8") as stream:
+        json.dump(history[-10_000:], stream, sort_keys=True, separators=(",", ":"))
+    temporary.replace(path)
+
+
+def usage_statistics(history: Iterable[Mapping[str, object]]) -> dict[str, object]:
+    """Aggregate total, accuracy, common values, and per-flag frequencies."""
+    records = list(history)
+    accuracies = [float(item["accuracy"]) for item in records if isinstance(item.get("accuracy"), (int, float))]
+    flags = Counter(str(item["matched_flag"]) for item in records if isinstance(item.get("matched_flag"), str))
+    devices = Counter(str(item["device_name"]) for item in records if isinstance(item.get("device_name"), str))
+    inputs = Counter(str(item["input"]) for item in records if isinstance(item.get("input"), str))
+    return {
+        "total_interactions": len(records),
+        "average_accuracy": round(sum(accuracies) / len(accuracies), 6) if accuracies else 0.0,
+        "common_device": devices.most_common(1)[0][0] if devices else None,
+        "common_input": inputs.most_common(1)[0][0] if inputs else None,
+        "per_flag_frequency": dict(sorted(flags.items())),
+    }
+
+
+def write_usage_graph(path: Path, statistics: Mapping[str, object]) -> Path:
+    """Write a portable SVG bar graph without optional plotting dependencies."""
+    raw_counts = statistics.get("per_flag_frequency", {})
+    counts = dict(raw_counts) if isinstance(raw_counts, Mapping) else {}
+    labels = sorted(FLAG_DESCRIPTIONS)
+    width, row_height = 760, 30
+    height = 70 + row_height * len(labels)
+    maximum = max((int(counts.get(label, 0)) for label in labels), default=0) or 1
+    rows: list[str] = []
+    for index, label in enumerate(labels):
+        count = int(counts.get(label, 0))
+        y = 48 + index * row_height
+        bar_width = int(500 * count / maximum)
+        rows.extend((
+            f'<text x="12" y="{y + 16}" font-family="monospace" font-size="13">{label}</text>',
+            f'<rect x="190" y="{y}" width="{bar_width}" height="20" fill="#3b82f6"/>',
+            f'<text x="{200 + bar_width}" y="{y + 16}" font-family="monospace" font-size="13">{count}</text>',
+        ))
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+        f'viewBox="0 0 {width} {height}"><rect width="100%" height="100%" fill="white"/>'
+        '<text x="12" y="28" font-family="sans-serif" font-size="20">Logicytics flag usage</text>'
+        + "".join(rows) + "</svg>\n"
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(svg, encoding="utf-8")
+    return path

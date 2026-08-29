@@ -17,6 +17,7 @@ from logicytics.discovery import preflight
 from logicytics.environment import inspect_environment
 from logicytics.errors import LogicyticsError
 from logicytics.manifest import MANIFEST_SCHEMA_VERSION
+from logicytics.interaction import load_history, match_flag, record_match, usage_statistics, write_usage_graph
 from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.runtime import RunSupervisor
 from logicytics.sysinternals import ensure_sysinternals
@@ -101,6 +102,8 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Logicytics v4 run-oriented evidence framework")
     parser.add_argument("--config", type=Path, help="Path to a v4 JSON configuration file")
+    parser.add_argument("--usage", action="store_true", help="Show local interaction statistics and create a usage graph.")
+    parser.add_argument("--match", metavar="TEXT", help="Suggest the closest documented action for natural-language input.")
     subcommands = parser.add_subparsers(dest="command")
     for command in ("preflight", "debug", "update", "plan", "run"):
         subparser = subcommands.add_parser(command, help=f"Run the {command} action.")
@@ -198,12 +201,47 @@ def main(argv: list[str] | None = None) -> int:
     """Run the selected preflight, planning, or supervised execution command."""
     parser = _parser()
     arguments = parser.parse_args(argv)
+    if arguments.usage and arguments.match:
+        parser.error("--usage cannot be combined with --match")
+    if arguments.command is not None and (arguments.usage or arguments.match):
+        parser.error("--usage and --match are standalone actions")
+    if arguments.usage:
+        arguments.command = "usage"
+    elif arguments.match:
+        arguments.command = "match"
     if arguments.command is None:
         parser.print_help()
         return 0
     root = _project_root()
     try:
         configuration = load_config(root, arguments.config)
+        history_path = configuration.runtime.output_root / "interaction_history.json.gz"
+        if arguments.command == "match":
+            history = load_history(history_path)
+            match = match_flag(
+                arguments.match,
+                threshold=configuration.interaction.similarity_threshold,
+                model_name=configuration.interaction.model_name,
+                history=history,
+            )
+            if configuration.interaction.history_enabled:
+                record_match(history_path, match)
+            payload = {
+                "input": match.input,
+                "matched_flag": match.matched_flag,
+                "accuracy": match.accuracy,
+                "source": match.source,
+                "history_persisted": configuration.interaction.history_enabled,
+            }
+            if configuration.interaction.model_debug:
+                payload["model_debug"] = {"model_name": match.model_name, "threshold": configuration.interaction.similarity_threshold}
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return 0 if match.matched_flag is not None else 1
+        if arguments.command == "usage":
+            statistics = usage_statistics(load_history(history_path))
+            graph_path = write_usage_graph(configuration.runtime.output_root / "flag_usage.svg", statistics)
+            print(json.dumps({**statistics, "graph_path": str(graph_path)}, indent=2, sort_keys=True))
+            return 0
         report = preflight(root, configuration_hash=configuration.fingerprint())
         if arguments.command == "preflight":
             validation = report.to_dict(

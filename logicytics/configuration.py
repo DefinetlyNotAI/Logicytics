@@ -19,10 +19,11 @@ DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES = 4 * 1024 * 1024 * 1024
 MAXIMUM_RUN_OUTPUT_BYTES = 64 * 1024 * 1024 * 1024
 _COLLECTOR_ID = re.compile(r"^(?:core\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*|plugin\.[a-z][a-z0-9_]*)$")
 _SETTING_NAME = re.compile(r"^[a-z][a-z0-9_]*$")
-_ROOT_FIELDS = frozenset({"schema_version", "runtime", "collectors"})
+_ROOT_FIELDS = frozenset({"schema_version", "runtime", "interaction", "collectors"})
 _RUNTIME_FIELDS = frozenset({
     "output_root", "default_max_workers", "maximum_workers", "package_completed_runs", "maximum_run_output_bytes",
 })
+_INTERACTION_FIELDS = frozenset({"history_enabled", "similarity_threshold", "model_name", "model_debug"})
 _LEGACY_ROOT_FIELDS = _ROOT_FIELDS.union({
     "collector_settings", "workers", "worker_count", "max_workers", "output_root",
     "package_completed_runs", "maximum_run_output_bytes",
@@ -181,7 +182,12 @@ def _migrate_v3_configuration(raw: Mapping[str, Any], project_root: Path) -> dic
         relative_parts = tuple(part.casefold() for part in candidate.parts)
         if relative_parts == ("access", "runs") or candidate == project_root / "ACCESS" / "RUNS":
             runtime["output_root"] = str(project_root / "output" / "data")
-    return {"schema_version": SCHEMA_VERSION, "runtime": runtime, "collectors": collectors}
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "runtime": runtime,
+        "interaction": raw.get("interaction", {}),
+        "collectors": collectors,
+    }
 
 
 @dataclass(frozen=True, slots=True)
@@ -196,11 +202,22 @@ class RuntimeSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class InteractionSettings:
+    """Local-only matching, diagnostics, and optional history policy."""
+
+    history_enabled: bool = False
+    similarity_threshold: float = 0.55
+    model_name: str = "stdlib-sequence-matcher"
+    model_debug: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class AppConfig:
     """Validated settings loaded from an optional JSON configuration file."""
 
     schema_version: int
     runtime: RuntimeSettings
+    interaction: InteractionSettings = field(default_factory=InteractionSettings)
     collector_settings: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
     migrated_from_schema: int | None = None
 
@@ -297,6 +314,23 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     ):
         raise PlanError("runtime maximum_run_output_bytes must be an integer from 1 to 68719476736")
 
+    interaction_raw = raw.get("interaction", {})
+    if not isinstance(interaction_raw, dict):
+        raise PlanError("interaction configuration must be an object")
+    unknown_interaction = sorted(set(interaction_raw) - _INTERACTION_FIELDS)
+    if unknown_interaction:
+        raise PlanError(f"interaction configuration contains unsupported settings: {', '.join(unknown_interaction)}")
+    history_enabled = interaction_raw.get("history_enabled", False)
+    model_debug = interaction_raw.get("model_debug", False)
+    similarity_threshold = interaction_raw.get("similarity_threshold", 0.55)
+    model_name = interaction_raw.get("model_name", "stdlib-sequence-matcher")
+    if not isinstance(history_enabled, bool) or not isinstance(model_debug, bool):
+        raise PlanError("interaction history_enabled and model_debug must be boolean")
+    if not _bounded_number(similarity_threshold, minimum=0, maximum=1):
+        raise PlanError("interaction similarity_threshold must be a number from 0 to 1")
+    if not isinstance(model_name, str) or not model_name.strip() or any(char in model_name for char in "\r\n"):
+        raise PlanError("interaction model_name must be a non-empty single-line string")
+
     collector_settings = raw.get("collectors", {})
     if not isinstance(collector_settings, dict) or not all(
             isinstance(key, str) and isinstance(value, dict)
@@ -312,6 +346,12 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             maximum_workers=maximum_workers,
             package_completed_runs=package_completed_runs,
             maximum_run_output_bytes=maximum_run_output_bytes,
+        ),
+        interaction=InteractionSettings(
+            history_enabled=history_enabled,
+            similarity_threshold=float(similarity_threshold),
+            model_name=model_name,
+            model_debug=model_debug,
         ),
         collector_settings=collector_settings,
         migrated_from_schema=migrated_from_schema,

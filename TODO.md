@@ -608,18 +608,18 @@ Windows platform allows.
 - [x] Provide action/sub-action exclusivity validation and clear invalid-combination
       errors.
 - [ ] Provide colored console output for status, warnings, errors, and prompts.
-- [ ] Provide a semantic flag-matching feature that can map natural-language user
+- [x] Provide a semantic flag-matching feature that can map natural-language user
       input to the closest command-line flag.
-- [ ] Match input against both flag names and their descriptions.
-- [ ] Use a configurable similarity threshold.
-- [ ] Fall back to historical flag suggestions when direct matching is weak.
-- [ ] Persist optional compressed interaction history locally only when enabled.
-- [ ] Record matched flag, input, accuracy, timestamp, and device name in history.
-- [ ] Track per-flag usage counts.
-- [ ] Provide `--usage` statistics including total interactions, average accuracy,
+- [x] Match input against both flag names and their descriptions.
+- [x] Use a configurable similarity threshold.
+- [x] Fall back to historical flag suggestions when direct matching is weak.
+- [x] Persist optional compressed interaction history locally only when enabled.
+- [x] Record matched flag, input, accuracy, timestamp, and device name in history.
+- [x] Track per-flag usage counts.
+- [x] Provide `--usage` statistics including total interactions, average accuracy,
       common device/input values, and per-flag frequency.
-- [ ] Generate a flag-usage bar graph in the output/data area.
-- [ ] Allow model debug/progress output to be enabled independently from normal
+- [x] Generate a flag-usage bar graph in the output/data area.
+- [x] Allow model debug/progress output to be enabled independently from normal
       Logicytics debug logging.
 
 ## 3. Core Logicytics engine/library API
@@ -861,7 +861,7 @@ appropriate default/deep/non-Python mode.
 
 - [ ] Recreate general settings for debug logging, old-log deletion, worker count,
       and preference-history persistence.
-- [ ] Recreate flag-matching settings for model name, minimum accuracy, and model
+- [x] Recreate flag-matching settings for model name, minimum accuracy, and model
       debug output.
 - [ ] Recreate memory-dump settings for file-size limit, safety margin, and dump
       directory.
@@ -905,7 +905,7 @@ appropriate default/deep/non-Python mode.
 - [ ] Implement sensitive-file mining, recursive directory/tree collection, and
       Sysinternals integration.
 - [ ] Implement packet capture, CSV export, and network graph generation.
-- [ ] Implement flag-history statistics and usage graph generation.
+- [x] Implement flag-history statistics and usage graph generation.
 
 ### Phase 5 — Maintenance and release readiness
 
