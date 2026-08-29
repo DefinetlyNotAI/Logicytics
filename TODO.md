@@ -97,7 +97,7 @@ collector is launched.
 - [x] Add `core.filesystem.system_drive_tree`, a deep-profile, filesystem-read,
       bounded recursive system-drive tree with configurable depth and entry limits.
 - [x] Add `core.filesystem.system_drive_listing`, a deep-profile, filesystem-read,
-      bounded threaded recursive system-drive listing.
+      bounded recursive system-drive listing scheduled by the run supervisor.
 - [x] Add `core.network.bandwidth_sample`, a deep-profile, subprocess-gated,
       configurable local adapter bandwidth sampler.
 - [x] Add `core.bluetooth.bluetooth_addresses`, a deep-profile, subprocess-gated,
@@ -533,7 +533,7 @@ Windows platform allows.
 - [ ] Keep legacy output names as aliases or compatibility copies only where users
       rely on them; make the run artifact tree canonical.
 - [ ] Remove global mutable state after all collectors use `RunContext`.
-- [ ] Remove direct `exit()` calls, current-directory assumptions, nested worker
+- [x] Remove direct `exit()` calls, current-directory assumptions, nested worker
       pools, and package-wide cleanup from collectors.
 - [ ] Remove compatibility shims only after the v4.0 API and migration documentation
       cover their replacement.
@@ -792,8 +792,8 @@ appropriate default/deep/non-Python mode.
 - [x] Restrict sensitive-file mining to the supported document, data, archive,
       database, configuration, log, and text extensions.
 - [x] Copy matching files into a dedicated report directory.
-- [x] Use concurrent search/copy operations and skip files over the configured
-      per-file size ceiling.
+- [x] Use scheduler-owned collector concurrency, cancellation-aware copy operations,
+      and skip files over the configured per-file size ceiling.
 - [x] Back up the current user's Pictures and Videos directories.
 - [x] Recursively collect supported image/video formats, including JPG, JPEG, PNG,
       and MP4.
@@ -885,7 +885,7 @@ appropriate default/deep/non-Python mode.
 - [x] Define the v4.0 package layout and run manifest format.
 - [x] Implement configuration loading, structured logging, file discovery, command
       execution, privilege checks, cancellation, and error aggregation.
-- [ ] Implement the temporary run directory and cleanup lifecycle.
+- [x] Implement the temporary run directory and cleanup lifecycle.
 - [x] Rename ACCESS folder to output/ and LOGS/ to logs/, PACKAGES/ to data/ (and remove RUNS/ as it should be the same as data/)
 
 ### Phase 2 — Engine and packaging

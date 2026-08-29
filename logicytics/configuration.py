@@ -75,7 +75,6 @@ _COLLECTOR_SETTING_SCHEMAS = MappingProxyType({
     "core.filesystem.system_drive_listing": {
         "max_entries": CollectorSettingRule("integer", 1, 50_000),
         "max_depth": CollectorSettingRule("integer", 1, 32),
-        "workers": CollectorSettingRule("integer", 1, 8),
     },
     "core.filesystem.sensitive_file_inventory": {
         "root": CollectorSettingRule("absolute_path"),

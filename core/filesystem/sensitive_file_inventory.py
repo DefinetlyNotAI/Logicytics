@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import shutil
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
@@ -57,7 +56,7 @@ class SensitiveFileInventoryCollector(CoreCollector):
         return ValidationResult(True)
 
     def collect(self, context: CollectorContext) -> CollectorResult:
-        """Find matches and copy them concurrently into a dedicated evidence directory."""
+        """Find matches and copy them through the scheduler-owned collector worker."""
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before sensitive-file inventory")
         root = Path(str(context.settings.get("root", os.environ.get("SystemDrive", "C:") + "\\")))
@@ -87,11 +86,15 @@ class SensitiveFileInventoryCollector(CoreCollector):
                 if len(matches) >= max_matches:
                     break
         destination_root = context.workspace / "sensitive_file_inventory"
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            copied = [item for item in executor.map(lambda source: _copy(source,
-                                                                         destination_root / source.drive.replace(":",
-                                                                                                                 "") / source.relative_to(
-                                                                             root)), matches) if item is not None]
+        copied: list[Path] = []
+        for source in matches:
+            if context.is_cancelled:
+                for copied_path in copied:
+                    copied_path.unlink(missing_ok=True)
+                return CollectorResult(CollectorStatus.CANCELLED, "cancelled during sensitive-file copy")
+            destination = destination_root / source.drive.replace(":", "") / source.relative_to(root)
+            if copied_path := _copy(source, destination):
+                copied.append(copied_path)
         if context.is_cancelled:
             for copied_path in copied:
                 copied_path.unlink(missing_ok=True)

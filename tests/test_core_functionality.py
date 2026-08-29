@@ -1677,7 +1677,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             invalid = (
                 ("core.filesystem.system_drive_tree", {"max_entries": True}, "max_entries"),
                 ("core.filesystem.system_drive_tree", {"max_depth": 33}, "max_depth"),
-                ("core.filesystem.system_drive_listing", {"workers": 9}, "workers"),
+                ("core.filesystem.system_drive_listing", {"workers": 2}, "unsupported settings"),
                 ("core.filesystem.system_drive_listing", {"max_entries": "100"}, "max_entries"),
                 ("core.filesystem.sensitive_file_inventory", {"max_directories": 50_001}, "max_directories"),
                 ("core.filesystem.sensitive_file_inventory", {"max_matches": 0}, "max_matches"),
@@ -1694,7 +1694,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                     self.assertFalse((root / "output").exists())
             valid = {
                 "core.filesystem.system_drive_tree": {"max_entries": 100, "max_depth": 3},
-                "core.filesystem.system_drive_listing": {"max_entries": 200, "max_depth": 4, "workers": 2},
+                "core.filesystem.system_drive_listing": {"max_entries": 200, "max_depth": 4},
                 "core.filesystem.sensitive_file_inventory": {
                     "root": str(root), "max_directories": 100, "max_matches": 10,
                 },
