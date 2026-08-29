@@ -235,7 +235,7 @@ that fails any mandatory rule is not a collector and must not be launched.
       has a second public class that could be mistaken for the collector.
 - [x] Require a stable, lowercase dotted ID matching its location and class, such as
       `core.network.network_info` or `plugin.example_plugin`.
-- [ ] Require class metadata constants or an immutable metadata object for:
+- [x] Require class metadata constants or an immutable metadata object for:
       `ID`, `NAME`, `VERSION`, `SPECIALTY`, `DESCRIPTION`, `AUTHOR`, and
       `SUPPORTED_PLATFORMS`.
 - [ ] Require plugin metadata to additionally declare requested capabilities,
@@ -275,7 +275,7 @@ that fails any mandatory rule is not a collector and must not be launched.
       references; direct package manipulation is forbidden.
 - [x] Require collectors to report structured progress and never use undocumented
       console output as their API.
-- [ ] Require all expected failures to become typed result/error values rather than
+- [x] Require all expected failures to become typed result/error values rather than
       process exits.
 - [x] Require docstrings for the class and every public method.
 - [x] Reject import-time collection, threads, subprocesses, network calls, file
@@ -284,13 +284,13 @@ that fails any mandatory rule is not a collector and must not be launched.
 #### Static and runtime preflight validation
 
 - [x] Parse every discovered module with the Python AST before importing it.
-- [ ] Validate path, filename, module docstring, imports, public names, class
+- [x] Validate path, filename, module docstring, imports, public names, class
       inheritance, class name, metadata, method signatures, type annotations, and
       forbidden top-level statements.
 - [x] Import each candidate in a short-lived validation subprocess with collection
       disabled and with a restricted environment.
 - [x] Instantiate the class only after static validation succeeds.
-- [ ] Validate metadata, dependencies, supported platform, requested capabilities,
+- [x] Validate metadata, dependencies, supported platform, requested capabilities,
       output declarations, timeout, and size limits at runtime.
 - [x] Run a no-op contract probe against `validate()` and reject unexpected side
       effects, hangs, exceptions, or malformed return values.
@@ -320,11 +320,11 @@ Windows platform allows.
       do not share mutable engine objects across collectors.
 - [x] Enforce declared timeout, memory/output limits, file-count limits, and
       cancellation through the supervisor.
-- [ ] Terminate and clean up only the failed collector's process and workspace when
+- [x] Terminate and clean up only the failed collector's process and workspace when
       it crashes, hangs, exceeds limits, or is cancelled.
-- [ ] Mark that collector `failed`/`cancelled` with its traceback stored in the
+- [x] Mark that collector `failed`/`cancelled` with its traceback stored in the
       run manifest, while allowing independent collectors to finish.
-- [ ] Prevent a collector from changing another collector's files, result state,
+- [x] Prevent a collector from changing another collector's files, result state,
       logger configuration, environment, or execution plan.
 - [x] Restrict artifact registration to paths inside the collector workspace and
       copy/stream only approved artifacts into the run artifact store.
@@ -334,7 +334,7 @@ Windows platform allows.
 - [x] Require elevated privilege and explicit user approval for collectors that need
       it; do not grant administrator access to every plugin by default.
 - [x] Capture subprocess trees so child processes do not survive a failed collector.
-- [ ] Use OS/process isolation as the default boundary; treat Python-level import
+- [x] Use OS/process isolation as the default boundary; treat Python-level import
       restrictions as validation and defense-in-depth, not as a complete sandbox.
 - [x] Ensure a collector cannot call the main CLI, trigger reboot/shutdown, alter
       configuration, install packages, update the repository, or launch another
@@ -352,12 +352,12 @@ Windows platform allows.
       collector registry. Each collector declares its ID, category, supported
       platforms, required privileges, estimated cost, dependencies, output types,
       default profiles, and whether it is safe to parallelize.
-- [ ] Replace scripts writing directly into the repository with a `RunContext` that
+- [x] Replace scripts writing directly into the repository with a `CollectorContext` that
       gives each collector a run ID, isolated workspace, logger, configuration
       snapshot, artifact writer, and cancellation handle.
-- [ ] Replace implicit current-working-directory behavior with explicit absolute
+- [x] Replace implicit current-working-directory behavior with explicit absolute
       paths owned by the run context.
-- [ ] Replace `print`, `exit`, and process-level shutdowns inside collectors with
+- [x] Replace `print`, `exit`, and process-level shutdowns inside collectors with
       typed results and typed errors returned to the orchestrator.
 - [x] Replace one giant execution-list algorithm with a planner that resolves
       collector dependencies, removes duplicates, validates conflicts, and emits a
@@ -365,14 +365,14 @@ Windows platform allows.
 - [ ] Replace mode names that imply implementation details with user-facing
       collection profiles. Preserve compatibility aliases for existing flags, but
       make profiles the canonical internal concept.
-- [ ] Replace a single shared mutable logger with run-scoped structured logging
+- [x] Replace a single shared mutable logger with run-scoped structured logging
       that can still be rendered to the existing console/log-file formats.
 - [x] Replace ad hoc output filenames with an artifact catalog containing stable
       artifact IDs, human-readable names, MIME/type information, byte counts,
       timestamps, producer collector, and status.
 - [x] Replace “zip whatever happens to be in CODE” with packaging the run's
       artifact catalog and manifest only.
-- [ ] Replace cleanup based on deleting a discovered file list with ownership-based
+- [x] Replace cleanup based on deleting a discovered file list with ownership-based
       cleanup that can remove only the current run's temporary workspace.
 
 ### Define the v4.0 run model
@@ -400,11 +400,11 @@ Windows platform allows.
 
 ### Separate responsibilities into layers
 
-- [ ] **CLI layer:** parse arguments, show help, request confirmation, and render
+- [x] **CLI layer:** parse arguments, show help, request confirmation, and render
       results; do not collect data or manipulate package files directly.
-- [ ] **Application layer:** create the request, resolve the profile, plan the run,
+- [x] **Application layer:** create the request, resolve the profile, plan the run,
       coordinate collectors, and decide the final run status.
-- [ ] **Collector layer:** perform one focused collection task through injected
+- [x] **Collector layer:** perform one focused collection task through injected
       services; do not import the main application or depend on global state.
 - [ ] **Platform layer:** centralize PowerShell, WMIC/WMI, registry, filesystem,
       process, network, and privilege access behind testable adapters.
@@ -432,7 +432,7 @@ Windows platform allows.
       memory when streaming is possible.
 - [x] Redact secrets from logs and from diagnostic metadata even when the artifact
       itself is intentionally collected.
-- [ ] Never place credentials or raw sensitive evidence in console logs, exception
+- [x] Never place credentials or raw sensitive evidence in console logs, exception
       messages, temporary filenames, or update requests.
 - [x] Record resource usage and progress per collector: files scanned, files
       copied, bytes written, packets observed, events processed, and elapsed time.
@@ -441,7 +441,7 @@ Windows platform allows.
 
 ### Make concurrency a planned capability
 
-- [ ] Use a scheduler with bounded workers instead of creating independent thread
+- [x] Use a scheduler with bounded workers instead of creating independent thread
       pools inside collectors.
 - [x] Declare dependencies and resource classes so disk-heavy, network-heavy,
       registry-sensitive, and interactive collectors can be coordinated.
@@ -470,7 +470,7 @@ Windows platform allows.
 
 ### Improve the extension model
 
-- [ ] Define a stable `Collector` interface and version it.
+- [x] Define a stable `Collector` interface and version it.
 - [ ] Require every MODS collector to declare metadata rather than being discovered
       only by extension.
 - [ ] Run mods in a sandboxed/isolated run workspace with declared inputs and
@@ -503,16 +503,16 @@ Windows platform allows.
 
 - [x] Make the package importable without starting a collection, opening files, or
       requiring Windows-only APIs at import time.
-- [ ] Replace singleton-heavy APIs with dependency injection where state matters.
+- [x] Replace singleton-heavy APIs with dependency injection where state matters.
 - [x] Keep a small stable public API: configuration, planning, running, querying
       run status, and reading artifacts.
-- [ ] Keep platform adapters mockable so collectors can be tested on non-Windows
+- [x] Keep platform adapters mockable so collectors can be tested on non-Windows
       development machines.
 - [ ] Add contract tests for every collector's metadata, lifecycle, result states,
       artifact declarations, and error behavior.
-- [ ] Add planner tests for profiles, explicit selections, dependencies, conflicts,
+- [x] Add planner tests for profiles, explicit selections, dependencies, conflicts,
       duplicate collectors, and invalid configurations.
-- [ ] Add run tests for sequential, bounded-parallel, cancellation, timeout,
+- [x] Add run tests for sequential, bounded-parallel, cancellation, timeout,
       partial-failure, rerun, and cleanup behavior.
 - [x] Add packaging tests proving that unregistered files cannot enter a package
       and that manifest hashes match the final bytes.
