@@ -134,6 +134,26 @@ def _delayed_collector_source(
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_preflight_cache_requires_source_interpreter_contract_and_configuration_identity(self) -> None:
+        """Only an exact validation context may reuse an isolated runtime probe."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+
+            initial = preflight(root, configuration_hash="configuration-a")
+            self.assertEqual(1, len(initial.valid), initial.invalid)
+            with patch("logicytics.discovery.subprocess.run", wraps=subprocess.run) as probe:
+                cached = preflight(root, configuration_hash="configuration-a")
+                self.assertEqual(1, len(cached.valid), cached.invalid)
+                probe.assert_not_called()
+
+            with patch("logicytics.discovery.subprocess.run", wraps=subprocess.run) as probe:
+                invalidated = preflight(root, configuration_hash="configuration-b")
+                self.assertEqual(1, len(invalidated.valid), invalidated.invalid)
+                self.assertEqual(1, probe.call_count)
+
     def test_public_package_import_does_not_start_runtime_or_create_files(self) -> None:
         """Importing contracts exposes lazy application services without host or disk side effects."""
         with tempfile.TemporaryDirectory() as temporary:

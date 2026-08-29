@@ -110,7 +110,7 @@ def plan_run(
         raise PlanError("request must be an immutable RunRequest instance")
     if request.max_workers > settings.runtime.maximum_workers:
         raise PlanError("requested workers exceed configured maximum_workers")
-    return build_plan(preflight(root), request)
+    return build_plan(preflight(root, configuration_hash=settings.fingerprint()), request)
 
 
 def run_collection(

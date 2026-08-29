@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import os
 import re
@@ -21,6 +22,7 @@ _APPLICATION_IMPORTS = {
     "load_configuration", "manifest", "packaging", "plan_run", "planner", "query_run", "read_artifact", "runtime",
     "run_collection", "validation_worker",
 }
+_CACHE_SCHEMA_VERSION = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -426,6 +428,38 @@ def discover(project_root: Path) -> tuple[CollectorCandidate, ...]:
     return tuple(candidates)
 
 
+def _accept_runtime_metadata(candidate: CollectorCandidate, payload: object) -> None:
+    """Validate cached or freshly probed metadata through the same strict path."""
+    try:
+        if not isinstance(payload, dict):
+            raise ValueError("metadata payload must be an object")
+        metadata = CollectorMetadata.from_dict(
+            payload,
+            allow_custom_specialty=candidate.kind is CollectorKind.PLUGIN,
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        candidate.runtime_error = f"invalid validation response: {error}"
+        return
+    if metadata.minimum_contract_version != CONTRACT_VERSION:
+        candidate.runtime_error = "collector contract version is unsupported"
+    elif metadata.timeout_seconds < 1 or metadata.maximum_output_bytes < 1:
+        candidate.runtime_error = "collector must declare positive timeout and output limits"
+    elif not metadata.id.startswith(f"{candidate.kind.value}."):
+        candidate.runtime_error = "collector ID must start with its owner kind"
+    elif candidate.kind is CollectorKind.CORE and metadata.specialty.value != candidate.path.parent.name:
+        candidate.runtime_error = "core collector specialty must match its parent folder"
+    elif candidate.kind is CollectorKind.CORE and metadata.id != (
+            f"core.{candidate.path.parent.name}.{candidate.path.stem}"
+    ):
+        candidate.runtime_error = "core collector ID must match core/<specialty>/<filename>.py"
+    elif candidate.kind is CollectorKind.PLUGIN and metadata.id != (
+            f"plugin.{candidate.path.parent.name if candidate.path.name == 'main.py' else candidate.path.stem}"
+    ):
+        candidate.runtime_error = "plugin collector ID must match its plugin folder or filename"
+    else:
+        candidate.metadata = metadata
+
+
 def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
     engine_root = Path(__file__).resolve().parent.parent
     pythonpath = os.pathsep.join((str(engine_root), str(project_root)))
@@ -468,36 +502,85 @@ def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
         return
     try:
         payload = json.loads(completed.stdout)
-        metadata = CollectorMetadata.from_dict(payload["metadata"],
-                                               allow_custom_specialty=candidate.kind is CollectorKind.PLUGIN)
-    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+        metadata_payload = payload["metadata"]
+    except (KeyError, TypeError, json.JSONDecodeError) as error:
         candidate.runtime_error = f"invalid validation response: {error}"
         return
-    if metadata.minimum_contract_version != CONTRACT_VERSION:
-        candidate.runtime_error = "collector contract version is unsupported"
-    elif metadata.timeout_seconds < 1 or metadata.maximum_output_bytes < 1:
-        candidate.runtime_error = "collector must declare positive timeout and output limits"
-    elif not metadata.id.startswith(f"{candidate.kind.value}."):
-        candidate.runtime_error = "collector ID must start with its owner kind"
-    elif candidate.kind is CollectorKind.CORE and metadata.specialty.value != candidate.path.parent.name:
-        candidate.runtime_error = "core collector specialty must match its parent folder"
-    elif candidate.kind is CollectorKind.CORE and metadata.id != (
-            f"core.{candidate.path.parent.name}.{candidate.path.stem}"
-    ):
-        candidate.runtime_error = "core collector ID must match core/<specialty>/<filename>.py"
-    elif candidate.kind is CollectorKind.PLUGIN and metadata.id != (
-            f"plugin.{candidate.path.parent.name if candidate.path.name == 'main.py' else candidate.path.stem}"
-    ):
-        candidate.runtime_error = "plugin collector ID must match its plugin folder or filename"
-    else:
-        candidate.metadata = metadata
+    _accept_runtime_metadata(candidate, metadata_payload)
 
 
-def preflight(project_root: Path) -> PreflightReport:
+def _cache_path(project_root: Path) -> Path:
+    """Keep disposable validation state outside source and evidence directories."""
+    project_key = hashlib.sha256(str(project_root.resolve()).encode("utf-8")).hexdigest()
+    return Path(tempfile.gettempdir()) / "logicytics-preflight-cache" / f"{project_key}.json"
+
+
+def _source_hash(path: Path) -> str:
+    """Hash exact collector bytes so any source edit invalidates its probe result."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _load_cache(project_root: Path, configuration_hash: str) -> dict[str, object]:
+    """Load only a cache created for this interpreter, contract, and configuration."""
+    path = _cache_path(project_root)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return {}
+    expected = {
+        "schema_version": _CACHE_SCHEMA_VERSION,
+        "interpreter": sys.version,
+        "contract_version": CONTRACT_VERSION,
+        "configuration_hash": configuration_hash,
+    }
+    if not isinstance(payload, dict) or any(payload.get(key) != value for key, value in expected.items()):
+        return {}
+    entries = payload.get("entries")
+    return entries if isinstance(entries, dict) else {}
+
+
+def _write_cache(project_root: Path, configuration_hash: str, candidates: list[CollectorCandidate]) -> None:
+    """Atomically persist successful probes; invalid candidates are always reprobed."""
+    entries: dict[str, object] = {}
+    for candidate in candidates:
+        if candidate.metadata is None or candidate.runtime_error or candidate.static_errors:
+            continue
+        relative_path = candidate.path.resolve().relative_to(project_root.resolve()).as_posix()
+        entries[relative_path] = {
+            "kind": candidate.kind.value,
+            "source_hash": _source_hash(candidate.path),
+            "metadata": candidate.metadata.to_dict(),
+        }
+    payload = {
+        "schema_version": _CACHE_SCHEMA_VERSION,
+        "interpreter": sys.version,
+        "contract_version": CONTRACT_VERSION,
+        "configuration_hash": configuration_hash,
+        "entries": entries,
+    }
+    path = _cache_path(project_root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
+def preflight(project_root: Path, *, configuration_hash: str = "unconfigured") -> PreflightReport:
     """Perform static checks then a short-lived isolated metadata probe."""
     candidates = list(discover(project_root))
+    cached = _load_cache(project_root, configuration_hash)
     for candidate in candidates:
-        if not candidate.static_errors:
+        if candidate.static_errors:
+            continue
+        relative_path = candidate.path.resolve().relative_to(project_root.resolve()).as_posix()
+        entry = cached.get(relative_path)
+        if (
+                isinstance(entry, dict)
+                and entry.get("kind") == candidate.kind.value
+                and entry.get("source_hash") == _source_hash(candidate.path)
+        ):
+            _accept_runtime_metadata(candidate, entry.get("metadata"))
+        else:
             _runtime_probe(project_root, candidate)
     seen_ids: set[str] = set()
     for candidate in candidates:
@@ -506,4 +589,5 @@ def preflight(project_root: Path) -> PreflightReport:
         if candidate.metadata.id in seen_ids:
             candidate.runtime_error = f"duplicate collector ID: {candidate.metadata.id}"
         seen_ids.add(candidate.metadata.id)
+    _write_cache(project_root, configuration_hash, candidates)
     return PreflightReport(tuple(candidates))

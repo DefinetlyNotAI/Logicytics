@@ -300,7 +300,7 @@ that fails any mandatory rule is not a collector and must not be launched.
       plugin fails validation.
 - [x] Never “best effort” execute a malformed collector because another collector
       succeeded.
-- [ ] Cache validation only with a source hash, interpreter version, contract
+- [x] Cache validation only with a source hash, interpreter version, contract
       version, and configuration hash; invalidate the cache whenever any changes.
 
 ### Per-collector sandbox and failure isolation

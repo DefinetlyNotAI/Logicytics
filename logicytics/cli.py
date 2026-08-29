@@ -160,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
     root = _project_root()
     try:
         configuration = load_config(root, arguments.config)
-        report = preflight(root)
+        report = preflight(root, configuration_hash=configuration.fingerprint())
         if arguments.command == "preflight":
             validation = report.to_dict(
                 selected_plugins=tuple(arguments.include),

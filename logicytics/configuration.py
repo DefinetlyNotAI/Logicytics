@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from dataclasses import asdict, dataclass, field
@@ -212,6 +213,13 @@ class AppConfig:
         data = asdict(self)
         data["runtime"]["output_root"] = str(self.runtime.output_root)
         return redact_mapping(data)
+
+    def fingerprint(self) -> str:
+        """Hash the complete validated configuration without persisting its secrets."""
+        data = asdict(self)
+        data["runtime"]["output_root"] = str(self.runtime.output_root.resolve())
+        serialized = json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+        return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
 
 def default_config(project_root: Path) -> AppConfig:
