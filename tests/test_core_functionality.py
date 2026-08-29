@@ -1265,6 +1265,20 @@ class CoreFunctionalityTests(unittest.TestCase):
         self.assertTrue(request.performance_check)
         self.assertEqual(1, request.max_workers)
 
+    def test_cli_without_action_prints_help_and_modes_are_parser_exclusive(self) -> None:
+        """An empty invocation is useful while contradictory legacy actions fail immediately."""
+        output = io.StringIO()
+        with patch("sys.stdout", output):
+            self.assertEqual(0, main([]))
+        rendered = output.getvalue()
+        self.assertIn("Logicytics v4 run-oriented evidence framework", rendered)
+        self.assertIn("preflight", rendered)
+        self.assertIn("run", rendered)
+        with patch("sys.stderr", new_callable=io.StringIO) as errors:
+            with self.assertRaises(SystemExit):
+                _parser().parse_args(["run", "--default", "--performance-check"])
+        self.assertIn("not allowed with argument", errors.getvalue())
+
     def test_run_parser_exposes_explicit_sequential_and_bounded_parallel_modes(self) -> None:
         """Execution policy is selectable directly instead of relying on compatibility modes."""
         parser = _parser()

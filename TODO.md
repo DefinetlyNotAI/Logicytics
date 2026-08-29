@@ -590,8 +590,8 @@ Windows platform allows.
 - [ ] `--modded`: run the normal collection set plus all supported files in MODS.
 - [x] `--performance-check`: run collectors sequentially, measure each duration,
       and write a performance summary table.
-- [ ] Show help when no collection action is selected.
-- [ ] Reject multiple mutually exclusive collection actions.
+- [x] Show help when no collection action is selected.
+- [x] Reject multiple mutually exclusive collection actions.
 
 ### Post-run actions
 
@@ -601,11 +601,11 @@ Windows platform allows.
 
 ## 2. Command-line and interaction features
 
-- [ ] Provide descriptive help text for every flag.
+- [x] Provide descriptive help text for every flag.
 - [ ] Support the current action flags: `default`, `threaded`, `modded`, `depth`,
       `nopy`, `minimal`, `performance-check`, and `usage`.
 - [ ] Support side actions: `debug`, `update`, and `dev`.
-- [ ] Provide action/sub-action exclusivity validation and clear invalid-combination
+- [x] Provide action/sub-action exclusivity validation and clear invalid-combination
       errors.
 - [ ] Provide colored console output for status, warnings, errors, and prompts.
 - [ ] Provide a semantic flag-matching feature that can map natural-language user

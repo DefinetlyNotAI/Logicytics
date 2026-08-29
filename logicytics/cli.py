@@ -101,19 +101,31 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Logicytics v4 run-oriented evidence framework")
     parser.add_argument("--config", type=Path, help="Path to a v4 JSON configuration file")
-    subcommands = parser.add_subparsers(dest="command", required=True)
+    subcommands = parser.add_subparsers(dest="command")
     for command in ("preflight", "debug", "update", "plan", "run"):
-        subparser = subcommands.add_parser(command)
+        subparser = subcommands.add_parser(command, help=f"Run the {command} action.")
         subparser.add_argument(
             "--profile",
             default="standard",
             choices=tuple(BUILTIN_PROFILES),
             help="Named built-in collector membership and access policy.",
         )
-        subparser.add_argument("--include", action="append", default=[])
-        subparser.add_argument("--exclude", action="append", default=[])
-        subparser.add_argument("--plugins", action="store_true")
-        subparser.add_argument("--workers", type=int)
+        subparser.add_argument(
+            "--include", action="append", default=[], metavar="COLLECTOR_ID",
+            help="Include a collector by exact dotted ID; repeat for multiple collectors.",
+        )
+        subparser.add_argument(
+            "--exclude", action="append", default=[], metavar="COLLECTOR_ID",
+            help="Exclude a collector by exact dotted ID; repeat for multiple collectors.",
+        )
+        subparser.add_argument(
+            "--plugins", action="store_true",
+            help="Enable all valid opt-in plugin collectors for the selected profile.",
+        )
+        subparser.add_argument(
+            "--workers", type=int, metavar="COUNT",
+            help="Bound concurrent isolated workers to this positive count.",
+        )
         subparser.add_argument(
             "--allow-capability",
             action="append",
@@ -145,7 +157,7 @@ def _parser() -> argparse.ArgumentParser:
                               help="Run the standard built-in profile with configured parallel workers.")
             mode.add_argument("--minimal", action="store_true", help="Run the minimal built-in profile.")
             mode.add_argument("--depth", action="store_true", help="Run the deep built-in profile.")
-            subparser.add_argument(
+            mode.add_argument(
                 "--performance-check",
                 action="store_true",
                 help="Run serially and save per-collector duration measurements.",
@@ -184,7 +196,11 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     """Run the selected preflight, planning, or supervised execution command."""
-    arguments = _parser().parse_args(argv)
+    parser = _parser()
+    arguments = parser.parse_args(argv)
+    if arguments.command is None:
+        parser.print_help()
+        return 0
     root = _project_root()
     try:
         configuration = load_config(root, arguments.config)
