@@ -35,8 +35,11 @@ from logicytics.contracts import (
     CollectorResult,
     CollectorStatus,
     EvidenceKind,
+    EstimatedCost,
+    NetworkAccess,
     OutputPolicy,
     PostRunAction,
+    PrivilegeLevel,
     ResourceClass,
     RunRequest,
     RunStatus,
@@ -55,6 +58,7 @@ _COLLECTOR = '''"""Create a harmless test artifact."""
 from pathlib import Path
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import EstimatedCost, NetworkAccess, PrivilegeLevel
 from logicytics.contracts import CollectorContext
 
 
@@ -88,6 +92,23 @@ class SystemInfoCollector(CoreCollector):
     def cleanup(self, context: CollectorContext) -> None:
         """Release test resources."""
 '''
+
+
+def _plugin_collector_source() -> str:
+    """Convert the core fixture into a plugin with every security field explicit."""
+    return _COLLECTOR.replace("CoreCollector", "PluginCollector").replace(
+        '            author="tests",',
+        '            author="tests",\n'
+        '            capabilities=(),\n'
+        '            privilege_level=PrivilegeLevel.STANDARD,\n'
+        '            sensitive_data_categories=(),\n'
+        '            network_access=NetworkAccess.NONE,\n'
+        '            estimated_cost=EstimatedCost.LOW,\n'
+        '            timeout_seconds=60,\n'
+        '            maximum_output_bytes=100 * 1024 * 1024,\n'
+        '            output_media_types=("text/plain",),\n'
+        '            minimum_contract_version="4.0",',
+    )
 
 
 def _delayed_collector_source(
@@ -136,6 +157,25 @@ def _delayed_collector_source(
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_plugin_preflight_requires_explicit_security_cost_and_output_metadata(self) -> None:
+        """A plugin cannot silently inherit fields that affect consent or scheduling."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            plugin_path = root / "plugins" / "example_plugin.py"
+            plugin_path.parent.mkdir(parents=True)
+            source = _plugin_collector_source().replace("SystemInfoCollector", "ExamplePluginCollector")
+            source = source.replace("core.system.system_info", "plugin.example_plugin")
+            plugin_path.write_text(
+                source.replace("            network_access=NetworkAccess.NONE,\n", ""),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn(
+                "plugin metadata must explicitly declare: network_access",
+                report.invalid[0].static_errors,
+            )
+
     def test_post_run_actions_are_typed_exclusive_and_require_verified_packaging(self) -> None:
         """Power actions remain explicit and cannot run before durable package publication."""
         arguments = _parser().parse_args([
@@ -220,7 +260,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             plugin_path = root / "plugins" / "example_plugin.py"
             plugin_path.parent.mkdir()
             plugin_path.write_text(
-                _COLLECTOR.replace("CoreCollector", "PluginCollector")
+                _plugin_collector_source()
                 .replace("SystemInfoCollector", "ExamplePluginCollector")
                 .replace("core.system.system_info", "plugin.example_plugin"),
                 encoding="utf-8",
@@ -698,6 +738,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 '            supported_platforms=("win32",),',
                 '            supported_platforms=("win32",),\n'
                 '            capabilities=(Capability.NETWORK,),\n'
+                '            network_access=NetworkAccess.LOCAL,\n'
                 '            default_profiles=("standard",),',
             )
             (core_directory / "network_source.py").write_text(source, encoding="utf-8")
@@ -3269,7 +3310,9 @@ class CoreFunctionalityTests(unittest.TestCase):
                     "from pathlib import Path\nimport socket\nfrom logicytics import Capability\n",
                 ).replace(
                     '            supported_platforms=("win32",),',
-                    '            supported_platforms=("win32",),\n            capabilities=(Capability.NETWORK,),',
+                    '            supported_platforms=("win32",),\n'
+                    '            capabilities=(Capability.NETWORK,),\n'
+                    '            network_access=NetworkAccess.LOCAL,',
                 ).replace(
                     '        output = context.workspace / "system.txt"',
                     '        socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)\n'
@@ -3941,7 +3984,8 @@ class CoreFunctionalityTests(unittest.TestCase):
                 "from logicytics import Capability, CollectorMetadata",
             ).replace(
                 'supported_platforms=("win32",),',
-                'supported_platforms=("win32",), capabilities=(Capability.ELEVATED_PRIVILEGES,),',
+                'supported_platforms=("win32",), capabilities=(Capability.ELEVATED_PRIVILEGES,), '
+                'privilege_level=PrivilegeLevel.ELEVATED,',
             )
             collector_path.write_text(secured_collector, encoding="utf-8")
             report = preflight(root)
@@ -3967,15 +4011,18 @@ class CoreFunctionalityTests(unittest.TestCase):
             root = Path(temporary)
             plugin_path = root / "plugins" / "admin_plugin.py"
             plugin_path.parent.mkdir(parents=True)
-            source = _COLLECTOR.replace("CoreCollector", "PluginCollector")
+            source = _plugin_collector_source()
             source = source.replace("SystemInfoCollector", "AdminPluginCollector")
             source = source.replace("core.system.system_info", "plugin.admin_plugin")
             source = source.replace(
                 "from logicytics import CollectorMetadata",
                 "from logicytics import Capability, CollectorMetadata",
             ).replace(
-                'supported_platforms=("win32",),',
-                'supported_platforms=("win32",), capabilities=(Capability.ELEVATED_PRIVILEGES,),',
+                "            capabilities=(),",
+                "            capabilities=(Capability.ELEVATED_PRIVILEGES,),",
+            ).replace(
+                "            privilege_level=PrivilegeLevel.STANDARD,",
+                "            privilege_level=PrivilegeLevel.ELEVATED,",
             )
             plugin_path.write_text(source, encoding="utf-8")
             report = preflight(root)

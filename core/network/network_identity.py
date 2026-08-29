@@ -11,6 +11,7 @@ from logicytics import (
     CollectorMetadata,
     CollectorResult,
     CoreCollector,
+    NetworkAccess,
     Specialty,
     ValidationResult,
 )
@@ -32,6 +33,7 @@ class NetworkIdentityCollector(CoreCollector):
             author="Logicytics",
             supported_platforms=("win32",),
             capabilities=(Capability.NETWORK,),
+            network_access=NetworkAccess.LOCAL,
             default_profiles=("standard", "deep"),
             timeout_seconds=10,
             maximum_output_bytes=64 * 1024,

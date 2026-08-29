@@ -122,6 +122,29 @@ class ResourceClass(StrEnum):
     INTERACTIVE = "interactive"
 
 
+class PrivilegeLevel(StrEnum):
+    """Host privilege required before a collector may launch."""
+
+    STANDARD = "standard"
+    ELEVATED = "elevated"
+
+
+class NetworkAccess(StrEnum):
+    """Declared network reach of a collector's implementation."""
+
+    NONE = "none"
+    LOCAL = "local"
+    REMOTE = "remote"
+
+
+class EstimatedCost(StrEnum):
+    """Coarse scheduling and consent cost declared before execution."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
 @dataclass(frozen=True, slots=True)
 class CollectorMetadata:
     """Declarative identity, limits, and permissions for one collector."""
@@ -132,6 +155,11 @@ class CollectorMetadata:
     specialty: Specialty | str
     description: str
     author: str
+    privilege_level: PrivilegeLevel = PrivilegeLevel.STANDARD
+    network_access: NetworkAccess = NetworkAccess.NONE
+    estimated_cost: EstimatedCost = EstimatedCost.LOW
+    secondary_categories: tuple[str, ...] = ()
+    output_media_types: tuple[str, ...] = ("application/octet-stream",)
     supported_platforms: tuple[str, ...] = ("win32",)
     capabilities: tuple[Capability, ...] = ()
     sensitive_data_categories: tuple[str, ...] = ()
@@ -165,12 +193,34 @@ class CollectorMetadata:
             raise ValueError("metadata specialty has an invalid schema")
         self._validate_labels("supported_platforms", self.supported_platforms, require_value=True)
         self._validate_labels("sensitive_data_categories", self.sensitive_data_categories)
+        self._validate_labels("secondary_categories", self.secondary_categories)
         self._validate_labels("default_profiles", self.default_profiles, require_value=True)
+        primary_specialty = self.specialty.value if isinstance(self.specialty, Specialty) else self.specialty
+        if primary_specialty in self.secondary_categories:
+            raise ValueError("metadata secondary_categories must not repeat the primary specialty")
+        if not isinstance(self.output_media_types, tuple) or not self.output_media_types or not all(
+                isinstance(media_type, str) and _MEDIA_TYPE.fullmatch(media_type)
+                for media_type in self.output_media_types
+        ):
+            raise ValueError("metadata output_media_types must be a non-empty tuple of MIME types")
+        if len(set(self.output_media_types)) != len(self.output_media_types):
+            raise ValueError("metadata output_media_types must not contain duplicates")
         if self.sensitive_data_categories and {"standard", "minimal"}.intersection(self.default_profiles):
             raise ValueError("sensitive collectors must not belong to standard or minimal profiles")
         if not isinstance(self.capabilities, tuple) or not all(
                 isinstance(capability, Capability) for capability in self.capabilities):
             raise ValueError("metadata capabilities must be a tuple of Capability values")
+        if not isinstance(self.privilege_level, PrivilegeLevel):
+            raise ValueError("metadata privilege_level must be a PrivilegeLevel value")
+        if not isinstance(self.network_access, NetworkAccess):
+            raise ValueError("metadata network_access must be a NetworkAccess value")
+        if not isinstance(self.estimated_cost, EstimatedCost):
+            raise ValueError("metadata estimated_cost must be an EstimatedCost value")
+        requires_elevation = Capability.ELEVATED_PRIVILEGES in self.capabilities
+        if requires_elevation != (self.privilege_level is PrivilegeLevel.ELEVATED):
+            raise ValueError("metadata privilege_level must match the elevated_privileges capability")
+        if Capability.NETWORK in self.capabilities and self.network_access is NetworkAccess.NONE:
+            raise ValueError("metadata network_access must declare local or remote access")
         if not isinstance(self.dependencies, tuple) or not all(
                 isinstance(dependency, str) and _COLLECTOR_ID.fullmatch(dependency)
                 for dependency in self.dependencies):
@@ -220,6 +270,9 @@ class CollectorMetadata:
         data["specialty"] = self.specialty.value if isinstance(self.specialty, Specialty) else self.specialty
         data["capabilities"] = [capability.value for capability in self.capabilities]
         data["resource_class"] = self.resource_class.value
+        data["privilege_level"] = self.privilege_level.value
+        data["network_access"] = self.network_access.value
+        data["estimated_cost"] = self.estimated_cost.value
         return data
 
     @classmethod
@@ -236,9 +289,14 @@ class CollectorMetadata:
             values["specialty"] = specialty
         values["capabilities"] = tuple(Capability(capability) for capability in values.get("capabilities", ()))
         values["resource_class"] = ResourceClass(values.get("resource_class", ResourceClass.GENERAL))
+        values["privilege_level"] = PrivilegeLevel(values.get("privilege_level", PrivilegeLevel.STANDARD))
+        values["network_access"] = NetworkAccess(values.get("network_access", NetworkAccess.NONE))
+        values["estimated_cost"] = EstimatedCost(values.get("estimated_cost", EstimatedCost.LOW))
         for field_name in (
                 "supported_platforms",
                 "sensitive_data_categories",
+                "secondary_categories",
+                "output_media_types",
                 "dependencies",
                 "default_profiles",
         ):

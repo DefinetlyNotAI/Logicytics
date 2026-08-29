@@ -238,7 +238,7 @@ that fails any mandatory rule is not a collector and must not be launched.
 - [x] Require class metadata constants or an immutable metadata object for:
       `ID`, `NAME`, `VERSION`, `SPECIALTY`, `DESCRIPTION`, `AUTHOR`, and
       `SUPPORTED_PLATFORMS`.
-- [ ] Require plugin metadata to additionally declare requested capabilities,
+- [x] Require plugin metadata to additionally declare requested capabilities,
       privilege level, sensitive-data categories, network access, estimated cost,
       timeout, maximum output, and minimum contract version.
 - [x] Require IDs, names, specialties, and versions to match their schemas and
@@ -246,12 +246,13 @@ that fails any mandatory rule is not a collector and must not be launched.
 
 #### Specialty rules
 
-- [ ] Require `SPECIALTY` to be exactly one registered value, not an arbitrary free
-      text string. Initial values should cover system, hardware, process, memory,
+- [x] Require `SPECIALTY` to be exactly one registered value: core collectors use
+      the closed built-in registry while plugins may register a schema-safe extension.
+      Initial values cover system, hardware, process, memory,
       filesystem, network, packet, wireless, Bluetooth, USB, browser, registry,
       event-log, storage, encryption, media, SSH, diagnostics, reporting, and
       integration.
-- [ ] Require each collector to have one primary specialty. Related secondary
+- [x] Require each collector to have one primary specialty. Related secondary
       categories may be declared as metadata but may not change the collector's
       identity.
 - [ ] Require the specialty to match the declared artifact types and the collector's

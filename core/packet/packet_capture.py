@@ -9,7 +9,16 @@ import time
 
 import select
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    NetworkAccess,
+    PrivilegeLevel,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 
@@ -43,6 +52,7 @@ class PacketCaptureCollector(CoreCollector):
             description="Captures bounded IPv4 packet metadata without saving packet payloads.", author="Logicytics",
             supported_platforms=("win32",),
             capabilities=(Capability.NETWORK, Capability.PACKET_CAPTURE, Capability.ELEVATED_PRIVILEGES),
+            privilege_level=PrivilegeLevel.ELEVATED, network_access=NetworkAccess.LOCAL,
             sensitive_data_categories=("network_metadata",), default_profiles=("deep",), timeout_seconds=90,
             maximum_output_bytes=2 * 1024 * 1024,
         )

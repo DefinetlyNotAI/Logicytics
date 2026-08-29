@@ -22,7 +22,7 @@ _APPLICATION_IMPORTS = {
     "load_configuration", "manifest", "packaging", "plan_run", "planner", "query_run", "read_artifact", "runtime",
     "run_collection", "validation_worker",
 }
-_CACHE_SCHEMA_VERSION = 1
+_CACHE_SCHEMA_VERSION = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -375,6 +375,29 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
     allowed = {
         "metadata", "validate", "prepare", "collect", "finalize", "cleanup", "estimate", "dependencies",
     }
+    if candidate.kind is CollectorKind.PLUGIN and "metadata" in methods:
+        metadata_calls = [
+            node for node in ast.walk(methods["metadata"])
+            if isinstance(node, ast.Call)
+            and (
+                isinstance(node.func, ast.Name) and node.func.id == "CollectorMetadata"
+                or isinstance(node.func, ast.Attribute) and node.func.attr == "CollectorMetadata"
+            )
+        ]
+        required_plugin_fields = {
+            "capabilities", "privilege_level", "sensitive_data_categories", "network_access",
+            "estimated_cost", "timeout_seconds", "maximum_output_bytes", "output_media_types",
+            "minimum_contract_version",
+        }
+        if len(metadata_calls) != 1:
+            candidate.static_errors.append("plugin metadata must construct one CollectorMetadata object directly")
+        else:
+            declared_fields = {keyword.arg for keyword in metadata_calls[0].keywords if keyword.arg is not None}
+            missing_fields = sorted(required_plugin_fields - declared_fields)
+            if missing_fields:
+                candidate.static_errors.append(
+                    f"plugin metadata must explicitly declare: {', '.join(missing_fields)}"
+                )
     unknown = sorted(set(methods) - allowed)
     if unknown:
         candidate.static_errors.append(f"unsupported public collector methods: {', '.join(unknown)}")
