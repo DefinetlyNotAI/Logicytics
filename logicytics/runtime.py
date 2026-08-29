@@ -348,12 +348,28 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                     elif context.is_cancelled:
                         result = CollectorResult(CollectorStatus.CANCELLED, "cancelled before collection")
                     else:
-                        context.logger.event("info", "collection_started")
-                        result = collector.collect(context)
-                        if not isinstance(result, CollectorResult):
-                            raise TypeError("collect() must return CollectorResult")
-                        if result.artifacts != writer.artifacts:
-                            raise TypeError("collector result artifacts must exactly match registered artifacts")
+                        preparation = collector.prepare(context)
+                        if not isinstance(preparation, ValidationResult):
+                            raise TypeError("prepare() must return ValidationResult")
+                        if not preparation.valid:
+                            result = CollectorResult.skipped(
+                                "collector preparation was not completed",
+                                errors=preparation.reasons,
+                            )
+                        elif context.is_cancelled:
+                            result = CollectorResult.cancelled("cancelled after preparation")
+                        else:
+                            context.logger.event("info", "collection_started")
+                            result = collector.collect(context)
+                            if not isinstance(result, CollectorResult):
+                                raise TypeError("collect() must return CollectorResult")
+                            if result.artifacts != writer.artifacts:
+                                raise TypeError("collector result artifacts must exactly match registered artifacts")
+                            result = collector.finalize(context, result)
+                            if not isinstance(result, CollectorResult):
+                                raise TypeError("finalize() must return CollectorResult")
+                            if result.artifacts != writer.artifacts:
+                                raise TypeError("finalized result artifacts must exactly match registered artifacts")
                 except BaseException as error:
                     lifecycle_errors.extend((f"{type(error).__name__}: {error}", traceback.format_exc()))
                 finally:

@@ -388,7 +388,7 @@ Windows platform allows.
       configuration snapshot with secrets removed, host metadata, privilege state,
       start/end times, cancellation state, errors, skipped items, and artifact
       checksums.
-- [ ] Give every collector an explicit lifecycle: validate, prepare, collect,
+- [x] Give every collector an explicit lifecycle: validate, prepare, collect,
       finalize, report result.
 - [x] Make collector results explicit: `succeeded`, `partial`, `skipped`,
       `cancelled`, or `failed`.

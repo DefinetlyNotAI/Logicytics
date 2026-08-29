@@ -3653,6 +3653,41 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("static.return_annotation", diagnostic.rule)
             self.assertEqual(str(collector_path), diagnostic.path)
 
+    def test_worker_runs_typed_prepare_collect_finalize_and_cleanup_lifecycle(self) -> None:
+        """Every accepted collector executes the complete typed lifecycle inside its worker."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            source = _COLLECTOR.replace(
+                "    def collect(self, context: CollectorContext) -> CollectorResult:",
+                "    def prepare(self, context: CollectorContext) -> ValidationResult:\n"
+                "        \"\"\"Prepare worker-local lifecycle state.\"\"\"\n"
+                "        context.settings['prepared'] = 'yes'\n"
+                "        return ValidationResult(True)\n\n"
+                "    def collect(self, context: CollectorContext) -> CollectorResult:",
+            ).replace(
+                "    def cleanup(self, context: CollectorContext) -> None:",
+                "    def finalize(self, context: CollectorContext, result: CollectorResult) -> CollectorResult:\n"
+                "        \"\"\"Finalize the typed result before it crosses the worker boundary.\"\"\"\n"
+                "        if context.settings.get('prepared') != 'yes':\n"
+                "            raise RuntimeError('prepare phase did not run')\n"
+                "        return CollectorResult.succeeded('finalized lifecycle', result.artifacts)\n\n"
+                "    def cleanup(self, context: CollectorContext) -> None:",
+            )
+            collector_path.write_text(source, encoding="utf-8")
+
+            report = preflight(root)
+            self.assertEqual(1, len(report.valid), report.invalid)
+            plan = build_plan(
+                report,
+                RunRequest(max_workers=1, acknowledge_authorization=True),
+            )
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            record = outcome.manifest.collectors[0]
+            self.assertEqual("finalized lifecycle", record.summary)
+
     def test_preflight_rejects_wrong_collection_estimate_type(self) -> None:
         """Optional estimates use the same strict typed contract as lifecycle methods."""
         with tempfile.TemporaryDirectory() as temporary:

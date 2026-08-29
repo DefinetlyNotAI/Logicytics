@@ -541,9 +541,17 @@ class Collector(ABC):
     def validate(self, context: CollectorContext) -> ValidationResult:
         """Validate prerequisites without creating evidence artifacts."""
 
+    def prepare(self, context: CollectorContext) -> ValidationResult:
+        """Prepare collector-local resources after validation and authorization."""
+        return ValidationResult(True)
+
     @abstractmethod
     def collect(self, context: CollectorContext) -> CollectorResult:
         """Collect evidence and return a normalized result."""
+
+    def finalize(self, context: CollectorContext, result: CollectorResult) -> CollectorResult:
+        """Finalize collector-local evidence and return the publishable result."""
+        return result
 
     def estimate(self, context: CollectorContext) -> CollectionEstimate:
         """Optionally estimate time and output without collecting evidence."""

@@ -113,7 +113,9 @@ def _validate_contract(collector_type: type[Collector], kind: CollectorKind) -> 
     for method_name, expected_parameters in {
         "metadata": 0,
         "validate": 1,
+        "prepare": 1,
         "collect": 1,
+        "finalize": 2,
         "cleanup": 1,
     }.items():
         method = getattr(collector_type, method_name, None)

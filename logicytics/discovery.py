@@ -372,7 +372,9 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
         for item in class_node.body
         if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and not item.name.startswith("_")
     }
-    allowed = {"metadata", "validate", "collect", "cleanup", "estimate", "dependencies"}
+    allowed = {
+        "metadata", "validate", "prepare", "collect", "finalize", "cleanup", "estimate", "dependencies",
+    }
     unknown = sorted(set(methods) - allowed)
     if unknown:
         candidate.static_errors.append(f"unsupported public collector methods: {', '.join(unknown)}")
@@ -380,7 +382,9 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
     expected_returns = {
         "metadata": "CollectorMetadata",
         "validate": "ValidationResult",
+        "prepare": "ValidationResult",
         "collect": "CollectorResult",
+        "finalize": "CollectorResult",
         "estimate": "CollectionEstimate",
         "dependencies": "tuple[str,...]",
         "cleanup": "None",
@@ -396,7 +400,9 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
         elif name in expected_returns and ast.unparse(method.returns).replace(" ", "") != expected_returns[name]:
             candidate.static_errors.append(f"{name} must return {expected_returns[name]}")
         parameters = method.args.args
-        expected_parameter_count = 1 if name in {"metadata", "dependencies"} else 2
+        expected_parameter_count = (
+            1 if name in {"metadata", "dependencies"} else 3 if name == "finalize" else 2
+        )
         if len(parameters) != expected_parameter_count:
             candidate.static_errors.append(f"{name} has an invalid parameter count")
             continue
@@ -413,6 +419,12 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
                 -1] if context_parameter.annotation else None
             if context_parameter.arg != "context" or annotation != "CollectorContext":
                 candidate.static_errors.append(f"{name} must accept an annotated context parameter")
+            if name == "finalize":
+                result_parameter = parameters[2]
+                result_annotation = ast.unparse(result_parameter.annotation).rsplit(".", 1)[
+                    -1] if result_parameter.annotation else None
+                if result_parameter.arg != "result" or result_annotation != "CollectorResult":
+                    candidate.static_errors.append("finalize must accept an annotated result parameter")
 
 
 def discover(project_root: Path) -> tuple[CollectorCandidate, ...]:
