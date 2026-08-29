@@ -739,7 +739,7 @@ appropriate default/deep/non-Python mode.
       metadata for IP/TCP/UDP/ICMP traffic.
 - [x] Export packet observations to CSV.
 - [x] Build and save a source/destination network graph with protocol edge labels.
-- [ ] Clean up packet-sniffer graph state and plotting resources.
+- [x] Clean up packet-sniffer graph state and plotting resources.
 
 ### Wireless, Bluetooth, and removable-device history
 
@@ -763,7 +763,7 @@ appropriate default/deep/non-Python mode.
 - [x] Read Security, Application, and System event logs through the modern Windows event API.
 - [x] Record event category, generated time, source, event ID, type, and message data
       in separate bounded CSV reports.
-- [ ] Run the event-log parsers concurrently and write separate reports.
+- [x] Run the event-log parsers concurrently and write separate reports.
 - [x] Export the HKLM registry hive to a `.reg` backup.
 - [x] Enumerate logical volumes with drive type, filesystem, free space, size, and
       volume name.
@@ -898,16 +898,16 @@ appropriate default/deep/non-Python mode.
 
 ### Phase 3 — Core collectors
 
-- [ ] Implement system/hardware inventory and command-output collectors.
-- [ ] Implement process, memory, filesystem, network, and adapter collectors.
-- [ ] Implement registry, event-log, storage, encryption, Bluetooth, USB, Wi-Fi,
+- [x] Implement system/hardware inventory and command-output collectors.
+- [x] Implement process, memory, filesystem, network, and adapter collectors.
+- [x] Implement registry, event-log, storage, encryption, Bluetooth, USB, Wi-Fi,
       SSH, browser, and media collectors.
 
 ### Phase 4 — Deep collection and visualization
 
-- [ ] Implement sensitive-file mining, recursive directory/tree collection, and
+- [x] Implement sensitive-file mining, recursive directory/tree collection, and
       Sysinternals integration.
-- [ ] Implement packet capture, CSV export, and network graph generation.
+- [x] Implement packet capture, CSV export, and network graph generation.
 - [x] Implement flag-history statistics and usage graph generation.
 
 ### Phase 5 — Maintenance and release readiness

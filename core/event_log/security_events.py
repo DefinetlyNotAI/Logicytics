@@ -5,7 +5,15 @@ from __future__ import annotations
 import subprocess
 from shutil import which
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    ResourceClass,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 _MAX_EVENTS = 1_000
@@ -34,6 +42,7 @@ class SecurityEventsCollector(CoreCollector):
             description="Exports up to 1,000 local Windows Security events as CSV.", author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("event_logs",),
+            parallel_safe=True, resource_class=ResourceClass.GENERAL,
             default_profiles=("deep",), timeout_seconds=90, maximum_output_bytes=8 * 1024 * 1024,
         )
 

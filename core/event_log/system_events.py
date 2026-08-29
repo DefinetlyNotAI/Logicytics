@@ -10,6 +10,7 @@ from logicytics import (
     CollectorMetadata,
     CollectorResult,
     CoreCollector,
+    ResourceClass,
     Specialty,
     ValidationResult,
 )
@@ -41,6 +42,8 @@ class SystemEventsCollector(CoreCollector):
             supported_platforms=("win32",),
             capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("event_logs",),
+            parallel_safe=True,
+            resource_class=ResourceClass.GENERAL,
             default_profiles=("deep",),
             timeout_seconds=90,
             maximum_output_bytes=8 * 1024 * 1024,

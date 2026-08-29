@@ -76,4 +76,4 @@ class ConnectionGraphCollector(CoreCollector):
         return CollectorResult.succeeded("connection graph collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:
-        """Release no resources because netstat exits before the result is returned."""
+        """Retain no graph or plot state; DOT generation uses only collection-local values."""

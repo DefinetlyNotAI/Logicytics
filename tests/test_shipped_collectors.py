@@ -5,6 +5,7 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
+from logicytics import ResourceClass
 from logicytics.discovery import preflight
 
 
@@ -85,6 +86,28 @@ class ShippedCollectorTests(unittest.TestCase):
             },
             {candidate.metadata.id for candidate in report.valid if candidate.metadata},
         )
+
+    def test_event_log_collectors_explicitly_allow_bounded_parallel_scheduling(self) -> None:
+        """The independent event channels may overlap while retaining separate identities."""
+        project_root = Path(__file__).resolve().parent.parent
+        report = preflight(project_root)
+        event_collectors = {
+            candidate.metadata.id: candidate.metadata
+            for candidate in report.valid
+            if candidate.metadata and candidate.metadata.id.startswith("core.event_log.")
+        }
+        self.assertEqual(
+            {
+                "core.event_log.application_events",
+                "core.event_log.security_events",
+                "core.event_log.system_events",
+            },
+            set(event_collectors),
+        )
+        for metadata in event_collectors.values():
+            self.assertTrue(metadata.parallel_safe)
+            self.assertIs(ResourceClass.GENERAL, metadata.resource_class)
+            self.assertEqual(("text/csv",), metadata.output_media_types)
 
 
 if __name__ == "__main__":
