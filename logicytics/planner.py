@@ -53,6 +53,14 @@ def _selected_by_request(candidate: CollectorCandidate, request: RunRequest) -> 
         return False
     if candidate.kind is CollectorKind.PLUGIN and not request.enable_plugins:
         return False
+    if candidate.kind is CollectorKind.MOD:
+        if not request.enable_mods:
+            return False
+        if request.non_python_only and candidate.execution_type == "mod_python":
+            return False
+        return True
+    if request.non_python_only:
+        return False
     return request.profile in metadata.default_profiles
 
 
@@ -96,6 +104,7 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
         if candidate.kind is CollectorKind.CORE
         or candidate.selection_id in request.include
         or (request.enable_plugins and candidate.kind is CollectorKind.PLUGIN)
+        or (request.enable_mods and candidate.kind is CollectorKind.MOD)
     ]
     if invalid_selected:
         details = "; ".join(
@@ -127,6 +136,10 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
                     request.enable_plugins or dependency_id in request.include
             ):
                 raise PlanError(f"plugin dependency {dependency_id} must be explicitly selected or plugins enabled")
+            if dependency.kind is CollectorKind.MOD and not (
+                    request.enable_mods or dependency_id in request.include
+            ):
+                raise PlanError(f"mod dependency {dependency_id} must be explicitly selected or mods enabled")
             if dependency.metadata.sensitive_data_categories and dependency_id not in request.include:
                 raise PlanError(f"sensitive dependency {dependency_id} must be explicitly selected")
             if dependency_id not in selected:

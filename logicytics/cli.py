@@ -35,6 +35,8 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
     parallel = getattr(arguments, "parallel", False)
     performance_check = getattr(arguments, "performance_check", False)
     default_mode = getattr(arguments, "default_mode", False)
+    modded = getattr(arguments, "modded", False)
+    nopy = getattr(arguments, "nopy", False)
     if sequential and arguments.workers is not None and arguments.workers != 1:
         raise ValueError("sequential execution requires --workers=1")
     if parallel and (performance_check or default_mode):
@@ -79,6 +81,8 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
         include=tuple(arguments.include),
         exclude=tuple(arguments.exclude),
         enable_plugins=arguments.plugins,
+        enable_mods=getattr(arguments, "mods", False) or modded or nopy,
+        non_python_only=nopy,
         max_workers=worker_count,
         acknowledge_authorization=getattr(arguments, "acknowledge_authorization", False),
         approved_capabilities=tuple(Capability(value) for value in arguments.allow_capability),
@@ -126,6 +130,10 @@ def _parser() -> argparse.ArgumentParser:
             help="Enable all valid opt-in plugin collectors for the selected profile.",
         )
         subparser.add_argument(
+            "--mods", action="store_true",
+            help="Enable valid sidecar-declared scripts from the MODS directory.",
+        )
+        subparser.add_argument(
             "--workers", type=int, metavar="COUNT",
             help="Bound concurrent isolated workers to this positive count.",
         )
@@ -160,6 +168,8 @@ def _parser() -> argparse.ArgumentParser:
                               help="Run the standard built-in profile with configured parallel workers.")
             mode.add_argument("--minimal", action="store_true", help="Run the minimal built-in profile.")
             mode.add_argument("--depth", action="store_true", help="Run the deep built-in profile.")
+            mode.add_argument("--modded", action="store_true", help="Run the standard profile plus all valid MODS scripts.")
+            mode.add_argument("--nopy", action="store_true", help="Run only non-Python PowerShell, batch, and executable MODS scripts.")
             mode.add_argument(
                 "--performance-check",
                 action="store_true",
@@ -247,6 +257,7 @@ def main(argv: list[str] | None = None) -> int:
             validation = report.to_dict(
                 selected_plugins=tuple(arguments.include),
                 enable_plugins=arguments.plugins,
+                enable_mods=arguments.mods,
             )
             payload = {
                 "environment": inspect_environment().to_dict(),

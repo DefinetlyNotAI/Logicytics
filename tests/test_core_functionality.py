@@ -7,6 +7,7 @@ import ctypes
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -112,6 +113,30 @@ def _plugin_collector_source() -> str:
     )
 
 
+def _mod_metadata(name: str) -> dict[str, object]:
+    """Return a complete sidecar declaration for a harmless legacy script fixture."""
+    return {
+        "id": f"mod.{name}",
+        "name": f"{name} mod",
+        "version": "1.0.0",
+        "specialty": "integration",
+        "description": "Harmless isolated legacy script fixture.",
+        "author": "tests",
+        "supported_platforms": [sys.platform],
+        "capabilities": ["subprocess"],
+        "privilege_level": "standard",
+        "sensitive_data_categories": [],
+        "network_access": "none",
+        "estimated_cost": "low",
+        "timeout_seconds": 15,
+        "maximum_output_bytes": 1024 * 1024,
+        "maximum_artifact_files": 10,
+        "output_media_types": ["text/plain"],
+        "minimum_contract_version": "4.0",
+        "default_profiles": ["standard"],
+    }
+
+
 def _delayed_collector_source(
         filename: str,
         delay: float,
@@ -158,6 +183,132 @@ def _delayed_collector_source(
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_mods_require_sidecars_and_run_as_isolated_registered_artifacts(self) -> None:
+        """Legacy scripts enter the pipeline only through typed metadata and worker isolation."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            mods = root / "MODS"
+            mods.mkdir()
+            script = mods / "example.py"
+            script.write_text(
+                "from pathlib import Path\n"
+                "Path('report.txt').write_text('mod evidence\\n', encoding='utf-8')\n"
+                "print('INFO: fixture completed')\n",
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn("requires metadata sidecar", report.invalid[0].static_errors[0])
+            with self.assertRaises(PreflightError):
+                build_plan(report, RunRequest(enable_mods=True))
+
+            script.with_suffix(".py.mod.json").write_text(
+                json.dumps(_mod_metadata("example")),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.valid), report.invalid)
+            self.assertEqual((), build_plan(report, RunRequest()).collectors)
+            plan = build_plan(
+                report,
+                RunRequest(
+                    enable_mods=True,
+                    approved_capabilities=(Capability.SUBPROCESS,),
+                    acknowledge_authorization=True,
+                    max_workers=1,
+                ),
+            )
+            self.assertEqual(["mod.example"], [item.metadata.id for item in plan.collectors])
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            record = outcome.manifest.collectors[0]
+            self.assertEqual("succeeded", record.status, record.errors)
+            self.assertEqual(2, len(record.artifacts))
+            report_artifact = next(item for item in record.artifacts if item["name"] == "report.txt")
+            artifact_path = outcome.run_directory / "artifacts" / str(report_artifact["relative_path"])
+            self.assertEqual("mod evidence\n", artifact_path.read_text(encoding="utf-8"))
+            mods_package = Path(str(outcome.manifest.package["mods_path"]))
+            mods_hash = Path(str(outcome.manifest.package["mods_sha256_path"]))
+            self.assertTrue(mods_package.name.startswith("mods-run-"))
+            self.assertTrue(mods_hash.is_file())
+            with zipfile.ZipFile(mods_package) as archive:
+                names = archive.namelist()
+                self.assertIn("metadata/mods.json", names)
+                self.assertTrue(any(name.endswith("/report.txt") for name in names))
+                self.assertIsNone(archive.testzip())
+
+    def test_nopy_and_modded_modes_select_declared_mod_types_without_helpers(self) -> None:
+        """Compatibility modes include all MODS or only non-Python MODS deterministically."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            mods = root / "MODS"
+            mods.mkdir()
+            for name, extension in (("python_mod", ".py"), ("batch_mod", ".bat")):
+                script = mods / f"{name}{extension}"
+                script.write_text("pass\n" if extension == ".py" else "@echo off\n", encoding="utf-8")
+                script.with_suffix(extension + ".mod.json").write_text(
+                    json.dumps(_mod_metadata(name)),
+                    encoding="utf-8",
+                )
+            report = preflight(root)
+            self.assertEqual(2, len(report.valid), report.invalid)
+            modded = build_plan(report, RunRequest(enable_mods=True, approved_capabilities=(Capability.SUBPROCESS,)))
+            nopy = build_plan(report, RunRequest(
+                enable_mods=True,
+                non_python_only=True,
+                approved_capabilities=(Capability.SUBPROCESS,),
+            ))
+            self.assertEqual(["mod.batch_mod", "mod.python_mod"], [item.metadata.id for item in modded.collectors])
+            self.assertEqual(["mod.batch_mod"], [item.metadata.id for item in nopy.collectors])
+            parser = _parser()
+            self.assertTrue(_request(parser.parse_args(["run", "--modded"]), 2).enable_mods)
+            nopy_request = _request(parser.parse_args(["run", "--nopy"]), 2)
+            self.assertTrue(nopy_request.enable_mods)
+            self.assertTrue(nopy_request.non_python_only)
+
+    @unittest.skipUnless(os.name == "nt", "legacy script adapters require Windows")
+    def test_non_python_mod_adapters_execute_powershell_batch_and_executable_files(self) -> None:
+        """Every documented non-Python MODS type executes through its explicit adapter."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            mods = root / "MODS"
+            mods.mkdir()
+            scripts = {
+                "powershell_mod.ps1": "Set-Content -LiteralPath report.txt -Value 'powershell evidence'\n",
+                "batch_mod.bat": "@echo off\r\necho batch evidence>report.txt\r\n",
+            }
+            for filename, contents in scripts.items():
+                script = mods / filename
+                script.write_text(contents, encoding="utf-8")
+                script.with_suffix(script.suffix + ".mod.json").write_text(
+                    json.dumps(_mod_metadata(script.stem)),
+                    encoding="utf-8",
+                )
+            executable = Path(os.environ.get("WINDIR", r"C:\Windows")) / "System32" / "whoami.exe"
+            self.assertTrue(executable.is_file())
+            copied_executable = mods / "identity_mod.exe"
+            shutil.copy2(executable, copied_executable)
+            copied_executable.with_suffix(".exe.mod.json").write_text(
+                json.dumps(_mod_metadata("identity_mod")),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(3, len(report.valid), report.invalid)
+            plan = build_plan(
+                report,
+                RunRequest(
+                    enable_mods=True,
+                    non_python_only=True,
+                    approved_capabilities=(Capability.SUBPROCESS,),
+                    acknowledge_authorization=True,
+                    max_workers=1,
+                ),
+            )
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            self.assertEqual(
+                ["succeeded", "succeeded", "succeeded"],
+                [record.status for record in outcome.manifest.collectors],
+                [record.errors for record in outcome.manifest.collectors],
+            )
     def test_semantic_flag_matching_history_usage_and_graph_are_local_and_opt_in(self) -> None:
         """Natural-language actions use configured matching and persist only with consent."""
         with tempfile.TemporaryDirectory() as temporary:

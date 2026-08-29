@@ -13,7 +13,7 @@ from typing import Any, Mapping
 
 CONTRACT_VERSION = "4.0"
 _CUSTOM_SPECIALTY = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
-_COLLECTOR_ID = re.compile(r"^(?:core|plugin)\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)?$")
+_COLLECTOR_ID = re.compile(r"^(?:core|plugin|mod)\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)?$")
 _SEMANTIC_VERSION = re.compile(r"^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$")
 _CONTRACT_VERSION = re.compile(r"^\d+\.\d+$")
 _LABEL = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
@@ -28,6 +28,7 @@ class CollectorKind(StrEnum):
 
     CORE = "core"
     PLUGIN = "plugin"
+    MOD = "mod"
 
 
 class CollectorStatus(StrEnum):
@@ -481,6 +482,8 @@ class RunRequest:
     include: tuple[str, ...] = ()
     exclude: tuple[str, ...] = ()
     enable_plugins: bool = False
+    enable_mods: bool = False
+    non_python_only: bool = False
     max_workers: int = 4
     acknowledge_authorization: bool = False
     approved_capabilities: tuple[Capability, ...] = ()
@@ -510,7 +513,10 @@ class RunRequest:
             raise ValueError("request rerun_from must be a valid original run ID")
         if self.rerun_from is not None and not self.include:
             raise ValueError("request rerun_from requires explicit included collector IDs")
-        for name in ("enable_plugins", "acknowledge_authorization", "performance_check"):
+        for name in (
+                "enable_plugins", "enable_mods", "non_python_only",
+                "acknowledge_authorization", "performance_check",
+        ):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"request {name} must be boolean")
         if not isinstance(self.max_workers, int) or isinstance(self.max_workers, bool) or not 1 <= self.max_workers <= 64:

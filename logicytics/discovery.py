@@ -13,9 +13,11 @@ import tempfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from logicytics.contracts import CONTRACT_VERSION, CollectorKind, CollectorMetadata
+from logicytics.contracts import CONTRACT_VERSION, Capability, CollectorKind, CollectorMetadata
 
 _FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.py$")
+_MOD_FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.(?:py|ps1|bat|exe)$")
+_MOD_EXTENSIONS = {".py": "mod_python", ".ps1": "mod_powershell", ".bat": "mod_batch", ".exe": "mod_executable"}
 _VAGUE_NAMES = {"main.py", "misc.py", "stuff.py", "utils.py"}
 _APPLICATION_IMPORTS = {
     "CollectorSnapshot", "RunSnapshot", "api", "artifacts", "cli", "configuration", "discovery", "environment",
@@ -45,6 +47,7 @@ class CollectorCandidate:
     static_errors: list[str] = field(default_factory=list)
     metadata: CollectorMetadata | None = None
     runtime_error: str | None = None
+    execution_type: str = "collector"
 
     @property
     def valid(self) -> bool:
@@ -95,6 +98,7 @@ class PreflightReport:
             *,
             selected_plugins: tuple[str, ...] = (),
             enable_plugins: bool = False,
+            enable_mods: bool = False,
     ) -> dict[str, list[dict[str, object]]]:
         """Classify invalid plugins as quarantined unless the request selects them."""
         valid = [
@@ -112,7 +116,12 @@ class PreflightReport:
                 "path": str(candidate.path),
                 "diagnostics": [asdict(diagnostic) for diagnostic in candidate.diagnostics],
             }
-            if candidate.kind is CollectorKind.CORE or enable_plugins or candidate.selection_id in selected:
+            if (
+                    candidate.kind is CollectorKind.CORE
+                    or (enable_plugins and candidate.kind is CollectorKind.PLUGIN)
+                    or (enable_mods and candidate.kind is CollectorKind.MOD)
+                    or candidate.selection_id in selected
+            ):
                 invalid.append(item)
             else:
                 quarantined.append(item)
@@ -363,6 +372,56 @@ def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
     return candidate
 
 
+def _validate_mod(path: Path, mods_root: Path) -> CollectorCandidate:
+    """Validate one legacy script mod and its mandatory immutable metadata sidecar."""
+    candidate = CollectorCandidate(
+        path=path,
+        kind=CollectorKind.MOD,
+        expected_class="",
+        execution_type=_MOD_EXTENSIONS.get(path.suffix.casefold(), "unsupported"),
+    )
+    if not _is_within(path, mods_root) or path.is_symlink():
+        candidate.static_errors.append("mod path must remain a regular file inside MODS")
+        return candidate
+    if not _MOD_FILENAME.fullmatch(path.name):
+        candidate.static_errors.append("mod filename must be lowercase snake_case with a supported extension")
+    sidecar = path.with_suffix(path.suffix + ".mod.json")
+    if not sidecar.is_file() or sidecar.is_symlink() or not _is_within(sidecar, mods_root):
+        candidate.static_errors.append(f"mod requires metadata sidecar {sidecar.name}")
+        return candidate
+    try:
+        raw = json.loads(sidecar.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        candidate.static_errors.append(f"cannot parse mod metadata sidecar: {error}")
+        return candidate
+    if not isinstance(raw, dict):
+        candidate.static_errors.append("mod metadata sidecar must contain an object")
+        return candidate
+    required = {
+        "id", "name", "version", "specialty", "description", "author", "supported_platforms",
+        "capabilities", "privilege_level", "sensitive_data_categories", "network_access",
+        "estimated_cost", "timeout_seconds", "maximum_output_bytes", "maximum_artifact_files",
+        "output_media_types", "minimum_contract_version", "default_profiles",
+    }
+    missing = sorted(required - set(raw))
+    if missing:
+        candidate.static_errors.append(f"mod metadata must explicitly declare: {', '.join(missing)}")
+        return candidate
+    try:
+        metadata = CollectorMetadata.from_dict(raw, allow_custom_specialty=True)
+    except (KeyError, TypeError, ValueError) as error:
+        candidate.runtime_error = f"invalid mod metadata: {error}"
+        return candidate
+    expected_id = f"mod.{path.stem}"
+    if metadata.id != expected_id:
+        candidate.runtime_error = f"mod ID must match its filename: {expected_id}"
+    elif Capability.SUBPROCESS not in metadata.capabilities:
+        candidate.runtime_error = "legacy script mods must declare the subprocess capability"
+    else:
+        candidate.metadata = metadata
+    return candidate
+
+
 def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidate) -> None:
     """Enforce the small, documented public API allowed on a collector class."""
     if ast.get_docstring(class_node) is None:
@@ -460,6 +519,14 @@ def discover(project_root: Path) -> tuple[CollectorCandidate, ...]:
         _validate_static(path, CollectorKind.PLUGIN)
         for path in _iter_candidates(project_root, CollectorKind.PLUGIN)
     )
+    mods_root = project_root / "MODS"
+    if mods_root.exists():
+        for path in sorted(item for item in mods_root.rglob("*") if item.is_file()):
+            relative = path.relative_to(mods_root)
+            if any(part.startswith("_") for part in relative.parts):
+                continue
+            if path.suffix.casefold() in _MOD_EXTENSIONS:
+                candidates.append(_validate_mod(path, mods_root))
     return tuple(candidates)
 
 
@@ -470,7 +537,7 @@ def _accept_runtime_metadata(candidate: CollectorCandidate, payload: object) -> 
             raise ValueError("metadata payload must be an object")
         metadata = CollectorMetadata.from_dict(
             payload,
-            allow_custom_specialty=candidate.kind is CollectorKind.PLUGIN,
+            allow_custom_specialty=candidate.kind is not CollectorKind.CORE,
         )
     except (KeyError, TypeError, ValueError) as error:
         candidate.runtime_error = f"invalid validation response: {error}"
@@ -491,6 +558,8 @@ def _accept_runtime_metadata(candidate: CollectorCandidate, payload: object) -> 
             f"plugin.{candidate.path.parent.name if candidate.path.name == 'main.py' else candidate.path.stem}"
     ):
         candidate.runtime_error = "plugin collector ID must match its plugin folder or filename"
+    elif candidate.kind is CollectorKind.MOD and metadata.id != f"mod.{candidate.path.stem}":
+        candidate.runtime_error = "mod collector ID must match its script filename"
     else:
         candidate.metadata = metadata
 
@@ -606,6 +675,8 @@ def preflight(project_root: Path, *, configuration_hash: str = "unconfigured") -
     cached = _load_cache(project_root, configuration_hash)
     for candidate in candidates:
         if candidate.static_errors:
+            continue
+        if candidate.kind is CollectorKind.MOD and candidate.metadata is not None:
             continue
         relative_path = candidate.path.resolve().relative_to(project_root.resolve()).as_posix()
         entry = cached.get(relative_path)

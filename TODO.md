@@ -473,16 +473,16 @@ Windows platform allows.
 ### Improve the extension model
 
 - [x] Define a stable `Collector` interface and version it.
-- [ ] Require every MODS collector to declare metadata rather than being discovered
+- [x] Require every MODS collector to declare metadata rather than being discovered
       only by extension.
-- [ ] Run mods in a sandboxed/isolated run workspace with declared inputs and
+- [x] Run mods in a sandboxed/isolated run workspace with declared inputs and
       outputs.
-- [ ] Give mods the same artifact writer, cancellation, timeout, logging, and
+- [x] Give mods the same artifact writer, cancellation, timeout, logging, and
       result contract as built-in collectors.
 - [ ] Prevent a mod from changing global configuration, replacing built-in
       collectors, or writing outside its permitted workspace without explicit
       permission.
-- [ ] Preserve compatibility with existing script mods through an adapter layer,
+- [x] Preserve compatibility with existing script mods through an adapter layer,
       while making the typed collector API the v4.0 contract.
 
 ### Improve packaging and evidence integrity
@@ -557,24 +557,25 @@ Windows platform allows.
 ## 1. Main engine and execution lifecycle
 
 - [ ] Provide a single main entry point that:
-  - [ ] Parses command-line flags and validates their combinations.
-  - [ ] Handles special actions before collection starts.
-  - [ ] Checks privileges and relevant Windows prerequisites.
-  - [ ] Extracts Sysinternals tools when permitted by configuration.
-  - [ ] Builds the execution list for the selected mode.
-  - [ ] Runs the selected Python, PowerShell, executable, and batch collectors.
-  - [ ] Captures collector output and converts script messages into Logicytics log
+  - [x] Parses command-line flags and validates their combinations.
+  - [x] Handles special actions before collection starts.
+  - [x] Checks privileges and relevant Windows prerequisites.
+  - [x] Extracts Sysinternals tools when permitted by configuration.
+  - [x] Builds the execution list for the selected mode.
+  - [x] Runs the selected Python, PowerShell, executable, and batch collectors.
+  - [x] Captures collector output and converts script messages into Logicytics log
         levels where applicable.
-  - [ ] Continues collecting when an individual collector fails, while recording
+  - [x] Continues collecting when an individual collector fails, while recording
         the failure.
-  - [ ] Packages generated evidence after collection.
-  - [ ] Produces a SHA-256 hash beside every package.
-  - [ ] Performs the requested shutdown or reboot action at the end.
-  - [ ] Handles Ctrl+C gracefully and attempts final packaging/cleanup.
+  - [x] Packages generated evidence after collection.
+  - [x] Produces a SHA-256 hash beside every package.
+  - [x] Performs the requested shutdown or reboot action at the end.
+  - [x] Handles Ctrl+C gracefully and attempts final packaging/cleanup.
   - [ ] Offers a final exit prompt for interactive use.
-- [ ] Discover runnable files recursively from the CODE directory.
-- [ ] Support `.py`, `.ps1`, `.exe`, and `.bat` collector types.
-- [ ] Exclude engine/library directories and underscore-prefixed helper files from
+- [x] Discover runnable files recursively from canonical `core/`, `plugins/`, and
+      `MODS/` directories; the legacy CODE directory is intentionally retired.
+- [x] Support `.py`, `.ps1`, `.exe`, and `.bat` collector types.
+- [x] Exclude engine/library directories and underscore-prefixed helper files from
       automatic collector discovery.
 - [x] Support a configurable worker limit for parallel collection.
 - [x] Provide per-collector success, failure, and duration information.
@@ -586,8 +587,9 @@ Windows platform allows.
 - [x] `--minimal`: run the quick/basic collection set.
 - [x] `--depth`: run the standard set concurrently plus the slow, large-data
       collectors.
-- [ ] `--nopy`: run the non-Python collectors for systems without Python.
-- [ ] `--modded`: run the normal collection set plus all supported files in MODS.
+- [x] `--nopy`: run only non-Python collector payloads; the v4 engine itself still
+      requires its configured Python runtime.
+- [x] `--modded`: run the normal collection set plus all supported files in MODS.
 - [x] `--performance-check`: run collectors sequentially, measure each duration,
       and write a performance summary table.
 - [x] Show help when no collection action is selected.
@@ -602,7 +604,7 @@ Windows platform allows.
 ## 2. Command-line and interaction features
 
 - [x] Provide descriptive help text for every flag.
-- [ ] Support the current action flags: `default`, `threaded`, `modded`, `depth`,
+- [x] Support the current action flags: `default`, `threaded`, `modded`, `depth`,
       `nopy`, `minimal`, `performance-check`, and `usage`.
 - [ ] Support side actions: `debug`, `update`, and `dev`.
 - [x] Provide action/sub-action exclusivity validation and clear invalid-combination
@@ -627,9 +629,10 @@ Windows platform allows.
 ### Command execution
 
 - [x] Expose a reusable command runner that returns command stdout.
-- [ ] Execute Python collectors through the configured Python runtime.
-- [ ] Execute PowerShell collectors after unblocking them when necessary.
-- [ ] Execute other supported script types through PowerShell where applicable.
+- [x] Execute Python collectors through the configured Python runtime.
+- [x] Execute PowerShell collectors from a private copy with execution-policy
+      handling that removes downloaded-file blocking from the execution path.
+- [x] Execute batch and executable collector types through explicit shell-free adapters.
 - [x] Parse `LEVEL: message` output from non-Python scripts into structured logs.
 
 ### File discovery
@@ -681,7 +684,7 @@ Windows platform allows.
       files, configuration secrets, caches, or library internals in the evidence
       package.
 - [ ] Include generated files from CODE in the package.
-- [ ] Include MODS output in a separate MODS package during modded runs.
+- [x] Include MODS output in a separate MODS package during modded runs.
 - [x] Preserve nested directory structure inside packages.
 - [x] Name packages using the action and timestamp.
 - [x] Generate a SHA-256 digest for each package and move both artifacts into the
@@ -848,14 +851,14 @@ appropriate default/deep/non-Python mode.
 
 ## 6. MODS extension system
 
-- [ ] Treat MODS as an opt-in extension directory.
-- [ ] Discover `.py`, `.exe`, `.ps1`, and `.bat` mods.
-- [ ] Run mods after the normal Logicytics collectors.
-- [ ] Allow users to add custom collectors without changing the engine.
-- [ ] Include mod-generated data in a separately named package.
-- [ ] Document the mod contract, supported file types, execution order, output
+- [x] Treat MODS as an opt-in extension directory.
+- [x] Discover `.py`, `.exe`, `.ps1`, and `.bat` mods.
+- [x] Run mods after the normal Logicytics collectors.
+- [x] Allow users to add custom collectors without changing the engine.
+- [x] Include mod-generated data in a separately named package.
+- [x] Document the mod contract, supported file types, execution order, output
       location, logging convention, and failure behavior.
-- [ ] Keep underscore-prefixed helper files out of automatic mod execution.
+- [x] Keep underscore-prefixed helper files out of automatic mod execution.
 
 ## 7. Configuration and output contract
 
@@ -891,7 +894,7 @@ appropriate default/deep/non-Python mode.
       performance reporting, and post-run actions.
 - [x] Implement ZIP creation, SHA-256 hashing, package naming, metadata, and output
       relocation.
-- [ ] Implement the MODS discovery and packaging contract.
+- [x] Implement the MODS discovery and packaging contract.
 
 ### Phase 3 — Core collectors
 
