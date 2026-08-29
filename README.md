@@ -156,7 +156,7 @@ public names are requested:
 ```python
 from pathlib import Path
 
-from logicytics import RunRequest, load_configuration, plan_run, query_run, read_artifact, run_collection
+from logicytics import RunRequest, load_configuration, open_artifact, plan_run, query_run, read_artifact, run_collection
 
 root = Path.cwd()
 configuration = load_configuration(root)
@@ -169,6 +169,8 @@ for collector in snapshot.collectors:
     if collector.failure is not None:
         print(collector.failure.operation, collector.failure.remediation)
 contents = read_artifact(root, snapshot.run_id, snapshot.artifacts[0].id, configuration=configuration)
+# Explicit user-facing actions may open the verified artifact with its Windows handler:
+# open_artifact(root, snapshot.run_id, snapshot.artifacts[0].id, configuration=configuration)
 ```
 
 Planning enforces strict core/plugin preflight and configured worker bounds
@@ -179,6 +181,8 @@ run summary prints the same redacted per-collector status, duration, summary,
 and failure guidance. Artifact reads are bounded (16 MiB by default, never more
 than 64 MiB) and verify the exact registered bytes against their manifest
 SHA-256 before returning evidence.
+`open_artifact` applies the same run ownership and hash checks with streaming I/O
+before asking Windows to open the file through its associated application.
 
 ## Configuration
 

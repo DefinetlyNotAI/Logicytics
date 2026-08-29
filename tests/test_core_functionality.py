@@ -20,7 +20,14 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from logicytics import packaging
-from logicytics import load_configuration, plan_run, query_run, read_artifact, run_collection
+from logicytics import (
+    load_configuration,
+    open_artifact,
+    plan_run,
+    query_run,
+    read_artifact,
+    run_collection,
+)
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.cli import _parser, _request, main
@@ -864,6 +871,13 @@ class CoreFunctionalityTests(unittest.TestCase):
             original = stored.read_bytes()
             manifest_source = outcome.manifest_path.read_text(encoding="utf-8")
 
+            with patch("logicytics.api.os.startfile") as startfile:
+                self.assertEqual(
+                    stored,
+                    open_artifact(root, outcome.manifest.run_id, artifact.id),
+                )
+                startfile.assert_called_once_with(stored)
+
             with self.assertRaisesRegex(ArtifactError, "canonical"):
                 read_artifact(root, outcome.manifest.run_id, "../outside")
             with self.assertRaisesRegex(ArtifactError, "not registered"):
@@ -877,6 +891,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             stored.write_bytes(b"bad")
             with self.assertRaisesRegex(ArtifactError, "SHA-256 verification"):
                 read_artifact(root, outcome.manifest.run_id, artifact.id)
+            with self.assertRaisesRegex(ArtifactError, "size"):
+                open_artifact(root, outcome.manifest.run_id, artifact.id)
             stored.write_bytes(original)
             payload = json.loads(manifest_source)
             payload["artifact_catalog"][0]["producer_status"] = "failed"

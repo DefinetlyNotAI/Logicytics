@@ -689,8 +689,8 @@ Windows platform allows.
 - [x] Name packages using the action and timestamp.
 - [x] Generate a SHA-256 digest for each package and move both artifacts into the
       output/data output directories.
-- [ ] Provide a file-opening helper for viewing generated artifacts.
-- [ ] Implement the v4.0 temporary-workspace lifecycle: collectors write into a
+- [x] Provide a file-opening helper for viewing generated artifacts.
+- [x] Implement the v4.0 temporary-workspace lifecycle: collectors write into a
       run-specific temporary directory, the packager consumes that directory, and
       cleanup occurs after successful or interrupted runs.
 
