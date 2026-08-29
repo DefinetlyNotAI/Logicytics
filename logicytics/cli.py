@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import importlib.util
 import json
 import os
@@ -18,6 +19,7 @@ from logicytics.environment import inspect_environment
 from logicytics.errors import LogicyticsError
 from logicytics.manifest import MANIFEST_SCHEMA_VERSION
 from logicytics.interaction import load_history, match_flag, record_match, usage_statistics, write_usage_graph
+from logicytics.logging import get_application_logger
 from logicytics.maintenance import (
     build_manifest,
     compare_files,
@@ -28,6 +30,7 @@ from logicytics.maintenance import (
     write_local_manifest,
 )
 from logicytics.planner import BUILTIN_PROFILES, build_plan
+from logicytics.output_layout import ensure_output_layout
 from logicytics.runtime import RunSupervisor
 from logicytics.sysinternals import ensure_sysinternals
 
@@ -328,8 +331,15 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 0
     root = _project_root()
+    application_logger = None
     try:
         configuration = load_config(root, arguments.config)
+        layout = ensure_output_layout(configuration.runtime.output_root)
+        application_logger = get_application_logger(
+            layout.application_log,
+            configuration.logging,
+        )
+        application_logger.event("INFO", "command_started", command=arguments.command)
         history_path = configuration.runtime.output_root / "interaction_history.json.gz"
         if arguments.command == "match":
             history = load_history(history_path)
@@ -384,7 +394,7 @@ def main(argv: list[str] | None = None) -> int:
                 "preflight": {"valid_collectors": len(report.valid), "invalid_collectors": len(report.invalid)},
                 "maintenance": maintenance_diagnostics(root, configuration.maintenance),
             }
-            debug_path = configuration.runtime.output_root.parent / "logs" / "debug" / "debug.json"
+            debug_path = layout.debug_logs / "debug.json"
             payload["debug_log"] = str(debug_path)
             _write_json(debug_path, payload)
             print(json.dumps(payload, indent=2, sort_keys=True))
@@ -441,6 +451,13 @@ def main(argv: list[str] | None = None) -> int:
                 pass
         return exit_code
     except (LogicyticsError, OSError, PermissionError, ValueError) as error:
+        if application_logger is not None:
+            with contextlib.suppress(OSError):
+                application_logger.event(
+                    "EXCEPTION",
+                    str(error),
+                    error_type=type(error).__name__,
+                )
         print(f"Error: {error}")
         return 2
 

@@ -32,7 +32,14 @@ from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.cli import _parser, _request, main
 from logicytics.file_listing import list_files
-from logicytics.logging import FileEventLogger, deprecated, raise_logged, timed
+from logicytics.logging import (
+    ApplicationLogger,
+    FileEventLogger,
+    deprecated,
+    get_application_logger,
+    raise_logged,
+    timed,
+)
 from logicytics.interaction import load_history, match_flag, usage_statistics
 from logicytics.manifest import write_manifest
 from logicytics.maintenance import (
@@ -44,7 +51,12 @@ from logicytics.maintenance import (
     write_local_manifest,
 )
 from logicytics.sysinternals import ensure_sysinternals
-from logicytics.configuration import MaintenanceSettings, default_config, load_config
+from logicytics.configuration import (
+    LoggingSettings,
+    MaintenanceSettings,
+    default_config,
+    load_config,
+)
 from logicytics.contracts import (
     Artifact,
     Capability,
@@ -66,6 +78,7 @@ from logicytics.discovery import PreflightReport, preflight
 from logicytics.environment import EnvironmentReport
 from logicytics.errors import ArtifactError, PlanError, PreflightError
 from logicytics.packaging import package_run
+from logicytics.output_layout import ensure_output_layout
 from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.runtime import RunSupervisor
 
@@ -198,6 +211,107 @@ def _delayed_collector_source(
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_application_logging_levels_colors_retention_and_dispatch_are_bounded(self) -> None:
+        """The application sink is typed, redacted, reusable, colored, and size bounded."""
+        class TerminalBuffer(io.StringIO):
+            def isatty(self) -> bool:
+                return True
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = root / "output" / "logs" / "Logicytics.log"
+            path.parent.mkdir(parents=True)
+            path.write_text("previous secret\n", encoding="utf-8")
+            old = path.parent / "Logicytics-old.log"
+            old.write_text("expired\n", encoding="utf-8")
+            os.utime(old, (0, 0))
+            console = TerminalBuffer()
+            settings = LoggingSettings(
+                level="DEBUG",
+                console_enabled=True,
+                color_enabled=True,
+                maximum_bytes=1024,
+                delete_previous=True,
+                retention_days=1,
+            )
+            logger = ApplicationLogger(path, settings, console=console)
+            for level in (
+                "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INTERNAL", "EXCEPTION"
+            ):
+                logger.event(level, "typed event", password="hidden", sequence=1)
+            logger.dispatch(("WARNING: parsed warning", "plain batch row"))
+            logger.raw("raw access_token=hidden")
+            logger.separator()
+            for index in range(40):
+                logger.event("INFO", "bounded row " + str(index) + " " + "x" * 80)
+
+            contents = path.read_text(encoding="utf-8")
+            self.assertNotIn("previous secret", contents)
+            self.assertNotIn("hidden", contents)
+            self.assertLessEqual(path.stat().st_size, settings.maximum_bytes)
+            self.assertFalse(old.exists())
+            self.assertIn("\033[", console.getvalue())
+            self.assertIn("[EXCEPTION]", console.getvalue())
+            with self.assertRaisesRegex(ValueError, "unsupported log level"):
+                logger.event("TRACE", "unsupported")
+            with self.assertRaisesRegex(ValueError, "raw log end"):
+                logger.raw("bad", end="\r\n")
+
+            shared = get_application_logger(path, LoggingSettings(console_enabled=False))
+            self.assertIs(
+                shared,
+                get_application_logger(path, LoggingSettings(console_enabled=False)),
+            )
+
+    def test_output_layout_and_logging_configuration_are_complete_and_validated(self) -> None:
+        """Every global output directory and logging policy value has one typed source."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            layout = ensure_output_layout(root / "output" / "data")
+            for directory in (
+                layout.data,
+                layout.logs,
+                layout.debug_logs,
+                layout.performance_logs,
+                layout.packages,
+                layout.hashes,
+            ):
+                self.assertTrue(directory.is_dir())
+            config_path = root / "logicytics.json"
+            config_path.write_text(
+                json.dumps({
+                    "schema_version": 4,
+                    "logging": {
+                        "level": "debug",
+                        "console_enabled": False,
+                        "color_enabled": False,
+                        "file_enabled": True,
+                        "maximum_bytes": 2048,
+                        "delete_previous": True,
+                        "retention_days": 7,
+                    },
+                }),
+                encoding="utf-8",
+            )
+            configuration = load_config(root, config_path)
+            self.assertEqual("DEBUG", configuration.logging.level)
+            self.assertEqual(2048, configuration.logging.maximum_bytes)
+            self.assertEqual(7, configuration.logging.retention_days)
+
+            for invalid_logging in (
+                {"level": "TRACE"},
+                {"maximum_bytes": True},
+                {"retention_days": -1},
+                {"console_enabled": 1},
+                {"unknown": True},
+            ):
+                config_path.write_text(
+                    json.dumps({"schema_version": 4, "logging": invalid_logging}),
+                    encoding="utf-8",
+                )
+                with self.subTest(logging=invalid_logging), self.assertRaises(PlanError):
+                    load_config(root, config_path)
+
     def test_maintenance_configuration_requires_pinned_https_and_python_order(
         self,
     ) -> None:

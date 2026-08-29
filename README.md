@@ -67,7 +67,13 @@ plugins/                 # user-created collectors, validated separately
 logicytics/              # engine, contracts, planning, runtime, and packaging
 tests/                   # core integration tests
 output/                  # ignored generated evidence and diagnostics
+  logs/
+    Logicytics.log       # bounded redacted application log
+    debug/               # debug-action diagnostics
+    performance/         # stable performance-report location
   data/
+    zip/                 # stable package-output location
+    hashes/              # stable package-hash location
     run-<id>/            # one self-contained run output tree
       artifacts/         # collector-owned registered evidence store
       collectors/        # private collector workspaces and event channels
@@ -200,6 +206,15 @@ engine-wide `runtime` options from per-collector `collectors` settings:
     "minimum_python": "3.11",
     "recommended_python": "3.11"
   },
+  "logging": {
+    "level": "INFO",
+    "console_enabled": true,
+    "color_enabled": true,
+    "file_enabled": true,
+    "maximum_bytes": 4194304,
+    "delete_previous": false,
+    "retention_days": 30
+  },
   "collectors": {
     "core.filesystem.system_drive_tree": {"max_entries": 5000, "max_depth": 12},
     "core.process.memory_map": {"max_regions": 5000, "dump_directory": "memory_maps"}
@@ -218,6 +233,13 @@ downloaded bytes are authenticated before strict JSON parsing. Integrity
 manifests can contain only a schema version, project version, and file hashes;
 they cannot configure, enable, or add collectors, and collection never depends
 on the remote endpoint.
+
+Application logging supports `DEBUG`, `INTERNAL`, `INFO`, `WARNING`, `ERROR`,
+`EXCEPTION`, and `CRITICAL`. Human-readable UTC rows are redacted before they
+reach colored stderr or `output/logs/Logicytics.log`; per-run and per-collector
+JSONL logs remain isolated in each run. The configured byte limit retains recent
+complete rows, `delete_previous` removes the prior application log explicitly,
+and `retention_days` removes expired rotated application logs.
 
 Schema-version `3` JSON files are migrated in memory without modifying the source
 file. Legacy `workers`/`worker_count`, `max_workers`, `output_root`, and

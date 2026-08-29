@@ -609,7 +609,7 @@ Windows platform allows.
 - [x] Support side actions: `debug`, `update`, and `dev`.
 - [x] Provide action/sub-action exclusivity validation and clear invalid-combination
       errors.
-- [ ] Provide colored console output for status, warnings, errors, and prompts.
+- [x] Provide colored console output for status, warnings, errors, and prompts.
 - [x] Provide a semantic flag-matching feature that can map natural-language user
       input to the closest command-line flag.
 - [x] Match input against both flag names and their descriptions.
@@ -655,20 +655,20 @@ Windows platform allows.
 ### Configuration
 
 - [ ] Load `config.ini` from the project CODE directory.
-- [ ] Expose debug level, version, current file manifest, log retention, worker
+- [x] Expose debug level, version, current file manifest, log retention, worker
       count, preference persistence, and all collector settings.
 - [x] Support remote configuration retrieval for update/integrity checks.
-- [ ] Keep configuration parsing available to every collector through the package.
+- [x] Keep configuration parsing available to every collector through the package.
 
 ### Logging
 
 - [ ] Provide a singleton logger shared by the engine and collectors.
-- [ ] Log to console with configurable colors and levels.
-- [ ] Log to output/logs/Logicytics.log.
-- [ ] Support DEBUG, INFO, WARNING, ERROR, CRITICAL, INTERNAL, and EXCEPTION levels.
-- [ ] Include timestamps and structured, readable log rows.
-- [ ] Support log truncation controls and optional deletion of the previous log.
-- [ ] Provide raw logging, newline separators, typed message dispatch, and batched
+- [x] Log to console with configurable colors and levels.
+- [x] Log to output/logs/Logicytics.log.
+- [x] Support DEBUG, INFO, WARNING, ERROR, CRITICAL, INTERNAL, and EXCEPTION levels.
+- [x] Include timestamps and structured, readable log rows.
+- [x] Support log truncation controls and optional deletion of the previous log.
+- [x] Provide raw logging, newline separators, typed message dispatch, and batched
       execution-message parsing.
 - [x] Provide a function decorator that records function execution and timing.
 - [x] Provide an exception helper that logs and raises a requested exception type.
@@ -678,7 +678,7 @@ Windows platform allows.
 
 ### Output and packaging
 
-- [ ] Create output/logs, output/logs/debug, output/logs/performance,
+- [x] Create output/logs, output/logs/debug, output/logs/performance,
       output/data/zip, and output/data/hashes automatically.
 - [ ] Collect generated files without including source code, executables, model
       files, configuration secrets, caches, or library internals in the evidence
@@ -862,7 +862,7 @@ appropriate default/deep/non-Python mode.
 
 ## 7. Configuration and output contract
 
-- [ ] Recreate general settings for debug logging, old-log deletion, worker count,
+- [x] Recreate general settings for debug logging, old-log deletion, worker count,
       and preference-history persistence.
 - [x] Recreate flag-matching settings for model name, minimum accuracy, and model
       debug output.
@@ -883,7 +883,7 @@ appropriate default/deep/non-Python mode.
 ### Phase 1 — Foundation
 
 - [x] Define the v4.0 package layout and run manifest format.
-- [ ] Implement configuration loading, structured logging, file discovery, command
+- [x] Implement configuration loading, structured logging, file discovery, command
       execution, privilege checks, cancellation, and error aggregation.
 - [ ] Implement the temporary run directory and cleanup lifecycle.
 - [x] Rename ACCESS folder to output/ and LOGS/ to logs/, PACKAGES/ to data/ (and remove RUNS/ as it should be the same as data/)
@@ -912,7 +912,7 @@ appropriate default/deep/non-Python mode.
 
 ### Phase 5 — Maintenance and release readiness
 
-- [ ] Implement debugger, update, developer checks, manifest comparison, and
+- [x] Implement debugger, update, developer checks, manifest comparison, and
       version handling.
 - [ ] Add per-collector tests using mocked Windows command/registry/WMI responses.
 - [ ] Add Windows integration tests for each output contract.
@@ -936,7 +936,7 @@ appropriate default/deep/non-Python mode.
 - [x] A cancelled run leaves a recoverable partial-run report and cleans only its
       own temporary data.
 - [x] A normal run creates a package, a matching SHA-256 hash, and a run manifest.
-- [ ] Debug/update/developer tools are separated from normal collection behavior.
+- [x] Debug/update/developer tools are separated from normal collection behavior.
 - [ ] The final v4.0 release is documented as a complete recreation of the feature
       surface listed here.
 

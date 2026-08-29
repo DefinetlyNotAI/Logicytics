@@ -21,7 +21,9 @@ _COLLECTOR_ID = re.compile(
     r"^(?:core\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*|(?:plugin|mod)\.[a-z][a-z0-9_]*)$"
 )
 _SETTING_NAME = re.compile(r"^[a-z][a-z0-9_]*$")
-_ROOT_FIELDS = frozenset({"schema_version", "runtime", "interaction", "maintenance", "collectors"})
+_ROOT_FIELDS = frozenset({
+    "schema_version", "runtime", "interaction", "maintenance", "logging", "collectors",
+})
 _RUNTIME_FIELDS = frozenset({
     "output_root", "default_max_workers", "maximum_workers", "package_completed_runs", "maximum_run_output_bytes",
 })
@@ -30,6 +32,11 @@ _MAINTENANCE_FIELDS = frozenset({
     "remote_manifest_url", "remote_manifest_sha256", "local_manifest_path",
     "minimum_python", "recommended_python",
 })
+_LOGGING_FIELDS = frozenset({
+    "level", "console_enabled", "color_enabled", "file_enabled", "maximum_bytes",
+    "delete_previous", "retention_days",
+})
+_LOG_LEVELS = frozenset({"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INTERNAL", "EXCEPTION"})
 _LEGACY_ROOT_FIELDS = _ROOT_FIELDS.union({
     "collector_settings", "workers", "worker_count", "max_workers", "output_root",
     "package_completed_runs", "maximum_run_output_bytes",
@@ -193,6 +200,7 @@ def _migrate_v3_configuration(raw: Mapping[str, Any], project_root: Path) -> dic
         "runtime": runtime,
         "interaction": raw.get("interaction", {}),
         "maintenance": raw.get("maintenance", {}),
+        "logging": raw.get("logging", {}),
         "collectors": collectors,
     }
 
@@ -230,6 +238,19 @@ class MaintenanceSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class LoggingSettings:
+    """Process-wide human log and console presentation policy."""
+
+    level: str = "INFO"
+    console_enabled: bool = True
+    color_enabled: bool = True
+    file_enabled: bool = True
+    maximum_bytes: int = 4 * 1024 * 1024
+    delete_previous: bool = False
+    retention_days: int = 30
+
+
+@dataclass(frozen=True, slots=True)
 class AppConfig:
     """Validated settings loaded from an optional JSON configuration file."""
 
@@ -237,6 +258,7 @@ class AppConfig:
     runtime: RuntimeSettings
     interaction: InteractionSettings = field(default_factory=InteractionSettings)
     maintenance: MaintenanceSettings = field(default_factory=MaintenanceSettings)
+    logging: LoggingSettings = field(default_factory=LoggingSettings)
     collector_settings: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
     migrated_from_schema: int | None = None
 
@@ -404,6 +426,41 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     ):
         raise PlanError("recommended_python must not be older than minimum_python")
 
+    logging_raw = raw.get("logging", {})
+    if not isinstance(logging_raw, dict):
+        raise PlanError("logging configuration must be an object")
+    unknown_logging = sorted(set(logging_raw) - _LOGGING_FIELDS)
+    if unknown_logging:
+        raise PlanError(
+            f"logging configuration contains unsupported settings: {', '.join(unknown_logging)}"
+        )
+    logging_level = logging_raw.get("level", "INFO")
+    if not isinstance(logging_level, str) or logging_level.upper() not in _LOG_LEVELS:
+        raise PlanError("logging level must be DEBUG, INFO, WARNING, ERROR, CRITICAL, INTERNAL, or EXCEPTION")
+    console_enabled = logging_raw.get("console_enabled", True)
+    color_enabled = logging_raw.get("color_enabled", True)
+    file_enabled = logging_raw.get("file_enabled", True)
+    delete_previous = logging_raw.get("delete_previous", False)
+    if not all(
+        isinstance(value, bool)
+        for value in (console_enabled, color_enabled, file_enabled, delete_previous)
+    ):
+        raise PlanError("logging enable, color, file, and deletion settings must be boolean")
+    log_maximum_bytes = logging_raw.get("maximum_bytes", 4 * 1024 * 1024)
+    if (
+        not isinstance(log_maximum_bytes, int)
+        or isinstance(log_maximum_bytes, bool)
+        or not 1024 <= log_maximum_bytes <= 64 * 1024 * 1024
+    ):
+        raise PlanError("logging maximum_bytes must be an integer from 1024 to 67108864")
+    retention_days = logging_raw.get("retention_days", 30)
+    if (
+        not isinstance(retention_days, int)
+        or isinstance(retention_days, bool)
+        or not 0 <= retention_days <= 3650
+    ):
+        raise PlanError("logging retention_days must be an integer from 0 to 3650")
+
     collector_settings = raw.get("collectors", {})
     if not isinstance(collector_settings, dict) or not all(
             isinstance(key, str) and isinstance(value, dict)
@@ -432,6 +489,15 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             local_manifest_path=local_manifest_path,
             minimum_python=minimum_python,
             recommended_python=recommended_python,
+        ),
+        logging=LoggingSettings(
+            level=logging_level.upper(),
+            console_enabled=console_enabled,
+            color_enabled=color_enabled,
+            file_enabled=file_enabled,
+            maximum_bytes=log_maximum_bytes,
+            delete_previous=delete_previous,
+            retention_days=retention_days,
         ),
         collector_settings=collector_settings,
         migrated_from_schema=migrated_from_schema,

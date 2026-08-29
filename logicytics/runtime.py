@@ -42,9 +42,10 @@ from logicytics.contracts import (
 )
 from logicytics.discovery import CollectorCandidate
 from logicytics.errors import LogicyticsError
-from logicytics.logging import FileEventLogger
+from logicytics.logging import FileEventLogger, get_application_logger
 from logicytics.manifest import CollectorRecord, RunManifest, write_manifest, utc_now
 from logicytics.packaging import package_manifest
+from logicytics.output_layout import ensure_output_layout
 from logicytics.planner import RunPlan
 
 
@@ -599,6 +600,11 @@ class RunSupervisor:
             )
         if plan.request.max_workers > self.configuration.runtime.maximum_workers:
             raise ValueError("requested workers exceed configured maximum_workers")
+        output_layout = ensure_output_layout(self.configuration.runtime.output_root)
+        application_logger = get_application_logger(
+            output_layout.application_log,
+            self.configuration.logging,
+        )
         run_id = f"run-{uuid4().hex}"
         run_directory = self.configuration.runtime.output_root / run_id
         workspace_root = run_directory / "collectors"
@@ -620,6 +626,12 @@ class RunSupervisor:
         manifest.status = RunStatus.RUNNING
         write_manifest(manifest_path, manifest)
         run_logger.event("info", "run_started", collectors=len(plan.collectors))
+        application_logger.event(
+            "INFO",
+            "run_started",
+            run_id=run_id,
+            collectors=len(plan.collectors),
+        )
 
         records = {record.id: record for record in manifest.collectors}
         try:
@@ -655,12 +667,31 @@ class RunSupervisor:
                     package_path=str(package_path),
                     hash_path=str(hash_path),
                 )
+                application_logger.event(
+                    "INFO",
+                    "run_packaged",
+                    run_id=run_id,
+                    package_path=str(package_path),
+                )
             except (OSError, ValueError, zipfile.BadZipFile) as error:
                 manifest.status = RunStatus.FAILED
                 manifest.package = {"status": "failed", "error": f"{type(error).__name__}: {error}"}
                 run_logger.event("error", "run_packaging_failed", error_type=type(error).__name__)
+                application_logger.event(
+                    "ERROR",
+                    "run_packaging_failed",
+                    run_id=run_id,
+                    error_type=type(error).__name__,
+                )
         write_manifest(manifest_path, manifest)
         run_logger.event("info", "run_finished", status=manifest.status.value, artifacts=manifest.total_artifact_bytes)
+        application_logger.event(
+            "INFO",
+            "run_finished",
+            run_id=run_id,
+            status=manifest.status.value,
+            artifacts=manifest.total_artifact_bytes,
+        )
         if plan.request.post_run_action is not PostRunAction.NONE:
             self._execute_post_run_action(plan.request.post_run_action, manifest, run_logger)
         return RunOutcome(manifest=manifest, run_directory=run_directory, manifest_path=manifest_path)
