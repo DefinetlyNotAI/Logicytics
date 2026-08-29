@@ -59,6 +59,7 @@ class VolumeDetailsCollector(CoreCollector):
         """Declare the capability-free detailed volume artifact contract."""
         return CollectorMetadata(
             id="core.storage.volume_details", name="Volume details", version="4.0.0", specialty=Specialty.STORAGE,
+            output_media_types=("application/json",),
             description="Exports mounted drive type, filesystem, label, and capacity metadata.", author="Logicytics",
             supported_platforms=("win32",), default_profiles=("deep",), timeout_seconds=15,
             maximum_output_bytes=128 * 1024,

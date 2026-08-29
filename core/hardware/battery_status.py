@@ -24,6 +24,7 @@ class BatteryStatusCollector(CoreCollector):
         """Declare the subprocess-gated battery-status JSON artifact contract."""
         return CollectorMetadata(
             id="core.hardware.battery_status", name="Battery status", version="4.0.0", specialty=Specialty.HARDWARE,
+            output_media_types=("application/json",),
             description="Exports local battery name, status, charge, capacity, and estimated runtime metadata.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),

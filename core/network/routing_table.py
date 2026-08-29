@@ -33,6 +33,7 @@ class RoutingTableCollector(CoreCollector):
             name="Routing table",
             version="4.0.0",
             specialty=Specialty.NETWORK,
+            output_media_types=("text/plain",),
             description="Exports the local IPv4 and IPv6 routing tables without changing routes.",
             author="Logicytics",
             supported_platforms=("win32",),

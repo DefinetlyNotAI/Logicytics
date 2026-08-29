@@ -34,6 +34,7 @@ class WindowsFeaturesCollector(CoreCollector):
             name="Windows optional features",
             version="4.0.0",
             specialty=Specialty.HARDWARE,
+            output_media_types=("application/json",),
             description="Exports Windows optional-feature names and enabled states through PowerShell.",
             author="Logicytics",
             supported_platforms=("win32",),

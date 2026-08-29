@@ -20,6 +20,7 @@ class SshBackupCollector(CoreCollector):
         """Declare the explicit-consent SSH archive artifact contract."""
         return CollectorMetadata(
             id="core.ssh.ssh_backup", name="SSH directory backup", version="4.0.0", specialty=Specialty.SSH,
+            output_media_types=("application/zip",),
             description="Archives the current user's .ssh keys and configuration after explicit sensitive-data approval.",
             author="Logicytics", supported_platforms=("win32",),
             capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES, Capability.PRIVATE_KEYS),

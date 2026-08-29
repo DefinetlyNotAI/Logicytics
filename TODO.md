@@ -255,9 +255,9 @@ that fails any mandatory rule is not a collector and must not be launched.
 - [x] Require each collector to have one primary specialty. Related secondary
       categories may be declared as metadata but may not change the collector's
       identity.
-- [ ] Require the specialty to match the declared artifact types and the collector's
+- [x] Require the specialty to match the declared artifact types and the collector's
       documented responsibility.
-- [ ] Reject a collector whose name, metadata, class, or outputs claim one specialty
+- [x] Reject a collector whose name, metadata, class, or outputs claim one specialty
       while its implementation declares or performs an unrelated primary job.
 - [ ] Require a separate collector when a feature has a different permission model,
       timeout profile, sensitive-data classification, or output contract.

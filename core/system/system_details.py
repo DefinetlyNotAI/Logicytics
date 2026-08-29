@@ -33,6 +33,7 @@ class SystemDetailsCollector(CoreCollector):
             name="System details",
             version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("text/plain",),
             description="Exports the complete Windows systeminfo report as text.",
             author="Logicytics",
             supported_platforms=("win32",),

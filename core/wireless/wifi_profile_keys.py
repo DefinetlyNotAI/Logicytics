@@ -29,6 +29,7 @@ class WifiProfileKeysCollector(CoreCollector):
         return CollectorMetadata(
             id="core.wireless.wifi_profile_keys", name="Saved Wi-Fi profile keys", version="4.0.0",
             specialty=Specialty.WIRELESS,
+            output_media_types=("application/xml",),
             description="Exports saved Wi-Fi profile XML including key material after explicit sensitive-data approval.",
             author="Logicytics", supported_platforms=("win32",),
             capabilities=(Capability.SUBPROCESS, Capability.SENSITIVE_FILES),

@@ -28,6 +28,7 @@ class HklmBackupCollector(CoreCollector):
         return CollectorMetadata(
             id="core.registry.hklm_backup", name="HKLM registry backup", version="4.0.0",
             specialty=Specialty.REGISTRY,
+            output_media_types=("text/plain",),
             description="Exports the local HKLM hive as a .reg backup after explicit sensitive-data approval.",
             author="Logicytics", supported_platforms=("win32",),
             capabilities=(Capability.REGISTRY_READ, Capability.SUBPROCESS, Capability.SENSITIVE_FILES),

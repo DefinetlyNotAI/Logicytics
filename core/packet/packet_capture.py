@@ -49,6 +49,7 @@ class PacketCaptureCollector(CoreCollector):
         """Declare the explicitly approved packet-capture CSV artifact contract."""
         return CollectorMetadata(
             id="core.packet.packet_capture", name="IPv4 packet capture", version="4.0.0", specialty=Specialty.PACKET,
+            output_media_types=("text/csv",),
             description="Captures bounded IPv4 packet metadata without saving packet payloads.", author="Logicytics",
             supported_platforms=("win32",),
             capabilities=(Capability.NETWORK, Capability.PACKET_CAPTURE, Capability.ELEVATED_PRIVILEGES),

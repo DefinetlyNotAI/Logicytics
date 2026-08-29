@@ -64,6 +64,7 @@ class LogicalDrivesCollector(CoreCollector):
             name="Logical drives",
             version="4.0.0",
             specialty=Specialty.STORAGE,
+            output_media_types=("application/json",),
             description="Records mounted logical-drive types and aggregate capacity metadata.",
             author="Logicytics",
             supported_platforms=("win32",),

@@ -18,6 +18,7 @@ class DisplayAdaptersCollector(CoreCollector):
         """Declare the subprocess-gated display-adapter JSON artifact contract."""
         return CollectorMetadata(
             id="core.hardware.display_adapters", name="Display adapters", version="4.0.0", specialty=Specialty.HARDWARE,
+            output_media_types=("application/json",),
             description="Exports local display-adapter names, driver versions, resolution, and memory metadata.",
             author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("hardware_inventory",), default_profiles=("deep",), timeout_seconds=30,

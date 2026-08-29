@@ -40,6 +40,7 @@ class BitlockerVolumesCollector(CoreCollector):
             name="BitLocker volumes",
             version="4.0.0",
             specialty=Specialty.ENCRYPTION,
+            output_media_types=("application/json",),
             description="Exports local BitLocker volume metadata through read-only Get-BitLockerVolume.",
             author="Logicytics",
             supported_platforms=("win32",),

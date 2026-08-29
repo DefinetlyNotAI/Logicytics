@@ -22,6 +22,7 @@ class SysinternalsReportCollector(CoreCollector):
         return CollectorMetadata(
             id="core.diagnostics.sysinternals_report", name="Sysinternals report", version="4.0.0",
             specialty=Specialty.DIAGNOSTICS,
+            output_media_types=("text/plain",),
             description="Reports supported Sysinternals binary/archive state and consolidates available tool output.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),

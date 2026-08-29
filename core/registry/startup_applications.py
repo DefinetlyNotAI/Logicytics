@@ -46,6 +46,7 @@ class StartupApplicationsCollector(CoreCollector):
         return CollectorMetadata(
             id="core.registry.startup_applications", name="Startup applications", version="4.0.0",
             specialty=Specialty.REGISTRY,
+            output_media_types=("application/json",),
             description="Exports standard user and machine Run/RunOnce startup registry entries.", author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.REGISTRY_READ,),
             sensitive_data_categories=("system_configuration",),

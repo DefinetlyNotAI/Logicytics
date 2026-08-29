@@ -41,6 +41,7 @@ class MemoryMapCollector(CoreCollector):
         """Declare the bounded memory-region JSON artifact contract."""
         return CollectorMetadata(
             id="core.process.memory_map", name="Process memory map", version="4.0.0", specialty=Specialty.PROCESS,
+            output_media_types=("application/json",),
             description="Exports readable virtual-memory region addresses, sizes, permissions, paths, and process RSS.",
             author="Logicytics",
             supported_platforms=("win32",), sensitive_data_categories=("process_metadata",), default_profiles=("deep",),

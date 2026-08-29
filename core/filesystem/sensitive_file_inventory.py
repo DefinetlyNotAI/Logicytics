@@ -36,6 +36,7 @@ class SensitiveFileInventoryCollector(CoreCollector):
         return CollectorMetadata(
             id="core.filesystem.sensitive_file_inventory", name="Sensitive file inventory", version="4.0.0",
             specialty=Specialty.FILESYSTEM,
+            output_media_types=("application/octet-stream",),
             description="Finds and copies bounded supported files with sensitive-data keywords in their names.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),

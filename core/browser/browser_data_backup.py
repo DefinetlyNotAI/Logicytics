@@ -40,6 +40,7 @@ class BrowserDataBackupCollector(CoreCollector):
         return CollectorMetadata(
             id="core.browser.browser_data_backup", name="Browser data backup", version="4.0.0",
             specialty=Specialty.BROWSER,
+            output_media_types=("application/octet-stream",),
             description="Copies bounded local profile evidence from Edge, Chrome, Firefox, Opera, and Opera GX.",
             author="Logicytics", supported_platforms=("win32",),
             capabilities=(Capability.FILESYSTEM_READ, Capability.BROWSER_DATA, Capability.SENSITIVE_FILES),

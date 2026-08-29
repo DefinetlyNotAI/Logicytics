@@ -33,6 +33,7 @@ class InstalledDriversCollector(CoreCollector):
             name="Installed drivers",
             version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("text/csv",),
             description="Exports detailed Windows driver inventory information as CSV.",
             author="Logicytics",
             supported_platforms=("win32",),

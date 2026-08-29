@@ -27,6 +27,7 @@ class LocalAccountsCollector(CoreCollector):
             name="Local accounts",
             version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("application/json",),
             description="Exports local account names, SIDs, enabled state, descriptions, and login timestamps only.",
             author="Logicytics",
             supported_platforms=("win32",),

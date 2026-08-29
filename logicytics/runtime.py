@@ -493,6 +493,18 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                                 raise TypeError("collect() must return CollectorResult")
                             if result.artifacts != writer.artifacts:
                                 raise TypeError("collector result artifacts must exactly match registered artifacts")
+                            undeclared_media_types = sorted(
+                                {
+                                    artifact.media_type
+                                    for artifact in result.artifacts
+                                    if artifact.media_type not in metadata.output_media_types
+                                }
+                            )
+                            if undeclared_media_types:
+                                raise TypeError(
+                                    "collector registered undeclared output media types: "
+                                    f"{', '.join(undeclared_media_types)}"
+                                )
                             result = collector.finalize(context, result)
                             if not isinstance(result, CollectorResult):
                                 raise TypeError("finalize() must return CollectorResult")

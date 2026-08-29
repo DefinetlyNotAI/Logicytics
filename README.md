@@ -228,6 +228,12 @@ from `CoreCollector`, provide documented and typed `metadata`, `validate`,
 `collect`, and `cleanup` methods, and use a matching ID/specialty. Plugins follow
 the equivalent `PluginCollector` contract.
 
+Every collector explicitly declares the exact MIME types it can register.
+Preflight statically compares literal `register_file(..., media_type=...)` calls
+with that declaration, and isolated workers enforce the declaration again on
+the returned artifact catalog. The collector folder, ID, class, description,
+source category, and primary specialty therefore remain one coherent contract.
+
 Collectors may import the public collector contracts, but not CLI, planning,
 runtime, packaging, configuration, or public application-control services. Even
 with an approved subprocess capability, workers cannot invoke Logicytics, another

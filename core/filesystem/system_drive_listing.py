@@ -51,6 +51,7 @@ class SystemDriveListingCollector(CoreCollector):
         return CollectorMetadata(
             id="core.filesystem.system_drive_listing", name="System drive listing", version="4.0.0",
             specialty=Specialty.FILESYSTEM,
+            output_media_types=("text/plain",),
             description="Exports a configurable, bounded threaded recursive listing of the Windows system drive.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ,),

@@ -30,6 +30,7 @@ class BitlockerStatusCollector(CoreCollector):
             name="BitLocker status",
             version="4.0.0",
             specialty=Specialty.ENCRYPTION,
+            output_media_types=("text/plain",),
             description="Exports local drive BitLocker status through the read-only manage-bde command.",
             author="Logicytics",
             supported_platforms=("win32",),

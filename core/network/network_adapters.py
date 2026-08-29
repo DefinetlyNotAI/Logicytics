@@ -27,6 +27,7 @@ class NetworkAdaptersCollector(CoreCollector):
             name="Network adapters",
             version="4.0.0",
             specialty=Specialty.NETWORK,
+            output_media_types=("text/plain",),
             description="Captures local Windows IP configuration and adapter details through ipconfig.",
             author="Logicytics",
             supported_platforms=("win32",),

@@ -25,6 +25,7 @@ class EnvironmentPostureCollector(CoreCollector):
         return CollectorMetadata(
             id="core.system.environment_posture", name="Environment posture", version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("application/json",),
             description="Exports administrator state, UAC settings, and PowerShell execution policies.",
             author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("system_configuration",), default_profiles=("deep",),

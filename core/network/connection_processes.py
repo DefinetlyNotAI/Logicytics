@@ -56,6 +56,7 @@ class ConnectionProcessesCollector(CoreCollector):
             name="Connection process associations",
             version="4.0.0",
             specialty=Specialty.NETWORK,
+            output_media_types=("text/csv",),
             description="Correlates active Netstat TCP/UDP endpoints with local process names and PIDs.",
             author="Logicytics",
             supported_platforms=("win32",),

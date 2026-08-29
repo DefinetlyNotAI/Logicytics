@@ -32,6 +32,7 @@ class DefenderStatusCollector(CoreCollector):
             name="Microsoft Defender status",
             version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("application/json",),
             description="Exports installed Microsoft Defender engine, signature, and protection-state metadata.",
             author="Logicytics",
             supported_platforms=("win32",),

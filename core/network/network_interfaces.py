@@ -47,6 +47,7 @@ class NetworkInterfacesCollector(CoreCollector):
             name="Network interfaces",
             version="4.0.0",
             specialty=Specialty.NETWORK,
+            output_media_types=("application/json",),
             description="Exports IPv4 addresses, masks, broadcasts, link states, speeds, and duplex data.",
             author="Logicytics",
             supported_platforms=("win32",),

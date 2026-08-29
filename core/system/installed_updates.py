@@ -25,6 +25,7 @@ class InstalledUpdatesCollector(CoreCollector):
         return CollectorMetadata(
             id="core.system.installed_updates", name="Installed Windows updates", version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("application/json",),
             description="Exports local installed hotfix identifiers, descriptions, and install dates.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),

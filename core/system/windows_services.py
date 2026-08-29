@@ -24,6 +24,7 @@ class WindowsServicesCollector(CoreCollector):
         """Declare the subprocess-gated Windows-services JSON artifact contract."""
         return CollectorMetadata(
             id="core.system.windows_services", name="Windows services", version="4.0.0", specialty=Specialty.SYSTEM,
+            output_media_types=("application/json",),
             description="Exports local Windows service names, states, start modes, accounts, and executable paths.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),

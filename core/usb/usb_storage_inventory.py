@@ -83,6 +83,7 @@ class UsbStorageInventoryCollector(CoreCollector):
             name="USB storage inventory",
             version="4.0.0",
             specialty=Specialty.USB,
+            output_media_types=("application/json",),
             description="Reads USB storage device class, instance ID, friendly name, and last-write time from USBSTOR.",
             author="Logicytics",
             supported_platforms=("win32",),

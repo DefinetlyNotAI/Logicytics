@@ -83,6 +83,7 @@ class SystemInfoCollector(CoreCollector):
             name="System info",
             version="1.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("text/plain",),
             description="Creates a harmless text artifact for core tests.",
             author="tests",
             supported_platforms=("win32",),
@@ -116,7 +117,6 @@ def _plugin_collector_source() -> str:
         '            estimated_cost=EstimatedCost.LOW,\n'
         '            timeout_seconds=60,\n'
         '            maximum_output_bytes=100 * 1024 * 1024,\n'
-        '            output_media_types=("text/plain",),\n'
         '            minimum_contract_version="4.0",',
     )
 
@@ -923,6 +923,37 @@ class CoreFunctionalityTests(unittest.TestCase):
         self.assertEqual("evidence_graph", CollectorMetadata.from_dict(metadata, allow_custom_specialty=True).specialty)
         with self.assertRaises(ValueError):
             CollectorMetadata.from_dict(metadata)
+
+    def test_preflight_requires_exact_declared_artifact_media_types(self) -> None:
+        """A collector cannot disguise or omit the output contract used by registration."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            collector_path.write_text(
+                _COLLECTOR.replace(
+                    'output_media_types=("text/plain",)',
+                    'output_media_types=("application/json",)',
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertTrue(
+                any("include every" in error for error in report.invalid[0].static_errors),
+                report.invalid[0].static_errors,
+            )
+
+            collector_path.write_text(
+                _COLLECTOR.replace('            output_media_types=("text/plain",),\n', ""),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertTrue(
+                any("explicitly declare" in error for error in report.invalid[0].static_errors),
+                report.invalid[0].static_errors,
+            )
 
     def test_collector_metadata_rejects_invalid_identity_and_limits(self) -> None:
         """Collector metadata must be a complete typed declaration rather than free text."""
@@ -2235,6 +2266,9 @@ class CoreFunctionalityTests(unittest.TestCase):
             source = _COLLECTOR.replace(
                 "CollectorResult, CoreCollector, Specialty",
                 "CollectorResult, CoreCollector, EvidenceKind, Specialty",
+            ).replace(
+                'output_media_types=("text/plain",)',
+                'output_media_types=("text/plain", "application/octet-stream")',
             ).replace(
                 '        return CollectorResult.succeeded("test artifact created", (artifact,))',
                 '        raw = context.workspace / "source.bin"\n'

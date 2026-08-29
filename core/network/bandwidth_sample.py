@@ -35,6 +35,7 @@ class BandwidthSampleCollector(CoreCollector):
         return CollectorMetadata(
             id="core.network.bandwidth_sample", name="Network bandwidth sample", version="4.0.0",
             specialty=Specialty.NETWORK,
+            output_media_types=("application/json",),
             description="Calculates local per-interface average and peak bandwidth from adapter counter samples.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),

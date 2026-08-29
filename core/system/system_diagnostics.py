@@ -25,6 +25,7 @@ class SystemDiagnosticsCollector(CoreCollector):
         return CollectorMetadata(
             id="core.system.system_diagnostics", name="System diagnostics", version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("application/json",),
             description="Exports architecture, CPU, page-size, and boot-time diagnostics through Windows CIM.",
             author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("system_configuration",), default_profiles=("deep",),

@@ -23,6 +23,7 @@ class DnsCacheCollector(CoreCollector):
         """Declare the subprocess-gated sensitive DNS-cache artifact contract."""
         return CollectorMetadata(
             id="core.network.dns_cache", name="DNS resolver cache", version="4.0.0", specialty=Specialty.NETWORK,
+            output_media_types=("text/plain",),
             description="Exports local DNS resolver cache records through read-only ipconfig output.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),

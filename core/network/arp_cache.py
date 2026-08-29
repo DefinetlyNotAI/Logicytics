@@ -33,6 +33,7 @@ class ArpCacheCollector(CoreCollector):
             name="ARP cache",
             version="4.0.0",
             specialty=Specialty.NETWORK,
+            output_media_types=("text/plain",),
             description="Exports the local ARP cache without sending network traffic.",
             author="Logicytics",
             supported_platforms=("win32",),

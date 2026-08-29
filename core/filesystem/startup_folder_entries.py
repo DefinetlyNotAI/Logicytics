@@ -35,6 +35,7 @@ class StartupFolderEntriesCollector(CoreCollector):
             name="Startup folder entries",
             version="4.0.0",
             specialty=Specialty.FILESYSTEM,
+            output_media_types=("application/json",),
             description="Exports names, locations, sizes, and timestamps for up to 500 Startup-folder entries.",
             author="Logicytics",
             supported_platforms=("win32",),

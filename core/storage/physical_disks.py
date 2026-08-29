@@ -27,6 +27,7 @@ class PhysicalDisksCollector(CoreCollector):
             name="Physical disks",
             version="4.0.0",
             specialty=Specialty.STORAGE,
+            output_media_types=("application/json",),
             description="Exports local physical disk models, media types, interface types, and sizes.",
             author="Logicytics",
             supported_platforms=("win32",),

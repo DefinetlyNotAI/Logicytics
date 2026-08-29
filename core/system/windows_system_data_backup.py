@@ -21,6 +21,7 @@ class WindowsSystemDataBackupCollector(CoreCollector):
         return CollectorMetadata(
             id="core.system.windows_system_data_backup", name="Windows system-data backup", version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("application/octet-stream",),
             description="Copies bounded Group Policy, event-log, and Windows security-support evidence.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),

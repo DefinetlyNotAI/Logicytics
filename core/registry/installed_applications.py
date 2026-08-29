@@ -71,6 +71,7 @@ class InstalledApplicationsCollector(CoreCollector):
         return CollectorMetadata(
             id="core.registry.installed_applications", name="Installed applications", version="4.0.0",
             specialty=Specialty.REGISTRY,
+            output_media_types=("application/json",),
             description="Exports installed application names, versions, publishers, and install metadata from uninstall keys.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.REGISTRY_READ,),

@@ -34,6 +34,7 @@ class OperatingSystemCollector(CoreCollector):
             name="Operating system details",
             version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("application/json",),
             description="Exports detailed local Windows operating-system CIM information.",
             author="Logicytics",
             supported_platforms=("win32",),

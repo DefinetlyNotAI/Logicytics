@@ -24,6 +24,7 @@ class SystemInfoCollector(CoreCollector):
             name="System information",
             version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("application/json",),
             description="Collects a bounded operating-system and hardware inventory.",
             author="Logicytics",
             supported_platforms=("win32",),

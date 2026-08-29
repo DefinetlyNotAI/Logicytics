@@ -26,6 +26,7 @@ class DetailedProcessesCollector(CoreCollector):
             name="Detailed running processes",
             version="4.0.0",
             specialty=Specialty.PROCESS,
+            output_media_types=("text/csv",),
             description="Exports the verbose local Windows task list as CSV.",
             author="Logicytics",
             supported_platforms=("win32",),

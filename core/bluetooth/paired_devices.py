@@ -34,6 +34,7 @@ class PairedDevicesCollector(CoreCollector):
             name="Bluetooth devices",
             version="4.0.0",
             specialty=Specialty.BLUETOOTH,
+            output_media_types=("application/json",),
             description="Captures available Bluetooth Plug and Play device metadata through PowerShell.",
             author="Logicytics",
             supported_platforms=("win32",),

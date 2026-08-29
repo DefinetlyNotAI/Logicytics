@@ -46,6 +46,7 @@ class MemorySnapshotCollector(CoreCollector):
             name="Memory snapshot",
             version="4.0.0",
             specialty=Specialty.MEMORY,
+            output_media_types=("application/json",),
             description="Captures aggregate physical, virtual, and page-file memory statistics.",
             author="Logicytics",
             supported_platforms=("win32",),

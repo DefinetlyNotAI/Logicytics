@@ -23,6 +23,7 @@ class MediaBackupCollector(CoreCollector):
         """Declare the explicit-consent media backup artifact contract."""
         return CollectorMetadata(
             id="core.media.media_backup", name="Pictures and Videos backup", version="4.0.0", specialty=Specialty.MEDIA,
+            output_media_types=("application/octet-stream",),
             description="Copies bounded JPG, JPEG, PNG, and MP4 files from current-user Pictures and Videos folders.",
             author="Logicytics", supported_platforms=("win32",),
             capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),

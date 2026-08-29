@@ -30,6 +30,7 @@ class SecurityEventsCollector(CoreCollector):
         return CollectorMetadata(
             id="core.event_log.security_events", name="Security event log", version="4.0.0",
             specialty=Specialty.EVENT_LOG,
+            output_media_types=("text/csv",),
             description="Exports up to 1,000 local Windows Security events as CSV.", author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("event_logs",),

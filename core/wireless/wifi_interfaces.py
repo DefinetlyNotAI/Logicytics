@@ -34,6 +34,7 @@ class WifiInterfacesCollector(CoreCollector):
         return CollectorMetadata(
             id="core.wireless.wifi_interfaces", name="Wi-Fi interfaces", version="4.0.0",
             specialty=Specialty.WIRELESS,
+            output_media_types=("application/json",),
             description="Exports local Wi-Fi interface state and normalized interface names without key material.",
             author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("network_configuration",), default_profiles=("deep",),

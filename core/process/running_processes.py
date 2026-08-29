@@ -27,6 +27,7 @@ class RunningProcessesCollector(CoreCollector):
             name="Running processes",
             version="4.0.0",
             specialty=Specialty.PROCESS,
+            output_media_types=("text/csv",),
             description="Exports the non-verbose Windows Tasklist process inventory as CSV.",
             author="Logicytics",
             supported_platforms=("win32",),

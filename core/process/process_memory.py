@@ -24,6 +24,7 @@ class ProcessMemoryCollector(CoreCollector):
         """Declare the subprocess-gated process-memory JSON artifact contract."""
         return CollectorMetadata(
             id="core.process.process_memory", name="Process memory", version="4.0.0", specialty=Specialty.PROCESS,
+            output_media_types=("application/json",),
             description="Exports aggregate working-set, private, and virtual memory counters for local processes.",
             author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("process_metadata",), default_profiles=("deep",), timeout_seconds=60,

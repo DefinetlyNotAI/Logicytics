@@ -26,6 +26,7 @@ class ActiveConnectionsCollector(CoreCollector):
             name="Active network connections",
             version="4.0.0",
             specialty=Specialty.NETWORK,
+            output_media_types=("text/plain",),
             description="Exports active TCP/UDP endpoints, states, and owning PIDs from netstat.",
             author="Logicytics",
             supported_platforms=("win32",),

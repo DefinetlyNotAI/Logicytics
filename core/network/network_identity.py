@@ -29,6 +29,7 @@ class NetworkIdentityCollector(CoreCollector):
             name="Network identity",
             version="4.0.0",
             specialty=Specialty.NETWORK,
+            output_media_types=("application/json",),
             description="Records the local hostname and resolver-provided IP addresses without probing hosts.",
             author="Logicytics",
             supported_platforms=("win32",),

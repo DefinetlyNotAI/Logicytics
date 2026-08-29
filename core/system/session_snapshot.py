@@ -27,6 +27,7 @@ class SessionSnapshotCollector(CoreCollector):
             name="Session snapshot",
             version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("application/json",),
             description="Exports current user/SID, OS build, memory, language, host, time, and system-drive data.",
             author="Logicytics",
             supported_platforms=("win32",),

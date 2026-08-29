@@ -24,6 +24,7 @@ class ScheduledTasksCollector(CoreCollector):
         """Declare the subprocess-gated scheduled-task JSON artifact contract."""
         return CollectorMetadata(
             id="core.system.scheduled_tasks", name="Scheduled tasks", version="4.0.0", specialty=Specialty.SYSTEM,
+            output_media_types=("application/json",),
             description="Exports up to 1,000 local scheduled-task names, paths, authors, descriptions, and states.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),

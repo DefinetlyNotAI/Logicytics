@@ -28,6 +28,7 @@ class ApplicationEventsCollector(CoreCollector):
             name="Application event log",
             version="4.0.0",
             specialty=Specialty.EVENT_LOG,
+            output_media_types=("text/csv",),
             description="Exports up to 1,000 local Windows Application events as CSV.",
             author="Logicytics",
             supported_platforms=("win32",),

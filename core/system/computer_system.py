@@ -34,6 +34,7 @@ class ComputerSystemCollector(CoreCollector):
             name="Computer system",
             version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("application/json",),
             description="Exports local computer model, manufacturer, and processor-count CIM data.",
             author="Logicytics",
             supported_platforms=("win32",),

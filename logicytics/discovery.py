@@ -434,7 +434,8 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
     allowed = {
         "metadata", "validate", "prepare", "collect", "finalize", "cleanup", "estimate", "dependencies",
     }
-    if candidate.kind is CollectorKind.PLUGIN and "metadata" in methods:
+    metadata_calls: list[ast.Call] = []
+    if "metadata" in methods:
         metadata_calls = [
             node for node in ast.walk(methods["metadata"])
             if isinstance(node, ast.Call)
@@ -443,20 +444,64 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
                 or isinstance(node.func, ast.Attribute) and node.func.attr == "CollectorMetadata"
             )
         ]
+        if len(metadata_calls) != 1:
+            candidate.static_errors.append(
+                "metadata must construct one CollectorMetadata object directly"
+            )
+    if candidate.kind is CollectorKind.PLUGIN and "metadata" in methods:
         required_plugin_fields = {
             "capabilities", "privilege_level", "sensitive_data_categories", "network_access",
             "estimated_cost", "timeout_seconds", "maximum_output_bytes", "output_media_types",
             "minimum_contract_version",
         }
-        if len(metadata_calls) != 1:
-            candidate.static_errors.append("plugin metadata must construct one CollectorMetadata object directly")
-        else:
+        if len(metadata_calls) == 1:
             declared_fields = {keyword.arg for keyword in metadata_calls[0].keywords if keyword.arg is not None}
             missing_fields = sorted(required_plugin_fields - declared_fields)
             if missing_fields:
                 candidate.static_errors.append(
                     f"plugin metadata must explicitly declare: {', '.join(missing_fields)}"
                 )
+    if "collect" in methods and len(metadata_calls) == 1:
+        declared_keyword = next(
+            (keyword for keyword in metadata_calls[0].keywords if keyword.arg == "output_media_types"),
+            None,
+        )
+        if declared_keyword is None:
+            candidate.static_errors.append("metadata must explicitly declare output_media_types")
+        else:
+            try:
+                declared_media_types = set(ast.literal_eval(declared_keyword.value))
+            except (TypeError, ValueError):
+                candidate.static_errors.append("metadata output_media_types must be a literal tuple")
+            else:
+                registered_media_types: set[str] = set()
+                lifecycle_methods = [methods["collect"]]
+                if "finalize" in methods:
+                    lifecycle_methods.append(methods["finalize"])
+                for method in lifecycle_methods:
+                    for call in ast.walk(method):
+                        if not isinstance(call, ast.Call) or not (
+                            isinstance(call.func, ast.Attribute) and call.func.attr == "register_file"
+                        ):
+                            continue
+                        media_keyword = next(
+                            (keyword for keyword in call.keywords if keyword.arg == "media_type"),
+                            None,
+                        )
+                        if media_keyword is None:
+                            registered_media_types.add("application/octet-stream")
+                        elif isinstance(media_keyword.value, ast.Constant) and isinstance(
+                            media_keyword.value.value, str
+                        ):
+                            registered_media_types.add(media_keyword.value.value)
+                        else:
+                            candidate.static_errors.append(
+                                f"register_file media_type must be a literal string (line {call.lineno})"
+                            )
+                if not registered_media_types.issubset(declared_media_types):
+                    candidate.static_errors.append(
+                        "metadata output_media_types must include every registered artifact type"
+                    )
     unknown = sorted(set(methods) - allowed)
     if unknown:
         candidate.static_errors.append(f"unsupported public collector methods: {', '.join(unknown)}")

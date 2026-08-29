@@ -24,6 +24,7 @@ class FirewallProfilesCollector(CoreCollector):
         """Declare the subprocess-gated firewall-profile JSON artifact contract."""
         return CollectorMetadata(
             id="core.network.firewall_profiles", name="Firewall profiles", version="4.0.0", specialty=Specialty.NETWORK,
+            output_media_types=("application/json",),
             description="Exports local Domain, Private, and Public Windows firewall profile settings.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),

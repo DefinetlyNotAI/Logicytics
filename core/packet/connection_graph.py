@@ -23,6 +23,7 @@ class ConnectionGraphCollector(CoreCollector):
         """Declare the subprocess-gated network graph artifact contract."""
         return CollectorMetadata(
             id="core.packet.connection_graph", name="Connection graph", version="4.0.0", specialty=Specialty.PACKET,
+            output_media_types=("text/vnd.graphviz",),
             description="Exports a DOT source/destination graph with TCP or UDP protocol edge labels.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),

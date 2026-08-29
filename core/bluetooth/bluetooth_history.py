@@ -26,6 +26,7 @@ class BluetoothHistoryCollector(CoreCollector):
         return CollectorMetadata(
             id="core.bluetooth.bluetooth_history", name="Bluetooth history snapshot", version="4.0.0",
             specialty=Specialty.BLUETOOTH,
+            output_media_types=("application/json",),
             description="Exports a timestamped Bluetooth PnP snapshot; retained run packages provide historical evidence.",
             author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("device_identifiers",), default_profiles=("deep",), timeout_seconds=45,

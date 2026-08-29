@@ -32,6 +32,7 @@ class BluetoothAddressesCollector(CoreCollector):
         return CollectorMetadata(
             id="core.bluetooth.bluetooth_addresses", name="Bluetooth addresses", version="4.0.0",
             specialty=Specialty.BLUETOOTH,
+            output_media_types=("application/json",),
             description="Exports paired Bluetooth friendly names and address-like identifiers from PnP data.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),

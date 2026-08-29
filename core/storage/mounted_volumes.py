@@ -26,6 +26,7 @@ class MountedVolumesCollector(CoreCollector):
             name="Mounted volumes",
             version="4.0.0",
             specialty=Specialty.STORAGE,
+            output_media_types=("text/plain",),
             description="Exports Windows mounted volume GUID and mount-point mappings from mountvol.",
             author="Logicytics",
             supported_platforms=("win32",),

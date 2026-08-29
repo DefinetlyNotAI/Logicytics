@@ -29,6 +29,7 @@ class SystemDriveTreeCollector(CoreCollector):
         return CollectorMetadata(
             id="core.filesystem.system_drive_tree", name="System drive tree", version="4.0.0",
             specialty=Specialty.FILESYSTEM,
+            output_media_types=("text/plain",),
             description="Exports a configurable bounded recursive directory tree for the Windows system drive.",
             author="Logicytics",
             supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ,),

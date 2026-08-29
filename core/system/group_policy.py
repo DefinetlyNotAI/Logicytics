@@ -33,6 +33,7 @@ class GroupPolicyCollector(CoreCollector):
             name="Group policy result",
             version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("text/plain",),
             description="Exports the local Windows Group Policy Result summary through gpresult.",
             author="Logicytics",
             supported_platforms=("win32",),

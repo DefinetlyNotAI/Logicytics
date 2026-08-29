@@ -65,6 +65,7 @@ class BiosInfoCollector(CoreCollector):
             name="BIOS information",
             version="4.0.0",
             specialty=Specialty.SYSTEM,
+            output_media_types=("text/html",),
             description="Exports BIOS manufacturer, name, version, and release date as HTML.",
             author="Logicytics",
             supported_platforms=("win32",),

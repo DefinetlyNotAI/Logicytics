@@ -27,6 +27,7 @@ class AdapterStatisticsCollector(CoreCollector):
             name="Network adapter statistics",
             version="4.0.0",
             specialty=Specialty.NETWORK,
+            output_media_types=("application/json",),
             description="Exports per-interface network byte, packet, error, and discard counters.",
             author="Logicytics",
             supported_platforms=("win32",),

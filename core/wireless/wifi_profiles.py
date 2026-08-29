@@ -26,6 +26,7 @@ class WifiProfilesCollector(CoreCollector):
             name="Saved Wi-Fi profiles",
             version="4.0.0",
             specialty=Specialty.WIRELESS,
+            output_media_types=("text/plain",),
             description="Exports local saved Wi-Fi profile names without retrieving key material.",
             author="Logicytics",
             supported_platforms=("win32",),
