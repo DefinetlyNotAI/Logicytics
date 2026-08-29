@@ -764,9 +764,14 @@ class CoreFunctionalityTests(unittest.TestCase):
 
             collector_path.write_text(_COLLECTOR, encoding="utf-8")
             output = io.StringIO()
-            with patch("logicytics.cli._project_root", return_value=root), patch("sys.stdout", output):
-                exit_code = main(["run", "--default", "--acknowledge-authorization"])
+            with patch("logicytics.cli._project_root", return_value=root), patch(
+                "sys.stdout", output
+            ), patch("builtins.input", return_value="") as final_prompt:
+                exit_code = main(
+                    ["run", "--default", "--interactive", "--acknowledge-authorization"]
+                )
             self.assertEqual(0, exit_code, output.getvalue())
+            final_prompt.assert_called_once_with("Press Enter to exit...")
             self.assertIn("Collectors:", output.getvalue())
             self.assertIn("core.system.system_info status=succeeded duration_seconds=", output.getvalue())
             self.assertIn("summary=test artifact created", output.getvalue())

@@ -556,7 +556,7 @@ Windows platform allows.
 
 ## 1. Main engine and execution lifecycle
 
-- [ ] Provide a single main entry point that:
+- [x] Provide a single main entry point that:
   - [x] Parses command-line flags and validates their combinations.
   - [x] Handles special actions before collection starts.
   - [x] Checks privileges and relevant Windows prerequisites.
@@ -571,7 +571,7 @@ Windows platform allows.
   - [x] Produces a SHA-256 hash beside every package.
   - [x] Performs the requested shutdown or reboot action at the end.
   - [x] Handles Ctrl+C gracefully and attempts final packaging/cleanup.
-  - [ ] Offers a final exit prompt for interactive use.
+  - [x] Offers a final exit prompt for interactive use.
 - [x] Discover runnable files recursively from canonical `core/`, `plugins/`, and
       `MODS/` directories; the legacy CODE directory is intentionally retired.
 - [x] Support `.py`, `.ps1`, `.exe`, and `.bat` collector types.

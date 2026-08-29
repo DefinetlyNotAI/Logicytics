@@ -119,6 +119,8 @@ ZIP package and SHA-256 sidecar use the action, UTC request timestamp, and run
 ID, and are written into that run's `packages/` and `hashes/` directories;
 collector workspaces and `logs/` remain run-scoped. Explicit reruns use a
 `rerun-<utc>-run-<id>.zip` package identity.
+Add `--interactive` to `run` when a transient command window should pause on the
+final status; noninteractive and automated runs never prompt.
 
 `debug` writes redacted environment, preflight, Sysinternals, Python-support,
 version, and configured file-integrity diagnostics to

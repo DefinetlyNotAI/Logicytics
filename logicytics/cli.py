@@ -205,6 +205,11 @@ def _parser() -> argparse.ArgumentParser:
                 action="store_true",
                 help="Confirm you are authorized to collect the selected evidence.",
             )
+            subparser.add_argument(
+                "--interactive",
+                action="store_true",
+                help="Pause at the final status so an interactive command window remains visible.",
+            )
         if command == "update":
             subparser.add_argument("--apply", action="store_true",
                                    help="Explicitly run git pull after repository checks.")
@@ -428,7 +433,13 @@ def main(argv: list[str] | None = None) -> int:
                 f"SHA-256: {outcome.manifest.package.get('sha256_path', 'unavailable')}"
             )
         print(f"Run: {outcome.manifest_path}\nStatus: {outcome.manifest.status.value}")
-        return 0 if outcome.manifest.status.value == "succeeded" else 1
+        exit_code = 0 if outcome.manifest.status.value == "succeeded" else 1
+        if arguments.interactive:
+            try:
+                input("Press Enter to exit...")
+            except EOFError:
+                pass
+        return exit_code
     except (LogicyticsError, OSError, PermissionError, ValueError) as error:
         print(f"Error: {error}")
         return 2
