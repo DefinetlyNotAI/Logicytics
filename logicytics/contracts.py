@@ -51,6 +51,21 @@ class RunStatus(StrEnum):
     CANCELLED = "cancelled"
 
 
+class OutputPolicy(StrEnum):
+    """How a completed run publishes its evidence."""
+
+    PACKAGE = "package"
+    MANIFEST_ONLY = "manifest_only"
+
+
+class PostRunAction(StrEnum):
+    """An explicitly requested host action after durable run publication."""
+
+    NONE = "none"
+    REBOOT = "reboot"
+    SHUTDOWN = "shutdown"
+
+
 class EvidenceKind(StrEnum):
     """The package section that owns a registered evidence artifact."""
 
@@ -413,6 +428,8 @@ class RunRequest:
     approved_capabilities: tuple[Capability, ...] = ()
     performance_check: bool = False
     rerun_from: str | None = None
+    output_policy: OutputPolicy = OutputPolicy.PACKAGE
+    post_run_action: PostRunAction = PostRunAction.NONE
 
     def __post_init__(self) -> None:
         """Reject malformed selections and execution policy before planning."""
@@ -448,6 +465,12 @@ class RunRequest:
             raise ValueError("request approved_capabilities must be a tuple of Capability values")
         if len(set(self.approved_capabilities)) != len(self.approved_capabilities):
             raise ValueError("request approved_capabilities must not contain duplicates")
+        if not isinstance(self.output_policy, OutputPolicy):
+            raise ValueError("request output_policy must be an OutputPolicy value")
+        if not isinstance(self.post_run_action, PostRunAction):
+            raise ValueError("request post_run_action must be a PostRunAction value")
+        if self.post_run_action is not PostRunAction.NONE and self.output_policy is not OutputPolicy.PACKAGE:
+            raise ValueError("post-run actions require packaged output")
 
 
 class EventLogger(ABC):

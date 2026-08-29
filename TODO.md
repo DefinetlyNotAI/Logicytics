@@ -345,9 +345,10 @@ Windows platform allows.
 
 ### Replace the current architectural model
 
-- [ ] Replace global action/sub-action state with an immutable `RunRequest` that
+- [x] Replace global action/sub-action state with an immutable `RunRequest` that
       contains the selected profile, explicit collector selections, concurrency,
-      output policy, cancellation token, and post-run action.
+      output policy, and post-run action; keep the mutable cancellation handle in
+      the per-run `CollectorContext` rather than the immutable request.
 - [ ] Replace hard-coded filename lists and mode-specific branches with a typed
       collector registry. Each collector declares its ID, category, supported
       platforms, required privileges, estimated cost, dependencies, output types,
@@ -593,9 +594,9 @@ Windows platform allows.
 
 ### Post-run actions
 
-- [ ] `--reboot`: schedule a system reboot after packaging.
-- [ ] `--shutdown`: schedule a system shutdown after packaging.
-- [ ] Ensure post-run actions do not run prematurely during performance analysis.
+- [x] `--reboot`: schedule a system reboot after packaging.
+- [x] `--shutdown`: schedule a system shutdown after packaging.
+- [x] Ensure post-run actions do not run prematurely during performance analysis.
 
 ## 2. Command-line and interaction features
 

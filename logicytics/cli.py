@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 from logicytics.configuration import load_config
-from logicytics.contracts import Capability, RunRequest
+from logicytics.contracts import Capability, OutputPolicy, PostRunAction, RunRequest
 from logicytics.discovery import preflight
 from logicytics.environment import inspect_environment
 from logicytics.errors import LogicyticsError
@@ -83,6 +83,18 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
         approved_capabilities=tuple(Capability(value) for value in arguments.allow_capability),
         performance_check=performance_check,
         rerun_from=parent_run_id,
+        output_policy=(
+            OutputPolicy.MANIFEST_ONLY
+            if getattr(arguments, "no_package", False)
+            else OutputPolicy.PACKAGE
+        ),
+        post_run_action=(
+            PostRunAction.REBOOT
+            if getattr(arguments, "reboot", False)
+            else PostRunAction.SHUTDOWN
+            if getattr(arguments, "shutdown", False)
+            else PostRunAction.NONE
+        ),
     )
 
 
@@ -137,6 +149,22 @@ def _parser() -> argparse.ArgumentParser:
                 "--performance-check",
                 action="store_true",
                 help="Run serially and save per-collector duration measurements.",
+            )
+            subparser.add_argument(
+                "--no-package",
+                action="store_true",
+                help="Finalize the run manifest without creating a ZIP package.",
+            )
+            power_action = subparser.add_mutually_exclusive_group()
+            power_action.add_argument(
+                "--reboot",
+                action="store_true",
+                help="Schedule a reboot only after the run is packaged successfully.",
+            )
+            power_action.add_argument(
+                "--shutdown",
+                action="store_true",
+                help="Schedule a shutdown only after the run is packaged successfully.",
             )
             subparser.add_argument(
                 "--acknowledge-authorization",

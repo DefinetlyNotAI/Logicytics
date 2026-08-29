@@ -35,6 +35,8 @@ from logicytics.contracts import (
     CollectorResult,
     CollectorStatus,
     EvidenceKind,
+    OutputPolicy,
+    PostRunAction,
     ResourceClass,
     RunRequest,
     RunStatus,
@@ -134,6 +136,33 @@ def _delayed_collector_source(
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_post_run_actions_are_typed_exclusive_and_require_verified_packaging(self) -> None:
+        """Power actions remain explicit and cannot run before durable package publication."""
+        arguments = _parser().parse_args([
+            "run", "--shutdown", "--performance-check", "--acknowledge-authorization",
+        ])
+        request = _request(arguments, default_workers=4)
+        self.assertEqual(PostRunAction.SHUTDOWN, request.post_run_action)
+        self.assertEqual(OutputPolicy.PACKAGE, request.output_policy)
+        self.assertEqual(1, request.max_workers)
+        with self.assertRaises(SystemExit):
+            _parser().parse_args(["run", "--reboot", "--shutdown"])
+        with self.assertRaisesRegex(ValueError, "require packaged output"):
+            _request(_parser().parse_args(["run", "--reboot", "--no-package"]), default_workers=1)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            logger = FileEventLogger(Path(temporary) / "events.jsonl", run_id="run-" + "a" * 32)
+            manifest = type("Manifest", (), {
+                "status": RunStatus.SUCCEEDED,
+                "package": {"path": "evidence.zip", "sha256": "a" * 64},
+            })()
+            completed = subprocess.CompletedProcess(["shutdown"], 0, "", "")
+            with patch("logicytics.runtime.subprocess.run", return_value=completed) as command:
+                RunSupervisor._execute_post_run_action(PostRunAction.REBOOT, manifest, logger)
+                self.assertEqual("shutdown", command.call_args.args[0][0])
+                self.assertEqual("/r", command.call_args.args[0][1])
+                self.assertEqual("60", command.call_args.args[0][3])
+
     def test_preflight_cache_requires_source_interpreter_contract_and_configuration_identity(self) -> None:
         """Only an exact validation context may reuse an isolated runtime probe."""
         with tempfile.TemporaryDirectory() as temporary:

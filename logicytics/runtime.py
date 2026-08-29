@@ -31,11 +31,14 @@ from logicytics.contracts import (
     CollectorContext,
     CollectorResult,
     CollectorStatus,
+    OutputPolicy,
+    PostRunAction,
     ResourceClass,
     RunStatus,
     ValidationResult,
 )
 from logicytics.discovery import CollectorCandidate
+from logicytics.errors import LogicyticsError
 from logicytics.logging import FileEventLogger
 from logicytics.manifest import CollectorRecord, RunManifest, write_manifest, utc_now
 from logicytics.packaging import package_manifest
@@ -483,7 +486,11 @@ class RunSupervisor:
         manifest.finalize_status()
         if plan.request.performance_check:
             self._write_performance_report(run_directory, manifest)
-        if self.configuration.runtime.package_completed_runs:
+        should_package = (
+            self.configuration.runtime.package_completed_runs
+            and plan.request.output_policy is OutputPolicy.PACKAGE
+        )
+        if should_package:
             try:
                 package_path, hash_path = package_manifest(run_directory, manifest, manifest_path)
                 run_logger.event(
@@ -498,7 +505,39 @@ class RunSupervisor:
                 run_logger.event("error", "run_packaging_failed", error_type=type(error).__name__)
         write_manifest(manifest_path, manifest)
         run_logger.event("info", "run_finished", status=manifest.status.value, artifacts=manifest.total_artifact_bytes)
+        if plan.request.post_run_action is not PostRunAction.NONE:
+            self._execute_post_run_action(plan.request.post_run_action, manifest, run_logger)
         return RunOutcome(manifest=manifest, run_directory=run_directory, manifest_path=manifest_path)
+
+    @staticmethod
+    def _execute_post_run_action(
+            action: PostRunAction,
+            manifest: RunManifest,
+            run_logger: FileEventLogger,
+    ) -> None:
+        """Schedule an explicit Windows power action only after verified packaging."""
+        package = manifest.package or {}
+        if (
+                manifest.status is not RunStatus.SUCCEEDED
+                or not isinstance(package.get("path"), str)
+                or not isinstance(package.get("sha256"), str)
+        ):
+            raise LogicyticsError("post-run action requires a successful run and verified package")
+        flag = "/r" if action is PostRunAction.REBOOT else "/s"
+        try:
+            completed = subprocess.run(
+                ["shutdown", flag, "/t", "60", "/d", "p:0:0", "/c", "Logicytics run completed"],
+                capture_output=True,
+                check=False,
+                text=True,
+            )
+        except OSError as error:
+            raise LogicyticsError(f"unable to schedule {action.value}: {error}") from error
+        if completed.returncode != 0:
+            raise LogicyticsError(
+                f"unable to schedule {action.value}: {completed.stderr.strip() or completed.stdout.strip()}"
+            )
+        run_logger.event("warning", "post_run_action_scheduled", action=action.value, delay_seconds=60)
 
     @staticmethod
     def _write_performance_report(run_directory: Path, manifest: RunManifest) -> None:
