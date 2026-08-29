@@ -106,6 +106,8 @@ Run these from the repository root:
 
 ```powershell
 python -m logicytics preflight
+python -m logicytics debug
+python -m logicytics dev
 python -m logicytics plan --profile standard
 python -m logicytics run --profile standard --acknowledge-authorization
 ```
@@ -117,6 +119,13 @@ ZIP package and SHA-256 sidecar use the action, UTC request timestamp, and run
 ID, and are written into that run's `packages/` and `hashes/` directories;
 collector workspaces and `logs/` remain run-scoped. Explicit reruns use a
 `rerun-<utc>-run-<id>.zip` package identity.
+
+`debug` writes redacted environment, preflight, Sysinternals, Python-support,
+version, and configured file-integrity diagnostics to
+`output/logs/debug/debug.json`. `dev` compares the repository with the optional
+integrity manifest and checks source organization without running collectors.
+Manifest changes are opt-in: use `dev --write-manifest --next-version 4.1.0`, or
+`dev --interactive` to review status markers and confirm the write.
 
 Collectors that request additional access must be explicitly approved, for
 example:
@@ -180,6 +189,11 @@ engine-wide `runtime` options from per-collector `collectors` settings:
 {
   "schema_version": 4,
   "runtime": {"default_max_workers": 4, "maximum_workers": 8},
+  "maintenance": {
+    "local_manifest_path": "project.manifest.json",
+    "minimum_python": "3.11",
+    "recommended_python": "3.11"
+  },
   "collectors": {
     "core.filesystem.system_drive_tree": {"max_entries": 5000, "max_depth": 12},
     "core.process.memory_map": {"max_regions": 5000, "dump_directory": "memory_maps"}
@@ -191,6 +205,13 @@ Shipped filesystem, network, packet, sensitive-inventory, and metadata-only
 memory-map collector options are strictly typed and bounded before planning.
 Unknown engine fields, duplicate JSON keys, unsafe workspace paths, and invalid
 collector IDs fail closed; plugin-owned setting fields remain extensible.
+
+An optional remote integrity manifest requires both an HTTPS
+`remote_manifest_url` and a pinned lowercase `remote_manifest_sha256`. The exact
+downloaded bytes are authenticated before strict JSON parsing. Integrity
+manifests can contain only a schema version, project version, and file hashes;
+they cannot configure, enable, or add collectors, and collection never depends
+on the remote endpoint.
 
 Schema-version `3` JSON files are migrated in memory without modifying the source
 file. Legacy `workers`/`worker_count`, `max_workers`, `output_root`, and

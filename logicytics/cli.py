@@ -11,13 +11,22 @@ import subprocess
 import sys
 from pathlib import Path
 
-from logicytics.configuration import load_config
+from logicytics.configuration import AppConfig, load_config
 from logicytics.contracts import Capability, OutputPolicy, PostRunAction, RunRequest
 from logicytics.discovery import preflight
 from logicytics.environment import inspect_environment
 from logicytics.errors import LogicyticsError
 from logicytics.manifest import MANIFEST_SCHEMA_VERSION
 from logicytics.interaction import load_history, match_flag, record_match, usage_statistics, write_usage_graph
+from logicytics.maintenance import (
+    build_manifest,
+    compare_files,
+    developer_checks,
+    load_local_manifest,
+    local_version,
+    maintenance_diagnostics,
+    write_local_manifest,
+)
 from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.runtime import RunSupervisor
 from logicytics.sysinternals import ensure_sysinternals
@@ -109,7 +118,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--usage", action="store_true", help="Show local interaction statistics and create a usage graph.")
     parser.add_argument("--match", metavar="TEXT", help="Suggest the closest documented action for natural-language input.")
     subcommands = parser.add_subparsers(dest="command")
-    for command in ("preflight", "debug", "update", "plan", "run"):
+    for command in ("preflight", "debug", "update", "dev", "plan", "run"):
         subparser = subcommands.add_parser(command, help=f"Run the {command} action.")
         subparser.add_argument(
             "--profile",
@@ -204,7 +213,98 @@ def _parser() -> argparse.ArgumentParser:
                 action="store_true",
                 help="Run collectors sequentially and write a per-collector duration report.",
             )
+        if command == "dev":
+            subparser.add_argument(
+                "--write-manifest",
+                action="store_true",
+                help=(
+                    "Write the reviewed local integrity manifest; requires --next-version "
+                    "unless interactive."
+                ),
+            )
+            subparser.add_argument(
+                "--next-version",
+                help=(
+                    "Semantic version to validate and record in a newly written "
+                    "integrity manifest."
+                ),
+            )
+            subparser.add_argument(
+                "--interactive",
+                action="store_true",
+                help=(
+                    "Show contribution checks and prompt before changing the local "
+                    "integrity manifest."
+                ),
+            )
     return parser
+
+
+def _write_json(path: Path, payload: object) -> Path:
+    """Atomically write a human-readable JSON diagnostic artifact."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    temporary.replace(path)
+    return path
+
+
+def _status_marker(label: str, count: int) -> str:
+    """Return a colored interactive repository-status marker when a terminal supports it."""
+    color = "\033[32m" if count == 0 else "\033[33m"
+    reset = "\033[0m"
+    return f"{color}{label}: {count}{reset}" if sys.stdout.isatty() else f"{label}: {count}"
+
+
+def _run_developer_action(
+    root: Path, configuration: AppConfig, arguments: argparse.Namespace
+) -> int:
+    """Run read-only contribution checks and an explicitly confirmed manifest update."""
+    settings = configuration.maintenance
+    existing = load_local_manifest(root, settings)
+    comparison = (
+        compare_files(root, settings, existing)
+        if existing
+        else {"missing": [], "modified": [], "extra": [], "unchanged": []}
+    )
+    checks = developer_checks(root, settings)
+    next_version = arguments.next_version
+    write_requested = arguments.write_manifest
+    if arguments.interactive:
+        print("Contribution and repository organization checks")
+        for name in ("missing", "modified", "extra", "unchanged"):
+            print(_status_marker(name.title(), len(comparison[name])))
+        organization_checks = (
+            "naming_violations",
+            "misplaced_python",
+            "missing_module_docstrings",
+            "crowded_modules",
+        )
+        for name in organization_checks:
+            print(_status_marker(name.replace("_", " ").title(), len(checks[name])))
+        if next_version is None:
+            entered = input(f"Next semantic version [{local_version(root)}]: ").strip()
+            next_version = entered or local_version(root)
+        answer = input("Write the reviewed integrity manifest? [y/N]: ").strip().casefold()
+        write_requested = answer in {"y", "yes"}
+    if arguments.write_manifest and next_version is None:
+        raise ValueError("--write-manifest requires --next-version unless --interactive is used")
+    manifest_path: str | None = None
+    if write_requested:
+        if next_version is None:
+            raise ValueError("a semantic next version is required to write the integrity manifest")
+        manifest = build_manifest(root, settings, next_version)
+        manifest_path = str(write_local_manifest(root, settings, manifest))
+    payload = {
+        "checks": checks,
+        "comparison": comparison,
+        "current_version": local_version(root),
+        "existing_manifest_version": existing.version if existing else None,
+        "manifest_written": manifest_path,
+        "next_version": next_version,
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -277,7 +377,11 @@ def main(argv: list[str] | None = None) -> int:
                            "cpu_count": os.cpu_count()},
                 "sysinternals": ensure_sysinternals(root).to_dict(),
                 "preflight": {"valid_collectors": len(report.valid), "invalid_collectors": len(report.invalid)},
+                "maintenance": maintenance_diagnostics(root, configuration.maintenance),
             }
+            debug_path = configuration.runtime.output_root.parent / "logs" / "debug" / "debug.json"
+            payload["debug_log"] = str(debug_path)
+            _write_json(debug_path, payload)
             print(json.dumps(payload, indent=2, sort_keys=True))
             return 0 if not report.invalid else 2
         if arguments.command == "update":
@@ -294,6 +398,8 @@ def main(argv: list[str] | None = None) -> int:
                                 "stderr": pulled.stderr})
             print(json.dumps(payload, indent=2, sort_keys=True))
             return 0 if not arguments.apply or payload.get("returncode") == 0 else 1
+        if arguments.command == "dev":
+            return _run_developer_action(root, configuration, arguments)
         plan = build_plan(report, _request(arguments, configuration.runtime.default_max_workers))
         if arguments.command == "plan":
             print("\n".join(candidate.metadata.id for candidate in plan.collectors if candidate.metadata))
@@ -323,7 +429,7 @@ def main(argv: list[str] | None = None) -> int:
             )
         print(f"Run: {outcome.manifest_path}\nStatus: {outcome.manifest.status.value}")
         return 0 if outcome.manifest.status.value == "succeeded" else 1
-    except (LogicyticsError, PermissionError, ValueError) as error:
+    except (LogicyticsError, OSError, PermissionError, ValueError) as error:
         print(f"Error: {error}")
         return 2
 

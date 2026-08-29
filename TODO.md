@@ -414,7 +414,7 @@ Windows platform allows.
       checksums, enforce size limits, and register artifacts.
 - [x] **Packaging layer:** consume the finalized artifact catalog and create ZIP,
       hash, manifest, and summary outputs.
-- [ ] **Maintenance layer:** keep update, debug, developer checks, and usage
+- [x] **Maintenance layer:** keep update, debug, developer checks, and usage
       analytics from being coupled to normal collection.
 
 ### Make collection safe, bounded, and observable
@@ -466,9 +466,9 @@ Windows platform allows.
       with documented collector membership.
 - [x] Allow explicit include/exclude collector selections to override a profile.
 - [x] Version the configuration schema and migrate older configuration files.
-- [ ] Keep remote configuration optional, authenticated/validated, and out of the
+- [x] Keep remote configuration optional, authenticated/validated, and out of the
       critical local collection path.
-- [ ] Never let a remote manifest silently add a collector to a user's run.
+- [x] Never let a remote manifest silently add a collector to a user's run.
 
 ### Improve the extension model
 
@@ -606,7 +606,7 @@ Windows platform allows.
 - [x] Provide descriptive help text for every flag.
 - [x] Support the current action flags: `default`, `threaded`, `modded`, `depth`,
       `nopy`, `minimal`, `performance-check`, and `usage`.
-- [ ] Support side actions: `debug`, `update`, and `dev`.
+- [x] Support side actions: `debug`, `update`, and `dev`.
 - [x] Provide action/sub-action exclusivity validation and clear invalid-combination
       errors.
 - [ ] Provide colored console output for status, warnings, errors, and prompts.
@@ -657,7 +657,7 @@ Windows platform allows.
 - [ ] Load `config.ini` from the project CODE directory.
 - [ ] Expose debug level, version, current file manifest, log retention, worker
       count, preference persistence, and all collector settings.
-- [ ] Support remote configuration retrieval for update/integrity checks.
+- [x] Support remote configuration retrieval for update/integrity checks.
 - [ ] Keep configuration parsing available to every collector through the package.
 
 ### Logging
@@ -674,7 +674,7 @@ Windows platform allows.
 - [x] Provide an exception helper that logs and raises a requested exception type.
 - [x] Provide a deprecation decorator with removal version, reason, and optional
       stack trace.
-- [ ] Preserve a dedicated DEBUG log and diagnostic context for `--debug`.
+- [x] Preserve a dedicated DEBUG log and diagnostic context for `--debug`.
 
 ### Output and packaging
 
@@ -817,15 +817,15 @@ appropriate default/deep/non-Python mode.
 
 ### Debugger (`--debug`)
 
-- [ ] Fetch the remote configuration manifest.
-- [ ] Compare local and remote versions, including snapshot-version handling.
-- [ ] Compare the local file tree to the configured required-file manifest.
-- [ ] Report missing and extra files.
-- [ ] Check Sysinternals archive/binary state.
+- [x] Fetch the remote configuration manifest.
+- [x] Compare local and remote versions, including snapshot-version handling.
+- [x] Compare the local file tree to the configured required-file manifest.
+- [x] Report missing and extra files.
+- [x] Check Sysinternals archive/binary state.
 - [x] Report admin/UAC state and PowerShell execution policy.
 - [x] Report Python, psutil, executable, prefix, virtual-environment, CPU, and
       logging context.
-- [ ] Report whether the running Python version is recommended, supported, or
+- [x] Report whether the running Python version is recommended, supported, or
       incompatible.
 - [x] Write diagnostic output to a dedicated debug log.
 
@@ -840,14 +840,14 @@ appropriate default/deep/non-Python mode.
 
 ### Developer action (`--dev`)
 
-- [ ] Present contribution and repository-organization checks interactively.
+- [x] Present contribution and repository-organization checks interactively.
 - [ ] Check naming conventions, CODE placement, documentation/docstrings, and
       one-main-feature-per-file organization.
-- [ ] Compare current files against the configured manifest.
-- [ ] Display added, removed, and unchanged files with colored status markers.
+- [x] Compare current files against the configured manifest.
+- [x] Display added, removed, and unchanged files with colored status markers.
 - [ ] Update the manifest in `config.ini` after confirmation.
-- [ ] Prompt for and validate the next semantic version.
-- [ ] Keep excluded history/cache/Sysinternals files out of manifest comparisons.
+- [x] Prompt for and validate the next semantic version.
+- [x] Keep excluded history/cache/Sysinternals files out of manifest comparisons.
 
 ## 6. MODS extension system
 

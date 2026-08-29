@@ -21,11 +21,15 @@ _COLLECTOR_ID = re.compile(
     r"^(?:core\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*|(?:plugin|mod)\.[a-z][a-z0-9_]*)$"
 )
 _SETTING_NAME = re.compile(r"^[a-z][a-z0-9_]*$")
-_ROOT_FIELDS = frozenset({"schema_version", "runtime", "interaction", "collectors"})
+_ROOT_FIELDS = frozenset({"schema_version", "runtime", "interaction", "maintenance", "collectors"})
 _RUNTIME_FIELDS = frozenset({
     "output_root", "default_max_workers", "maximum_workers", "package_completed_runs", "maximum_run_output_bytes",
 })
 _INTERACTION_FIELDS = frozenset({"history_enabled", "similarity_threshold", "model_name", "model_debug"})
+_MAINTENANCE_FIELDS = frozenset({
+    "remote_manifest_url", "remote_manifest_sha256", "local_manifest_path",
+    "minimum_python", "recommended_python",
+})
 _LEGACY_ROOT_FIELDS = _ROOT_FIELDS.union({
     "collector_settings", "workers", "worker_count", "max_workers", "output_root",
     "package_completed_runs", "maximum_run_output_bytes",
@@ -188,6 +192,7 @@ def _migrate_v3_configuration(raw: Mapping[str, Any], project_root: Path) -> dic
         "schema_version": SCHEMA_VERSION,
         "runtime": runtime,
         "interaction": raw.get("interaction", {}),
+        "maintenance": raw.get("maintenance", {}),
         "collectors": collectors,
     }
 
@@ -214,12 +219,24 @@ class InteractionSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class MaintenanceSettings:
+    """Optional integrity sources and supported Python policy."""
+
+    remote_manifest_url: str | None = None
+    remote_manifest_sha256: str | None = None
+    local_manifest_path: Path = Path("project.manifest.json")
+    minimum_python: str = "3.11"
+    recommended_python: str = "3.11"
+
+
+@dataclass(frozen=True, slots=True)
 class AppConfig:
     """Validated settings loaded from an optional JSON configuration file."""
 
     schema_version: int
     runtime: RuntimeSettings
     interaction: InteractionSettings = field(default_factory=InteractionSettings)
+    maintenance: MaintenanceSettings = field(default_factory=MaintenanceSettings)
     collector_settings: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
     migrated_from_schema: int | None = None
 
@@ -231,12 +248,14 @@ class AppConfig:
         """Return a JSON-safe, non-secret configuration snapshot."""
         data = asdict(self)
         data["runtime"]["output_root"] = str(self.runtime.output_root)
+        data["maintenance"]["local_manifest_path"] = str(self.maintenance.local_manifest_path)
         return redact_mapping(data)
 
     def fingerprint(self) -> str:
         """Hash the complete validated configuration without persisting its secrets."""
         data = asdict(self)
         data["runtime"]["output_root"] = str(self.runtime.output_root.resolve())
+        data["maintenance"]["local_manifest_path"] = str(self.maintenance.local_manifest_path)
         serialized = json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
         return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
@@ -333,6 +352,58 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     if not isinstance(model_name, str) or not model_name.strip() or any(char in model_name for char in "\r\n"):
         raise PlanError("interaction model_name must be a non-empty single-line string")
 
+    maintenance_raw = raw.get("maintenance", {})
+    if not isinstance(maintenance_raw, dict):
+        raise PlanError("maintenance configuration must be an object")
+    unknown_maintenance = sorted(set(maintenance_raw) - _MAINTENANCE_FIELDS)
+    if unknown_maintenance:
+        raise PlanError(
+            "maintenance configuration contains unsupported settings: "
+            f"{', '.join(unknown_maintenance)}"
+        )
+    remote_url = maintenance_raw.get("remote_manifest_url")
+    remote_sha256 = maintenance_raw.get("remote_manifest_sha256")
+    if (remote_url is None) != (remote_sha256 is None):
+        raise PlanError("remote manifest URL and SHA-256 must be configured together")
+    if remote_url is not None and (
+        not isinstance(remote_url, str)
+        or not remote_url.startswith("https://")
+        or "\n" in remote_url
+    ):
+        raise PlanError("remote_manifest_url must be an HTTPS URL")
+    if remote_sha256 is not None and (
+        not isinstance(remote_sha256, str)
+        or re.fullmatch(r"[0-9a-f]{64}", remote_sha256) is None
+    ):
+        raise PlanError("remote_manifest_sha256 must be a lowercase SHA-256 digest")
+    local_manifest_value = maintenance_raw.get("local_manifest_path", "project.manifest.json")
+    if not isinstance(local_manifest_value, str) or not local_manifest_value.strip():
+        raise PlanError("local_manifest_path must be a non-empty relative path")
+    local_manifest_path = Path(local_manifest_value)
+    if (
+        local_manifest_path.is_absolute()
+        or local_manifest_path.drive
+        or ".." in local_manifest_path.parts
+    ):
+        raise PlanError("local_manifest_path must remain inside the project")
+    version_pattern = re.compile(r"^\d+\.\d+$")
+    minimum_python = maintenance_raw.get("minimum_python", "3.11")
+    recommended_python = maintenance_raw.get("recommended_python", "3.11")
+    if (
+        not isinstance(minimum_python, str)
+        or version_pattern.fullmatch(minimum_python) is None
+    ):
+        raise PlanError("minimum_python must use major.minor form")
+    if (
+        not isinstance(recommended_python, str)
+        or version_pattern.fullmatch(recommended_python) is None
+    ):
+        raise PlanError("recommended_python must use major.minor form")
+    if tuple(map(int, recommended_python.split("."))) < tuple(
+        map(int, minimum_python.split("."))
+    ):
+        raise PlanError("recommended_python must not be older than minimum_python")
+
     collector_settings = raw.get("collectors", {})
     if not isinstance(collector_settings, dict) or not all(
             isinstance(key, str) and isinstance(value, dict)
@@ -354,6 +425,13 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             similarity_threshold=float(similarity_threshold),
             model_name=model_name,
             model_debug=model_debug,
+        ),
+        maintenance=MaintenanceSettings(
+            remote_manifest_url=remote_url,
+            remote_manifest_sha256=remote_sha256,
+            local_manifest_path=local_manifest_path,
+            minimum_python=minimum_python,
+            recommended_python=recommended_python,
         ),
         collector_settings=collector_settings,
         migrated_from_schema=migrated_from_schema,

@@ -17,7 +17,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import FrozenInstanceError
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from logicytics import packaging
 from logicytics import load_configuration, plan_run, query_run, read_artifact, run_collection
@@ -28,8 +28,16 @@ from logicytics.file_listing import list_files
 from logicytics.logging import FileEventLogger, deprecated, raise_logged, timed
 from logicytics.interaction import load_history, match_flag, usage_statistics
 from logicytics.manifest import write_manifest
+from logicytics.maintenance import (
+    build_manifest,
+    compare_files,
+    compare_versions,
+    fetch_remote_manifest,
+    project_files,
+    write_local_manifest,
+)
 from logicytics.sysinternals import ensure_sysinternals
-from logicytics.configuration import default_config, load_config
+from logicytics.configuration import MaintenanceSettings, default_config, load_config
 from logicytics.contracts import (
     Artifact,
     Capability,
@@ -183,6 +191,155 @@ def _delayed_collector_source(
 
 
 class CoreFunctionalityTests(unittest.TestCase):
+    def test_maintenance_configuration_requires_pinned_https_and_python_order(
+        self,
+    ) -> None:
+        """Integrity endpoints and Python policy fail closed during configuration loading."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config = root / "logicytics.json"
+            valid = {
+                "schema_version": 4,
+                "maintenance": {
+                    "remote_manifest_url": "https://example.invalid/project.manifest.json",
+                    "remote_manifest_sha256": "a" * 64,
+                    "local_manifest_path": "integrity/project.json",
+                    "minimum_python": "3.11",
+                    "recommended_python": "3.12",
+                },
+            }
+            config.write_text(json.dumps(valid), encoding="utf-8")
+            loaded = load_config(root, config)
+            self.assertEqual(
+                Path("integrity/project.json"), loaded.maintenance.local_manifest_path
+            )
+            self.assertEqual("3.12", loaded.maintenance.recommended_python)
+
+            for mutation in (
+                {"remote_manifest_url": "http://example.invalid/project.json"},
+                {"remote_manifest_sha256": None},
+                {"local_manifest_path": "../escape.json"},
+                {"minimum_python": "3.12", "recommended_python": "3.11"},
+            ):
+                invalid = json.loads(json.dumps(valid))
+                invalid["maintenance"].update(mutation)
+                config.write_text(json.dumps(invalid), encoding="utf-8")
+                with self.subTest(mutation=mutation), self.assertRaises(PlanError):
+                    load_config(root, config)
+
+    def test_authenticated_remote_manifest_is_strict_data_only_configuration(
+        self,
+    ) -> None:
+        """Pinned HTTPS bytes are accepted, while unpinned or execution-bearing data is rejected."""
+        payload = json.dumps(
+            {
+                "schema_version": 1,
+                "version": "4.1.0-snapshot.2",
+                "files": {"logicytics/cli.py": "a" * 64},
+            }
+        ).encode("utf-8")
+        settings = MaintenanceSettings(
+            remote_manifest_url="https://example.invalid/project.manifest.json",
+            remote_manifest_sha256=hashlib.sha256(payload).hexdigest(),
+        )
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = payload
+        with patch("logicytics.maintenance.urllib.request.urlopen", return_value=response):
+            manifest = fetch_remote_manifest(settings)
+        self.assertIsNotNone(manifest)
+        self.assertEqual("4.1.0-snapshot.2", manifest.version)
+
+        tampered = MaintenanceSettings(
+            remote_manifest_url=settings.remote_manifest_url,
+            remote_manifest_sha256="0" * 64,
+        )
+        with patch("logicytics.maintenance.urllib.request.urlopen", return_value=response):
+            with self.assertRaisesRegex(ValueError, "does not match"):
+                fetch_remote_manifest(tampered)
+
+        execution_payload = json.dumps(
+            {
+                "schema_version": 1,
+                "version": "4.1.0",
+                "files": {},
+                "collectors": ["remote.code"],
+            }
+        ).encode("utf-8")
+        execution_response = MagicMock()
+        execution_response.__enter__.return_value.read.return_value = execution_payload
+        execution_settings = MaintenanceSettings(
+            remote_manifest_url=settings.remote_manifest_url,
+            remote_manifest_sha256=hashlib.sha256(execution_payload).hexdigest(),
+        )
+        with patch(
+            "logicytics.maintenance.urllib.request.urlopen",
+            return_value=execution_response,
+        ):
+            with self.assertRaisesRegex(ValueError, "only schema_version"):
+                fetch_remote_manifest(execution_settings)
+
+    def test_integrity_manifest_comparison_and_snapshot_version_ordering(self) -> None:
+        """Developer integrity reports file states and compare snapshots semantically."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            settings = MaintenanceSettings()
+            (root / "same.txt").write_text("same", encoding="utf-8")
+            (root / "changed.txt").write_text("before", encoding="utf-8")
+            (root / "removed.txt").write_text("remove", encoding="utf-8")
+            manifest = build_manifest(root, settings, "4.1.0-snapshot.2")
+            write_local_manifest(root, settings, manifest)
+            (root / "changed.txt").write_text("after", encoding="utf-8")
+            (root / "removed.txt").unlink()
+            (root / "added.txt").write_text("add", encoding="utf-8")
+            comparison = compare_files(root, settings, manifest)
+            self.assertEqual(["removed.txt"], comparison["missing"])
+            self.assertEqual(["changed.txt"], comparison["modified"])
+            self.assertEqual(["added.txt"], comparison["extra"])
+            self.assertEqual(["same.txt"], comparison["unchanged"])
+            self.assertEqual("behind", compare_versions("4.1.0-snapshot.2", "4.1.0"))
+            self.assertEqual(
+                "behind", compare_versions("4.1.0-snapshot.2", "4.1.0-snapshot.10")
+            )
+            cache = root / ".pytest_cache" / "ignored.txt"
+            cache.parent.mkdir()
+            cache.write_text("ignored", encoding="utf-8")
+            tool = root / "tools" / "Sysinternals" / "ignored.exe"
+            tool.parent.mkdir(parents=True)
+            tool.write_bytes(b"ignored")
+            names = {path.relative_to(root).as_posix() for path in project_files(root, settings)}
+            self.assertNotIn(".pytest_cache/ignored.txt", names)
+            self.assertNotIn("tools/Sysinternals/ignored.exe", names)
+
+    def test_dev_writes_explicit_manifest_and_debug_persists_diagnostics(self) -> None:
+        """Side actions remain separate from collection and write only their dedicated artifacts."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "pyproject.toml").write_text(
+                '[project]\nname = "fixture"\nversion = "4.0.0"\n',
+                encoding="utf-8",
+            )
+            with patch("logicytics.cli._project_root", return_value=root), patch(
+                "sys.stdout", new_callable=io.StringIO
+            ):
+                self.assertEqual(0, main(["dev", "--write-manifest", "--next-version", "4.1.0"]))
+            manifest_path = root / "project.manifest.json"
+            self.assertTrue(manifest_path.is_file())
+            manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual("4.1.0", manifest_payload["version"])
+
+            with patch("logicytics.cli._project_root", return_value=root), patch(
+                "sys.stdout", new_callable=io.StringIO
+            ):
+                self.assertEqual(0, main(["debug"]))
+            debug_path = root / "output" / "logs" / "debug" / "debug.json"
+            debug = json.loads(debug_path.read_text(encoding="utf-8"))
+            self.assertEqual("4.0.0", debug["maintenance"]["local_version"])
+            self.assertIn(
+                debug["maintenance"]["python_support"]["status"],
+                {"recommended", "supported", "incompatible"},
+            )
+            self.assertEqual("missing", debug["sysinternals"]["status"])
+
     def test_mods_require_sidecars_and_run_as_isolated_registered_artifacts(self) -> None:
         """Legacy scripts enter the pipeline only through typed metadata and worker isolation."""
         with tempfile.TemporaryDirectory() as temporary:
