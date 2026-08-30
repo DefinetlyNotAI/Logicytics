@@ -5,7 +5,10 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from enum import Enum
 from types import MappingProxyType
-from typing import Mapping
+from typing import Iterable, Mapping
+
+from logicytics.contracts import CollectorKind
+from logicytics.discovery import CollectorCandidate
 
 
 class ExecutionStrategy(str, Enum):
@@ -100,8 +103,28 @@ def resolve_execution_mode(
         raise ValueError(f"unknown execution mode: {name}") from error
 
 
-def mode_matrix() -> list[dict[str, object]]:
-    """Return a stable JSON-ready mode inclusion and scheduling matrix."""
+def _candidate_modes(candidate: CollectorCandidate) -> tuple[str, ...]:
+    """Return every named mode that selects one validated collector by default."""
+    if candidate.metadata is None:
+        return ()
+    metadata = candidate.metadata
+    selected: list[str] = []
+    for mode in EXECUTION_MODES.values():
+        if candidate.kind is CollectorKind.MOD:
+            enabled = mode.enable_mods and not (
+                mode.non_python_only and candidate.execution_type == "mod_python"
+            )
+        elif candidate.kind is CollectorKind.PLUGIN:
+            enabled = False
+        else:
+            enabled = not mode.non_python_only and mode.profile in metadata.default_profiles
+        if enabled:
+            selected.append(mode.name)
+    return tuple(selected)
+
+
+def mode_matrix(candidates: Iterable[CollectorCandidate] = ()) -> dict[str, object]:
+    """Return the versioned mode definitions and complete collector inclusion matrix."""
     aliases_by_mode = {
         name: sorted(
             f"--{flag.removesuffix('_mode').replace('_', '-')}"
@@ -110,11 +133,71 @@ def mode_matrix() -> list[dict[str, object]]:
         )
         for name in EXECUTION_MODES
     }
-    return [
+    ordered_candidates = sorted(
+        candidates,
+        key=lambda candidate: (
+            candidate.metadata.id if candidate.metadata is not None else candidate.selection_id,
+            str(candidate.path),
+        ),
+    )
+    collector_rows = []
+    memberships: dict[str, list[str]] = {name: [] for name in EXECUTION_MODES}
+    for candidate in ordered_candidates:
+        collector_id = candidate.metadata.id if candidate.metadata is not None else candidate.selection_id
+        assigned_modes = _candidate_modes(candidate)
+        for mode_name in assigned_modes:
+            memberships[mode_name].append(collector_id)
+        errors = [*candidate.static_errors]
+        if candidate.runtime_error:
+            errors.append(candidate.runtime_error)
+        collector_rows.append({
+            "id": collector_id,
+            "kind": candidate.kind.value,
+            "valid": candidate.valid,
+            "modes": list(assigned_modes),
+            "manual_only": candidate.valid and not assigned_modes,
+            "execution_type": candidate.execution_type,
+            "validation_errors": errors,
+        })
+    modes = [
         {
             **asdict(mode),
             "strategy": mode.strategy.value,
             "legacy_aliases": aliases_by_mode[mode.name],
+            "collector_ids": memberships[mode.name],
         }
         for mode in EXECUTION_MODES.values()
     ]
+    return {
+        "schema_version": 1,
+        "modes": modes,
+        "collectors": collector_rows,
+    }
+
+
+def render_mode_matrix_markdown(matrix: Mapping[str, object]) -> str:
+    """Render the collector side of a mode matrix as deterministic v4 documentation."""
+    rows = [
+        "# Logicytics v4 collector mode matrix",
+        "",
+        "This file is generated from strict collector preflight metadata. Use",
+        "`python -m logicytics --modes` for the complete machine-readable contract.",
+        "",
+        "| Collector | Kind | Valid | Included modes | Selection |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for item in matrix.get("collectors", []):
+        collector = dict(item)
+        modes = ", ".join(f"`{name}`" for name in collector["modes"]) or "none"
+        if not collector["valid"]:
+            selection = "quarantined"
+        elif collector["manual_only"]:
+            selection = "explicit include only"
+        else:
+            selection = "mode selected"
+        rows.append(
+            f"| `{collector['id']}` | `{collector['kind']}` | "
+            f"{'yes' if collector['valid'] else 'no'} | {modes} | {selection} |"
+        )
+    rows.append("")
+    return "\n".join(rows)

@@ -157,9 +157,13 @@ with `--plugins`. Unknown profile names are rejected before collection begins.
 
 ## Execution modes
 
-`python -m logicytics --modes` prints the authoritative machine-readable mode
-matrix. New integrations should use `run --mode <name>`; the historical flags
-remain exact compatibility aliases.
+`python -m logicytics --modes` runs strict collector preflight and prints the
+authoritative, versioned machine-readable mode matrix. Its `modes` rows contain
+the exact validated `collector_ids` selected by each mode. Its `collectors` rows
+represent every discovered core, plugin, and MOD collector exactly once with its
+mode assignments, validation state, execution type, and either `manual_only` or
+quarantine status. New integrations should use `run --mode <name>`; the
+historical flags remain exact compatibility aliases.
 
 | Mode | Profile | Scheduling | Legacy alias | Additional behavior |
 | --- | --- | --- | --- | --- |

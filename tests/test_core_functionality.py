@@ -1868,7 +1868,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             "performance": ("standard", 1, False, False, True),
         }
         self.assertEqual(set(expected), set(EXECUTION_MODES))
-        self.assertEqual(set(expected), {item["name"] for item in mode_matrix()})
+        self.assertEqual(set(expected), {item["name"] for item in mode_matrix()["modes"]})
         for name, contract in expected.items():
             with self.subTest(mode=name):
                 request = _request(parser.parse_args(["run", "--mode", name]), 4)
@@ -1913,8 +1913,10 @@ class CoreFunctionalityTests(unittest.TestCase):
             ):
                 self.assertEqual(0, main(["--modes"]))
             payload = json.loads(output.getvalue())
-            self.assertEqual(list(EXECUTION_MODES), [item["name"] for item in payload])
-            self.assertTrue(all("legacy_aliases" in item for item in payload))
+            self.assertEqual(1, payload["schema_version"])
+            self.assertEqual(list(EXECUTION_MODES), [item["name"] for item in payload["modes"]])
+            self.assertTrue(all("legacy_aliases" in item for item in payload["modes"]))
+            self.assertEqual([], payload["collectors"])
 
     def test_cli_without_action_prints_help_and_modes_are_parser_exclusive(self) -> None:
         """An empty invocation is useful while contradictory legacy actions fail immediately."""

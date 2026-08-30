@@ -919,7 +919,7 @@ appropriate default/deep/non-Python mode.
 - [ ] Test default, threaded, minimal, deep, non-Python, performance, modded,
       debug, update, usage, shutdown, reboot, cancellation, and permission-denied
       flows.
-- [ ] Verify that every collector is represented in the CLI mode matrix and the
+- [x] Verify that every collector is represented in the CLI mode matrix and the
       v4.0 documentation.
 - [ ] Verify that packages contain generated evidence and metadata only.
 - [x] Verify that hashes reproduce from the final package bytes.
@@ -930,7 +930,7 @@ appropriate default/deep/non-Python mode.
 
 - [ ] Every feature in this file has an implementation owner/status.
 - [ ] Every collector can be run directly and through the orchestrator.
-- [ ] Every mode has an explicit collector inclusion matrix.
+- [x] Every mode has an explicit collector inclusion matrix.
 - [ ] Every output has a documented path, format, and retention rule.
 - [x] A failed collector cannot silently make the run appear successful.
 - [x] A cancelled run leaves a recoverable partial-run report and cleans only its

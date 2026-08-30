@@ -7,6 +7,7 @@ from pathlib import Path
 
 from logicytics import ResourceClass
 from logicytics.discovery import preflight
+from logicytics.modes import EXECUTION_MODES, mode_matrix
 
 
 class ShippedCollectorTests(unittest.TestCase):
@@ -108,6 +109,36 @@ class ShippedCollectorTests(unittest.TestCase):
             self.assertTrue(metadata.parallel_safe)
             self.assertIs(ResourceClass.GENERAL, metadata.resource_class)
             self.assertEqual(("text/csv",), metadata.output_media_types)
+
+    def test_mode_matrix_represents_every_discovered_collector_exactly_once(self) -> None:
+        """Mode documentation covers selected, manual-only, and quarantined collectors."""
+        project_root = Path(__file__).resolve().parent.parent
+        report = preflight(project_root)
+        matrix = mode_matrix(report.candidates)
+        collector_rows = matrix["collectors"]
+        expected_ids = {
+            candidate.metadata.id if candidate.metadata is not None else candidate.selection_id
+            for candidate in report.candidates
+        }
+        represented_ids = [row["id"] for row in collector_rows]
+        self.assertEqual(expected_ids, set(represented_ids))
+        self.assertEqual(len(represented_ids), len(set(represented_ids)))
+
+        modes = {row["name"]: row for row in matrix["modes"]}
+        self.assertEqual(set(EXECUTION_MODES), set(modes))
+        for collector in collector_rows:
+            with self.subTest(collector=collector["id"]):
+                self.assertEqual(
+                    collector["valid"] and not collector["modes"],
+                    collector["manual_only"],
+                )
+                for mode_name in collector["modes"]:
+                    self.assertIn(collector["id"], modes[mode_name]["collector_ids"])
+        for mode_name, mode in modes.items():
+            expected = {
+                row["id"] for row in collector_rows if mode_name in row["modes"]
+            }
+            self.assertEqual(expected, set(mode["collector_ids"]))
 
 
 if __name__ == "__main__":

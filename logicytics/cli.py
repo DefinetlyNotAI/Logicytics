@@ -404,7 +404,8 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({**statistics, "graph_path": str(graph_path)}, indent=2, sort_keys=True))
             return 0
         if arguments.command == "modes":
-            print(json.dumps(mode_matrix(), indent=2, sort_keys=True))
+            report = preflight(root, configuration_hash=configuration.fingerprint())
+            print(json.dumps(mode_matrix((*report.valid, *report.invalid)), indent=2, sort_keys=True))
             return 0
         report = preflight(root, configuration_hash=configuration.fingerprint())
         if arguments.command == "preflight":
