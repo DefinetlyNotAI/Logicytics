@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import subprocess
 import socket as _socket
+import ctypes
+import shutil
 from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -31,6 +33,13 @@ class ProcessAdapter:
 
 
 process_adapter = ProcessAdapter()
+
+
+def which(command: str) -> str | None:
+    """Resolve one host executable through the shared platform boundary."""
+    if not isinstance(command, str) or not command.strip() or any(value in command for value in "\r\n\x00"):
+        raise ValueError("executable name must be a non-empty single-line string")
+    return shutil.which(command)
 
 
 class RegistryAdapter:
@@ -116,3 +125,19 @@ class NetworkAdapter:
 
 
 network_adapter = NetworkAdapter()
+
+
+class WindowsApiAdapter:
+    """Load explicitly named Win32 libraries behind a replaceable test seam."""
+
+    @staticmethod
+    def load_library(name: str):
+        if not isinstance(name, str) or not name or any(character in name for character in "/\\\x00"):
+            raise ValueError("Win32 library name must be a simple non-empty name")
+        loader = getattr(ctypes, "WinDLL", None)
+        if loader is None:
+            raise OSError("Win32 libraries are unavailable on this platform")
+        return loader(name, use_last_error=True)
+
+
+windows_api_adapter = WindowsApiAdapter()

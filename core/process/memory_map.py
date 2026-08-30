@@ -10,6 +10,7 @@ from pathlib import Path
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import windows_api_adapter
 
 
 class _MemoryBasicInformation(ctypes.Structure):
@@ -76,8 +77,8 @@ class MemoryMapCollector(CoreCollector):
         except ValueError:
             return CollectorResult(CollectorStatus.FAILED,
                                    "memory-map dump_directory must stay inside the collector workspace")
-        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-        psapi = ctypes.WinDLL("psapi", use_last_error=True)
+        kernel32 = windows_api_adapter.load_library("kernel32")
+        psapi = windows_api_adapter.load_library("psapi")
         process = kernel32.GetCurrentProcess()
         counters = _ProcessMemoryCounters()
         psapi.GetProcessMemoryInfo(process, ctypes.byref(counters), ctypes.sizeof(counters))

@@ -7,7 +7,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from logicytics.platform_adapters import NetworkAdapter, ProcessAdapter, RegistryAdapter
+from logicytics.platform_adapters import (
+    NetworkAdapter, ProcessAdapter, RegistryAdapter, WindowsApiAdapter, which,
+)
 
 
 class ProcessAdapterTests(unittest.TestCase):
@@ -83,6 +85,41 @@ class ProcessAdapterTests(unittest.TestCase):
             str(path.relative_to(project_root))
             for path in (project_root / "core").rglob("*.py")
             if "import socket" in path.read_text(encoding="utf-8").splitlines()
+        ]
+        self.assertEqual([], offenders)
+
+    def test_windows_api_adapter_validates_names_and_uses_the_win32_loader(self) -> None:
+        loader = Mock(return_value="library")
+        with patch("logicytics.platform_adapters.ctypes.WinDLL", loader, create=True):
+            self.assertEqual("library", WindowsApiAdapter().load_library("kernel32"))
+        loader.assert_called_once_with("kernel32", use_last_error=True)
+        for invalid in ("", "../kernel32", "folder\\library"):
+            with self.subTest(name=invalid), self.assertRaises(ValueError):
+                WindowsApiAdapter().load_library(invalid)
+
+    def test_core_collectors_cannot_load_win32_libraries_directly(self) -> None:
+        project_root = Path(__file__).resolve().parent.parent
+        offenders = [
+            str(path.relative_to(project_root))
+            for path in (project_root / "core").rglob("*.py")
+            if "ctypes.WinDLL(" in path.read_text(encoding="utf-8")
+        ]
+        self.assertEqual([], offenders)
+
+    def test_executable_resolution_uses_the_platform_boundary(self) -> None:
+        with patch("logicytics.platform_adapters.shutil.which", return_value="C:/tool.exe") as resolve:
+            self.assertEqual("C:/tool.exe", which("tool"))
+        resolve.assert_called_once_with("tool")
+        for invalid in ("", "bad\nname", "bad\x00name"):
+            with self.subTest(command=invalid), self.assertRaises(ValueError):
+                which(invalid)
+
+    def test_core_collectors_cannot_resolve_executables_through_shutil(self) -> None:
+        project_root = Path(__file__).resolve().parent.parent
+        offenders = [
+            str(path.relative_to(project_root))
+            for path in (project_root / "core").rglob("*.py")
+            if "from shutil import which" in path.read_text(encoding="utf-8")
         ]
         self.assertEqual([], offenders)
 
