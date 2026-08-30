@@ -549,7 +549,7 @@ Windows platform allows.
       verify after export.
 - [ ] Keep administrator checks, permission-aware collection, cancellation, and
       failure reporting as first-class behavior.
-- [ ] Keep the default run reasonably quick while retaining a deeper, slower mode
+- [x] Keep the default run reasonably quick while retaining a deeper, slower mode
       for exhaustive collection.
 - [ ] Keep the project Windows-focused, including PowerShell, registry, WMI,
       WMIC, Windows event logs, BitLocker, and Sysinternals integrations.

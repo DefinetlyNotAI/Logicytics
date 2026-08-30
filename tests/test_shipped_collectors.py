@@ -386,6 +386,32 @@ class ShippedCollectorTests(unittest.TestCase):
                         result = _load_collector(candidate.path, candidate.expected_class).collect(context)
                         self.assertIn(result.status, set(CollectorStatus))
 
+    def test_default_profiles_keep_quick_runs_small_and_deep_runs_complete(self) -> None:
+        """Minimal and standard stay bounded while deep explicitly owns the exhaustive surface."""
+        project_root = Path(__file__).resolve().parent.parent
+        metadata = [
+            candidate.metadata for candidate in preflight(project_root).valid
+            if candidate.kind.value == "core" and candidate.metadata is not None
+        ]
+        memberships = {
+            profile: {item.id for item in metadata if profile in item.default_profiles}
+            for profile in ("minimal", "standard", "deep", "offline")
+        }
+        self.assertEqual(3, len(memberships["minimal"]))
+        self.assertEqual(6, len(memberships["standard"]))
+        self.assertEqual({item.id for item in metadata}, memberships["deep"])
+        self.assertLess(memberships["minimal"], memberships["standard"])
+        self.assertLess(memberships["standard"], memberships["deep"])
+        self.assertEqual(memberships["minimal"], memberships["offline"])
+        self.assertLessEqual(
+            sum(item.timeout_seconds for item in metadata if item.id in memberships["standard"]),
+            90,
+        )
+        self.assertTrue(all(
+            not item.sensitive_data_categories
+            for item in metadata if item.id in memberships["standard"]
+        ))
+
 
 if __name__ == "__main__":
     unittest.main()
