@@ -662,7 +662,7 @@ Windows platform allows.
 
 ### Logging
 
-- [ ] Provide a singleton logger shared by the engine and collectors.
+- [x] Provide a singleton logger shared by the engine and collectors.
 - [x] Log to console with configurable colors and levels.
 - [x] Log to output/logs/Logicytics.log.
 - [x] Support DEBUG, INFO, WARNING, ERROR, CRITICAL, INTERNAL, and EXCEPTION levels.

@@ -119,6 +119,12 @@ environment boundary. Core collectors may use these mockable service seams and
 `logicytics.contracts`, but cannot import orchestration services or bypass the
 artifact writer for publication.
 
+Logging uses path-keyed, process-local singleton factories. The CLI and supervisor
+share one application logger per canonical `Logicytics.log`; engine and collector
+workers share the same event-logger factory while receiving distinct run-owned
+JSONL channels. Logger objects are intentionally not shared across process
+boundaries, preserving collector isolation and avoiding cross-process mutable state.
+
 ## Commands
 
 Run these from the repository root:

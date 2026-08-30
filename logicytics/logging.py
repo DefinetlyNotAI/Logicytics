@@ -37,6 +37,7 @@ _LEVEL_COLORS = {
 }
 _LOGGER_LOCK = RLock()
 _APPLICATION_LOGGERS: dict[Path, "ApplicationLogger"] = {}
+_EVENT_LOGGERS: dict[tuple[Path, str, str | None], "FileEventLogger"] = {}
 
 
 class ApplicationLogger(EventLogger):
@@ -178,6 +179,17 @@ class FileEventLogger(EventLogger):
         with self._event_lock:
             with self.path.open("a", encoding="utf-8") as stream:
                 stream.write(json.dumps(payload, sort_keys=True) + "\n")
+
+
+def get_event_logger(path: Path, *, run_id: str, collector_id: str | None = None) -> FileEventLogger:
+    """Return the process-local singleton for one canonical engine or collector channel."""
+    identity = (path.resolve(), run_id, collector_id)
+    with _LOGGER_LOCK:
+        logger = _EVENT_LOGGERS.get(identity)
+        if logger is None:
+            logger = FileEventLogger(identity[0], run_id=run_id, collector_id=collector_id)
+            _EVENT_LOGGERS[identity] = logger
+        return logger
 
 
 def timed(logger: EventLogger, *, level: str = "info") -> Callable[

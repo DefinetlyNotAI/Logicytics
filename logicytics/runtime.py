@@ -42,7 +42,7 @@ from logicytics.contracts import (
 )
 from logicytics.discovery import CollectorCandidate
 from logicytics.errors import LogicyticsError
-from logicytics.logging import FileEventLogger, get_application_logger
+from logicytics.logging import FileEventLogger, get_application_logger, get_event_logger
 from logicytics.manifest import CollectorRecord, RunManifest, write_manifest, utc_now
 from logicytics.packaging import package_manifest
 from logicytics.output_layout import ensure_output_layout
@@ -339,7 +339,7 @@ def _run_mod_worker(payload: dict[str, object], result_queue: multiprocessing.Qu
         run_output_budget_bytes=int(payload["run_output_budget_bytes"]),
         cancellation_file=cancellation_file,
     )
-    logger = FileEventLogger(
+    logger = get_event_logger(
         workspace / "events.jsonl",
         run_id=str(payload["run_id"]),
         collector_id=metadata.id,
@@ -481,7 +481,7 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                     workspace=workspace,
                     temporary_directory=temporary_directory,
                     artifacts=writer,
-                    logger=FileEventLogger(
+                    logger=get_event_logger(
                         workspace / "events.jsonl",
                         run_id=str(payload["run_id"]),
                         collector_id=metadata.id,
@@ -648,7 +648,7 @@ class RunSupervisor:
         cancellation_file = run_directory / ".cancelled"
         workspace_root.mkdir(parents=True, exist_ok=False)
         artifact_root.mkdir(parents=True, exist_ok=False)
-        run_logger = FileEventLogger(run_directory / "logs" / "engine.jsonl", run_id=run_id)
+        run_logger = get_event_logger(run_directory / "logs" / "engine.jsonl", run_id=run_id)
         manifest_path = run_directory / "manifest.json"
         manifest = RunManifest.create(
             run_id,

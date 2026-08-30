@@ -37,6 +37,7 @@ from logicytics.logging import (
     FileEventLogger,
     deprecated,
     get_application_logger,
+    get_event_logger,
     raise_logged,
     timed,
 )
@@ -266,6 +267,23 @@ class CoreFunctionalityTests(unittest.TestCase):
                 shared,
                 get_application_logger(path, LoggingSettings(console_enabled=False)),
             )
+            event_path = root / "output" / "data" / "run-test" / "logs" / "engine.jsonl"
+            engine = get_event_logger(event_path, run_id="run-test")
+            self.assertIs(engine, get_event_logger(event_path, run_id="run-test"))
+            collector = get_event_logger(
+                event_path.parent / "collector.jsonl",
+                run_id="run-test",
+                collector_id="core.system.system_info",
+            )
+            self.assertIs(
+                collector,
+                get_event_logger(
+                    event_path.parent / "collector.jsonl",
+                    run_id="run-test",
+                    collector_id="core.system.system_info",
+                ),
+            )
+            self.assertIsNot(engine, collector)
 
     def test_output_layout_and_logging_configuration_are_complete_and_validated(self) -> None:
         """Every global output directory and logging policy value has one typed source."""
