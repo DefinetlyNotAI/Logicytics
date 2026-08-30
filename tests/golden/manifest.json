@@ -1,0 +1,69 @@
+{
+  "action": "run",
+  "artifact_catalog": [],
+  "cancellation_requested": false,
+  "collectors": [
+    {
+      "artifacts": [],
+      "attempt_count": 0,
+      "duration_seconds": null,
+      "errors": [],
+      "event_count": 0,
+      "failure": null,
+      "finished_at": "<TIMESTAMP>",
+      "heartbeat_at": null,
+      "id": "core.system.system_info",
+      "isolation_mode": "process",
+      "last_progress_at": null,
+      "metrics": {},
+      "peak_memory_bytes": 0,
+      "progress": {
+        "bytes_written": 0,
+        "elapsed_seconds": 0.0,
+        "events_processed": 0,
+        "files_copied": 0,
+        "files_scanned": 0,
+        "packets_observed": 0
+      },
+      "retry_history": [],
+      "source": "<SOURCE>",
+      "started_at": "<TIMESTAMP>",
+      "status": "succeeded",
+      "summary": "collected",
+      "termination_reason": null,
+      "worker_exit_code": null,
+      "worker_pid": null
+    }
+  ],
+  "configuration": {"schema_version": 4},
+  "engine_version": "4.0",
+  "errors": [],
+  "finished_at": "<TIMESTAMP>",
+  "host": {
+    "hostname": "<HOST>",
+    "is_administrator": "false",
+    "platform": "win32",
+    "python": "<PYTHON>",
+    "user": "<USER>"
+  },
+  "manifest_schema_version": 1,
+  "package": null,
+  "package_layout_version": "1.0",
+  "package_sections": {
+    "derived_reports": "evidence/derived/",
+    "hashes": "hashes/",
+    "logs": "logs/",
+    "metadata": "metadata/",
+    "raw_evidence": "evidence/raw/",
+    "reports": "reports/"
+  },
+  "parent_run_id": null,
+  "plan_fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+  "request": {"profile": "minimal"},
+  "requested_at": "<TIMESTAMP>",
+  "resolved_plan": ["core.system.system_info"],
+  "run_id": "run-00000000000000000000000000000000",
+  "skipped_collectors": [],
+  "status": "succeeded",
+  "total_artifact_bytes": 0
+}

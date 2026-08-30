@@ -1,0 +1,5 @@
+digraph connection_graph {
+  rankdir=LR;
+  "10.0.0.5:50000" -> "1.1.1.1:443" [label="TCP"];
+  "[::1]:5353" -> "[::1]:5354" [label="UDP"];
+}

@@ -518,7 +518,7 @@ Windows platform allows.
       partial-failure, rerun, and cleanup behavior.
 - [x] Add packaging tests proving that unregistered files cannot enter a package
       and that manifest hashes match the final bytes.
-- [ ] Add golden-output tests for stable text, CSV, HTML, graph, and manifest
+- [x] Add golden-output tests for stable text, CSV, HTML, graph, and manifest
       formats, allowing platform-specific values to be normalized.
 - [ ] Add end-to-end Windows tests for permissions, PowerShell, registry, WMI,
       event logs, BitLocker, networking, and Sysinternals where available.

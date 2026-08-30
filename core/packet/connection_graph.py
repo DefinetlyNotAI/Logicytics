@@ -15,6 +15,30 @@ def _is_access_denied(detail: str) -> bool:
     return "permission denied" in normalized or ("access" in normalized and "denied" in normalized)
 
 
+def _render_connection_graph(command_output: str) -> str:
+    """Normalize netstat rows into deterministic, sorted Graphviz DOT source."""
+    edges: set[tuple[str, str, str]] = set()
+    for line in command_output.splitlines():
+        fields = line.split()
+        if len(fields) < 4 or fields[0].upper() not in {"TCP", "UDP"}:
+            continue
+        protocol, source, destination = fields[:3]
+        if destination in {"*:*", "*"}:
+            continue
+        edges.add((source, destination, protocol.upper()))
+
+    def quote(value: str) -> str:
+        return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+
+    lines = ["digraph connection_graph {", "  rankdir=LR;"]
+    lines.extend(
+        f"  {quote(source)} -> {quote(destination)} [label={quote(protocol)}];"
+        for source, destination, protocol in sorted(edges)
+    )
+    lines.append("}")
+    return "\n".join(lines) + "\n"
+
+
 class ConnectionGraphCollector(CoreCollector):
     """Build a DOT connection graph without retaining packet payloads."""
 
@@ -51,28 +75,12 @@ class ConnectionGraphCollector(CoreCollector):
                 return CollectorResult(CollectorStatus.SKIPPED,
                                        "connection graph access was denied for the current account", errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "connection graph query failed", errors=(detail,))
-        edges: set[tuple[str, str, str]] = set()
-        for line in completed.stdout.splitlines():
-            fields = line.split()
-            if len(fields) < 4 or fields[0].upper() not in {"TCP", "UDP"}:
-                continue
-            protocol, source, destination = fields[:3]
-            if destination in {"*:*", "*"}:
-                continue
-            edges.add((source, destination, protocol.upper()))
-
-        def quote(value: str) -> str:
-            return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
-
-        lines = ["digraph connection_graph {", "  rankdir=LR;"]
-        lines.extend(
-            f"  {quote(source)} -> {quote(destination)} [label={quote(protocol)}];" for source, destination, protocol in
-            sorted(edges))
-        lines.append("}")
+        rendered = _render_connection_graph(completed.stdout)
         output = context.workspace / "connection_graph.dot"
-        output.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        output.write_text(rendered, encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/vnd.graphviz")
-        context.report_progress("connection_graph_finished", edge_count=len(edges), bytes_written=artifact.size_bytes)
+        edge_count = sum(1 for line in rendered.splitlines() if " -> " in line)
+        context.report_progress("connection_graph_finished", edge_count=edge_count, bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("connection graph collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

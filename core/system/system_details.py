@@ -74,7 +74,7 @@ class SystemDetailsCollector(CoreCollector):
                 )
             return CollectorResult(CollectorStatus.FAILED, "systeminfo failed", errors=(detail,))
         output = context.workspace / "system_details.txt"
-        output.write_text(completed.stdout, encoding="utf-8")
+        output.write_text(completed.stdout, encoding="utf-8", newline="")
         artifact = context.artifacts.register_file(output, media_type="text/plain")
         line_count = sum(1 for line in completed.stdout.splitlines() if line.strip())
         context.report_progress("system_details_finished", line_count=line_count, bytes_written=artifact.size_bytes)
