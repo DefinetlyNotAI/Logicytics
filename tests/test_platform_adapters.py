@@ -5,9 +5,9 @@ from __future__ import annotations
 import subprocess
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-from logicytics.platform_adapters import ProcessAdapter
+from logicytics.platform_adapters import ProcessAdapter, RegistryAdapter
 
 
 class ProcessAdapterTests(unittest.TestCase):
@@ -37,6 +37,28 @@ class ProcessAdapterTests(unittest.TestCase):
             str(path.relative_to(project_root))
             for path in (project_root / "core").rglob("*.py")
             if "import subprocess" in path.read_text(encoding="utf-8").splitlines()
+        ]
+        self.assertEqual([], offenders)
+
+    def test_registry_adapter_delegates_only_read_operations(self) -> None:
+        adapter = RegistryAdapter()
+        fake = Mock()
+        fake.OpenKey.return_value = "key"
+        fake.QueryValueEx.return_value = ("value", 1)
+        fake.EnumKey.return_value = "child"
+        fake.EnumValue.return_value = ("name", "value", 1)
+        with patch("logicytics.platform_adapters._winreg", fake):
+            self.assertEqual("key", adapter.OpenKey(1, "Software"))
+            self.assertEqual(("value", 1), adapter.QueryValueEx("key", "Name"))
+            self.assertEqual("child", adapter.EnumKey("key", 0))
+            self.assertEqual(("name", "value", 1), adapter.EnumValue("key", 0))
+
+    def test_core_collectors_cannot_import_winreg_directly(self) -> None:
+        project_root = Path(__file__).resolve().parent.parent
+        offenders = [
+            str(path.relative_to(project_root))
+            for path in (project_root / "core").rglob("*.py")
+            if "import winreg" in path.read_text(encoding="utf-8").splitlines()
         ]
         self.assertEqual([], offenders)
 

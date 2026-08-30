@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-import winreg
 from datetime import datetime, timezone
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import registry_adapter as winreg
 
 _RUN_PATHS = (
     ("HKEY_CURRENT_USER", winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run"),

@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import ctypes
 import json
-import winreg
-from ctypes import wintypes
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from logicytics import (
     Capability,
@@ -17,20 +14,14 @@ from logicytics import (
     ValidationResult,
 )
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import registry_adapter as winreg
 
 _USBSTOR_PATH = r"SYSTEM\CurrentControlSet\Enum\USBSTOR"
 
 
 def _registry_last_write(key: winreg.HKEYType) -> str | None:
     """Return one registry key's last-write timestamp in UTC when Windows reports it."""
-    timestamp = wintypes.FILETIME()
-    result = ctypes.windll.advapi32.RegQueryInfoKeyW(
-        wintypes.HKEY(key.handle), None, None, None, None, None, None, None, None, None, None, ctypes.byref(timestamp)
-    )
-    if result != 0:
-        return None
-    ticks = (timestamp.dwHighDateTime << 32) | timestamp.dwLowDateTime
-    return (datetime(1601, 1, 1, tzinfo=timezone.utc) + timedelta(microseconds=ticks // 10)).isoformat()
+    return winreg.last_write_time(key)
 
 
 def _enumerate_usb_storage() -> list[dict[str, str | None]]:
