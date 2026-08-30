@@ -135,6 +135,10 @@ version, and configured file-integrity diagnostics to
 integrity manifest and checks source organization without running collectors.
 Manifest changes are opt-in: use `dev --write-manifest --next-version 4.1.0`, or
 `dev --interactive` to review status markers and confirm the write.
+For a checkout still using the historical INI fallback, that same confirmed dev
+action atomically updates only `[System Settings]` `version` and `files` in
+`CODE/config.ini`, preserving comments and unrelated sections. Modern checkouts
+continue to write the hashed JSON integrity manifest.
 On Windows, an update workflow can explicitly open a fresh visible console for
 one allowlisted maintenance action with `update --launch-action preflight
 --new-window`. Both options are required together; ordinary update checks never

@@ -841,11 +841,11 @@ appropriate default/deep/non-Python mode.
 ### Developer action (`--dev`)
 
 - [x] Present contribution and repository-organization checks interactively.
-- [ ] Check naming conventions, CODE placement, documentation/docstrings, and
+- [x] Check naming conventions, CODE placement, documentation/docstrings, and
       one-main-feature-per-file organization.
 - [x] Compare current files against the configured manifest.
 - [x] Display added, removed, and unchanged files with colored status markers.
-- [ ] Update the manifest in `config.ini` after confirmation.
+- [x] Update the manifest in `config.ini` after confirmation.
 - [x] Prompt for and validate the next semantic version.
 - [x] Keep excluded history/cache/Sysinternals files out of manifest comparisons.
 

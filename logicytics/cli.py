@@ -27,6 +27,7 @@ from logicytics.maintenance import (
     load_local_manifest,
     local_version,
     maintenance_diagnostics,
+    write_legacy_ini_manifest,
     write_local_manifest,
 )
 from logicytics.modes import (
@@ -362,7 +363,13 @@ def _run_developer_action(
         if next_version is None:
             raise ValueError("a semantic next version is required to write the integrity manifest")
         manifest = build_manifest(root, settings, next_version)
-        manifest_path = str(write_local_manifest(root, settings, manifest))
+        legacy_ini = root / "CODE" / "config.ini"
+        modern_config = root / "logicytics.json"
+        manifest_path = str(
+            write_legacy_ini_manifest(root, manifest)
+            if legacy_ini.is_file() and not modern_config.exists()
+            else write_local_manifest(root, settings, manifest)
+        )
     payload = {
         "checks": checks,
         "comparison": comparison,

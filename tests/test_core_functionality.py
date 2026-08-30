@@ -462,6 +462,49 @@ class CoreFunctionalityTests(unittest.TestCase):
             )
             self.assertEqual("missing", debug["sysinternals"]["status"])
 
+    def test_dev_updates_legacy_ini_manifest_after_explicit_confirmation(self) -> None:
+        """Legacy dev mode preserves comments and updates only its version and file list."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "pyproject.toml").write_text(
+                '[project]\nname = "fixture"\nversion = "4.0.0"\n',
+                encoding="utf-8",
+            )
+            collector = root / "core" / "system" / "example.py"
+            collector.parent.mkdir(parents=True)
+            collector.write_text('"""Example collector module."""\n', encoding="utf-8")
+            code = root / "CODE"
+            code.mkdir()
+            legacy = code / "config.ini"
+            legacy.write_text(
+                "# preserve this comment\n"
+                "[System Settings]\n"
+                "version = 3.6.0\n"
+                'files = "old.py"\n\n'
+                "[Unrelated]\n"
+                "value = untouched\n",
+                encoding="utf-8",
+            )
+            output = io.StringIO()
+            with patch("logicytics.cli._project_root", return_value=root), patch(
+                "sys.stdout", output
+            ):
+                self.assertEqual(
+                    0,
+                    main(["dev", "--write-manifest", "--next-version", "4.1.0"]),
+                )
+            payload = json.loads(output.getvalue())
+            self.assertEqual(str(legacy), payload["manifest_written"])
+            self.assertEqual([], payload["checks"]["misplaced_python"])
+            updated = legacy.read_text(encoding="utf-8")
+            self.assertIn("# preserve this comment", updated)
+            self.assertIn("version = 4.1.0", updated)
+            self.assertIn("CODE/config.ini", updated)
+            self.assertIn("core/system/example.py", updated)
+            self.assertIn("value = untouched", updated)
+            self.assertNotIn("old.py", updated)
+            self.assertFalse((root / "project.manifest.json").exists())
+
     def test_mods_require_sidecars_and_run_as_isolated_registered_artifacts(self) -> None:
         """Legacy scripts enter the pipeline only through typed metadata and worker isolation."""
         with tempfile.TemporaryDirectory() as temporary:
