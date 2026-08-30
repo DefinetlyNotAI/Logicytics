@@ -1,5 +1,10 @@
 # Contributing to Logicytics
 
+Before changing a legacy alias, configuration migration, CODE evidence import,
+or MOD adapter, read [MIGRATION.md](MIGRATION.md). Compatibility bridges must
+remain bounded translations into the canonical v4 request and artifact model;
+do not add a second execution or output path.
+
 Looking to contribute something to Logicytics? **Here's how you can help.**
 
 Please take a moment to review this document to make the contribution

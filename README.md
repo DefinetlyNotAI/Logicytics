@@ -100,6 +100,8 @@ remains an external sidecar because an archive cannot contain its own final dige
 Every shipped collector's stable filename or path pattern, MIME format, canonical
 package location, and retention behavior is defined in [OUTPUTS.md](OUTPUTS.md)
 and enforced by the isolated artifact writer.
+Supported legacy inputs, their exact v4 replacements, and removed internal shims
+are documented in [MIGRATION.md](MIGRATION.md).
 
 ## Requirements
 

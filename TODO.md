@@ -530,12 +530,12 @@ Windows platform allows.
 - [x] Wrap legacy scripts in compatibility collectors before rewriting their data
       gathering logic.
 - [x] Move one collector at a time from direct filesystem writes to artifact APIs.
-- [ ] Keep legacy output names as aliases or compatibility copies only where users
+- [x] Keep legacy output names as aliases or compatibility copies only where users
       rely on them; make the run artifact tree canonical.
 - [x] Remove global mutable state after all collectors use `RunContext`.
 - [x] Remove direct `exit()` calls, current-directory assumptions, nested worker
       pools, and package-wide cleanup from collectors.
-- [ ] Remove compatibility shims only after the v4.0 API and migration documentation
+- [x] Remove compatibility shims only after the v4.0 API and migration documentation
       cover their replacement.
 
 ## v4.0 goals

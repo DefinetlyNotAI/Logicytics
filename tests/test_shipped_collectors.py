@@ -13,7 +13,7 @@ from logicytics.contracts import (
     ArtifactWriter, CollectorContext, CollectorStatus, EventLogger, EvidenceKind,
 )
 from logicytics.discovery import preflight
-from logicytics.modes import EXECUTION_MODES, mode_matrix
+from logicytics.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
 from logicytics.output_contracts import core_output_contract
 
 
@@ -281,6 +281,23 @@ class ShippedCollectorTests(unittest.TestCase):
                 self.assertTrue(register_calls)
                 self.assertTrue(declared_at_calls)
                 self.assertLessEqual(declared_at_calls, set(candidate.metadata.output_media_types))
+
+    def test_migration_documentation_covers_every_supported_bridge(self) -> None:
+        """Public compatibility stays explicit and canonical-output-only."""
+        project_root = Path(__file__).resolve().parent.parent
+        migration = (project_root / "MIGRATION.md").read_text(encoding="utf-8")
+        command_flags = {"default_mode": "default", "performance_check": "performance-check"}
+        for flag in LEGACY_MODE_ALIASES:
+            with self.subTest(flag=flag):
+                self.assertIn(f"`--{command_flags.get(flag, flag.replace('_', '-'))}`", migration)
+        for bridge in ("CODE/config.ini", "core.integration.legacy_code_outputs", "MODS/"):
+            self.assertIn(bridge, migration)
+        self.assertIn("There are no global `ACCESS/`, `RUNS/`, `LOGS/`, or `PACKAGES/`", migration)
+        contract = core_output_contract(next(
+            candidate.metadata for candidate in preflight(project_root).valid
+            if candidate.metadata and candidate.metadata.id == "core.integration.legacy_code_outputs"
+        ))
+        self.assertEqual(("legacy_code/**",), contract.workspace_patterns)
 
 
 if __name__ == "__main__":
