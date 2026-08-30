@@ -520,7 +520,7 @@ Windows platform allows.
       and that manifest hashes match the final bytes.
 - [x] Add golden-output tests for stable text, CSV, HTML, graph, and manifest
       formats, allowing platform-specific values to be normalized.
-- [ ] Add end-to-end Windows tests for permissions, PowerShell, registry, WMI,
+- [x] Add end-to-end Windows tests for permissions, PowerShell, registry, WMI,
       event logs, BitLocker, networking, and Sysinternals where available.
 
 ### Migration rules from the old design
@@ -915,7 +915,7 @@ appropriate default/deep/non-Python mode.
 - [x] Implement debugger, update, developer checks, manifest comparison, and
       version handling.
 - [x] Add per-collector tests using mocked Windows command/registry/WMI responses.
-- [ ] Add Windows integration tests for each output contract.
+- [x] Add Windows integration tests for each output contract.
 - [ ] Test default, threaded, minimal, deep, non-Python, performance, modded,
       debug, update, usage, shutdown, reboot, cancellation, and permission-denied
       flows.
