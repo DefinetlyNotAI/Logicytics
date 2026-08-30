@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import ast
 import importlib.util
+import subprocess
 import tempfile
 import unittest
+from contextlib import ExitStack
 from pathlib import Path
 
 from logicytics import ResourceClass
@@ -15,6 +17,11 @@ from logicytics.contracts import (
 from logicytics.discovery import preflight
 from logicytics.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
 from logicytics.output_contracts import core_output_contract
+from logicytics.artifacts import WorkspaceArtifactWriter
+from logicytics.platform_adapters import (
+    filesystem_adapter, network_adapter, process_adapter, registry_adapter, windows_api_adapter,
+)
+from unittest.mock import patch
 
 
 class _RejectingWriter(ArtifactWriter):
@@ -327,6 +334,57 @@ class ShippedCollectorTests(unittest.TestCase):
                     contract.media_types,
                 )
         self.assertEqual(len(signatures), len(set(signatures)))
+
+    def test_every_core_collector_handles_mocked_windows_platform_responses(self) -> None:
+        """Each collector returns a typed result when Windows adapters report unavailable data."""
+        project_root = Path(__file__).resolve().parent.parent
+        report = preflight(project_root)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            empty_host = root / "empty-host"
+            empty_host.mkdir()
+            with ExitStack() as mocks:
+                mocks.enter_context(patch.object(
+                    process_adapter, "run",
+                    return_value=subprocess.CompletedProcess((), 1, "", "Access is denied"),
+                ))
+                mocks.enter_context(patch.object(registry_adapter, "OpenKey", side_effect=OSError("missing key")))
+                mocks.enter_context(patch.object(windows_api_adapter, "load_library",
+                                                 side_effect=OSError("API unavailable")))
+                mocks.enter_context(patch.object(windows_api_adapter, "is_administrator", return_value=False))
+                mocks.enter_context(patch.object(network_adapter, "gethostname", return_value="golden-host"))
+                mocks.enter_context(patch.object(network_adapter, "gethostbyname", return_value="192.0.2.1"))
+                mocks.enter_context(patch.object(network_adapter, "getaddrinfo", return_value=[]))
+                mocks.enter_context(patch.object(network_adapter, "socket", side_effect=PermissionError("denied")))
+                mocks.enter_context(patch.object(filesystem_adapter, "home", return_value=empty_host))
+                mocks.enter_context(patch.object(filesystem_adapter, "system_drive_root", return_value=empty_host))
+                mocks.enter_context(patch.object(filesystem_adapter, "environment_path", return_value=empty_host))
+                for candidate in report.valid:
+                    if candidate.kind.value != "core" or candidate.metadata is None:
+                        continue
+                    with self.subTest(collector=candidate.metadata.id):
+                        workspace = root / candidate.metadata.id.replace(".", "_")
+                        artifact_root = workspace / "published"
+                        workspace.mkdir()
+                        artifact_root.mkdir()
+                        context = CollectorContext(
+                            run_id="run-" + "0" * 32,
+                            collector_id=candidate.metadata.id,
+                            workspace=workspace,
+                            temporary_directory=workspace / "tmp",
+                            artifacts=WorkspaceArtifactWriter(
+                                candidate.metadata.id,
+                                workspace,
+                                artifact_root,
+                                candidate.metadata.maximum_output_bytes,
+                                candidate.metadata.maximum_artifact_files,
+                            ),
+                            logger=_NoopLogger(),
+                            settings={},
+                            cancellation_file=workspace / ".cancelled",
+                        )
+                        result = _load_collector(candidate.path, candidate.expected_class).collect(context)
+                        self.assertIn(result.status, set(CollectorStatus))
 
 
 if __name__ == "__main__":

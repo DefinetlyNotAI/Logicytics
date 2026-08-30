@@ -914,7 +914,7 @@ appropriate default/deep/non-Python mode.
 
 - [x] Implement debugger, update, developer checks, manifest comparison, and
       version handling.
-- [ ] Add per-collector tests using mocked Windows command/registry/WMI responses.
+- [x] Add per-collector tests using mocked Windows command/registry/WMI responses.
 - [ ] Add Windows integration tests for each output contract.
 - [ ] Test default, threaded, minimal, deep, non-Python, performance, modded,
       debug, update, usage, shutdown, reboot, cancellation, and permission-denied

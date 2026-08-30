@@ -76,8 +76,15 @@ class MemoryMapCollector(CoreCollector):
         except ValueError:
             return CollectorResult(CollectorStatus.FAILED,
                                    "memory-map dump_directory must stay inside the collector workspace")
-        kernel32 = windows_api_adapter.load_library("kernel32")
-        psapi = windows_api_adapter.load_library("psapi")
+        try:
+            kernel32 = windows_api_adapter.load_library("kernel32")
+            psapi = windows_api_adapter.load_library("psapi")
+        except OSError as error:
+            return CollectorResult(
+                CollectorStatus.FAILED,
+                "could not load Windows memory-map APIs",
+                errors=(str(error),),
+            )
         process = kernel32.GetCurrentProcess()
         counters = _ProcessMemoryCounters()
         psapi.GetProcessMemoryInfo(process, ctypes.byref(counters), ctypes.sizeof(counters))
