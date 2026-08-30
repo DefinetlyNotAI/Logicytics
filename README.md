@@ -114,6 +114,7 @@ Run these from the repository root:
 python -m logicytics preflight
 python -m logicytics debug
 python -m logicytics dev
+python -m logicytics update --launch-action debug --new-window
 python -m logicytics plan --profile standard
 python -m logicytics run --profile standard --acknowledge-authorization
 ```
@@ -134,6 +135,10 @@ version, and configured file-integrity diagnostics to
 integrity manifest and checks source organization without running collectors.
 Manifest changes are opt-in: use `dev --write-manifest --next-version 4.1.0`, or
 `dev --interactive` to review status markers and confirm the write.
+On Windows, an update workflow can explicitly open a fresh visible console for
+one allowlisted maintenance action with `update --launch-action preflight
+--new-window`. Both options are required together; ordinary update checks never
+launch another process.
 
 Collectors that request additional access must be explicitly approved, for
 example:

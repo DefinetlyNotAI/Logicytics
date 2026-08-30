@@ -30,7 +30,7 @@ from logicytics import (
 )
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.command_runner import parse_level_messages, run_command
-from logicytics.cli import _parser, _request, main
+from logicytics.cli import _launch_action_window, _parser, _request, main
 from logicytics.file_listing import list_files
 from logicytics.logging import (
     ApplicationLogger,
@@ -1931,6 +1931,53 @@ class CoreFunctionalityTests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 _parser().parse_args(["run", "--default", "--performance-check"])
         self.assertIn("not allowed with argument", errors.getvalue())
+
+    def test_update_can_explicitly_launch_an_allowlisted_action_in_a_new_window(self) -> None:
+        """The paired update options launch exactly one shell-free visible Windows action."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / ".git").mkdir()
+            git = subprocess.CompletedProcess(["git", "--version"], 0, "git version 2.0\n", "")
+            output = io.StringIO()
+            with patch("logicytics.cli._project_root", return_value=root), patch(
+                "logicytics.cli.subprocess.run", return_value=git
+            ), patch("logicytics.cli._launch_action_window", return_value=321) as launch, patch(
+                "sys.stdout", output
+            ):
+                self.assertEqual(
+                    0,
+                    main(["update", "--launch-action", "debug", "--new-window"]),
+                )
+            payload = json.loads(output.getvalue())
+            self.assertEqual("debug", payload["launched_action"])
+            self.assertEqual(321, payload["launched_process_id"])
+            launch.assert_called_once_with(root, "debug")
+
+            with patch("logicytics.cli._project_root", return_value=root), patch(
+                "sys.stdout", new_callable=io.StringIO
+            ) as invalid_output:
+                self.assertEqual(2, main(["update", "--new-window"]))
+            self.assertIn("must be provided together", invalid_output.getvalue())
+
+    def test_new_window_launcher_uses_current_interpreter_without_a_shell(self) -> None:
+        """Visible maintenance windows preserve argument boundaries and repository cwd."""
+        root = Path("C:/repo").resolve()
+        process = MagicMock(pid=42)
+        with patch("logicytics.cli.sys.platform", "win32"), patch(
+            "logicytics.cli.subprocess.Popen", return_value=process
+        ) as popen:
+            self.assertEqual(42, _launch_action_window(root, "preflight"))
+        popen.assert_called_once_with(
+            [sys.executable, "-m", "logicytics", "preflight"],
+            cwd=root,
+            shell=False,
+            creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0x00000010),
+            close_fds=True,
+        )
+        with patch("logicytics.cli.sys.platform", "linux"), self.assertRaisesRegex(
+            OSError, "only on Windows"
+        ):
+            _launch_action_window(root, "debug")
 
     def test_run_parser_exposes_explicit_sequential_and_bounded_parallel_modes(self) -> None:
         """Execution policy is selectable directly instead of relying on compatibility modes."""

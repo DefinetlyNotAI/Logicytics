@@ -250,6 +250,16 @@ def _parser() -> argparse.ArgumentParser:
             subparser.add_argument("--apply", action="store_true",
                                    help="Explicitly run git pull after repository checks.")
             subparser.add_argument(
+                "--launch-action",
+                choices=("preflight", "debug", "dev"),
+                help="Select a safe maintenance action to launch after a successful update check.",
+            )
+            subparser.add_argument(
+                "--new-window",
+                action="store_true",
+                help="Launch --launch-action in a visible, separate Windows command window.",
+            )
+            subparser.add_argument(
                 "--performance-check",
                 action="store_true",
                 help="Run collectors sequentially and write a per-collector duration report.",
@@ -288,6 +298,23 @@ def _write_json(path: Path, payload: object) -> Path:
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     temporary.replace(path)
     return path
+
+
+def _launch_action_window(root: Path, action: str) -> int:
+    """Launch one allowlisted maintenance action in a separate visible Windows console."""
+    if sys.platform != "win32":
+        raise OSError("new command windows are supported only on Windows")
+    if action not in {"preflight", "debug", "dev"}:
+        raise ValueError(f"unsupported new-window action: {action}")
+    command = [sys.executable, "-m", "logicytics", action]
+    process = subprocess.Popen(
+        command,
+        cwd=root,
+        shell=False,
+        creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0x00000010),
+        close_fds=True,
+    )
+    return process.pid
 
 
 def _status_marker(label: str, count: int) -> str:
@@ -440,6 +467,8 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(payload, indent=2, sort_keys=True))
             return 0 if not report.invalid else 2
         if arguments.command == "update":
+            if arguments.new_window != (arguments.launch_action is not None):
+                raise ValueError("--new-window and --launch-action must be provided together")
             git = subprocess.run(["git", "--version"], capture_output=True, check=False, text=True)
             is_repository = (root / ".git").exists()
             payload = {"git_available": git.returncode == 0, "git_version": git.stdout.strip() or None,
@@ -451,8 +480,12 @@ def main(argv: list[str] | None = None) -> int:
                 pulled = subprocess.run(["git", "pull"], cwd=root, capture_output=True, check=False, text=True)
                 payload.update({"applied": True, "returncode": pulled.returncode, "stdout": pulled.stdout,
                                 "stderr": pulled.stderr})
+            update_succeeded = not arguments.apply or payload.get("returncode") == 0
+            if arguments.new_window and update_succeeded:
+                payload["launched_action"] = arguments.launch_action
+                payload["launched_process_id"] = _launch_action_window(root, arguments.launch_action)
             print(json.dumps(payload, indent=2, sort_keys=True))
-            return 0 if not arguments.apply or payload.get("returncode") == 0 else 1
+            return 0 if update_succeeded else 1
         if arguments.command == "dev":
             return _run_developer_action(root, configuration, arguments)
         plan = build_plan(report, _request(arguments, configuration.runtime.default_max_workers))

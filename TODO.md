@@ -835,7 +835,7 @@ appropriate default/deep/non-Python mode.
 - [x] Verify that the project is a Git checkout.
 - [x] Pull the configured upstream repository when the user explicitly requests it.
 - [x] Report update success, failure, and repository-state errors.
-- [ ] Support launching a selected action in a new command window when required by
+- [x] Support launching a selected action in a new command window when required by
       the update/special-action workflow.
 
 ### Developer action (`--dev`)
