@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import subprocess
 from dataclasses import dataclass
 from typing import Iterable
+
+from logicytics.platform_adapters import process_adapter
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,7 +25,9 @@ def run_command(command: Iterable[str], *, timeout_seconds: float = 30) -> Comma
         raise ValueError("command must contain at least one argument")
     if timeout_seconds <= 0:
         raise ValueError("timeout_seconds must be positive")
-    completed = subprocess.run(normalized, capture_output=True, check=False, text=True, timeout=timeout_seconds)
+    completed = process_adapter.run(
+        normalized, capture_output=True, check=False, text=True, timeout=timeout_seconds
+    )
     return CommandResult(normalized, completed.returncode, completed.stdout, completed.stderr)
 
 

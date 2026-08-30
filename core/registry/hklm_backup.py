@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import subprocess
+from logicytics.platform_adapters import process_adapter as subprocess
 from shutil import which
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult

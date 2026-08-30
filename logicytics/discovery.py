@@ -25,6 +25,7 @@ _APPLICATION_IMPORTS = {
     "run_collection", "validation_worker",
 }
 _CACHE_SCHEMA_VERSION = 2
+_COLLECTOR_SERVICE_MODULES = {"logicytics.contracts", "logicytics.platform_adapters"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -294,7 +295,7 @@ def _validate_engine_boundary_imports(tree: ast.Module, candidate: CollectorCand
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.name.startswith("logicytics.") and alias.name != "logicytics.contracts":
+                if alias.name.startswith("logicytics.") and alias.name not in _COLLECTOR_SERVICE_MODULES:
                     candidate.static_errors.append(
                         f"forbidden application import: {alias.name} (line {node.lineno})"
                     )
@@ -302,7 +303,7 @@ def _validate_engine_boundary_imports(tree: ast.Module, candidate: CollectorCand
                     application_aliases.add(alias.asname or "logicytics")
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
-            if module.startswith("logicytics.") and module != "logicytics.contracts":
+            if module.startswith("logicytics.") and module not in _COLLECTOR_SERVICE_MODULES:
                 candidate.static_errors.append(
                     f"forbidden application import: {module} (line {node.lineno})"
                 )

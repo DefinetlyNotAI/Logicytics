@@ -7,7 +7,7 @@ import getpass
 import json
 import platform
 import socket
-import subprocess
+from logicytics.platform_adapters import process_adapter as subprocess
 from datetime import datetime, timezone
 from shutil import which
 

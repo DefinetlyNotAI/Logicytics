@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
+from logicytics.platform_adapters import process_adapter as subprocess
 from shutil import which
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
