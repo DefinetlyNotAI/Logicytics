@@ -527,12 +527,12 @@ Windows platform allows.
 
 - [x] Keep existing command-line flags as compatibility aliases during migration.
 - [x] Map every legacy flag to a named v4.0 profile or explicit collector set.
-- [ ] Wrap legacy scripts in compatibility collectors before rewriting their data
+- [x] Wrap legacy scripts in compatibility collectors before rewriting their data
       gathering logic.
-- [ ] Move one collector at a time from direct filesystem writes to artifact APIs.
+- [x] Move one collector at a time from direct filesystem writes to artifact APIs.
 - [ ] Keep legacy output names as aliases or compatibility copies only where users
       rely on them; make the run artifact tree canonical.
-- [ ] Remove global mutable state after all collectors use `RunContext`.
+- [x] Remove global mutable state after all collectors use `RunContext`.
 - [x] Remove direct `exit()` calls, current-directory assumptions, nested worker
       pools, and package-wide cleanup from collectors.
 - [ ] Remove compatibility shims only after the v4.0 API and migration documentation

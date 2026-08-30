@@ -321,6 +321,17 @@ from `CoreCollector`, provide documented and typed `metadata`, `validate`,
 the equivalent `PluginCollector` contract.
 
 Every collector explicitly declares the exact MIME types it can register.
+
+## Migration status
+
+Historical Python, PowerShell, batch, and executable scripts enter v4 only as
+sidecar-declared MOD compatibility collectors; they never bypass preflight,
+planning, isolation, capability approval, or artifact registration. Historical
+generated CODE evidence has its own bounded compatibility collector. Every
+shipped core collector writes beneath `CollectorContext.workspace`, publishes
+through `context.artifacts.register_file`, and avoids mutable `global`/`nonlocal`
+state. The run artifact tree is canonical even when a compatibility collector
+preserves a legacy evidence filename or nested relative path.
 Preflight statically compares literal `register_file(..., media_type=...)` calls
 with that declaration, and isolated workers enforce the declaration again on
 the returned artifact catalog. The collector folder, ID, class, description,

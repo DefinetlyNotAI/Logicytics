@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import unittest
 from pathlib import Path
 
@@ -140,6 +141,34 @@ class ShippedCollectorTests(unittest.TestCase):
                 row["id"] for row in collector_rows if mode_name in row["modes"]
             }
             self.assertEqual(expected, set(mode["collector_ids"]))
+
+    def test_every_core_collector_uses_context_artifacts_without_mutable_globals(self) -> None:
+        """Migration is complete only when all core modules use owned workspaces and catalogs."""
+        project_root = Path(__file__).resolve().parent.parent
+        report = preflight(project_root)
+        core_candidates = [
+            candidate for candidate in report.valid if candidate.kind.value == "core"
+        ]
+        self.assertTrue(core_candidates)
+        for candidate in core_candidates:
+            with self.subTest(collector=candidate.metadata.id):
+                source = candidate.path.read_text(encoding="utf-8")
+                tree = ast.parse(source, filename=str(candidate.path))
+                self.assertFalse(
+                    any(isinstance(node, (ast.Global, ast.Nonlocal)) for node in ast.walk(tree)),
+                    "collectors must not declare shared mutable state",
+                )
+                collect = next(
+                    node for node in ast.walk(tree)
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    and node.name == "collect"
+                )
+                attributes = {
+                    node.attr for node in ast.walk(collect) if isinstance(node, ast.Attribute)
+                }
+                self.assertIn("workspace", attributes)
+                self.assertIn("artifacts", attributes)
+                self.assertIn("register_file", attributes)
 
 
 if __name__ == "__main__":
