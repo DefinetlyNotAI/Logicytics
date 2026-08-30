@@ -680,10 +680,10 @@ Windows platform allows.
 
 - [x] Create output/logs, output/logs/debug, output/logs/performance,
       output/data/zip, and output/data/hashes automatically.
-- [ ] Collect generated files without including source code, executables, model
+- [x] Collect generated files without including source code, executables, model
       files, configuration secrets, caches, or library internals in the evidence
       package.
-- [ ] Include generated files from CODE in the package.
+- [x] Include generated files from CODE in the package.
 - [x] Include MODS output in a separate MODS package during modded runs.
 - [x] Preserve nested directory structure inside packages.
 - [x] Name packages using the action and timestamp.
@@ -921,7 +921,7 @@ appropriate default/deep/non-Python mode.
       flows.
 - [x] Verify that every collector is represented in the CLI mode matrix and the
       v4.0 documentation.
-- [ ] Verify that packages contain generated evidence and metadata only.
+- [x] Verify that packages contain generated evidence and metadata only.
 - [x] Verify that hashes reproduce from the final package bytes.
 - [ ] Update README, contribution guidance, configuration documentation, and the
       repository wiki for v4.0.

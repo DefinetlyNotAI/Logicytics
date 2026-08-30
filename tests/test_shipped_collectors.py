@@ -75,6 +75,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.hardware.windows_features",
                 "core.hardware.display_adapters",
                 "core.hardware.battery_status",
+                "core.integration.legacy_code_outputs",
                 "core.event_log.system_events",
                 "core.event_log.application_events",
                 "core.event_log.security_events",

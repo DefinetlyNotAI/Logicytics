@@ -300,6 +300,14 @@ Flag, DumpMemory, NetWorkPsutil, and PacketSniffer sections are converted into
 the same bounded typed v4 sections. Modern JSON always takes precedence; an INI
 larger than 2 MiB, malformed values, and unsafe limits fail before planning.
 
+Deep-profile compatibility includes `core.integration.legacy_code_outputs`.
+When a historical `CODE/` directory exists, it imports only bounded generated
+text, CSV, JSON, XML, HTML, DOT, SVG, registry, event-log, log, and ZIP evidence
+through the normal artifact catalog. Python/PowerShell/batch source, executables,
+models, `config.ini`, caches, virtual environments, and library internals are
+never staged or packaged. Clean v4 checkouts skip this collector because they do
+not need the legacy directory.
+
 ## Collector rules
 
 Core collectors must live at `core/<specialty>/<collector_name>.py`. Each module
