@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import configparser
 from dataclasses import asdict, dataclass, field
 from math import isfinite
 from pathlib import Path
@@ -15,6 +16,7 @@ from logicytics.errors import PlanError
 from logicytics.redaction import redact_mapping
 
 SCHEMA_VERSION = 4
+MAXIMUM_CONFIGURATION_BYTES = 2 * 1024 * 1024
 DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES = 4 * 1024 * 1024 * 1024
 MAXIMUM_RUN_OUTPUT_BYTES = 64 * 1024 * 1024 * 1024
 _COLLECTOR_ID = re.compile(
@@ -60,7 +62,7 @@ class CollectorSettingRule:
 _COLLECTOR_SETTING_SCHEMAS = MappingProxyType({
     "core.network.bandwidth_sample": {
         "sample_count": CollectorSettingRule("integer", 1, 10),
-        "interval_seconds": CollectorSettingRule("integer", 1, 5),
+        "interval_seconds": CollectorSettingRule("number", 0.1, 60),
     },
     "core.packet.packet_capture": {
         "packet_count": CollectorSettingRule("integer", 1, 10_000),
@@ -204,6 +206,79 @@ def _migrate_v3_configuration(raw: Mapping[str, Any], project_root: Path) -> dic
     }
 
 
+def _legacy_ini_payload(path: Path) -> dict[str, Any]:
+    """Translate the bounded historical CODE/config.ini schema into typed v4 sections."""
+    try:
+        payload = path.read_bytes()
+    except OSError as error:
+        raise PlanError(f"invalid legacy configuration file {path}: {error}") from error
+    if len(payload) > MAXIMUM_CONFIGURATION_BYTES:
+        raise PlanError("legacy configuration exceeds the 2 MiB limit")
+    try:
+        text = payload.decode("utf-8-sig")
+        parser = configparser.ConfigParser(interpolation=None, strict=True)
+        parser.read_string(text, source=str(path))
+    except (UnicodeDecodeError, configparser.Error) as error:
+        raise PlanError(f"invalid legacy configuration file {path}: {error}") from error
+
+    try:
+        runtime: dict[str, Any] = {}
+        logging: dict[str, Any] = {}
+        interaction: dict[str, Any] = {}
+        collectors: dict[str, dict[str, Any]] = {}
+        if parser.has_option("Settings", "max_workers"):
+            workers = parser.getint("Settings", "max_workers")
+            runtime.update({"default_max_workers": workers, "maximum_workers": workers})
+        if parser.has_option("Settings", "log_using_debug"):
+            logging["level"] = "DEBUG" if parser.getboolean("Settings", "log_using_debug") else "INFO"
+        if parser.has_option("Settings", "delete_old_logs"):
+            logging["delete_previous"] = parser.getboolean("Settings", "delete_old_logs")
+        if parser.has_option("Settings", "save_preferences"):
+            interaction["history_enabled"] = parser.getboolean("Settings", "save_preferences")
+
+        if parser.has_section("Flag Settings"):
+            if parser.has_option("Flag Settings", "accuracy_min"):
+                interaction["similarity_threshold"] = parser.getfloat("Flag Settings", "accuracy_min") / 100
+            if parser.has_option("Flag Settings", "model_to_use"):
+                interaction["model_name"] = parser.get("Flag Settings", "model_to_use")
+            if parser.has_option("Flag Settings", "model_debug"):
+                interaction["model_debug"] = parser.getboolean("Flag Settings", "model_debug")
+
+        if parser.has_section("DumpMemory Settings"):
+            limit_mib = parser.getint("DumpMemory Settings", "file_size_limit", fallback=0)
+            safety_factor = parser.getfloat("DumpMemory Settings", "file_size_safety", fallback=1.0)
+            if limit_mib < 0 or safety_factor < 1:
+                raise ValueError("memory limits require file_size_limit >= 0 and file_size_safety >= 1")
+            output_limit = min(64 * 1024 * 1024, limit_mib * 1024 * 1024) if limit_mib else 64 * 1024 * 1024
+            collectors["core.process.memory_map"] = {
+                "output_limit_bytes": output_limit,
+                "disk_safety_margin_bytes": int(output_limit * (safety_factor - 1)),
+                "dump_directory": "memory_maps",
+            }
+
+        if parser.has_section("NetWorkPsutil Settings"):
+            collectors["core.network.bandwidth_sample"] = {
+                "sample_count": parser.getint("NetWorkPsutil Settings", "sample_count", fallback=3),
+                "interval_seconds": parser.getfloat("NetWorkPsutil Settings", "interval", fallback=1.0),
+            }
+
+        if parser.has_section("PacketSniffer Settings"):
+            collectors["core.packet.packet_capture"] = {
+                "interface": parser.get("PacketSniffer Settings", "interface", fallback="WiFi"),
+                "packet_count": parser.getint("PacketSniffer Settings", "packet_count", fallback=100),
+                "timeout_seconds": parser.getfloat("PacketSniffer Settings", "timeout", fallback=10),
+                "retry_window_seconds": parser.getfloat("PacketSniffer Settings", "max_retry_time", fallback=0),
+            }
+    except (configparser.Error, ValueError) as error:
+        raise PlanError(f"invalid legacy configuration file {path}: {error}") from error
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "runtime": runtime,
+        "interaction": interaction,
+        "maintenance": {},
+        "logging": logging,
+        "collectors": collectors,
+    }
 @dataclass(frozen=True, slots=True)
 class RuntimeSettings:
     """Engine-wide limits that apply before a collector is started."""
@@ -288,25 +363,31 @@ def default_config(project_root: Path) -> AppConfig:
 
 
 def load_config(project_root: Path, config_path: Path | None = None) -> AppConfig:
-    """Load and validate `logicytics.json`, or use the documented defaults."""
-    path = config_path or project_root / "logicytics.json"
+    """Load typed JSON, migrate historical CODE/config.ini, or use safe defaults."""
+    modern_path = project_root / "logicytics.json"
+    legacy_path = project_root / "CODE" / "config.ini"
+    path = config_path or (modern_path if modern_path.exists() else legacy_path)
     if not path.exists():
         return default_config(project_root)
-    try:
-        raw = json.loads(
-            path.read_text(encoding="utf-8"),
-            object_pairs_hook=_unique_json_object,
-            parse_constant=_reject_json_constant,
-            parse_float=_finite_json_number,
-        )
-    except (OSError, UnicodeDecodeError, ValueError) as error:
-        raise PlanError(f"invalid configuration file {path}: {error}") from error
+    legacy_ini = path.suffix.casefold() == ".ini"
+    if legacy_ini:
+        raw = _legacy_ini_payload(path)
+    else:
+        try:
+            raw = json.loads(
+                path.read_text(encoding="utf-8"),
+                object_pairs_hook=_unique_json_object,
+                parse_constant=_reject_json_constant,
+                parse_float=_finite_json_number,
+            )
+        except (OSError, UnicodeDecodeError, ValueError) as error:
+            raise PlanError(f"invalid configuration file {path}: {error}") from error
     if not isinstance(raw, dict):
         raise PlanError("configuration root must be a JSON object")
     schema_version = raw.get("schema_version", SCHEMA_VERSION)
     if not isinstance(schema_version, int) or isinstance(schema_version, bool):
         raise PlanError("configuration schema_version must be an integer")
-    migrated_from_schema: int | None = None
+    migrated_from_schema: int | None = 3 if legacy_ini else None
     if schema_version == 3:
         raw = _migrate_v3_configuration(raw, project_root)
         migrated_from_schema = schema_version

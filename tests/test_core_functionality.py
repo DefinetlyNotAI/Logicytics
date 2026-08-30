@@ -1524,6 +1524,69 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(settings["core.packet.packet_capture"],
                              configuration.settings_for("core.packet.packet_capture"))
             self.assertEqual(original, config_path.read_text(encoding="utf-8"))
+
+    def test_historical_code_config_ini_migrates_into_typed_v4_settings(self) -> None:
+        """The original CODE/config.ini is a bounded read-only fallback when JSON is absent."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            code = root / "CODE"
+            code.mkdir()
+            config_path = code / "config.ini"
+            original = """[Settings]
+log_using_debug = true
+delete_old_logs = true
+max_workers = 6
+save_preferences = false
+
+[Flag Settings]
+accuracy_min = 30.0
+model_to_use = all-MiniLM-L6-v2
+model_debug = true
+
+[DumpMemory Settings]
+file_size_limit = 8
+file_size_safety = 1.5
+
+[NetWorkPsutil Settings]
+sample_count = 5
+interval = 1.5
+
+[PacketSniffer Settings]
+interface = WiFi
+packet_count = 5000
+timeout = 10
+max_retry_time = 30
+"""
+            config_path.write_text(original, encoding="utf-8")
+
+            configuration = load_config(root)
+
+            self.assertEqual(3, configuration.migrated_from_schema)
+            self.assertEqual(6, configuration.runtime.default_max_workers)
+            self.assertEqual(6, configuration.runtime.maximum_workers)
+            self.assertEqual("DEBUG", configuration.logging.level)
+            self.assertTrue(configuration.logging.delete_previous)
+            self.assertFalse(configuration.interaction.history_enabled)
+            self.assertEqual(0.3, configuration.interaction.similarity_threshold)
+            self.assertEqual("all-MiniLM-L6-v2", configuration.interaction.model_name)
+            self.assertTrue(configuration.interaction.model_debug)
+            self.assertEqual(
+                {
+                    "output_limit_bytes": 8 * 1024 * 1024,
+                    "disk_safety_margin_bytes": 4 * 1024 * 1024,
+                    "dump_directory": "memory_maps",
+                },
+                configuration.settings_for("core.process.memory_map"),
+            )
+            self.assertEqual(
+                {"sample_count": 5, "interval_seconds": 1.5},
+                configuration.settings_for("core.network.bandwidth_sample"),
+            )
+            self.assertEqual(5000, configuration.settings_for("core.packet.packet_capture")["packet_count"])
+            self.assertEqual(original, config_path.read_text(encoding="utf-8"))
+
+            (root / "logicytics.json").write_text('{"schema_version":4}', encoding="utf-8")
+            self.assertIsNone(load_config(root).migrated_from_schema)
             self.assertFalse((root / "output").exists())
             self.assertEqual(3, configuration.to_manifest_dict()["migrated_from_schema"])
 

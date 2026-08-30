@@ -20,6 +20,14 @@ def _setting(settings: object, key: str, default: int, maximum: int) -> int:
     return value if isinstance(value, int) and 1 <= value <= maximum else default
 
 
+def _interval_setting(settings: object) -> float:
+    """Return the configured finite positive sampling interval."""
+    value = settings.get("interval_seconds", _DEFAULT_INTERVAL_SECONDS) if isinstance(settings, dict) else _DEFAULT_INTERVAL_SECONDS
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and 0.1 <= value <= 60:
+        return float(value)
+    return float(_DEFAULT_INTERVAL_SECONDS)
+
+
 def _is_access_denied(detail: str) -> bool:
     """Recognize common permission-denied wording from PowerShell output."""
     normalized = detail.casefold()
@@ -56,7 +64,7 @@ class BandwidthSampleCollector(CoreCollector):
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before bandwidth sampling")
         samples = _setting(context.settings, "sample_count", _DEFAULT_SAMPLES, 10)
-        interval = _setting(context.settings, "interval_seconds", _DEFAULT_INTERVAL_SECONDS, 5)
+        interval = _interval_setting(context.settings)
         command = "Get-NetAdapterStatistics | Select-Object Name, ReceivedBytes, SentBytes | ConvertTo-Json -Depth 3"
         observations: list[dict[str, dict[str, int]]] = []
         context.report_progress("bandwidth_sample_started", sample_count=samples, interval_seconds=interval)

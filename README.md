@@ -290,6 +290,11 @@ file. Legacy `workers`/`worker_count`, `max_workers`, `output_root`, and
 the old `ACCESS/RUNS` default becomes `output/data`. Ambiguous aliases, unsafe
 values, unsupported versions, and implicit plugin-selection fields are rejected.
 Run manifests record `migrated_from_schema: 3` when this compatibility path runs.
+When `logicytics.json` is absent, the historical `CODE/config.ini` is also loaded
+as a read-only migration source. Its general logging/worker/history options and
+Flag, DumpMemory, NetWorkPsutil, and PacketSniffer sections are converted into
+the same bounded typed v4 sections. Modern JSON always takes precedence; an INI
+larger than 2 MiB, malformed values, and unsafe limits fail before planning.
 
 ## Collector rules
 

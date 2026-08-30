@@ -654,7 +654,7 @@ Windows platform allows.
 
 ### Configuration
 
-- [ ] Load `config.ini` from the project CODE directory.
+- [x] Load `config.ini` from the project CODE directory.
 - [x] Expose debug level, version, current file manifest, log retention, worker
       count, preference persistence, and all collector settings.
 - [x] Support remote configuration retrieval for update/integrity checks.
