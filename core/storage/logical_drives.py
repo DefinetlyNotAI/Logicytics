@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import windows_api_adapter
 
 _DRIVE_TYPES = {
     0: "unknown",
@@ -22,7 +23,8 @@ _DRIVE_TYPES = {
 
 def _logical_drives() -> list[dict[str, int | str]]:
     """Return Windows logical drive metadata without walking any filesystem contents."""
-    mask = ctypes.windll.kernel32.GetLogicalDrives()
+    kernel32 = windows_api_adapter.load_library("kernel32")
+    mask = kernel32.GetLogicalDrives()
     if mask == 0:
         raise ctypes.WinError()
     drives: list[dict[str, int | str]] = []
@@ -33,14 +35,14 @@ def _logical_drives() -> list[dict[str, int | str]]:
         available = ctypes.c_ulonglong()
         total = ctypes.c_ulonglong()
         free = ctypes.c_ulonglong()
-        if not ctypes.windll.kernel32.GetDiskFreeSpaceExW(
+        if not kernel32.GetDiskFreeSpaceExW(
                 root,
                 ctypes.byref(available),
                 ctypes.byref(total),
                 ctypes.byref(free),
         ):
             continue
-        drive_type_code = ctypes.windll.kernel32.GetDriveTypeW(root)
+        drive_type_code = kernel32.GetDriveTypeW(root)
         drives.append(
             {
                 "root": root,

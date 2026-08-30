@@ -430,7 +430,7 @@ Windows platform allows.
       memory collection, event-log queries, and copy loops.
 - [x] Prevent path traversal and symlink/junction escapes from leaving the run
       workspace or copying unintended locations.
-- [ ] Avoid loading entire command output, files, memory maps, or packet sets into
+- [x] Avoid loading entire command output, files, memory maps, or packet sets into
       memory when streaming is possible.
 - [x] Redact secrets from logs and from diagnostic metadata even when the artifact
       itself is intentionally collected.

@@ -7,6 +7,7 @@ import socket as _socket
 import ctypes
 import shutil
 import os
+import tempfile
 from pathlib import Path
 from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
@@ -21,6 +22,8 @@ except ImportError:  # pragma: no cover - exercised by non-Windows package impor
 class ProcessAdapter:
     """Run one explicit, shell-free host command through a central policy seam."""
 
+    maximum_capture_bytes = 64 * 1024 * 1024
+
     def run(self, command: Sequence[str], **options: Any) -> subprocess.CompletedProcess[str]:
         """Delegate to the guarded stdlib runner while retaining its familiar result contract."""
         normalized = tuple(str(argument) for argument in command)
@@ -31,7 +34,31 @@ class ProcessAdapter:
         timeout = options.get("timeout")
         if timeout is not None and (not isinstance(timeout, (int, float)) or timeout <= 0):
             raise ValueError("command timeout must be positive")
-        return subprocess.run(normalized, **options)
+        capture_output = options.pop("capture_output", False)
+        if not capture_output:
+            return subprocess.run(normalized, **options)
+        if "stdout" in options or "stderr" in options:
+            raise ValueError("capture_output cannot be combined with explicit streams")
+        wants_text = bool(options.pop("text", False) or options.get("encoding") is not None)
+        encoding = options.pop("encoding", None) or "utf-8"
+        errors = options.pop("errors", None) or "replace"
+        with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
+            completed = subprocess.run(normalized, stdout=stdout, stderr=stderr, **options)
+            stdout_size = stdout.tell()
+            stderr_size = stderr.tell()
+            if stdout_size > self.maximum_capture_bytes or stderr_size > self.maximum_capture_bytes:
+                raise ValueError(
+                    f"command output exceeds the {self.maximum_capture_bytes}-byte capture limit"
+                )
+            stdout.seek(0)
+            stderr.seek(0)
+            stdout_bytes = stdout.read()
+            stderr_bytes = stderr.read()
+        captured_stdout = stdout_bytes.decode(encoding, errors) if wants_text else stdout_bytes
+        captured_stderr = stderr_bytes.decode(encoding, errors) if wants_text else stderr_bytes
+        return subprocess.CompletedProcess(
+            normalized, completed.returncode, captured_stdout, captured_stderr
+        )
 
 
 process_adapter = ProcessAdapter()
@@ -140,6 +167,12 @@ class WindowsApiAdapter:
         if loader is None:
             raise OSError("Win32 libraries are unavailable on this platform")
         return loader(name, use_last_error=True)
+
+    def is_administrator(self) -> bool | None:
+        try:
+            return bool(self.load_library("shell32").IsUserAnAdmin())
+        except OSError:
+            return None
 
 
 windows_api_adapter = WindowsApiAdapter()

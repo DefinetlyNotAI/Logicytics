@@ -8,6 +8,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+from core.packet import packet_capture
+from logicytics.artifacts import WorkspaceArtifactWriter
+from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import (
     FilesystemAdapter, NetworkAdapter, ProcessAdapter, RegistryAdapter, WindowsApiAdapter, which,
 )
@@ -15,13 +18,71 @@ from logicytics.platform_adapters import (
 
 class ProcessAdapterTests(unittest.TestCase):
     def test_process_adapter_normalizes_and_delegates_shell_free_commands(self) -> None:
-        completed = subprocess.CompletedProcess(("tool", "argument"), 0, "output", "")
-        with patch("logicytics.platform_adapters.subprocess.run", return_value=completed) as invoke:
+        def execute(command, *, stdout, stderr, **options):
+            stdout.write(b"output")
+            stderr.write(b"warning")
+            return subprocess.CompletedProcess(command, 7)
+
+        with patch("logicytics.platform_adapters.subprocess.run", side_effect=execute) as invoke:
             result = ProcessAdapter().run(["tool", Path("argument")], capture_output=True,
                                           check=False, text=True, timeout=5)
-        self.assertIs(completed, result)
-        invoke.assert_called_once_with(("tool", "argument"), capture_output=True,
-                                       check=False, text=True, timeout=5)
+        self.assertEqual(("tool", "argument"), result.args)
+        self.assertEqual(7, result.returncode)
+        self.assertEqual("output", result.stdout)
+        self.assertEqual("warning", result.stderr)
+        self.assertEqual(("tool", "argument"), invoke.call_args.args[0])
+        self.assertEqual({"check": False, "timeout": 5}, {
+            key: value for key, value in invoke.call_args.kwargs.items()
+            if key not in {"stdout", "stderr"}
+        })
+
+    def test_process_adapter_rejects_captured_streams_over_the_hard_limit(self) -> None:
+        adapter = ProcessAdapter()
+        adapter.maximum_capture_bytes = 3
+
+        def execute(command, *, stdout, stderr, **options):
+            stdout.write(b"four")
+            return subprocess.CompletedProcess(command, 0)
+
+        with patch("logicytics.platform_adapters.subprocess.run", side_effect=execute):
+            with self.assertRaisesRegex(ValueError, "capture limit"):
+                adapter.run(["tool"], capture_output=True, text=True)
+
+    def test_packet_capture_streams_rows_to_its_artifact_file(self) -> None:
+        packet = bytearray(24)
+        packet[0] = 0x45
+        packet[9] = 6
+        packet[12:16] = bytes((192, 0, 2, 1))
+        packet[16:20] = bytes((198, 51, 100, 2))
+        packet[20:24] = bytes((0x1F, 0x90, 0x01, 0xBB))
+        capture = Mock()
+        capture.recv.side_effect = (bytes(packet), bytes(packet))
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifacts = root / "artifacts"
+            workspace.mkdir()
+            artifacts.mkdir()
+            context = CollectorContext(
+                run_id="run-" + "0" * 32,
+                collector_id="core.packet.packet_capture",
+                workspace=workspace,
+                temporary_directory=workspace / "tmp",
+                artifacts=WorkspaceArtifactWriter(
+                    "core.packet.packet_capture", workspace, artifacts, 1024 * 1024, 1
+                ),
+                logger=Mock(),
+                settings={"interface": "192.0.2.1", "packet_count": 2,
+                          "timeout_seconds": 1, "retry_window_seconds": 0},
+                cancellation_file=workspace / ".cancelled",
+            )
+            with patch.object(packet_capture.socket, "socket", return_value=capture), \
+                    patch.object(packet_capture.select, "select", return_value=([capture], [], [])):
+                result = packet_capture.PacketCaptureCollector().collect(context)
+            rows = (workspace / "packet_capture.csv").read_text(encoding="utf-8").splitlines()
+        self.assertIs(CollectorStatus.SUCCEEDED, result.status)
+        self.assertEqual(3, len(rows))
+        self.assertEqual(2, capture.recv.call_count)
 
     def test_process_adapter_rejects_shell_empty_and_unbounded_timeout_inputs(self) -> None:
         adapter = ProcessAdapter()
@@ -103,7 +164,8 @@ class ProcessAdapterTests(unittest.TestCase):
         offenders = [
             str(path.relative_to(project_root))
             for path in (project_root / "core").rglob("*.py")
-            if "ctypes.WinDLL(" in path.read_text(encoding="utf-8")
+            if any(token in path.read_text(encoding="utf-8")
+                   for token in ("ctypes.WinDLL(", "ctypes.windll."))
         ]
         self.assertEqual([], offenders)
 

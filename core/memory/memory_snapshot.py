@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import windows_api_adapter
 
 
 class _MemoryStatus(ctypes.Structure):
@@ -30,7 +31,8 @@ def _read_memory_status() -> _MemoryStatus:
     """Read Windows aggregate memory counters or raise the platform error."""
     status = _MemoryStatus()
     status.dwLength = ctypes.sizeof(_MemoryStatus)
-    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+    kernel32 = windows_api_adapter.load_library("kernel32")
+    if not kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
         raise ctypes.WinError()
     return status
 

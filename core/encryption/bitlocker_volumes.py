@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ctypes
 import getpass
 import json
 import platform
@@ -12,7 +11,7 @@ from logicytics.platform_adapters import which
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
-from logicytics.platform_adapters import network_adapter as socket
+from logicytics.platform_adapters import network_adapter as socket, windows_api_adapter
 
 
 def _is_access_denied(detail: str) -> bool:
@@ -24,7 +23,7 @@ def _is_access_denied(detail: str) -> bool:
 def _is_administrator() -> bool | None:
     """Return the local administrator token state when Windows can report it."""
     try:
-        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+        return windows_api_adapter.is_administrator()
     except OSError:
         return None
 

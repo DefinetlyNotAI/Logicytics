@@ -89,59 +89,72 @@ class PacketCaptureCollector(CoreCollector):
             packet_count=count,
             retry_window_seconds=retry_window,
         )
-        capture: socket.socket | None = None
-        observations: list[dict[str, str]] = []
-        try:
-            capture = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
-            capture.bind((interface, 0))
-            capture.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-            capture.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
-            deadline = time.monotonic() + timeout
-            retry_deadline = time.monotonic() + retry_window
-            while len(observations) < count and time.monotonic() < deadline:
-                if context.is_cancelled:
-                    return CollectorResult(CollectorStatus.CANCELLED, "cancelled during packet capture")
-                ready, _, _ = select.select([capture], [], [], min(1.0, deadline - time.monotonic()))
-                if not ready:
-                    continue
-                try:
-                    payload = capture.recv(65_535)
-                except OSError:
-                    if time.monotonic() < retry_deadline:
-                        time.sleep(0.1)
-                        continue
-                    raise
-                row = _packet_row(payload)
-                if row is not None:
-                    observations.append(row)
-        except PermissionError as error:
-            return CollectorResult(CollectorStatus.SKIPPED, "raw packet capture requires an elevated account",
-                                   errors=(str(error),))
-        except OSError as error:
-            if error.winerror in {5, 10013}:
-                return CollectorResult(CollectorStatus.SKIPPED, "raw packet capture was denied for the current account",
-                                       errors=(str(error),))
-            return CollectorResult(CollectorStatus.FAILED, "raw packet capture failed", errors=(str(error),))
-        finally:
-            if capture is not None:
-                try:
-                    capture.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
-                except OSError:
-                    pass
-                capture.close()
-        if context.is_cancelled:
-            return CollectorResult(CollectorStatus.CANCELLED, "cancelled before packet-capture serialization")
         output = context.workspace / "packet_capture.csv"
+        capture: socket.socket | None = None
+        observation_count = 0
+        early_result: CollectorResult | None = None
         with output.open("w", newline="", encoding="utf-8") as stream:
             writer = csv.DictWriter(stream, fieldnames=("source_ip", "destination_ip", "protocol", "source_port",
                                                         "destination_port", "packet_bytes"))
             writer.writeheader()
-            writer.writerows(observations)
+            try:
+                capture = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
+                capture.bind((interface, 0))
+                capture.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+                capture.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
+                deadline = time.monotonic() + timeout
+                retry_deadline = time.monotonic() + retry_window
+                while observation_count < count and time.monotonic() < deadline:
+                    if context.is_cancelled:
+                        early_result = CollectorResult(
+                            CollectorStatus.CANCELLED, "cancelled during packet capture"
+                        )
+                        break
+                    ready, _, _ = select.select([capture], [], [], min(1.0, deadline - time.monotonic()))
+                    if not ready:
+                        continue
+                    try:
+                        payload = capture.recv(65_535)
+                    except OSError:
+                        if time.monotonic() < retry_deadline:
+                            time.sleep(0.1)
+                            continue
+                        raise
+                    row = _packet_row(payload)
+                    if row is not None:
+                        writer.writerow(row)
+                        observation_count += 1
+            except PermissionError as error:
+                early_result = CollectorResult(
+                    CollectorStatus.SKIPPED, "raw packet capture requires an elevated account",
+                    errors=(str(error),),
+                )
+            except OSError as error:
+                if error.winerror in {5, 10013}:
+                    early_result = CollectorResult(
+                        CollectorStatus.SKIPPED,
+                        "raw packet capture was denied for the current account",
+                        errors=(str(error),),
+                    )
+                else:
+                    early_result = CollectorResult(
+                        CollectorStatus.FAILED, "raw packet capture failed", errors=(str(error),)
+                    )
+            finally:
+                if capture is not None:
+                    try:
+                        capture.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
+                    except OSError:
+                        pass
+                    capture.close()
+        if early_result is not None:
+            output.unlink(missing_ok=True)
+            return early_result
         if context.is_cancelled:
             output.unlink(missing_ok=True)
-            return CollectorResult(CollectorStatus.CANCELLED, "cancelled during packet-capture serialization")
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled after packet capture")
         artifact = context.artifacts.register_file(output, media_type="text/csv")
-        context.report_progress("packet_capture_finished", observation_count=len(observations),
+        context.report_progress("packet_capture_finished", observation_count=observation_count,
                                 bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("packet metadata captured", (artifact,))
 

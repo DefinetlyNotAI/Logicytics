@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import windows_api_adapter
 
 _DRIVE_TYPES = {0: "unknown", 1: "no_root_directory", 2: "removable", 3: "fixed", 4: "remote", 5: "optical",
                 6: "ram_disk"}
@@ -16,7 +17,7 @@ _DRIVE_TYPES = {0: "unknown", 1: "no_root_directory", 2: "removable", 3: "fixed"
 
 def _volume_details() -> list[dict[str, int | str]]:
     """Read mounted logical-volume capacity, label, and filesystem metadata only."""
-    kernel32 = ctypes.windll.kernel32
+    kernel32 = windows_api_adapter.load_library("kernel32")
     mask = kernel32.GetLogicalDrives()
     if mask == 0:
         raise ctypes.WinError()
