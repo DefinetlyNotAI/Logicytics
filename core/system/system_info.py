@@ -6,11 +6,11 @@ import getpass
 import json
 import os
 import platform
-import socket
 from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import network_adapter as socket
 
 
 class SystemInfoCollector(CoreCollector):

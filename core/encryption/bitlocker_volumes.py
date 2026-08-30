@@ -6,13 +6,13 @@ import ctypes
 import getpass
 import json
 import platform
-import socket
 from logicytics.platform_adapters import process_adapter as subprocess
 from datetime import datetime, timezone
 from shutil import which
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import network_adapter as socket
 
 
 def _is_access_denied(detail: str) -> bool:

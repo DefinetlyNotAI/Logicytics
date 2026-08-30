@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import socket
 from datetime import datetime, timezone
 
 from logicytics import (
@@ -16,6 +15,7 @@ from logicytics import (
     ValidationResult,
 )
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import network_adapter as socket
 
 
 class NetworkIdentityCollector(CoreCollector):

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import socket as _socket
 from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -77,3 +78,41 @@ class RegistryAdapter:
 
 
 registry_adapter = RegistryAdapter()
+
+
+class NetworkAdapter:
+    """Centralize local host resolution and explicitly authorized socket creation."""
+
+    AF_INET = _socket.AF_INET
+    SOCK_RAW = _socket.SOCK_RAW
+    IPPROTO_IP = _socket.IPPROTO_IP
+    IP_HDRINCL = _socket.IP_HDRINCL
+    SIO_RCVALL = getattr(_socket, "SIO_RCVALL", 0)
+    RCVALL_ON = getattr(_socket, "RCVALL_ON", 1)
+    RCVALL_OFF = getattr(_socket, "RCVALL_OFF", 0)
+    gaierror = _socket.gaierror
+
+    @staticmethod
+    def gethostname() -> str:
+        return _socket.gethostname()
+
+    @staticmethod
+    def gethostbyname(hostname: str) -> str:
+        return _socket.gethostbyname(hostname)
+
+    @staticmethod
+    def getaddrinfo(host: str, port: int | str | None):
+        return _socket.getaddrinfo(host, port)
+
+    @staticmethod
+    def inet_ntoa(packed_ip: bytes) -> str:
+        return _socket.inet_ntoa(packed_ip)
+
+    @staticmethod
+    def socket(family: int = -1, type: int = -1, proto: int = -1, fileno: int | None = None):
+        if fileno is None:
+            return _socket.socket(family, type, proto)
+        return _socket.socket(family, type, proto, fileno=fileno)
+
+
+network_adapter = NetworkAdapter()

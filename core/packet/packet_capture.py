@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-import socket
 import struct
 import time
 
@@ -20,6 +19,7 @@ from logicytics import (
     ValidationResult,
 )
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import network_adapter as socket
 
 
 def _packet_row(payload: bytes) -> dict[str, str] | None:

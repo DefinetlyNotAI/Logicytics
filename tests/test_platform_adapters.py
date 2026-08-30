@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from logicytics.platform_adapters import ProcessAdapter, RegistryAdapter
+from logicytics.platform_adapters import NetworkAdapter, ProcessAdapter, RegistryAdapter
 
 
 class ProcessAdapterTests(unittest.TestCase):
@@ -59,6 +59,30 @@ class ProcessAdapterTests(unittest.TestCase):
             str(path.relative_to(project_root))
             for path in (project_root / "core").rglob("*.py")
             if "import winreg" in path.read_text(encoding="utf-8").splitlines()
+        ]
+        self.assertEqual([], offenders)
+
+    def test_network_adapter_delegates_host_and_socket_operations(self) -> None:
+        adapter = NetworkAdapter()
+        fake_socket = Mock()
+        fake_socket.gethostname.return_value = "host"
+        fake_socket.gethostbyname.return_value = "192.0.2.1"
+        fake_socket.getaddrinfo.return_value = [(2, 1, 6, "", ("192.0.2.1", 0))]
+        fake_socket.inet_ntoa.return_value = "198.51.100.1"
+        fake_socket.socket.return_value = "socket"
+        with patch("logicytics.platform_adapters._socket", fake_socket):
+            self.assertEqual("host", adapter.gethostname())
+            self.assertEqual("192.0.2.1", adapter.gethostbyname("host"))
+            self.assertTrue(adapter.getaddrinfo("host", None))
+            self.assertEqual("198.51.100.1", adapter.inet_ntoa(b"\x00" * 4))
+            self.assertEqual("socket", adapter.socket(2, 3, 4))
+
+    def test_core_collectors_cannot_import_socket_directly(self) -> None:
+        project_root = Path(__file__).resolve().parent.parent
+        offenders = [
+            str(path.relative_to(project_root))
+            for path in (project_root / "core").rglob("*.py")
+            if "import socket" in path.read_text(encoding="utf-8").splitlines()
         ]
         self.assertEqual([], offenders)
 
