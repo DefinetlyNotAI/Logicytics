@@ -163,6 +163,10 @@ python -m logicytics run --profile standard --acknowledge-authorization `
 
 Plugin collectors never join any profile unless explicitly included or enabled
 with `--plugins`. Unknown profile names are rejected before collection begins.
+Python MODs are workspace-confined unless the user explicitly approves the
+`filesystem_write` capability. Native PowerShell, batch, and executable MODs
+must declare and receive that approval because their host writes cannot be
+enforced through Python audit hooks.
 
 ## Execution modes
 

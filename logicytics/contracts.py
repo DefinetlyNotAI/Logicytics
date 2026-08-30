@@ -103,6 +103,7 @@ class Capability(StrEnum):
     """Explicitly approved platform access a collector may request."""
 
     FILESYSTEM_READ = "filesystem_read"
+    FILESYSTEM_WRITE = "filesystem_write"
     REGISTRY_READ = "registry_read"
     SUBPROCESS = "subprocess"
     NETWORK = "network"

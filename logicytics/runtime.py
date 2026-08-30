@@ -123,6 +123,8 @@ class _WorkerMutationGuard:
         if not isinstance(value, (str, bytes, os.PathLike)):
             raise PermissionError("collector filesystem mutation has an unsupported target")
         path = Path(os.fsdecode(value)).resolve()
+        if Capability.FILESYSTEM_WRITE in self.capabilities:
+            return
         if not any(path == root or root in path.parents for root in self.roots):
             raise PermissionError(f"collector filesystem mutation escapes its private workspace: {path}")
 
@@ -284,10 +286,27 @@ def _result_from_dict(data: dict[str, object]) -> CollectorResult:
     )
 
 
-def _mod_command(script: Path, execution_type: str) -> list[str]:
+def _mod_command(
+        script: Path,
+        execution_type: str,
+        workspace: Path | None = None,
+        collector_id: str = "mod.legacy",
+        capabilities: tuple[Capability, ...] = (),
+) -> list[str]:
     """Build a shell-free command for one copied legacy MODS script."""
     if execution_type == "mod_python":
-        return [sys.executable, str(script)]
+        if workspace is None:
+            raise ValueError("Python mod execution requires a private workspace")
+        runner = Path(__file__).with_name("mod_runner.py")
+        return [
+            sys.executable,
+            "-I",
+            str(runner),
+            str(script),
+            str(workspace),
+            collector_id,
+            json.dumps([capability.value for capability in capabilities]),
+        ]
     if execution_type == "mod_powershell":
         return ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(script)]
     if execution_type == "mod_batch":
@@ -332,7 +351,13 @@ def _run_mod_worker(payload: dict[str, object], result_queue: multiprocessing.Qu
         if cancellation_file.exists():
             result = CollectorResult.cancelled("mod cancelled before execution")
         else:
-            command = _mod_command(copied_script, str(payload["execution_type"]))
+            command = _mod_command(
+                copied_script,
+                str(payload["execution_type"]),
+                workspace,
+                metadata.id,
+                metadata.capabilities,
+            )
             environment = {
                 "PATH": os.environ.get("PATH", ""),
                 "SYSTEMROOT": os.environ.get("SYSTEMROOT", ""),

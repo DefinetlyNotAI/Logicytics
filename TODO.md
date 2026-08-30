@@ -479,7 +479,7 @@ Windows platform allows.
       outputs.
 - [x] Give mods the same artifact writer, cancellation, timeout, logging, and
       result contract as built-in collectors.
-- [ ] Prevent a mod from changing global configuration, replacing built-in
+- [x] Prevent a mod from changing global configuration, replacing built-in
       collectors, or writing outside its permitted workspace without explicit
       permission.
 - [x] Preserve compatibility with existing script mods through an adapter layer,

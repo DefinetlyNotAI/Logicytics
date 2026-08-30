@@ -31,7 +31,7 @@ This example is intentionally bounded and non-sensitive:
   "description": "Creates a bounded local compatibility report.",
   "author": "Example author",
   "supported_platforms": ["win32"],
-  "capabilities": ["subprocess"],
+  "capabilities": ["subprocess", "filesystem_write"],
   "privilege_level": "standard",
   "sensitive_data_categories": [],
   "network_access": "none",
@@ -48,7 +48,13 @@ This example is intentionally bounded and non-sensitive:
 The ID must be `mod.<filename_stem>`. Legacy adapters must request the
 `subprocess` capability, and the user must approve it with
 `--allow-capability subprocess`. Other access must also be declared and
-approved. Invalid or missing sidecars quarantine the mod; selecting all mods
+approved. Python MODs are audit-confined to their private workspace by default.
+PowerShell, batch, and executable MODs must additionally declare
+`filesystem_write` and the user must explicitly approve it with
+`--allow-capability filesystem_write`, because Python cannot enforce filesystem
+boundaries inside native child processes. A Python MOD needs that capability
+only when intentionally writing outside its workspace. Invalid or missing
+sidecars quarantine the mod; selecting all mods
 then fails preflight before any collector launches.
 
 ## Execution and output
@@ -77,7 +83,9 @@ SHA-256 sidecar.
 
 Mods are untrusted, opt-in local code. Worker/process isolation, a private
 workspace, capability approval, bounded resources, packaging allowlists, and
-process-tree termination contain engine state and evidence publication. They do
-not grant access beyond the Windows account running Logicytics, nor do they
-replace Windows ACLs or an AppContainer. Review a mod and its declared
-capabilities before approving execution.
+process-tree termination contain engine state and evidence publication. Python
+MOD mutation attempts outside the workspace fail unless `filesystem_write` was
+approved. Native MOD types require that explicit high-risk approval before
+preflight accepts them. Approval does not grant access beyond the Windows
+account running Logicytics, nor replace Windows ACLs or an AppContainer. Review
+a mod and its declared capabilities before approving execution.

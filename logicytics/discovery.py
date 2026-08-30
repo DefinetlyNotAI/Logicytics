@@ -417,6 +417,14 @@ def _validate_mod(path: Path, mods_root: Path) -> CollectorCandidate:
         candidate.runtime_error = f"mod ID must match its filename: {expected_id}"
     elif Capability.SUBPROCESS not in metadata.capabilities:
         candidate.runtime_error = "legacy script mods must declare the subprocess capability"
+    elif (
+        candidate.execution_type != "mod_python"
+        and Capability.FILESYSTEM_WRITE not in metadata.capabilities
+    ):
+        candidate.runtime_error = (
+            "non-Python mods must declare filesystem_write because their host mutations "
+            "cannot be audit-confined"
+        )
     else:
         candidate.metadata = metadata
     return candidate
@@ -721,7 +729,7 @@ def preflight(project_root: Path, *, configuration_hash: str = "unconfigured") -
     for candidate in candidates:
         if candidate.static_errors:
             continue
-        if candidate.kind is CollectorKind.MOD and candidate.metadata is not None:
+        if candidate.kind is CollectorKind.MOD:
             continue
         relative_path = candidate.path.resolve().relative_to(project_root.resolve()).as_posix()
         entry = cached.get(relative_path)

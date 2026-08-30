@@ -142,7 +142,7 @@ def _plugin_collector_source() -> str:
     )
 
 
-def _mod_metadata(name: str) -> dict[str, object]:
+def _mod_metadata(name: str, *, filesystem_write: bool = False) -> dict[str, object]:
     """Return a complete sidecar declaration for a harmless legacy script fixture."""
     return {
         "id": f"mod.{name}",
@@ -152,7 +152,10 @@ def _mod_metadata(name: str) -> dict[str, object]:
         "description": "Harmless isolated legacy script fixture.",
         "author": "tests",
         "supported_platforms": [sys.platform],
-        "capabilities": ["subprocess"],
+        "capabilities": [
+            "subprocess",
+            *(["filesystem_write"] if filesystem_write else []),
+        ],
         "privilege_level": "standard",
         "sensitive_data_categories": [],
         "network_access": "none",
@@ -558,6 +561,80 @@ class CoreFunctionalityTests(unittest.TestCase):
                 self.assertTrue(any(name.endswith("/report.txt") for name in names))
                 self.assertIsNone(archive.testzip())
 
+    def test_python_mod_cannot_mutate_project_configuration_without_write_approval(self) -> None:
+        """The Python MOD bootstrap blocks host writes while an independent MOD still succeeds."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            configuration_path = root / "logicytics.json"
+            configuration_path.write_text('{"schema_version":4}\n', encoding="utf-8")
+            mods = root / "MODS"
+            mods.mkdir()
+            scripts = {
+                "good.py": "from pathlib import Path\nPath('report.txt').write_text('ok', encoding='utf-8')\n",
+                "malicious.py": (
+                    "from pathlib import Path\n"
+                    f"Path({str(configuration_path)!r}).write_text('replaced', encoding='utf-8')\n"
+                ),
+            }
+            for filename, source in scripts.items():
+                script = mods / filename
+                script.write_text(source, encoding="utf-8")
+                script.with_suffix(".py.mod.json").write_text(
+                    json.dumps(_mod_metadata(script.stem)),
+                    encoding="utf-8",
+                )
+            report = preflight(root)
+            self.assertEqual(2, len(report.valid), report.invalid)
+            plan = build_plan(
+                report,
+                RunRequest(
+                    enable_mods=True,
+                    approved_capabilities=(Capability.SUBPROCESS,),
+                    acknowledge_authorization=True,
+                    max_workers=2,
+                ),
+            )
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {record.id: record for record in outcome.manifest.collectors}
+            self.assertEqual("succeeded", records["mod.good"].status, records["mod.good"].errors)
+            self.assertEqual("failed", records["mod.malicious"].status)
+            self.assertTrue(
+                any("private workspace" in error for error in records["mod.malicious"].errors),
+                records["mod.malicious"].errors,
+            )
+            self.assertEqual('{"schema_version":4}\n', configuration_path.read_text(encoding="utf-8"))
+
+    def test_native_mod_requires_explicit_filesystem_write_declaration(self) -> None:
+        """Native child processes are quarantined unless their unconfined write risk is declared."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            mods = root / "MODS"
+            mods.mkdir()
+            script = mods / "native.bat"
+            script.write_text("@echo off\n", encoding="utf-8")
+            script.with_suffix(".bat.mod.json").write_text(
+                json.dumps(_mod_metadata("native")),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn("filesystem_write", report.invalid[0].runtime_error)
+
+            script.with_suffix(".bat.mod.json").write_text(
+                json.dumps(_mod_metadata("native", filesystem_write=True)),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.valid), report.invalid)
+            with self.assertRaisesRegex(PlanError, "filesystem_write"):
+                build_plan(
+                    report,
+                    RunRequest(
+                        enable_mods=True,
+                        approved_capabilities=(Capability.SUBPROCESS,),
+                    ),
+                )
+
     def test_nopy_and_modded_modes_select_declared_mod_types_without_helpers(self) -> None:
         """Compatibility modes include all MODS or only non-Python MODS deterministically."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -568,16 +645,19 @@ class CoreFunctionalityTests(unittest.TestCase):
                 script = mods / f"{name}{extension}"
                 script.write_text("pass\n" if extension == ".py" else "@echo off\n", encoding="utf-8")
                 script.with_suffix(extension + ".mod.json").write_text(
-                    json.dumps(_mod_metadata(name)),
+                    json.dumps(_mod_metadata(name, filesystem_write=extension != ".py")),
                     encoding="utf-8",
                 )
             report = preflight(root)
             self.assertEqual(2, len(report.valid), report.invalid)
-            modded = build_plan(report, RunRequest(enable_mods=True, approved_capabilities=(Capability.SUBPROCESS,)))
+            modded = build_plan(report, RunRequest(
+                enable_mods=True,
+                approved_capabilities=(Capability.SUBPROCESS, Capability.FILESYSTEM_WRITE),
+            ))
             nopy = build_plan(report, RunRequest(
                 enable_mods=True,
                 non_python_only=True,
-                approved_capabilities=(Capability.SUBPROCESS,),
+                approved_capabilities=(Capability.SUBPROCESS, Capability.FILESYSTEM_WRITE),
             ))
             self.assertEqual(["mod.batch_mod", "mod.python_mod"], [item.metadata.id for item in modded.collectors])
             self.assertEqual(["mod.batch_mod"], [item.metadata.id for item in nopy.collectors])
@@ -602,7 +682,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 script = mods / filename
                 script.write_text(contents, encoding="utf-8")
                 script.with_suffix(script.suffix + ".mod.json").write_text(
-                    json.dumps(_mod_metadata(script.stem)),
+                    json.dumps(_mod_metadata(script.stem, filesystem_write=True)),
                     encoding="utf-8",
                 )
             executable = Path(os.environ.get("WINDIR", r"C:\Windows")) / "System32" / "whoami.exe"
@@ -610,7 +690,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             copied_executable = mods / "identity_mod.exe"
             shutil.copy2(executable, copied_executable)
             copied_executable.with_suffix(".exe.mod.json").write_text(
-                json.dumps(_mod_metadata("identity_mod")),
+                json.dumps(_mod_metadata("identity_mod", filesystem_write=True)),
                 encoding="utf-8",
             )
             report = preflight(root)
@@ -620,7 +700,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 RunRequest(
                     enable_mods=True,
                     non_python_only=True,
-                    approved_capabilities=(Capability.SUBPROCESS,),
+                    approved_capabilities=(Capability.SUBPROCESS, Capability.FILESYSTEM_WRITE),
                     acknowledge_authorization=True,
                     max_workers=1,
                 ),
