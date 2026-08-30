@@ -916,7 +916,7 @@ appropriate default/deep/non-Python mode.
       version handling.
 - [x] Add per-collector tests using mocked Windows command/registry/WMI responses.
 - [x] Add Windows integration tests for each output contract.
-- [ ] Test default, threaded, minimal, deep, non-Python, performance, modded,
+- [x] Test default, threaded, minimal, deep, non-Python, performance, modded,
       debug, update, usage, shutdown, reboot, cancellation, and permission-denied
       flows.
 - [x] Verify that every collector is represented in the CLI mode matrix and the

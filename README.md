@@ -102,6 +102,8 @@ package location, and retention behavior is defined in [OUTPUTS.md](OUTPUTS.md)
 and enforced by the isolated artifact writer.
 Supported legacy inputs, their exact v4 replacements, and removed internal shims
 are documented in [MIGRATION.md](MIGRATION.md).
+The executable evidence for every supported mode, maintenance action, power
+action, cancellation, and permission flow is indexed in [FLOW_MATRIX.md](FLOW_MATRIX.md).
 
 ## Requirements
 
