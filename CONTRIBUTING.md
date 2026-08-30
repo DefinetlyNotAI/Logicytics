@@ -5,6 +5,12 @@ or MOD adapter, read [MIGRATION.md](MIGRATION.md). Compatibility bridges must
 remain bounded translations into the canonical v4 request and artifact model;
 do not add a second execution or output path.
 
+Each collector module owns exactly one collector class and one primary job. Split
+a feature into a separate collector ID whenever it needs a different capability,
+privilege level, network reach, sensitive-data category, timeout/cost profile, or
+output name/format. Do not hide a second authorization or output contract behind
+a setting in an existing collector.
+
 Looking to contribute something to Logicytics? **Here's how you can help.**
 
 Please take a moment to review this document to make the contribution

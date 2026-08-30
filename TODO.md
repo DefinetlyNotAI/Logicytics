@@ -259,7 +259,7 @@ that fails any mandatory rule is not a collector and must not be launched.
       documented responsibility.
 - [x] Reject a collector whose name, metadata, class, or outputs claim one specialty
       while its implementation declares or performs an unrelated primary job.
-- [ ] Require a separate collector when a feature has a different permission model,
+- [x] Require a separate collector when a feature has a different permission model,
       timeout profile, sensitive-data classification, or output contract.
 
 #### Required class interface

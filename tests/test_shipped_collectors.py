@@ -299,6 +299,35 @@ class ShippedCollectorTests(unittest.TestCase):
         ))
         self.assertEqual(("legacy_code/**",), contract.workspace_patterns)
 
+    def test_each_core_module_owns_exactly_one_policy_contract(self) -> None:
+        """Different permission, sensitivity, timeout, or output policies require separate IDs."""
+        project_root = Path(__file__).resolve().parent.parent
+        report = preflight(project_root)
+        signatures: dict[str, tuple[object, ...]] = {}
+        for candidate in report.valid:
+            if candidate.kind.value != "core" or candidate.metadata is None:
+                continue
+            tree = ast.parse(candidate.path.read_text(encoding="utf-8"), filename=str(candidate.path))
+            collector_classes = [
+                node for node in tree.body
+                if isinstance(node, ast.ClassDef)
+                and any(ast.unparse(base).endswith("CoreCollector") for base in node.bases)
+            ]
+            with self.subTest(collector=candidate.metadata.id):
+                self.assertEqual([candidate.expected_class], [node.name for node in collector_classes])
+                contract = core_output_contract(candidate.metadata)
+                signatures[candidate.metadata.id] = (
+                    candidate.metadata.capabilities,
+                    candidate.metadata.privilege_level,
+                    candidate.metadata.network_access,
+                    candidate.metadata.sensitive_data_categories,
+                    candidate.metadata.timeout_seconds,
+                    candidate.metadata.estimated_cost,
+                    contract.workspace_patterns,
+                    contract.media_types,
+                )
+        self.assertEqual(len(signatures), len(set(signatures)))
+
 
 if __name__ == "__main__":
     unittest.main()
