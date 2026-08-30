@@ -116,10 +116,21 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
         if unknown:
             raise ValueError(f"rerun collectors were not present in the original run: {', '.join(unknown)}")
         parent_run_id = previous["run_id"]
+    selection_only = getattr(arguments, "command", None) == "collector"
+    if selection_only and (
+        arguments.include
+        or arguments.exclude
+        or arguments.profile is not None
+        or arguments.plugins
+        or arguments.mods
+    ):
+        raise ValueError("collector execution cannot combine its ID with profile or selection flags")
+    includes = (arguments.collector_id,) if selection_only else tuple(arguments.include)
     return RunRequest(
         profile=profile,
-        include=tuple(arguments.include),
+        include=includes,
         exclude=tuple(arguments.exclude),
+        selection_only=selection_only,
         enable_plugins=arguments.plugins,
         enable_mods=enable_mods,
         non_python_only=non_python_only,
@@ -150,7 +161,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--modes", action="store_true", help="Show the typed execution-mode inclusion matrix.")
     parser.add_argument("--match", metavar="TEXT", help="Suggest the closest documented action for natural-language input.")
     subcommands = parser.add_subparsers(dest="command")
-    for command in ("preflight", "debug", "update", "dev", "plan", "run"):
+    for command in ("preflight", "debug", "update", "dev", "plan", "run", "collector"):
         subparser = subcommands.add_parser(command, help=f"Run the {command} action.")
         subparser.add_argument(
             "--profile",
@@ -241,6 +252,23 @@ def _parser() -> argparse.ArgumentParser:
                 "--acknowledge-authorization",
                 action="store_true",
                 help="Confirm you are authorized to collect the selected evidence.",
+            )
+            subparser.add_argument(
+                "--interactive",
+                action="store_true",
+                help="Pause at the final status so an interactive command window remains visible.",
+            )
+        if command == "collector":
+            subparser.add_argument("collector_id", help="Exact dotted ID of the collector to run independently.")
+            subparser.add_argument(
+                "--acknowledge-authorization",
+                action="store_true",
+                help="Confirm you are authorized to collect this collector's evidence.",
+            )
+            subparser.add_argument(
+                "--no-package",
+                action="store_true",
+                help="Finalize the direct collector manifest without creating a ZIP package.",
             )
             subparser.add_argument(
                 "--interactive",

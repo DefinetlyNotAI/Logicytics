@@ -47,6 +47,8 @@ def _selected_by_request(candidate: CollectorCandidate, request: RunRequest) -> 
     metadata = candidate.metadata
     if metadata.id in request.exclude:
         return False
+    if request.selection_only:
+        return metadata.id in request.include
     if metadata.id in request.include:
         return True
     if request.rerun_from is not None:

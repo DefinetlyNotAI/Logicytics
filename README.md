@@ -115,6 +115,7 @@ python -m logicytics preflight
 python -m logicytics debug
 python -m logicytics dev
 python -m logicytics update --launch-action debug --new-window
+python -m logicytics collector core.system.system_info --acknowledge-authorization
 python -m logicytics plan --profile standard
 python -m logicytics run --profile standard --acknowledge-authorization
 ```
@@ -126,6 +127,9 @@ ZIP package and SHA-256 sidecar use the action, UTC request timestamp, and run
 ID, and are written into that run's `packages/` and `hashes/` directories;
 collector workspaces and `logs/` remain run-scoped. Explicit reruns use a
 `rerun-<utc>-run-<id>.zip` package identity.
+`collector <exact-id>` runs only that validated collector and any declared
+dependencies through the same authorization, isolation, artifact, manifest,
+packaging, and cleanup pipeline; it never adds unrelated profile members.
 Add `--interactive` to `run` when a transient command window should pause on the
 final status; noninteractive and automated runs never prompt.
 

@@ -543,7 +543,7 @@ Windows platform allows.
 - [ ] Recreate Logicytics as a Windows system-data collection and packaging tool.
 - [ ] Preserve every supported collection category, execution mode, output type,
       configuration option, and extension point listed below.
-- [ ] Keep collection modules independently runnable as well as runnable through
+- [x] Keep collection modules independently runnable as well as runnable through
       the main orchestrator.
 - [ ] Make collection results predictable, timestamped, inspectable, and easy to
       verify after export.
@@ -929,7 +929,7 @@ appropriate default/deep/non-Python mode.
 ## 9. v4.0 completion checklist
 
 - [ ] Every feature in this file has an implementation owner/status.
-- [ ] Every collector can be run directly and through the orchestrator.
+- [x] Every collector can be run directly and through the orchestrator.
 - [x] Every mode has an explicit collector inclusion matrix.
 - [ ] Every output has a documented path, format, and retention rule.
 - [x] A failed collector cannot silently make the run appear successful.

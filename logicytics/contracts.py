@@ -482,6 +482,7 @@ class RunRequest:
     profile: str = "standard"
     include: tuple[str, ...] = ()
     exclude: tuple[str, ...] = ()
+    selection_only: bool = False
     enable_plugins: bool = False
     enable_mods: bool = False
     non_python_only: bool = False
@@ -515,11 +516,13 @@ class RunRequest:
         if self.rerun_from is not None and not self.include:
             raise ValueError("request rerun_from requires explicit included collector IDs")
         for name in (
-                "enable_plugins", "enable_mods", "non_python_only",
+                "selection_only", "enable_plugins", "enable_mods", "non_python_only",
                 "acknowledge_authorization", "performance_check",
         ):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"request {name} must be boolean")
+        if self.selection_only and not self.include:
+            raise ValueError("request selection_only requires explicit included collector IDs")
         if not isinstance(self.max_workers, int) or isinstance(self.max_workers, bool) or not 1 <= self.max_workers <= 64:
             raise ValueError("request max_workers must be an integer from 1 to 64")
         if self.performance_check and self.max_workers != 1:

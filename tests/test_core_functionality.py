@@ -2040,6 +2040,66 @@ max_retry_time = 30
         self.assertTrue(request.performance_check)
         self.assertEqual(1, request.max_workers)
 
+    def test_collector_command_runs_only_the_selected_id_and_declared_dependencies(self) -> None:
+        """Direct execution never pulls unrelated profile members into its supervised run."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core = root / "core" / "system"
+            core.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            (core / "first.py").write_text(
+                _delayed_collector_source("first", 0),
+                encoding="utf-8",
+            )
+            (core / "second.py").write_text(
+                _delayed_collector_source("second", 0),
+                encoding="utf-8",
+            )
+            output = io.StringIO()
+            with patch("logicytics.cli._project_root", return_value=root), patch(
+                "sys.stdout", output
+            ):
+                self.assertEqual(
+                    0,
+                    main([
+                        "collector",
+                        "core.system.first",
+                        "--acknowledge-authorization",
+                    ]),
+                )
+            manifests = list((root / "output" / "data").glob("run-*/manifest.json"))
+            self.assertEqual(1, len(manifests))
+            manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
+            self.assertEqual(
+                ["core.system.first"],
+                [record["id"] for record in manifest["collectors"]],
+            )
+            self.assertIn("Status: succeeded", output.getvalue())
+
+            dependent = core / "dependent.py"
+            dependent.write_text(
+                _delayed_collector_source(
+                    "dependent",
+                    0,
+                    dependencies=("core.system.second",),
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            plan = build_plan(
+                report,
+                RunRequest(
+                    include=("core.system.dependent",),
+                    selection_only=True,
+                    acknowledge_authorization=True,
+                    max_workers=1,
+                ),
+            )
+            self.assertEqual(
+                ["core.system.second", "core.system.dependent"],
+                [candidate.metadata.id for candidate in plan.collectors],
+            )
+
     def test_typed_mode_registry_maps_every_user_mode_and_legacy_alias(self) -> None:
         """One immutable matrix owns profile, scheduling, MODS, and performance behavior."""
         parser = _parser()
