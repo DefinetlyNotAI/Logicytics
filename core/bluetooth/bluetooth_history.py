@@ -62,8 +62,7 @@ class BluetoothHistoryCollector(CoreCollector):
                                    errors=(str(error),))
         snapshot = {"collected_at": datetime.now(timezone.utc).isoformat(),
                     "devices": devices if isinstance(devices, list) else [devices]}
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        output = context.workspace / f"bluetooth_history_{stamp}.json"
+        output = context.workspace / "bluetooth_history.json"
         output.write_text(json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="application/json")
         context.report_progress("bluetooth_history_finished", device_count=len(snapshot["devices"]),

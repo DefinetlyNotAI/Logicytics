@@ -872,7 +872,7 @@ appropriate default/deep/non-Python mode.
 - [x] Recreate packet-sniffer settings for interface, packet count, timeout, and
       retry duration.
 - [x] Version the configuration schema and provide migration/default handling.
-- [ ] Define stable output names and formats for every collector.
+- [x] Define stable output names and formats for every collector.
 - [x] Keep logs, hashes, packages, graphs, CSVs, HTML, text, and copied evidence
       discoverable under one run-specific output tree.
 - [x] Include collection metadata: version, action, start/end times, host, user,
@@ -931,7 +931,7 @@ appropriate default/deep/non-Python mode.
 - [ ] Every feature in this file has an implementation owner/status.
 - [x] Every collector can be run directly and through the orchestrator.
 - [x] Every mode has an explicit collector inclusion matrix.
-- [ ] Every output has a documented path, format, and retention rule.
+- [x] Every output has a documented path, format, and retention rule.
 - [x] A failed collector cannot silently make the run appear successful.
 - [x] A cancelled run leaves a recoverable partial-run report and cleans only its
       own temporary data.

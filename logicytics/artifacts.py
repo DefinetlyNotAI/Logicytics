@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import hashlib
 import os
 import re
@@ -47,6 +48,8 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             maximum_artifact_bytes: int | None = None,
             run_output_budget_bytes: int | None = None,
             cancellation_file: Path | None = None,
+            allowed_relative_paths: tuple[str, ...] | None = None,
+            allowed_media_types: tuple[str, ...] | None = None,
     ) -> None:
         self._collector_id = collector_id
         collector_parts = collector_id.split(".", 2)
@@ -76,6 +79,8 @@ class WorkspaceArtifactWriter(ArtifactWriter):
         ):
             raise ArtifactError("run_output_budget_bytes must be a positive integer")
         self._cancellation_file = cancellation_file
+        self._allowed_relative_paths = allowed_relative_paths
+        self._allowed_media_types = allowed_media_types
         self._registration_lock = RLock()
         self._bytes_registered = 0
         self._artifacts: list[Artifact] = []
@@ -116,6 +121,8 @@ class WorkspaceArtifactWriter(ArtifactWriter):
                 media_type,
         ):
             raise ArtifactError("artifact media_type must be a valid MIME type")
+        if self._allowed_media_types is not None and media_type not in self._allowed_media_types:
+            raise ArtifactError(f"artifact media type is outside the collector output contract: {media_type}")
         if not isinstance(evidence_kind, EvidenceKind):
             raise ArtifactError("artifact evidence_kind must be an EvidenceKind value")
         if not isinstance(transformations, tuple) or any(
@@ -133,6 +140,13 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             raise ArtifactError("collector artifact count exceeds its declared maximum_artifact_files")
 
         relative_source = source.relative_to(self._workspace)
+        if self._allowed_relative_paths is not None and not any(
+                fnmatch.fnmatchcase(relative_source.as_posix(), pattern)
+                for pattern in self._allowed_relative_paths
+        ):
+            raise ArtifactError(
+                f"artifact path is outside the collector output contract: {relative_source.as_posix()}"
+            )
         safe_collector_id = self._collector_id.replace(".", "_")
         destination = self._artifact_root / safe_collector_id / relative_source
         if not _is_within(destination, self._artifact_root):

@@ -9,6 +9,7 @@ from pathlib import Path
 from logicytics import ResourceClass
 from logicytics.discovery import preflight
 from logicytics.modes import EXECUTION_MODES, mode_matrix
+from logicytics.output_contracts import core_output_contract
 
 
 class ShippedCollectorTests(unittest.TestCase):
@@ -169,6 +170,27 @@ class ShippedCollectorTests(unittest.TestCase):
                 self.assertIn("workspace", attributes)
                 self.assertIn("artifacts", attributes)
                 self.assertIn("register_file", attributes)
+
+    def test_every_core_collector_has_a_stable_output_contract(self) -> None:
+        """Every shipped output has explicit names, formats, package paths, and retention."""
+        project_root = Path(__file__).resolve().parent.parent
+        report = preflight(project_root)
+        for candidate in report.valid:
+            if candidate.kind.value != "core" or candidate.metadata is None:
+                continue
+            with self.subTest(collector=candidate.metadata.id):
+                contract = core_output_contract(candidate.metadata)
+                self.assertEqual(candidate.metadata.output_media_types, contract.media_types)
+                self.assertTrue(contract.workspace_patterns)
+                self.assertTrue(all(
+                    "\\" not in pattern and not pattern.startswith("/")
+                    for pattern in contract.workspace_patterns
+                ))
+                self.assertEqual(len(contract.workspace_patterns), len(contract.package_patterns))
+                self.assertTrue(all(
+                    path.startswith("evidence/{kind}/core_") for path in contract.package_patterns
+                ))
+                self.assertEqual("run_retention_days", contract.retention)
 
 
 if __name__ == "__main__":

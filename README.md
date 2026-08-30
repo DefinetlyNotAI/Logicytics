@@ -97,6 +97,9 @@ records, the artifact catalog, errors, and package metadata. Readers fail closed
 on absent, non-integer, or unsupported schema versions. The manifest separately
 records package layout version `1.0` and every section path; the package SHA-256
 remains an external sidecar because an archive cannot contain its own final digest.
+Every shipped collector's stable filename or path pattern, MIME format, canonical
+package location, and retention behavior is defined in [OUTPUTS.md](OUTPUTS.md)
+and enforced by the isolated artifact writer.
 
 ## Requirements
 

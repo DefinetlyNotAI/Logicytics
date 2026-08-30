@@ -46,6 +46,7 @@ from logicytics.logging import FileEventLogger, get_application_logger
 from logicytics.manifest import CollectorRecord, RunManifest, write_manifest, utc_now
 from logicytics.packaging import package_manifest
 from logicytics.output_layout import ensure_output_layout
+from logicytics.output_contracts import core_output_contract
 from logicytics.planner import RunPlan
 
 
@@ -449,6 +450,14 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
             with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
                 collector = _load_collector(Path(str(payload["path"])), str(payload["expected_class"]))
                 metadata = collector.metadata()
+                source_path = Path(str(payload["path"])).resolve()
+                shipped_core_root = (Path(__file__).resolve().parent.parent / "core").resolve()
+                try:
+                    source_path.relative_to(shipped_core_root)
+                except ValueError:
+                    output_contract = None
+                else:
+                    output_contract = core_output_contract(metadata)
                 writer = WorkspaceArtifactWriter(
                     metadata.id,
                     workspace,
@@ -463,6 +472,8 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                     maximum_artifact_bytes=metadata.maximum_artifact_bytes,
                     run_output_budget_bytes=int(payload["run_output_budget_bytes"]),
                     cancellation_file=Path(str(payload["cancellation_file"])),
+                    allowed_relative_paths=(output_contract.workspace_patterns if output_contract else None),
+                    allowed_media_types=(output_contract.media_types if output_contract else None),
                 )
                 context = CollectorContext(
                     run_id=str(payload["run_id"]),

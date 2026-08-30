@@ -2345,6 +2345,35 @@ max_retry_time = 30
                 writer.register_file(source)
             self.assertEqual([], list(outside.iterdir()))
 
+    def test_artifact_writer_enforces_declared_output_name_and_format(self) -> None:
+        """A core collector cannot silently drift from its published output contract."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            artifact_root = root / "artifacts"
+            workspace.mkdir()
+            artifact_root.mkdir()
+            expected = workspace / "system_info.json"
+            unexpected = workspace / "renamed.json"
+            expected.write_text("{}\n", encoding="utf-8")
+            unexpected.write_text("{}\n", encoding="utf-8")
+            writer = WorkspaceArtifactWriter(
+                "core.system.system_info",
+                workspace,
+                artifact_root,
+                1024,
+                2,
+                allowed_relative_paths=("system_info.json",),
+                allowed_media_types=("application/json",),
+            )
+
+            with self.assertRaisesRegex(ArtifactError, "output contract"):
+                writer.register_file(unexpected, media_type="application/json")
+            with self.assertRaisesRegex(ArtifactError, "media type"):
+                writer.register_file(expected, media_type="text/plain")
+            artifact = writer.register_file(expected, media_type="application/json")
+            self.assertEqual("core_system_system_info/system_info.json", artifact.relative_path)
+
     def test_cancelled_artifact_copy_never_publishes_partial_evidence(self) -> None:
         """Cancellation must stop staging without creating a final or temporary artifact."""
         with tempfile.TemporaryDirectory() as temporary:
