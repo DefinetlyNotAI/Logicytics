@@ -510,7 +510,7 @@ Windows platform allows.
       run status, and reading artifacts.
 - [x] Keep platform adapters mockable so collectors can be tested on non-Windows
       development machines.
-- [ ] Add contract tests for every collector's metadata, lifecycle, result states,
+- [x] Add contract tests for every collector's metadata, lifecycle, result states,
       artifact declarations, and error behavior.
 - [x] Add planner tests for profiles, explicit selections, dependencies, conflicts,
       duplicate collectors, and invalid configurations.

@@ -10,7 +10,7 @@ import socket
 from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
-from logicytics.contracts import CollectorContext
+from logicytics.contracts import CollectorContext, CollectorStatus
 
 
 class SystemInfoCollector(CoreCollector):
@@ -41,6 +41,8 @@ class SystemInfoCollector(CoreCollector):
 
     def collect(self, context: CollectorContext) -> CollectorResult:
         """Write and register the system inventory as a JSON evidence artifact."""
+        if context.is_cancelled:
+            return CollectorResult(CollectorStatus.CANCELLED, "cancelled before system inventory collection")
         context.report_progress("system_inventory_started")
         inventory = {
             "collected_at": datetime.now(timezone.utc).isoformat(),

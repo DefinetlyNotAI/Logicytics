@@ -3,13 +3,41 @@
 from __future__ import annotations
 
 import ast
+import importlib.util
+import tempfile
 import unittest
 from pathlib import Path
 
 from logicytics import ResourceClass
+from logicytics.contracts import (
+    ArtifactWriter, CollectorContext, CollectorStatus, EventLogger, EvidenceKind,
+)
 from logicytics.discovery import preflight
 from logicytics.modes import EXECUTION_MODES, mode_matrix
 from logicytics.output_contracts import core_output_contract
+
+
+class _RejectingWriter(ArtifactWriter):
+    """Prove cancellation paths never attempt to publish evidence."""
+
+    def register_file(self, source: Path, *, media_type: str = "application/octet-stream",
+                      evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
+                      transformations: tuple[str, ...] = ()):
+        raise AssertionError("a cancelled collector must not register an artifact")
+
+
+class _NoopLogger(EventLogger):
+    def event(self, level: str, message: str, **fields: int | float | str) -> None:
+        return None
+
+
+def _load_collector(path: Path, class_name: str):
+    module_name = f"contract_{path.parent.name}_{path.stem}"
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return getattr(module, class_name)()
 
 
 class ShippedCollectorTests(unittest.TestCase):
@@ -191,6 +219,68 @@ class ShippedCollectorTests(unittest.TestCase):
                     path.startswith("evidence/{kind}/core_") for path in contract.package_patterns
                 ))
                 self.assertEqual("run_retention_days", contract.retention)
+
+    def test_every_core_collector_obeys_the_typed_lifecycle_contract(self) -> None:
+        """All shipped collectors fail closed on cancellation without platform access or artifacts."""
+        project_root = Path(__file__).resolve().parent.parent
+        report = preflight(project_root)
+        for candidate in report.valid:
+            if candidate.kind.value != "core" or candidate.metadata is None:
+                continue
+            with self.subTest(collector=candidate.metadata.id), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                cancellation = root / ".cancelled"
+                cancellation.touch()
+                context = CollectorContext(
+                    run_id="run-" + "0" * 32,
+                    collector_id=candidate.metadata.id,
+                    workspace=root,
+                    temporary_directory=root / "tmp",
+                    artifacts=_RejectingWriter(),
+                    logger=_NoopLogger(),
+                    settings={},
+                    cancellation_file=cancellation,
+                )
+                collector = _load_collector(candidate.path, candidate.expected_class)
+                validation = collector.validate(context)
+                self.assertFalse(validation.valid)
+                self.assertTrue(validation.reasons)
+                prepared = collector.prepare(context)
+                self.assertTrue(hasattr(prepared, "valid"))
+                result = collector.collect(context)
+                self.assertIs(CollectorStatus.CANCELLED, result.status)
+                self.assertFalse(result.artifacts)
+                self.assertIs(result, collector.finalize(context, result))
+                collector.cleanup(context)
+
+    def test_every_registered_artifact_media_type_is_declared(self) -> None:
+        """Static artifact calls cannot introduce an undeclared output format."""
+        project_root = Path(__file__).resolve().parent.parent
+        report = preflight(project_root)
+        for candidate in report.valid:
+            if candidate.kind.value != "core" or candidate.metadata is None:
+                continue
+            tree = ast.parse(candidate.path.read_text(encoding="utf-8"), filename=str(candidate.path))
+            register_calls = [
+                node for node in ast.walk(tree)
+                if isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "register_file"
+            ]
+            declared_at_calls = {
+                keyword.value.value
+                for node in register_calls for keyword in node.keywords
+                if keyword.arg == "media_type"
+                and isinstance(keyword.value, ast.Constant)
+                and isinstance(keyword.value.value, str)
+            }
+            if any(not any(keyword.arg == "media_type" for keyword in node.keywords)
+                   for node in register_calls):
+                declared_at_calls.add("application/octet-stream")
+            with self.subTest(collector=candidate.metadata.id):
+                self.assertTrue(register_calls)
+                self.assertTrue(declared_at_calls)
+                self.assertLessEqual(declared_at_calls, set(candidate.metadata.output_media_types))
 
 
 if __name__ == "__main__":
