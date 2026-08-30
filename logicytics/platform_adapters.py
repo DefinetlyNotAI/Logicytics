@@ -6,6 +6,8 @@ import subprocess
 import socket as _socket
 import ctypes
 import shutil
+import os
+from pathlib import Path
 from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -141,3 +143,52 @@ class WindowsApiAdapter:
 
 
 windows_api_adapter = WindowsApiAdapter()
+
+
+class FilesystemAdapter:
+    """Centralize host discovery and evidence staging while leaving publication to ArtifactWriter."""
+
+    @staticmethod
+    def home() -> Path:
+        return Path.home()
+
+    @staticmethod
+    def environment_path(name: str, fallback: Path) -> Path:
+        if not isinstance(name, str) or not name or not name.replace("_", "").isalnum():
+            raise ValueError("environment path name must be an alphanumeric variable name")
+        return Path(os.environ.get(name, fallback))
+
+    @staticmethod
+    def system_drive_root() -> Path:
+        return Path(os.environ.get("SystemDrive", "C:") + "\\")
+
+    @staticmethod
+    def children(path: Path):
+        return path.iterdir()
+
+    @staticmethod
+    def glob(path: Path, pattern: str):
+        return path.glob(pattern)
+
+    @staticmethod
+    def recursive(path: Path, pattern: str = "*"):
+        return path.rglob(pattern)
+
+    @staticmethod
+    def walk(path: Path, **options: Any):
+        return os.walk(path, **options)
+
+    @staticmethod
+    def scan(path: Path):
+        return os.scandir(path)
+
+    @staticmethod
+    def copy_file(source: Path, destination: Path) -> None:
+        shutil.copy2(source, destination)
+
+    @staticmethod
+    def disk_usage(path: Path):
+        return shutil.disk_usage(path)
+
+
+filesystem_adapter = FilesystemAdapter()

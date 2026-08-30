@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import filesystem_adapter
 
 SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".mp4"}
 MAX_FILE_BYTES = 50 * 1024 * 1024
@@ -41,7 +41,8 @@ class MediaBackupCollector(CoreCollector):
         """Copy supported regular media files while preserving source metadata."""
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before media backup")
-        source_roots = (("pictures", Path.home() / "Pictures"), ("videos", Path.home() / "Videos"))
+        home = filesystem_adapter.home()
+        source_roots = (("pictures", home / "Pictures"), ("videos", home / "Videos"))
         destination_root = context.workspace / "media_backup"
         copied: list[Path] = []
         copied_bytes = 0
@@ -57,7 +58,7 @@ class MediaBackupCollector(CoreCollector):
             if not exists:
                 continue
             try:
-                candidates = source_root.rglob("*")
+                candidates = filesystem_adapter.recursive(source_root)
                 for candidate in candidates:
                     if context.is_cancelled:
                         return CollectorResult(CollectorStatus.CANCELLED, "cancelled during media backup")
@@ -81,7 +82,7 @@ class MediaBackupCollector(CoreCollector):
                         destination = destination_root / category / f"{candidate.stem}_{timestamp}_{suffix}{candidate.suffix.casefold()}"
                         suffix += 1
                     destination.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(candidate, destination)
+                    filesystem_adapter.copy_file(candidate, destination)
                     if context.is_cancelled:
                         destination.unlink(missing_ok=True)
                         for copied_path in copied:

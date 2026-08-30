@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
-import shutil
 from pathlib import Path
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import filesystem_adapter
 
 CHROMIUM_FILES = ("History", "History-journal", "Cookies", "Cookies-journal", "Login Data", "Login Data-journal",
                   "Bookmarks", "Preferences")
@@ -27,7 +26,7 @@ def _copy_file(source: Path, destination: Path, copied_bytes: int) -> tuple[Path
     if size > MAX_FILE_BYTES or copied_bytes + size > MAX_TOTAL_BYTES:
         return None, copied_bytes
     destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source, destination)
+    filesystem_adapter.copy_file(source, destination)
     return destination, copied_bytes + size
 
 
@@ -58,8 +57,9 @@ class BrowserDataBackupCollector(CoreCollector):
         """Copy supported profile files from configured local browser locations."""
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before browser data backup")
-        local = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-        roaming = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
+        home = filesystem_adapter.home()
+        local = filesystem_adapter.environment_path("LOCALAPPDATA", home / "AppData" / "Local")
+        roaming = filesystem_adapter.environment_path("APPDATA", home / "AppData" / "Roaming")
         chromium_roots = (("chrome", local / "Google" / "Chrome" / "User Data"),
                           ("edge", local / "Microsoft" / "Edge" / "User Data"),
                           ("opera", roaming / "Opera Software" / "Opera Stable"),
@@ -69,7 +69,7 @@ class BrowserDataBackupCollector(CoreCollector):
         context.report_progress("browser_data_backup_started")
         for browser, root in chromium_roots:
             try:
-                profile_roots = [root] if browser.startswith("opera") else [path for path in root.iterdir() if
+                profile_roots = [root] if browser.startswith("opera") else [path for path in filesystem_adapter.children(root) if
                                                                             path.is_dir() and (
                                                                                         path.name == "Default" or path.name.startswith(
                                                                                     "Profile "))]
@@ -92,7 +92,7 @@ class BrowserDataBackupCollector(CoreCollector):
                         copied.append(destination)
         firefox_profiles = roaming / "Mozilla" / "Firefox" / "Profiles"
         try:
-            profiles = [path for path in firefox_profiles.iterdir() if path.is_dir()]
+            profiles = [path for path in filesystem_adapter.children(firefox_profiles) if path.is_dir()]
         except OSError:
             profiles = []
         for profile in profiles:

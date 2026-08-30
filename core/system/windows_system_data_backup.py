@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
-import shutil
 from pathlib import Path
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import filesystem_adapter
 
 MAX_FILE_BYTES = 100 * 1024 * 1024
 
@@ -39,8 +38,8 @@ class WindowsSystemDataBackupCollector(CoreCollector):
         """Copy supported Windows system-data files and preserve source metadata."""
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before Windows system-data backup")
-        windows = Path(os.environ.get("SystemRoot", r"C:\Windows"))
-        program_data = Path(os.environ.get("ProgramData", r"C:\ProgramData"))
+        windows = filesystem_adapter.environment_path("SystemRoot", Path(r"C:\Windows"))
+        program_data = filesystem_adapter.environment_path("ProgramData", Path(r"C:\ProgramData"))
         candidates = [
             ("group_policy", windows / "System32" / "GroupPolicy" / "Machine" / "Registry.pol"),
             ("group_policy", windows / "System32" / "GroupPolicy" / "User" / "Registry.pol"),
@@ -48,8 +47,9 @@ class WindowsSystemDataBackupCollector(CoreCollector):
             ("event_logs", windows / "System32" / "winevt" / "Logs" / "Application.evtx"),
             ("event_logs", windows / "System32" / "winevt" / "Logs" / "Security.evtx"),
         ]
-        candidates.extend(("security_support", path) for path in
-                          (program_data / "Microsoft" / "Windows Defender" / "Support").glob("*.log"))
+        candidates.extend(("security_support", path) for path in filesystem_adapter.glob(
+            program_data / "Microsoft" / "Windows Defender" / "Support", "*.log"
+        ))
         copied: list[Path] = []
         context.report_progress("windows_system_data_backup_started")
         for label, source in candidates:
@@ -60,7 +60,7 @@ class WindowsSystemDataBackupCollector(CoreCollector):
                     continue
                 destination = context.workspace / "windows_system_data" / label / source.name
                 destination.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(source, destination)
+                filesystem_adapter.copy_file(source, destination)
             except OSError:
                 continue
             if context.is_cancelled:

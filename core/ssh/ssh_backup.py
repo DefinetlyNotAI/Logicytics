@@ -7,6 +7,7 @@ from pathlib import Path
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import filesystem_adapter
 
 MAX_FILE_BYTES = 10 * 1024 * 1024
 MAX_ARCHIVE_SOURCE_BYTES = 128 * 1024 * 1024
@@ -38,7 +39,7 @@ class SshBackupCollector(CoreCollector):
         """Archive bounded regular files from .ssh while preserving relative paths."""
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before SSH backup")
-        ssh_directory = Path.home() / ".ssh"
+        ssh_directory = filesystem_adapter.home() / ".ssh"
         try:
             directory_exists = ssh_directory.is_dir()
         except OSError as error:
@@ -54,7 +55,7 @@ class SshBackupCollector(CoreCollector):
         cancelled = False
         with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as output:
             try:
-                candidates = sorted(ssh_directory.rglob("*"))
+                candidates = sorted(filesystem_adapter.recursive(ssh_directory))
             except OSError as error:
                 return CollectorResult(CollectorStatus.SKIPPED, "the current user's .ssh directory is inaccessible",
                                        errors=(str(error),))

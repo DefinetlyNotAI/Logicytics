@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from logicytics.platform_adapters import process_adapter as subprocess
 from pathlib import Path
-from logicytics.platform_adapters import which
+from logicytics.platform_adapters import filesystem_adapter, which
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
@@ -63,7 +63,7 @@ class WifiProfileKeysCollector(CoreCollector):
                 return CollectorResult(CollectorStatus.SKIPPED,
                                        "Wi-Fi profile-key access was denied for the current account", errors=(message,))
             return CollectorResult(CollectorStatus.FAILED, "Wi-Fi profile-key export failed", errors=(message,))
-        profiles = sorted(path for path in export_directory.glob("*.xml") if path.is_file())
+        profiles = sorted(path for path in filesystem_adapter.glob(export_directory, "*.xml") if path.is_file())
         if not profiles:
             return CollectorResult(CollectorStatus.SKIPPED, "no saved Wi-Fi profiles with key material were exported")
         artifacts = tuple(

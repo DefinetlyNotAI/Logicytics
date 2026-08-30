@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 from logicytics.platform_adapters import (
-    NetworkAdapter, ProcessAdapter, RegistryAdapter, WindowsApiAdapter, which,
+    FilesystemAdapter, NetworkAdapter, ProcessAdapter, RegistryAdapter, WindowsApiAdapter, which,
 )
 
 
@@ -121,6 +122,33 @@ class ProcessAdapterTests(unittest.TestCase):
             for path in (project_root / "core").rglob("*.py")
             if "from shutil import which" in path.read_text(encoding="utf-8")
         ]
+        self.assertEqual([], offenders)
+
+    def test_filesystem_adapter_enumerates_and_copies_without_publishing(self) -> None:
+        adapter = FilesystemAdapter()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            source.mkdir()
+            evidence = source / "evidence.txt"
+            evidence.write_text("evidence", encoding="utf-8")
+            destination = root / "staged.txt"
+            self.assertEqual([evidence], list(adapter.children(source)))
+            self.assertEqual([evidence], list(adapter.glob(source, "*.txt")))
+            self.assertEqual([evidence], list(adapter.recursive(source)))
+            adapter.copy_file(evidence, destination)
+            self.assertEqual(b"evidence", destination.read_bytes())
+            self.assertGreater(adapter.disk_usage(root).total, 0)
+
+    def test_core_collectors_use_the_filesystem_boundary_for_host_traversal(self) -> None:
+        project_root = Path(__file__).resolve().parent.parent
+        forbidden = ("Path.home()", "os.walk(", "os.scandir(", "shutil.copy2(", "shutil.disk_usage(",
+                     ".rglob(", ".iterdir(")
+        offenders = []
+        for path in (project_root / "core").rglob("*.py"):
+            source = path.read_text(encoding="utf-8")
+            if any(token in source for token in forbidden):
+                offenders.append(str(path.relative_to(project_root)))
         self.assertEqual([], offenders)
 
 

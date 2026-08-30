@@ -8,6 +8,7 @@ from pathlib import Path
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import filesystem_adapter
 
 _MAXIMUM_ENTRIES = 500
 
@@ -66,7 +67,7 @@ class StartupFolderEntriesCollector(CoreCollector):
                 missing_folders += 1
                 continue
             try:
-                children = sorted(folder.iterdir(), key=lambda path: path.name.casefold())
+                children = sorted(filesystem_adapter.children(folder), key=lambda path: path.name.casefold())
             except OSError as error:
                 return CollectorResult(CollectorStatus.SKIPPED, "Startup-folder access was denied", errors=(str(error),))
             for child in children:

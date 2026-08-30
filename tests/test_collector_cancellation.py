@@ -100,8 +100,8 @@ class CollectorCancellationTests(unittest.TestCase):
                 destination.write_bytes(source.read_bytes())
                 media_context.cancelled = True
 
-            with patch.object(media_backup.Path, "home", return_value=home), patch.object(
-                    media_backup.shutil, "copy2", side_effect=cancel_media_copy):
+            with patch.object(media_backup.filesystem_adapter, "home", return_value=home), patch.object(
+                    media_backup.filesystem_adapter, "copy_file", side_effect=cancel_media_copy):
                 media_result = media_backup.MediaBackupCollector().collect(media_context)
             self.assertEqual(CollectorStatus.CANCELLED, media_result.status)
             self.assertEqual([], [path for path in media_context.workspace.rglob("*") if path.is_file()])
@@ -145,7 +145,8 @@ class CollectorCancellationTests(unittest.TestCase):
                 system_context.cancelled = True
 
             with patch.dict(os.environ, {"SystemRoot": str(windows), "ProgramData": str(root / "ProgramData")}), \
-                    patch.object(windows_system_data_backup.shutil, "copy2", side_effect=cancel_system_copy):
+                    patch.object(windows_system_data_backup.filesystem_adapter, "copy_file",
+                                 side_effect=cancel_system_copy):
                 system_result = windows_system_data_backup.WindowsSystemDataBackupCollector().collect(system_context)
             self.assertEqual(CollectorStatus.CANCELLED, system_result.status)
             self.assertEqual([], [path for path in system_context.workspace.rglob("*") if path.is_file()])
@@ -163,7 +164,7 @@ class CollectorCancellationTests(unittest.TestCase):
                 ssh_context.cancelled = True
                 return result
 
-            with patch.object(ssh_backup.Path, "home", return_value=home), patch.object(
+            with patch.object(ssh_backup.filesystem_adapter, "home", return_value=home), patch.object(
                     ssh_backup.zipfile.ZipFile, "write", new=cancel_archive_write):
                 ssh_result = ssh_backup.SshBackupCollector().collect(ssh_context)
             self.assertEqual(CollectorStatus.CANCELLED, ssh_result.status)

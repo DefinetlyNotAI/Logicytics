@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import filesystem_adapter
 
 _DEFAULT_MAX_ENTRIES = 5_000
 _DEFAULT_MAX_DEPTH = 12
@@ -41,7 +41,7 @@ class SystemDriveTreeCollector(CoreCollector):
         """Check cancellation state and system-drive availability before traversal."""
         if context.is_cancelled:
             return ValidationResult(False, reasons=("run cancellation was requested",))
-        system_drive = Path(os.environ.get("SystemDrive", "C:") + "\\")
+        system_drive = filesystem_adapter.system_drive_root()
         if not system_drive.is_dir():
             return ValidationResult(False, reasons=(f"system drive is unavailable: {system_drive}",))
         return ValidationResult(True)
@@ -52,13 +52,13 @@ class SystemDriveTreeCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before system-drive tree collection")
         maximum_entries = _bounded_setting(context.settings, "max_entries", _DEFAULT_MAX_ENTRIES, _HARD_MAX_ENTRIES)
         maximum_depth = _bounded_setting(context.settings, "max_depth", _DEFAULT_MAX_DEPTH, _HARD_MAX_DEPTH)
-        root = Path(os.environ.get("SystemDrive", "C:") + "\\")
+        root = filesystem_adapter.system_drive_root()
         lines = [f"# system_drive={root}", f"# max_entries={maximum_entries}", f"# max_depth={maximum_depth}"]
         entries = 0
         skipped = 0
         truncated = False
         context.report_progress("system_drive_tree_started", max_entries=maximum_entries, max_depth=maximum_depth)
-        for current, directories, filenames in os.walk(root, topdown=True, followlinks=False,
+        for current, directories, filenames in filesystem_adapter.walk(root, topdown=True, followlinks=False,
                                                        onerror=lambda _error: None):
             if context.is_cancelled:
                 return CollectorResult(CollectorStatus.CANCELLED, "cancelled during system-drive tree collection")

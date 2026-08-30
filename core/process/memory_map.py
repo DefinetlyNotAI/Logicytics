@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import ctypes
 import json
-import shutil
 from ctypes import wintypes
 from pathlib import Path
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
-from logicytics.platform_adapters import windows_api_adapter
+from logicytics.platform_adapters import filesystem_adapter, windows_api_adapter
 
 
 class _MemoryBasicInformation(ctypes.Structure):
@@ -115,7 +114,7 @@ class MemoryMapCollector(CoreCollector):
                 break
             regions.pop()
             truncated = True
-        if shutil.disk_usage(context.workspace).free < len(serialized.encode("utf-8")) + safety_margin:
+        if filesystem_adapter.disk_usage(context.workspace).free < len(serialized.encode("utf-8")) + safety_margin:
             return CollectorResult(CollectorStatus.SKIPPED,
                                    "insufficient free disk space after configured memory-map safety margin")
         if context.is_cancelled:

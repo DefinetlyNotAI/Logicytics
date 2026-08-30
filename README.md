@@ -111,6 +111,14 @@ are documented in [MIGRATION.md](MIGRATION.md).
 The v4 core uses only the Python standard library. A collector may later declare
 its own dependency and capability requirements.
 
+Collectors reach Windows through `logicytics.platform_adapters`: guarded process
+execution covers PowerShell, WMI/CIM, WMIC, and command tools; dedicated adapters
+cover registry reads, host filesystem discovery and staging, socket access, and
+Win32 library loading. Privilege and UAC inspection remains in the application
+environment boundary. Core collectors may use these mockable service seams and
+`logicytics.contracts`, but cannot import orchestration services or bypass the
+artifact writer for publication.
+
 ## Commands
 
 Run these from the repository root:

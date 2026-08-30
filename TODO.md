@@ -408,7 +408,7 @@ Windows platform allows.
       coordinate collectors, and decide the final run status.
 - [x] **Collector layer:** perform one focused collection task through injected
       services; do not import the main application or depend on global state.
-- [ ] **Platform layer:** centralize PowerShell, WMIC/WMI, registry, filesystem,
+- [x] **Platform layer:** centralize PowerShell, WMIC/WMI, registry, filesystem,
       process, network, and privilege access behind testable adapters.
 - [x] **Artifact layer:** validate paths, stream output, normalize metadata, compute
       checksums, enforce size limits, and register artifacts.

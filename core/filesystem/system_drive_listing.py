@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import os
 from collections import deque
 from pathlib import Path
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import filesystem_adapter
 
 _DEFAULT_MAX_ENTRIES = 10_000
 _DEFAULT_MAX_DEPTH = 16
@@ -26,7 +26,7 @@ def _scan_directory(directory: Path) -> tuple[list[str], list[Path]]:
     entries: list[str] = []
     children: list[Path] = []
     try:
-        with os.scandir(directory) as scan:
+        with filesystem_adapter.scan(directory) as scan:
             for entry in scan:
                 try:
                     is_directory = entry.is_dir(follow_symlinks=False)
@@ -61,7 +61,7 @@ class SystemDriveListingCollector(CoreCollector):
         """Check cancellation state and system-drive availability before traversal."""
         if context.is_cancelled:
             return ValidationResult(False, reasons=("run cancellation was requested",))
-        root = Path(os.environ.get("SystemDrive", "C:") + "\\")
+        root = filesystem_adapter.system_drive_root()
         if not root.is_dir():
             return ValidationResult(False, reasons=(f"system drive is unavailable: {root}",))
         return ValidationResult(True)
@@ -72,7 +72,7 @@ class SystemDriveListingCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before system-drive listing collection")
         maximum_entries = _setting(context.settings, "max_entries", _DEFAULT_MAX_ENTRIES, _HARD_MAX_ENTRIES)
         maximum_depth = _setting(context.settings, "max_depth", _DEFAULT_MAX_DEPTH, _HARD_MAX_DEPTH)
-        root = Path(os.environ.get("SystemDrive", "C:") + "\\")
+        root = filesystem_adapter.system_drive_root()
         lines = [f"# system_drive={root}", f"# max_entries={maximum_entries}", f"# max_depth={maximum_depth}",
                  "# scheduling=run_supervisor"]
         pending = deque([(root, 0)])

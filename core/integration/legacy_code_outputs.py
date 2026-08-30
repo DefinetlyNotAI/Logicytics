@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 from logicytics import (
@@ -15,6 +14,7 @@ from logicytics import (
     ValidationResult,
 )
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import filesystem_adapter
 
 _EVIDENCE_EXTENSIONS = {
     ".csv", ".dot", ".evtx", ".html", ".htm", ".json", ".log", ".reg",
@@ -72,7 +72,7 @@ class LegacyCodeOutputsCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before legacy CODE import")
         code_root = self._code_root().resolve()
         candidates: list[Path] = []
-        for path in sorted(code_root.rglob("*")):
+        for path in sorted(filesystem_adapter.recursive(code_root)):
             if context.is_cancelled:
                 return CollectorResult.cancelled("cancelled during legacy CODE discovery")
             relative = path.relative_to(code_root)
@@ -141,5 +141,5 @@ class LegacyCodeOutputsCollector(CoreCollector):
 
     def cleanup(self, context: CollectorContext) -> None:
         """Remove only an unpublished temporary copy left by an interrupted import."""
-        for temporary in context.workspace.rglob("*.tmp"):
+        for temporary in filesystem_adapter.recursive(context.workspace, "*.tmp"):
             temporary.unlink(missing_ok=True)

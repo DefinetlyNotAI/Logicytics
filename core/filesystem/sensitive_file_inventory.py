@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
-import shutil
 from pathlib import Path
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import filesystem_adapter
 
 KEYWORDS = ("password", "secret", "code", "login", "api", "key", "token", "auth", "credential", "private",
             "certificate", "ssh", "pgp", "wallet")
@@ -20,7 +19,7 @@ def _copy(source: Path, destination: Path) -> Path | None:
     """Copy one regular source file into the private workspace, preserving metadata."""
     try:
         destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, destination)
+        filesystem_adapter.copy_file(source, destination)
     except OSError:
         return None
     return destination
@@ -59,13 +58,13 @@ class SensitiveFileInventoryCollector(CoreCollector):
         """Find matches and copy them through the scheduler-owned collector worker."""
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before sensitive-file inventory")
-        root = Path(str(context.settings.get("root", os.environ.get("SystemDrive", "C:") + "\\")))
+        root = Path(str(context.settings.get("root", filesystem_adapter.system_drive_root())))
         max_directories = int(context.settings.get("max_directories", 5_000))
         max_matches = int(context.settings.get("max_matches", 500))
         matches: list[Path] = []
         scanned_directories = 0
         context.report_progress("sensitive_file_inventory_started", root=str(root))
-        for directory, directories, filenames in os.walk(root, onerror=lambda _: None):
+        for directory, directories, filenames in filesystem_adapter.walk(root, onerror=lambda _: None):
             if context.is_cancelled:
                 return CollectorResult(CollectorStatus.CANCELLED, "cancelled during sensitive-file inventory")
             scanned_directories += 1
