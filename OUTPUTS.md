@@ -49,11 +49,10 @@ time-dependent.
 
 Collector workspaces are private staging locations and are removed after durable
 publication. The run tree, manifest, package, package hash, reports, and logs are
-retained together for `general.retention_days` (30 days by default). Cleanup
-removes only complete, run-owned directories older than that configured period.
-Copied evidence has no separate lifetime: raw and derived artifacts follow their
-owning run. A manifest-only run follows the same run-tree retention rule but has
-no ZIP or package-hash sidecar.
+retained together until the user explicitly removes that run. Schema v4 does not
+silently expire completed evidence. Copied evidence has no separate lifetime:
+raw and derived artifacts follow their owning run. A manifest-only run follows
+the same retained-with-run rule but has no ZIP or package-hash sidecar.
 
 Global application, debug, and performance logs live under `output/logs/` and
 follow the logging limits described in the configuration documentation; they are

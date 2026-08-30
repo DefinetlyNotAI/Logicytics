@@ -225,7 +225,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 self.assertTrue(all(
                     path.startswith("evidence/{kind}/core_") for path in contract.package_patterns
                 ))
-                self.assertEqual("run_retention_days", contract.retention)
+                self.assertEqual("retained_with_run", contract.retention)
 
     def test_every_core_collector_obeys_the_typed_lifecycle_contract(self) -> None:
         """All shipped collectors fail closed on cancellation without platform access or artifacts."""

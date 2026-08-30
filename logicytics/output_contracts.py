@@ -36,7 +36,7 @@ class OutputContract:
     collector_id: str
     workspace_patterns: tuple[str, ...]
     media_types: tuple[str, ...]
-    retention: str = "run_retention_days"
+    retention: str = "retained_with_run"
 
     @property
     def package_patterns(self) -> tuple[str, ...]:
