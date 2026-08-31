@@ -80,20 +80,19 @@ class ReleaseDocumentationTests(unittest.TestCase):
         for heading, (owner, status, evidence) in rows.items():
             with self.subTest(heading=heading):
                 self.assertTrue(owner)
-                self.assertIn(status, {"Complete", "Wiki pending"})
+                self.assertEqual("Complete", status)
                 self.assertTrue(evidence)
 
-    def test_only_the_external_wiki_documentation_item_remains_unchecked(self) -> None:
+    def test_every_todo_item_is_complete_and_wiki_evidence_is_recorded(self) -> None:
         unchecked = [
             line.removeprefix("- [ ] ")
             for line in self.todo.splitlines()
             if line.startswith("- [ ] ")
         ]
-        self.assertEqual(
-            ["Update README, contribution guidance, configuration documentation, and the"],
-            unchecked,
-        )
-        self.assertIn("separate GitHub wiki checkout", self.release)
+        self.assertEqual([], unchecked)
+        self.assertIn("GitHub wiki", self.release)
+        self.assertIn("eaf7628", self.release)
+        self.assertIn("eaf7628", self.status)
 
     def test_user_and_contributor_guides_cover_the_release_entry_points(self) -> None:
         documents = (

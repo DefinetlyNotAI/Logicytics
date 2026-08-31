@@ -507,6 +507,8 @@ BitLocker, networking, Sysinternals, and artifact-publication probes.
 - [FLOW_MATRIX.md](FLOW_MATRIX.md) — executable evidence for every user flow.
 - [FEATURE_STATUS.md](FEATURE_STATUS.md) — TODO section owners and status.
 - [V4_RELEASE.md](V4_RELEASE.md) — final v4.0 recreation and release evidence.
+- [Logicytics wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) — v4 user,
+  contributor, configuration, evidence, extension, and troubleshooting guides.
 - [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and
   [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — contributor and security policy.
 

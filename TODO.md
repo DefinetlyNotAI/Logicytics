@@ -923,7 +923,7 @@ appropriate default/deep/non-Python mode.
       v4.0 documentation.
 - [x] Verify that packages contain generated evidence and metadata only.
 - [x] Verify that hashes reproduce from the final package bytes.
-- [ ] Update README, contribution guidance, configuration documentation, and the
+- [x] Update README, contribution guidance, configuration documentation, and the
       repository wiki for v4.0.
 
 ## 9. v4.0 completion checklist
@@ -940,4 +940,5 @@ appropriate default/deep/non-Python mode.
 - [x] The final v4.0 release is documented as a complete recreation of the feature
       surface listed here.
 
-Once all is complete, ask the user to git clone the wiki of logicytics so that we may update the DOCS completly
+The separate Logicytics wiki was cloned and synchronized for v4.0 in wiki commit
+`eaf7628`.

@@ -3,8 +3,8 @@
 This register maps every section in [TODO.md](TODO.md) to its implementation
 owner, current status, and primary evidence. Every checklist item inherits the
 owner of its nearest heading; the checkbox beside that item is the authoritative
-item-level status. `Wiki pending` means repository code and versioned docs are
-complete but the separate GitHub wiki checkout still needs synchronization.
+item-level status. The separate GitHub wiki was synchronized for v4.0 in wiki
+commit `eaf7628`.
 
 | TODO section | Owner | Status | Primary evidence |
 | --- | --- | --- | --- |
@@ -54,13 +54,13 @@ complete but the separate GitHub wiki checkout still needs synchronization.
 | Developer action (`--dev`) | Maintenance maintainers | Complete | integrity/version/developer check tests |
 | 6. MODS extension system | Extension maintainers | Complete | `MODS.md`, MOD runner and package tests |
 | 7. Configuration and output contract | Configuration/artifact maintainers | Complete | `CONFIGURATION.md`, `OUTPUTS.md`, contract tests |
-| 8. v4.0 delivery phases | Release maintainers | Wiki pending | phases 1-4 complete; phase 5 awaits separate wiki checkout |
+| 8. v4.0 delivery phases | Release maintainers | Complete | phases 1-5 complete, including wiki commit `eaf7628` |
 | Phase 1 — Foundation | Architecture maintainers | Complete | contracts, configuration, logging, adapters, run workspace |
 | Phase 2 — Engine and packaging | Runtime/packaging maintainers | Complete | scheduling, modes, ZIP/hash, MOD packaging tests |
 | Phase 3 — Core collectors | Core collector maintainers | Complete | all 66 core collectors pass strict preflight |
 | Phase 4 — Deep collection and visualization | Deep-collection maintainers | Complete | deep profile, packet graph, usage SVG tests |
-| Phase 5 — Maintenance and release readiness | Release maintainers | Wiki pending | repository release gates complete; external wiki synchronization pending |
-| 9. v4.0 completion checklist | Release maintainers | Wiki pending | repository checklist complete except the separate wiki update |
+| Phase 5 — Maintenance and release readiness | Release maintainers | Complete | repository release gates and wiki commit `eaf7628` |
+| 9. v4.0 completion checklist | Release maintainers | Complete | all repository and wiki checklist items verified |
 
 ## Maintenance rule
 

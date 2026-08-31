@@ -8,9 +8,11 @@ interaction, maintenance, extension, output, and packaging capabilities while
 replacing the historical shared-script design with a typed, run-oriented,
 isolated architecture.
 
-The repository implementation and versioned documentation are release-complete.
-Synchronization of the separate GitHub wiki checkout is tracked independently in
-the TODO because the wiki is not stored in this repository.
+The repository implementation, versioned documentation, and separate
+[GitHub wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) are
+release-complete. The wiki's v4 user, contributor, configuration, evidence,
+extension, migration, security, and troubleshooting pages were synchronized in
+wiki commit `eaf7628`.
 
 ## Release identity
 
