@@ -103,6 +103,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.system.scheduled_tasks",
                 "core.system.windows_services",
                 "core.system.windows_system_data_backup",
+                "core.system.wmic_inventory",
                 "core.diagnostics.sysinternals_report",
                 "core.system.group_policy",
                 "core.usb.usb_storage_inventory",

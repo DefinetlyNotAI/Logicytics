@@ -11,6 +11,7 @@ from unittest.mock import Mock, patch
 from core.packet import packet_capture
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.environment import inspect_environment
 from logicytics.platform_adapters import (
     FilesystemAdapter, NetworkAdapter, ProcessAdapter, RegistryAdapter, WindowsApiAdapter, which,
 )
@@ -158,6 +159,22 @@ class ProcessAdapterTests(unittest.TestCase):
         for invalid in ("", "../kernel32", "folder\\library"):
             with self.subTest(name=invalid), self.assertRaises(ValueError):
                 WindowsApiAdapter().load_library(invalid)
+
+    def test_environment_inspection_uses_only_mockable_platform_adapters(self) -> None:
+        key = Mock()
+        key.__enter__ = Mock(return_value="uac-key")
+        key.__exit__ = Mock(return_value=False)
+        completed = subprocess.CompletedProcess((), 0, "RemoteSigned\n", "")
+        with patch("logicytics.environment.windows_api_adapter.is_administrator", return_value=True), \
+                patch("logicytics.environment.registry_adapter.OpenKey", return_value=key), \
+                patch("logicytics.environment.registry_adapter.QueryValueEx", return_value=(1, 4)), \
+                patch("logicytics.environment.which", return_value="C:/Windows/PowerShell.exe"), \
+                patch("logicytics.environment.process_adapter.run", return_value=completed) as run:
+            report = inspect_environment()
+        self.assertTrue(report.is_administrator)
+        self.assertTrue(report.uac_enabled)
+        self.assertEqual("RemoteSigned", report.powershell_execution_policy)
+        self.assertEqual("C:/Windows/PowerShell.exe", run.call_args.args[0][0])
 
     def test_core_collectors_cannot_load_win32_libraries_directly(self) -> None:
         project_root = Path(__file__).resolve().parent.parent

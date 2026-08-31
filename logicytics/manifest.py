@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import platform
-import ctypes
 import getpass
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -13,6 +12,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
 from logicytics.contracts import CONTRACT_VERSION, Artifact, CollectorResult, RunStatus
+from logicytics.platform_adapters import windows_api_adapter
 from logicytics.redaction import redact_mapping, redact_text
 
 MANIFEST_SCHEMA_VERSION = 1
@@ -255,10 +255,10 @@ def sys_platform() -> str:
 
 def _privilege_label() -> str:
     """Return the local elevation state without starting external tools."""
-    try:
-        return "true" if ctypes.windll.shell32.IsUserAnAdmin() else "false"
-    except (AttributeError, OSError):
+    state = windows_api_adapter.is_administrator()
+    if state is None:
         return "unknown"
+    return "true" if state else "false"
 
 
 def write_manifest(path: Path, manifest: RunManifest) -> None:

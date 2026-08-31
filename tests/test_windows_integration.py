@@ -18,7 +18,7 @@ from logicytics.platform_adapters import (
 @unittest.skipUnless(os.name == "nt", "Windows integration tests require Windows")
 class WindowsIntegrationTests(unittest.TestCase):
     def test_read_only_windows_platform_integrations_are_bounded(self) -> None:
-        """Exercise live privilege, PowerShell, registry, WMI, event, disk, and network boundaries."""
+        """Exercise live privilege, PowerShell, registry, WMI/WMIC, event, disk, and network boundaries."""
         privilege = windows_api_adapter.is_administrator()
         self.assertIn(privilege, {True, False, None})
 
@@ -44,6 +44,9 @@ class WindowsIntegrationTests(unittest.TestCase):
         manage_bde = which("manage-bde")
         if manage_bde is not None:
             probes["bitlocker"] = [manage_bde, "-status"]
+        wmic = which("wmic")
+        if wmic is not None:
+            probes["wmic"] = [wmic, "computersystem", "get", "Name", "/format:list"]
         for name, command in probes.items():
             with self.subTest(integration=name):
                 result = process_adapter.run(
