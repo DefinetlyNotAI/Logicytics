@@ -37,6 +37,7 @@ class ProcessAdapter:
     def run(self, command: Sequence[str], **options: Any) -> subprocess.CompletedProcess[str]:
         """Delegate to the guarded stdlib runner while retaining its familiar result contract."""
         normalized = self._command(command)
+        capture_directory = options.pop("capture_directory", None)
         if options.get("shell") is True:
             raise ValueError("collector process adapters never permit shell execution")
         timeout = options.get("timeout")
@@ -50,7 +51,14 @@ class ProcessAdapter:
         wants_text = bool(options.pop("text", False) or options.get("encoding") is not None)
         encoding = options.pop("encoding", None) or "utf-8"
         errors = options.pop("errors", None) or "replace"
-        with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
+        if capture_directory is not None:
+            capture_directory = Path(capture_directory)
+            if not capture_directory.is_dir():
+                raise ValueError("capture_directory must be an existing directory")
+        with (
+            tempfile.TemporaryFile(dir=capture_directory) as stdout,
+            tempfile.TemporaryFile(dir=capture_directory) as stderr,
+        ):
             completed = subprocess.run(normalized, stdout=stdout, stderr=stderr, **options)
             stdout_size = stdout.tell()
             stderr_size = stderr.tell()

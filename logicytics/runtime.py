@@ -375,6 +375,7 @@ def _run_mod_worker(payload: dict[str, object], result_queue: multiprocessing.Qu
                     command,
                     cwd=workspace,
                     env=environment,
+                    capture_directory=workspace / "tmp",
                     capture_output=True,
                     check=False,
                     text=True,

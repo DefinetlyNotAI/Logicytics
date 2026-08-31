@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -49,6 +50,26 @@ class ProcessAdapterTests(unittest.TestCase):
         with patch("logicytics.platform_adapters.subprocess.run", side_effect=execute):
             with self.assertRaisesRegex(ValueError, "capture limit"):
                 adapter.run(["tool"], capture_output=True, text=True)
+
+    def test_process_adapter_can_capture_inside_an_isolated_workspace(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            capture_directory = Path(temporary)
+            result = ProcessAdapter().run(
+                [sys.executable, "-c", "print('workspace capture')"],
+                capture_directory=capture_directory,
+                capture_output=True,
+                check=False,
+                text=True,
+            )
+            self.assertEqual(0, result.returncode)
+            self.assertEqual(["workspace capture"], result.stdout.splitlines())
+            self.assertEqual("", result.stderr)
+            with self.assertRaisesRegex(ValueError, "existing directory"):
+                ProcessAdapter().run(
+                    [sys.executable, "-c", "pass"],
+                    capture_directory=capture_directory / "missing",
+                    capture_output=True,
+                )
 
     def test_process_adapter_starts_shell_free_processes_and_reads_host_memory(self) -> None:
         process = Mock()

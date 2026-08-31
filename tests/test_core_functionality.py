@@ -14,7 +14,7 @@ import tempfile
 import unittest
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -1802,7 +1802,7 @@ max_retry_time = 30
         """Manifest snapshots hide credentials while collectors retain configured access."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            collector_id = "core.system.private_keys"
+            collector_id = "plugin.private_keys"
             settings = {
                 "password": "password-value",
                 "nested": {"refresh_token": "token-value", "cookie": "cookie-value"},
@@ -3073,7 +3073,16 @@ max_retry_time = 30
                 encoding="utf-8",
             )
             plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
-            outcome = RunSupervisor(root, load_config(root)).run(plan)
+            configuration = replace(
+                default_config(root),
+                collector_settings={
+                    "core.system.system_info": {
+                        "password": "evidence-password",
+                        "nested": {"access_token": "evidence-token"},
+                    }
+                },
+            )
+            outcome = RunSupervisor(root, configuration).run(plan)
             self.assertEqual("succeeded", outcome.manifest.status.value)
             self.assertEqual("password=[REDACTED]", outcome.manifest.collectors[0].summary)
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
