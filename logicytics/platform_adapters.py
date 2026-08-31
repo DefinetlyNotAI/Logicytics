@@ -7,6 +7,7 @@ import socket as _socket
 import ctypes
 import shutil
 import os
+import signal
 import tempfile
 from pathlib import Path
 from collections.abc import Sequence
@@ -23,12 +24,19 @@ class ProcessAdapter:
     """Run one explicit, shell-free host command through a central policy seam."""
 
     maximum_capture_bytes = 64 * 1024 * 1024
+    create_new_console = getattr(subprocess, "CREATE_NEW_CONSOLE", 0x00000010)
 
-    def run(self, command: Sequence[str], **options: Any) -> subprocess.CompletedProcess[str]:
-        """Delegate to the guarded stdlib runner while retaining its familiar result contract."""
+    @staticmethod
+    def _command(command: Sequence[str]) -> tuple[str, ...]:
+        """Validate and normalize an explicit shell-free command sequence."""
         normalized = tuple(str(argument) for argument in command)
         if not normalized:
             raise ValueError("command must contain at least one argument")
+        return normalized
+
+    def run(self, command: Sequence[str], **options: Any) -> subprocess.CompletedProcess[str]:
+        """Delegate to the guarded stdlib runner while retaining its familiar result contract."""
+        normalized = self._command(command)
         if options.get("shell") is True:
             raise ValueError("collector process adapters never permit shell execution")
         timeout = options.get("timeout")
@@ -59,6 +67,35 @@ class ProcessAdapter:
         return subprocess.CompletedProcess(
             normalized, completed.returncode, captured_stdout, captured_stderr
         )
+
+    def popen(self, command: Sequence[str], **options: Any) -> subprocess.Popen[Any]:
+        """Start one explicit long-lived process without invoking a command shell."""
+        normalized = self._command(command)
+        if options.get("shell") is True:
+            raise ValueError("process adapters never permit shell execution")
+        return subprocess.Popen(normalized, **options)
+
+    def memory_bytes(self, process_id: int) -> int | None:
+        """Return one process's resident memory through the host-specific boundary."""
+        if not isinstance(process_id, int) or isinstance(process_id, bool) or process_id <= 0:
+            raise ValueError("process_id must be a positive integer")
+        if os.name == "nt":
+            return windows_api_adapter.process_working_set(process_id)
+        status_path = Path(f"/proc/{process_id}/status")
+        try:
+            for line in status_path.read_text(encoding="ascii").splitlines():
+                if line.startswith("VmRSS:"):
+                    return int(line.split()[1]) * 1024
+        except (OSError, ValueError, IndexError):
+            return None
+        return None
+
+    @staticmethod
+    def terminate_process_group(process_id: int) -> None:
+        """Request termination of one non-Windows process group."""
+        if not isinstance(process_id, int) or isinstance(process_id, bool) or process_id <= 0:
+            raise ValueError("process_id must be a positive integer")
+        os.killpg(process_id, signal.SIGTERM)
 
 
 process_adapter = ProcessAdapter()
@@ -173,6 +210,99 @@ class WindowsApiAdapter:
             return bool(self.load_library("shell32").IsUserAnAdmin())
         except OSError:
             return None
+
+    def process_working_set(self, process_id: int) -> int | None:
+        """Return a Windows process working set without exposing raw Win32 handles."""
+        class ProcessMemoryCounters(ctypes.Structure):
+            _fields_ = [
+                ("cb", ctypes.c_ulong),
+                ("PageFaultCount", ctypes.c_ulong),
+                ("PeakWorkingSetSize", ctypes.c_size_t),
+                ("WorkingSetSize", ctypes.c_size_t),
+                ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                ("PagefileUsage", ctypes.c_size_t),
+                ("PeakPagefileUsage", ctypes.c_size_t),
+            ]
+
+        try:
+            kernel = self.load_library("kernel32")
+            psapi = self.load_library("psapi")
+        except OSError:
+            return None
+        handle = kernel.OpenProcess(0x0410, False, process_id)
+        if not handle:
+            return None
+        try:
+            counters = ProcessMemoryCounters()
+            counters.cb = ctypes.sizeof(counters)
+            if not psapi.GetProcessMemoryInfo(handle, ctypes.byref(counters), counters.cb):
+                return None
+            return int(counters.WorkingSetSize)
+        finally:
+            kernel.CloseHandle(handle)
+
+    def process_descendants(self, parent_process_id: int) -> tuple[int, ...]:
+        """Snapshot descendants of one Windows process through Toolhelp APIs."""
+        class ProcessEntry(ctypes.Structure):
+            _fields_ = [
+                ("dwSize", ctypes.c_ulong),
+                ("cntUsage", ctypes.c_ulong),
+                ("th32ProcessID", ctypes.c_ulong),
+                ("th32DefaultHeapID", ctypes.c_size_t),
+                ("th32ModuleID", ctypes.c_ulong),
+                ("cntThreads", ctypes.c_ulong),
+                ("th32ParentProcessID", ctypes.c_ulong),
+                ("pcPriClassBase", ctypes.c_long),
+                ("dwFlags", ctypes.c_ulong),
+                ("szExeFile", ctypes.c_wchar * 260),
+            ]
+
+        try:
+            kernel = self.load_library("kernel32")
+        except OSError:
+            return ()
+        snapshot = kernel.CreateToolhelp32Snapshot(0x00000002, 0)
+        if snapshot in (0, -1, ctypes.c_void_p(-1).value):
+            return ()
+        try:
+            entry = ProcessEntry()
+            entry.dwSize = ctypes.sizeof(entry)
+            relationships: dict[int, list[int]] = {}
+            valid = kernel.Process32FirstW(snapshot, ctypes.byref(entry))
+            while valid:
+                relationships.setdefault(int(entry.th32ParentProcessID), []).append(
+                    int(entry.th32ProcessID)
+                )
+                valid = kernel.Process32NextW(snapshot, ctypes.byref(entry))
+            descendants: list[int] = []
+            pending = [parent_process_id]
+            while pending:
+                children = relationships.get(pending.pop(), [])
+                descendants.extend(children)
+                pending.extend(children)
+            return tuple(reversed(descendants))
+        finally:
+            kernel.CloseHandle(snapshot)
+
+    def terminate_process(self, process_id: int, *, wait_milliseconds: int = 2000) -> bool:
+        """Terminate one known Windows process ID and close its handle deterministically."""
+        try:
+            kernel = self.load_library("kernel32")
+        except OSError:
+            return False
+        handle = kernel.OpenProcess(0x0001 | 0x100000, False, process_id)
+        if not handle:
+            return False
+        try:
+            terminated = bool(kernel.TerminateProcess(handle, 1))
+            if terminated:
+                kernel.WaitForSingleObject(handle, wait_milliseconds)
+            return terminated
+        finally:
+            kernel.CloseHandle(handle)
 
 
 windows_api_adapter = WindowsApiAdapter()

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import contextlib
-import ctypes
 import importlib.util
 import json
 import mimetypes
@@ -12,15 +11,14 @@ import os
 import queue
 import re
 import shlex
-import signal
 import shutil
 import socket
-import subprocess
 import sys
 import traceback
 import zipfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from subprocess import TimeoutExpired
 from time import monotonic, sleep
 from uuid import uuid4
 
@@ -43,6 +41,7 @@ from logicytics.contracts import (
 from logicytics.discovery import CollectorCandidate
 from logicytics.errors import LogicyticsError
 from logicytics.logging import FileEventLogger, get_application_logger, get_event_logger
+from logicytics.platform_adapters import process_adapter, windows_api_adapter
 from logicytics.manifest import CollectorRecord, RunManifest, write_manifest, utc_now
 from logicytics.packaging import package_manifest
 from logicytics.output_layout import ensure_output_layout
@@ -372,7 +371,7 @@ def _run_mod_worker(payload: dict[str, object], result_queue: multiprocessing.Qu
             }
             guard.active = True
             try:
-                completed = subprocess.run(
+                completed = process_adapter.run(
                     command,
                     cwd=workspace,
                     env=environment,
@@ -748,7 +747,7 @@ class RunSupervisor:
             raise LogicyticsError("post-run action requires a successful run and verified package")
         flag = "/r" if action is PostRunAction.REBOOT else "/s"
         try:
-            completed = subprocess.run(
+            completed = process_adapter.run(
                 ["shutdown", flag, "/t", "60", "/d", "p:0:0", "/c", "Logicytics run completed"],
                 capture_output=True,
                 check=False,
@@ -1061,44 +1060,7 @@ class RunSupervisor:
         """Return one worker's resident working set using local OS facilities."""
         if process.pid is None:
             return None
-        if os.name == "nt":
-            class ProcessMemoryCounters(ctypes.Structure):
-                _fields_ = [
-                    ("cb", ctypes.c_ulong),
-                    ("PageFaultCount", ctypes.c_ulong),
-                    ("PeakWorkingSetSize", ctypes.c_size_t),
-                    ("WorkingSetSize", ctypes.c_size_t),
-                    ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
-                    ("QuotaPagedPoolUsage", ctypes.c_size_t),
-                    ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
-                    ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
-                    ("PagefileUsage", ctypes.c_size_t),
-                    ("PeakPagefileUsage", ctypes.c_size_t),
-                ]
-
-            handle = ctypes.windll.kernel32.OpenProcess(0x0410, False, process.pid)
-            if not handle:
-                return None
-            try:
-                counters = ProcessMemoryCounters()
-                counters.cb = ctypes.sizeof(counters)
-                if not ctypes.windll.psapi.GetProcessMemoryInfo(
-                        handle,
-                        ctypes.byref(counters),
-                        counters.cb,
-                ):
-                    return None
-                return int(counters.WorkingSetSize)
-            finally:
-                ctypes.windll.kernel32.CloseHandle(handle)
-        status_path = Path(f"/proc/{process.pid}/status")
-        try:
-            for line in status_path.read_text(encoding="ascii").splitlines():
-                if line.startswith("VmRSS:"):
-                    return int(line.split()[1]) * 1024
-        except (OSError, ValueError, IndexError):
-            return None
-        return None
+        return process_adapter.memory_bytes(process.pid)
 
     @staticmethod
     def _schedule_retry(
@@ -1175,41 +1137,7 @@ class RunSupervisor:
     @staticmethod
     def _windows_descendants(parent_pid: int) -> tuple[int, ...]:
         """Snapshot only descendants belonging to one isolated Windows worker."""
-        class ProcessEntry(ctypes.Structure):
-            _fields_ = [
-                ("dwSize", ctypes.c_ulong),
-                ("cntUsage", ctypes.c_ulong),
-                ("th32ProcessID", ctypes.c_ulong),
-                ("th32DefaultHeapID", ctypes.c_size_t),
-                ("th32ModuleID", ctypes.c_ulong),
-                ("cntThreads", ctypes.c_ulong),
-                ("th32ParentProcessID", ctypes.c_ulong),
-                ("pcPriClassBase", ctypes.c_long),
-                ("dwFlags", ctypes.c_ulong),
-                ("szExeFile", ctypes.c_wchar * 260),
-            ]
-
-        kernel = ctypes.windll.kernel32
-        snapshot = kernel.CreateToolhelp32Snapshot(0x00000002, 0)
-        if snapshot in (0, -1, ctypes.c_void_p(-1).value):
-            return ()
-        try:
-            entry = ProcessEntry()
-            entry.dwSize = ctypes.sizeof(entry)
-            relationships: dict[int, list[int]] = {}
-            valid = kernel.Process32FirstW(snapshot, ctypes.byref(entry))
-            while valid:
-                relationships.setdefault(int(entry.th32ParentProcessID), []).append(int(entry.th32ProcessID))
-                valid = kernel.Process32NextW(snapshot, ctypes.byref(entry))
-            descendants: list[int] = []
-            pending = [parent_pid]
-            while pending:
-                children = relationships.get(pending.pop(), [])
-                descendants.extend(children)
-                pending.extend(children)
-            return tuple(reversed(descendants))
-        finally:
-            kernel.CloseHandle(snapshot)
+        return windows_api_adapter.process_descendants(parent_pid)
 
     @staticmethod
     def _terminate_process_tree(process: multiprocessing.Process) -> None:
@@ -1218,7 +1146,7 @@ class RunSupervisor:
             try:
                 if os.name == "nt":
                     descendants = RunSupervisor._windows_descendants(process.pid)
-                    subprocess.run(
+                    process_adapter.run(
                         ["taskkill", "/PID", str(process.pid), "/T", "/F"],
                         capture_output=True,
                         check=False,
@@ -1226,16 +1154,10 @@ class RunSupervisor:
                         timeout=5,
                     )
                     for child_pid in descendants:
-                        handle = ctypes.windll.kernel32.OpenProcess(0x0001 | 0x100000, False, child_pid)
-                        if handle:
-                            try:
-                                ctypes.windll.kernel32.TerminateProcess(handle, 1)
-                                ctypes.windll.kernel32.WaitForSingleObject(handle, 2000)
-                            finally:
-                                ctypes.windll.kernel32.CloseHandle(handle)
+                        windows_api_adapter.terminate_process(child_pid)
                 else:
-                    os.killpg(process.pid, signal.SIGTERM)
-            except (OSError, subprocess.TimeoutExpired):
+                    process_adapter.terminate_process_group(process.pid)
+            except (OSError, TimeoutExpired):
                 pass
         if process.is_alive():
             process.terminate()

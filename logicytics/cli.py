@@ -8,7 +8,6 @@ import importlib.util
 import json
 import os
 import platform
-import subprocess
 import sys
 from pathlib import Path
 
@@ -39,6 +38,7 @@ from logicytics.modes import (
 )
 from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.output_layout import ensure_output_layout
+from logicytics.platform_adapters import process_adapter
 from logicytics.runtime import RunSupervisor
 from logicytics.sysinternals import ensure_sysinternals
 
@@ -340,11 +340,11 @@ def _launch_action_window(root: Path, action: str) -> int:
     if action not in {"preflight", "debug", "dev"}:
         raise ValueError(f"unsupported new-window action: {action}")
     command = [sys.executable, "-m", "logicytics", action]
-    process = subprocess.Popen(
+    process = process_adapter.popen(
         command,
         cwd=root,
         shell=False,
-        creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0x00000010),
+        creationflags=process_adapter.create_new_console,
         close_fds=True,
     )
     return process.pid
@@ -508,7 +508,9 @@ def main(argv: list[str] | None = None) -> int:
         if arguments.command == "update":
             if arguments.new_window != (arguments.launch_action is not None):
                 raise ValueError("--new-window and --launch-action must be provided together")
-            git = subprocess.run(["git", "--version"], capture_output=True, check=False, text=True)
+            git = process_adapter.run(
+                ["git", "--version"], capture_output=True, check=False, text=True
+            )
             is_repository = (root / ".git").exists()
             payload = {"git_available": git.returncode == 0, "git_version": git.stdout.strip() or None,
                        "is_repository": is_repository, "applied": False}
@@ -516,7 +518,9 @@ def main(argv: list[str] | None = None) -> int:
                 if git.returncode != 0 or not is_repository:
                     print(json.dumps(payload, indent=2, sort_keys=True))
                     return 2
-                pulled = subprocess.run(["git", "pull"], cwd=root, capture_output=True, check=False, text=True)
+                pulled = process_adapter.run(
+                    ["git", "pull"], cwd=root, capture_output=True, check=False, text=True
+                )
                 payload.update({"applied": True, "returncode": pulled.returncode, "stdout": pulled.stdout,
                                 "stderr": pulled.stderr})
             update_succeeded = not arguments.apply or payload.get("returncode") == 0

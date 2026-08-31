@@ -7,13 +7,14 @@ import hashlib
 import json
 import os
 import re
-import subprocess
 import sys
 import tempfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from subprocess import TimeoutExpired
 
 from logicytics.contracts import CONTRACT_VERSION, Capability, CollectorKind, CollectorMetadata
+from logicytics.platform_adapters import process_adapter
 
 _FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.py$")
 _MOD_FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.(?:py|ps1|bat|exe)$")
@@ -643,7 +644,7 @@ def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
             if value := os.environ.get(name):
                 environment[name] = value
         try:
-            completed = subprocess.run(
+            completed = process_adapter.run(
                 command,
                 cwd=probe_directory,
                 capture_output=True,
@@ -652,7 +653,7 @@ def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
                 check=False,
                 env=environment,
             )
-        except (OSError, subprocess.TimeoutExpired) as error:
+        except (OSError, TimeoutExpired) as error:
             candidate.runtime_error = f"validation worker failed: {error}"
             return
     if completed.returncode != 0:

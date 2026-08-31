@@ -13,7 +13,8 @@ from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.environment import inspect_environment
 from logicytics.platform_adapters import (
-    FilesystemAdapter, NetworkAdapter, ProcessAdapter, RegistryAdapter, WindowsApiAdapter, which,
+    FilesystemAdapter, NetworkAdapter, ProcessAdapter, RegistryAdapter, WindowsApiAdapter,
+    which, windows_api_adapter,
 )
 
 
@@ -48,6 +49,20 @@ class ProcessAdapterTests(unittest.TestCase):
         with patch("logicytics.platform_adapters.subprocess.run", side_effect=execute):
             with self.assertRaisesRegex(ValueError, "capture limit"):
                 adapter.run(["tool"], capture_output=True, text=True)
+
+    def test_process_adapter_starts_shell_free_processes_and_reads_host_memory(self) -> None:
+        process = Mock()
+        with patch("logicytics.platform_adapters.subprocess.Popen", return_value=process) as popen:
+            self.assertIs(
+                process,
+                ProcessAdapter().popen(["tool", Path("argument")], cwd=Path("C:/work"), shell=False),
+            )
+        self.assertEqual(("tool", "argument"), popen.call_args.args[0])
+        with patch("logicytics.platform_adapters.os.name", "nt"), patch.object(
+            windows_api_adapter, "process_working_set", return_value=4096
+        ) as memory:
+            self.assertEqual(4096, ProcessAdapter().memory_bytes(42))
+        memory.assert_called_once_with(42)
 
     def test_packet_capture_streams_rows_to_its_artifact_file(self) -> None:
         packet = bytearray(24)
@@ -103,6 +118,22 @@ class ProcessAdapterTests(unittest.TestCase):
             for path in (project_root / "core").rglob("*.py")
             if "import subprocess" in path.read_text(encoding="utf-8").splitlines()
         ]
+        self.assertEqual([], offenders)
+
+    def test_application_host_process_and_privilege_access_stays_behind_adapters(self) -> None:
+        project_root = Path(__file__).resolve().parent.parent
+        modules = (
+            "cli.py", "discovery.py", "environment.py", "manifest.py", "runtime.py",
+        )
+        forbidden = (
+            "subprocess.run(", "subprocess.Popen(", "ctypes.windll", "import winreg",
+            "from shutil import which", "os.killpg(",
+        )
+        offenders: list[str] = []
+        for name in modules:
+            source = (project_root / "logicytics" / name).read_text(encoding="utf-8")
+            if any(token in source for token in forbidden):
+                offenders.append(name)
         self.assertEqual([], offenders)
 
     def test_registry_adapter_delegates_only_read_operations(self) -> None:

@@ -848,7 +848,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 "package": {"path": "evidence.zip", "sha256": "a" * 64},
             })()
             completed = subprocess.CompletedProcess(["shutdown"], 0, "", "")
-            with patch("logicytics.runtime.subprocess.run", return_value=completed) as command:
+            with patch("logicytics.runtime.process_adapter.run", return_value=completed) as command:
                 RunSupervisor._execute_post_run_action(PostRunAction.REBOOT, manifest, logger)
                 self.assertEqual("shutdown", command.call_args.args[0][0])
                 self.assertEqual("/r", command.call_args.args[0][1])
@@ -864,12 +864,12 @@ class CoreFunctionalityTests(unittest.TestCase):
 
             initial = preflight(root, configuration_hash="configuration-a")
             self.assertEqual(1, len(initial.valid), initial.invalid)
-            with patch("logicytics.discovery.subprocess.run", wraps=subprocess.run) as probe:
+            with patch("logicytics.discovery.process_adapter.run", wraps=subprocess.run) as probe:
                 cached = preflight(root, configuration_hash="configuration-a")
                 self.assertEqual(1, len(cached.valid), cached.invalid)
                 probe.assert_not_called()
 
-            with patch("logicytics.discovery.subprocess.run", wraps=subprocess.run) as probe:
+            with patch("logicytics.discovery.process_adapter.run", wraps=subprocess.run) as probe:
                 invalidated = preflight(root, configuration_hash="configuration-b")
                 self.assertEqual(1, len(invalidated.valid), invalidated.invalid)
                 self.assertEqual(1, probe.call_count)
@@ -2204,7 +2204,7 @@ max_retry_time = 30
             git = subprocess.CompletedProcess(["git", "--version"], 0, "git version 2.0\n", "")
             output = io.StringIO()
             with patch("logicytics.cli._project_root", return_value=root), patch(
-                "logicytics.cli.subprocess.run", return_value=git
+                "logicytics.cli.process_adapter.run", return_value=git
             ), patch("logicytics.cli._launch_action_window", return_value=321) as launch, patch(
                 "sys.stdout", output
             ):
@@ -2228,7 +2228,7 @@ max_retry_time = 30
         root = Path("C:/repo").resolve()
         process = MagicMock(pid=42)
         with patch("logicytics.cli.sys.platform", "win32"), patch(
-            "logicytics.cli.subprocess.Popen", return_value=process
+            "logicytics.cli.process_adapter.popen", return_value=process
         ) as popen:
             self.assertEqual(42, _launch_action_window(root, "preflight"))
         popen.assert_called_once_with(
@@ -4887,7 +4887,7 @@ max_retry_time = 30
             (root / "plugins").mkdir()
             collector_path.write_text(_COLLECTOR, encoding="utf-8")
             with patch(
-                    "logicytics.discovery.subprocess.run",
+                    "logicytics.discovery.process_adapter.run",
                     side_effect=subprocess.TimeoutExpired(["validation-worker"], timeout=10),
             ):
                 report = preflight(root)
