@@ -11,6 +11,12 @@ privilege level, network reach, sensitive-data category, timeout/cost profile, o
 output name/format. Do not hide a second authorization or output contract behind
 a setting in an existing collector.
 
+Configuration changes must preserve the strict schema described in
+[CONFIGURATION.md](CONFIGURATION.md). Update that field reference and its
+parser-backed documentation tests in the same commit as any setting, default,
+bound, migration alias, or source-precedence change. Invocation-only behavior
+belongs in `RunRequest` or CLI flags, not persistent configuration.
+
 Looking to contribute something to Logicytics? **Here's how you can help.**
 
 Please take a moment to review this document to make the contribution

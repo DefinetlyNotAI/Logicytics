@@ -156,7 +156,11 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Logicytics v4 run-oriented evidence framework")
-    parser.add_argument("--config", type=Path, help="Path to a v4 JSON configuration file")
+    parser.add_argument(
+        "--config",
+        type=Path,
+        help="Path to a v4 JSON or supported legacy INI configuration file",
+    )
     parser.add_argument("--usage", action="store_true", help="Show local interaction statistics and create a usage graph.")
     parser.add_argument("--modes", action="store_true", help="Show the typed execution-mode inclusion matrix.")
     parser.add_argument("--match", metavar="TEXT", help="Suggest the closest documented action for natural-language input.")

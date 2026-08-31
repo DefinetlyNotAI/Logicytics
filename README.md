@@ -257,6 +257,9 @@ before asking Windows to open the file through its associated application.
 
 ## Configuration
 
+The complete field reference, limits, source precedence, migration rules, and a
+parser-verified example are in [CONFIGURATION.md](CONFIGURATION.md).
+
 An optional project-root `logicytics.json` uses schema version `4`. Product
 policy is split into immutable `runtime`, `interaction`, `maintenance`, and
 `logging` sections. Profile membership remains in the typed collector registry,

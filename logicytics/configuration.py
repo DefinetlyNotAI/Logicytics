@@ -112,6 +112,10 @@ def _validate_collector_settings(settings: Mapping[str, Mapping[str, Any]]) -> N
                 raise PlanError(f"{collector_id} contains an invalid setting name: {key!r}")
         schema = _COLLECTOR_SETTING_SCHEMAS.get(collector_id)
         if schema is None:
+            if collector_id.startswith("core.") and values:
+                raise PlanError(
+                    f"{collector_id} does not declare configurable settings"
+                )
             continue
         unknown = sorted(set(values) - set(schema))
         if unknown:
@@ -367,6 +371,8 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     modern_path = project_root / "logicytics.json"
     legacy_path = project_root / "CODE" / "config.ini"
     path = config_path or (modern_path if modern_path.exists() else legacy_path)
+    if not path.is_absolute():
+        path = project_root / path
     if not path.exists():
         return default_config(project_root)
     legacy_ini = path.suffix.casefold() == ".ini"
@@ -374,13 +380,19 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
         raw = _legacy_ini_payload(path)
     else:
         try:
+            payload = path.read_bytes()
+        except OSError as error:
+            raise PlanError(f"invalid configuration file {path}: {error}") from error
+        if len(payload) > MAXIMUM_CONFIGURATION_BYTES:
+            raise PlanError("configuration exceeds the 2 MiB limit")
+        try:
             raw = json.loads(
-                path.read_text(encoding="utf-8"),
+                payload.decode("utf-8-sig"),
                 object_pairs_hook=_unique_json_object,
                 parse_constant=_reject_json_constant,
                 parse_float=_finite_json_number,
             )
-        except (OSError, UnicodeDecodeError, ValueError) as error:
+        except (UnicodeDecodeError, ValueError) as error:
             raise PlanError(f"invalid configuration file {path}: {error}") from error
     if not isinstance(raw, dict):
         raise PlanError("configuration root must be a JSON object")
