@@ -1,74 +1,43 @@
-# Security Policy
+# Security policy
 
-## Supported Versions
+## Supported versions
 
-This section outlines the versions of our project that are currently supported with security updates.
+| Version | Security support | Release date |
+| --- | --- | --- |
+| 4.0.x | Supported | 2026-08-31 |
+| 3.x and earlier | Unsupported | — |
 
-| Version | Supported | Major Release Date |
-|---------|-----------|--------------------|
-| 4.0.x   | ✅        | To be released     |
-| 3.6.x   | ✖️        | July 26, 2025      |
-| 3.5.x   | ✖️        | July 26, 2025      |
-| 3.4.x   | ❌        | January 3, 2025    |
-| 3.3.x   | ❌        | January 3, 2025    |
-| 3.2.x   | ❌        | Dec 19, 2024       |
-| 3.1.x   | ❌        | Dec 11, 2024       |
-| 3.0.x   | ❌        | Dec 6, 2024        |
-| 2.5.x   | ❌        | Nov 25, 2024       |
-| 2.4.x   | ❌        | Nov 12, 2024       |
-| 2.3.x   | ❌        | Sep 21, 2024       |
-| 2.2.x   | ❌        | Sep 9, 2024        |
-| 2.1.x   | ❌        | Aug 29, 2024       |
-| 2.0.x   | ❌        | Aug 25, 2024       |
-| 1.6.x   | ❌        | Jun 18, 2024       |
-| 1.5.x   | ❌        | Jun 10, 2024       |
-| 1.4.x   | ❌        | May 30, 2024       |
-| 1.3.x   | ❌        | May 21, 2024       |
-| 1.2.x   | ❌        | May 16, 2024       |
-| 1.1.x   | ❌        | May 10, 2024       |
-| 1.0.x   | ❌        | May 4, 2024        |
+Only the current v4 release line receives security fixes. Upgrade through the
+documented [migration boundary](MIGRATION.md); do not run an unsupported checkout
+against sensitive evidence.
 
-### Key:
+## Reporting a vulnerability
 
-| Key | Desc                                                |
-|-----|-----------------------------------------------------|
-| ✅  | Supported for all security updates                  |
-| ✖️  | Only for major security issues (CVSS 8.0+)          |
-| ❌  | No longer supported for any security updates        |
+Do not open a public issue containing an exploit, credential, private key,
+collected artifact, host identifier, or unredacted log. Email
+[Nirt_12023@outlook.com](mailto:Nirt_12023@outlook.com) with the subject
+`Logicytics security vulnerability`.
 
-## Reporting a Vulnerability
+Include:
 
-If you believe you have found a security vulnerability in our project, we encourage you to report it to us. Your report
-will help us improve the security of our project and ensure the trust of our users.
+- the affected Logicytics version and commit;
+- Windows edition/build and Python version;
+- the affected collector, command, capability, or package contract;
+- reproducible steps and expected security boundary;
+- impact and required authorization/elevation state; and
+- a minimal redacted proof of concept.
 
-### How to Report a Vulnerability
+Reports should target behavior owned by this repository and be reproducible.
+Maintainers will acknowledge receipt, investigate the report, coordinate a fix
+and disclosure window when accepted, and credit the reporter if requested.
 
-1. **Identify the Vulnerability**: Clearly describe the vulnerability, including how it can be exploited and any
-   potential impact.
-2. **Provide Detailed Information**: Include as much detail as possible, such as the version of the project affected,
-   steps to reproduce the vulnerability, and any relevant code snippets or screenshots.
-3. **Contact Us**: Send your report to my [email](mailto:Nirt_12023@outlook.com). Please include "Security Vulnerability
-   Report" in the subject line.
+## Security boundaries
 
-### What to Expect
+Logicytics requires authorization acknowledgement and explicit capability
+approval. A vulnerability includes bypassing those checks, escaping a collector
+workspace, publishing undeclared evidence, leaking secrets to logs/metadata,
+executing an undeclared process or network action, corrupting package/hash
+verification, or allowing one collector to affect unrelated runs.
 
-- **Acknowledgment**: Upon receiving your report, we will acknowledge receipt within 2�5 business days.
-- **Investigation**: Our security team will investigate the vulnerability and determine its validity.
-- **Update**: If the vulnerability is accepted, we will work on a fix and provide an update on the timeline for a
-  security update.
-- **Communication**: We will communicate with you regarding the status of the vulnerability and any necessary actions.
-
-### Vulnerability Acceptance Criteria
-
-- The vulnerability must be reproducible.
-- The vulnerability must be exploitable.
-- The vulnerability must not be a false positive.
-
-### Vulnerability Decline Criteria
-
-- The vulnerability is outside the scope of our project.
-
-Thank you for helping us maintain the security of our project. Your contribution is invaluable in keeping our users
-safe.
-
----
+Do not weaken isolation, redaction, path validation, output limits, cancellation,
+or package verification while developing a fix. Use synthetic fixtures only.

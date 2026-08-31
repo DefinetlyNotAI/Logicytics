@@ -31,10 +31,12 @@ fail closed. Migration provenance is recorded in the run manifest.
 ## Output migration
 
 There are no global `ACCESS/`, `RUNS/`, `LOGS/`, or `PACKAGES/` compatibility
-copies. Their v4 replacements are respectively the run tree under
-`output/data/run-<id>/`, `output/logs/`, `output/data/zip/`, and
-`output/data/hashes/`. The run artifact tree and verified package layout in
-[OUTPUTS.md](OUTPUTS.md) are canonical.
+copies. Their v4 replacements are the run tree under `output/data/run-<id>/`,
+application diagnostics under `output/logs/`, and each run's `packages/` and
+`hashes/` directories. `output/data/zip/` and `output/data/hashes/` are created
+as stable compatibility landing directories for external tooling but are not
+populated with duplicate evidence. The run artifact tree and verified package
+layout in [OUTPUTS.md](OUTPUTS.md) are canonical.
 
 The legacy CODE evidence collector preserves a historical file's relative name
 only inside its collector-owned `legacy_code/` subtree. This is the sole legacy

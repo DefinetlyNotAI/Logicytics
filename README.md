@@ -1,13 +1,15 @@
 # Logicytics v4
 
-Logicytics v4 is a Windows-focused, run-oriented evidence collection framework.
-It is being rebuilt from a clean architecture around an explicit pipeline:
+Logicytics v4.0 is a complete recreation of the Windows system-data collection
+and evidence-packaging tool around an explicit run-oriented pipeline:
 
 `request -> validated plan -> isolated collectors -> registered artifacts -> manifest -> package`
 
-The project is currently an early v4 implementation. The engine and the first
-safe system collector are available; the broader collection catalog is being
-rebuilt incrementally.
+The release ships 66 independently runnable core collectors, typed profiles and
+modes, opt-in plugins and MODs, isolated workers, reproducible manifests and
+packages, and bounded Windows integrations. See [V4_RELEASE.md](V4_RELEASE.md)
+for the release scope and [FEATURE_STATUS.md](FEATURE_STATUS.md) for ownership
+and verification evidence.
 
 ## Current capabilities
 
@@ -20,7 +22,10 @@ rebuilt incrementally.
   and source-copy loops, with unpublished sensitive bytes removed.
 - Artifact registration with workspace boundaries, output limits, SHA-256 hashes,
   a run manifest, ZIP package, and package hash.
-- Shipped collectors: `core.system.system_info` and the capability-gated
+- Sixty-six shipped collectors cover all v4 specialties. The authoritative
+  collector catalog and exact mode membership are emitted by
+  `python -m logicytics --modes`; representative collectors include
+  `core.system.system_info` and the capability-gated
   `core.process.running_processes` and `core.network.network_identity`, plus
   `core.memory.memory_snapshot`, `core.storage.logical_drives`, and deep-profile
   `core.hardware.windows_features`, `core.network.network_adapters`, and
@@ -55,7 +60,9 @@ rebuilt incrementally.
   `core.storage.physical_disks`, and `core.storage.mounted_volumes`.
   `core.storage.volume_details` adds filesystem and label metadata in the deep profile.
   `core.encryption.bitlocker_status` is also available in the deep profile.
-  `core.encryption.bitlocker_volumes` provides the PowerShell volume view.
+  `core.encryption.bitlocker_volumes` provides the PowerShell volume view, while
+  `core.system.wmic_inventory` preserves an optional bounded WMIC view when that
+  Windows capability is installed.
 
 ## Layout
 
@@ -72,8 +79,8 @@ output/                  # ignored generated evidence and diagnostics
     debug/               # debug-action diagnostics
     performance/         # stable performance-report location
   data/
-    zip/                 # stable package-output location
-    hashes/              # stable package-hash location
+    zip/                 # created compatibility landing directory; canonical packages are run-owned
+    hashes/              # created compatibility landing directory; canonical hashes are run-owned
     run-<id>/            # one self-contained run output tree
       artifacts/         # collector-owned registered evidence store
       collectors/        # private collector workspaces and event channels
@@ -108,10 +115,10 @@ action, cancellation, and permission flow is indexed in [FLOW_MATRIX.md](FLOW_MA
 ## Requirements
 
 - Python 3.11 or later.
-- Windows for the currently shipped collector and future Windows integrations.
+- Windows for core collection and live platform integration checks.
 
-The v4 core uses only the Python standard library. A collector may later declare
-its own dependency and capability requirements.
+The v4 core uses only the Python standard library. Extension collectors declare
+their own dependency and capability requirements.
 
 Collectors reach Windows through `logicytics.platform_adapters`: guarded process
 execution covers PowerShell, WMI/CIM, WMIC, and command tools; dedicated adapters
@@ -127,7 +134,37 @@ workers share the same event-logger factory while receiving distinct run-owned
 JSONL channels. Logger objects are intentionally not shared across process
 boundaries, preserving collector isolation and avoiding cross-process mutable state.
 
-## Commands
+## Installation
+
+Clone the repository on Windows and use Python 3.11 or later. No third-party
+runtime package is required:
+
+```powershell
+git clone https://github.com/DefinetlyNotAI/Logicytics.git
+cd Logicytics
+python -m logicytics preflight
+```
+
+`preflight` is read-only. It validates configuration, host prerequisites,
+collector contracts, optional Windows features, and quarantine state before a
+run. A missing optional WMIC, BitLocker, or Sysinternals capability is reported
+without invalidating unrelated collectors.
+
+## Quick start
+
+Inspect the exact plan first, then acknowledge authorization explicitly:
+
+```powershell
+python -m logicytics plan --profile standard
+python -m logicytics run --profile standard --acknowledge-authorization
+```
+
+The standard profile is intentionally bounded. Use `--mode thorough` for the full
+deep catalog and approve every requested capability deliberately. Generated run
+data appears under `output/data/run-<id>/`; the final summary prints collector
+status, duration, failures, package path, and package hash.
+
+## CLI reference
 
 Run these from the repository root:
 
@@ -136,6 +173,9 @@ python -m logicytics preflight
 python -m logicytics debug
 python -m logicytics dev
 python -m logicytics update --launch-action debug --new-window
+python -m logicytics --match "collect quickly"
+python -m logicytics usage
+python -m logicytics --modes
 python -m logicytics collector core.system.system_info --acknowledge-authorization
 python -m logicytics plan --profile standard
 python -m logicytics run --profile standard --acknowledge-authorization
@@ -176,6 +216,50 @@ example:
 python -m logicytics run --profile standard --acknowledge-authorization `
   --allow-capability filesystem_read
 ```
+
+Important global and run controls:
+
+| Control | Purpose |
+| --- | --- |
+| `--config PATH` | Load a schema-v4 JSON or supported legacy INI configuration. |
+| `--match TEXT` | Suggest the closest documented action; history persists only when configured. |
+| `--modes` | Print the versioned collector/mode matrix. |
+| `run --mode NAME` | Select one canonical execution mode. |
+| `--include ID` / `--exclude ID` | Override profile membership by exact collector ID. |
+| `--plugins` / `--mods` | Opt into discovered plugins or declared MODs. |
+| `--workers COUNT` | Override bounded concurrency within the configured maximum. |
+| `--sequential` / `--parallel` | Select explicit scheduling without a legacy mode alias. |
+| `--rerun-from MANIFEST` | Rerun selected collectors while preserving parent-run provenance. |
+| `--no-package` | Retain the manifest/run tree without a ZIP or ZIP hash. |
+| `--reboot` / `--shutdown` | Schedule one mutually exclusive power action only after verified packaging. |
+| `update --apply` | Explicitly apply the configured Git update; an ordinary update check is read-only. |
+
+Legacy `--default`, `--threaded`, `--minimal`, `--depth`, `--modded`, `--nopy`,
+and `--performance-check` flags remain exact aliases. They cannot be combined
+with a contradictory mode, profile, or scheduling override.
+
+## Authorization, permissions, and status
+
+Collection requires `--acknowledge-authorization`. Capabilities such as
+filesystem reads, registry reads, subprocesses, browser data, private keys,
+sensitive files, packet capture, network access, or elevation must also be
+approved explicitly when selected metadata requests them. An elevated collector
+is rejected during planning unless the process is actually administrative.
+
+Collector outcomes are `succeeded`, `partial`, `skipped`, `cancelled`, or
+`failed`. Expected absence and access denial are visible skips when no evidence
+can be collected; unexpected command, parsing, timeout, output-limit, or worker
+failures remain failures. One collector failure does not stop independent peers,
+and the run cannot appear fully successful while a selected collector failed.
+
+Ctrl+C requests cooperative cancellation. Long collectors check the run-owned
+cancellation marker, the supervisor terminates unresponsive worker trees within
+their timeout policy, and a recoverable partial manifest/package is finalized
+when possible. Cleanup removes only worker-owned temporary data.
+
+CLI exit status is `0` for the requested successful/read-only action, `1` for an
+unsuccessful collection or maintenance result, and `2` for invalid arguments,
+configuration, preflight, authorization, or other Logicytics contract errors.
 
 ## Collection profiles
 
@@ -376,7 +460,8 @@ classification across the isolated worker boundary.
 
 Malformed core collectors block a run. Malformed unselected plugins are
 quarantined and listed by preflight; malformed explicitly selected plugins block
-the requested run. See [TODO.md](TODO.md) for the complete v4 recreation plan.
+the requested run. See [FEATURE_STATUS.md](FEATURE_STATUS.md) for implemented
+ownership and [V4_RELEASE.md](V4_RELEASE.md) for the released feature surface.
 
 ## Verification
 
@@ -384,6 +469,46 @@ the requested run. See [TODO.md](TODO.md) for the complete v4 recreation plan.
 python -m unittest discover -v
 python -m compileall -q logicytics core tests
 ```
+
+On Windows, `python -m unittest tests.test_windows_integration -v` adds bounded
+live privilege, registry, PowerShell, CIM/WMI, optional WMIC, event-log,
+BitLocker, networking, Sysinternals, and artifact-publication probes.
+
+## Troubleshooting
+
+- **A collector is skipped:** inspect its manifest `summary`, `errors`, and
+  `failure` fields. Install the named optional Windows feature, run from an
+  authorized elevated console when required, or approve the exact capability.
+- **Planning rejects capabilities:** rerun `plan` first and add only the listed
+  `--allow-capability` values. Sensitive and elevated access is never inferred.
+- **PowerShell execution policy is unavailable:** run `preflight`; confirm
+  `powershell` is on `PATH`. The engine does not weaken machine policy.
+- **WMIC is unavailable:** modern Windows may omit the optional WMIC feature.
+  `core.system.wmic_inventory` skips explicitly; CIM/WMI collectors continue.
+- **A plugin is quarantined:** use `preflight` to read its static/runtime errors.
+  Unselected invalid plugins do not block core collection.
+- **A run was interrupted:** inspect the printed run manifest under
+  `output/data/run-<id>/metadata/`; cancellation preserves recoverable partial
+  evidence and removes only private worker scratch data.
+- **A package hash does not match:** do not trust or open the package. Use the
+  adjacent `.sha256` sidecar and rerun collection; package verification fails
+  closed on modified bytes.
+- **Output is unexpectedly large:** lower collector-specific bounds in
+  [CONFIGURATION.md](CONFIGURATION.md) or use `minimal`/`standard`; the aggregate
+  run budget prevents unbounded publication.
+
+## Documentation
+
+- [CONFIGURATION.md](CONFIGURATION.md) — complete persistent settings contract.
+- [OUTPUTS.md](OUTPUTS.md) — every collector path, format, package path, and
+  retention rule.
+- [MODS.md](MODS.md) — opt-in MOD extension contract.
+- [MIGRATION.md](MIGRATION.md) — supported v3 and legacy compatibility boundary.
+- [FLOW_MATRIX.md](FLOW_MATRIX.md) — executable evidence for every user flow.
+- [FEATURE_STATUS.md](FEATURE_STATUS.md) — TODO section owners and status.
+- [V4_RELEASE.md](V4_RELEASE.md) — final v4.0 recreation and release evidence.
+- [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and
+  [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — contributor and security policy.
 
 ## Authorization
 

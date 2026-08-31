@@ -1,49 +1,31 @@
-## Pull Request Template
+## Summary
 
-### Prerequisites
+<!-- Explain the problem, the focused solution, and the user-visible result. -->
 
-<!-- Take a couple of minutes to help our maintainers work faster by checking of the pre-requisites. -->
-<!-- To tick the checkboxes replace the space with an 'x', so [ ] becomes [x] . -->
+## Contract impact
 
-- [ ] I have [searched](https://github.com/DefinetlyNotAI/Logicytics/pulls) for duplicate or closed issues.
-- [ ] I have read the [contributing guidelines](https://github.com/DefinetlyNotAI/Logicytics/blob/main/CONTRIBUTING.md).
-- [ ] I have followed the instructions in the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) about
-  contributions.
-- [ ] I have updated the documentation accordingly, if required.
-- [ ] I have tested my code with the `--dev` flag, if required.
+<!-- List affected collectors, modes/profiles, capabilities, settings, outputs, API, migration, or security boundaries. -->
 
-### PR Type
+## Verification
 
-<!-- Take a couple of minutes to help our maintainers work faster by telling us what is the PR guided on. -->
-<!-- To tick the checkboxes replace the space with an 'x', so [ ] becomes [x] . -->
+<!-- Include exact commands and results. Explain any skipped live Windows probe. -->
 
-- [ ] Bug fix <!-- Non-Breaking Bug Fix - Usually relates to fixing an issue -->
-- [ ] Deprecation Change <!-- Removing a deprecation -->
-- [ ] New feature <!-- Non-Breaking Change that adds a new feature -->
-- [ ] Refactoring <!-- Non-Breaking Change that modifies existing code to refactor it to become more organised -->
-- [ ] Documentation
-  update <!-- Non-Breaking Change that modifies existing documentation to refactor it or add extra comments - either wiki, md files or code is included here -->
-- [ ] ⚠️ Breaking change ⚠️ <!-- Breaking Bug Fix / New Addition that changes how Logicytics works -->
+- [ ] Relevant focused tests pass.
+- [ ] `python -m unittest discover -v` passes.
+- [ ] `python -m compileall -q logicytics core tests` passes.
+- [ ] `python -m logicytics preflight` reports no invalid core collector.
+- [ ] `git diff --check` passes.
+- [ ] Live Windows integration tests pass when the change touches host behavior.
 
-### Description
+## Review checklist
 
-<!-- REQUIRED: Provide a summary of the PR and what you expected to happen. -->
+- [ ] I read [CONTRIBUTING.md](../CONTRIBUTING.md) and searched for duplicate work.
+- [ ] This pull request contains one coherent theme and conventional commits.
+- [ ] Collector metadata, cancellation, isolation, and artifact registration remain valid.
+- [ ] Configuration, output, migration, release, and feature-status docs are updated when affected.
+- [ ] No generated evidence, credentials, private data, caches, or unrelated changes are included.
+- [ ] I agree to the [Developer Certificate of Origin](../DCO.md) and repository license.
 
-### Motivation and Context
+## Related issues
 
-<!-- REQUIRED: Why is this PR required? What problem does it solve? Why do you want to do it? -->
-
-### Credit
-
-<!-- If this PR is a contribution, please mention the contributors here using the appropriate syntax. -->
-
-<!--
-### File-Created/CONTRIBUTION by MAIN-Username
-What you did, created, removed, refactored, fixed, or discovered.
-- [Your GitHub Username](https://github.com/YourGitHubLink)
-- [Your GitHub Username](https://github.com/YourGitHubLink) etc...
--->
-
-### Issues Fixed
-
-<!-- REQUIRED: What issues will be fixed? (Format: "#50, #23" etc.) if none exist type _N/A_ -->
+<!-- Use `Fixes #123` or `N/A`. -->

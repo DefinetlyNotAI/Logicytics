@@ -540,18 +540,18 @@ Windows platform allows.
 
 ## v4.0 goals
 
-- [ ] Recreate Logicytics as a Windows system-data collection and packaging tool.
-- [ ] Preserve every supported collection category, execution mode, output type,
+- [x] Recreate Logicytics as a Windows system-data collection and packaging tool.
+- [x] Preserve every supported collection category, execution mode, output type,
       configuration option, and extension point listed below.
 - [x] Keep collection modules independently runnable as well as runnable through
       the main orchestrator.
-- [ ] Make collection results predictable, timestamped, inspectable, and easy to
+- [x] Make collection results predictable, timestamped, inspectable, and easy to
       verify after export.
-- [ ] Keep administrator checks, permission-aware collection, cancellation, and
+- [x] Keep administrator checks, permission-aware collection, cancellation, and
       failure reporting as first-class behavior.
 - [x] Keep the default run reasonably quick while retaining a deeper, slower mode
       for exhaustive collection.
-- [ ] Keep the project Windows-focused, including PowerShell, registry, WMI,
+- [x] Keep the project Windows-focused, including PowerShell, registry, WMI,
       WMIC, Windows event logs, BitLocker, and Sysinternals integrations.
 
 ## 1. Main engine and execution lifecycle
@@ -928,7 +928,7 @@ appropriate default/deep/non-Python mode.
 
 ## 9. v4.0 completion checklist
 
-- [ ] Every feature in this file has an implementation owner/status.
+- [x] Every feature in this file has an implementation owner/status.
 - [x] Every collector can be run directly and through the orchestrator.
 - [x] Every mode has an explicit collector inclusion matrix.
 - [x] Every output has a documented path, format, and retention rule.
@@ -937,7 +937,7 @@ appropriate default/deep/non-Python mode.
       own temporary data.
 - [x] A normal run creates a package, a matching SHA-256 hash, and a run manifest.
 - [x] Debug/update/developer tools are separated from normal collection behavior.
-- [ ] The final v4.0 release is documented as a complete recreation of the feature
+- [x] The final v4.0 release is documented as a complete recreation of the feature
       surface listed here.
 
 Once all is complete, ask the user to git clone the wiki of logicytics so that we may update the DOCS completly
