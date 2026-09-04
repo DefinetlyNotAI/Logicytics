@@ -248,14 +248,26 @@ class ProcessAdapterTests(unittest.TestCase):
         self.assertEqual("RemoteSigned", report.powershell_execution_policy)
         self.assertEqual("C:/Windows/PowerShell.exe", run.call_args.args[0][0])
 
-    def test_core_collectors_cannot_load_win32_libraries_directly(self) -> None:
+    def test_core_collectors_cannot_use_ctypes_directly(self) -> None:
         project_root = Path(__file__).resolve().parent.parent
+
+        forbidden_tokens = (
+            "import ctypes",
+            "from ctypes import",
+            "ctypes.WinDLL(",
+            "ctypes.windll.",
+            "ctypes.cdll.",
+        )
+
         offenders = [
             str(path.relative_to(project_root))
             for path in (project_root / "core").rglob("*.py")
-            if any(token in path.read_text(encoding="utf-8")
-                   for token in ("ctypes.WinDLL(", "ctypes.windll."))
+            if any(
+                token in path.read_text(encoding="utf-8")
+                for token in forbidden_tokens
+            )
         ]
+
         self.assertEqual([], offenders)
 
     def test_executable_resolution_uses_the_platform_boundary(self) -> None:

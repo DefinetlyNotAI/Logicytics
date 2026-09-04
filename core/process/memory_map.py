@@ -9,6 +9,7 @@ from pathlib import Path
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.ctypes_collector import ProcessMemoryCounters
 from logicytics.platform_adapters import filesystem_adapter, windows_api_adapter
 
 
@@ -16,14 +17,6 @@ class _MemoryBasicInformation(ctypes.Structure):
     _fields_ = [("BaseAddress", wintypes.LPVOID), ("AllocationBase", wintypes.LPVOID),
                 ("AllocationProtect", wintypes.DWORD), ("PartitionId", wintypes.WORD), ("RegionSize", ctypes.c_size_t),
                 ("State", wintypes.DWORD), ("Protect", wintypes.DWORD), ("Type", wintypes.DWORD)]
-
-
-class _ProcessMemoryCounters(ctypes.Structure):
-    _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD), ("PeakWorkingSetSize", ctypes.c_size_t),
-                ("WorkingSetSize", ctypes.c_size_t), ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
-                ("QuotaPagedPoolUsage", ctypes.c_size_t), ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
-                ("QuotaNonPagedPoolUsage", ctypes.c_size_t), ("PagefileUsage", ctypes.c_size_t),
-                ("PeakPagefileUsage", ctypes.c_size_t)]
 
 
 def _permissions(protection: int) -> str:
@@ -127,7 +120,7 @@ class MemoryMapCollector(CoreCollector):
                 errors=(str(error),),
             )
         process = kernel32.GetCurrentProcess()
-        counters = _ProcessMemoryCounters()
+        counters = ProcessMemoryCounters()
         psapi.GetProcessMemoryInfo(process, ctypes.byref(counters), ctypes.sizeof(counters))
         memory = _MemoryBasicInformation()
         address = 0
@@ -140,7 +133,7 @@ class MemoryMapCollector(CoreCollector):
             if not queried or memory.RegionSize == 0:
                 break
             base = ctypes.cast(memory.BaseAddress, ctypes.c_void_p).value or address
-            readable = memory.State == 0x1000 and not (memory.Protect & 0x101)
+            readable = memory.State == 0x1000 and not memory.Protect & 0x101
             if readable:
                 base_address = int(base)
 

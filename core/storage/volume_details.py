@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import ctypes
 import json
-from ctypes import wintypes
 from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.ctypes_collector import get_volume_information, get_disk_free_space, ularge_integer, \
+    create_unicode_buffer, dword
 from logicytics.platform_adapters import windows_api_adapter
 
 _DRIVE_TYPES = {0: "unknown", 1: "no_root_directory", 2: "removable", 3: "fixed", 4: "remote", 5: "optical",
@@ -26,19 +27,32 @@ def _volume_details() -> list[dict[str, int | str]]:
         if not mask & (1 << offset):
             continue
         root = f"{chr(ord('A') + offset)}:\\"
-        available = ctypes.c_ulonglong()
-        total = ctypes.c_ulonglong()
-        free = ctypes.c_ulonglong()
-        if not kernel32.GetDiskFreeSpaceExW(root, ctypes.byref(available), ctypes.byref(total), ctypes.byref(free)):
+
+        available = ularge_integer()
+        total = ularge_integer()
+        free = ularge_integer()
+
+        if not get_disk_free_space(
+                root,
+                available,
+                total,
+                free,
+        ):
             continue
-        label = ctypes.create_unicode_buffer(261)
-        filesystem = ctypes.create_unicode_buffer(261)
-        serial = wintypes.DWORD()
-        maximum_component_length = wintypes.DWORD()
-        flags = wintypes.DWORD()
-        information_available = kernel32.GetVolumeInformationW(
-            root, label, len(label), ctypes.byref(serial), ctypes.byref(maximum_component_length), ctypes.byref(flags),
-            filesystem, len(filesystem)
+
+        label = create_unicode_buffer(261)
+        filesystem = create_unicode_buffer(261)
+        serial = dword()
+        maximum_component_length = dword()
+        flags = dword()
+
+        information_available = get_volume_information(
+            root,
+            label,
+            serial,
+            maximum_component_length,
+            flags,
+            filesystem,
         )
         volumes.append({
             "root": root,

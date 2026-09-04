@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import ctypes
 import json
 import os
 import tempfile
@@ -9,7 +8,6 @@ import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
-from fixtures.collectors import COLLECTOR, delayed_collector_source
 from logicytics.configuration import (
     default_config,
 )
@@ -17,9 +15,16 @@ from logicytics.contracts import (
     Capability,
     RunRequest,
 )
+from logicytics.ctypes_collector import (
+    open_process,
+    get_exit_code_process,
+    STILL_ACTIVE,
+    close_handle
+)
 from logicytics.discovery import preflight
 from logicytics.planner import build_plan
 from logicytics.runtime import RunSupervisor
+from tests.fixtures.collectors import COLLECTOR, delayed_collector_source
 
 
 class RuntimeTests(unittest.TestCase):
@@ -518,14 +523,19 @@ class RuntimeTests(unittest.TestCase):
                     encoding="ascii"
                 )
             )
-            handle = ctypes.windll.kernel32.OpenProcess(0x1000, False, child_pid)
-            if handle:
+
+            handle = open_process(child_pid)
+            if handle is not None:
                 try:
-                    exit_code = ctypes.c_ulong()
-                    self.assertTrue(ctypes.windll.kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)))
-                    self.assertNotEqual(259, exit_code.value, "collector subprocess survived worker termination")
+                    exit_code = get_exit_code_process(handle)
+                    self.assertIsNotNone(exit_code)
+                    self.assertNotEqual(
+                        STILL_ACTIVE,
+                        exit_code,
+                        "collector subprocess survived worker termination",
+                    )
                 finally:
-                    ctypes.windll.kernel32.CloseHandle(handle)
+                    close_handle(handle)
 
             self.assertEqual("failed", records["core.system.a_tree"].status)
             self.assertEqual("timeout_exceeded", records["core.system.a_tree"].termination_reason)
