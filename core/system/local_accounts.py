@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-from logicytics.platform_adapters import process_adapter as subprocess
-from logicytics.platform_adapters import which
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import process_adapter as subprocess
+from logicytics.platform_adapters import which
 
 
 def _is_access_denied(detail: str) -> bool:
@@ -70,7 +70,8 @@ class LocalAccountsCollector(CoreCollector):
         try:
             accounts = json.loads(completed.stdout) if completed.stdout.strip() else []
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "local-account query returned invalid JSON", errors=(str(error),))
+            return CollectorResult(CollectorStatus.FAILED, "local-account query returned invalid JSON",
+                                   errors=(str(error),))
         if not isinstance(accounts, (dict, list)):
             return CollectorResult(CollectorStatus.FAILED, "local-account query returned an unexpected result")
         output = context.workspace / "local_accounts.json"

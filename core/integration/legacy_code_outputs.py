@@ -80,11 +80,11 @@ class LegacyCodeOutputsCollector(CoreCollector):
                 continue
             try:
                 if (
-                    not path.is_file()
-                    or path.is_symlink()
-                    or path.resolve().parent != (code_root / relative.parent).resolve()
-                    or path.suffix.casefold() not in _EVIDENCE_EXTENSIONS
-                    or path.stat().st_size > _MAXIMUM_FILE_BYTES
+                        not path.is_file()
+                        or path.is_symlink()
+                        or path.resolve().parent != (code_root / relative.parent).resolve()
+                        or path.suffix.casefold() not in _EVIDENCE_EXTENSIONS
+                        or path.stat().st_size > _MAXIMUM_FILE_BYTES
                 ):
                     continue
             except OSError:

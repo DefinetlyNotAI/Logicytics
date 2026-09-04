@@ -59,7 +59,7 @@ class SystemDriveTreeCollector(CoreCollector):
         truncated = False
         context.report_progress("system_drive_tree_started", max_entries=maximum_entries, max_depth=maximum_depth)
         for current, directories, filenames in filesystem_adapter.walk(root, topdown=True, followlinks=False,
-                                                       onerror=lambda _error: None):
+                                                                       onerror=lambda _error: None):
             if context.is_cancelled:
                 return CollectorResult(CollectorStatus.CANCELLED, "cancelled during system-drive tree collection")
             relative = Path(current).relative_to(root)

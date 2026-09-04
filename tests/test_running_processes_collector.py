@@ -60,9 +60,9 @@ class RunningProcessesCollectorTests(unittest.TestCase):
                 cancellation_file=workspace / ".cancelled",
             )
             with patch.object(
-                module.subprocess,
-                "run",
-                return_value=CompletedProcess([], 1, "", "ERROR: Access denied"),
+                    module.subprocess,
+                    "run",
+                    return_value=CompletedProcess([], 1, "", "ERROR: Access denied"),
             ):
                 result = collector_type().collect(context)
         self.assertEqual(CollectorStatus.SKIPPED, result.status)

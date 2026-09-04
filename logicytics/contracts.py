@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
-from math import isfinite
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
+from datetime import datetime
 from enum import StrEnum
+from math import isfinite
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -523,7 +523,8 @@ class RunRequest:
                 raise ValueError(f"request {name} must be boolean")
         if self.selection_only and not self.include:
             raise ValueError("request selection_only requires explicit included collector IDs")
-        if not isinstance(self.max_workers, int) or isinstance(self.max_workers, bool) or not 1 <= self.max_workers <= 64:
+        if not isinstance(self.max_workers, int) or isinstance(self.max_workers,
+                                                               bool) or not 1 <= self.max_workers <= 64:
             raise ValueError("request max_workers must be an integer from 1 to 64")
         if self.performance_check and self.max_workers != 1:
             raise ValueError("request performance_check requires max_workers=1")

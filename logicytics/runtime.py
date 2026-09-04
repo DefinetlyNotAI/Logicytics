@@ -23,8 +23,8 @@ from time import monotonic, sleep
 from uuid import uuid4
 
 from logicytics.artifacts import WorkspaceArtifactWriter
-from logicytics.configuration import AppConfig
 from logicytics.command_runner import parse_level_messages
+from logicytics.configuration import AppConfig
 from logicytics.contracts import (
     Artifact,
     Capability,
@@ -41,12 +41,12 @@ from logicytics.contracts import (
 from logicytics.discovery import CollectorCandidate
 from logicytics.errors import LogicyticsError
 from logicytics.logging import FileEventLogger, get_application_logger, get_event_logger
-from logicytics.platform_adapters import process_adapter, windows_api_adapter
 from logicytics.manifest import CollectorRecord, RunManifest, write_manifest, utc_now
-from logicytics.packaging import package_manifest
-from logicytics.output_layout import ensure_output_layout
 from logicytics.output_contracts import core_output_contract
+from logicytics.output_layout import ensure_output_layout
+from logicytics.packaging import package_manifest
 from logicytics.planner import RunPlan
+from logicytics.platform_adapters import process_adapter, windows_api_adapter
 
 
 @dataclass(slots=True)
@@ -144,7 +144,8 @@ class _WorkerMutationGuard:
             "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa"
         } or path.suffix.casefold() in {".pem", ".ppk"}
         sensitive = private_key or browser_data or any(
-            label in path.name.casefold() for label in ("cookie", "credential", "password", "token", "secret", "login data")
+            label in path.name.casefold() for label in
+            ("cookie", "credential", "password", "token", "secret", "login data")
         )
         if browser_data and Capability.BROWSER_DATA not in self.capabilities:
             raise PermissionError("collector requires declared browser_data capability")
@@ -691,8 +692,8 @@ class RunSupervisor:
         if plan.request.performance_check:
             self._write_performance_report(run_directory, manifest)
         should_package = (
-            self.configuration.runtime.package_completed_runs
-            and plan.request.output_policy is OutputPolicy.PACKAGE
+                self.configuration.runtime.package_completed_runs
+                and plan.request.output_policy is OutputPolicy.PACKAGE
         )
         if should_package:
             try:
@@ -859,19 +860,19 @@ class RunSupervisor:
                         candidate.metadata.resource_class is ResourceClass.INTERACTIVE
                         or any(worker.resource_class is ResourceClass.INTERACTIVE for worker in active.values())
                         or (
-                            candidate.metadata.resource_class is not ResourceClass.GENERAL
-                            and any(
-                                worker.resource_class is candidate.metadata.resource_class
-                                for worker in active.values()
-                            )
+                                candidate.metadata.resource_class is not ResourceClass.GENERAL
+                                and any(
+                            worker.resource_class is candidate.metadata.resource_class
+                            for worker in active.values()
+                        )
                         )
                 ):
                     break
                 reserved_output_bytes = sum(worker.reserved_output_bytes for worker in active.values())
                 remaining_output_bytes = (
-                    self.configuration.runtime.maximum_run_output_bytes
-                    - committed_output_bytes
-                    - reserved_output_bytes
+                        self.configuration.runtime.maximum_run_output_bytes
+                        - committed_output_bytes
+                        - reserved_output_bytes
                 )
                 if remaining_output_bytes < 1:
                     if active:

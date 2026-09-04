@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import sys
 import hashlib
 import json
+import sys
 from dataclasses import asdict
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -104,9 +104,9 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
         candidate
         for candidate in report.invalid
         if candidate.kind is CollectorKind.CORE
-        or candidate.selection_id in request.include
-        or (request.enable_plugins and candidate.kind is CollectorKind.PLUGIN)
-        or (request.enable_mods and candidate.kind is CollectorKind.MOD)
+           or candidate.selection_id in request.include
+           or (request.enable_plugins and candidate.kind is CollectorKind.PLUGIN)
+           or (request.enable_mods and candidate.kind is CollectorKind.MOD)
     ]
     if invalid_selected:
         details = "; ".join(

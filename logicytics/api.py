@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-import os
 import json
+import os
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -205,9 +205,9 @@ def _collector_snapshot(record: dict[str, Any], collector_id: str, status: str) 
         if (
                 raw_failure.get("collector_id") != collector_id
                 or not all(
-                    isinstance(raw_failure.get(field), str) and raw_failure[field].strip()
-                    for field in ("operation", "platform_error", "remediation")
-                )
+            isinstance(raw_failure.get(field), str) and raw_failure[field].strip()
+            for field in ("operation", "platform_error", "remediation")
+        )
                 or not isinstance(raw_failure.get("retry_safe"), bool)
         ):
             raise PlanError("run manifest collector failure contains invalid actionable details")

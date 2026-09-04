@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import getpass
 import json
 import os
 import platform
-import getpass
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath

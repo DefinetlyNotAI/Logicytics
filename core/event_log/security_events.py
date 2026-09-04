@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from logicytics.platform_adapters import process_adapter as subprocess
-from logicytics.platform_adapters import which
-
 from logicytics import (
     Capability,
     CollectorMetadata,
@@ -15,6 +12,8 @@ from logicytics import (
     ValidationResult,
 )
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import process_adapter as subprocess
+from logicytics.platform_adapters import which
 
 _MAX_EVENTS = 1_000
 

@@ -79,7 +79,8 @@ def match_flag(
         old_input = item.get("input")
         old_flag = item.get("matched_flag")
         if isinstance(old_input, str) and isinstance(old_flag, str) and old_flag in FLAG_DESCRIPTIONS:
-            historical.append((SequenceMatcher(None, _normalized(user_input), _normalized(old_input)).ratio(), old_flag))
+            historical.append(
+                (SequenceMatcher(None, _normalized(user_input), _normalized(old_input)).ratio(), old_flag))
     if historical:
         history_score, history_flag = sorted(historical, key=lambda item: (-item[0], item[1]))[0]
         if history_score > direct_score:
@@ -151,10 +152,10 @@ def write_usage_graph(path: Path, statistics: Mapping[str, object]) -> Path:
             f'<text x="{200 + bar_width}" y="{y + 16}" font-family="monospace" font-size="13">{count}</text>',
         ))
     svg = (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-        f'viewBox="0 0 {width} {height}"><rect width="100%" height="100%" fill="white"/>'
-        '<text x="12" y="28" font-family="sans-serif" font-size="20">Logicytics flag usage</text>'
-        + "".join(rows) + "</svg>\n"
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+            f'viewBox="0 0 {width} {height}"><rect width="100%" height="100%" fill="white"/>'
+            '<text x="12" y="28" font-family="sans-serif" font-size="20">Logicytics flag usage</text>'
+            + "".join(rows) + "</svg>\n"
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(svg, encoding="utf-8")

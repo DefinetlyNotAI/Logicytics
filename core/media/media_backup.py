@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
+from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, \
+    ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import filesystem_adapter
 

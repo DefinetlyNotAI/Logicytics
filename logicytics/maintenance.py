@@ -89,23 +89,23 @@ def _parse_manifest(payload: object, source: str) -> IntegrityManifest:
     validated: dict[str, str] = {}
     for name, digest in files.items():
         if (
-            not isinstance(name, str)
-            or not isinstance(digest, str)
-            or _SHA256.fullmatch(digest) is None
+                not isinstance(name, str)
+                or not isinstance(digest, str)
+                or _SHA256.fullmatch(digest) is None
         ):
             raise ValueError("integrity manifest file entries require path and SHA-256 strings")
         path = PurePosixPath(name)
         if (
-            name == "."
-            or path.is_absolute()
-            or ".." in path.parts
-            or path.as_posix() != name
-            or "\\" in name
+                name == "."
+                or path.is_absolute()
+                or ".." in path.parts
+                or path.as_posix() != name
+                or "\\" in name
         ):
             raise ValueError(f"integrity manifest path is unsafe: {name!r}")
         if any(
-            part in _EXCLUDED_PARTS or part.startswith(".") and part != ".github"
-            for part in path.parts
+                part in _EXCLUDED_PARTS or part.startswith(".") and part != ".github"
+                for part in path.parts
         ):
             raise ValueError(f"integrity manifest path is excluded: {name!r}")
         validated[name] = digest
@@ -134,7 +134,7 @@ def fetch_remote_manifest(settings: MaintenanceSettings) -> IntegrityManifest | 
 
 
 def load_local_manifest(
-    project_root: Path, settings: MaintenanceSettings
+        project_root: Path, settings: MaintenanceSettings
 ) -> IntegrityManifest | None:
     """Load the configured project-owned manifest without leaving the repository."""
     path = (project_root / settings.local_manifest_path).resolve()
@@ -172,7 +172,7 @@ def project_files(project_root: Path, settings: MaintenanceSettings) -> tuple[Pa
 
 
 def build_manifest(
-    project_root: Path, settings: MaintenanceSettings, version: str
+        project_root: Path, settings: MaintenanceSettings, version: str
 ) -> IntegrityManifest:
     """Create a deterministic required-file manifest from eligible project files."""
     if _VERSION.fullmatch(version) is None:
@@ -186,9 +186,9 @@ def build_manifest(
 
 
 def write_local_manifest(
-    project_root: Path,
-    settings: MaintenanceSettings,
-    manifest: IntegrityManifest,
+        project_root: Path,
+        settings: MaintenanceSettings,
+        manifest: IntegrityManifest,
 ) -> Path:
     """Atomically publish an explicitly approved local manifest update."""
     path = (project_root / settings.local_manifest_path).resolve()
@@ -208,8 +208,8 @@ def write_local_manifest(
 
 
 def write_legacy_ini_manifest(
-    project_root: Path,
-    manifest: IntegrityManifest,
+        project_root: Path,
+        manifest: IntegrityManifest,
 ) -> Path:
     """Atomically update only version and file membership in historical CODE/config.ini."""
     if _VERSION.fullmatch(manifest.version) is None:
@@ -247,9 +247,9 @@ def write_legacy_ini_manifest(
 
 
 def compare_files(
-    project_root: Path,
-    settings: MaintenanceSettings,
-    manifest: IntegrityManifest,
+        project_root: Path,
+        settings: MaintenanceSettings,
+        manifest: IntegrityManifest,
 ) -> dict[str, list[str]]:
     """Report exact missing, modified, extra, and unchanged project files."""
     root = project_root.resolve()
@@ -286,6 +286,7 @@ def local_version(project_root: Path) -> str:
 
 def compare_versions(local: str, remote: str) -> str:
     """Compare semantic versions while treating snapshots as older than stable peers."""
+
     def parsed(value: str) -> tuple[int, int, int, int, tuple[tuple[int, int | str], ...]]:
         match = _VERSION.fullmatch(value)
         if match is None:
@@ -330,7 +331,7 @@ def python_support(settings: MaintenanceSettings) -> dict[str, str]:
 
 
 def maintenance_diagnostics(
-    project_root: Path, settings: MaintenanceSettings
+        project_root: Path, settings: MaintenanceSettings
 ) -> dict[str, object]:
     """Resolve optional remote/local integrity evidence without changing collection state."""
     remote = fetch_remote_manifest(settings)
@@ -380,7 +381,7 @@ def developer_checks(project_root: Path, settings: MaintenanceSettings) -> dict[
         public_features = [
             node.name for node in tree.body
             if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
-            and not node.name.startswith("_")
+               and not node.name.startswith("_")
         ]
         if len(public_features) > 12:
             crowded_modules.append(relative.as_posix())

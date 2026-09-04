@@ -80,7 +80,7 @@ class ProcessAdapterTests(unittest.TestCase):
             )
         self.assertEqual(("tool", "argument"), popen.call_args.args[0])
         with patch("logicytics.platform_adapters.os.name", "nt"), patch.object(
-            windows_api_adapter, "process_working_set", return_value=4096
+                windows_api_adapter, "process_working_set", return_value=4096
         ) as memory:
             self.assertEqual(4096, ProcessAdapter().memory_bytes(42))
         memory.assert_called_once_with(42)
@@ -124,9 +124,9 @@ class ProcessAdapterTests(unittest.TestCase):
     def test_process_adapter_rejects_shell_empty_and_unbounded_timeout_inputs(self) -> None:
         adapter = ProcessAdapter()
         for command, options, message in (
-            ([], {}, "at least one"),
-            (["tool"], {"shell": True}, "shell"),
-            (["tool"], {"timeout": 0}, "timeout"),
+                ([], {}, "at least one"),
+                (["tool"], {"shell": True}, "shell"),
+                (["tool"], {"timeout": 0}, "timeout"),
         ):
             with self.subTest(command=command, options=options):
                 with self.assertRaisesRegex(ValueError, message):

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import os
-from logicytics.platform_adapters import process_adapter as subprocess
 from pathlib import Path
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import process_adapter as subprocess
 
 TOOLS = ("psfile", "psgetsid", "psinfo", "pslist", "psloggedon", "psloglist")
 MAX_OUTPUT_CHARS = 512_000

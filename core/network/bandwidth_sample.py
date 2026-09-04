@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import json
-from logicytics.platform_adapters import process_adapter as subprocess
 import time
-from logicytics.platform_adapters import which
 
 from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import process_adapter as subprocess
+from logicytics.platform_adapters import which
 
 _DEFAULT_SAMPLES = 3
 _DEFAULT_INTERVAL_SECONDS = 1
@@ -22,7 +22,8 @@ def _setting(settings: object, key: str, default: int, maximum: int) -> int:
 
 def _interval_setting(settings: object) -> float:
     """Return the configured finite positive sampling interval."""
-    value = settings.get("interval_seconds", _DEFAULT_INTERVAL_SECONDS) if isinstance(settings, dict) else _DEFAULT_INTERVAL_SECONDS
+    value = settings.get("interval_seconds", _DEFAULT_INTERVAL_SECONDS) if isinstance(settings,
+                                                                                      dict) else _DEFAULT_INTERVAL_SECONDS
     if isinstance(value, (int, float)) and not isinstance(value, bool) and 0.1 <= value <= 60:
         return float(value)
     return float(_DEFAULT_INTERVAL_SECONDS)
@@ -90,7 +91,7 @@ class BandwidthSampleCollector(CoreCollector):
                 return CollectorResult(CollectorStatus.FAILED, "bandwidth-sample query returned an unexpected result")
             observations.append({str(record.get("Name", "unavailable")): {
                 "received": int(record.get("ReceivedBytes", 0)), "sent": int(record.get("SentBytes", 0))} for record in
-                                 records})
+                records})
             if index + 1 < samples:
                 time.sleep(interval)
         rates: dict[str, dict[str, float]] = {}

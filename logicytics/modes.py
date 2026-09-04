@@ -85,8 +85,8 @@ LEGACY_MODE_ALIASES: Mapping[str, str] = MappingProxyType({
 
 
 def resolve_execution_mode(
-    selected: str | None,
-    legacy_flags: Mapping[str, bool],
+        selected: str | None,
+        legacy_flags: Mapping[str, bool],
 ) -> ExecutionMode | None:
     """Resolve a user-facing name or exactly one parser-exclusive legacy alias."""
     aliases = [name for flag, name in LEGACY_MODE_ALIASES.items() if legacy_flags.get(flag, False)]
@@ -112,7 +112,7 @@ def _candidate_modes(candidate: CollectorCandidate) -> tuple[str, ...]:
     for mode in EXECUTION_MODES.values():
         if candidate.kind is CollectorKind.MOD:
             enabled = mode.enable_mods and not (
-                mode.non_python_only and candidate.execution_type == "mod_python"
+                    mode.non_python_only and candidate.execution_type == "mod_python"
             )
         elif candidate.kind is CollectorKind.PLUGIN:
             enabled = False

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import configparser
 import hashlib
 import json
 import re
-import configparser
 from dataclasses import asdict, dataclass, field
 from math import isfinite
 from pathlib import Path
@@ -283,6 +283,8 @@ def _legacy_ini_payload(path: Path) -> dict[str, Any]:
         "logging": logging,
         "collectors": collectors,
     }
+
+
 @dataclass(frozen=True, slots=True)
 class RuntimeSettings:
     """Engine-wide limits that apply before a collector is started."""
@@ -480,14 +482,14 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     if (remote_url is None) != (remote_sha256 is None):
         raise PlanError("remote manifest URL and SHA-256 must be configured together")
     if remote_url is not None and (
-        not isinstance(remote_url, str)
-        or not remote_url.startswith("https://")
-        or "\n" in remote_url
+            not isinstance(remote_url, str)
+            or not remote_url.startswith("https://")
+            or "\n" in remote_url
     ):
         raise PlanError("remote_manifest_url must be an HTTPS URL")
     if remote_sha256 is not None and (
-        not isinstance(remote_sha256, str)
-        or re.fullmatch(r"[0-9a-f]{64}", remote_sha256) is None
+            not isinstance(remote_sha256, str)
+            or re.fullmatch(r"[0-9a-f]{64}", remote_sha256) is None
     ):
         raise PlanError("remote_manifest_sha256 must be a lowercase SHA-256 digest")
     local_manifest_value = maintenance_raw.get("local_manifest_path", "project.manifest.json")
@@ -495,26 +497,26 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
         raise PlanError("local_manifest_path must be a non-empty relative path")
     local_manifest_path = Path(local_manifest_value)
     if (
-        local_manifest_path.is_absolute()
-        or local_manifest_path.drive
-        or ".." in local_manifest_path.parts
+            local_manifest_path.is_absolute()
+            or local_manifest_path.drive
+            or ".." in local_manifest_path.parts
     ):
         raise PlanError("local_manifest_path must remain inside the project")
     version_pattern = re.compile(r"^\d+\.\d+$")
     minimum_python = maintenance_raw.get("minimum_python", "3.11")
     recommended_python = maintenance_raw.get("recommended_python", "3.11")
     if (
-        not isinstance(minimum_python, str)
-        or version_pattern.fullmatch(minimum_python) is None
+            not isinstance(minimum_python, str)
+            or version_pattern.fullmatch(minimum_python) is None
     ):
         raise PlanError("minimum_python must use major.minor form")
     if (
-        not isinstance(recommended_python, str)
-        or version_pattern.fullmatch(recommended_python) is None
+            not isinstance(recommended_python, str)
+            or version_pattern.fullmatch(recommended_python) is None
     ):
         raise PlanError("recommended_python must use major.minor form")
     if tuple(map(int, recommended_python.split("."))) < tuple(
-        map(int, minimum_python.split("."))
+            map(int, minimum_python.split("."))
     ):
         raise PlanError("recommended_python must not be older than minimum_python")
 
@@ -534,22 +536,22 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     file_enabled = logging_raw.get("file_enabled", True)
     delete_previous = logging_raw.get("delete_previous", False)
     if not all(
-        isinstance(value, bool)
-        for value in (console_enabled, color_enabled, file_enabled, delete_previous)
+            isinstance(value, bool)
+            for value in (console_enabled, color_enabled, file_enabled, delete_previous)
     ):
         raise PlanError("logging enable, color, file, and deletion settings must be boolean")
     log_maximum_bytes = logging_raw.get("maximum_bytes", 4 * 1024 * 1024)
     if (
-        not isinstance(log_maximum_bytes, int)
-        or isinstance(log_maximum_bytes, bool)
-        or not 1024 <= log_maximum_bytes <= 64 * 1024 * 1024
+            not isinstance(log_maximum_bytes, int)
+            or isinstance(log_maximum_bytes, bool)
+            or not 1024 <= log_maximum_bytes <= 64 * 1024 * 1024
     ):
         raise PlanError("logging maximum_bytes must be an integer from 1024 to 67108864")
     retention_days = logging_raw.get("retention_days", 30)
     if (
-        not isinstance(retention_days, int)
-        or isinstance(retention_days, bool)
-        or not 0 <= retention_days <= 3650
+            not isinstance(retention_days, int)
+            or isinstance(retention_days, bool)
+            or not 0 <= retention_days <= 3650
     ):
         raise PlanError("logging retention_days must be an integer from 0 to 3650")
 

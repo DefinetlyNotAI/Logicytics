@@ -44,11 +44,11 @@ class ApplicationLogger(EventLogger):
     """Thread-safe human-readable file and colored-console event sink."""
 
     def __init__(
-        self,
-        path: Path,
-        settings: LoggingSettings,
-        *,
-        console: TextIO | None = None,
+            self,
+            path: Path,
+            settings: LoggingSettings,
+            *,
+            console: TextIO | None = None,
     ) -> None:
         self.path = path.resolve()
         self.settings = settings
@@ -64,9 +64,9 @@ class ApplicationLogger(EventLogger):
         cutoff = time() - self.settings.retention_days * 86400
         for candidate in self.path.parent.glob("Logicytics*.log"):
             if (
-                candidate != self.path
-                and candidate.is_file()
-                and candidate.stat().st_mtime < cutoff
+                    candidate != self.path
+                    and candidate.is_file()
+                    and candidate.stat().st_mtime < cutoff
             ):
                 candidate.unlink()
         self._truncate_file()
@@ -138,10 +138,10 @@ class ApplicationLogger(EventLogger):
 
 
 def get_application_logger(
-    path: Path,
-    settings: LoggingSettings,
-    *,
-    console: TextIO | None = None,
+        path: Path,
+        settings: LoggingSettings,
+        *,
+        console: TextIO | None = None,
 ) -> ApplicationLogger:
     """Return one configured logger instance per canonical application log path."""
     resolved = path.resolve()

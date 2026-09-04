@@ -23,8 +23,8 @@ class WindowsIntegrationTests(unittest.TestCase):
         self.assertIn(privilege, {True, False, None})
 
         with registry_adapter.OpenKey(
-            registry_adapter.HKEY_LOCAL_MACHINE,
-            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+                registry_adapter.HKEY_LOCAL_MACHINE,
+                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
         ) as key:
             product_name, _ = registry_adapter.QueryValueEx(key, "ProductName")
         self.assertTrue(str(product_name).strip())

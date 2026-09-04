@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
+from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, \
+    ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import filesystem_adapter
 
@@ -69,10 +70,11 @@ class BrowserDataBackupCollector(CoreCollector):
         context.report_progress("browser_data_backup_started")
         for browser, root in chromium_roots:
             try:
-                profile_roots = [root] if browser.startswith("opera") else [path for path in filesystem_adapter.children(root) if
+                profile_roots = [root] if browser.startswith("opera") else [path for path in
+                                                                            filesystem_adapter.children(root) if
                                                                             path.is_dir() and (
-                                                                                        path.name == "Default" or path.name.startswith(
-                                                                                    "Profile "))]
+                                                                                    path.name == "Default" or path.name.startswith(
+                                                                                "Profile "))]
             except OSError:
                 continue
             for profile in profile_roots:

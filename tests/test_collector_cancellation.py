@@ -50,7 +50,7 @@ class CollectorCancellationTests(unittest.TestCase):
             source_root.mkdir()
             (source_root / "password.txt").write_text("sensitive", encoding="utf-8")
             context = _Context(root / "workspace", {"root": str(source_root), "max_directories": 10,
-                                                     "max_matches": 10})
+                                                    "max_matches": 10})
             context.workspace.mkdir()
 
             def cancel_after_copy(source: Path, destination: Path) -> Path:
@@ -175,7 +175,7 @@ class CollectorCancellationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             packet_context = _Context(root / "packet", {"packet_count": 2, "timeout_seconds": 2,
-                                                         "retry_window_seconds": 0, "interface": "127.0.0.1"})
+                                                        "retry_window_seconds": 0, "interface": "127.0.0.1"})
             packet_context.workspace.mkdir()
 
             class FakeSocket:
@@ -202,8 +202,8 @@ class CollectorCancellationTests(unittest.TestCase):
             self.assertFalse((packet_context.workspace / "packet_capture.csv").exists())
 
             memory_context = _Context(root / "memory", {"max_regions": 10, "output_limit_bytes": 4096,
-                                                         "disk_safety_margin_bytes": 0,
-                                                         "dump_directory": "maps"})
+                                                        "disk_safety_margin_bytes": 0,
+                                                        "dump_directory": "maps"})
             memory_context.workspace.mkdir()
 
             class FakeKernel:

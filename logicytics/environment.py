@@ -30,8 +30,8 @@ def inspect_environment() -> EnvironmentReport:
     is_administrator = windows_api_adapter.is_administrator()
     try:
         with registry_adapter.OpenKey(
-            registry_adapter.HKEY_LOCAL_MACHINE,
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System",
+                registry_adapter.HKEY_LOCAL_MACHINE,
+                r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System",
         ) as key:
             uac_enabled = bool(registry_adapter.QueryValueEx(key, "EnableLUA")[0])
     except OSError:

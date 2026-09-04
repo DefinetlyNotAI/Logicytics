@@ -352,9 +352,9 @@ def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
         candidate.static_errors.append(f"collector class must be named {expected_class}")
     elif not any(
             (isinstance(base, ast.Name) and base.id == (
-            "CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
+                    "CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
             or (isinstance(base, ast.Attribute) and base.attr == (
-            "CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
+                    "CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
             for base in public_classes[0].bases
     ):
         candidate.static_errors.append("collector class must inherit from its required base class")
@@ -420,8 +420,8 @@ def _validate_mod(path: Path, mods_root: Path) -> CollectorCandidate:
     elif Capability.SUBPROCESS not in metadata.capabilities:
         candidate.runtime_error = "legacy script mods must declare the subprocess capability"
     elif (
-        candidate.execution_type != "mod_python"
-        and Capability.FILESYSTEM_WRITE not in metadata.capabilities
+            candidate.execution_type != "mod_python"
+            and Capability.FILESYSTEM_WRITE not in metadata.capabilities
     ):
         candidate.runtime_error = (
             "non-Python mods must declare filesystem_write because their host mutations "
@@ -449,10 +449,10 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
         metadata_calls = [
             node for node in ast.walk(methods["metadata"])
             if isinstance(node, ast.Call)
-            and (
-                isinstance(node.func, ast.Name) and node.func.id == "CollectorMetadata"
-                or isinstance(node.func, ast.Attribute) and node.func.attr == "CollectorMetadata"
-            )
+               and (
+                       isinstance(node.func, ast.Name) and node.func.id == "CollectorMetadata"
+                       or isinstance(node.func, ast.Attribute) and node.func.attr == "CollectorMetadata"
+               )
         ]
         if len(metadata_calls) != 1:
             candidate.static_errors.append(
@@ -491,7 +491,7 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
                 for method in lifecycle_methods:
                     for call in ast.walk(method):
                         if not isinstance(call, ast.Call) or not (
-                            isinstance(call.func, ast.Attribute) and call.func.attr == "register_file"
+                                isinstance(call.func, ast.Attribute) and call.func.attr == "register_file"
                         ):
                             continue
                         media_keyword = next(
@@ -501,7 +501,7 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
                         if media_keyword is None:
                             registered_media_types.add("application/octet-stream")
                         elif isinstance(media_keyword.value, ast.Constant) and isinstance(
-                            media_keyword.value.value, str
+                                media_keyword.value.value, str
                         ):
                             registered_media_types.add(media_keyword.value.value)
                         else:

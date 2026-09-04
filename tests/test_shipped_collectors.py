@@ -9,19 +9,19 @@ import tempfile
 import unittest
 from contextlib import ExitStack
 from pathlib import Path
+from unittest.mock import patch
 
 from logicytics import ResourceClass
+from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.contracts import (
     ArtifactWriter, CollectorContext, CollectorStatus, EventLogger, EvidenceKind,
 )
 from logicytics.discovery import preflight
 from logicytics.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
 from logicytics.output_contracts import core_output_contract
-from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.platform_adapters import (
     filesystem_adapter, network_adapter, process_adapter, registry_adapter, windows_api_adapter,
 )
-from unittest.mock import patch
 
 
 class _RejectingWriter(ArtifactWriter):
@@ -272,15 +272,15 @@ class ShippedCollectorTests(unittest.TestCase):
             register_calls = [
                 node for node in ast.walk(tree)
                 if isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Attribute)
-                and node.func.attr == "register_file"
+                   and isinstance(node.func, ast.Attribute)
+                   and node.func.attr == "register_file"
             ]
             declared_at_calls = {
                 keyword.value.value
                 for node in register_calls for keyword in node.keywords
                 if keyword.arg == "media_type"
-                and isinstance(keyword.value, ast.Constant)
-                and isinstance(keyword.value.value, str)
+                   and isinstance(keyword.value, ast.Constant)
+                   and isinstance(keyword.value.value, str)
             }
             if any(not any(keyword.arg == "media_type" for keyword in node.keywords)
                    for node in register_calls):
@@ -319,7 +319,7 @@ class ShippedCollectorTests(unittest.TestCase):
             collector_classes = [
                 node for node in tree.body
                 if isinstance(node, ast.ClassDef)
-                and any(ast.unparse(base).endswith("CoreCollector") for base in node.bases)
+                   and any(ast.unparse(base).endswith("CoreCollector") for base in node.bases)
             ]
             with self.subTest(collector=candidate.metadata.id):
                 self.assertEqual([candidate.expected_class], [node.name for node in collector_classes])

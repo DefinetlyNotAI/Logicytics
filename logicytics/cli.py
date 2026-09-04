@@ -16,7 +16,6 @@ from logicytics.contracts import Capability, OutputPolicy, PostRunAction, RunReq
 from logicytics.discovery import preflight
 from logicytics.environment import inspect_environment
 from logicytics.errors import LogicyticsError
-from logicytics.manifest import MANIFEST_SCHEMA_VERSION
 from logicytics.interaction import load_history, match_flag, record_match, usage_statistics, write_usage_graph
 from logicytics.logging import get_application_logger
 from logicytics.maintenance import (
@@ -29,6 +28,7 @@ from logicytics.maintenance import (
     write_legacy_ini_manifest,
     write_local_manifest,
 )
+from logicytics.manifest import MANIFEST_SCHEMA_VERSION
 from logicytics.modes import (
     EXECUTION_MODES,
     LEGACY_MODE_ALIASES,
@@ -36,8 +36,8 @@ from logicytics.modes import (
     mode_matrix,
     resolve_execution_mode,
 )
-from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.output_layout import ensure_output_layout
+from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.platform_adapters import process_adapter
 from logicytics.runtime import RunSupervisor
 from logicytics.sysinternals import ensure_sysinternals
@@ -71,10 +71,10 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
                 )
             raise ValueError(f"{mode.name} mode requires sequential execution")
     sequential = explicit_sequential or (
-        mode is not None and mode.strategy is ExecutionStrategy.SEQUENTIAL
+            mode is not None and mode.strategy is ExecutionStrategy.SEQUENTIAL
     )
     parallel = explicit_parallel or (
-        mode is not None and mode.strategy is ExecutionStrategy.PARALLEL
+            mode is not None and mode.strategy is ExecutionStrategy.PARALLEL
     )
     performance_check = mode.performance_check if mode is not None else False
     enable_mods = getattr(arguments, "mods", False) or (
@@ -118,11 +118,11 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
         parent_run_id = previous["run_id"]
     selection_only = getattr(arguments, "command", None) == "collector"
     if selection_only and (
-        arguments.include
-        or arguments.exclude
-        or arguments.profile is not None
-        or arguments.plugins
-        or arguments.mods
+            arguments.include
+            or arguments.exclude
+            or arguments.profile is not None
+            or arguments.plugins
+            or arguments.mods
     ):
         raise ValueError("collector execution cannot combine its ID with profile or selection flags")
     includes = (arguments.collector_id,) if selection_only else tuple(arguments.include)
@@ -161,9 +161,11 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         help="Path to a v4 JSON or supported legacy INI configuration file",
     )
-    parser.add_argument("--usage", action="store_true", help="Show local interaction statistics and create a usage graph.")
+    parser.add_argument("--usage", action="store_true",
+                        help="Show local interaction statistics and create a usage graph.")
     parser.add_argument("--modes", action="store_true", help="Show the typed execution-mode inclusion matrix.")
-    parser.add_argument("--match", metavar="TEXT", help="Suggest the closest documented action for natural-language input.")
+    parser.add_argument("--match", metavar="TEXT",
+                        help="Suggest the closest documented action for natural-language input.")
     subcommands = parser.add_subparsers(dest="command")
     for command in ("preflight", "debug", "update", "dev", "plan", "run", "collector"):
         subparser = subcommands.add_parser(command, help=f"Run the {command} action.")
@@ -229,8 +231,10 @@ def _parser() -> argparse.ArgumentParser:
                               help="Run the standard built-in profile with configured parallel workers.")
             mode.add_argument("--minimal", action="store_true", help="Run the minimal built-in profile.")
             mode.add_argument("--depth", action="store_true", help="Run the deep built-in profile.")
-            mode.add_argument("--modded", action="store_true", help="Run the standard profile plus all valid MODS scripts.")
-            mode.add_argument("--nopy", action="store_true", help="Run only non-Python PowerShell, batch, and executable MODS scripts.")
+            mode.add_argument("--modded", action="store_true",
+                              help="Run the standard profile plus all valid MODS scripts.")
+            mode.add_argument("--nopy", action="store_true",
+                              help="Run only non-Python PowerShell, batch, and executable MODS scripts.")
             mode.add_argument(
                 "--performance-check",
                 action="store_true",
@@ -358,7 +362,7 @@ def _status_marker(label: str, count: int) -> str:
 
 
 def _run_developer_action(
-    root: Path, configuration: AppConfig, arguments: argparse.Namespace
+        root: Path, configuration: AppConfig, arguments: argparse.Namespace
 ) -> int:
     """Run read-only contribution checks and an explicitly confirmed manifest update."""
     settings = configuration.maintenance
@@ -461,7 +465,8 @@ def main(argv: list[str] | None = None) -> int:
                 "history_persisted": configuration.interaction.history_enabled,
             }
             if configuration.interaction.model_debug:
-                payload["model_debug"] = {"model_name": match.model_name, "threshold": configuration.interaction.similarity_threshold}
+                payload["model_debug"] = {"model_name": match.model_name,
+                                          "threshold": configuration.interaction.similarity_threshold}
             print(json.dumps(payload, indent=2, sort_keys=True))
             return 0 if match.matched_flag is not None else 1
         if arguments.command == "usage":

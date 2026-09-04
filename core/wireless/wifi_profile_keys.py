@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from logicytics.platform_adapters import process_adapter as subprocess
 from pathlib import Path
-from logicytics.platform_adapters import filesystem_adapter, which
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
+from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, \
+    ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.platform_adapters import filesystem_adapter, which
+from logicytics.platform_adapters import process_adapter as subprocess
 
 
 def _is_access_denied(detail: str) -> bool:

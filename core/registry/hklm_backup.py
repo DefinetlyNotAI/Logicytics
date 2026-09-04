@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, \
+    ValidationResult
+from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
-
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, ValidationResult
-from logicytics.contracts import CollectorContext, CollectorStatus
 
 
 def _is_access_denied(detail: str) -> bool:

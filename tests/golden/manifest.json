@@ -35,7 +35,9 @@
       "worker_pid": null
     }
   ],
-  "configuration": {"schema_version": 4},
+  "configuration": {
+    "schema_version": 4
+  },
   "engine_version": "4.0",
   "errors": [],
   "finished_at": "<TIMESTAMP>",
@@ -59,9 +61,13 @@
   },
   "parent_run_id": null,
   "plan_fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
-  "request": {"profile": "minimal"},
+  "request": {
+    "profile": "minimal"
+  },
   "requested_at": "<TIMESTAMP>",
-  "resolved_plan": ["core.system.system_info"],
+  "resolved_plan": [
+    "core.system.system_info"
+  ],
   "run_id": "run-00000000000000000000000000000000",
   "skipped_collectors": [],
   "status": "succeeded",

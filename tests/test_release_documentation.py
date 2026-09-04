@@ -27,10 +27,10 @@ class ReleaseDocumentationTests(unittest.TestCase):
         self.assertIn("complete recreation", self.release.casefold())
         self.assertIn("complete recreation", self.readme.casefold())
         for provisional in (
-            "being rebuilt",
-            "early v4 implementation",
-            "broader collection catalog is being rebuilt",
-            "to be released",
+                "being rebuilt",
+                "early v4 implementation",
+                "broader collection catalog is being rebuilt",
+                "to be released",
         ):
             with self.subTest(provisional=provisional):
                 self.assertNotIn(provisional, self.readme.casefold())
@@ -104,18 +104,18 @@ class ReleaseDocumentationTests(unittest.TestCase):
             with self.subTest(document=document):
                 self.assertIn(document, self.readme)
         for option in (
-            "--config", "--match", "--modes", "--profile", "--include", "--exclude",
-            "--plugins", "--mods", "--workers", "--allow-capability", "--rerun-from",
-            "--sequential", "--parallel", "--no-package", "--reboot", "--shutdown",
-            "--acknowledge-authorization", "--interactive", "--apply",
+                "--config", "--match", "--modes", "--profile", "--include", "--exclude",
+                "--plugins", "--mods", "--workers", "--allow-capability", "--rerun-from",
+                "--sequential", "--parallel", "--no-package", "--reboot", "--shutdown",
+                "--acknowledge-authorization", "--interactive", "--apply",
         ):
             with self.subTest(option=option):
                 self.assertIn(option, self.readme)
         contributor = (self.root / "CONTRIBUTING.md").read_text(encoding="utf-8")
         for requirement in (
-            "Development setup", "Architecture boundaries", "Core collector changes",
-            "Plugins and MODs", "Configuration changes", "Testing expectations",
-            "conventional commit", "Developer Certificate of Origin",
+                "Development setup", "Architecture boundaries", "Core collector changes",
+                "Plugins and MODs", "Configuration changes", "Testing expectations",
+                "conventional commit", "Developer Certificate of Origin",
         ):
             with self.subTest(requirement=requirement):
                 self.assertIn(requirement, contributor)

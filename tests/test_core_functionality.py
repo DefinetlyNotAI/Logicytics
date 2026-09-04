@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import hashlib
 import ctypes
+import hashlib
 import io
 import json
 import os
@@ -19,7 +19,6 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from logicytics import packaging
 from logicytics import (
     load_configuration,
     open_artifact,
@@ -28,30 +27,10 @@ from logicytics import (
     read_artifact,
     run_collection,
 )
+from logicytics import packaging
 from logicytics.artifacts import WorkspaceArtifactWriter
-from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.cli import _launch_action_window, _parser, _request, main
-from logicytics.file_listing import list_files
-from logicytics.logging import (
-    ApplicationLogger,
-    FileEventLogger,
-    deprecated,
-    get_application_logger,
-    get_event_logger,
-    raise_logged,
-    timed,
-)
-from logicytics.interaction import load_history, match_flag, usage_statistics
-from logicytics.manifest import write_manifest
-from logicytics.maintenance import (
-    build_manifest,
-    compare_files,
-    compare_versions,
-    fetch_remote_manifest,
-    project_files,
-    write_local_manifest,
-)
-from logicytics.sysinternals import ensure_sysinternals
+from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.configuration import (
     LoggingSettings,
     MaintenanceSettings,
@@ -65,11 +44,8 @@ from logicytics.contracts import (
     CollectorResult,
     CollectorStatus,
     EvidenceKind,
-    EstimatedCost,
-    NetworkAccess,
     OutputPolicy,
     PostRunAction,
-    PrivilegeLevel,
     ResourceClass,
     RunRequest,
     RunStatus,
@@ -78,12 +54,32 @@ from logicytics.contracts import (
 from logicytics.discovery import PreflightReport, preflight
 from logicytics.environment import EnvironmentReport
 from logicytics.errors import ArtifactError, PlanError, PreflightError
-from logicytics.packaging import package_run
-from logicytics.output_layout import ensure_output_layout
+from logicytics.file_listing import list_files
+from logicytics.interaction import load_history, match_flag, usage_statistics
+from logicytics.logging import (
+    ApplicationLogger,
+    FileEventLogger,
+    deprecated,
+    get_application_logger,
+    get_event_logger,
+    raise_logged,
+    timed,
+)
+from logicytics.maintenance import (
+    build_manifest,
+    compare_files,
+    compare_versions,
+    fetch_remote_manifest,
+    project_files,
+    write_local_manifest,
+)
+from logicytics.manifest import write_manifest
 from logicytics.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
+from logicytics.output_layout import ensure_output_layout
+from logicytics.packaging import package_run
 from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.runtime import RunSupervisor
-
+from logicytics.sysinternals import ensure_sysinternals
 
 _COLLECTOR = '''"""Create a harmless test artifact."""
 
@@ -218,6 +214,7 @@ def _delayed_collector_source(
 class CoreFunctionalityTests(unittest.TestCase):
     def test_application_logging_levels_colors_retention_and_dispatch_are_bounded(self) -> None:
         """The application sink is typed, redacted, reusable, colored, and size bounded."""
+
         class TerminalBuffer(io.StringIO):
             def isatty(self) -> bool:
                 return True
@@ -241,7 +238,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             )
             logger = ApplicationLogger(path, settings, console=console)
             for level in (
-                "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INTERNAL", "EXCEPTION"
+                    "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INTERNAL", "EXCEPTION"
             ):
                 logger.event(level, "typed event", password="hidden", sequence=1)
             logger.dispatch(("WARNING: parsed warning", "plain batch row"))
@@ -291,12 +288,12 @@ class CoreFunctionalityTests(unittest.TestCase):
             root = Path(temporary)
             layout = ensure_output_layout(root / "output" / "data")
             for directory in (
-                layout.data,
-                layout.logs,
-                layout.debug_logs,
-                layout.performance_logs,
-                layout.packages,
-                layout.hashes,
+                    layout.data,
+                    layout.logs,
+                    layout.debug_logs,
+                    layout.performance_logs,
+                    layout.packages,
+                    layout.hashes,
             ):
                 self.assertTrue(directory.is_dir())
             config_path = root / "logicytics.json"
@@ -321,11 +318,11 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(7, configuration.logging.retention_days)
 
             for invalid_logging in (
-                {"level": "TRACE"},
-                {"maximum_bytes": True},
-                {"retention_days": -1},
-                {"console_enabled": 1},
-                {"unknown": True},
+                    {"level": "TRACE"},
+                    {"maximum_bytes": True},
+                    {"retention_days": -1},
+                    {"console_enabled": 1},
+                    {"unknown": True},
             ):
                 config_path.write_text(
                     json.dumps({"schema_version": 4, "logging": invalid_logging}),
@@ -335,7 +332,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                     load_config(root, config_path)
 
     def test_maintenance_configuration_requires_pinned_https_and_python_order(
-        self,
+            self,
     ) -> None:
         """Integrity endpoints and Python policy fail closed during configuration loading."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -359,10 +356,10 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("3.12", loaded.maintenance.recommended_python)
 
             for mutation in (
-                {"remote_manifest_url": "http://example.invalid/project.json"},
-                {"remote_manifest_sha256": None},
-                {"local_manifest_path": "../escape.json"},
-                {"minimum_python": "3.12", "recommended_python": "3.11"},
+                    {"remote_manifest_url": "http://example.invalid/project.json"},
+                    {"remote_manifest_sha256": None},
+                    {"local_manifest_path": "../escape.json"},
+                    {"minimum_python": "3.12", "recommended_python": "3.11"},
             ):
                 invalid = json.loads(json.dumps(valid))
                 invalid["maintenance"].update(mutation)
@@ -371,7 +368,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                     load_config(root, config)
 
     def test_authenticated_remote_manifest_is_strict_data_only_configuration(
-        self,
+            self,
     ) -> None:
         """Pinned HTTPS bytes are accepted, while unpinned or execution-bearing data is rejected."""
         payload = json.dumps(
@@ -415,8 +412,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             remote_manifest_sha256=hashlib.sha256(execution_payload).hexdigest(),
         )
         with patch(
-            "logicytics.maintenance.urllib.request.urlopen",
-            return_value=execution_response,
+                "logicytics.maintenance.urllib.request.urlopen",
+                return_value=execution_response,
         ):
             with self.assertRaisesRegex(ValueError, "only schema_version"):
                 fetch_remote_manifest(execution_settings)
@@ -462,7 +459,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             with patch("logicytics.cli._project_root", return_value=root), patch(
-                "sys.stdout", new_callable=io.StringIO
+                    "sys.stdout", new_callable=io.StringIO
             ):
                 self.assertEqual(0, main(["dev", "--write-manifest", "--next-version", "4.1.0"]))
             manifest_path = root / "project.manifest.json"
@@ -471,7 +468,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual("4.1.0", manifest_payload["version"])
 
             with patch("logicytics.cli._project_root", return_value=root), patch(
-                "sys.stdout", new_callable=io.StringIO
+                    "sys.stdout", new_callable=io.StringIO
             ):
                 self.assertEqual(0, main(["debug"]))
             debug_path = root / "output" / "logs" / "debug" / "debug.json"
@@ -508,7 +505,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             )
             output = io.StringIO()
             with patch("logicytics.cli._project_root", return_value=root), patch(
-                "sys.stdout", output
+                    "sys.stdout", output
             ):
                 self.assertEqual(
                     0,
@@ -729,6 +726,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 [record.status for record in outcome.manifest.collectors],
                 [record.errors for record in outcome.manifest.collectors],
             )
+
     def test_semantic_flag_matching_history_usage_and_graph_are_local_and_opt_in(self) -> None:
         """Natural-language actions use configured matching and persist only with consent."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -967,7 +965,8 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertEqual(RunStatus.SUCCEEDED, snapshot.status, outcome.manifest.package)
             self.assertEqual(outcome.run_directory, snapshot.run_directory)
             self.assertEqual(outcome.manifest_path, snapshot.manifest_path)
-            self.assertEqual(1, json.loads(outcome.manifest_path.read_text(encoding="utf-8"))["manifest_schema_version"])
+            self.assertEqual(1,
+                             json.loads(outcome.manifest_path.read_text(encoding="utf-8"))["manifest_schema_version"])
             self.assertEqual(["core.system.system_info"], [item.collector_id for item in snapshot.collectors])
             self.assertEqual(["succeeded"], [item.status for item in snapshot.collectors])
             collector = snapshot.collectors[0]
@@ -1021,7 +1020,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             collector_path.write_text(_COLLECTOR, encoding="utf-8")
             output = io.StringIO()
             with patch("logicytics.cli._project_root", return_value=root), patch(
-                "sys.stdout", output
+                    "sys.stdout", output
             ), patch("builtins.input", return_value="") as final_prompt:
                 exit_code = main(
                     ["run", "--default", "--interactive", "--acknowledge-authorization"]
@@ -1529,12 +1528,15 @@ class CoreFunctionalityTests(unittest.TestCase):
     def test_deprecation_decorator_logs_removal_context(self) -> None:
         """Deprecated functions must preserve behavior while reporting removal context."""
         events: list[tuple[str, str, dict[str, object]]] = []
+
         class Logger:
             def event(self, level: str, message: str, **fields: object) -> None:
                 events.append((level, message, fields))
+
         @deprecated(Logger(), removal_version="5.0", reason="replacement exists")
         def old() -> str:
             return "still works"
+
         self.assertEqual("still works", old())
         self.assertEqual("function_deprecated", events[0][1])
         self.assertEqual("5.0", events[0][2]["removal_version"])
@@ -1542,9 +1544,11 @@ class CoreFunctionalityTests(unittest.TestCase):
     def test_exception_helper_logs_before_raising(self) -> None:
         """Exception helpers must preserve the requested exception type and context."""
         events: list[tuple[str, str, dict[str, object]]] = []
+
         class Logger:
             def event(self, level: str, message: str, **fields: object) -> None:
                 events.append((level, message, fields))
+
         with self.assertRaises(ValueError):
             raise_logged(Logger(), ValueError, "invalid setting", setting="workers")
         self.assertEqual("exception", events[0][0])
@@ -1553,12 +1557,15 @@ class CoreFunctionalityTests(unittest.TestCase):
     def test_timed_decorator_records_function_lifecycle(self) -> None:
         """Timing instrumentation must report start and finish through EventLogger."""
         events: list[tuple[str, str, dict[str, object]]] = []
+
         class Logger:
             def event(self, level: str, message: str, **fields: object) -> None:
                 events.append((level, message, fields))
+
         @timed(Logger())
         def add(left: int, right: int) -> int:
             return left + right
+
         self.assertEqual(3, add(1, 2))
         self.assertEqual(["function_started", "function_finished"], [event[1] for event in events])
 
@@ -1858,8 +1865,10 @@ max_retry_time = 30
                 ('{"schema_version":4,"runtime":{"maximum_workers":NaN}}', "non-finite"),
                 ('{"schema_version":4,"collectors":{"plugin.custom":{"value":1e999}}}', "non-finite"),
                 ('{"schema_version":4,"collectors":{"../escape":{}}}', "invalid collector ID"),
-                ('{"schema_version":4,"collectors":{"core.system.example":{"invalid-name":1}}}', "invalid setting name"),
-                ('{"schema_version":4,"collectors":{"core.packet.packet_capture":{"packet_typo":1}}}', "unsupported settings"),
+                ('{"schema_version":4,"collectors":{"core.system.example":{"invalid-name":1}}}',
+                 "invalid setting name"),
+                ('{"schema_version":4,"collectors":{"core.packet.packet_capture":{"packet_typo":1}}}',
+                 "unsupported settings"),
             )
             for payload, message in invalid:
                 with self.subTest(payload=payload):
@@ -2075,7 +2084,7 @@ max_retry_time = 30
             )
             output = io.StringIO()
             with patch("logicytics.cli._project_root", return_value=root), patch(
-                "sys.stdout", output
+                    "sys.stdout", output
             ):
                 self.assertEqual(
                     0,
@@ -2173,7 +2182,7 @@ max_retry_time = 30
             root = Path(temporary)
             output = io.StringIO()
             with patch("logicytics.cli._project_root", return_value=root), patch(
-                "sys.stdout", output
+                    "sys.stdout", output
             ):
                 self.assertEqual(0, main(["--modes"]))
             payload = json.loads(output.getvalue())
@@ -2204,7 +2213,7 @@ max_retry_time = 30
             git = subprocess.CompletedProcess(["git", "--version"], 0, "git version 2.0\n", "")
             output = io.StringIO()
             with patch("logicytics.cli._project_root", return_value=root), patch(
-                "logicytics.cli.process_adapter.run", return_value=git
+                    "logicytics.cli.process_adapter.run", return_value=git
             ), patch("logicytics.cli._launch_action_window", return_value=321) as launch, patch(
                 "sys.stdout", output
             ):
@@ -2218,7 +2227,7 @@ max_retry_time = 30
             launch.assert_called_once_with(root, "debug")
 
             with patch("logicytics.cli._project_root", return_value=root), patch(
-                "sys.stdout", new_callable=io.StringIO
+                    "sys.stdout", new_callable=io.StringIO
             ) as invalid_output:
                 self.assertEqual(2, main(["update", "--new-window"]))
             self.assertIn("must be provided together", invalid_output.getvalue())
@@ -2228,7 +2237,7 @@ max_retry_time = 30
         root = Path("C:/repo").resolve()
         process = MagicMock(pid=42)
         with patch("logicytics.cli.sys.platform", "win32"), patch(
-            "logicytics.cli.process_adapter.popen", return_value=process
+                "logicytics.cli.process_adapter.popen", return_value=process
         ) as popen:
             self.assertEqual(42, _launch_action_window(root, "preflight"))
         popen.assert_called_once_with(
@@ -2239,7 +2248,7 @@ max_retry_time = 30
             close_fds=True,
         )
         with patch("logicytics.cli.sys.platform", "linux"), self.assertRaisesRegex(
-            OSError, "only on Windows"
+                OSError, "only on Windows"
         ):
             _launch_action_window(root, "debug")
 
@@ -3176,7 +3185,8 @@ max_retry_time = 30
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
             collector_path.write_text(
-                _COLLECTOR.replace("from pathlib import Path\n", "from pathlib import Path\nfrom time import sleep\n").replace(
+                _COLLECTOR.replace("from pathlib import Path\n",
+                                   "from pathlib import Path\nfrom time import sleep\n").replace(
                     '        output = context.workspace / "system.txt"',
                     '        context.report_progress("scan_started", scanned_files=3)\n'
                     '        sleep(0.2)\n'
@@ -3803,7 +3813,8 @@ max_retry_time = 30
             report = preflight(root)
             self.assertEqual((), report.invalid)
             with self.assertRaisesRegex(PlanError, "sensitive dependency"):
-                build_plan(report, RunRequest(include=(target_id,), approved_capabilities=(Capability.SENSITIVE_FILES,)))
+                build_plan(report,
+                           RunRequest(include=(target_id,), approved_capabilities=(Capability.SENSITIVE_FILES,)))
             approved = build_plan(
                 report,
                 RunRequest(
@@ -4696,7 +4707,8 @@ max_retry_time = 30
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
             collector_path.write_text(
-                _COLLECTOR.replace("def collect(self, context: CollectorContext) -> CollectorResult:", "def collect(self, context: CollectorContext) -> ValidationResult:"),
+                _COLLECTOR.replace("def collect(self, context: CollectorContext) -> CollectorResult:",
+                                   "def collect(self, context: CollectorContext) -> ValidationResult:"),
                 encoding="utf-8",
             )
             report = preflight(root)
@@ -4912,12 +4924,14 @@ max_retry_time = 30
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
             collector_path.write_text(
-                _COLLECTOR.replace("return CollectorResult.succeeded(\"test artifact created\", (artifact,))", "print('unexpected output')\n        return CollectorResult.succeeded(\"test artifact created\", (artifact,))"),
+                _COLLECTOR.replace("return CollectorResult.succeeded(\"test artifact created\", (artifact,))",
+                                   "print('unexpected output')\n        return CollectorResult.succeeded(\"test artifact created\", (artifact,))"),
                 encoding="utf-8",
             )
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
-            self.assertIn("collectors must not print; use structured progress or logging", report.invalid[0].static_errors)
+            self.assertIn("collectors must not print; use structured progress or logging",
+                          report.invalid[0].static_errors)
 
     def test_preflight_rejects_import_time_calls_in_headers_and_class_body(self) -> None:
         """Collection-like work must not run before a worker has isolated the collector."""

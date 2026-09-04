@@ -67,7 +67,8 @@ class PacketCaptureCollector(CoreCollector):
             timeout = float(context.settings.get("timeout_seconds", 10))
             retry_window = float(context.settings.get("retry_window_seconds", 0))
         except (TypeError, ValueError):
-            return ValidationResult(False, reasons=("packet_count, timeout_seconds, and retry_window_seconds must be numeric",))
+            return ValidationResult(False, reasons=(
+                "packet_count, timeout_seconds, and retry_window_seconds must be numeric",))
         if not 1 <= count <= 10_000 or not 1 <= timeout <= 60 or not 0 <= retry_window <= 60:
             return ValidationResult(
                 False,

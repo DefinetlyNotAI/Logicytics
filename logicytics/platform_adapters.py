@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-import subprocess
-import socket as _socket
 import ctypes
-import shutil
 import os
+import shutil
 import signal
+import socket as _socket
+import subprocess
 import tempfile
-from pathlib import Path
 from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
 try:
@@ -221,6 +221,7 @@ class WindowsApiAdapter:
 
     def process_working_set(self, process_id: int) -> int | None:
         """Return a Windows process working set without exposing raw Win32 handles."""
+
         class ProcessMemoryCounters(ctypes.Structure):
             _fields_ = [
                 ("cb", ctypes.c_ulong),
@@ -254,6 +255,7 @@ class WindowsApiAdapter:
 
     def process_descendants(self, parent_process_id: int) -> tuple[int, ...]:
         """Snapshot descendants of one Windows process through Toolhelp APIs."""
+
         class ProcessEntry(ctypes.Structure):
             _fields_ = [
                 ("dwSize", ctypes.c_ulong),
