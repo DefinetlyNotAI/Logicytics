@@ -15,9 +15,11 @@ repos:
     hooks:
       - id: pylint
 
-  - repo: local
+  - # noinspection YAMLSchemaValidation
+    repo: local
     hooks:
-      - id: conventional-commit-message
+      - # noinspection YAMLSchemaValidation
+        id: conventional-commit-message
         name: Validate conventional commit message
         entry: .github/script/validate-commit-msg.sh
         language: script
