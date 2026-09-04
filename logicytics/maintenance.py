@@ -12,7 +12,7 @@ import tomllib
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, Mapping
+from typing import Any, Mapping, TypedDict
 
 from logicytics.configuration import MaintenanceSettings
 
@@ -356,7 +356,15 @@ def maintenance_diagnostics(
     }
 
 
-def developer_checks(project_root: Path, settings: MaintenanceSettings) -> dict[str, object]:
+class DeveloperChecks(TypedDict):
+    naming_violations: list[str]
+    misplaced_python: list[str]
+    missing_module_docstrings: list[str]
+    crowded_modules: list[str]
+    eligible_file_count: int
+
+
+def developer_checks(project_root: Path, settings: MaintenanceSettings) -> DeveloperChecks:
     """Inspect repository organization without importing or executing project modules."""
     naming: list[str] = []
     missing_docstrings: list[str] = []
