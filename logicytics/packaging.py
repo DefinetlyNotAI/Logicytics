@@ -172,7 +172,7 @@ def _log_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[Path,
         if not path.is_file() or path.resolve(strict=True) != path:
             raise ValueError(f"diagnostic log escapes its run-owned event channel: {path.name}")
         sources.append((path, archive_name))
-    if manifest.request.get("performance_check") is True:
+    if manifest.request.get("performance_check"):
         performance_path = root / "logs" / "performance.json"
         if not performance_path.is_file():
             raise FileNotFoundError("requested performance report is missing")

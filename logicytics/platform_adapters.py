@@ -39,7 +39,7 @@ class ProcessAdapter:
         """Delegate to the guarded stdlib runner while retaining its familiar result contract."""
         normalized = self._command(command)
         capture_directory = options.pop("capture_directory", None)
-        if options.get("shell") is True:
+        if options.get("shell"):
             raise ValueError("collector process adapters never permit shell execution")
         timeout = options.get("timeout")
         if timeout is not None and (not isinstance(timeout, (int, float)) or timeout <= 0):
@@ -80,11 +80,12 @@ class ProcessAdapter:
     def popen(self, command: Sequence[str], **options: Any) -> subprocess.Popen[Any]:
         """Start one explicit long-lived process without invoking a command shell."""
         normalized = self._command(command)
-        if options.get("shell") is True:
+        if options.get("shell"):
             raise ValueError("process adapters never permit shell execution")
         return subprocess.Popen(normalized, **options)
 
-    def memory_bytes(self, process_id: int) -> int | None:
+    @staticmethod
+    def memory_bytes(process_id: int) -> int | None:
         """Return one process's resident memory through the host-specific boundary."""
         if not isinstance(process_id, int) or isinstance(process_id, bool) or process_id <= 0:
             raise ValueError("process_id must be a positive integer")
