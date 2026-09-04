@@ -170,7 +170,7 @@ Pull requests should:
 - include tests and documentation proportional to the changed contract;
 - preserve unrelated work and never include generated evidence or secrets;
 - pass the complete verification gates above; and
-- comply with the [Developer Certificate of Origin](DCO.md),
+- comply with the [Developer Certificate of Origin](.github/DCO.md),
   [Code of Conduct](CODE_OF_CONDUCT.md), and repository license.
 
 By contributing code, you agree to license it under the [MIT License](LICENSE).

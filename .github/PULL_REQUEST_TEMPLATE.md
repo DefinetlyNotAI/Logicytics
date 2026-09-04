@@ -24,7 +24,7 @@
 - [ ] Collector metadata, cancellation, isolation, and artifact registration remain valid.
 - [ ] Configuration, output, migration, release, and feature-status docs are updated when affected.
 - [ ] No generated evidence, credentials, private data, caches, or unrelated changes are included.
-- [ ] I agree to the [Developer Certificate of Origin](../DCO.md) and repository license.
+- [ ] I agree to the [Developer Certificate of Origin](DCO.md) and repository license.
 
 ## Related issues
 
