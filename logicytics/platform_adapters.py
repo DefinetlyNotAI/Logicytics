@@ -8,6 +8,7 @@ import shutil
 import signal
 import socket as _socket
 import subprocess
+import sys
 import tempfile
 from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
@@ -206,12 +207,19 @@ class WindowsApiAdapter:
 
     @staticmethod
     def load_library(name: str):
-        if not isinstance(name, str) or not name or any(character in name for character in "/\\\x00"):
-            raise ValueError("Win32 library name must be a simple non-empty name")
-        loader = getattr(ctypes, "WinDLL", None)
-        if loader is None:
+        if (
+            not isinstance(name, str)
+            or not name
+            or any(character in name for character in "/\\\x00")
+        ):
+            raise ValueError(
+                "Win32 library name must be a simple non-empty name"
+            )
+
+        if sys.platform != "win32":
             raise OSError("Win32 libraries are unavailable on this platform")
-        return loader(name, use_last_error=True)
+
+        return ctypes.WinDLL(name, use_last_error=True)
 
     def is_administrator(self) -> bool | None:
         try:

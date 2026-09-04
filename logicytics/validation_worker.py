@@ -8,7 +8,9 @@ import json
 import os
 import sys
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
+from typing import cast
 
 from logicytics.contracts import (
     Collector,
@@ -106,10 +108,17 @@ def _load_module(path: Path):
     return module
 
 
-def _validate_contract(collector_type: type[Collector], kind: CollectorKind) -> CollectorMetadata:
+def _validate_contract(
+        collector_type: type[Collector],
+        kind: CollectorKind,
+) -> CollectorMetadata:
     required_base = CoreCollector if kind is CollectorKind.CORE else PluginCollector
+
     if not issubclass(collector_type, required_base):
-        raise ValueError(f"collector must inherit from {required_base.__name__}")
+        raise ValueError(
+            f"collector must inherit from {required_base.__name__}"
+        )
+
     for method_name, expected_parameters in {
         "metadata": 0,
         "validate": 1,
@@ -119,31 +128,73 @@ def _validate_contract(collector_type: type[Collector], kind: CollectorKind) -> 
         "cleanup": 1,
     }.items():
         method = getattr(collector_type, method_name, None)
-        if method is None:
+
+        if method is None or not callable(method):
             raise ValueError(f"missing required method: {method_name}")
+
         parameters = list(inspect.signature(method).parameters.values())
+
         if method_name == "metadata":
-            parameters = parameters[1:] if parameters and parameters[0].name == "cls" else parameters
+            parameters = (
+                parameters[1:]
+                if parameters and parameters[0].name == "cls"
+                else parameters
+            )
         elif parameters and parameters[0].name == "self":
             parameters = parameters[1:]
+
         if len(parameters) != expected_parameters:
-            raise ValueError(f"{method_name} has an invalid signature")
-    dependencies = getattr(collector_type, "dependencies", None)
-    if dependencies is None or list(inspect.signature(dependencies).parameters.values()):
+            raise ValueError(
+                f"{method_name} has an invalid signature"
+            )
+
+    raw_dependencies = getattr(collector_type, "dependencies", None)
+
+    if raw_dependencies is None or not callable(raw_dependencies):
         raise ValueError("dependencies has an invalid signature")
+
+    dependencies = cast(
+        Callable[[], tuple[str, ...]],
+        raw_dependencies,
+    )
+
+    if inspect.signature(dependencies).parameters:
+        raise ValueError("dependencies has an invalid signature")
+
     declared_dependencies = dependencies()
-    if not isinstance(declared_dependencies, tuple) or not all(isinstance(item, str) for item in declared_dependencies):
-        raise ValueError("dependencies() must return tuple[str, ...]")
+
+    if (
+        not isinstance(declared_dependencies, tuple)
+        or not all(
+            isinstance(item, str)
+            for item in declared_dependencies
+        )
+    ):
+        raise ValueError(
+            "dependencies() must return tuple[str, ...]"
+        )
+
     metadata = collector_type.metadata()
+
     if not isinstance(metadata, CollectorMetadata):
-        raise ValueError("metadata() must return CollectorMetadata")
+        raise ValueError(
+            "metadata() must return CollectorMetadata"
+        )
+
     if declared_dependencies != metadata.dependencies:
-        raise ValueError("dependencies() must match metadata.dependencies")
+        raise ValueError(
+            "dependencies() must match metadata.dependencies"
+        )
+
     collector = collector_type()
-    with tempfile.TemporaryDirectory(prefix="logicytics-validation-") as temporary:
+
+    with tempfile.TemporaryDirectory(
+        prefix="logicytics-validation-"
+    ) as temporary:
         workspace = Path(temporary)
         temporary_directory = workspace / "tmp"
         temporary_directory.mkdir()
+
         context = CollectorContext(
             run_id="validation",
             collector_id=metadata.id,
@@ -154,13 +205,20 @@ def _validate_contract(collector_type: type[Collector], kind: CollectorKind) -> 
             settings={},
             cancellation_file=workspace / "cancelled",
         )
+
         try:
             with _ValidationSideEffectGuard():
                 validation = collector.validate(context)
         except Exception as error:
-            raise ValueError(f"validate() probe failed: {error}") from error
+            raise ValueError(
+                f"validate() probe failed: {error}"
+            ) from error
+
     if not isinstance(validation, ValidationResult):
-        raise ValueError("validate() must return ValidationResult")
+        raise ValueError(
+            "validate() must return ValidationResult"
+        )
+
     return metadata
 
 

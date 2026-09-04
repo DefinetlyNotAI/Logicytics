@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import sys
 from dataclasses import dataclass
 from datetime import datetime
 from math import isfinite
@@ -386,38 +387,59 @@ def open_artifact(
 ) -> Path:
     """Verify and open one registered artifact with the platform's associated application."""
     if not isinstance(artifact_id, str) or _ARTIFACT_ID.fullmatch(artifact_id) is None:
-        raise ArtifactError("artifact_id must be a canonical registered artifact identifier")
+        raise ArtifactError(
+            "artifact_id must be a canonical registered artifact identifier"
+        )
+
     snapshot = query_run(
         project_root,
         run_id,
         configuration=configuration,
         config_path=config_path,
     )
-    artifact = next((item for item in snapshot.artifacts if item.id == artifact_id), None)
+
+    artifact = next(
+        (item for item in snapshot.artifacts if item.id == artifact_id),
+        None,
+    )
     if artifact is None:
-        raise ArtifactError("artifact is not registered in the selected run manifest")
+        raise ArtifactError(
+            "artifact is not registered in the selected run manifest"
+        )
+
     root = snapshot.run_directory / "artifacts"
     source = root.joinpath(*PurePosixPath(artifact.relative_path).parts)
     owner = root / artifact.collector_id.replace(".", "_")
+
     try:
         if root.resolve(strict=True) != root or owner.resolve(strict=True) != owner:
             raise ValueError("artifact ownership roots must not be redirected")
+
         resolved = source.resolve(strict=True)
         resolved.relative_to(owner)
+
         if not source.is_file() or source.stat().st_size != artifact.size_bytes:
-            raise ArtifactError("registered artifact size does not match its manifest")
+            raise ArtifactError(
+                "registered artifact size does not match its manifest"
+            )
+
         digest = hashlib.sha256()
         with source.open("rb") as stream:
             for block in iter(lambda: stream.read(1024 * 1024), b""):
                 digest.update(block)
+
     except (OSError, ValueError) as error:
         raise ArtifactError(
             "registered artifact escapes its collector-owned store or cannot be opened"
         ) from error
+
     if digest.hexdigest() != artifact.sha256:
-        raise ArtifactError("registered artifact failed manifest SHA-256 verification")
-    platform_opener = getattr(os, "startfile", None)
-    if platform_opener is None:
-        raise OSError("opening artifacts requires a Windows associated-file handler")
-    platform_opener(source)
+        raise ArtifactError(
+            "registered artifact failed manifest SHA-256 verification"
+        )
+
+    if sys.platform != "win32":
+        raise OSError("opening artifacts requires Windows")
+
+    os.startfile(source)
     return source
