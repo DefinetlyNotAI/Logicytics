@@ -143,7 +143,8 @@ class RegistryAdapter:
     def EnumValue(self, key: Any, index: int):
         return self._module().EnumValue(key, index)
 
-    def last_write_time(self, key: Any) -> str | None:
+    @staticmethod
+    def last_write_time(key: Any) -> str | None:
         """Return one key's Win32 last-write timestamp in UTC when available."""
         if _winreg is None:
             return None

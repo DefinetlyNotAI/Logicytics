@@ -37,7 +37,8 @@ class _Context:
     def is_cancelled(self) -> bool:
         return self.cancelled
 
-    def report_progress(self, _event: str, **_metrics: int | float | str) -> None:
+    @staticmethod
+    def report_progress(_event: str, **_metrics: int | float | str) -> None:
         return None
 
 
@@ -178,16 +179,20 @@ class CollectorCancellationTests(unittest.TestCase):
             packet_context.workspace.mkdir()
 
             class FakeSocket:
-                def bind(self, _address) -> None:
+                @staticmethod
+                def bind(_address) -> None:
                     return None
 
-                def setsockopt(self, *_args) -> None:
+                @staticmethod
+                def setsockopt(*_args) -> None:
                     return None
 
-                def ioctl(self, *_args) -> None:
+                @staticmethod
+                def ioctl(*_args) -> None:
                     return None
 
-                def close(self) -> None:
+                @staticmethod
+                def close() -> None:
                     return None
 
             def cancel_wait(*_args):
@@ -206,7 +211,8 @@ class CollectorCancellationTests(unittest.TestCase):
             memory_context.workspace.mkdir()
 
             class FakeKernel:
-                def GetCurrentProcess(self):
+                @staticmethod
+                def GetCurrentProcess():
                     memory_context.cancelled = True
                     return 1
 

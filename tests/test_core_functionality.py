@@ -1530,7 +1530,8 @@ class CoreFunctionalityTests(unittest.TestCase):
         events: list[tuple[str, str, dict[str, object]]] = []
 
         class Logger:
-            def event(self, level: str, message: str, **fields: object) -> None:
+            @staticmethod
+            def event(level: str, message: str, **fields: object) -> None:
                 events.append((level, message, fields))
 
         @deprecated(Logger(), removal_version="5.0", reason="replacement exists")
@@ -1546,7 +1547,8 @@ class CoreFunctionalityTests(unittest.TestCase):
         events: list[tuple[str, str, dict[str, object]]] = []
 
         class Logger:
-            def event(self, level: str, message: str, **fields: object) -> None:
+            @staticmethod
+            def event(level: str, message: str, **fields: object) -> None:
                 events.append((level, message, fields))
 
         with self.assertRaises(ValueError):
@@ -1559,7 +1561,8 @@ class CoreFunctionalityTests(unittest.TestCase):
         events: list[tuple[str, str, dict[str, object]]] = []
 
         class Logger:
-            def event(self, level: str, message: str, **fields: object) -> None:
+            @staticmethod
+            def event(level: str, message: str, **fields: object) -> None:
                 events.append((level, message, fields))
 
         @timed(Logger())

@@ -610,7 +610,8 @@ class Collector(ABC):
     def validate(self, context: CollectorContext) -> ValidationResult:
         """Validate prerequisites without creating evidence artifacts."""
 
-    def prepare(self, _context: CollectorContext) -> ValidationResult:
+    @staticmethod
+    def prepare(_context: CollectorContext) -> ValidationResult:
         """Prepare collector-local resources after validation and authorization."""
         return ValidationResult(True)
 
