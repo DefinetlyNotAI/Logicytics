@@ -21,6 +21,7 @@ class _UnusedArtifactWriter(ArtifactWriter):
             *,
             media_type: str = "application/octet-stream",
             transformations: tuple[str, ...] = (),
+            evidence_kind: str | None = None,
     ):
         raise AssertionError("a skipped collector must not register artifacts")
 
