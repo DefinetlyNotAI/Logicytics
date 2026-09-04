@@ -101,12 +101,29 @@ class MemoryMapCollector(CoreCollector):
             base = ctypes.cast(memory.BaseAddress, ctypes.c_void_p).value or address
             readable = memory.State == 0x1000 and not (memory.Protect & 0x101)
             if readable:
+                base_address = int(base)
+
                 mapped = ctypes.create_unicode_buffer(32_768)
-                mapped_length = psapi.GetMappedFileNameW(process, ctypes.c_void_p(base), mapped, len(mapped))
-                regions.append({"index": len(regions), "address": f"0x{base:016X}", "size_bytes": memory.RegionSize,
-                                "rss_bytes": counters.WorkingSetSize, "permissions": _permissions(memory.Protect),
-                                "mapped_path": mapped.value if mapped_length else None, "state": memory.State,
-                                "type": memory.Type})
+                mapped_length = psapi.GetMappedFileNameW(
+                    process,
+                    ctypes.c_void_p(base_address),
+                    mapped,
+                    len(mapped),
+                )
+
+                regions.append(
+                    {
+                        "index": len(regions),
+                        "address": f"0x{base_address:016X}",
+                        "size_bytes": memory.RegionSize,
+                        "rss_bytes": counters.WorkingSetSize,
+                        "permissions": _permissions(memory.Protect),
+                        "mapped_path": mapped.value if mapped_length else None,
+                        "state": memory.State,
+                        "type": memory.Type,
+                    }
+                )
+
             next_address = base + memory.RegionSize
             if next_address <= address:
                 break
