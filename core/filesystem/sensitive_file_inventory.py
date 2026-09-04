@@ -46,22 +46,34 @@ class SensitiveFileInventoryCollector(CoreCollector):
     def validate(self, context: CollectorContext) -> ValidationResult:
         """Validate bounded search settings before walking the requested root."""
         if context.is_cancelled:
-            return ValidationResult(False, reasons=("run cancellation was requested",))
-        try:
-            if int(context.settings.get("max_directories", 5_000)) < 1 or int(
-                    context.settings.get("max_matches", 500)) < 1:
-                return ValidationResult(False, reasons=("max_directories and max_matches must be positive",))
-        except (TypeError, ValueError):
-            return ValidationResult(False, reasons=("max_directories and max_matches must be integers",))
+            return ValidationResult(
+                False,
+                reasons=("run cancellation was requested",),
+            )
+
+        max_directories = context.setting_int("max_directories", 5_000)
+        max_matches = context.setting_int("max_matches", 500)
+
+        if max_directories < 1 or max_matches < 1:
+            return ValidationResult(
+                False,
+                reasons=("max_directories and max_matches must be positive",),
+            )
+
         return ValidationResult(True)
 
     def collect(self, context: CollectorContext) -> CollectorResult:
         """Find matches and copy them through the scheduler-owned collector worker."""
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before sensitive-file inventory")
-        root = Path(str(context.settings.get("root", filesystem_adapter.system_drive_root())))
-        max_directories = int(context.settings.get("max_directories", 5_000))
-        max_matches = int(context.settings.get("max_matches", 500))
+        root = Path(
+            context.setting_str(
+                "root",
+                str(filesystem_adapter.system_drive_root()),
+            )
+        )
+        max_directories = context.setting_int("max_directories", 5_000)
+        max_matches = context.setting_int("max_matches", 500)
         matches: list[Path] = []
         scanned_directories = 0
         context.report_progress("sensitive_file_inventory_started", root=str(root))

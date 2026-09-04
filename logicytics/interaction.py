@@ -120,13 +120,37 @@ def record_match(path: Path, match: FlagMatch) -> None:
 def usage_statistics(history: Iterable[Mapping[str, object]]) -> dict[str, object]:
     """Aggregate total, accuracy, common values, and per-flag frequencies."""
     records = list(history)
-    accuracies = [float(item["accuracy"]) for item in records if isinstance(item.get("accuracy"), (int, float))]
-    flags = Counter(str(item["matched_flag"]) for item in records if isinstance(item.get("matched_flag"), str))
-    devices = Counter(str(item["device_name"]) for item in records if isinstance(item.get("device_name"), str))
-    inputs = Counter(str(item["input"]) for item in records if isinstance(item.get("input"), str))
+
+    accuracies: list[float] = []
+    flags: Counter[str] = Counter()
+    devices: Counter[str] = Counter()
+    inputs: Counter[str] = Counter()
+
+    for item in records:
+        accuracy = item.get("accuracy")
+        matched_flag = item.get("matched_flag")
+        device_name = item.get("device_name")
+        input_value = item.get("input")
+
+        if isinstance(accuracy, (int, float)):
+            accuracies.append(float(accuracy))
+
+        if isinstance(matched_flag, str):
+            flags[matched_flag] += 1
+
+        if isinstance(device_name, str):
+            devices[device_name] += 1
+
+        if isinstance(input_value, str):
+            inputs[input_value] += 1
+
     return {
         "total_interactions": len(records),
-        "average_accuracy": round(sum(accuracies) / len(accuracies), 6) if accuracies else 0.0,
+        "average_accuracy": (
+            round(sum(accuracies) / len(accuracies), 6)
+            if accuracies
+            else 0.0
+        ),
         "common_device": devices.most_common(1)[0][0] if devices else None,
         "common_input": inputs.most_common(1)[0][0] if inputs else None,
         "per_flag_frequency": dict(sorted(flags.items())),

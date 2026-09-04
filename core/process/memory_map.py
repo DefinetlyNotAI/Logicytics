@@ -66,10 +66,18 @@ class MemoryMapCollector(CoreCollector):
         """Query readable local memory regions and write metadata-only JSON evidence."""
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before memory-map collection")
-        maximum = int(context.settings.get("max_regions", 5_000))
-        output_limit = int(context.settings.get("output_limit_bytes", 64 * 1024 * 1024))
-        safety_margin = int(context.settings.get("disk_safety_margin_bytes", 100 * 1024 * 1024))
-        configured_directory = Path(str(context.settings.get("dump_directory", "memory_maps")))
+        maximum = context.setting_int("max_regions", 5_000)
+        output_limit = context.setting_int(
+            "output_limit_bytes",
+            64 * 1024 * 1024,
+        )
+        safety_margin = context.setting_int(
+            "disk_safety_margin_bytes",
+            100 * 1024 * 1024,
+        )
+        configured_directory = Path(
+            context.setting_str("dump_directory", "memory_maps")
+        )
         output_directory = (context.workspace / configured_directory).resolve()
         try:
             output_directory.relative_to(context.workspace.resolve())

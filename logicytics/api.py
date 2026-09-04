@@ -271,10 +271,15 @@ def query_run(
             or isinstance(manifest_schema_version, bool)
             or manifest_schema_version != MANIFEST_SCHEMA_VERSION
     ):
-        raise PlanError(
-            f"unsupported run manifest schema_version {manifest_schema_version!r}; "
-            f"expected {MANIFEST_SCHEMA_VERSION}"
-        )
+        if manifest_schema_version is None:
+            raise PlanError("run manifest is missing schema_version")
+
+        if manifest_schema_version != MANIFEST_SCHEMA_VERSION:
+            raise PlanError(
+                f"unsupported run manifest schema_version {manifest_schema_version!r}; "
+                f"expected {MANIFEST_SCHEMA_VERSION}"
+            )
+
     _manifest_timestamp(payload.get("requested_at"), "requested_at")
     if not isinstance(payload.get("status"), str):
         raise PlanError("run manifest contains an unsupported run status")

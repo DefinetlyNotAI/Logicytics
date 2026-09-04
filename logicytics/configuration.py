@@ -49,6 +49,9 @@ _LEGACY_RUNTIME_ALIASES = MappingProxyType({
     "max_workers": "maximum_workers",
 })
 
+type CollectorSettingValue = str | int | float
+type CollectorSettings = Mapping[str, CollectorSettingValue]
+
 
 @dataclass(frozen=True, slots=True)
 class CollectorSettingRule:
@@ -339,10 +342,10 @@ class AppConfig:
     interaction: InteractionSettings = field(default_factory=InteractionSettings)
     maintenance: MaintenanceSettings = field(default_factory=MaintenanceSettings)
     logging: LoggingSettings = field(default_factory=LoggingSettings)
-    collector_settings: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
+    collector_settings: Mapping[str, CollectorSettings] = field(default_factory=dict)
     migrated_from_schema: int | None = None
 
-    def settings_for(self, collector_id: str) -> Mapping[str, Any]:
+    def settings_for(self, collector_id: str) -> CollectorSettings:
         """Return the isolated settings declared for one collector."""
         return self.collector_settings.get(collector_id, {})
 

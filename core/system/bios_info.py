@@ -24,7 +24,7 @@ def _is_access_denied(detail: str) -> bool:
     return "permission denied" in normalized or ("access" in normalized and "denied" in normalized)
 
 
-def render_bios_table(bios: dict[str, object]) -> str:
+def render_bios_table(bios: dict[str, str | None]) -> str:
     """Render trusted structured BIOS fields into a portable evidence table."""
     rows = "\n".join(
         f"      <tr><th>{html.escape(label)}</th><td>{html.escape(str(bios.get(key) or 'unavailable'))}</td></tr>"

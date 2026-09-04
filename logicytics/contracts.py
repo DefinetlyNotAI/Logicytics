@@ -561,7 +561,7 @@ class CollectorContext:
             temporary_directory: Path,
             artifacts: "ArtifactWriter",
             logger: EventLogger,
-            settings: Mapping[str, Any],
+            settings: Mapping[str, object],
             cancellation_file: Path,
     ) -> None:
         self.run_id = run_id
@@ -577,6 +577,25 @@ class CollectorContext:
     def is_cancelled(self) -> bool:
         """Whether the supervisor has requested cancellation."""
         return self._cancellation_file.exists()
+
+    def setting_int(self, name: str, default: int) -> int:
+        """Return one integer collector setting or its default."""
+        value = self.settings.get(name, default)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        return default
+
+    def setting_float(self, name: str, default: float) -> float:
+        """Return one numeric collector setting or its default."""
+        value = self.settings.get(name, default)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return float(value)
+        return default
+
+    def setting_str(self, name: str, default: str) -> str:
+        """Return one textual collector setting or its default."""
+        value = self.settings.get(name, default)
+        return value if isinstance(value, str) else default
 
     def report_progress(self, event: str, **metrics: int | float | str) -> None:
         """Write a structured progress event local to this collector workspace."""

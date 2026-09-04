@@ -17,10 +17,24 @@ def _is_access_denied(detail: str) -> bool:
     return "permission denied" in normalized or ("access" in normalized and "denied" in normalized)
 
 
-def _format_address(instance_id: object) -> str | None:
+def _format_address(instance_id: str | None) -> str | None:
     """Extract one conventional colon-separated address from a PnP instance identifier."""
-    match = re.search(r"(?<![0-9A-Fa-f])([0-9A-Fa-f]{12})(?![0-9A-Fa-f])", str(instance_id))
-    return ":".join(match.group(1)[offset: offset + 2].upper() for offset in range(0, 12, 2)) if match else None
+    if instance_id is None:
+        return None
+
+    match = re.search(
+        r"(?<![0-9A-Fa-f])([0-9A-Fa-f]{12})(?![0-9A-Fa-f])",
+        instance_id,
+    )
+
+    return (
+        ":".join(
+            match.group(1)[offset:offset + 2].upper()
+            for offset in range(0, 12, 2)
+        )
+        if match
+        else None
+    )
 
 
 class BluetoothAddressesCollector(CoreCollector):

@@ -20,19 +20,26 @@ def _is_access_denied(detail: str) -> bool:
 def _enrich_ipv4_networks(records: list[dict[str, object]]) -> list[dict[str, object]]:
     """Add deterministic IPv4 netmask and broadcast fields from each prefix length."""
     enriched: list[dict[str, object]] = []
+
     for record in records:
         item = dict(record)
         address = item.get("IPAddress")
         prefix = item.get("PrefixLength")
+
         if isinstance(address, str) and isinstance(prefix, int):
             try:
-                network = ipaddress.IPv4Network(f"{address}/{prefix}", strict=False)
+                network = ipaddress.IPv4Network(
+                    f"{address}/{prefix}",
+                    strict=False,
+                )
             except ValueError:
                 pass
             else:
-                item["Netmask"] = str(network.netmask)
-                item["BroadcastAddress"] = str(network.broadcast_address)
+                item["Netmask"] = network.netmask.compressed
+                item["BroadcastAddress"] = network.broadcast_address.compressed
+
         enriched.append(item)
+
     return enriched
 
 
