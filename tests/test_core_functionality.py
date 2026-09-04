@@ -1,4 +1,5 @@
 """Integration-style checks for the v4 core without shipped collectors."""
+# TODO Dedupe the logic, as its split weirdly
 
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import FrozenInstanceError, replace
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Callable, cast
 from unittest.mock import MagicMock, patch
 
 from logicytics import (
@@ -26,10 +28,11 @@ from logicytics import (
     query_run,
     read_artifact,
     run_collection,
+    maintenance, discovery,
 )
 from logicytics import packaging
 from logicytics.artifacts import WorkspaceArtifactWriter
-from logicytics.cli import launch_action_window, parser, request, main
+from logicytics.cli import cli_methods, main, CLI
 from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.configuration import (
     LoggingSettings,
@@ -78,6 +81,7 @@ from logicytics.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
 from logicytics.output_layout import ensure_output_layout
 from logicytics.packaging import package_run
 from logicytics.planner import BUILTIN_PROFILES, build_plan
+from logicytics.platform_adapters import ProcessAdapter, process_adapter
 from logicytics.runtime import RunSupervisor
 from logicytics.sysinternals import ensure_sysinternals
 
@@ -139,7 +143,7 @@ def _plugin_collector_source() -> str:
     )
 
 
-def _mod_metadata(name: str, *, filesystem_write: bool = False) -> dict[str, object]:
+def _mod_metadata(name: str, *, filesystem_write: bool = False) -> dict[str, Any]:
     """Return a complete sidecar declaration for a harmless legacy script fixture."""
     return {
         "id": f"mod.{name}",
@@ -384,8 +388,13 @@ class CoreFunctionalityTests(unittest.TestCase):
         )
         response = MagicMock()
         response.__enter__.return_value.read.return_value = payload
-        with patch("logicytics.maintenance.urllib.request.urlopen", return_value=response):
+        with patch.object(
+                maintenance.urllib.request,
+                "urlopen",
+                return_value=response,
+        ):
             manifest = fetch_remote_manifest(settings)
+
         self.assertIsNotNone(manifest)
         self.assertEqual("4.1.0-snapshot.2", manifest.version)
 
@@ -393,7 +402,11 @@ class CoreFunctionalityTests(unittest.TestCase):
             remote_manifest_url=settings.remote_manifest_url,
             remote_manifest_sha256="0" * 64,
         )
-        with patch("logicytics.maintenance.urllib.request.urlopen", return_value=response):
+        with patch.object(
+                maintenance.urllib.request,
+                "urlopen",
+                return_value=response,
+        ):
             with self.assertRaisesRegex(ValueError, "does not match"):
                 fetch_remote_manifest(tampered)
 
@@ -405,14 +418,18 @@ class CoreFunctionalityTests(unittest.TestCase):
                 "collectors": ["remote.code"],
             }
         ).encode("utf-8")
+
         execution_response = MagicMock()
         execution_response.__enter__.return_value.read.return_value = execution_payload
+
         execution_settings = MaintenanceSettings(
             remote_manifest_url=settings.remote_manifest_url,
             remote_manifest_sha256=hashlib.sha256(execution_payload).hexdigest(),
         )
-        with patch(
-                "logicytics.maintenance.urllib.request.urlopen",
+
+        with patch.object(
+                maintenance.urllib.request,
+                "urlopen",
                 return_value=execution_response,
         ):
             with self.assertRaisesRegex(ValueError, "only schema_version"):
@@ -458,17 +475,23 @@ class CoreFunctionalityTests(unittest.TestCase):
                 '[project]\nname = "fixture"\nversion = "4.0.0"\n',
                 encoding="utf-8",
             )
-            with patch("logicytics.cli._project_root", return_value=root), patch(
-                    "sys.stdout", new_callable=io.StringIO
+            with patch.object(CLI, "project_root", return_value=root), patch(
+                    "sys.stdout",
+                    new_callable=io.StringIO,
             ):
-                self.assertEqual(0, main(["dev", "--write-manifest", "--next-version", "4.1.0"]))
+                self.assertEqual(
+                    0,
+                    main(["dev", "--write-manifest", "--next-version", "4.1.0"]),
+                )
+
             manifest_path = root / "project.manifest.json"
             self.assertTrue(manifest_path.is_file())
             manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
             self.assertEqual("4.1.0", manifest_payload["version"])
 
-            with patch("logicytics.cli._project_root", return_value=root), patch(
-                    "sys.stdout", new_callable=io.StringIO
+            with patch.object(CLI, "project_root", return_value=root), patch(
+                    "sys.stdout",
+                    new_callable=io.StringIO,
             ):
                 self.assertEqual(0, main(["debug"]))
             debug_path = root / "output" / "logs" / "debug" / "debug.json"
@@ -504,8 +527,9 @@ class CoreFunctionalityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             output = io.StringIO()
-            with patch("logicytics.cli._project_root", return_value=root), patch(
-                    "sys.stdout", output
+            with patch.object(CLI, "project_root", return_value=root), patch(
+                    "sys.stdout",
+                    output,
             ):
                 self.assertEqual(
                     0,
@@ -633,7 +657,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             )
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
-            self.assertIn("filesystem_write", report.invalid[0].runtime_error)
+            self.assertIn("filesystem_write", report.invalid[0].runtime_error or "")
 
             script.with_suffix(".bat.mod.json").write_text(
                 json.dumps(_mod_metadata("native", filesystem_write=True)),
@@ -676,9 +700,9 @@ class CoreFunctionalityTests(unittest.TestCase):
             ))
             self.assertEqual(["mod.batch_mod", "mod.python_mod"], [item.metadata.id for item in modded.collectors])
             self.assertEqual(["mod.batch_mod"], [item.metadata.id for item in nopy.collectors])
-            parser = parser()
-            self.assertTrue(request(parser.parse_args(["run", "--modded"]), 2).enable_mods)
-            nopy_request = request(parser.parse_args(["run", "--nopy"]), 2)
+            parser = cli_methods.parser()
+            self.assertTrue(cli_methods.request(parser.parse_args(["run", "--modded"]), 2).enable_mods)
+            nopy_request = cli_methods.request(parser.parse_args(["run", "--nopy"]), 2)
             self.assertTrue(nopy_request.enable_mods)
             self.assertTrue(nopy_request.non_python_only)
 
@@ -732,7 +756,10 @@ class CoreFunctionalityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             output = io.StringIO()
-            with patch("logicytics.cli._project_root", return_value=root), patch("sys.stdout", output):
+            with patch.object(CLI, "project_root", return_value=root), patch(
+                    "sys.stdout",
+                    output,
+            ):
                 self.assertEqual(0, main(["--match", "run a quick basic collection"]))
             payload = json.loads(output.getvalue())
             self.assertEqual("minimal", payload["matched_flag"])
@@ -752,7 +779,10 @@ class CoreFunctionalityTests(unittest.TestCase):
                 encoding="utf-8",
             )
             output = io.StringIO()
-            with patch("logicytics.cli._project_root", return_value=root), patch("sys.stdout", output):
+            with patch.object(CLI, "project_root", return_value=root), patch(
+                    "sys.stdout",
+                    output,
+            ):
                 self.assertEqual(0, main(["--match", "an exhaustive slow scan"]))
             payload = json.loads(output.getvalue())
             self.assertEqual("depth", payload["matched_flag"])
@@ -764,7 +794,10 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertIn("device_name", history[0])
 
             output = io.StringIO()
-            with patch("logicytics.cli._project_root", return_value=root), patch("sys.stdout", output):
+            with patch.object(CLI, "project_root", return_value=root), patch(
+                    "sys.stdout",
+                    output,
+            ):
                 self.assertEqual(0, main(["--usage"]))
             usage = json.loads(output.getvalue())
             self.assertEqual(1, usage["total_interactions"])
@@ -825,34 +858,83 @@ class CoreFunctionalityTests(unittest.TestCase):
                 report.invalid[0].static_errors,
             )
 
-    def test_post_run_actions_are_typed_exclusive_and_require_verified_packaging(self) -> None:
+    def test_post_run_actions_are_typed_exclusive_and_require_verified_packaging(
+            self,
+    ) -> None:
         """Power actions remain explicit and cannot run before durable package publication."""
-        arguments = parser().parse_args([
-            "run", "--shutdown", "--performance-check", "--acknowledge-authorization",
+        arguments = cli_methods.parser().parse_args([
+            "run",
+            "--shutdown",
+            "--performance-check",
+            "--acknowledge-authorization",
         ])
-        request = request(arguments, default_workers=4)
+
+        request = cli_methods.request(arguments, default_workers=4)
+
         self.assertEqual(PostRunAction.SHUTDOWN, request.post_run_action)
         self.assertEqual(OutputPolicy.PACKAGE, request.output_policy)
         self.assertEqual(1, request.max_workers)
+
         with self.assertRaises(SystemExit):
-            parser().parse_args(["run", "--reboot", "--shutdown"])
+            cli_methods.parser().parse_args([
+                "run",
+                "--reboot",
+                "--shutdown",
+            ])
+
         with self.assertRaisesRegex(ValueError, "require packaged output"):
-            request(parser().parse_args(["run", "--reboot", "--no-package"]), default_workers=1)
+            cli_methods.request(
+                cli_methods.parser().parse_args([
+                    "run",
+                    "--reboot",
+                    "--no-package",
+                ]),
+                default_workers=1,
+            )
 
         with tempfile.TemporaryDirectory() as temporary:
-            logger = FileEventLogger(Path(temporary) / "events.jsonl", run_id="run-" + "a" * 32)
-            manifest = type("Manifest", (), {
-                "status": RunStatus.SUCCEEDED,
-                "package": {"path": "evidence.zip", "sha256": "a" * 64},
-            })()
-            completed = subprocess.CompletedProcess(["shutdown"], 0, "", "")
-            with patch("logicytics.runtime.process_adapter.run", return_value=completed) as command:
-                RunSupervisor._execute_post_run_action(PostRunAction.REBOOT, manifest, logger)
+            logger = FileEventLogger(
+                Path(temporary) / "events.jsonl",
+                run_id="run-" + "a" * 32,
+            )
+
+            manifest = type(
+                "Manifest",
+                (),
+                {
+                    "status": RunStatus.SUCCEEDED,
+                    "package": {
+                        "path": "evidence.zip",
+                        "sha256": "a" * 64,
+                    },
+                },
+            )()
+
+            completed = subprocess.CompletedProcess(
+                ["shutdown"],
+                0,
+                "",
+                "",
+            )
+
+            with patch.object(
+                    ProcessAdapter,
+                    ProcessAdapter.run.__name__,
+                    return_value=completed,
+            ) as command:
+                RunSupervisor._execute_post_run_action(
+                    PostRunAction.REBOOT,
+                    manifest,
+                    logger,
+                )
+
                 self.assertEqual("shutdown", command.call_args.args[0][0])
                 self.assertEqual("/r", command.call_args.args[0][1])
                 self.assertEqual("60", command.call_args.args[0][3])
 
-    def test_preflight_cache_requires_source_interpreter_contract_and_configuration_identity(self) -> None:
+    def test_preflight_cache_requires_source_interpreter_contract_and_configuration_identity(
+            self,
+    ) -> None:
         """Only an exact validation context may reuse an isolated runtime probe."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -862,12 +944,21 @@ class CoreFunctionalityTests(unittest.TestCase):
 
             initial = preflight(root, configuration_hash="configuration-a")
             self.assertEqual(1, len(initial.valid), initial.invalid)
-            with patch("logicytics.discovery.process_adapter.run", wraps=subprocess.run) as probe:
+
+            with patch.object(
+                    ProcessAdapter,
+                    ProcessAdapter.run.__name__,
+                    wraps=ProcessAdapter.run,
+            ) as probe:
                 cached = preflight(root, configuration_hash="configuration-a")
                 self.assertEqual(1, len(cached.valid), cached.invalid)
                 probe.assert_not_called()
 
-            with patch("logicytics.discovery.process_adapter.run", wraps=subprocess.run) as probe:
+            with patch.object(
+                    ProcessAdapter,
+                    ProcessAdapter.run.__name__,
+                    wraps=ProcessAdapter.run,
+            ) as probe:
                 invalidated = preflight(root, configuration_hash="configuration-b")
                 self.assertEqual(1, len(invalidated.valid), invalidated.invalid)
                 self.assertEqual(1, probe.call_count)
@@ -973,6 +1064,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             self.assertIsNotNone(collector.started_at)
             self.assertIsNotNone(collector.finished_at)
             self.assertIsNotNone(collector.duration_seconds)
+            assert collector.duration_seconds is not None
             self.assertGreaterEqual(collector.duration_seconds, 0)
             self.assertEqual("test artifact created", collector.summary)
             self.assertEqual((), collector.errors)
@@ -987,13 +1079,16 @@ class CoreFunctionalityTests(unittest.TestCase):
             with self.assertRaises(FrozenInstanceError):
                 collector.status = "failed"
 
-    def test_public_run_snapshot_and_cli_expose_verified_collector_failure_and_duration(self) -> None:
+    def test_public_run_snapshot_and_cli_expose_verified_collector_failure_and_duration(
+            self,
+    ) -> None:
         """Callers can inspect redacted lifecycle timing and actionable failure details without parsing manifests."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             collector_path = root / "core" / "system" / "system_info.py"
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
+
             collector_path.write_text(
                 _COLLECTOR.replace(
                     '        output = context.workspace / "system.txt"',
@@ -1002,34 +1097,81 @@ class CoreFunctionalityTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            outcome = run_collection(root, RunRequest(max_workers=1, acknowledge_authorization=True))
+
+            outcome = run_collection(
+                root,
+                RunRequest(
+                    max_workers=1,
+                    acknowledge_authorization=True,
+                ),
+            )
+
             snapshot = query_run(root, outcome.manifest.run_id)
             collector = snapshot.collectors[0]
 
             self.assertEqual("failed", collector.status)
             self.assertIsNotNone(collector.duration_seconds)
+
+            assert collector.duration_seconds is not None
+
             self.assertGreaterEqual(collector.duration_seconds, 0)
             self.assertIn("worker crashed", collector.summary)
-            self.assertTrue(any("fixture lifecycle failure" in error for error in collector.errors))
-            self.assertEqual("core.system.system_info", collector.failure.collector_id)
+            self.assertTrue(
+                any(
+                    "fixture lifecycle failure" in error
+                    for error in collector.errors
+                )
+            )
+            self.assertEqual(
+                "core.system.system_info",
+                collector.failure.collector_id,
+            )
             self.assertEqual("collect", collector.failure.operation)
-            self.assertIn("fixture lifecycle failure", collector.failure.platform_error)
+            self.assertIn(
+                "fixture lifecycle failure",
+                collector.failure.platform_error,
+            )
             self.assertTrue(collector.failure.remediation)
             self.assertTrue(collector.failure.retry_safe)
 
-            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+            collector_path.write_text(
+                _COLLECTOR,
+                encoding="utf-8",
+            )
+
             output = io.StringIO()
-            with patch("logicytics.cli._project_root", return_value=root), patch(
-                    "sys.stdout", output
-            ), patch("builtins.input", return_value="") as final_prompt:
+
+            with patch.object(
+                    CLI,
+                    "project_root",
+                    return_value=root,
+            ), patch(
+                "sys.stdout",
+                output,
+            ), patch(
+                "builtins.input",
+                return_value="",
+            ) as final_prompt:
                 exit_code = main(
-                    ["run", "--default", "--interactive", "--acknowledge-authorization"]
+                    [
+                        "run",
+                        "--default",
+                        "--interactive",
+                        "--acknowledge-authorization",
+                    ]
                 )
+
             self.assertEqual(0, exit_code, output.getvalue())
             final_prompt.assert_called_once_with("Press Enter to exit...")
             self.assertIn("Collectors:", output.getvalue())
-            self.assertIn("core.system.system_info status=succeeded duration_seconds=", output.getvalue())
-            self.assertIn("summary=test artifact created", output.getvalue())
+            self.assertIn(
+                "core.system.system_info status=succeeded duration_seconds=",
+                output.getvalue(),
+            )
+            self.assertIn(
+                "summary=test artifact created",
+                output.getvalue(),
+            )
 
     def test_public_run_queries_reject_traversal_forged_identity_and_manifest_links(self) -> None:
         """Persisted status lookup cannot leave its configured run or trust a forged manifest."""
@@ -1415,7 +1557,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 build_plan(report, RunRequest(profile="invented"))
             with patch("sys.stderr", new_callable=io.StringIO) as errors:
                 with self.assertRaises(SystemExit):
-                    parser().parse_args(["plan", "--profile", "invented"])
+                    cli_methods.parser().parse_args(["plan", "--profile", "invented"])
             self.assertIn("invalid choice", errors.getvalue())
 
     def test_offline_profile_rejects_network_collectors_even_with_explicit_approval(self) -> None:
@@ -1464,10 +1606,11 @@ class CoreFunctionalityTests(unittest.TestCase):
             )
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
-            self.assertIn("resource_class", report.invalid[0].runtime_error)
+            self.assertIn("resource_class", report.invalid[0].runtime_error or "")
             diagnostic = report.invalid[0].diagnostics[0]
             self.assertEqual("runtime.contract", diagnostic.rule)
             self.assertEqual(str(collector_path), diagnostic.path)
+            assert diagnostic.line is not None
             self.assertGreater(diagnostic.line, 1)
             self.assertIn("resource_class", diagnostic.message)
             with self.assertRaises(PreflightError):
@@ -1489,7 +1632,7 @@ class CoreFunctionalityTests(unittest.TestCase):
             )
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
-            self.assertIn("sensitive collectors", report.invalid[0].runtime_error)
+            self.assertIn("sensitive collectors", report.invalid[0].runtime_error or "")
             with self.assertRaises(PreflightError):
                 build_plan(report, RunRequest())
 
@@ -1527,14 +1670,14 @@ class CoreFunctionalityTests(unittest.TestCase):
 
     def test_deprecation_decorator_logs_removal_context(self) -> None:
         """Deprecated functions must preserve behavior while reporting removal context."""
-        events: list[tuple[str, str, dict[str, object]]] = []
+        events: list[tuple[str, str, dict[str, Any]]] = []
 
         class Logger:
             @staticmethod
-            def event(level: str, message: str, **fields: object) -> None:
+            def event(level: str, message: str, **fields: Any) -> None:
                 events.append((level, message, fields))
 
-        @deprecated(Logger(), removal_version="5.0", reason="replacement exists")
+        @deprecated(cast(Any, Logger()), removal_version="5.0", reason="replacement exists")
         def old() -> str:
             return "still works"
 
@@ -1544,28 +1687,28 @@ class CoreFunctionalityTests(unittest.TestCase):
 
     def test_exception_helper_logs_before_raising(self) -> None:
         """Exception helpers must preserve the requested exception type and context."""
-        events: list[tuple[str, str, dict[str, object]]] = []
+        events: list[tuple[str, str, dict[str, Any]]] = []
 
         class Logger:
             @staticmethod
-            def event(level: str, message: str, **fields: object) -> None:
+            def event(level: str, message: str, **fields: Any) -> None:
                 events.append((level, message, fields))
 
         with self.assertRaises(ValueError):
-            raise_logged(Logger(), ValueError, "invalid setting", setting="workers")
+            raise_logged(cast(Any, Logger()), ValueError, "invalid setting", setting="workers")
         self.assertEqual("exception", events[0][0])
         self.assertEqual("ValueError", events[0][2]["exception_type"])
 
     def test_timed_decorator_records_function_lifecycle(self) -> None:
         """Timing instrumentation must report start and finish through EventLogger."""
-        events: list[tuple[str, str, dict[str, object]]] = []
+        events: list[tuple[str, str, dict[str, Any]]] = []
 
         class Logger:
             @staticmethod
-            def event(level: str, message: str, **fields: object) -> None:
+            def event(level: str, message: str, **fields: Any) -> None:
                 events.append((level, message, fields))
 
-        @timed(Logger())
+        @timed(cast(Any, Logger()))
         def add(left: int, right: int) -> int:
             return left + right
 
@@ -1825,8 +1968,8 @@ max_retry_time = 30
             )
             configuration = load_config(root)
             self.assertEqual(settings, configuration.settings_for(collector_id))
-            snapshot = configuration.to_manifest_dict()
-            manifest_settings = snapshot["collector_settings"][collector_id]
+            snapshot = cast(dict[str, Any], configuration.to_manifest_dict())
+            manifest_settings = cast(dict[str, Any], snapshot["collector_settings"][collector_id])
             self.assertEqual("[REDACTED]", manifest_settings["password"])
             self.assertEqual("[REDACTED]", manifest_settings["nested"]["refresh_token"])
             self.assertEqual("[REDACTED]", manifest_settings["nested"]["cookie"])
@@ -2064,19 +2207,22 @@ max_retry_time = 30
 
     def test_run_parser_accepts_performance_check(self) -> None:
         """The run command must expose the performance mode used by the request builder."""
-        arguments = parser().parse_args(["run", "--performance-check"])
+        arguments = cli_methods.parser().parse_args(["run", "--performance-check"])
         self.assertTrue(arguments.performance_check)
-        request = request(arguments, default_workers=4)
+        request = cli_methods.request(arguments, default_workers=4)
         self.assertTrue(request.performance_check)
         self.assertEqual(1, request.max_workers)
 
-    def test_collector_command_runs_only_the_selected_id_and_declared_dependencies(self) -> None:
+    def test_collector_command_runs_only_the_selected_id_and_declared_dependencies(
+            self,
+    ) -> None:
         """Direct execution never pulls unrelated profile members into its supervised run."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             core = root / "core" / "system"
             core.mkdir(parents=True)
             (root / "plugins").mkdir()
+
             (core / "first.py").write_text(
                 _delayed_collector_source("first", 0),
                 encoding="utf-8",
@@ -2085,9 +2231,16 @@ max_retry_time = 30
                 _delayed_collector_source("second", 0),
                 encoding="utf-8",
             )
+
             output = io.StringIO()
-            with patch("logicytics.cli._project_root", return_value=root), patch(
-                    "sys.stdout", output
+
+            with patch.object(
+                    CLI,
+                    "project_root",
+                    return_value=root,
+            ), patch(
+                "sys.stdout",
+                output,
             ):
                 self.assertEqual(
                     0,
@@ -2097,9 +2250,16 @@ max_retry_time = 30
                         "--acknowledge-authorization",
                     ]),
                 )
-            manifests = list((root / "output" / "data").glob("run-*/manifest.json"))
+
+            manifests = list(
+                (root / "output" / "data").glob("run-*/manifest.json")
+            )
             self.assertEqual(1, len(manifests))
-            manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
+
+            manifest = json.loads(
+                manifests[0].read_text(encoding="utf-8")
+            )
+
             self.assertEqual(
                 ["core.system.first"],
                 [record["id"] for record in manifest["collectors"]],
@@ -2115,6 +2275,7 @@ max_retry_time = 30
                 ),
                 encoding="utf-8",
             )
+
             report = preflight(root)
             plan = build_plan(
                 report,
@@ -2125,6 +2286,7 @@ max_retry_time = 30
                     max_workers=1,
                 ),
             )
+
             self.assertEqual(
                 ["core.system.second", "core.system.dependent"],
                 [candidate.metadata.id for candidate in plan.collectors],
@@ -2132,7 +2294,7 @@ max_retry_time = 30
 
     def test_typed_mode_registry_maps_every_user_mode_and_legacy_alias(self) -> None:
         """One immutable matrix owns profile, scheduling, MODS, and performance behavior."""
-        parser = parser()
+        parser = cli_methods.parser()
         expected = {
             "standard": ("standard", 1, False, False, False),
             "balanced": ("standard", 4, False, False, False),
@@ -2143,19 +2305,32 @@ max_retry_time = 30
             "non-python": ("standard", 4, True, True, False),
             "performance": ("standard", 1, False, False, True),
         }
+
         self.assertEqual(set(expected), set(EXECUTION_MODES))
-        self.assertEqual(set(expected), {item["name"] for item in mode_matrix()["modes"]})
+
+        modes = mode_matrix()["modes"]
+        assert isinstance(modes, list)
+        assert all(isinstance(item, dict) for item in modes)
+
+        self.assertEqual(
+            set(expected),
+            {item["name"] for item in modes},
+        )
+
         for name, contract in expected.items():
             with self.subTest(mode=name):
-                request = request(parser.parse_args(["run", "--mode", name]), 4)
+                run_request = cli_methods.request(
+                    parser.parse_args(["run", "--mode", name]),
+                    4,
+                )
                 self.assertEqual(
                     contract,
                     (
-                        request.profile,
-                        request.max_workers,
-                        request.enable_mods,
-                        request.non_python_only,
-                        request.performance_check,
+                        run_request.profile,
+                        run_request.max_workers,
+                        run_request.enable_mods,
+                        run_request.non_python_only,
+                        run_request.performance_check,
                     ),
                 )
 
@@ -2168,14 +2343,31 @@ max_retry_time = 30
             "nopy": "--nopy",
             "performance_check": "--performance-check",
         }
+
         for field, mode_name in LEGACY_MODE_ALIASES.items():
             with self.subTest(alias=alias_flags[field]):
-                legacy = request(parser.parse_args(["run", alias_flags[field]]), 4)
-                named = request(parser.parse_args(["run", "--mode", mode_name]), 4)
+                legacy = cli_methods.request(
+                    parser.parse_args(["run", alias_flags[field]]),
+                    4,
+                )
+                named = cli_methods.request(
+                    parser.parse_args(["run", "--mode", mode_name]),
+                    4,
+                )
                 self.assertEqual(named, legacy)
 
         with self.assertRaisesRegex(ValueError, "--profile"):
-            request(parser.parse_args(["run", "--mode", "quick", "--profile", "deep"]), 4)
+            cli_methods.request(
+                parser.parse_args([
+                    "run",
+                    "--mode",
+                    "quick",
+                    "--profile",
+                    "deep",
+                ]),
+                4,
+            )
+
         with patch("sys.stderr"), self.assertRaises(SystemExit):
             parser.parse_args(["run", "--mode", "quick", "--minimal"])
 
@@ -2184,14 +2376,27 @@ max_retry_time = 30
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             output = io.StringIO()
-            with patch("logicytics.cli._project_root", return_value=root), patch(
-                    "sys.stdout", output
+
+            with patch.object(
+                    CLI,
+                    "project_root",
+                    return_value=root,
+            ), patch(
+                "sys.stdout",
+                output,
             ):
                 self.assertEqual(0, main(["--modes"]))
+
             payload = json.loads(output.getvalue())
+
             self.assertEqual(1, payload["schema_version"])
-            self.assertEqual(list(EXECUTION_MODES), [item["name"] for item in payload["modes"]])
-            self.assertTrue(all("legacy_aliases" in item for item in payload["modes"]))
+            self.assertEqual(
+                list(EXECUTION_MODES),
+                [item["name"] for item in payload["modes"]],
+            )
+            self.assertTrue(
+                all("legacy_aliases" in item for item in payload["modes"])
+            )
             self.assertEqual([], payload["collectors"])
 
     def test_cli_without_action_prints_help_and_modes_are_parser_exclusive(self) -> None:
@@ -2205,62 +2410,117 @@ max_retry_time = 30
         self.assertIn("run", rendered)
         with patch("sys.stderr", new_callable=io.StringIO) as errors:
             with self.assertRaises(SystemExit):
-                parser().parse_args(["run", "--default", "--performance-check"])
+                cli_methods.parser().parse_args(["run", "--default", "--performance-check"])
         self.assertIn("not allowed with argument", errors.getvalue())
 
-    def test_update_can_explicitly_launch_an_allowlisted_action_in_a_new_window(self) -> None:
+    def test_update_can_explicitly_launch_an_allowlisted_action_in_a_new_window(
+            self,
+    ) -> None:
         """The paired update options launch exactly one shell-free visible Windows action."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / ".git").mkdir()
-            git = subprocess.CompletedProcess(["git", "--version"], 0, "git version 2.0\n", "")
+
+            git = subprocess.CompletedProcess(
+                ["git", "--version"],
+                0,
+                "git version 2.0\n",
+                "",
+            )
             output = io.StringIO()
-            with patch("logicytics.cli._project_root", return_value=root), patch(
-                    "logicytics.cli.process_adapter.run", return_value=git
-            ), patch("logicytics.cli.launch_action_window", return_value=321) as launch, patch(
-                "sys.stdout", output
+
+            with patch.object(
+                    CLI,
+                    CLI.project_root.__name__,
+                    return_value=root,
+            ), patch.object(
+                process_adapter,
+                process_adapter.run.__name__,
+                return_value=git,
+            ), patch.object(
+                CLI,
+                CLI.launch_action_window.__name__,
+                return_value=321,
+            ) as launch, patch(
+                "sys.stdout",
+                output,
             ):
                 self.assertEqual(
                     0,
-                    main(["update", "--launch-action", "debug", "--new-window"]),
+                    main([
+                        "update",
+                        "--launch-action",
+                        "debug",
+                        "--new-window",
+                    ]),
                 )
+
             payload = json.loads(output.getvalue())
             self.assertEqual("debug", payload["launched_action"])
             self.assertEqual(321, payload["launched_process_id"])
             launch.assert_called_once_with(root, "debug")
 
-            with patch("logicytics.cli._project_root", return_value=root), patch(
-                    "sys.stdout", new_callable=io.StringIO
+            with patch.object(
+                    CLI,
+                    CLI.project_root.__name__,
+                    return_value=root,
+            ), patch(
+                "sys.stdout",
+                new_callable=io.StringIO,
             ) as invalid_output:
-                self.assertEqual(2, main(["update", "--new-window"]))
-            self.assertIn("must be provided together", invalid_output.getvalue())
+                self.assertEqual(
+                    2,
+                    main(["update", "--new-window"]),
+                )
 
-    def test_new_window_launcher_uses_current_interpreter_without_a_shell(self) -> None:
+            self.assertIn(
+                "must be provided together",
+                invalid_output.getvalue(),
+            )
+
+    def test_new_window_launcher_uses_current_interpreter_without_a_shell(
+            self,
+    ) -> None:
         """Visible maintenance windows preserve argument boundaries and repository cwd."""
         root = Path("C:/repo").resolve()
         process = MagicMock(pid=42)
-        with patch("logicytics.cli.sys.platform", "win32"), patch(
-                "logicytics.cli.process_adapter.popen", return_value=process
+
+        with patch(
+                "sys.platform",
+                "win32",
+        ), patch.object(
+            process_adapter,
+            process_adapter.popen.__name__,
+            return_value=process,
         ) as popen:
-            self.assertEqual(42, launch_action_window(root, "preflight"))
+            self.assertEqual(
+                42,
+                cli_methods.launch_action_window(root, "preflight"),
+            )
+
         popen.assert_called_once_with(
             [sys.executable, "-m", "logicytics", "preflight"],
             cwd=root,
             shell=False,
-            creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0x00000010),
+            creationflags=process_adapter.create_new_console,
             close_fds=True,
         )
-        with patch("logicytics.cli.sys.platform", "linux"), self.assertRaisesRegex(
-                OSError, "only on Windows"
+
+        with patch(
+                "sys.platform",
+                "linux",
+        ), self.assertRaisesRegex(
+            OSError,
+            "only on Windows",
         ):
-            launch_action_window(root, "debug")
+            cli_methods.launch_action_window(root, "debug")
 
     def test_run_parser_exposes_explicit_sequential_and_bounded_parallel_modes(self) -> None:
         """Execution policy is selectable directly instead of relying on compatibility modes."""
-        parser = parser()
-        sequential = request(parser.parse_args(["run", "--sequential"]), default_workers=4)
-        parallel = request(parser.parse_args(["run", "--parallel"]), default_workers=4)
-        bounded_parallel = request(
+        parser = cli_methods.parser()
+        sequential = cli_methods.request(parser.parse_args(["run", "--sequential"]), default_workers=4)
+        parallel = cli_methods.request(parser.parse_args(["run", "--parallel"]), default_workers=4)
+        bounded_parallel = cli_methods.request(
             parser.parse_args(["run", "--parallel", "--workers", "3"]),
             default_workers=4,
         )
@@ -2273,7 +2533,7 @@ max_retry_time = 30
 
     def test_run_parser_rejects_conflicting_explicit_execution_modes(self) -> None:
         """Contradictory worker policies fail before creating a collection plan."""
-        parser = parser()
+        parser = cli_methods.parser()
         conflicts = (
             (["run", "--sequential", "--workers", "2"], 4, "sequential execution"),
             (["run", "--sequential", "--threaded"], 4, "legacy --threaded"),
@@ -2285,7 +2545,7 @@ max_retry_time = 30
         for arguments, default_workers, error in conflicts:
             with self.subTest(arguments=arguments, default_workers=default_workers):
                 with self.assertRaisesRegex(ValueError, error):
-                    request(parser.parse_args(arguments), default_workers=default_workers)
+                    cli_methods.request(parser.parse_args(arguments), default_workers=default_workers)
         with patch("sys.stderr"), self.assertRaises(SystemExit):
             parser.parse_args(["run", "--sequential", "--parallel"])
 
@@ -2302,12 +2562,12 @@ max_retry_time = 30
                 "resolved_plan": [collector_id],
             }
             manifest_path.write_text(json.dumps(valid_manifest), encoding="utf-8")
-            parser = parser()
+            parser = cli_methods.parser()
 
             with self.assertRaisesRegex(ValueError, "explicit --include"):
-                request(parser.parse_args(["run", "--rerun-from", str(manifest_path)]), 2)
+                cli_methods.request(parser.parse_args(["run", "--rerun-from", str(manifest_path)]), 2)
             with self.assertRaisesRegex(ValueError, "not present in the original"):
-                request(
+                cli_methods.request(
                     parser.parse_args(
                         ["run", "--rerun-from", str(manifest_path), "--include", "core.system.other"]
                     ),
@@ -2315,7 +2575,7 @@ max_retry_time = 30
                 )
             manifest_path.write_text(json.dumps({**valid_manifest, "status": "running"}), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "finalized"):
-                request(
+                cli_methods.request(
                     parser.parse_args(["run", "--rerun-from", str(manifest_path), "--include", collector_id]),
                     2,
                 )
@@ -2324,7 +2584,7 @@ max_retry_time = 30
                     invalid_manifest = {**valid_manifest, "manifest_schema_version": schema_version}
                     manifest_path.write_text(json.dumps(invalid_manifest), encoding="utf-8")
                     with self.assertRaisesRegex(ValueError, "unsupported schema_version"):
-                        request(
+                        cli_methods.request(
                             parser.parse_args(
                                 ["run", "--rerun-from", str(manifest_path), "--include", collector_id]
                             ),
@@ -2332,7 +2592,7 @@ max_retry_time = 30
                         )
             manifest_path.write_text("not json", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "cannot be loaded"):
-                request(
+                cli_methods.request(
                     parser.parse_args(["run", "--rerun-from", str(manifest_path), "--include", collector_id]),
                     2,
                 )
@@ -3009,7 +3269,7 @@ max_retry_time = 30
             original_package_path = Path(original.manifest.package["path"])
             original_package = original_package_path.read_bytes()
             selected_id = "core.system.z_selected"
-            arguments = parser().parse_args(
+            arguments = cli_methods.parser().parse_args(
                 [
                     "run",
                     "--rerun-from",
@@ -3020,7 +3280,7 @@ max_retry_time = 30
                     "--sequential",
                 ]
             )
-            request = request(arguments, default_workers=4)
+            request = cli_methods.request(arguments, default_workers=4)
             self.assertEqual(original.manifest.run_id, request.rerun_from)
             rerun = RunSupervisor(root, configuration).run(build_plan(report, request))
 
@@ -3087,12 +3347,12 @@ max_retry_time = 30
             plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
             configuration = replace(
                 default_config(root),
-                collector_settings={
+                collector_settings=cast(Any, {
                     "core.system.system_info": {
                         "password": "evidence-password",
                         "nested": {"access_token": "evidence-token"},
                     }
-                },
+                }),
             )
             outcome = RunSupervisor(root, configuration).run(plan)
             self.assertEqual("succeeded", outcome.manifest.status.value)
@@ -3135,10 +3395,17 @@ max_retry_time = 30
             self.assertNotIn("crash-token", outcome.manifest.errors[0]["message"])
             failure = outcome.manifest.collectors[0].failure
             self.assertIsNotNone(failure)
-            self.assertNotIn("crash-password", failure["platform_error"])
-            self.assertNotIn("crash-token", failure["platform_error"])
-            self.assertIn("[REDACTED]", failure["platform_error"])
-            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+            assert failure is not None
+            platform_error = failure["platform_error"]
+            assert isinstance(platform_error, str)
+
+            self.assertNotIn("crash-password", platform_error)
+            self.assertNotIn("crash-token", platform_error)
+            self.assertIn("[REDACTED]", platform_error)
+            package = outcome.manifest.package
+            assert package is not None
+
+            with zipfile.ZipFile(Path(package["path"])) as archive:
                 packaged_record = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
                 self.assertEqual(failure, packaged_record["failure"])
                 diagnostics = "\n".join(
@@ -3206,10 +3473,10 @@ max_retry_time = 30
                 preflight(root),
                 RunRequest(max_workers=1, acknowledge_authorization=True, performance_check=True),
             )
-            snapshots: list[dict[str, object]] = []
+            snapshots: list[dict[str, Any]] = []
             from logicytics.manifest import write_manifest as original_write_manifest
 
-            def capture_manifest(path: Path, manifest: object) -> None:
+            def capture_manifest(path: Path, manifest: Any) -> None:
                 snapshots.append(json.loads(json.dumps(manifest.to_dict())))
                 original_write_manifest(path, manifest)
 
@@ -3225,7 +3492,7 @@ max_retry_time = 30
             }
             for field, value in expected.items():
                 self.assertEqual(value, record.progress[field])
-            self.assertGreater(record.progress["elapsed_seconds"], 0)
+            self.assertGreater(float(record.progress["elapsed_seconds"]), 0)
             self.assertTrue(
                 any(
                     snapshot["collectors"][0]["status"] == "running"
@@ -3501,11 +3768,11 @@ max_retry_time = 30
             artifact = outcome.manifest.artifact_list()[0]
             source = outcome.run_directory / "artifacts" / artifact.relative_path
             expected_package_path = Path(outcome.manifest.package["path"]).with_suffix(".zip.tmp")
-            original_open = Path.open
+            original_open = cast(Callable[..., Any], Path.open)
             read_sizes: list[tuple[Path, int]] = []
 
             class BoundedReader:
-                def __init__(self, stream: object, path: Path) -> None:
+                def __init__(self, stream: Any, path: Path) -> None:
                     self.stream = stream
                     self.path = path
 
@@ -3513,7 +3780,7 @@ max_retry_time = 30
                     self.stream.__enter__()
                     return self
 
-                def __exit__(self, *arguments: object) -> object:
+                def __exit__(self, *arguments: Any) -> Any:
                     return self.stream.__exit__(*arguments)
 
                 def read(self, size: int = -1) -> bytes:
@@ -3522,7 +3789,7 @@ max_retry_time = 30
                     read_sizes.append((self.path, size))
                     return self.stream.read(size)
 
-            def guarded_open(path: Path, *arguments: object, **options: object) -> object:
+            def guarded_open(path: Path, *arguments: Any, **options: Any) -> Any:
                 stream = original_open(path, *arguments, **options)
                 if path in {source, expected_package_path} and arguments and arguments[0] == "rb":
                     return BoundedReader(stream, path)
@@ -3563,7 +3830,10 @@ max_retry_time = 30
             records = {record.id: record for record in outcome.manifest.collectors}
 
             self.assertEqual(planned_ids, [record.id for record in outcome.manifest.collectors])
-            self.assertLess(records["core.system.z_fast"].finished_at, records["core.system.a_slow"].finished_at)
+            fast_finished = records["core.system.z_fast"].finished_at
+            slow_finished = records["core.system.a_slow"].finished_at
+            assert fast_finished is not None and slow_finished is not None
+            self.assertLess(fast_finished, slow_finished)
 
     def test_explicit_execution_modes_control_isolated_worker_overlap(self) -> None:
         """First-class CLI policies determine real sequential versus bounded worker overlap."""
@@ -3578,7 +3848,7 @@ max_retry_time = 30
                         _delayed_collector_source(filename, 0.3),
                         encoding="utf-8",
                     )
-                arguments = parser().parse_args(
+                arguments = cli_methods.parser().parse_args(
                     ["run", execution_mode, "--acknowledge-authorization"]
                 )
                 request = request(arguments, default_workers=2)
@@ -3592,8 +3862,10 @@ max_retry_time = 30
                 self.assertEqual("succeeded", first.status, first.errors)
                 self.assertEqual("succeeded", second.status, second.errors)
                 if expect_overlap:
+                    assert second.started_at is not None and first.finished_at is not None
                     self.assertLess(second.started_at, first.finished_at)
                 else:
+                    assert first.finished_at is not None and second.started_at is not None
                     self.assertLessEqual(first.finished_at, second.started_at)
 
     def test_parallel_unsafe_collector_runs_without_worker_overlap(self) -> None:
@@ -3625,7 +3897,9 @@ max_retry_time = 30
             first = records["core.system.a_parallel"]
             serial = records["core.system.m_serial"]
             last = records["core.system.z_parallel"]
+            assert first.finished_at is not None and serial.started_at is not None
             self.assertLessEqual(first.finished_at, serial.started_at)
+            assert serial.finished_at is not None and last.started_at is not None
             self.assertLessEqual(serial.finished_at, last.started_at)
 
     def test_conflicting_resource_classes_run_without_worker_overlap(self) -> None:
@@ -3655,6 +3929,7 @@ max_retry_time = 30
 
                 self.assertEqual("succeeded", first.status, first.errors)
                 self.assertEqual("succeeded", second.status, second.errors)
+                assert first.finished_at is not None and second.started_at is not None
                 self.assertLessEqual(first.finished_at, second.started_at)
 
     def test_independent_resource_classes_preserve_bounded_parallelism(self) -> None:
@@ -3681,7 +3956,10 @@ max_retry_time = 30
 
             self.assertEqual("succeeded", records["core.system.a_disk"].status)
             self.assertEqual("succeeded", records["core.system.z_network"].status)
-            self.assertLess(records["core.system.z_network"].started_at, records["core.system.a_disk"].finished_at)
+            network_started = records["core.system.z_network"].started_at
+            disk_finished = records["core.system.a_disk"].finished_at
+            assert network_started is not None and disk_finished is not None
+            self.assertLess(network_started, disk_finished)
 
     def test_interactive_resource_class_runs_without_any_worker_overlap(self) -> None:
         """Interactive collectors require an exclusive deterministic scheduler window."""
@@ -3706,14 +3984,14 @@ max_retry_time = 30
             outcome = RunSupervisor(root, default_config(root)).run(plan)
             records = {record.id: record for record in outcome.manifest.collectors}
 
-            self.assertLessEqual(
-                records["core.system.a_disk"].finished_at,
-                records["core.system.m_interactive"].started_at,
-            )
-            self.assertLessEqual(
-                records["core.system.m_interactive"].finished_at,
-                records["core.system.z_general"].started_at,
-            )
+            disk_finished = records["core.system.a_disk"].finished_at
+            interactive_started = records["core.system.m_interactive"].started_at
+            interactive_finished = records["core.system.m_interactive"].finished_at
+            general_started = records["core.system.z_general"].started_at
+            assert disk_finished is not None and interactive_started is not None
+            assert interactive_finished is not None and general_started is not None
+            self.assertLessEqual(disk_finished, interactive_started)
+            self.assertLessEqual(interactive_finished, general_started)
 
     def test_dependencies_finish_before_dependents_start(self) -> None:
         """Topological order must become an execution barrier under bounded parallelism."""
@@ -3742,6 +4020,7 @@ max_retry_time = 30
             self.assertEqual("succeeded", dependent.status, dependent.errors)
             self.assertIsNotNone(dependency.finished_at)
             self.assertIsNotNone(dependent.started_at)
+            assert dependency.finished_at is not None and dependent.started_at is not None
             self.assertLessEqual(dependency.finished_at, dependent.started_at)
 
     def test_dependency_closure_and_plan_fingerprint_are_deterministic(self) -> None:
@@ -4014,10 +4293,22 @@ max_retry_time = 30
             self.assertTrue((outcome.run_directory / "artifacts" / "core_system_system_info" / "system.txt").is_file())
             self.assertEqual(1, len(record.artifacts))
             self.assertEqual(1, len(outcome.manifest.artifact_list()))
-            self.assertEqual("core.system.system_info", record.failure["collector_id"])
-            self.assertEqual("collect", record.failure["operation"])
-            self.assertIn("failure after evidence registration", record.failure["platform_error"])
-            self.assertFalse(record.failure["retry_safe"])
+
+            failure = record.failure
+            assert failure is not None
+
+            self.assertEqual("core.system.system_info", failure["collector_id"])
+            self.assertEqual("collect", failure["operation"])
+
+            platform_error = failure["platform_error"]
+            assert isinstance(platform_error, str)
+
+            self.assertIn(
+                "failure after evidence registration",
+                platform_error,
+            )
+
+            self.assertFalse(failure["retry_safe"])
             with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
                 self.assertIn("evidence/derived/core_system_system_info/system.txt", archive.namelist())
                 packaged = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
@@ -4122,6 +4413,7 @@ max_retry_time = 30
             collector_path = root / "core" / "system" / "system_info.py"
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
+
             collector_path.write_text(
                 _COLLECTOR.replace(
                     '        """Release test resources."""',
@@ -4130,19 +4422,60 @@ max_retry_time = 30
                 ),
                 encoding="utf-8",
             )
-            plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
-            outcome = RunSupervisor(root, default_config(root)).run(plan)
+
+            plan = build_plan(
+                preflight(root),
+                RunRequest(
+                    max_workers=1,
+                    acknowledge_authorization=True,
+                ),
+            )
+
+            outcome = RunSupervisor(
+                root,
+                default_config(root),
+            ).run(plan)
+
             record = outcome.manifest.collectors[0]
 
             self.assertEqual("failed", record.status)
             self.assertEqual("collector cleanup failed", record.summary)
             self.assertEqual(1, len(record.artifacts))
-            self.assertIn("finalizer failed after collecting evidence", "\n".join(record.errors))
-            self.assertEqual("cleanup", record.failure["operation"])
-            self.assertIn("cleanup", record.failure["remediation"])
-            self.assertFalse(record.failure["retry_safe"])
-            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                self.assertIn("evidence/derived/core_system_system_info/system.txt", archive.namelist())
+            self.assertIn(
+                "finalizer failed after collecting evidence",
+                "\n".join(record.errors),
+            )
+
+            failure = record.failure
+            assert failure is not None
+
+            self.assertEqual("cleanup", failure["operation"])
+
+            remediation = failure["remediation"]
+            if not isinstance(remediation, str):
+                self.fail(
+                    f"remediation must be str, got {type(remediation).__name__}"
+                )
+
+            self.assertIn("cleanup", remediation)
+
+            retry_safe = failure["retry_safe"]
+            if not isinstance(retry_safe, bool):
+                self.fail(
+                    f"retry_safe must be bool, got {type(retry_safe).__name__}"
+                )
+
+            self.assertFalse(retry_safe)
+
+            package = outcome.manifest.package
+            assert package is not None
+            assert "path" in package
+
+            with zipfile.ZipFile(Path(package["path"])) as archive:
+                self.assertIn(
+                    "evidence/derived/core_system_system_info/system.txt",
+                    archive.namelist(),
+                )
 
     def test_collector_timeout_preserves_independent_worker_results(self) -> None:
         """A timed-out worker is terminated without cancelling unrelated collection."""
@@ -4151,28 +4484,78 @@ max_retry_time = 30
             core_directory = root / "core" / "system"
             core_directory.mkdir(parents=True)
             (root / "plugins").mkdir()
+
             timeout_source = _delayed_collector_source("a_timeout", 2.0).replace(
                 '            supported_platforms=("win32",),',
-                '            supported_platforms=("win32",),\n            timeout_seconds=1,',
+                '            supported_platforms=("win32",),\n'
+                '            timeout_seconds=1,',
             )
-            (core_directory / "a_timeout.py").write_text(timeout_source, encoding="utf-8")
+
+            (core_directory / "a_timeout.py").write_text(
+                timeout_source,
+                encoding="utf-8",
+            )
+
             (core_directory / "z_independent.py").write_text(
                 _delayed_collector_source("z_independent", 0.0),
                 encoding="utf-8",
             )
+
             report = preflight(root)
             self.assertEqual((), report.invalid)
-            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
-            outcome = RunSupervisor(root, default_config(root)).run(plan)
-            records = {record.id: record for record in outcome.manifest.collectors}
 
-            self.assertEqual("failed", records["core.system.a_timeout"].status)
-            self.assertTrue(any("timeout" in error for error in records["core.system.a_timeout"].errors))
-            self.assertEqual("timeout_exceeded", records["core.system.a_timeout"].termination_reason)
-            self.assertTrue(records["core.system.a_timeout"].failure["retry_safe"])
-            self.assertIn("timeout", records["core.system.a_timeout"].failure["remediation"])
-            self.assertEqual("succeeded", records["core.system.z_independent"].status)
-            self.assertIsNone(records["core.system.z_independent"].failure)
+            plan = build_plan(
+                report,
+                RunRequest(
+                    max_workers=2,
+                    acknowledge_authorization=True,
+                ),
+            )
+
+            outcome = RunSupervisor(
+                root,
+                default_config(root),
+            ).run(plan)
+
+            records = {
+                record.id: record
+                for record in outcome.manifest.collectors
+            }
+
+            timeout_record = records["core.system.a_timeout"]
+
+            self.assertEqual("failed", timeout_record.status)
+            self.assertTrue(
+                any("timeout" in error for error in timeout_record.errors)
+            )
+            self.assertEqual(
+                "timeout_exceeded",
+                timeout_record.termination_reason,
+            )
+
+            timeout_failure = timeout_record.failure
+            assert timeout_failure is not None
+
+            retry_safe = timeout_failure["retry_safe"]
+            if not isinstance(retry_safe, bool):
+                self.fail(
+                    f"retry_safe must be bool, got {type(retry_safe).__name__}"
+                )
+
+            self.assertTrue(retry_safe)
+
+            remediation = timeout_failure["remediation"]
+            if not isinstance(remediation, str):
+                self.fail(
+                    f"remediation must be str, got {type(remediation).__name__}"
+                )
+
+            self.assertIn("timeout", remediation)
+
+            independent_record = records["core.system.z_independent"]
+
+            self.assertEqual("succeeded", independent_record.status)
+            self.assertIsNone(independent_record.failure)
             self.assertEqual("partial", outcome.manifest.status.value)
 
     def test_collector_cannot_modify_peer_workspace_or_repository_files(self) -> None:
@@ -4236,32 +4619,83 @@ max_retry_time = 30
             collector_path = root / "core" / "system" / "system_info.py"
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
+
             base = _COLLECTOR.replace(
                 "from pathlib import Path\n",
-                "from pathlib import Path\nimport socket\nimport subprocess\nimport sys\nimport winreg\n",
+                "from pathlib import Path\n"
+                "import socket\n"
+                "import subprocess\n"
+                "import sys\n"
+                "import winreg\n",
             )
+
             attempts = (
-                ("subprocess.run([sys.executable, '-c', 'pass'], check=False)", "subprocess capability"),
-                ("socket.socket()", "network capability"),
-                ("winreg.OpenKey(winreg.HKEY_CURRENT_USER, 'Software')", "registry_read capability"),
+                (
+                    "subprocess.run([sys.executable, '-c', 'pass'], check=False)",
+                    "subprocess capability",
+                ),
+                (
+                    "socket.socket()",
+                    "network capability",
+                ),
+                (
+                    "winreg.OpenKey(winreg.HKEY_CURRENT_USER, 'Software')",
+                    "registry_read capability",
+                ),
             )
+
             for operation, message in attempts:
                 with self.subTest(operation=operation):
                     collector_path.write_text(
                         base.replace(
                             '        output = context.workspace / "system.txt"',
-                            f"        {operation}\n        output = context.workspace / \"system.txt\"",
+                            f'        {operation}\n'
+                            '        output = context.workspace / "system.txt"',
                         ),
                         encoding="utf-8",
                     )
-                    plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
-                    outcome = RunSupervisor(root, default_config(root)).run(plan)
-                    self.assertEqual("failed", outcome.manifest.collectors[0].status)
-                    self.assertIn(message, "\n".join(outcome.manifest.collectors[0].errors))
-                    failure = outcome.manifest.collectors[0].failure
+
+                    plan = build_plan(
+                        preflight(root),
+                        RunRequest(
+                            max_workers=1,
+                            acknowledge_authorization=True,
+                        ),
+                    )
+
+                    outcome = RunSupervisor(
+                        root,
+                        default_config(root),
+                    ).run(plan)
+
+                    record = outcome.manifest.collectors[0]
+
+                    self.assertEqual("failed", record.status)
+                    self.assertIn(
+                        message,
+                        "\n".join(record.errors),
+                    )
+
+                    failure = record.failure
+                    assert failure is not None
+
                     self.assertEqual("access", failure["operation"])
-                    self.assertIn("capability", failure["remediation"])
-                    self.assertFalse(failure["retry_safe"])
+
+                    remediation = failure["remediation"]
+                    if not isinstance(remediation, str):
+                        self.fail(
+                            f"remediation must be str, got {type(remediation).__name__}"
+                        )
+
+                    self.assertIn("capability", remediation)
+
+                    retry_safe = failure["retry_safe"]
+                    if not isinstance(retry_safe, bool):
+                        self.fail(
+                            f"retry_safe must be bool, got {type(retry_safe).__name__}"
+                        )
+
+                    self.assertFalse(retry_safe)
 
     def test_worker_enforces_external_browser_sensitive_and_private_key_read_capabilities(self) -> None:
         """External evidence reads require filesystem access plus every applicable sensitive grant."""
@@ -4555,30 +4989,93 @@ max_retry_time = 30
             core_directory = root / "core" / "system"
             core_directory.mkdir(parents=True)
             (root / "plugins").mkdir()
+
             limited_source = _delayed_collector_source("a_limited", 2.0).replace(
                 '            supported_platforms=("win32",),',
-                '            supported_platforms=("win32",),\n            maximum_memory_bytes=1,',
+                '            supported_platforms=("win32",),\n'
+                '            maximum_memory_bytes=1,',
             )
-            (core_directory / "a_limited.py").write_text(limited_source, encoding="utf-8")
+
+            (core_directory / "a_limited.py").write_text(
+                limited_source,
+                encoding="utf-8",
+            )
+
             (core_directory / "z_independent.py").write_text(
                 _delayed_collector_source("z_independent", 0.0),
                 encoding="utf-8",
             )
+
             report = preflight(root)
             self.assertEqual((), report.invalid)
-            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
-            outcome = RunSupervisor(root, default_config(root)).run(plan)
-            records = {record.id: record for record in outcome.manifest.collectors}
+
+            plan = build_plan(
+                report,
+                RunRequest(
+                    max_workers=2,
+                    acknowledge_authorization=True,
+                ),
+            )
+
+            outcome = RunSupervisor(
+                root,
+                default_config(root),
+            ).run(plan)
+
+            records = {
+                record.id: record
+                for record in outcome.manifest.collectors
+            }
 
             limited = records["core.system.a_limited"]
+
             self.assertEqual("failed", limited.status)
-            self.assertGreater(limited.peak_memory_bytes, 1)
-            self.assertTrue(any("maximum_memory_bytes=1" in error for error in limited.errors))
-            self.assertEqual("memory_limit_exceeded", limited.termination_reason)
-            self.assertEqual("collect", limited.failure["operation"])
-            self.assertIn("memory limit", limited.failure["remediation"])
-            self.assertTrue(limited.failure["retry_safe"])
-            self.assertEqual("succeeded", records["core.system.z_independent"].status)
+
+            peak_memory_bytes = limited.peak_memory_bytes
+            assert peak_memory_bytes is not None
+
+            self.assertGreater(peak_memory_bytes, 1)
+            self.assertTrue(
+                any(
+                    "maximum_memory_bytes=1" in error
+                    for error in limited.errors
+                )
+            )
+            self.assertEqual(
+                "memory_limit_exceeded",
+                limited.termination_reason,
+            )
+
+            limited_failure = limited.failure
+            assert limited_failure is not None
+
+            self.assertEqual(
+                "collect",
+                limited_failure["operation"],
+            )
+
+            remediation = limited_failure["remediation"]
+            if not isinstance(remediation, str):
+                self.fail(
+                    f"remediation must be str, got {type(remediation).__name__}"
+                )
+
+            self.assertIn(
+                "memory limit",
+                remediation,
+            )
+
+            retry_safe = limited_failure["retry_safe"]
+            if not isinstance(retry_safe, bool):
+                self.fail(
+                    f"retry_safe must be bool, got {type(retry_safe).__name__}"
+                )
+
+            self.assertTrue(retry_safe)
+
+            independent = records["core.system.z_independent"]
+
+            self.assertEqual("succeeded", independent.status)
             self.assertEqual("partial", outcome.manifest.status.value)
 
     def test_cancelled_run_writes_a_recoverable_package_and_manifest(self) -> None:
@@ -4588,30 +5085,73 @@ max_retry_time = 30
             collector_path = root / "core" / "system" / "system_info.py"
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
-            collector_path.write_text(_COLLECTOR, encoding="utf-8")
+
+            collector_path.write_text(
+                _COLLECTOR,
+                encoding="utf-8",
+            )
+
             report = preflight(root)
-            plan = build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True))
-            supervisor = RunSupervisor(root, default_config(root))
-            with patch.object(supervisor, "_supervise", side_effect=KeyboardInterrupt):
+
+            plan = build_plan(
+                report,
+                RunRequest(
+                    max_workers=1,
+                    acknowledge_authorization=True,
+                ),
+            )
+
+            supervisor = RunSupervisor(
+                root,
+                default_config(root),
+            )
+
+            with patch.object(
+                    supervisor,
+                    supervisor._supervise.__name__,
+                    side_effect=KeyboardInterrupt,
+            ):
                 outcome = supervisor.run(plan)
+
             self.assertEqual("cancelled", outcome.manifest.status.value)
             self.assertTrue(outcome.manifest.cancellation_requested)
+
             record = outcome.manifest.collectors[0]
+
             self.assertEqual("cancelled", record.status)
             self.assertEqual("run cancelled by user", record.summary)
             self.assertTrue((outcome.run_directory / ".cancelled").is_file())
-            self.assertIsNotNone(outcome.manifest.package)
-            package_path = Path(outcome.manifest.package["path"])
+
+            package = outcome.manifest.package
+            assert package is not None
+            assert "path" in package
+
+            package_path = Path(package["path"])
+
             self.assertTrue(package_path.is_file())
+
             with zipfile.ZipFile(package_path) as archive:
-                summary = archive.read("reports/summary.txt").decode("utf-8")
-                packaged_manifest = json.loads(archive.read("metadata/manifest.json"))
+                summary = archive.read(
+                    "reports/summary.txt"
+                ).decode("utf-8")
+
+                packaged_manifest = json.loads(
+                    archive.read("metadata/manifest.json")
+                )
+
             self.assertTrue(packaged_manifest["cancellation_requested"])
             self.assertIn("Status: cancelled", summary)
             self.assertIn("Cancellation requested: true", summary)
             self.assertIn("Summary: run cancelled by user", summary)
             self.assertIn("Started: not started", summary)
-            self.assertIn(f"Finished: {record.finished_at}", summary)
+
+            finished_at = record.finished_at
+            assert finished_at is not None
+
+            self.assertIn(
+                f"Finished: {finished_at}",
+                summary,
+            )
 
     def test_invalid_core_blocks_a_run_but_unselected_plugin_is_quarantined(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -4633,25 +5173,91 @@ max_retry_time = 30
             core_path = root / "core" / "system" / "system_info.py"
             core_path.parent.mkdir(parents=True)
             core_path.write_text(_COLLECTOR, encoding="utf-8")
+
             plugin_path = root / "plugins" / "broken_plugin.py"
             plugin_path.parent.mkdir()
-            plugin_path.write_text('"""Invalid plugin collector."""\n', encoding="utf-8")
+            plugin_path.write_text(
+                '"""Invalid plugin collector."""\n',
+                encoding="utf-8",
+            )
+
             report = preflight(root)
             payload = report.to_dict()
-            self.assertEqual(["core.system.system_info"], [item["id"] for item in payload["valid"]])
-            self.assertEqual([], payload["invalid"])
-            self.assertEqual(["plugin.broken_plugin"], [item["id"] for item in payload["quarantined"]])
-            diagnostic = payload["quarantined"][0]["diagnostics"][0]
+
+            valid = payload["valid"]
+            assert isinstance(valid, list)
+            assert all(isinstance(item, dict) for item in valid)
+
+            invalid = payload["invalid"]
+            assert isinstance(invalid, list)
+
+            quarantined = payload["quarantined"]
+            assert isinstance(quarantined, list)
+            assert all(isinstance(item, dict) for item in quarantined)
+
+            self.assertEqual(
+                ["core.system.system_info"],
+                [item["id"] for item in valid],
+            )
+            self.assertEqual([], invalid)
+            self.assertEqual(
+                ["plugin.broken_plugin"],
+                [item["id"] for item in quarantined],
+            )
+
+            quarantined_item = quarantined[0]
+
+            diagnostics = quarantined_item["diagnostics"]
+            assert isinstance(diagnostics, list)
+            assert all(isinstance(item, dict) for item in diagnostics)
+
+            diagnostic = diagnostics[0]
+
             self.assertEqual(str(plugin_path), diagnostic["path"])
             self.assertEqual(1, diagnostic["line"])
             self.assertEqual("static.class_name", diagnostic["rule"])
-            self.assertIn("exactly one public collector class", diagnostic["message"])
-            selected = report.to_dict(selected_plugins=("plugin.broken_plugin",))
-            self.assertEqual([], selected["quarantined"])
-            self.assertEqual(["plugin.broken_plugin"], [item["id"] for item in selected["invalid"]])
+
+            message = diagnostic["message"]
+            assert isinstance(message, str)
+
+            self.assertIn(
+                "exactly one public collector class",
+                message,
+            )
+
+            selected = report.to_dict(
+                selected_plugins=("plugin.broken_plugin",),
+            )
+
+            selected_quarantined = selected["quarantined"]
+            assert isinstance(selected_quarantined, list)
+
+            selected_invalid = selected["invalid"]
+            assert isinstance(selected_invalid, list)
+            assert all(isinstance(item, dict) for item in selected_invalid)
+
+            self.assertEqual([], selected_quarantined)
+            self.assertEqual(
+                ["plugin.broken_plugin"],
+                [item["id"] for item in selected_invalid],
+            )
+
             enabled = report.to_dict(enable_plugins=True)
-            self.assertEqual(["plugin.broken_plugin"], [item["id"] for item in enabled["invalid"]])
-            plan = build_plan(report, RunRequest())
+
+            enabled_invalid = enabled["invalid"]
+            assert isinstance(enabled_invalid, list)
+            assert all(isinstance(item, dict) for item in enabled_invalid)
+
+            self.assertEqual(
+                ["plugin.broken_plugin"],
+                [item["id"] for item in enabled_invalid],
+            )
+
+            plan = build_plan(
+                report,
+                RunRequest(),
+            )
+
             self.assertEqual(
                 ["core.system.system_info"],
                 [candidate.metadata.id for candidate in plan.collectors],
@@ -4694,7 +5300,10 @@ max_retry_time = 30
             ):
                 with self.subTest(arguments=arguments):
                     output = io.StringIO()
-                    with patch("logicytics.cli._project_root", return_value=root), patch("sys.stdout", output):
+                    with patch.object(CLI, "project_root", return_value=root), patch(
+                            "sys.stdout",
+                            output,
+                    ):
                         exit_code = main(arguments)
                     payload = json.loads(output.getvalue())
                     self.assertEqual(expected_exit, exit_code)
@@ -4910,9 +5519,13 @@ max_retry_time = 30
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
             collector_path.write_text(_COLLECTOR, encoding="utf-8")
-            with patch(
-                    "logicytics.discovery.process_adapter.run",
-                    side_effect=subprocess.TimeoutExpired(["validation-worker"], timeout=10),
+            with patch.object(
+                    discovery.process_adapter,
+                    discovery.process_adapter.run.__name__,
+                    side_effect=subprocess.TimeoutExpired(
+                        ["validation-worker"],
+                        timeout=10,
+                    ),
             ):
                 report = preflight(root)
             self.assertEqual(1, len(report.invalid))
