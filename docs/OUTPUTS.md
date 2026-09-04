@@ -15,30 +15,30 @@ for copied source evidence and `derived` for generated reports.
 
 The suffix is fixed by the declared MIME type:
 
-| MIME type | Suffix |
-| --- | --- |
-| `application/json` | `.json` |
-| `application/xml` | `.xml` |
-| `application/zip` | `.zip` |
-| `text/csv` | `.csv` |
-| `text/html` | `.html` |
-| `text/plain` | `.txt` |
-| `text/vnd.graphviz` | `.dot` |
+| MIME type           | Suffix  |
+|---------------------|---------|
+| `application/json`  | `.json` |
+| `application/xml`   | `.xml`  |
+| `application/zip`   | `.zip`  |
+| `text/csv`          | `.csv`  |
+| `text/html`         | `.html` |
+| `text/plain`        | `.txt`  |
+| `text/vnd.graphviz` | `.dot`  |
 
 This rule covers every shipped collector except the explicitly listed contracts
 below. MIME types remain those declared by each collector's `CollectorMetadata`.
 
-| Collector | Stable workspace path pattern |
-| --- | --- |
-| `core.bluetooth.paired_devices` | `bluetooth_devices.json` |
-| `core.browser.browser_data_backup` | `browser_data/*/*/*` |
-| `core.filesystem.sensitive_file_inventory` | `sensitive_file_inventory/**` |
-| `core.integration.legacy_code_outputs` | `legacy_code/**` |
-| `core.media.media_backup` | `media_backup/**` |
-| `core.process.memory_map` | `**/memory_map.json` |
-| `core.registry.hklm_backup` | `hklm_backup.reg` |
-| `core.system.windows_system_data_backup` | `windows_system_data/*/*` |
-| `core.wireless.wifi_profile_keys` | `wifi_profiles_with_keys/*.xml` |
+| Collector                                  | Stable workspace path pattern   |
+|--------------------------------------------|---------------------------------|
+| `core.bluetooth.paired_devices`            | `bluetooth_devices.json`        |
+| `core.browser.browser_data_backup`         | `browser_data/*/*/*`            |
+| `core.filesystem.sensitive_file_inventory` | `sensitive_file_inventory/**`   |
+| `core.integration.legacy_code_outputs`     | `legacy_code/**`                |
+| `core.media.media_backup`                  | `media_backup/**`               |
+| `core.process.memory_map`                  | `**/memory_map.json`            |
+| `core.registry.hklm_backup`                | `hklm_backup.reg`               |
+| `core.system.windows_system_data_backup`   | `windows_system_data/*/*`       |
+| `core.wireless.wifi_profile_keys`          | `wifi_profiles_with_keys/*.xml` |
 
 `core.bluetooth.bluetooth_history` uses the fixed
 `bluetooth_history.json` name. Its content carries `collected_at`; the run ID and

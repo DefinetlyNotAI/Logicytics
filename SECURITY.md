@@ -2,13 +2,13 @@
 
 ## Supported versions
 
-| Version | Security support | Release date |
-| --- | --- | --- |
-| 4.0.x | Supported | 2026-08-31 |
-| 3.x and earlier | Unsupported | — |
+| Version         | Security support | Release date |
+|-----------------|------------------|--------------|
+| 4.0.x           | Supported        | 2026-08-31   |
+| 3.x and earlier | Unsupported      | —            |
 
 Only the current v4 release line receives security fixes. Upgrade through the
-documented [migration boundary](MIGRATION.md); do not run an unsupported checkout
+documented [migration boundary](docs/MIGRATION.md); do not run an unsupported checkout
 against sensitive evidence.
 
 ## Reporting a vulnerability

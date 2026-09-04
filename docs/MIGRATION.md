@@ -10,19 +10,19 @@ model, but it may not create a second execution or output pipeline.
 These bridges are intentionally supported for the v4 release and are not
 internal shims:
 
-| Historical interface | v4 replacement | Retention policy |
-| --- | --- | --- |
-| `--default` | `--mode standard` | Supported v4 CLI alias |
-| `--threaded` | `--mode balanced` | Supported v4 CLI alias |
-| `--minimal` | `--mode quick` | Supported v4 CLI alias |
-| `--depth` | `--mode thorough` | Supported v4 CLI alias |
-| `--nopy` | `--mode non-python` | Supported v4 CLI alias |
-| `--modded` | `--mode extensions` | Supported v4 CLI alias |
-| `--performance-check` | `--mode performance` | Supported v4 CLI alias |
-| schema-3 JSON settings | schema-4 `logicytics.json` | Read and migrated in memory |
-| `CODE/config.ini` | schema-4 `logicytics.json` | Read-only fallback when JSON is absent |
-| generated evidence in `CODE/` | `core.integration.legacy_code_outputs` | Deep-profile import only |
-| `.py`, `.ps1`, `.bat`, `.exe` files in `MODS/` | typed plugin collector | Isolated compatibility adapter |
+| Historical interface                           | v4 replacement                         | Retention policy                       |
+|------------------------------------------------|----------------------------------------|----------------------------------------|
+| `--default`                                    | `--mode standard`                      | Supported v4 CLI alias                 |
+| `--threaded`                                   | `--mode balanced`                      | Supported v4 CLI alias                 |
+| `--minimal`                                    | `--mode quick`                         | Supported v4 CLI alias                 |
+| `--depth`                                      | `--mode thorough`                      | Supported v4 CLI alias                 |
+| `--nopy`                                       | `--mode non-python`                    | Supported v4 CLI alias                 |
+| `--modded`                                     | `--mode extensions`                    | Supported v4 CLI alias                 |
+| `--performance-check`                          | `--mode performance`                   | Supported v4 CLI alias                 |
+| schema-3 JSON settings                         | schema-4 `logicytics.json`             | Read and migrated in memory            |
+| `CODE/config.ini`                              | schema-4 `logicytics.json`             | Read-only fallback when JSON is absent |
+| generated evidence in `CODE/`                  | `core.integration.legacy_code_outputs` | Deep-profile import only               |
+| `.py`, `.ps1`, `.bat`, `.exe` files in `MODS/` | typed plugin collector                 | Isolated compatibility adapter         |
 
 Legacy inputs never enable plugins or MODS implicitly. Ambiguous settings,
 duplicate keys, unsafe paths, undeclared capabilities, and unsupported fields

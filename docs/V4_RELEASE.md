@@ -131,6 +131,6 @@ authoritative item-level completion record.
 ## Upgrade and support
 
 Read [MIGRATION.md](MIGRATION.md) before reusing a v3 configuration, legacy flag,
-MOD, or generated `CODE` output. Read [README.md](README.md) for installation and
-operation, [CONTRIBUTING.md](CONTRIBUTING.md) for change requirements, and
-[SECURITY.md](SECURITY.md) for supported versions and vulnerability reporting.
+MOD, or generated `CODE` output. Read [README.md](../README.md) for installation and
+operation, [CONTRIBUTING.md](../CONTRIBUTING.md) for change requirements, and
+[SECURITY.md](../SECURITY.md) for supported versions and vulnerability reporting.

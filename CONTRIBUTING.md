@@ -86,15 +86,15 @@ use a sidecar declaration and may be Python, PowerShell, batch, or executable
 payloads. Neither extension type may bypass preflight, planning, capability
 approval, isolated workspaces, artifact registration, or package filtering.
 
-Read [MODS.md](MODS.md) before changing discovery or extension behavior. Read
-[MIGRATION.md](MIGRATION.md) before changing a legacy flag, schema migration,
+Read [MODS.md](docs/MODS.md) before changing discovery or extension behavior. Read
+[MIGRATION.md](docs/MIGRATION.md) before changing a legacy flag, schema migration,
 historical `CODE` evidence import, or MOD adapter. Compatibility code must remain
 a bounded translation into the canonical v4 model.
 
 ## Configuration changes
 
 Configuration changes must preserve the strict schema in
-[CONFIGURATION.md](CONFIGURATION.md). Update the field reference and its
+[CONFIGURATION.md](docs/CONFIGURATION.md). Update the field reference and its
 parser-backed tests in the same commit as any setting, default, bound, migration
 alias, or source-precedence change.
 
@@ -105,7 +105,7 @@ They do not belong in persistent configuration.
 
 ## Evidence, security, and compatibility
 
-- Update [OUTPUTS.md](OUTPUTS.md) when a filename, MIME type, package path,
+- Update [OUTPUTS.md](docs/OUTPUTS.md) when a filename, MIME type, package path,
   evidence kind, or retention rule changes.
 - Keep source, executables, models, configuration secrets, caches, and library
   internals out of evidence packages.
@@ -144,13 +144,13 @@ Keep user and developer documentation synchronized with behavior:
 
 - [README.md](README.md): installation, quick start, CLI, permissions, and
   troubleshooting.
-- [CONFIGURATION.md](CONFIGURATION.md): every persistent setting and migration.
-- [OUTPUTS.md](OUTPUTS.md): artifact and retention contracts.
-- [MODS.md](MODS.md): extension contract.
-- [MIGRATION.md](MIGRATION.md): supported compatibility boundary.
-- [FLOW_MATRIX.md](FLOW_MATRIX.md): executable flow evidence.
-- [FEATURE_STATUS.md](FEATURE_STATUS.md): TODO ownership and completion evidence.
-- [V4_RELEASE.md](V4_RELEASE.md): v4 recreation scope and release verification.
+- [CONFIGURATION.md](docs/CONFIGURATION.md): every persistent setting and migration.
+- [OUTPUTS.md](docs/OUTPUTS.md): artifact and retention contracts.
+- [MODS.md](docs/MODS.md): extension contract.
+- [MIGRATION.md](docs/MIGRATION.md): supported compatibility boundary.
+- [FLOW_MATRIX.md](docs/FLOW_MATRIX.md): executable flow evidence.
+- [FEATURE_STATUS.md](docs/FEATURE_STATUS.md): TODO ownership and completion evidence.
+- [V4_RELEASE.md](docs/V4_RELEASE.md): v4 recreation scope and release verification.
 
 The repository wiki is complementary documentation, not a substitute for the
 versioned contract files required to review a change.

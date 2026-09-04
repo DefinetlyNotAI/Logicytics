@@ -7,8 +7,8 @@ and evidence-packaging tool around an explicit run-oriented pipeline:
 
 The release ships 66 independently runnable core collectors, typed profiles and
 modes, opt-in plugins and MODs, isolated workers, reproducible manifests and
-packages, and bounded Windows integrations. See [V4_RELEASE.md](V4_RELEASE.md)
-for the release scope and [FEATURE_STATUS.md](FEATURE_STATUS.md) for ownership
+packages, and bounded Windows integrations. See [V4_RELEASE.md](docs/V4_RELEASE.md)
+for the release scope and [FEATURE_STATUS.md](docs/FEATURE_STATUS.md) for ownership
 and verification evidence.
 
 ## Current capabilities
@@ -105,12 +105,12 @@ on absent, non-integer, or unsupported schema versions. The manifest separately
 records package layout version `1.0` and every section path; the package SHA-256
 remains an external sidecar because an archive cannot contain its own final digest.
 Every shipped collector's stable filename or path pattern, MIME format, canonical
-package location, and retention behavior is defined in [OUTPUTS.md](OUTPUTS.md)
+package location, and retention behavior is defined in [OUTPUTS.md](docs/OUTPUTS.md)
 and enforced by the isolated artifact writer.
 Supported legacy inputs, their exact v4 replacements, and removed internal shims
-are documented in [MIGRATION.md](MIGRATION.md).
+are documented in [MIGRATION.md](docs/MIGRATION.md).
 The executable evidence for every supported mode, maintenance action, power
-action, cancellation, and permission flow is indexed in [FLOW_MATRIX.md](FLOW_MATRIX.md).
+action, cancellation, and permission flow is indexed in [FLOW_MATRIX.md](docs/FLOW_MATRIX.md).
 
 ## Requirements
 
@@ -219,20 +219,20 @@ python -m logicytics run --profile standard --acknowledge-authorization `
 
 Important global and run controls:
 
-| Control | Purpose |
-| --- | --- |
-| `--config PATH` | Load a schema-v4 JSON or supported legacy INI configuration. |
-| `--match TEXT` | Suggest the closest documented action; history persists only when configured. |
-| `--modes` | Print the versioned collector/mode matrix. |
-| `run --mode NAME` | Select one canonical execution mode. |
-| `--include ID` / `--exclude ID` | Override profile membership by exact collector ID. |
-| `--plugins` / `--mods` | Opt into discovered plugins or declared MODs. |
-| `--workers COUNT` | Override bounded concurrency within the configured maximum. |
-| `--sequential` / `--parallel` | Select explicit scheduling without a legacy mode alias. |
-| `--rerun-from MANIFEST` | Rerun selected collectors while preserving parent-run provenance. |
-| `--no-package` | Retain the manifest/run tree without a ZIP or ZIP hash. |
-| `--reboot` / `--shutdown` | Schedule one mutually exclusive power action only after verified packaging. |
-| `update --apply` | Explicitly apply the configured Git update; an ordinary update check is read-only. |
+| Control                         | Purpose                                                                            |
+|---------------------------------|------------------------------------------------------------------------------------|
+| `--config PATH`                 | Load a schema-v4 JSON or supported legacy INI configuration.                       |
+| `--match TEXT`                  | Suggest the closest documented action; history persists only when configured.      |
+| `--modes`                       | Print the versioned collector/mode matrix.                                         |
+| `run --mode NAME`               | Select one canonical execution mode.                                               |
+| `--include ID` / `--exclude ID` | Override profile membership by exact collector ID.                                 |
+| `--plugins` / `--mods`          | Opt into discovered plugins or declared MODs.                                      |
+| `--workers COUNT`               | Override bounded concurrency within the configured maximum.                        |
+| `--sequential` / `--parallel`   | Select explicit scheduling without a legacy mode alias.                            |
+| `--rerun-from MANIFEST`         | Rerun selected collectors while preserving parent-run provenance.                  |
+| `--no-package`                  | Retain the manifest/run tree without a ZIP or ZIP hash.                            |
+| `--reboot` / `--shutdown`       | Schedule one mutually exclusive power action only after verified packaging.        |
+| `update --apply`                | Explicitly apply the configured Git update; an ordinary update check is read-only. |
 
 Legacy `--default`, `--threaded`, `--minimal`, `--depth`, `--modded`, `--nopy`,
 and `--performance-check` flags remain exact aliases. They cannot be combined
@@ -287,16 +287,16 @@ mode assignments, validation state, execution type, and either `manual_only` or
 quarantine status. New integrations should use `run --mode <name>`; the
 historical flags remain exact compatibility aliases.
 
-| Mode | Profile | Scheduling | Legacy alias | Additional behavior |
-| --- | --- | --- | --- | --- |
-| `standard` | standard | sequential | `--default` | deterministic standard run |
-| `balanced` | standard | bounded parallel | `--threaded` | configured worker pool |
-| `quick` | minimal | configured | `--minimal` | essential inventory |
-| `thorough` | deep | configured | `--depth` | extended slower inventory |
-| `offline` | offline | configured | none | forbids network access |
-| `extensions` | standard | configured | `--modded` | enables declared MODS |
-| `non-python` | standard | configured | `--nopy` | only non-Python MODS payloads |
-| `performance` | standard | sequential | `--performance-check` | duration report |
+| Mode          | Profile  | Scheduling       | Legacy alias          | Additional behavior           |
+|---------------|----------|------------------|-----------------------|-------------------------------|
+| `standard`    | standard | sequential       | `--default`           | deterministic standard run    |
+| `balanced`    | standard | bounded parallel | `--threaded`          | configured worker pool        |
+| `quick`       | minimal  | configured       | `--minimal`           | essential inventory           |
+| `thorough`    | deep     | configured       | `--depth`             | extended slower inventory     |
+| `offline`     | offline  | configured       | none                  | forbids network access        |
+| `extensions`  | standard | configured       | `--modded`            | enables declared MODS         |
+| `non-python`  | standard | configured       | `--nopy`              | only non-Python MODS payloads |
+| `performance` | standard | sequential       | `--performance-check` | duration report               |
 
 Explicit `--profile`, `--include`, and `--exclude` remain available for advanced
 planning. A named mode cannot be combined with a different explicit profile or
@@ -342,7 +342,7 @@ before asking Windows to open the file through its associated application.
 ## Configuration
 
 The complete field reference, limits, source precedence, migration rules, and a
-parser-verified example are in [CONFIGURATION.md](CONFIGURATION.md).
+parser-verified example are in [CONFIGURATION.md](docs/CONFIGURATION.md).
 
 An optional project-root `logicytics.json` uses schema version `4`. Product
 policy is split into immutable `runtime`, `interaction`, `maintenance`, and
@@ -460,8 +460,8 @@ classification across the isolated worker boundary.
 
 Malformed core collectors block a run. Malformed unselected plugins are
 quarantined and listed by preflight; malformed explicitly selected plugins block
-the requested run. See [FEATURE_STATUS.md](FEATURE_STATUS.md) for implemented
-ownership and [V4_RELEASE.md](V4_RELEASE.md) for the released feature surface.
+the requested run. See [FEATURE_STATUS.md](docs/FEATURE_STATUS.md) for implemented
+ownership and [V4_RELEASE.md](docs/V4_RELEASE.md) for the released feature surface.
 
 ## Verification
 
@@ -494,19 +494,19 @@ BitLocker, networking, Sysinternals, and artifact-publication probes.
   adjacent `.sha256` sidecar and rerun collection; package verification fails
   closed on modified bytes.
 - **Output is unexpectedly large:** lower collector-specific bounds in
-  [CONFIGURATION.md](CONFIGURATION.md) or use `minimal`/`standard`; the aggregate
+  [CONFIGURATION.md](docs/CONFIGURATION.md) or use `minimal`/`standard`; the aggregate
   run budget prevents unbounded publication.
 
 ## Documentation
 
-- [CONFIGURATION.md](CONFIGURATION.md) — complete persistent settings contract.
-- [OUTPUTS.md](OUTPUTS.md) — every collector path, format, package path, and
+- [CONFIGURATION.md](docs/CONFIGURATION.md) — complete persistent settings contract.
+- [OUTPUTS.md](docs/OUTPUTS.md) — every collector path, format, package path, and
   retention rule.
-- [MODS.md](MODS.md) — opt-in MOD extension contract.
-- [MIGRATION.md](MIGRATION.md) — supported v3 and legacy compatibility boundary.
-- [FLOW_MATRIX.md](FLOW_MATRIX.md) — executable evidence for every user flow.
-- [FEATURE_STATUS.md](FEATURE_STATUS.md) — TODO section owners and status.
-- [V4_RELEASE.md](V4_RELEASE.md) — final v4.0 recreation and release evidence.
+- [MODS.md](docs/MODS.md) — opt-in MOD extension contract.
+- [MIGRATION.md](docs/MIGRATION.md) — supported v3 and legacy compatibility boundary.
+- [FLOW_MATRIX.md](docs/FLOW_MATRIX.md) — executable evidence for every user flow.
+- [FEATURE_STATUS.md](docs/FEATURE_STATUS.md) — TODO section owners and status.
+- [V4_RELEASE.md](docs/V4_RELEASE.md) — final v4.0 recreation and release evidence.
 - [Logicytics wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) — v4 user,
   contributor, configuration, evidence, extension, and troubleshooting guides.
 - [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and

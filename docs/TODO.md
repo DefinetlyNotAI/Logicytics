@@ -22,7 +22,7 @@ collector is launched.
 - [x] Typed collector contracts, metadata, statuses, run requests, validation, and
       artifact interfaces.
 - [x] Typed local configuration with validated worker and output limits.
-- [x] Strict discovery/preflight for `core/` and `plugins/`, including filename,
+- [x] Strict discovery/preflight for `../core` and `../plugins`, including filename,
       class, inheritance, method, docstring, annotation, metadata, specialty, and
       ID validation.
 - [x] Short-lived isolated metadata probe and invalid-plugin quarantine policy.
@@ -176,11 +176,11 @@ Logicytics/
 └── logicytics/                   # engine, contracts, planner, runtime
 ```
 
-- [x] Make `core/` the only source of shipped collection functionality.
-- [x] Automatically discover and validate every eligible collector in `core/` at
+- [x] Make `../core` the only source of shipped collection functionality.
+- [x] Automatically discover and validate every eligible collector in `../core` at
       startup; core collectors are included by the selected built-in profile unless
       a profile explicitly excludes them.
-- [x] Make `plugins/` an opt-in user extension area. Discover plugins automatically
+- [x] Make `../plugins` an opt-in user extension area. Discover plugins automatically
       during preflight, but only run valid plugins when the user selects the plugin
       profile/flag or explicitly includes them.
 - [x] Permit plugins to implement any useful collection specialty, including new
@@ -189,7 +189,7 @@ Logicytics/
 - [x] Keep plugin output, logs, permissions, and failures separated from core
       output while still including both in the final run manifest when selected.
 - [x] Never silently execute arbitrary `.py` files merely because they exist in
-      `core/` or `plugins/`.
+      `../core` or `../plugins`.
 - [x] Ignore caches, tests, examples, private helpers, virtual environments, and
       files beginning with `_` during collector discovery.
 - [x] Require an explicit `plugin_id` and detect duplicate IDs before any collector
@@ -572,7 +572,7 @@ Windows platform allows.
   - [x] Performs the requested shutdown or reboot action at the end.
   - [x] Handles Ctrl+C gracefully and attempts final packaging/cleanup.
   - [x] Offers a final exit prompt for interactive use.
-- [x] Discover runnable files recursively from canonical `core/`, `plugins/`, and
+- [x] Discover runnable files recursively from canonical `../core`, `../plugins`, and
       `MODS/` directories; the legacy CODE directory is intentionally retired.
 - [x] Support `.py`, `.ps1`, `.exe`, and `.bat` collector types.
 - [x] Exclude engine/library directories and underscore-prefixed helper files from
@@ -933,7 +933,7 @@ appropriate default/deep/non-Python mode.
 - [x] Every mode has an explicit collector inclusion matrix.
 - [x] Every output has a documented path, format, and retention rule.
 - [x] A failed collector cannot silently make the run appear successful.
-- [x] A cancelled run leaves a recoverable partial-run report and cleans only its
+- [x] A canceled run leaves a recoverable partial-run report and cleans only its
       own temporary data.
 - [x] A normal run creates a package, a matching SHA-256 hash, and a run manifest.
 - [x] Debug/update/developer tools are separated from normal collection behavior.
