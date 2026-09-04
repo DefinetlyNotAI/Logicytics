@@ -21,7 +21,7 @@ from logicytics.platform_adapters import (
 
 class ProcessAdapterTests(unittest.TestCase):
     def test_process_adapter_normalizes_and_delegates_shell_free_commands(self) -> None:
-        def execute(command, *, stdout, stderr, **options):
+        def execute(command, *, stdout, stderr, **_options):
             stdout.write(b"output")
             stderr.write(b"warning")
             return subprocess.CompletedProcess(command, 7)
@@ -43,7 +43,7 @@ class ProcessAdapterTests(unittest.TestCase):
         adapter = ProcessAdapter()
         adapter.maximum_capture_bytes = 3
 
-        def execute(command, *, stdout, stderr, **options):
+        def execute(command, *, stdout, _stderr, **_options):
             stdout.write(b"four")
             return subprocess.CompletedProcess(command, 0)
 
