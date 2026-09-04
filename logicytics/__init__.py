@@ -1,5 +1,6 @@
 """Logicytics v4 public engine API."""
-
+from logicytics.api import run_collection, read_artifact, query_run, open_artifact, plan_run, load_configuration, \
+    RunSnapshot, CollectorSnapshot, CollectorFailureSnapshot
 from logicytics.contracts import (
     CONTRACT_VERSION,
     Capability,
