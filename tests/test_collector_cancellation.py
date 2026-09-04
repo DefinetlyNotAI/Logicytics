@@ -159,10 +159,9 @@ class CollectorCancellationTests(unittest.TestCase):
             ssh_context.workspace.mkdir()
             original_write = ssh_backup.zipfile.ZipFile.write
 
-            def cancel_archive_write(archive, *args, **kwargs):
-                result = original_write(archive, *args, **kwargs)
+            def cancel_archive_write(archive, *args: object, **kwargs: object) -> None:
+                original_write(archive, *args, **kwargs)
                 ssh_context.cancelled = True
-                return result
 
             with patch.object(ssh_backup.filesystem_adapter, "home", return_value=home), patch.object(
                     ssh_backup.zipfile.ZipFile, "write", new=cancel_archive_write):

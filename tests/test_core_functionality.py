@@ -2746,7 +2746,7 @@ max_retry_time = 30
 
             def capture_manifest_state(path, manifest):
                 persisted_states.append(manifest.status.value)
-                return write_manifest(path, manifest)
+                write_manifest(path, manifest)
 
             with patch("logicytics.runtime.write_manifest", side_effect=capture_manifest_state):
                 outcome = RunSupervisor(root, configuration).run(plan)
