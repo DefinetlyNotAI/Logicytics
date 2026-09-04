@@ -3,12 +3,23 @@ repos:
     rev: v8.16.3
     hooks:
       - id: gitleaks
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
+
   - repo: https://github.com/pylint-dev/pylint
-    rev: v2.17.2
+    rev: v4.0.2
     hooks:
       - id: pylint
+
+  - repo: local
+    hooks:
+      - id: conventional-commit-message
+        name: Validate conventional commit message
+        entry: .github/script/validate-commit-msg.sh
+        language: script
+        stages:
+          - commit-msg
