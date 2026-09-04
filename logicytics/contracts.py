@@ -637,9 +637,9 @@ class Collector(ABC):
         """Release collector-local resources. The engine owns filesystem cleanup."""
 
 
-class CoreCollector(Collector):
+class CoreCollector(Collector, ABC):
     """Marker base class for collectors shipped with Logicytics."""
 
 
-class PluginCollector(Collector):
+class PluginCollector(Collector, ABC):
     """Marker base class for user-owned collectors discovered in plugins/."""
