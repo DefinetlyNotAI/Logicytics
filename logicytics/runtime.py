@@ -17,9 +17,12 @@ import sys
 import traceback
 import zipfile
 from dataclasses import asdict, dataclass
+from multiprocessing.process import BaseProcess
+from multiprocessing.queues import Queue
 from pathlib import Path
 from subprocess import TimeoutExpired
 from time import monotonic, sleep
+from typing import Any, Mapping, TypedDict, cast, Callable, Protocol, TypeVar
 from uuid import uuid4
 
 from logicytics.artifacts import WorkspaceArtifactWriter
@@ -48,6 +51,8 @@ from logicytics.packaging import package_manifest
 from logicytics.planner import RunPlan
 from logicytics.platform_adapters import process_adapter, windows_api_adapter
 
+_T = TypeVar("_T")
+
 
 @dataclass(slots=True)
 class RunOutcome:
@@ -58,10 +63,65 @@ class RunOutcome:
     manifest_path: Path
 
 
+class _ProcessContext(Protocol):
+    """Typed multiprocessing context subset used by the supervisor."""
+
+    def Process(
+            self,
+            group: None = None,
+            target: Callable[..., object] | None = None,
+            name: str | None = None,
+            args: tuple[Any, ...] = (),
+            kwargs: dict[str, Any] | None = None,
+            *,
+            daemon: bool | None = None,
+    ) -> BaseProcess:
+        ...
+
+    def Queue(
+            self,
+            maxsize: int = 0,
+    ) -> Queue[_T]:
+        ...
+
+
+class _WorkerPayload(TypedDict):
+    """Fully typed, pickle-safe payload passed to collector worker processes."""
+
+    run_id: str
+    collector_id: str
+    path: str
+    expected_class: str
+    execution_type: str
+    metadata: dict[str, object]
+    workspace: str
+    artifact_root: str
+    cancellation_file: str
+    settings: dict[str, Any]
+    run_output_budget_bytes: int
+
+
+class _SerializedResult(TypedDict):
+    """Serialized CollectorResult shape transported through multiprocessing queues."""
+
+    status: str
+    summary: str
+    artifacts: list[dict[str, object]]
+    errors: list[str]
+    metrics: dict[str, int | float | str]
+
+
+class _WorkerMessage(TypedDict):
+    """Terminal result message produced by a worker process."""
+
+    collector_id: str
+    result: _SerializedResult
+
+
 @dataclass(slots=True)
 class _ActiveWorker:
     candidate_id: str
-    process: multiprocessing.Process
+    process: BaseProcess
     started_at: float
     timeout_seconds: int
     maximum_memory_bytes: int
@@ -73,6 +133,14 @@ class _ActiveWorker:
     last_event_offset: int = 0
     last_heartbeat_at: float = 0.0
     exited_at: float | None = None
+
+
+def _require_metadata(candidate: CollectorCandidate) -> CollectorMetadata:
+    """Return preflight metadata or fail immediately on an invalid supervisor input."""
+    metadata = candidate.metadata
+    if metadata is None:
+        raise RuntimeError(f"preflighted collector has no metadata: {candidate.path}")
+    return metadata
 
 
 class _WorkerMutationGuard:
@@ -159,8 +227,19 @@ class _WorkerMutationGuard:
         """Normalize cross-platform subprocess audit arguments without executing a shell."""
         executable = arguments[0] if arguments else None
         command = arguments[1] if len(arguments) > 1 else None
+
         if isinstance(command, (list, tuple)):
-            tokens = tuple(str(item) for item in command)
+            tokens = tuple(
+                os.fsdecode(item)
+                for item in command
+                if isinstance(item, (str, bytes, os.PathLike))
+            )
+        elif isinstance(command, bytes):
+            decoded = os.fsdecode(command)
+            try:
+                tokens = tuple(shlex.split(decoded, posix=os.name != "nt"))
+            except ValueError:
+                tokens = tuple(decoded.split())
         elif isinstance(command, str):
             try:
                 tokens = tuple(shlex.split(command, posix=os.name != "nt"))
@@ -168,9 +247,12 @@ class _WorkerMutationGuard:
                 tokens = tuple(command.split())
         else:
             tokens = ()
+
         if tokens:
             return tokens
-        return (str(executable),) if isinstance(executable, (str, bytes, os.PathLike)) else ()
+        if isinstance(executable, (str, bytes, os.PathLike)):
+            return (os.fsdecode(executable),)
+        return ()
 
     @staticmethod
     def _command_stem(value: str) -> str:
@@ -236,7 +318,12 @@ class _WorkerMutationGuard:
         }:
             if Capability.NETWORK not in self.capabilities:
                 raise PermissionError("collector requires declared network capability")
-            if event == "socket.__new__" and len(arguments) > 2 and int(arguments[2]) == int(socket.SOCK_RAW):
+            socket_type = arguments[2] if len(arguments) > 2 else None
+            if (
+                    event == "socket.__new__"
+                    and isinstance(socket_type, int)
+                    and socket_type == int(socket.SOCK_RAW)
+            ):
                 if Capability.PACKET_CAPTURE not in self.capabilities:
                     raise PermissionError("collector requires declared packet_capture capability")
         if event.startswith("winreg.") and Capability.REGISTRY_READ not in self.capabilities:
@@ -273,17 +360,19 @@ def _load_collector(path: Path, expected_class: str):
     return getattr(module, expected_class)()
 
 
-def _artifact_from_dict(data: dict[str, object]) -> Artifact:
-    return Artifact.from_dict(data)
+def _artifact_from_dict(data: Mapping[str, object]) -> Artifact:
+    """Deserialize one artifact from an already validated mapping."""
+    return Artifact.from_dict(dict(data))
 
 
-def _result_from_dict(data: dict[str, object]) -> CollectorResult:
+def _result_from_dict(data: _SerializedResult) -> CollectorResult:
+    """Deserialize the typed result payload emitted by a worker."""
     return CollectorResult(
-        status=CollectorStatus(str(data["status"])),
-        summary=str(data["summary"]),
-        artifacts=tuple(_artifact_from_dict(item) for item in data.get("artifacts", [])),
-        errors=tuple(str(error) for error in data.get("errors", [])),
-        metrics=dict(data.get("metrics", {})),
+        status=CollectorStatus(data["status"]),
+        summary=data["summary"],
+        artifacts=tuple(_artifact_from_dict(item) for item in data["artifacts"]),
+        errors=tuple(data["errors"]),
+        metrics=dict(data["metrics"]),
     )
 
 
@@ -317,15 +406,15 @@ def _mod_command(
     raise ValueError(f"unsupported mod execution type: {execution_type}")
 
 
-def _run_mod_worker(payload: dict[str, object], result_queue: multiprocessing.Queue) -> None:
+def _run_mod_worker(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) -> None:
     """Adapt a sidecar-declared legacy script to the isolated collector contract."""
-    metadata = CollectorMetadata.from_dict(dict(payload["metadata"]), allow_custom_specialty=True)
-    workspace = Path(str(payload["workspace"]))
-    artifact_root = Path(str(payload["artifact_root"]))
-    cancellation_file = Path(str(payload["cancellation_file"]))
+    metadata = CollectorMetadata.from_dict(payload["metadata"], allow_custom_specialty=True)
+    workspace = Path(payload["workspace"])
+    artifact_root = Path(payload["artifact_root"])
+    cancellation_file = Path(payload["cancellation_file"])
     source_directory = workspace / "source"
     source_directory.mkdir(parents=True, exist_ok=True)
-    source = Path(str(payload["path"]))
+    source = Path(payload["path"])
     copied_script = source_directory / source.name
     shutil.copy2(source, copied_script)
     writer = WorkspaceArtifactWriter(
@@ -334,14 +423,14 @@ def _run_mod_worker(payload: dict[str, object], result_queue: multiprocessing.Qu
         artifact_root,
         metadata.maximum_output_bytes,
         metadata.maximum_artifact_files,
-        source_category=metadata.specialty.value if hasattr(metadata.specialty, "value") else metadata.specialty,
+        source_category=str(metadata.specialty),
         maximum_artifact_bytes=metadata.maximum_artifact_bytes,
-        run_output_budget_bytes=int(payload["run_output_budget_bytes"]),
+        run_output_budget_bytes=payload["run_output_budget_bytes"],
         cancellation_file=cancellation_file,
     )
     logger = get_event_logger(
         workspace / "events.jsonl",
-        run_id=str(payload["run_id"]),
+        run_id=payload["run_id"],
         collector_id=metadata.id,
     )
     stdout_path = workspace / "script_stdout.txt"
@@ -354,7 +443,7 @@ def _run_mod_worker(payload: dict[str, object], result_queue: multiprocessing.Qu
         else:
             command = _mod_command(
                 copied_script,
-                str(payload["execution_type"]),
+                payload["execution_type"],
                 workspace,
                 metadata.id,
                 metadata.capabilities,
@@ -366,7 +455,7 @@ def _run_mod_worker(payload: dict[str, object], result_queue: multiprocessing.Qu
                 "COMSPEC": os.environ.get("COMSPEC", ""),
                 "TEMP": str(workspace / "tmp"),
                 "TMP": str(workspace / "tmp"),
-                "LOGICYTICS_RUN_ID": str(payload["run_id"]),
+                "LOGICYTICS_RUN_ID": payload["run_id"],
                 "LOGICYTICS_COLLECTOR_ID": metadata.id,
                 "LOGICYTICS_WORKSPACE": str(workspace),
             }
@@ -424,20 +513,20 @@ def _run_mod_worker(payload: dict[str, object], result_queue: multiprocessing.Qu
     result_queue.put({"collector_id": metadata.id, "result": _serialize_result(result)})
 
 
-def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queue) -> None:
+def _worker_entry(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) -> None:
     """Run a single collector in an isolated child process."""
     if os.name != "nt":
         os.setsid()
-    workspace = Path(str(payload["workspace"]))
+    workspace = Path(payload["workspace"])
     workspace.mkdir(parents=True, exist_ok=True)
     temporary_directory = workspace / "tmp"
     temporary_directory.mkdir(exist_ok=True)
-    if str(payload.get("execution_type", "collector")) != "collector":
+    if payload["execution_type"] != "collector":
         try:
             _run_mod_worker(payload, result_queue)
         except BaseException as error:
             result_queue.put({
-                "collector_id": str(payload["collector_id"]),
+                "collector_id": payload["collector_id"],
                 "result": _serialize_result(CollectorResult.failed(
                     "legacy mod worker crashed",
                     errors=(f"{type(error).__name__}: {error}", traceback.format_exc()),
@@ -449,9 +538,9 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
     try:
         with stdout_path.open("w", encoding="utf-8") as stdout, stderr_path.open("w", encoding="utf-8") as stderr:
             with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-                collector = _load_collector(Path(str(payload["path"])), str(payload["expected_class"]))
+                collector = _load_collector(Path(payload["path"]), payload["expected_class"])
                 metadata = collector.metadata()
-                source_path = Path(str(payload["path"])).resolve()
+                source_path = Path(payload["path"]).resolve()
                 shipped_core_root = (Path(__file__).resolve().parent.parent / "core").resolve()
                 try:
                     source_path.relative_to(shipped_core_root)
@@ -462,43 +551,39 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
                 writer = WorkspaceArtifactWriter(
                     metadata.id,
                     workspace,
-                    Path(str(payload["artifact_root"])),
+                    Path(payload["artifact_root"]),
                     metadata.maximum_output_bytes,
                     metadata.maximum_artifact_files,
-                    source_category=(
-                        metadata.specialty.value
-                        if hasattr(metadata.specialty, "value")
-                        else metadata.specialty
-                    ),
+                    source_category=str(metadata.specialty),
                     maximum_artifact_bytes=metadata.maximum_artifact_bytes,
-                    run_output_budget_bytes=int(payload["run_output_budget_bytes"]),
-                    cancellation_file=Path(str(payload["cancellation_file"])),
+                    run_output_budget_bytes=payload["run_output_budget_bytes"],
+                    cancellation_file=Path(payload["cancellation_file"]),
                     allowed_relative_paths=(output_contract.workspace_patterns if output_contract else None),
                     allowed_media_types=(output_contract.media_types if output_contract else None),
                 )
                 context = CollectorContext(
-                    run_id=str(payload["run_id"]),
+                    run_id=payload["run_id"],
                     collector_id=metadata.id,
                     workspace=workspace,
                     temporary_directory=temporary_directory,
                     artifacts=writer,
                     logger=get_event_logger(
                         workspace / "events.jsonl",
-                        run_id=str(payload["run_id"]),
+                        run_id=payload["run_id"],
                         collector_id=metadata.id,
                     ),
                     settings=dict(payload["settings"]),
-                    cancellation_file=Path(str(payload["cancellation_file"])),
+                    cancellation_file=Path(payload["cancellation_file"]),
                 )
                 result: CollectorResult | None = None
                 lifecycle_errors: list[str] = []
                 failure_summary = "collector worker crashed"
                 mutation_guard = _WorkerMutationGuard(
                     workspace,
-                    Path(str(payload["artifact_root"])),
+                    Path(payload["artifact_root"]),
                     metadata.id,
                     metadata.capabilities,
-                    Path(str(payload["path"])),
+                    Path(payload["path"]),
                 )
                 mutation_guard.active = True
                 try:
@@ -581,7 +666,7 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
     except BaseException as error:  # child processes must always report a terminal result
         result_queue.put(
             {
-                "collector_id": str(payload["collector_id"]),
+                "collector_id": payload["collector_id"],
                 "result": _serialize_result(
                     CollectorResult(
                         CollectorStatus.FAILED,
@@ -593,13 +678,20 @@ def _worker_entry(payload: dict[str, object], result_queue: multiprocessing.Queu
         )
 
 
-def _serialize_result(result: CollectorResult) -> dict[str, object]:
+def _serialize_result(result: CollectorResult) -> _SerializedResult:
     return {
         "status": result.status.value,
         "summary": result.summary,
-        "artifacts": [artifact.to_dict() for artifact in result.artifacts],
+        "artifacts": [
+            dict(cast(Mapping[str, object], artifact.to_dict()))
+            for artifact in result.artifacts
+        ],
         "errors": list(result.errors),
-        "metrics": dict(result.metrics),
+        "metrics": {
+            key: value
+            for key, value in result.metrics.items()
+            if isinstance(value, (int, float, str)) and not isinstance(value, bool)
+        },
     }
 
 
@@ -614,19 +706,13 @@ class RunSupervisor:
     def run(self, plan: RunPlan) -> RunOutcome:
         """Execute a preflighted plan and persist the manifest throughout the run."""
         if plan.collectors and not plan.request.acknowledge_authorization:
-            categories = sorted(
-                candidate.metadata.specialty.value
-                if hasattr(candidate.metadata.specialty, "value")
-                else candidate.metadata.specialty
-                for candidate in plan.collectors
-                if candidate.metadata is not None
-            )
+            selected_metadata = tuple(_require_metadata(candidate) for candidate in plan.collectors)
+            categories = sorted(str(metadata.specialty) for metadata in selected_metadata)
             sensitive_outputs = sorted(
                 {
                     category
-                    for candidate in plan.collectors
-                    if candidate.metadata is not None
-                    for category in candidate.metadata.sensitive_data_categories
+                    for metadata in selected_metadata
+                    for category in metadata.sensitive_data_categories
                 }
             )
             raise PermissionError(
@@ -655,7 +741,7 @@ class RunSupervisor:
             run_id,
             asdict(plan.request),
             self.configuration.to_manifest_dict(),
-            [(candidate.metadata.id, candidate.path) for candidate in plan.collectors if candidate.metadata],
+            [(_require_metadata(candidate).id, candidate.path) for candidate in plan.collectors],
             parent_run_id=plan.request.rerun_from,
             plan_fingerprint=plan.fingerprint,
         )
@@ -797,22 +883,27 @@ class RunSupervisor:
         """Schedule bounded isolated workers and contain each terminal failure."""
         pending = list(plan.collectors)
         candidates = {
-            candidate.metadata.id: candidate
+            _require_metadata(candidate).id: candidate
             for candidate in plan.collectors
-            if candidate.metadata is not None
         }
         active: dict[str, _ActiveWorker] = {}
         retry_not_before: dict[str, float] = {}
         self._active_workers = active
-        result_queue: multiprocessing.Queue = multiprocessing.get_context("spawn").Queue()
+
+        spawn_context = cast(
+            _ProcessContext,
+            cast(object, multiprocessing.get_context("spawn")),
+        )
+
+        result_queue: Queue[_WorkerMessage] = spawn_context.Queue()
         worker_limit = min(plan.request.max_workers, self.configuration.runtime.maximum_workers)
         committed_output_bytes = 0
         while pending or active:
             if cancellation_file.exists():
                 self._cancel_active(active, records, manifest, manifest_path, "run cancellation requested")
                 for candidate in pending:
-                    assert candidate.metadata is not None
-                    records[candidate.metadata.id].apply_result(
+                    metadata = _require_metadata(candidate)
+                    records[metadata.id].apply_result(
                         CollectorResult(CollectorStatus.CANCELLED, "not started because run was cancelled")
                     )
                 return
@@ -820,12 +911,12 @@ class RunSupervisor:
                 if any(not worker.parallel_safe for worker in active.values()):
                     break
                 candidate = pending[0]
-                assert candidate.metadata is not None
-                if monotonic() < retry_not_before.get(candidate.metadata.id, 0):
+                metadata = _require_metadata(candidate)
+                if monotonic() < retry_not_before.get(metadata.id, 0):
                     break
                 dependency_states = {
                     dependency: records[dependency].status
-                    for dependency in candidate.metadata.dependencies
+                    for dependency in metadata.dependencies
                 }
                 failed_dependencies = {
                     dependency: status
@@ -838,7 +929,7 @@ class RunSupervisor:
                         f"{dependency}={status}"
                         for dependency, status in sorted(failed_dependencies.items())
                     )
-                    records[candidate.metadata.id].apply_result(
+                    records[metadata.id].apply_result(
                         CollectorResult(
                             CollectorStatus.SKIPPED,
                             "collector dependency was not satisfied",
@@ -848,7 +939,7 @@ class RunSupervisor:
                     run_logger.event(
                         "warning",
                         "collector_dependency_unsatisfied",
-                        collector_id=candidate.metadata.id,
+                        collector_id=metadata.id,
                     )
                     write_manifest(manifest_path, manifest)
                     continue
@@ -856,11 +947,11 @@ class RunSupervisor:
                 if any(status != "succeeded" for status in dependency_states.values()):
                     break
 
-                if active and not candidate.metadata.parallel_safe:
+                if active and not metadata.parallel_safe:
                     break
 
                 if active:
-                    candidate_class = candidate.metadata.resource_class
+                    candidate_class = metadata.resource_class
 
                     has_interactive_worker = any(
                         worker.resource_class is ResourceClass.INTERACTIVE
@@ -894,7 +985,7 @@ class RunSupervisor:
                     if active:
                         break
                     pending.pop(0)
-                    records[candidate.metadata.id].apply_result(
+                    records[metadata.id].apply_result(
                         CollectorResult(
                             CollectorStatus.SKIPPED,
                             "run output limit reached before collector could start",
@@ -904,52 +995,52 @@ class RunSupervisor:
                     run_logger.event(
                         "warning",
                         "collector_run_output_limit_reached",
-                        collector_id=candidate.metadata.id,
+                        collector_id=metadata.id,
                     )
                     write_manifest(manifest_path, manifest)
                     continue
-                output_budget = min(candidate.metadata.maximum_output_bytes, remaining_output_bytes)
+                output_budget = min(metadata.maximum_output_bytes, remaining_output_bytes)
                 pending.pop(0)
-                retry_not_before.pop(candidate.metadata.id, None)
-                workspace = workspace_root / candidate.metadata.id.replace(".", "_")
-                payload: dict[str, object] = {
+                retry_not_before.pop(metadata.id, None)
+                workspace = workspace_root / metadata.id.replace(".", "_")
+                payload: _WorkerPayload = {
                     "run_id": run_id,
-                    "collector_id": candidate.metadata.id,
+                    "collector_id": metadata.id,
                     "path": str(candidate.path),
                     "expected_class": candidate.expected_class,
                     "execution_type": candidate.execution_type,
-                    "metadata": candidate.metadata.to_dict(),
+                    "metadata": dict(cast(Mapping[str, object], metadata.to_dict())),
                     "workspace": str(workspace),
                     "artifact_root": str(artifact_root),
                     "cancellation_file": str(cancellation_file),
-                    "settings": dict(self.configuration.settings_for(candidate.metadata.id)),
+                    "settings": dict(self.configuration.settings_for(metadata.id)),
                     "run_output_budget_bytes": output_budget,
                 }
-                process = multiprocessing.get_context("spawn").Process(
+                process = spawn_context.Process(
                     target=_worker_entry,
                     args=(payload, result_queue),
-                    name=f"Logicytics-{candidate.metadata.id}",
+                    name=f"Logicytics-{metadata.id}",
                 )
-                records[candidate.metadata.id].status = "running"
-                records[candidate.metadata.id].started_at = utc_now()
-                records[candidate.metadata.id].heartbeat_at = utc_now()
-                records[candidate.metadata.id].attempt_count += 1
+                records[metadata.id].status = "running"
+                records[metadata.id].started_at = utc_now()
+                records[metadata.id].heartbeat_at = utc_now()
+                records[metadata.id].attempt_count += 1
                 process.start()
-                records[candidate.metadata.id].worker_pid = process.pid
-                active[candidate.metadata.id] = _ActiveWorker(
-                    candidate.metadata.id,
+                records[metadata.id].worker_pid = process.pid
+                active[metadata.id] = _ActiveWorker(
+                    metadata.id,
                     process,
                     monotonic(),
-                    candidate.metadata.timeout_seconds,
-                    candidate.metadata.maximum_memory_bytes,
+                    metadata.timeout_seconds,
+                    metadata.maximum_memory_bytes,
                     workspace,
-                    candidate.metadata.parallel_safe,
-                    candidate.metadata.resource_class,
+                    metadata.parallel_safe,
+                    metadata.resource_class,
                     output_budget,
                 )
-                run_logger.event("info", "collector_started", collector_id=candidate.metadata.id)
+                run_logger.event("info", "collector_started", collector_id=metadata.id)
                 write_manifest(manifest_path, manifest)
-                if not candidate.metadata.parallel_safe:
+                if not metadata.parallel_safe:
                     break
 
             try:
@@ -957,7 +1048,7 @@ class RunSupervisor:
             except queue.Empty:
                 message = None
             if message is not None:
-                collector_id = str(message["collector_id"])
+                collector_id = message["collector_id"]
                 worker = active.pop(collector_id, None)
                 if worker is not None:
                     worker.process.join(timeout=1)
@@ -1074,11 +1165,12 @@ class RunSupervisor:
             sleep(0.01)
 
     @staticmethod
-    def _worker_memory_bytes(process: multiprocessing.Process) -> int | None:
+    def _worker_memory_bytes(process: BaseProcess) -> int | None:
         """Return one worker's resident working set using local OS facilities."""
-        if process.pid is None:
+        pid = process.pid
+        if pid is None:
             return None
-        return process_adapter.memory_bytes(process.pid)
+        return process_adapter.memory_bytes(pid)
 
     @staticmethod
     def _schedule_retry(
@@ -1091,10 +1183,10 @@ class RunSupervisor:
             run_logger: FileEventLogger,
     ) -> bool:
         """Retry only explicitly permitted failed attempts that produced no evidence."""
-        assert candidate.metadata is not None
+        metadata = _require_metadata(candidate)
         if (
                 record.status != CollectorStatus.FAILED.value
-                or record.attempt_count > candidate.metadata.maximum_retries
+                or record.attempt_count > metadata.maximum_retries
                 or artifact_bytes != 0
                 or cancellation_file.exists()
         ):
@@ -1107,7 +1199,7 @@ class RunSupervisor:
                 "finished_at": record.finished_at,
                 "summary": record.summary,
                 "errors": list(record.errors),
-                "failure": dict(record.failure) if record.failure is not None else None,
+                "failure": dict(record.failure) if isinstance(record.failure, Mapping) else None,
                 "duration_seconds": record.duration_seconds,
                 "worker_pid": record.worker_pid,
                 "worker_exit_code": record.worker_exit_code,
@@ -1125,7 +1217,7 @@ class RunSupervisor:
         record.worker_pid = None
         record.worker_exit_code = None
         record.termination_reason = None
-        retry_not_before[record.id] = monotonic() + candidate.metadata.retry_delay_seconds
+        retry_not_before[record.id] = monotonic() + metadata.retry_delay_seconds
         pending.insert(0, candidate)
         run_logger.event(
             "warning",
@@ -1158,14 +1250,15 @@ class RunSupervisor:
         return windows_api_adapter.process_descendants(parent_pid)
 
     @staticmethod
-    def _terminate_process_tree(process: multiprocessing.Process) -> None:
+    def _terminate_process_tree(process: BaseProcess) -> None:
         """Terminate one worker-owned process tree without touching peer workers."""
-        if process.pid is not None:
+        pid = process.pid
+        if pid is not None:
             try:
                 if os.name == "nt":
-                    descendants = RunSupervisor._windows_descendants(process.pid)
+                    descendants = RunSupervisor._windows_descendants(pid)
                     process_adapter.run(
-                        ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                        ["taskkill", "/PID", str(pid), "/T", "/F"],
                         capture_output=True,
                         check=False,
                         text=True,
@@ -1174,7 +1267,7 @@ class RunSupervisor:
                     for child_pid in descendants:
                         windows_api_adapter.terminate_process(child_pid)
                 else:
-                    process_adapter.terminate_process_group(process.pid)
+                    process_adapter.terminate_process_group(pid)
             except (OSError, TimeoutExpired):
                 pass
         if process.is_alive():
@@ -1182,7 +1275,7 @@ class RunSupervisor:
         process.join(timeout=2)
 
     @staticmethod
-    def _refresh_worker_progress(record, worker: _ActiveWorker) -> bool:
+    def _refresh_worker_progress(record: CollectorRecord, worker: _ActiveWorker) -> bool:
         """Persist worker liveness and any newly written structured progress events."""
         changed = False
         now = monotonic()
@@ -1239,7 +1332,7 @@ class RunSupervisor:
         return changed
 
     @staticmethod
-    def _apply_worker_result(record, result: CollectorResult, worker: _ActiveWorker) -> None:
+    def _apply_worker_result(record: CollectorRecord, result: CollectorResult, worker: _ActiveWorker) -> None:
         """Attach result, elapsed time, and progress accounting to one record."""
         record.apply_result(result, duration_seconds=round(monotonic() - worker.started_at, 3))
         record.progress["bytes_written"] = max(
@@ -1256,7 +1349,14 @@ class RunSupervisor:
             )
         RunSupervisor._refresh_worker_progress(record, worker)
 
-    def _cancel_active(self, active, records, manifest, manifest_path, reason: str) -> None:
+    def _cancel_active(
+            self,
+            active: dict[str, _ActiveWorker],
+            records: dict[str, CollectorRecord],
+            manifest: RunManifest,
+            manifest_path: Path,
+            reason: str,
+    ) -> None:
         for collector_id, worker in tuple(active.items()):
             self._terminate_process_tree(worker.process)
             active.pop(collector_id)
@@ -1269,7 +1369,13 @@ class RunSupervisor:
             self._cleanup_worker_temporary_directory(worker)
         write_manifest(manifest_path, manifest)
 
-    def _cancel_records(self, records, manifest, manifest_path, reason: str) -> None:
+    def _cancel_records(
+            self,
+            records: dict[str, CollectorRecord],
+            manifest: RunManifest,
+            manifest_path: Path,
+            reason: str,
+    ) -> None:
         self._cancel_active(self._active_workers, records, manifest, manifest_path, reason)
         for record in records.values():
             if record.status in {"planned", "running"}:

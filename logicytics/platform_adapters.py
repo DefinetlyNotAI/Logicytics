@@ -28,83 +28,156 @@ class ProcessAdapter:
     create_new_console = getattr(subprocess, "CREATE_NEW_CONSOLE", 0x00000010)
 
     @staticmethod
-    def _command(command: Sequence[str]) -> tuple[str, ...]:
+    def _command(
+            command: Sequence[str | os.PathLike[str]],
+    ) -> tuple[str, ...]:
         """Validate and normalize an explicit shell-free command sequence."""
-        normalized = tuple(str(argument) for argument in command)
+        normalized = tuple(
+            argument if isinstance(argument, str) else argument.__fspath__()
+            for argument in command
+        )
+
         if not normalized:
             raise ValueError("command must contain at least one argument")
+
         return normalized
 
-    def run(self, command: Sequence[str], **options: Any) -> subprocess.CompletedProcess[str]:
+    def run(
+            self,
+            command: Sequence[str | os.PathLike[str]],
+            **options: Any,
+    ) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]:
         """Delegate to the guarded stdlib runner while retaining its familiar result contract."""
         normalized = self._command(command)
         capture_directory = options.pop("capture_directory", None)
+
         if options.get("shell"):
             raise ValueError("collector process adapters never permit shell execution")
+
         timeout = options.get("timeout")
-        if timeout is not None and (not isinstance(timeout, (int, float)) or timeout <= 0):
+
+        if timeout is not None and (
+                not isinstance(timeout, (int, float))
+                or timeout <= 0
+        ):
             raise ValueError("command timeout must be positive")
+
         capture_output = options.pop("capture_output", False)
+
         if not capture_output:
             return subprocess.run(normalized, **options)
+
         if "stdout" in options or "stderr" in options:
-            raise ValueError("capture_output cannot be combined with explicit streams")
-        wants_text = bool(options.pop("text", False) or options.get("encoding") is not None)
+            raise ValueError(
+                "capture_output cannot be combined with explicit streams"
+            )
+
+        wants_text = bool(
+            options.pop("text", False)
+            or options.get("encoding") is not None
+        )
         encoding = options.pop("encoding", None) or "utf-8"
         errors = options.pop("errors", None) or "replace"
+
         if capture_directory is not None:
             capture_directory = Path(capture_directory)
+
             if not capture_directory.is_dir():
-                raise ValueError("capture_directory must be an existing directory")
+                raise ValueError(
+                    "capture_directory must be an existing directory"
+                )
+
         with (
             tempfile.TemporaryFile(dir=capture_directory) as stdout,
             tempfile.TemporaryFile(dir=capture_directory) as stderr,
         ):
-            completed = subprocess.run(normalized, stdout=stdout, stderr=stderr, **options)
+            completed = subprocess.run(
+                normalized,
+                stdout=stdout,
+                stderr=stderr,
+                **options,
+            )
+
             stdout_size = stdout.tell()
             stderr_size = stderr.tell()
-            if stdout_size > self.maximum_capture_bytes or stderr_size > self.maximum_capture_bytes:
+
+            if (
+                    stdout_size > self.maximum_capture_bytes
+                    or stderr_size > self.maximum_capture_bytes
+            ):
                 raise ValueError(
-                    f"command output exceeds the {self.maximum_capture_bytes}-byte capture limit"
+                    f"command output exceeds the "
+                    f"{self.maximum_capture_bytes}-byte capture limit"
                 )
+
             stdout.seek(0)
             stderr.seek(0)
+
             stdout_bytes = stdout.read()
             stderr_bytes = stderr.read()
-        captured_stdout = stdout_bytes.decode(encoding, errors) if wants_text else stdout_bytes
-        captured_stderr = stderr_bytes.decode(encoding, errors) if wants_text else stderr_bytes
-        return subprocess.CompletedProcess(
-            normalized, completed.returncode, captured_stdout, captured_stderr
+
+        if wants_text:
+            return subprocess.CompletedProcess[str](
+                normalized,
+                completed.returncode,
+                stdout_bytes.decode(encoding, errors),
+                stderr_bytes.decode(encoding, errors),
+            )
+
+        return subprocess.CompletedProcess[bytes](
+            normalized,
+            completed.returncode,
+            stdout_bytes,
+            stderr_bytes,
         )
 
-    def popen(self, command: Sequence[str], **options: Any) -> subprocess.Popen[Any]:
+    def popen(
+            self,
+            command: Sequence[str | os.PathLike[str]],
+            **options: Any,
+    ) -> subprocess.Popen[Any]:
         """Start one explicit long-lived process without invoking a command shell."""
         normalized = self._command(command)
+
         if options.get("shell"):
             raise ValueError("process adapters never permit shell execution")
+
         return subprocess.Popen(normalized, **options)
 
     @staticmethod
     def memory_bytes(process_id: int) -> int | None:
         """Return one process's resident memory through the host-specific boundary."""
-        if not isinstance(process_id, int) or isinstance(process_id, bool) or process_id <= 0:
+        if (
+                not isinstance(process_id, int)
+                or isinstance(process_id, bool)
+                or process_id <= 0
+        ):
             raise ValueError("process_id must be a positive integer")
+
         if os.name == "nt":
             return windows_api_adapter.process_working_set(process_id)
+
         status_path = Path(f"/proc/{process_id}/status")
+
         try:
             for line in status_path.read_text(encoding="ascii").splitlines():
                 if line.startswith("VmRSS:"):
                     return int(line.split()[1]) * 1024
         except (OSError, ValueError, IndexError):
             return None
+
         return None
 
     @staticmethod
     def terminate_process_group(process_id: int) -> None:
         """Request termination of one non-Windows process group."""
-        if not isinstance(process_id, int) or isinstance(process_id, bool) or process_id <= 0:
+        if (
+                not isinstance(process_id, int)
+                or isinstance(process_id, bool)
+                or process_id <= 0
+        ):
             raise ValueError("process_id must be a positive integer")
+
         os.killpg(process_id, signal.SIGTERM)
 
 

@@ -66,5 +66,5 @@ __all__ = [
     "plan_run",
     "query_run",
     "read_artifact",
-    "run_collection",
+    "run_collection"
 ]

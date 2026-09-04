@@ -95,6 +95,12 @@ class RuntimeTests(unittest.TestCase):
             self.assertIn("Status: failed", summary)
             self.assertIn("Reasons:", summary)
             self.assertIn("RuntimeError", summary)
+            self.assertIsNotNone(record.started_at)
+            self.assertIsNotNone(record.finished_at)
+
+            assert record.started_at is not None
+            assert record.finished_at is not None
+
             self.assertIn(f"Started: {record.started_at}", summary)
             self.assertIn(f"Finished: {record.finished_at}", summary)
 

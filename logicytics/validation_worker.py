@@ -19,18 +19,18 @@ from logicytics.contracts import (
     CollectorMetadata,
     CoreCollector,
     PluginCollector,
-    ValidationResult,
+    ValidationResult, EventLogger, Artifact, EvidenceKind, ArtifactWriter,
 )
 
 
-class _ProbeLogger:
+class _ProbeLogger(EventLogger):
     """Discard structured events emitted during the side-effect-free validation probe."""
 
     def event(self, level: str, message: str, **fields: int | float | str) -> None:
         """Accept probe events without exposing them through the JSON-only worker output."""
 
 
-class _ProbeArtifactWriter:
+class _ProbeArtifactWriter(ArtifactWriter):
     """Reject evidence registration during preflight validation."""
 
     def register_file(
@@ -38,8 +38,9 @@ class _ProbeArtifactWriter:
             source: Path,
             *,
             media_type: str = "application/octet-stream",
+            evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
             transformations: tuple[str, ...] = (),
-    ):
+    ) -> Artifact:
         """Prevent a validation method from registering collection artifacts."""
         raise RuntimeError("validate() must not register artifacts")
 
@@ -230,9 +231,16 @@ def main() -> int:
         expected_class = sys.argv[3]
         sys.path.insert(0, str(path.parent))
         module = _load_module(path)
-        collector_type = getattr(module, expected_class, None)
-        if not inspect.isclass(collector_type):
+        collector_object = getattr(module, expected_class, None)
+
+        if not inspect.isclass(collector_object):
             raise ValueError(f"missing collector class: {expected_class}")
+
+        collector_type = cast(type[Collector], collector_object)
+
+        if not issubclass(collector_type, Collector):
+            raise ValueError(f"{expected_class} is not a Collector")
+
         metadata = _validate_contract(collector_type, kind)
         print(json.dumps({"metadata": metadata.to_dict()}, sort_keys=True))
         return 0

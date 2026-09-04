@@ -13,7 +13,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from subprocess import TimeoutExpired
 
-from logicytics.contracts import CONTRACT_VERSION, Capability, CollectorKind, CollectorMetadata
+from logicytics.contracts import CONTRACT_VERSION, Capability, CollectorKind, CollectorMetadata, Specialty
 from logicytics.platform_adapters import process_adapter
 
 _FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.py$")
@@ -432,99 +432,183 @@ def _validate_mod(path: Path, mods_root: Path) -> CollectorCandidate:
     return candidate
 
 
-def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidate) -> None:
+def _validate_class_shape(
+        class_node: ast.ClassDef,
+        candidate: CollectorCandidate,
+) -> None:
     """Enforce the small, documented public API allowed on a collector class."""
     if ast.get_docstring(class_node) is None:
         candidate.static_errors.append("collector class requires a docstring")
-    methods = {
-        item.name: item
-        for item in class_node.body
-        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and not item.name.startswith("_")
-    }
+
+    methods: dict[str, ast.FunctionDef | ast.AsyncFunctionDef] = {}
+
+    for item in class_node.body:
+        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not item.name.startswith("_"):
+                methods[item.name] = item
+
     allowed = {
-        "metadata", "validate", "prepare", "collect", "finalize", "cleanup", "estimate", "dependencies",
+        "metadata",
+        "validate",
+        "prepare",
+        "collect",
+        "finalize",
+        "cleanup",
+        "estimate",
+        "dependencies",
     }
 
     metadata_calls: list[ast.Call] = []
 
-    for node in ast.walk(methods["metadata"]):
-        if not isinstance(node, ast.Call):
-            continue
+    metadata_method = methods.get("metadata")
+    if metadata_method is not None:
+        for node in ast.walk(metadata_method):
+            if not isinstance(node, ast.Call):
+                continue
 
-        is_metadata_constructor = (
-                                          isinstance(node.func, ast.Name)
-                                          and node.func.id == "CollectorMetadata"
-                                  ) or (
-                                          isinstance(node.func, ast.Attribute)
-                                          and node.func.attr == "CollectorMetadata"
-                                  )
+            is_metadata_constructor = (
+                                              isinstance(node.func, ast.Name)
+                                              and node.func.id == "CollectorMetadata"
+                                      ) or (
+                                              isinstance(node.func, ast.Attribute)
+                                              and node.func.attr == "CollectorMetadata"
+                                      )
 
-        if is_metadata_constructor:
-            metadata_calls.append(node)
+            if is_metadata_constructor:
+                metadata_calls.append(node)
 
-    if len(metadata_calls) != 1:
+    if metadata_method is not None and len(metadata_calls) != 1:
         candidate.static_errors.append(
             "metadata must construct one CollectorMetadata object directly"
         )
 
-    if candidate.kind is CollectorKind.PLUGIN and "metadata" in methods:
+    if candidate.kind is CollectorKind.PLUGIN and metadata_method is not None:
         required_plugin_fields = {
-            "capabilities", "privilege_level", "sensitive_data_categories", "network_access",
-            "estimated_cost", "timeout_seconds", "maximum_output_bytes", "output_media_types",
+            "capabilities",
+            "privilege_level",
+            "sensitive_data_categories",
+            "network_access",
+            "estimated_cost",
+            "timeout_seconds",
+            "maximum_output_bytes",
+            "output_media_types",
             "minimum_contract_version",
         }
+
         if len(metadata_calls) == 1:
-            declared_fields = {keyword.arg for keyword in metadata_calls[0].keywords if keyword.arg is not None}
+            metadata_call = metadata_calls[0]
+
+            declared_fields = {
+                keyword.arg
+                for keyword in metadata_call.keywords
+                if keyword.arg is not None
+            }
+
             missing_fields = sorted(required_plugin_fields - declared_fields)
+
             if missing_fields:
                 candidate.static_errors.append(
-                    f"plugin metadata must explicitly declare: {', '.join(missing_fields)}"
+                    "plugin metadata must explicitly declare: "
+                    f"{', '.join(missing_fields)}"
                 )
-    if "collect" in methods and len(metadata_calls) == 1:
+
+    collect_method = methods.get("collect")
+
+    if collect_method is not None and len(metadata_calls) == 1:
+        metadata_call = metadata_calls[0]
+
         declared_keyword = next(
-            (keyword for keyword in metadata_calls[0].keywords if keyword.arg == "output_media_types"),
+            (
+                keyword
+                for keyword in metadata_call.keywords
+                if keyword.arg == "output_media_types"
+            ),
             None,
         )
+
         if declared_keyword is None:
-            candidate.static_errors.append("metadata must explicitly declare output_media_types")
+            candidate.static_errors.append(
+                "metadata must explicitly declare output_media_types"
+            )
         else:
             try:
-                declared_media_types = set(ast.literal_eval(declared_keyword.value))
+                evaluated_media_types = ast.literal_eval(declared_keyword.value)
+                declared_media_types = set(evaluated_media_types)
             except (TypeError, ValueError):
-                candidate.static_errors.append("metadata output_media_types must be a literal tuple")
+                candidate.static_errors.append(
+                    "metadata output_media_types must be a literal tuple"
+                )
             else:
                 registered_media_types: set[str] = set()
-                lifecycle_methods = [methods["collect"]]
-                if "finalize" in methods:
-                    lifecycle_methods.append(methods["finalize"])
+
+                lifecycle_methods: list[
+                    ast.FunctionDef | ast.AsyncFunctionDef
+                    ] = [collect_method]
+
+                finalize_method = methods.get("finalize")
+                if finalize_method is not None:
+                    lifecycle_methods.append(finalize_method)
+
                 for method in lifecycle_methods:
                     for call in ast.walk(method):
-                        if not isinstance(call, ast.Call) or not (
-                                isinstance(call.func, ast.Attribute) and call.func.attr == "register_file"
+                        if not isinstance(call, ast.Call):
+                            continue
+
+                        if not (
+                                isinstance(call.func, ast.Attribute)
+                                and call.func.attr == "register_file"
                         ):
                             continue
+
                         media_keyword = next(
-                            (keyword for keyword in call.keywords if keyword.arg == "media_type"),
+                            (
+                                keyword
+                                for keyword in call.keywords
+                                if keyword.arg == "media_type"
+                            ),
                             None,
                         )
+
                         if media_keyword is None:
-                            registered_media_types.add("application/octet-stream")
-                        elif isinstance(media_keyword.value, ast.Constant) and isinstance(
-                                media_keyword.value.value, str
+                            registered_media_types.add(
+                                "application/octet-stream"
+                            )
+                        elif (
+                                isinstance(media_keyword.value, ast.Constant)
+                                and isinstance(media_keyword.value.value, str)
                         ):
-                            registered_media_types.add(media_keyword.value.value)
+                            registered_media_types.add(
+                                media_keyword.value.value
+                            )
                         else:
                             candidate.static_errors.append(
-                                f"register_file media_type must be a literal string (line {call.lineno})"
+                                "register_file media_type must be a literal "
+                                f"string (line {call.lineno})"
                             )
-                if not registered_media_types.issubset(declared_media_types):
+
+                if not registered_media_types.issubset(
+                        declared_media_types
+                ):
                     candidate.static_errors.append(
-                        "metadata output_media_types must include every registered artifact type"
+                        "metadata output_media_types must include every "
+                        "registered artifact type"
                     )
+
     unknown = sorted(set(methods) - allowed)
+
     if unknown:
-        candidate.static_errors.append(f"unsupported public collector methods: {', '.join(unknown)}")
-    required = {"metadata", "validate", "collect", "cleanup"}
+        candidate.static_errors.append(
+            "unsupported public collector methods: "
+            f"{', '.join(unknown)}"
+        )
+
+    required = {
+        "metadata",
+        "validate",
+        "collect",
+        "cleanup",
+    }
+
     expected_returns = {
         "metadata": "CollectorMetadata",
         "validate": "ValidationResult",
@@ -535,42 +619,108 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
         "dependencies": "tuple[str,...]",
         "cleanup": "None",
     }
+
     missing = sorted(required - set(methods))
+
     if missing:
-        candidate.static_errors.append(f"missing required collector methods: {', '.join(missing)}")
+        candidate.static_errors.append(
+            f"missing required collector methods: {', '.join(missing)}"
+        )
+
     for name, method in methods.items():
         if ast.get_docstring(method) is None:
-            candidate.static_errors.append(f"{name} requires a docstring")
+            candidate.static_errors.append(
+                f"{name} requires a docstring"
+            )
+
         if method.returns is None:
-            candidate.static_errors.append(f"{name} requires a return type annotation")
-        elif name in expected_returns and ast.unparse(method.returns).replace(" ", "") != expected_returns[name]:
-            candidate.static_errors.append(f"{name} must return {expected_returns[name]}")
+            candidate.static_errors.append(
+                f"{name} requires a return type annotation"
+            )
+        elif name in expected_returns:
+            actual_return = ast.unparse(method.returns).replace(" ", "")
+            expected_return = expected_returns[name]
+
+            if actual_return != expected_return:
+                candidate.static_errors.append(
+                    f"{name} must return {expected_return}"
+                )
+
         parameters = method.args.args
+
         expected_parameter_count = (
-            1 if name in {"metadata", "dependencies"} else 3 if name == "finalize" else 2
+            1
+            if name in {"metadata", "dependencies"}
+            else 3
+            if name == "finalize"
+            else 2
         )
+
         if len(parameters) != expected_parameter_count:
-            candidate.static_errors.append(f"{name} has an invalid parameter count")
+            candidate.static_errors.append(
+                f"{name} has an invalid parameter count"
+            )
             continue
-        expected_first = "cls" if name in {"metadata", "dependencies"} else "self"
+
+        expected_first = (
+            "cls"
+            if name in {"metadata", "dependencies"}
+            else "self"
+        )
+
         if parameters[0].arg != expected_first:
-            candidate.static_errors.append(f"{name} must begin with {expected_first}")
+            candidate.static_errors.append(
+                f"{name} must begin with {expected_first}"
+            )
+
         if name in {"metadata", "dependencies"}:
-            if not any(isinstance(decorator, ast.Name) and decorator.id == "classmethod" for decorator in
-                       method.decorator_list):
-                candidate.static_errors.append(f"{name} must be a classmethod")
+            is_classmethod = any(
+                isinstance(decorator, ast.Name)
+                and decorator.id == "classmethod"
+                for decorator in method.decorator_list
+            )
+
+            if not is_classmethod:
+                candidate.static_errors.append(
+                    f"{name} must be a classmethod"
+                )
+
+            continue
+
+        context_parameter = parameters[1]
+
+        if context_parameter.annotation is None:
+            context_annotation = None
         else:
-            context_parameter = parameters[1]
-            annotation = ast.unparse(context_parameter.annotation).rsplit(".", 1)[
-                -1] if context_parameter.annotation else None
-            if context_parameter.arg != "context" or annotation != "CollectorContext":
-                candidate.static_errors.append(f"{name} must accept an annotated context parameter")
-            if name == "finalize":
-                result_parameter = parameters[2]
-                result_annotation = ast.unparse(result_parameter.annotation).rsplit(".", 1)[
-                    -1] if result_parameter.annotation else None
-                if result_parameter.arg != "result" or result_annotation != "CollectorResult":
-                    candidate.static_errors.append("finalize must accept an annotated result parameter")
+            context_annotation = ast.unparse(
+                context_parameter.annotation
+            ).rsplit(".", 1)[-1]
+
+        if (
+                context_parameter.arg != "context"
+                or context_annotation != "CollectorContext"
+        ):
+            candidate.static_errors.append(
+                f"{name} must accept an annotated context parameter"
+            )
+
+        if name == "finalize":
+            result_parameter = parameters[2]
+
+            if result_parameter.annotation is None:
+                result_annotation = None
+            else:
+                result_annotation = ast.unparse(
+                    result_parameter.annotation
+                ).rsplit(".", 1)[-1]
+
+            if (
+                    result_parameter.arg != "result"
+                    or result_annotation != "CollectorResult"
+            ):
+                candidate.static_errors.append(
+                    "finalize must accept an annotated result parameter"
+                )
 
 
 def discover(project_root: Path) -> tuple[CollectorCandidate, ...]:
@@ -606,13 +756,20 @@ def _accept_runtime_metadata(candidate: CollectorCandidate, payload: object) -> 
     except (KeyError, TypeError, ValueError) as error:
         candidate.runtime_error = f"invalid validation response: {error}"
         return
+
+    specialty = (
+        metadata.specialty.value
+        if isinstance(metadata.specialty, Specialty)
+        else metadata.specialty
+    )
+
     if metadata.minimum_contract_version != CONTRACT_VERSION:
         candidate.runtime_error = "collector contract version is unsupported"
     elif metadata.timeout_seconds < 1 or metadata.maximum_output_bytes < 1:
         candidate.runtime_error = "collector must declare positive timeout and output limits"
     elif not metadata.id.startswith(f"{candidate.kind.value}."):
         candidate.runtime_error = "collector ID must start with its owner kind"
-    elif candidate.kind is CollectorKind.CORE and metadata.specialty.value != candidate.path.parent.name:
+    elif candidate.kind is CollectorKind.CORE and specialty != candidate.path.parent.name:
         candidate.runtime_error = "core collector specialty must match its parent folder"
     elif candidate.kind is CollectorKind.CORE and metadata.id != (
             f"core.{candidate.path.parent.name}.{candidate.path.stem}"

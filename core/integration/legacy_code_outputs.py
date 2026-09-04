@@ -69,15 +69,31 @@ class LegacyCodeOutputsCollector(CoreCollector):
     def collect(self, context: CollectorContext) -> CollectorResult:
         """Stream allowlisted generated files into the private workspace and artifact store."""
         if context.is_cancelled:
-            return CollectorResult(CollectorStatus.CANCELLED, "cancelled before legacy CODE import")
+            return CollectorResult(
+                CollectorStatus.CANCELLED,
+                "cancelled before legacy CODE import",
+            )
+
         code_root = self._code_root().resolve()
         candidates: list[Path] = []
-        for path in sorted(filesystem_adapter.recursive(code_root)):
+
+        for path in sorted(
+                filesystem_adapter.recursive(code_root),
+                key=lambda candidate: candidate.as_posix(),
+        ):
             if context.is_cancelled:
-                return CollectorResult.cancelled("cancelled during legacy CODE discovery")
+                return CollectorResult.cancelled(
+                    "cancelled during legacy CODE discovery"
+                )
+
             relative = path.relative_to(code_root)
-            if any(part.casefold() in _EXCLUDED_DIRECTORIES for part in relative.parts):
+
+            if any(
+                    part.casefold() in _EXCLUDED_DIRECTORIES
+                    for part in relative.parts
+            ):
                 continue
+
             try:
                 if (
                         not path.is_file()
@@ -89,55 +105,90 @@ class LegacyCodeOutputsCollector(CoreCollector):
                     continue
             except OSError:
                 continue
+
             candidates.append(path)
+
             if len(candidates) >= _MAXIMUM_FILES:
                 break
 
         artifacts = []
         errors: list[str] = []
+
         for source in candidates:
             if context.is_cancelled:
-                return CollectorResult.cancelled("cancelled during legacy CODE import", tuple(artifacts))
+                return CollectorResult.cancelled(
+                    "cancelled during legacy CODE import",
+                    tuple(artifacts),
+                )
+
             relative = source.relative_to(code_root)
             destination = context.workspace / "legacy_code" / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
+
             temporary = destination.with_suffix(destination.suffix + ".tmp")
+
             try:
-                with source.open("rb") as source_stream, temporary.open("xb") as destination_stream:
+                with (
+                    source.open("rb") as source_stream,
+                    temporary.open("xb") as destination_stream,
+                ):
                     while block := source_stream.read(1024 * 1024):
                         if context.is_cancelled:
                             raise InterruptedError("run cancellation was requested")
+
                         destination_stream.write(block)
+
                 temporary.replace(destination)
+
                 artifacts.append(
                     context.artifacts.register_file(
                         destination,
                         media_type="application/octet-stream",
                         evidence_kind=EvidenceKind.RAW,
-                        transformations=("imported from historical CODE output",),
+                        transformations=(
+                            "imported from historical CODE output",
+                        ),
                     )
                 )
+
             except InterruptedError:
                 temporary.unlink(missing_ok=True)
                 destination.unlink(missing_ok=True)
-                return CollectorResult.cancelled("cancelled during legacy CODE import", tuple(artifacts))
+
+                return CollectorResult.cancelled(
+                    "cancelled during legacy CODE import",
+                    tuple(artifacts),
+                )
+
             except OSError as error:
                 temporary.unlink(missing_ok=True)
                 errors.append(f"{relative.as_posix()}: {error}")
+
         if not artifacts and not errors:
-            return CollectorResult.skipped("no generated legacy CODE evidence matched the import policy")
+            return CollectorResult.skipped(
+                "no generated legacy CODE evidence matched the import policy"
+            )
+
         if errors:
             return CollectorResult.partial(
                 "legacy CODE evidence imported with file-level failures",
                 tuple(artifacts),
                 errors=tuple(errors),
             )
+
         context.report_progress(
             "legacy_code_outputs_finished",
             imported_files=len(artifacts),
-            bytes_written=sum(artifact.size_bytes for artifact in artifacts),
+            bytes_written=sum(
+                artifact.size_bytes
+                for artifact in artifacts
+            ),
         )
-        return CollectorResult.succeeded("legacy CODE evidence imported", tuple(artifacts))
+
+        return CollectorResult.succeeded(
+            "legacy CODE evidence imported",
+            tuple(artifacts),
+        )
 
     def cleanup(self, context: CollectorContext) -> None:
         """Remove only an unpublished temporary copy left by an interrupted import."""

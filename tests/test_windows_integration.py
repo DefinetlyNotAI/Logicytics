@@ -69,19 +69,27 @@ class WindowsIntegrationTests(unittest.TestCase):
         """Publish one representative artifact for every canonical core path and MIME contract."""
         project_root = Path(__file__).resolve().parent.parent
         report = preflight(project_root)
+
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
+
             for candidate in report.valid:
-                if candidate.kind.value != "core" or candidate.metadata is None:
+                metadata = candidate.metadata
+
+                if candidate.kind.value != "core" or metadata is None:
                     continue
-                with self.subTest(collector=candidate.metadata.id):
-                    contract = core_output_contract(candidate.metadata)
-                    workspace = root / "work" / candidate.metadata.id.replace(".", "_")
-                    artifact_root = root / "artifacts" / candidate.metadata.id.replace(".", "_")
+
+                with self.subTest(collector=metadata.id):
+                    contract = core_output_contract(metadata)
+
+                    workspace = root / "work" / metadata.id.replace(".", "_")
+                    artifact_root = root / "artifacts" / metadata.id.replace(".", "_")
+
                     workspace.mkdir(parents=True)
                     artifact_root.mkdir(parents=True)
+
                     writer = WorkspaceArtifactWriter(
-                        candidate.metadata.id,
+                        metadata.id,
                         workspace,
                         artifact_root,
                         1024 * 1024,
@@ -89,20 +97,35 @@ class WindowsIntegrationTests(unittest.TestCase):
                         allowed_relative_paths=contract.workspace_patterns,
                         allowed_media_types=contract.media_types,
                     )
-                    for pattern, media_type in zip(contract.workspace_patterns, contract.media_types):
+
+                    for pattern, media_type in zip(
+                            contract.workspace_patterns,
+                            contract.media_types,
+                    ):
                         parts: list[str] = []
+
                         for part in Path(pattern).parts:
                             if part == "**":
                                 parts.extend(("sample", "evidence.bin"))
                             else:
                                 parts.append(part.replace("*", "sample"))
+
                         source = workspace.joinpath(*parts)
                         source.parent.mkdir(parents=True, exist_ok=True)
                         source.write_bytes(b"golden evidence\n")
-                        artifact = writer.register_file(source, media_type=media_type)
-                        self.assertIn(artifact.relative_path, {
-                            f"{candidate.metadata.id.replace('.', '_')}/{source.relative_to(workspace).as_posix()}"
-                        })
+
+                        artifact = writer.register_file(
+                            source,
+                            media_type=media_type,
+                        )
+
+                        self.assertIn(
+                            artifact.relative_path,
+                            {
+                                f"{metadata.id.replace('.', '_')}/"
+                                f"{source.relative_to(workspace).as_posix()}"
+                            },
+                        )
 
 
 if __name__ == "__main__":

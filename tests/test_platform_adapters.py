@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Sequence, BinaryIO
 from unittest.mock import Mock, patch
 
 from core.packet import packet_capture
@@ -21,23 +22,42 @@ from logicytics.platform_adapters import (
 
 class ProcessAdapterTests(unittest.TestCase):
     def test_process_adapter_normalizes_and_delegates_shell_free_commands(self) -> None:
-        def execute(command, *, stdout, stderr, **_options):
+        def execute(
+                command: Sequence[str],
+                *,
+                stdout: BinaryIO,
+                stderr: BinaryIO,
+                **_options: object,
+        ) -> subprocess.CompletedProcess[str]:
             stdout.write(b"output")
             stderr.write(b"warning")
             return subprocess.CompletedProcess(command, 7)
 
-        with patch("logicytics.platform_adapters.subprocess.run", side_effect=execute) as invoke:
-            result = ProcessAdapter().run(["tool", Path("argument")], capture_output=True,
-                                          check=False, text=True, timeout=5)
+        with patch(
+                "logicytics.platform_adapters.subprocess.run",
+                side_effect=execute,
+        ) as invoke:
+            result = ProcessAdapter().run(
+                ["tool", Path("argument")],
+                capture_output=True,
+                check=False,
+                text=True,
+                timeout=5,
+            )
+
         self.assertEqual(("tool", "argument"), result.args)
         self.assertEqual(7, result.returncode)
         self.assertEqual("output", result.stdout)
         self.assertEqual("warning", result.stderr)
         self.assertEqual(("tool", "argument"), invoke.call_args.args[0])
-        self.assertEqual({"check": False, "timeout": 5}, {
-            key: value for key, value in invoke.call_args.kwargs.items()
-            if key not in {"stdout", "stderr"}
-        })
+        self.assertEqual(
+            {"check": False, "timeout": 5},
+            {
+                key: value
+                for key, value in invoke.call_args.kwargs.items()
+                if key not in {"stdout", "stderr"}
+            },
+        )
 
     def test_process_adapter_rejects_captured_streams_over_the_hard_limit(self) -> None:
         adapter = ProcessAdapter()

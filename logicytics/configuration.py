@@ -62,7 +62,10 @@ class CollectorSettingRule:
     maximum: int | float = 0
 
 
-_COLLECTOR_SETTING_SCHEMAS = MappingProxyType({
+_COLLECTOR_SETTING_SCHEMAS: Mapping[
+    str,
+    Mapping[str, CollectorSettingRule],
+] = MappingProxyType({
     "core.network.bandwidth_sample": {
         "sample_count": CollectorSettingRule("integer", 1, 10),
         "interval_seconds": CollectorSettingRule("number", 0.1, 60),
@@ -88,8 +91,16 @@ _COLLECTOR_SETTING_SCHEMAS = MappingProxyType({
     },
     "core.process.memory_map": {
         "max_regions": CollectorSettingRule("integer", 1, 100_000),
-        "output_limit_bytes": CollectorSettingRule("integer", 1_024, 64 * 1024 * 1024),
-        "disk_safety_margin_bytes": CollectorSettingRule("integer", 0, MAXIMUM_RUN_OUTPUT_BYTES),
+        "output_limit_bytes": CollectorSettingRule(
+            "integer",
+            1_024,
+            64 * 1024 * 1024,
+        ),
+        "disk_safety_margin_bytes": CollectorSettingRule(
+            "integer",
+            0,
+            MAXIMUM_RUN_OUTPUT_BYTES,
+        ),
         "dump_directory": CollectorSettingRule("workspace_path"),
     },
 })

@@ -9,7 +9,7 @@ import re
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING, BinaryIO
+from typing import TYPE_CHECKING, IO
 
 from logicytics.artifacts import sha256_file
 from logicytics.contracts import Artifact
@@ -189,7 +189,7 @@ def _stream_archive_member(archive: zipfile.ZipFile, source: Path, archive_name:
             writer.write(block)
 
 
-def _sha256_stream(stream: BinaryIO) -> str:
+def _sha256_stream(stream: IO[bytes]) -> str:
     """Hash an open binary stream without loading the evidence into memory."""
     digest = hashlib.sha256()
     for block in iter(lambda: stream.read(_STREAM_BLOCK_BYTES), b""):
@@ -269,6 +269,7 @@ def _package_mod_artifacts(
                     digest = _sha256_stream(stream)
                 if member.file_size != artifact.size_bytes or digest != artifact.sha256:
                     raise ValueError(f"MODS artifact verification failed: {artifact.relative_path}")
+
         digest = sha256_file(temporary_package)
         temporary_hash.write_text(f"{digest}  {package_path.name}\n", encoding="ascii")
         package_backup = package_path.with_suffix(".zip.backup")

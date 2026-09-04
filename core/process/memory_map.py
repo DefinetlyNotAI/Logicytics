@@ -51,15 +51,48 @@ class MemoryMapCollector(CoreCollector):
     def validate(self, context: CollectorContext) -> ValidationResult:
         """Validate cancellation state and bounded region settings."""
         if context.is_cancelled:
-            return ValidationResult(False, reasons=("run cancellation was requested",))
+            return ValidationResult(
+                False,
+                reasons=("run cancellation was requested",),
+            )
+
+        def setting_int(name: str, default: int) -> int:
+            value = context.settings.get(name, default)
+
+            if isinstance(value, bool):
+                raise ValueError(f"{name} must be an integer")
+
+            if isinstance(value, (int, str, bytes, bytearray)):
+                return int(value)
+
+            raise ValueError(f"{name} must be an integer")
+
         try:
-            maximum = int(context.settings.get("max_regions", 5_000))
-            output_limit = int(context.settings.get("output_limit_bytes", 64 * 1024 * 1024))
-            safety_margin = int(context.settings.get("disk_safety_margin_bytes", 100 * 1024 * 1024))
+            maximum = setting_int("max_regions", 5_000)
+            output_limit = setting_int(
+                "output_limit_bytes",
+                64 * 1024 * 1024,
+            )
+            safety_margin = setting_int(
+                "disk_safety_margin_bytes",
+                100 * 1024 * 1024,
+            )
         except (TypeError, ValueError):
-            return ValidationResult(False, reasons=("memory-map limits must be integers",))
-        if not 1 <= maximum <= 100_000 or not 1_024 <= output_limit <= 64 * 1024 * 1024 or safety_margin < 0:
-            return ValidationResult(False, reasons=("invalid memory-map region, output, or safety limits",))
+            return ValidationResult(
+                False,
+                reasons=("memory-map limits must be integers",),
+            )
+
+        if (
+                not 1 <= maximum <= 100_000
+                or not 1_024 <= output_limit <= 64 * 1024 * 1024
+                or safety_margin < 0
+        ):
+            return ValidationResult(
+                False,
+                reasons=("invalid memory-map region, output, or safety limits",),
+            )
+
         return ValidationResult(True)
 
     def collect(self, context: CollectorContext) -> CollectorResult:

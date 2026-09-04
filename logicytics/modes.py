@@ -2,13 +2,37 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from enum import Enum
 from types import MappingProxyType
-from typing import Iterable, Mapping
+from typing import Iterable, TypedDict, Mapping
 
 from logicytics.contracts import CollectorKind
 from logicytics.discovery import CollectorCandidate
+
+
+class ModeMatrixCollector(TypedDict):
+    id: str
+    kind: str
+    valid: bool
+    modes: list[str]
+    manual_only: bool
+    execution_type: str
+    validation_errors: list[str]
+
+
+class ModeMatrixMode(TypedDict):
+    name: str
+    description: str
+    strategy: str
+    legacy_aliases: list[str]
+    collector_ids: list[str]
+
+
+class ModeMatrix(TypedDict):
+    schema_version: int
+    modes: list[ModeMatrixMode]
+    collectors: list[ModeMatrixCollector]
 
 
 class ExecutionStrategy(str, Enum):
@@ -123,7 +147,9 @@ def _candidate_modes(candidate: CollectorCandidate) -> tuple[str, ...]:
     return tuple(selected)
 
 
-def mode_matrix(candidates: Iterable[CollectorCandidate] = ()) -> dict[str, object]:
+def mode_matrix(
+        candidates: Iterable[CollectorCandidate] = (),
+) -> ModeMatrix:
     """Return the versioned mode definitions and complete collector inclusion matrix."""
     aliases_by_mode = {
         name: sorted(
@@ -133,41 +159,61 @@ def mode_matrix(candidates: Iterable[CollectorCandidate] = ()) -> dict[str, obje
         )
         for name in EXECUTION_MODES
     }
+
     ordered_candidates = sorted(
         candidates,
         key=lambda candidate: (
-            candidate.metadata.id if candidate.metadata is not None else candidate.selection_id,
+            candidate.metadata.id
+            if candidate.metadata is not None
+            else candidate.selection_id,
             str(candidate.path),
         ),
     )
-    collector_rows = []
-    memberships: dict[str, list[str]] = {name: [] for name in EXECUTION_MODES}
+
+    collector_rows: list[ModeMatrixCollector] = []
+    memberships: dict[str, list[str]] = {
+        name: []
+        for name in EXECUTION_MODES
+    }
+
     for candidate in ordered_candidates:
-        collector_id = candidate.metadata.id if candidate.metadata is not None else candidate.selection_id
+        collector_id = (
+            candidate.metadata.id
+            if candidate.metadata is not None
+            else candidate.selection_id
+        )
         assigned_modes = _candidate_modes(candidate)
+
         for mode_name in assigned_modes:
             memberships[mode_name].append(collector_id)
+
         errors = [*candidate.static_errors]
         if candidate.runtime_error:
             errors.append(candidate.runtime_error)
-        collector_rows.append({
-            "id": collector_id,
-            "kind": candidate.kind.value,
-            "valid": candidate.valid,
-            "modes": list(assigned_modes),
-            "manual_only": candidate.valid and not assigned_modes,
-            "execution_type": candidate.execution_type,
-            "validation_errors": errors,
-        })
-    modes = [
+
+        collector_rows.append(
+            {
+                "id": collector_id,
+                "kind": candidate.kind.value,
+                "valid": candidate.valid,
+                "modes": list(assigned_modes),
+                "manual_only": candidate.valid and not assigned_modes,
+                "execution_type": candidate.execution_type,
+                "validation_errors": errors,
+            }
+        )
+
+    modes: list[ModeMatrixMode] = [
         {
-            **asdict(mode),
+            "name": mode.name,
+            "description": mode.description,
             "strategy": mode.strategy.value,
             "legacy_aliases": aliases_by_mode[mode.name],
             "collector_ids": memberships[mode.name],
         }
         for mode in EXECUTION_MODES.values()
     ]
+
     return {
         "schema_version": 1,
         "modes": modes,
@@ -186,18 +232,35 @@ def render_mode_matrix_markdown(matrix: Mapping[str, object]) -> str:
         "| Collector | Kind | Valid | Included modes | Selection |",
         "| --- | --- | --- | --- | --- |",
     ]
-    for item in matrix.get("collectors", []):
+
+    collectors = matrix.get("collectors", [])
+    if not isinstance(collectors, list):
+        collectors = []
+
+    for item in collectors:
+        if not isinstance(item, Mapping):
+            continue
+
         collector = dict(item)
-        modes = ", ".join(f"`{name}`" for name in collector["modes"]) or "none"
-        if not collector["valid"]:
+
+        raw_modes = collector.get("modes", [])
+        modes_iterable = raw_modes if isinstance(raw_modes, (list, tuple)) else []
+        modes = ", ".join(f"`{name}`" for name in modes_iterable) or "none"
+
+        valid = collector.get("valid") is True
+        manual_only = collector.get("manual_only") is True
+
+        if not valid:
             selection = "quarantined"
-        elif collector["manual_only"]:
+        elif manual_only:
             selection = "explicit include only"
         else:
             selection = "mode selected"
+
         rows.append(
-            f"| `{collector['id']}` | `{collector['kind']}` | "
-            f"{'yes' if collector['valid'] else 'no'} | {modes} | {selection} |"
+            f"| `{collector.get('id', '')}` | `{collector.get('kind', '')}` | "
+            f"{'yes' if valid else 'no'} | {modes} | {selection} |"
         )
+
     rows.append("")
     return "\n".join(rows)
