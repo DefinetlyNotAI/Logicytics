@@ -24,7 +24,7 @@ def _is_access_denied(detail: str) -> bool:
     return "permission denied" in normalized or ("access" in normalized and "denied" in normalized)
 
 
-def _render_bios_table(bios: dict[str, object]) -> str:
+def render_bios_table(bios: dict[str, object]) -> str:
     """Render trusted structured BIOS fields into a portable evidence table."""
     rows = "\n".join(
         f"      <tr><th>{html.escape(label)}</th><td>{html.escape(str(bios.get(key) or 'unavailable'))}</td></tr>"
@@ -117,7 +117,7 @@ class BiosInfoCollector(CoreCollector):
         if not isinstance(bios, dict):
             return CollectorResult(CollectorStatus.FAILED, "BIOS CIM query returned an unexpected result")
         output = context.workspace / "bios_info.html"
-        output.write_text(_render_bios_table(bios), encoding="utf-8")
+        output.write_text(render_bios_table(bios), encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/html")
         context.report_progress("bios_info_finished", bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("BIOS information collected", (artifact,))

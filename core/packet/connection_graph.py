@@ -14,7 +14,7 @@ def _is_access_denied(detail: str) -> bool:
     return "permission denied" in normalized or ("access" in normalized and "denied" in normalized)
 
 
-def _render_connection_graph(command_output: str) -> str:
+def render_connection_graph(command_output: str) -> str:
     """Normalize netstat rows into deterministic, sorted Graphviz DOT source."""
     edges: set[tuple[str, str, str]] = set()
     for line in command_output.splitlines():
@@ -74,7 +74,7 @@ class ConnectionGraphCollector(CoreCollector):
                 return CollectorResult(CollectorStatus.SKIPPED,
                                        "connection graph access was denied for the current account", errors=(detail,))
             return CollectorResult(CollectorStatus.FAILED, "connection graph query failed", errors=(detail,))
-        rendered = _render_connection_graph(completed.stdout)
+        rendered = render_connection_graph(completed.stdout)
         output = context.workspace / "connection_graph.dot"
         output.write_text(rendered, encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/vnd.graphviz")

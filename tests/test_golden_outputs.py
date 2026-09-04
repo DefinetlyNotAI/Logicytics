@@ -9,10 +9,10 @@ from pathlib import Path
 from subprocess import CompletedProcess
 from unittest.mock import patch
 
-from core.packet.connection_graph import _render_connection_graph
+from core.packet.connection_graph import render_connection_graph
 from core.process import running_processes
 from core.system import system_details
-from core.system.bios_info import _render_bios_table
+from core.system.bios_info import render_bios_table
 from logicytics.contracts import (
     Artifact, ArtifactWriter, CollectorContext, EvidenceKind, EventLogger, RunStatus,
 )
@@ -85,7 +85,7 @@ class GoldenOutputTests(unittest.TestCase):
         self.assertEqual(expected.encode(), writer.contents)
 
     def test_html_output_matches_golden_file(self) -> None:
-        rendered = _render_bios_table({
+        rendered = render_bios_table({
             "Manufacturer": "Example & Sons",
             "Name": "Golden <BIOS>",
             "SMBIOSBIOSVersion": "1.2.3",
@@ -95,7 +95,7 @@ class GoldenOutputTests(unittest.TestCase):
         self.assertEqual((_GOLDEN / "bios_info.html").read_text(encoding="utf-8"), rendered)
 
     def test_graph_output_matches_golden_file(self) -> None:
-        rendered = _render_connection_graph(
+        rendered = render_connection_graph(
             "UDP [::1]:5353 [::1]:5354 999\n"
             "TCP 10.0.0.5:50000 1.1.1.1:443 ESTABLISHED 4242\n"
             "TCP 10.0.0.5:50000 1.1.1.1:443 ESTABLISHED 4242\n"

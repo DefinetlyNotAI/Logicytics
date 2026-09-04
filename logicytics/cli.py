@@ -47,7 +47,7 @@ def _project_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
+def request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
     legacy_flags = {
         flag: getattr(arguments, flag, False)
         for flag in LEGACY_MODE_ALIASES
@@ -154,7 +154,7 @@ def _request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
     )
 
 
-def _parser() -> argparse.ArgumentParser:
+def parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Logicytics v4 run-oriented evidence framework")
     parser.add_argument(
         "--config",
@@ -337,7 +337,7 @@ def _write_json(path: Path, payload: object) -> Path:
     return path
 
 
-def _launch_action_window(root: Path, action: str) -> int:
+def launch_action_window(root: Path, action: str) -> int:
     """Launch one allowlisted maintenance action in a separate visible Windows console."""
     if sys.platform != "win32":
         raise OSError("new command windows are supported only on Windows")
@@ -420,7 +420,7 @@ def _run_developer_action(
 
 def main(argv: list[str] | None = None) -> int:
     """Run the selected preflight, planning, or supervised execution command."""
-    parser = _parser()
+    parser = parser()
     arguments = parser.parse_args(argv)
     standalone_actions = sum(bool(value) for value in (arguments.usage, arguments.match, arguments.modes))
     if standalone_actions > 1:
@@ -531,12 +531,12 @@ def main(argv: list[str] | None = None) -> int:
             update_succeeded = not arguments.apply or payload.get("returncode") == 0
             if arguments.new_window and update_succeeded:
                 payload["launched_action"] = arguments.launch_action
-                payload["launched_process_id"] = _launch_action_window(root, arguments.launch_action)
+                payload["launched_process_id"] = launch_action_window(root, arguments.launch_action)
             print(json.dumps(payload, indent=2, sort_keys=True))
             return 0 if update_succeeded else 1
         if arguments.command == "dev":
             return _run_developer_action(root, configuration, arguments)
-        plan = build_plan(report, _request(arguments, configuration.runtime.default_max_workers))
+        plan = build_plan(report, request(arguments, configuration.runtime.default_max_workers))
         if arguments.command == "plan":
             print("\n".join(candidate.metadata.id for candidate in plan.collectors if candidate.metadata))
             return 0

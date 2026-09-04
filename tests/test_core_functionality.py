@@ -29,7 +29,7 @@ from logicytics import (
 )
 from logicytics import packaging
 from logicytics.artifacts import WorkspaceArtifactWriter
-from logicytics.cli import _launch_action_window, _parser, _request, main
+from logicytics.cli import launch_action_window, parser, request, main
 from logicytics.command_runner import parse_level_messages, run_command
 from logicytics.configuration import (
     LoggingSettings,
@@ -676,9 +676,9 @@ class CoreFunctionalityTests(unittest.TestCase):
             ))
             self.assertEqual(["mod.batch_mod", "mod.python_mod"], [item.metadata.id for item in modded.collectors])
             self.assertEqual(["mod.batch_mod"], [item.metadata.id for item in nopy.collectors])
-            parser = _parser()
-            self.assertTrue(_request(parser.parse_args(["run", "--modded"]), 2).enable_mods)
-            nopy_request = _request(parser.parse_args(["run", "--nopy"]), 2)
+            parser = parser()
+            self.assertTrue(request(parser.parse_args(["run", "--modded"]), 2).enable_mods)
+            nopy_request = request(parser.parse_args(["run", "--nopy"]), 2)
             self.assertTrue(nopy_request.enable_mods)
             self.assertTrue(nopy_request.non_python_only)
 
@@ -827,17 +827,17 @@ class CoreFunctionalityTests(unittest.TestCase):
 
     def test_post_run_actions_are_typed_exclusive_and_require_verified_packaging(self) -> None:
         """Power actions remain explicit and cannot run before durable package publication."""
-        arguments = _parser().parse_args([
+        arguments = parser().parse_args([
             "run", "--shutdown", "--performance-check", "--acknowledge-authorization",
         ])
-        request = _request(arguments, default_workers=4)
+        request = request(arguments, default_workers=4)
         self.assertEqual(PostRunAction.SHUTDOWN, request.post_run_action)
         self.assertEqual(OutputPolicy.PACKAGE, request.output_policy)
         self.assertEqual(1, request.max_workers)
         with self.assertRaises(SystemExit):
-            _parser().parse_args(["run", "--reboot", "--shutdown"])
+            parser().parse_args(["run", "--reboot", "--shutdown"])
         with self.assertRaisesRegex(ValueError, "require packaged output"):
-            _request(_parser().parse_args(["run", "--reboot", "--no-package"]), default_workers=1)
+            request(parser().parse_args(["run", "--reboot", "--no-package"]), default_workers=1)
 
         with tempfile.TemporaryDirectory() as temporary:
             logger = FileEventLogger(Path(temporary) / "events.jsonl", run_id="run-" + "a" * 32)
@@ -1415,7 +1415,7 @@ class CoreFunctionalityTests(unittest.TestCase):
                 build_plan(report, RunRequest(profile="invented"))
             with patch("sys.stderr", new_callable=io.StringIO) as errors:
                 with self.assertRaises(SystemExit):
-                    _parser().parse_args(["plan", "--profile", "invented"])
+                    parser().parse_args(["plan", "--profile", "invented"])
             self.assertIn("invalid choice", errors.getvalue())
 
     def test_offline_profile_rejects_network_collectors_even_with_explicit_approval(self) -> None:
@@ -2061,9 +2061,9 @@ max_retry_time = 30
 
     def test_run_parser_accepts_performance_check(self) -> None:
         """The run command must expose the performance mode used by the request builder."""
-        arguments = _parser().parse_args(["run", "--performance-check"])
+        arguments = parser().parse_args(["run", "--performance-check"])
         self.assertTrue(arguments.performance_check)
-        request = _request(arguments, default_workers=4)
+        request = request(arguments, default_workers=4)
         self.assertTrue(request.performance_check)
         self.assertEqual(1, request.max_workers)
 
@@ -2129,7 +2129,7 @@ max_retry_time = 30
 
     def test_typed_mode_registry_maps_every_user_mode_and_legacy_alias(self) -> None:
         """One immutable matrix owns profile, scheduling, MODS, and performance behavior."""
-        parser = _parser()
+        parser = parser()
         expected = {
             "standard": ("standard", 1, False, False, False),
             "balanced": ("standard", 4, False, False, False),
@@ -2144,7 +2144,7 @@ max_retry_time = 30
         self.assertEqual(set(expected), {item["name"] for item in mode_matrix()["modes"]})
         for name, contract in expected.items():
             with self.subTest(mode=name):
-                request = _request(parser.parse_args(["run", "--mode", name]), 4)
+                request = request(parser.parse_args(["run", "--mode", name]), 4)
                 self.assertEqual(
                     contract,
                     (
@@ -2167,12 +2167,12 @@ max_retry_time = 30
         }
         for field, mode_name in LEGACY_MODE_ALIASES.items():
             with self.subTest(alias=alias_flags[field]):
-                legacy = _request(parser.parse_args(["run", alias_flags[field]]), 4)
-                named = _request(parser.parse_args(["run", "--mode", mode_name]), 4)
+                legacy = request(parser.parse_args(["run", alias_flags[field]]), 4)
+                named = request(parser.parse_args(["run", "--mode", mode_name]), 4)
                 self.assertEqual(named, legacy)
 
         with self.assertRaisesRegex(ValueError, "--profile"):
-            _request(parser.parse_args(["run", "--mode", "quick", "--profile", "deep"]), 4)
+            request(parser.parse_args(["run", "--mode", "quick", "--profile", "deep"]), 4)
         with patch("sys.stderr"), self.assertRaises(SystemExit):
             parser.parse_args(["run", "--mode", "quick", "--minimal"])
 
@@ -2202,7 +2202,7 @@ max_retry_time = 30
         self.assertIn("run", rendered)
         with patch("sys.stderr", new_callable=io.StringIO) as errors:
             with self.assertRaises(SystemExit):
-                _parser().parse_args(["run", "--default", "--performance-check"])
+                parser().parse_args(["run", "--default", "--performance-check"])
         self.assertIn("not allowed with argument", errors.getvalue())
 
     def test_update_can_explicitly_launch_an_allowlisted_action_in_a_new_window(self) -> None:
@@ -2214,7 +2214,7 @@ max_retry_time = 30
             output = io.StringIO()
             with patch("logicytics.cli._project_root", return_value=root), patch(
                     "logicytics.cli.process_adapter.run", return_value=git
-            ), patch("logicytics.cli._launch_action_window", return_value=321) as launch, patch(
+            ), patch("logicytics.cli.launch_action_window", return_value=321) as launch, patch(
                 "sys.stdout", output
             ):
                 self.assertEqual(
@@ -2239,7 +2239,7 @@ max_retry_time = 30
         with patch("logicytics.cli.sys.platform", "win32"), patch(
                 "logicytics.cli.process_adapter.popen", return_value=process
         ) as popen:
-            self.assertEqual(42, _launch_action_window(root, "preflight"))
+            self.assertEqual(42, launch_action_window(root, "preflight"))
         popen.assert_called_once_with(
             [sys.executable, "-m", "logicytics", "preflight"],
             cwd=root,
@@ -2250,14 +2250,14 @@ max_retry_time = 30
         with patch("logicytics.cli.sys.platform", "linux"), self.assertRaisesRegex(
                 OSError, "only on Windows"
         ):
-            _launch_action_window(root, "debug")
+            launch_action_window(root, "debug")
 
     def test_run_parser_exposes_explicit_sequential_and_bounded_parallel_modes(self) -> None:
         """Execution policy is selectable directly instead of relying on compatibility modes."""
-        parser = _parser()
-        sequential = _request(parser.parse_args(["run", "--sequential"]), default_workers=4)
-        parallel = _request(parser.parse_args(["run", "--parallel"]), default_workers=4)
-        bounded_parallel = _request(
+        parser = parser()
+        sequential = request(parser.parse_args(["run", "--sequential"]), default_workers=4)
+        parallel = request(parser.parse_args(["run", "--parallel"]), default_workers=4)
+        bounded_parallel = request(
             parser.parse_args(["run", "--parallel", "--workers", "3"]),
             default_workers=4,
         )
@@ -2270,7 +2270,7 @@ max_retry_time = 30
 
     def test_run_parser_rejects_conflicting_explicit_execution_modes(self) -> None:
         """Contradictory worker policies fail before creating a collection plan."""
-        parser = _parser()
+        parser = parser()
         conflicts = (
             (["run", "--sequential", "--workers", "2"], 4, "sequential execution"),
             (["run", "--sequential", "--threaded"], 4, "legacy --threaded"),
@@ -2282,7 +2282,7 @@ max_retry_time = 30
         for arguments, default_workers, error in conflicts:
             with self.subTest(arguments=arguments, default_workers=default_workers):
                 with self.assertRaisesRegex(ValueError, error):
-                    _request(parser.parse_args(arguments), default_workers=default_workers)
+                    request(parser.parse_args(arguments), default_workers=default_workers)
         with patch("sys.stderr"), self.assertRaises(SystemExit):
             parser.parse_args(["run", "--sequential", "--parallel"])
 
@@ -2299,12 +2299,12 @@ max_retry_time = 30
                 "resolved_plan": [collector_id],
             }
             manifest_path.write_text(json.dumps(valid_manifest), encoding="utf-8")
-            parser = _parser()
+            parser = parser()
 
             with self.assertRaisesRegex(ValueError, "explicit --include"):
-                _request(parser.parse_args(["run", "--rerun-from", str(manifest_path)]), 2)
+                request(parser.parse_args(["run", "--rerun-from", str(manifest_path)]), 2)
             with self.assertRaisesRegex(ValueError, "not present in the original"):
-                _request(
+                request(
                     parser.parse_args(
                         ["run", "--rerun-from", str(manifest_path), "--include", "core.system.other"]
                     ),
@@ -2312,7 +2312,7 @@ max_retry_time = 30
                 )
             manifest_path.write_text(json.dumps({**valid_manifest, "status": "running"}), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "finalized"):
-                _request(
+                request(
                     parser.parse_args(["run", "--rerun-from", str(manifest_path), "--include", collector_id]),
                     2,
                 )
@@ -2321,7 +2321,7 @@ max_retry_time = 30
                     invalid_manifest = {**valid_manifest, "manifest_schema_version": schema_version}
                     manifest_path.write_text(json.dumps(invalid_manifest), encoding="utf-8")
                     with self.assertRaisesRegex(ValueError, "unsupported schema_version"):
-                        _request(
+                        request(
                             parser.parse_args(
                                 ["run", "--rerun-from", str(manifest_path), "--include", collector_id]
                             ),
@@ -2329,7 +2329,7 @@ max_retry_time = 30
                         )
             manifest_path.write_text("not json", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "cannot be loaded"):
-                _request(
+                request(
                     parser.parse_args(["run", "--rerun-from", str(manifest_path), "--include", collector_id]),
                     2,
                 )
@@ -3006,7 +3006,7 @@ max_retry_time = 30
             original_package_path = Path(original.manifest.package["path"])
             original_package = original_package_path.read_bytes()
             selected_id = "core.system.z_selected"
-            arguments = _parser().parse_args(
+            arguments = parser().parse_args(
                 [
                     "run",
                     "--rerun-from",
@@ -3017,7 +3017,7 @@ max_retry_time = 30
                     "--sequential",
                 ]
             )
-            request = _request(arguments, default_workers=4)
+            request = request(arguments, default_workers=4)
             self.assertEqual(original.manifest.run_id, request.rerun_from)
             rerun = RunSupervisor(root, configuration).run(build_plan(report, request))
 
@@ -3575,10 +3575,10 @@ max_retry_time = 30
                         _delayed_collector_source(filename, 0.3),
                         encoding="utf-8",
                     )
-                arguments = _parser().parse_args(
+                arguments = parser().parse_args(
                     ["run", execution_mode, "--acknowledge-authorization"]
                 )
-                request = _request(arguments, default_workers=2)
+                request = request(arguments, default_workers=2)
                 report = preflight(root)
                 self.assertEqual((), report.invalid)
                 outcome = RunSupervisor(root, default_config(root)).run(build_plan(report, request))
