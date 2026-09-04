@@ -70,11 +70,17 @@ class BrowserDataBackupCollector(CoreCollector):
         context.report_progress("browser_data_backup_started")
         for browser, root in chromium_roots:
             try:
-                profile_roots = [root] if browser.startswith("opera") else [path for path in
-                                                                            filesystem_adapter.children(root) if
-                                                                            path.is_dir() and (
-                                                                                    path.name == "Default" or path.name.startswith(
-                                                                                "Profile "))]
+                if browser.startswith("opera"):
+                    profile_roots = [root]
+                else:
+                    profile_roots = [
+                        path
+                        for path in filesystem_adapter.children(root)
+                        if path.is_dir() and (
+                                path.name == "Default"
+                                or path.name.startswith("Profile ")
+                        )
+                    ]
             except OSError:
                 continue
             for profile in profile_roots:

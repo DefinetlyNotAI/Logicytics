@@ -386,13 +386,17 @@ def developer_checks(project_root: Path, settings: MaintenanceSettings) -> Devel
             continue
         if ast.get_docstring(tree) is None:
             missing_docstrings.append(relative.as_posix())
+
         public_features = [
             node.name for node in tree.body
-            if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
-               and not node.name.startswith("_")
+            if isinstance(
+                node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+            ) and not node.name.startswith("_")
         ]
+
         if len(public_features) > 12:
             crowded_modules.append(relative.as_posix())
+
     return {
         "naming_violations": sorted(naming),
         "misplaced_python": sorted(misplaced_python),

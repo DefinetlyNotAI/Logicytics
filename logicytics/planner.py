@@ -103,10 +103,12 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
     invalid_selected = [
         candidate
         for candidate in report.invalid
-        if candidate.kind is CollectorKind.CORE
-           or candidate.selection_id in request.include
-           or (request.enable_plugins and candidate.kind is CollectorKind.PLUGIN)
-           or (request.enable_mods and candidate.kind is CollectorKind.MOD)
+        if (
+                candidate.kind is CollectorKind.CORE or
+                candidate.selection_id in request.include or
+                (request.enable_plugins and candidate.kind is CollectorKind.PLUGIN) or
+                (request.enable_mods and candidate.kind is CollectorKind.MOD)
+        )
     ]
     if invalid_selected:
         details = "; ".join(

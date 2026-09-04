@@ -192,8 +192,10 @@ def get_event_logger(path: Path, *, run_id: str, collector_id: str | None = None
         return logger
 
 
-def timed(logger: EventLogger, *, level: str = "info") -> Callable[
-    [Callable[Parameters, Result]], Callable[Parameters, Result]]:
+def timed(
+        logger: EventLogger, *,
+        level: str = "info"
+) -> Callable[[Callable[Parameters, Result]], Callable[Parameters, Result]]:
     """Decorate a function so structured start, finish, error, and duration events are written."""
 
     def decorate(function: Callable[Parameters, Result]) -> Callable[Parameters, Result]:
@@ -222,8 +224,12 @@ def raise_logged(logger: EventLogger, exception_type: type[Exception], message: 
     raise exception_type(message)
 
 
-def deprecated(logger: EventLogger, *, removal_version: str, reason: str, include_stack: bool = False) -> Callable[
-    [Callable[Parameters, Result]], Callable[Parameters, Result]]:
+def deprecated(
+        logger: EventLogger, *,
+        removal_version: str,
+        reason: str,
+        include_stack: bool = False
+) -> Callable[[Callable[Parameters, Result]], Callable[Parameters, Result]]:
     """Decorate a function so each invocation emits a structured deprecation warning."""
 
     def decorate(function: Callable[Parameters, Result]) -> Callable[Parameters, Result]:

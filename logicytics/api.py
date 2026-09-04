@@ -203,15 +203,23 @@ def _collector_snapshot(record: dict[str, Any], collector_id: str, status: str) 
         required = {"collector_id", "operation", "platform_error", "remediation", "retry_safe"}
         if not isinstance(raw_failure, dict) or set(raw_failure) != required:
             raise PlanError("run manifest collector failure must contain the complete actionable failure contract")
-        if (
-                raw_failure.get("collector_id") != collector_id
-                or not all(
+        actionable_fields = ("operation", "platform_error", "remediation")
+
+        has_valid_collector_id = raw_failure.get("collector_id") == collector_id
+        has_valid_actionable_details = all(
             isinstance(raw_failure.get(field), str) and raw_failure[field].strip()
-            for field in ("operation", "platform_error", "remediation")
+            for field in actionable_fields
         )
-                or not isinstance(raw_failure.get("retry_safe"), bool)
+        has_valid_retry_flag = isinstance(raw_failure.get("retry_safe"), bool)
+
+        if not (
+                has_valid_collector_id
+                and has_valid_actionable_details
+                and has_valid_retry_flag
         ):
-            raise PlanError("run manifest collector failure contains invalid actionable details")
+            raise PlanError(
+                "run manifest collector failure contains invalid actionable details"
+            )
         failure = CollectorFailureSnapshot(
             collector_id=collector_id,
             operation=raw_failure["operation"],

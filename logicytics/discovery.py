@@ -444,20 +444,29 @@ def _validate_class_shape(class_node: ast.ClassDef, candidate: CollectorCandidat
     allowed = {
         "metadata", "validate", "prepare", "collect", "finalize", "cleanup", "estimate", "dependencies",
     }
+
     metadata_calls: list[ast.Call] = []
-    if "metadata" in methods:
-        metadata_calls = [
-            node for node in ast.walk(methods["metadata"])
-            if isinstance(node, ast.Call)
-               and (
-                       isinstance(node.func, ast.Name) and node.func.id == "CollectorMetadata"
-                       or isinstance(node.func, ast.Attribute) and node.func.attr == "CollectorMetadata"
-               )
-        ]
-        if len(metadata_calls) != 1:
-            candidate.static_errors.append(
-                "metadata must construct one CollectorMetadata object directly"
-            )
+
+    for node in ast.walk(methods["metadata"]):
+        if not isinstance(node, ast.Call):
+            continue
+
+        is_metadata_constructor = (
+                                          isinstance(node.func, ast.Name)
+                                          and node.func.id == "CollectorMetadata"
+                                  ) or (
+                                          isinstance(node.func, ast.Attribute)
+                                          and node.func.attr == "CollectorMetadata"
+                                  )
+
+        if is_metadata_constructor:
+            metadata_calls.append(node)
+
+    if len(metadata_calls) != 1:
+        candidate.static_errors.append(
+            "metadata must construct one CollectorMetadata object directly"
+        )
+
     if candidate.kind is CollectorKind.PLUGIN and "metadata" in methods:
         required_plugin_fields = {
             "capabilities", "privilege_level", "sensitive_data_categories", "network_access",

@@ -852,22 +852,38 @@ class RunSupervisor:
                     )
                     write_manifest(manifest_path, manifest)
                     continue
+
                 if any(status != "succeeded" for status in dependency_states.values()):
                     break
+
                 if active and not candidate.metadata.parallel_safe:
                     break
-                if active and (
-                        candidate.metadata.resource_class is ResourceClass.INTERACTIVE
-                        or any(worker.resource_class is ResourceClass.INTERACTIVE for worker in active.values())
-                        or (
-                                candidate.metadata.resource_class is not ResourceClass.GENERAL
-                                and any(
-                            worker.resource_class is candidate.metadata.resource_class
-                            for worker in active.values()
-                        )
-                        )
-                ):
-                    break
+
+                if active:
+                    candidate_class = candidate.metadata.resource_class
+
+                    has_interactive_worker = any(
+                        worker.resource_class is ResourceClass.INTERACTIVE
+                        for worker in active.values()
+                    )
+
+                    has_same_resource_class = any(
+                        worker.resource_class is candidate_class
+                        for worker in active.values()
+                    )
+
+                    conflicts_with_active_worker = (
+                            candidate_class is ResourceClass.INTERACTIVE
+                            or has_interactive_worker
+                            or (
+                                    candidate_class is not ResourceClass.GENERAL
+                                    and has_same_resource_class
+                            )
+                    )
+
+                    if conflicts_with_active_worker:
+                        break
+
                 reserved_output_bytes = sum(worker.reserved_output_bytes for worker in active.values())
                 remaining_output_bytes = (
                         self.configuration.runtime.maximum_run_output_bytes

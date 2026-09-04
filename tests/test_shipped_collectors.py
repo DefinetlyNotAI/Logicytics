@@ -269,19 +269,31 @@ class ShippedCollectorTests(unittest.TestCase):
             if candidate.kind.value != "core" or candidate.metadata is None:
                 continue
             tree = ast.parse(candidate.path.read_text(encoding="utf-8"), filename=str(candidate.path))
-            register_calls = [
-                node for node in ast.walk(tree)
-                if isinstance(node, ast.Call)
-                   and isinstance(node.func, ast.Attribute)
-                   and node.func.attr == "register_file"
-            ]
-            declared_at_calls = {
-                keyword.value.value
-                for node in register_calls for keyword in node.keywords
-                if keyword.arg == "media_type"
-                   and isinstance(keyword.value, ast.Constant)
-                   and isinstance(keyword.value.value, str)
-            }
+
+            register_calls: list[ast.Call] = []
+
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.Call):
+                    continue
+
+                if (
+                        isinstance(node.func, ast.Attribute)
+                        and node.func.attr == "register_file"
+                ):
+                    register_calls.append(node)
+
+            declared_at_calls: set[str] = set()
+
+            for call in register_calls:
+                for keyword in call.keywords:
+                    if keyword.arg != "media_type":
+                        continue
+
+                    value = keyword.value
+
+                    if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                        declared_at_calls.add(value.value)
+
             if any(not any(keyword.arg == "media_type" for keyword in node.keywords)
                    for node in register_calls):
                 declared_at_calls.add("application/octet-stream")
@@ -316,11 +328,21 @@ class ShippedCollectorTests(unittest.TestCase):
             if candidate.kind.value != "core" or candidate.metadata is None:
                 continue
             tree = ast.parse(candidate.path.read_text(encoding="utf-8"), filename=str(candidate.path))
-            collector_classes = [
-                node for node in tree.body
-                if isinstance(node, ast.ClassDef)
-                   and any(ast.unparse(base).endswith("CoreCollector") for base in node.bases)
-            ]
+
+            collector_classes: list[ast.ClassDef] = []
+
+            for node in tree.body:
+                if not isinstance(node, ast.ClassDef):
+                    continue
+
+                inherits_core_collector = any(
+                    ast.unparse(base).endswith("CoreCollector")
+                    for base in node.bases
+                )
+
+                if inherits_core_collector:
+                    collector_classes.append(node)
+
             with self.subTest(collector=candidate.metadata.id):
                 self.assertEqual([candidate.expected_class], [node.name for node in collector_classes])
                 contract = core_output_contract(candidate.metadata)
