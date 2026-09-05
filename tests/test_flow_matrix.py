@@ -13,11 +13,12 @@ class FlowMatrixTests(unittest.TestCase):
         test_names: set[str] = set()
         for path in (project_root / "tests").glob("test_*.py"):
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-            test_names.update(
-                node.name for node in ast.walk(tree)
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-                and node.name.startswith("test_")
-            )
+            for node in ast.walk(tree):
+                if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    continue
+
+                if node.name.startswith("test_"):
+                    test_names.add(node.name)
         required = {
             "default": "test_typed_mode_registry_maps_every_user_mode_and_legacy_alias",
             "threaded": "test_explicit_execution_modes_control_isolated_worker_overlap",

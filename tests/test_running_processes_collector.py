@@ -62,7 +62,7 @@ class RunningProcessesCollectorTests(unittest.TestCase):
             )
             with patch.object(
                     module.subprocess,
-                    "run",
+                    module.subprocess.run.__name__,
                     return_value=CompletedProcess([], 1, "", "ERROR: Access denied"),
             ):
                 result = collector_type().collect(context)

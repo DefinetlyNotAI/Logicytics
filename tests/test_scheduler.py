@@ -37,20 +37,37 @@ class SchedulerTests(unittest.TestCase):
                 delayed_collector_source("z_fast", 0.0),
                 encoding="utf-8",
             )
+
             report = preflight(root)
             self.assertEqual((), report.invalid)
+
             plan = build_plan(
                 report,
                 RunRequest(max_workers=2, acknowledge_authorization=True),
             )
-            planned_ids = [candidate.metadata.id for candidate in plan.collectors]
-            outcome = RunSupervisor(root, default_config(root)).run(plan)
-            records = {record.id: record for record in outcome.manifest.collectors}
 
-            self.assertEqual(planned_ids, [record.id for record in outcome.manifest.collectors])
+            planned_ids: list[str] = []
+            for candidate in plan.collectors:
+                assert candidate.metadata is not None
+                planned_ids.append(candidate.metadata.id)
+
+            outcome = RunSupervisor(root, default_config(root)).run(plan)
+            records = {
+                record.id: record
+                for record in outcome.manifest.collectors
+            }
+
+            self.assertEqual(
+                planned_ids,
+                [record.id for record in outcome.manifest.collectors],
+            )
+
             fast_finished = records["core.system.z_fast"].finished_at
             slow_finished = records["core.system.a_slow"].finished_at
-            assert fast_finished is not None and slow_finished is not None
+
+            assert fast_finished is not None
+            assert slow_finished is not None
+
             self.assertLess(fast_finished, slow_finished)
 
     def test_explicit_execution_modes_control_isolated_worker_overlap(self) -> None:

@@ -34,12 +34,15 @@ class WmicInventoryCollectorTests(unittest.TestCase):
                 cancellation_file=workspace / ".cancelled",
             )
             response = "Manufacturer=Example Corp\r\nModel=Example Model\r\n"
-            with patch.object(wmic_inventory, "which", return_value="C:/Windows/System32/wbem/WMIC.exe"), \
-                    patch.object(
-                        wmic_inventory.subprocess,
-                        "run",
-                        return_value=subprocess.CompletedProcess((), 0, response, ""),
-                    ) as run:
+            with patch.object(
+                    wmic_inventory,
+                    wmic_inventory.which.__name__,
+                    return_value="C:/Windows/System32/wbem/WMIC.exe",
+            ), patch.object(
+                wmic_inventory.subprocess,
+                wmic_inventory.subprocess.run.__name__,
+                return_value=subprocess.CompletedProcess((), 0, response, ""),
+            ) as run:
                 collector = wmic_inventory.WmicInventoryCollector()
                 self.assertTrue(collector.validate(context).valid)
                 result = collector.collect(context)
@@ -68,7 +71,11 @@ class WmicInventoryCollectorTests(unittest.TestCase):
                 settings={},
                 cancellation_file=root / ".cancelled",
             )
-            with patch.object(wmic_inventory, "which", return_value=None):
+            with patch.object(
+                    wmic_inventory,
+                    wmic_inventory.which.__name__,
+                    return_value=None,
+            ):
                 collector = wmic_inventory.WmicInventoryCollector()
                 validation = collector.validate(context)
                 result = collector.collect(context)

@@ -40,6 +40,9 @@ class ConfigurationDocumentationTests(unittest.TestCase):
     def test_complete_example_loads_through_the_real_parser(self) -> None:
         match = re.search(r"## Complete example.*?```json\n(.*?)\n```", self.guide, re.DOTALL)
         self.assertIsNotNone(match)
+        self.assertIsNotNone(match)
+        assert match is not None
+
         payload = json.loads(match.group(1))
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

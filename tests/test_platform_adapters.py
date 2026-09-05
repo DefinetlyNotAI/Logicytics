@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -11,12 +12,13 @@ from typing import Sequence, BinaryIO
 from unittest.mock import Mock, patch
 
 from core.packet import packet_capture
+from logicytics import environment
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.environment import inspect_environment
 from logicytics.platform_adapters import (
     FilesystemAdapter, NetworkAdapter, ProcessAdapter, RegistryAdapter, WindowsApiAdapter,
-    which, windows_api_adapter,
+    which, windows_api_adapter, registry_adapter,
 )
 
 
@@ -99,10 +101,19 @@ class ProcessAdapterTests(unittest.TestCase):
                 ProcessAdapter().popen(["tool", Path("argument")], cwd=Path("C:/work"), shell=False),
             )
         self.assertEqual(("tool", "argument"), popen.call_args.args[0])
-        with patch("logicytics.platform_adapters.os.name", "nt"), patch.object(
-                windows_api_adapter, "process_working_set", return_value=4096
+        with patch.object(
+                os,
+                os.name.__name__,
+                "nt",
+        ), patch.object(
+            windows_api_adapter,
+            windows_api_adapter.process_working_set.__name__,
+            return_value=4096,
         ) as memory:
-            self.assertEqual(4096, ProcessAdapter().memory_bytes(42))
+            self.assertEqual(
+                4096,
+                ProcessAdapter().memory_bytes(42),
+            )
         memory.assert_called_once_with(42)
 
     def test_packet_capture_streams_rows_to_its_artifact_file(self) -> None:
@@ -133,8 +144,15 @@ class ProcessAdapterTests(unittest.TestCase):
                           "timeout_seconds": 1, "retry_window_seconds": 0},
                 cancellation_file=workspace / ".cancelled",
             )
-            with patch.object(packet_capture.socket, "socket", return_value=capture), \
-                    patch.object(packet_capture.select, "select", return_value=([capture], [], [])):
+            with patch.object(
+                    packet_capture.socket,
+                    packet_capture.socket.socket.__name__,
+                    return_value=capture,
+            ), patch.object(
+                packet_capture.select,
+                packet_capture.select.select.__name__,
+                return_value=([capture], [], []),
+            ):
                 result = packet_capture.PacketCaptureCollector().collect(context)
             rows = (workspace / "packet_capture.csv").read_text(encoding="utf-8").splitlines()
         self.assertIs(CollectorStatus.SUCCEEDED, result.status)
@@ -237,11 +255,27 @@ class ProcessAdapterTests(unittest.TestCase):
         key.__enter__ = Mock(return_value="uac-key")
         key.__exit__ = Mock(return_value=False)
         completed = subprocess.CompletedProcess((), 0, "RemoteSigned\n", "")
-        with patch("logicytics.environment.windows_api_adapter.is_administrator", return_value=True), \
-                patch("logicytics.environment.registry_adapter.OpenKey", return_value=key), \
-                patch("logicytics.environment.registry_adapter.QueryValueEx", return_value=(1, 4)), \
-                patch("logicytics.environment.which", return_value="C:/Windows/PowerShell.exe"), \
-                patch("logicytics.environment.process_adapter.run", return_value=completed) as run:
+        with patch.object(
+                windows_api_adapter,
+                windows_api_adapter.is_administrator.__name__,
+                return_value=True,
+        ), patch.object(
+            registry_adapter,
+            registry_adapter.OpenKey.__name__,
+            return_value=key,
+        ), patch.object(
+            registry_adapter,
+            registry_adapter.QueryValueEx.__name__,
+            return_value=(1, 4),
+        ), patch.object(
+            environment,
+            environment.which.__name__,
+            return_value="C:/Windows/PowerShell.exe",
+        ), patch.object(
+            environment.process_adapter,
+            environment.process_adapter.run.__name__,
+            return_value=completed,
+        ) as run:
             report = inspect_environment()
         self.assertTrue(report.is_administrator)
         self.assertTrue(report.uac_enabled)

@@ -37,36 +37,102 @@ class RuntimeTests(unittest.TestCase):
             core_directory = root / "core" / "system"
             core_directory.mkdir(parents=True)
             (root / "plugins").mkdir()
+
             dependency_id = "core.system.a_dependency"
+
             (core_directory / "a_dependency.py").write_text(
-                delayed_collector_source("a_dependency", 0.0, fail=True),
+                delayed_collector_source(
+                    "a_dependency",
+                    0.0,
+                    fail=True,
+                ),
                 encoding="utf-8",
             )
+
             (core_directory / "b_dependent.py").write_text(
-                delayed_collector_source("b_dependent", 0.0, dependencies=(dependency_id,)),
+                delayed_collector_source(
+                    "b_dependent",
+                    0.0,
+                    dependencies=(dependency_id,),
+                ),
                 encoding="utf-8",
             )
+
             report = preflight(root)
             self.assertEqual((), report.invalid)
-            plan = build_plan(report, RunRequest(max_workers=2, acknowledge_authorization=True))
-            outcome = RunSupervisor(root, default_config(root)).run(plan)
-            records = {record.id: record for record in outcome.manifest.collectors}
 
-            self.assertEqual("failed", records[dependency_id].status)
-            dependent = records["core.system.b_dependent"]
-            self.assertEqual("skipped", dependent.status)
-            self.assertIsNone(dependent.started_at)
-            self.assertTrue(any(dependency_id in error for error in dependent.errors))
-            self.assertEqual(["core.system.b_dependent"], outcome.manifest.skipped_collectors)
-            self.assertEqual(
-                {dependency_id, "core.system.b_dependent"},
-                {error["collector_id"] for error in outcome.manifest.errors},
+            plan = build_plan(
+                report,
+                RunRequest(
+                    max_workers=2,
+                    acknowledge_authorization=True,
+                ),
             )
-            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                packaged = json.loads(archive.read("metadata/manifest.json"))
-                summary = archive.read("reports/summary.txt").decode("utf-8")
-            self.assertEqual(["core.system.b_dependent"], packaged["skipped_collectors"])
-            self.assertIn("Skipped collectors: 1", summary)
+
+            outcome = RunSupervisor(
+                root,
+                default_config(root),
+            ).run(plan)
+
+            records = {
+                record.id: record
+                for record in outcome.manifest.collectors
+            }
+
+            self.assertEqual(
+                "failed",
+                records[dependency_id].status,
+            )
+
+            dependent = records["core.system.b_dependent"]
+
+            self.assertEqual(
+                "skipped",
+                dependent.status,
+            )
+            self.assertIsNone(dependent.started_at)
+            self.assertTrue(
+                any(
+                    dependency_id in error
+                    for error in dependent.errors
+                )
+            )
+
+            self.assertEqual(
+                ["core.system.b_dependent"],
+                outcome.manifest.skipped_collectors,
+            )
+
+            self.assertEqual(
+                {
+                    dependency_id,
+                    "core.system.b_dependent",
+                },
+                {
+                    error["collector_id"]
+                    for error in outcome.manifest.errors
+                },
+            )
+
+            package = outcome.manifest.package
+            assert package is not None
+
+            with zipfile.ZipFile(Path(package["path"])) as archive:
+                packaged = json.loads(
+                    archive.read("metadata/manifest.json")
+                )
+                summary = archive.read(
+                    "reports/summary.txt"
+                ).decode("utf-8")
+
+            self.assertEqual(
+                ["core.system.b_dependent"],
+                packaged["skipped_collectors"],
+            )
+            self.assertIn(
+                "Skipped collectors: 1",
+                summary,
+            )
 
     def test_failed_collector_is_manifested_and_never_reported_as_success(self) -> None:
         """An isolated collector crash must produce a durable failed run outcome."""
@@ -93,7 +159,11 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual("failed", record.status)
             self.assertTrue(any("RuntimeError" in error for error in record.errors))
             self.assertIsNotNone(outcome.manifest.package)
-            package_path = Path(outcome.manifest.package["path"])
+            package = outcome.manifest.package
+            self.assertIsNotNone(package)
+            assert package is not None
+
+            package_path = Path(package["path"])
             self.assertTrue(package_path.is_file())
             with zipfile.ZipFile(package_path) as archive:
                 summary = archive.read("reports/summary.txt").decode("utf-8")
@@ -152,8 +222,13 @@ class RuntimeTests(unittest.TestCase):
             self.assertNotEqual(record.worker_pid, record.retry_history[0]["worker_pid"])
             self.assertEqual("failed", record.retry_history[0]["termination_reason"])
             self.assertEqual("completed", record.termination_reason)
-            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                packaged_record = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
+            package = outcome.manifest.package
+            assert package is not None
+
+            with zipfile.ZipFile(Path(package["path"])) as archive:
+                packaged_record = json.loads(
+                    archive.read("metadata/manifest.json")
+                )["collectors"][0]
                 summary = archive.read("reports/summary.txt").decode("utf-8")
             self.assertEqual(2, packaged_record["attempt_count"])
             self.assertEqual(1, len(packaged_record["retry_history"]))
@@ -230,9 +305,17 @@ class RuntimeTests(unittest.TestCase):
             )
 
             self.assertFalse(failure["retry_safe"])
-            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
-                self.assertIn("evidence/derived/core_system_system_info/system.txt", archive.namelist())
-                packaged = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
+            package = outcome.manifest.package
+            assert package is not None
+
+            with zipfile.ZipFile(Path(package["path"])) as archive:
+                self.assertIn(
+                    "evidence/derived/core_system_system_info/system.txt",
+                    archive.namelist(),
+                )
+                packaged = json.loads(
+                    archive.read("metadata/manifest.json")
+                )["collectors"][0]
                 summary = archive.read("reports/summary.txt").decode("utf-8")
             self.assertEqual(record.failure, packaged["failure"])
             self.assertIn("Failed operation: collect", summary)
@@ -281,13 +364,21 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual("failed", failed.termination_reason)
             self.assertEqual("completed", succeeded.termination_reason)
             self.assertNotEqual(failed.worker_pid, succeeded.worker_pid)
-            with zipfile.ZipFile(Path(outcome.manifest.package["path"])) as archive:
+            package = outcome.manifest.package
+            assert package is not None
+
+            with zipfile.ZipFile(Path(package["path"])) as archive:
                 packaged = {
                     item["id"]: item
-                    for item in json.loads(archive.read("metadata/manifest.json"))["collectors"]
+                    for item in json.loads(
+                        archive.read("metadata/manifest.json")
+                    )["collectors"]
                 }
                 summary = archive.read("reports/summary.txt").decode("utf-8")
-                self.assertIn("evidence/derived/core_system_a_failed/system.txt", archive.namelist())
+                self.assertIn(
+                    "evidence/derived/core_system_a_failed/system.txt",
+                    archive.namelist(),
+                )
             self.assertEqual("failed", packaged["core.system.a_failed"]["status"])
             self.assertEqual("process", packaged["core.system.a_failed"]["isolation_mode"])
             self.assertEqual(failed.worker_pid, packaged["core.system.a_failed"]["worker_pid"])

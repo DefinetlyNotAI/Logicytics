@@ -325,9 +325,15 @@ class PreflightTests(unittest.TestCase):
                 RunRequest(),
             )
 
+            planned_ids: list[str] = []
+
+            for candidate in plan.collectors:
+                assert candidate.metadata is not None
+                planned_ids.append(candidate.metadata.id)
+
             self.assertEqual(
                 ["core.system.system_info"],
-                [candidate.metadata.id for candidate in plan.collectors],
+                planned_ids,
             )
 
     def test_invalid_selected_folder_or_enabled_plugin_blocks_planning(self) -> None:

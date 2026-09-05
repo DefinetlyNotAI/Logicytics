@@ -162,11 +162,17 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
         if missing_capabilities:
             required = ", ".join(sorted(capability.value for capability in missing_capabilities))
             raise PlanError(f"{candidate.metadata.id} requires unapproved capabilities: {required}")
-    elevated_collectors = sorted(
-        candidate.metadata.id
-        for candidate in selected.values()
-        if candidate.metadata is not None and Capability.ELEVATED_PRIVILEGES in candidate.metadata.capabilities
-    )
+    elevated_collectors: list[str] = []
+
+    for candidate in selected.values():
+        metadata = candidate.metadata
+        if metadata is None:
+            continue
+
+        if Capability.ELEVATED_PRIVILEGES in metadata.capabilities:
+            elevated_collectors.append(metadata.id)
+
+    elevated_collectors.sort()
     if elevated_collectors and inspect_environment().is_administrator is not True:
         raise PlanError(
             "selected collectors require an administrator account: "

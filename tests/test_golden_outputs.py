@@ -66,10 +66,17 @@ class GoldenOutputTests(unittest.TestCase):
         expected = (_GOLDEN / "system_details.txt").read_text(encoding="utf-8")
         with tempfile.TemporaryDirectory() as temporary:
             writer = _CaptureWriter()
-            with patch.object(system_details.subprocess, "run",
-                              return_value=CompletedProcess([], 0, expected, "")):
+            with patch.object(
+                    system_details.subprocess,
+                    system_details.subprocess.run.__name__,
+                    return_value=CompletedProcess([], 0, expected, ""),
+            ):
                 system_details.SystemDetailsCollector().collect(
-                    _context(Path(temporary), "core.system.system_details", writer)
+                    _context(
+                        Path(temporary),
+                        "core.system.system_details",
+                        writer,
+                    )
                 )
         self.assertEqual(expected.encode(), writer.contents)
 
@@ -77,10 +84,17 @@ class GoldenOutputTests(unittest.TestCase):
         expected = (_GOLDEN / "running_processes.csv").read_text(encoding="utf-8")
         with tempfile.TemporaryDirectory() as temporary:
             writer = _CaptureWriter()
-            with patch.object(running_processes.subprocess, "run",
-                              return_value=CompletedProcess([], 0, expected, "")):
+            with patch.object(
+                    running_processes.subprocess,
+                    running_processes.subprocess.run.__name__,
+                    return_value=CompletedProcess([], 0, expected, ""),
+            ):
                 running_processes.RunningProcessesCollector().collect(
-                    _context(Path(temporary), "core.process.running_processes", writer)
+                    _context(
+                        Path(temporary),
+                        "core.process.running_processes",
+                        writer,
+                    )
                 )
         self.assertEqual(expected.encode(), writer.contents)
 
