@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any, Callable, cast
 from unittest.mock import patch
 
-from fixtures.collectors import COLLECTOR, delayed_collector_source
 from logicytics import packaging
 from logicytics.cli import cli_methods
 from logicytics.configuration import (
@@ -27,6 +26,7 @@ from logicytics.manifest import write_manifest
 from logicytics.packaging import package_run
 from logicytics.planner import build_plan
 from logicytics.runtime import RunSupervisor
+from tests.fixtures.collectors import COLLECTOR, delayed_collector_source
 
 
 class PackagingTests(unittest.TestCase):

@@ -8,7 +8,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from fixtures.collectors import COLLECTOR, plugin_collector_source, delayed_collector_source
 from logicytics import (
     discovery,
 )
@@ -26,6 +25,7 @@ from logicytics.errors import PlanError, PreflightError
 from logicytics.planner import build_plan
 from logicytics.platform_adapters import ProcessAdapter
 from logicytics.runtime import RunSupervisor
+from tests.fixtures.collectors import COLLECTOR, plugin_collector_source, delayed_collector_source
 
 
 class PreflightTests(unittest.TestCase):

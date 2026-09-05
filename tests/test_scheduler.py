@@ -4,7 +4,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fixtures.collectors import delayed_collector_source
 from logicytics.cli import cli_methods
 from logicytics.configuration import (
     default_config,
@@ -16,6 +15,7 @@ from logicytics.contracts import (
 from logicytics.discovery import preflight
 from logicytics.planner import build_plan
 from logicytics.runtime import RunSupervisor
+from tests.fixtures.collectors import delayed_collector_source
 
 
 class SchedulerTests(unittest.TestCase):

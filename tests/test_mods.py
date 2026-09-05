@@ -8,7 +8,6 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from fixtures.collectors import mod_metadata
 from logicytics.cli import cli_methods
 from logicytics.configuration import default_config
 from logicytics.contracts import Capability, RunRequest
@@ -16,6 +15,7 @@ from logicytics.discovery import preflight
 from logicytics.errors import PlanError, PreflightError
 from logicytics.planner import build_plan
 from logicytics.runtime import RunSupervisor
+from tests.fixtures.collectors import mod_metadata
 
 
 class ModTests(unittest.TestCase):

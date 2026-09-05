@@ -8,7 +8,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from fixtures.collectors import COLLECTOR, delayed_collector_source
 from logicytics.cli import CLI, cli_methods, main
 from logicytics.configuration import (
     default_config,
@@ -30,6 +29,7 @@ from logicytics.logging import (
 from logicytics.planner import BUILTIN_PROFILES, build_plan
 from logicytics.platform_adapters import ProcessAdapter
 from logicytics.runtime import RunSupervisor
+from tests.fixtures.collectors import COLLECTOR, delayed_collector_source
 
 
 class PlanningTests(unittest.TestCase):

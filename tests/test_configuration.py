@@ -7,7 +7,6 @@ import zipfile
 from pathlib import Path
 from typing import Any, cast
 
-from fixtures.collectors import COLLECTOR
 from logicytics.configuration import (
     default_config,
     load_config,
@@ -19,6 +18,7 @@ from logicytics.discovery import preflight
 from logicytics.errors import PlanError
 from logicytics.planner import build_plan
 from logicytics.runtime import RunSupervisor
+from tests.fixtures.collectors import COLLECTOR
 
 
 class ConfigurationTests(unittest.TestCase):

@@ -7,7 +7,6 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
-from fixtures.collectors import COLLECTOR
 from logicytics.artifacts import WorkspaceArtifactWriter
 from logicytics.configuration import (
     default_config,
@@ -20,6 +19,7 @@ from logicytics.discovery import preflight
 from logicytics.errors import ArtifactError
 from logicytics.planner import build_plan
 from logicytics.runtime import RunSupervisor
+from tests.fixtures.collectors import COLLECTOR
 
 
 class ArtifactWriterTests(unittest.TestCase):

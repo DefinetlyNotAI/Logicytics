@@ -332,8 +332,7 @@ class CollectorCancellationTests(unittest.TestCase):
                         [
                             path
                             for path in context.workspace.rglob("*")
-                            if path.is_file()
-                               and path != cancellation_file
+                            if path.is_file() and path != cancellation_file
                         ],
                     )
 
@@ -404,8 +403,7 @@ class CollectorCancellationTests(unittest.TestCase):
                 [
                     path
                     for path in system_context.workspace.rglob("*")
-                    if path.is_file()
-                       and path != system_cancellation
+                    if path.is_file() and path != system_cancellation
                 ],
             )
 
@@ -622,8 +620,7 @@ class CollectorCancellationTests(unittest.TestCase):
                 [
                     path
                     for path in memory_context.workspace.rglob("*")
-                    if path.is_file()
-                       and path != memory_cancellation
+                    if path.is_file() and path != memory_cancellation
                 ],
             )
 

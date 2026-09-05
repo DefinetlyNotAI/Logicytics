@@ -17,8 +17,8 @@ ULONG: TypeAlias = ctypes.c_ulong
 SIZE_T: TypeAlias = ctypes.c_size_t
 ULARGE_INTEGER: TypeAlias = ctypes.c_ulonglong
 
-LPDWORD: TypeAlias = ctypes.POINTER(DWORD)
-LPULARGE_INTEGER: TypeAlias = ctypes.POINTER(ULARGE_INTEGER)
+LPDWORD = ctypes.POINTER(DWORD)
+LPULARGE_INTEGER = ctypes.POINTER(ULARGE_INTEGER)
 
 PROCESS_QUERY_LIMITED_INFORMATION: Final = 0x1000
 STILL_ACTIVE: Final = 259

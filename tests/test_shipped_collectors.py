@@ -526,16 +526,7 @@ class ShippedCollectorTests(unittest.TestCase):
 
                     value = keyword.value
 
-                    if (
-                            isinstance(
-                                value,
-                                ast.Constant,
-                            )
-                            and isinstance(
-                        value.value,
-                        str,
-                    )
-                    ):
+                    if isinstance(value, ast.Constant) and isinstance(value.value, str):
                         declared_at_calls.add(
                             value.value
                         )
@@ -835,13 +826,7 @@ class ShippedCollectorTests(unittest.TestCase):
                     with self.subTest(
                             collector=metadata.id
                     ):
-                        workspace = (
-                                root
-                                / metadata.id.replace(
-                            ".",
-                            "_",
-                        )
-                        )
+                        workspace = root / metadata.id.replace(".", "_")
 
                         artifact_root = (
                                 workspace / "published"

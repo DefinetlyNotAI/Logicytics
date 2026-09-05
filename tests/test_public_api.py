@@ -9,9 +9,9 @@ import tempfile
 import unittest
 from dataclasses import FrozenInstanceError
 from pathlib import Path
+from typing import Iterable
 from unittest.mock import patch
 
-from fixtures.collectors import COLLECTOR, plugin_collector_source
 from logicytics import (
     load_configuration,
     open_artifact,
@@ -25,7 +25,9 @@ from logicytics.contracts import (
     RunRequest,
     RunStatus,
 )
+from logicytics.discovery import CollectorCandidate
 from logicytics.errors import ArtifactError, PlanError, PreflightError
+from tests.fixtures.collectors import COLLECTOR, plugin_collector_source
 
 
 class PublicApiTests(unittest.TestCase):
@@ -60,11 +62,23 @@ class PublicApiTests(unittest.TestCase):
 
     def test_public_planning_is_read_only_bounded_and_keeps_plugins_opt_in(self) -> None:
         """The application planner validates configuration and extensions without starting work."""
+
+        def collector_ids(collectors: Iterable[CollectorCandidate]) -> list[str]:
+            ids: list[str] = []
+
+            for item in collectors:
+                self.assertIsNotNone(item.metadata)
+                assert item.metadata is not None
+                ids.append(item.metadata.id)
+
+            return ids
+
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             collector_path = root / "core" / "system" / "system_info.py"
             collector_path.parent.mkdir(parents=True)
             collector_path.write_text(COLLECTOR, encoding="utf-8")
+
             plugin_path = root / "plugins" / "example_plugin.py"
             plugin_path.parent.mkdir()
             plugin_path.write_text(
@@ -73,39 +87,88 @@ class PublicApiTests(unittest.TestCase):
                 .replace("core.system.system_info", "plugin.example_plugin"),
                 encoding="utf-8",
             )
+
             (root / "settings.json").write_text(
                 '{"schema_version":4,"runtime":{"default_max_workers":1,"maximum_workers":2}}',
                 encoding="utf-8",
             )
+
             configuration = load_configuration(root, "settings.json")
-            standard = plan_run(root, RunRequest(max_workers=1), configuration=configuration)
+
+            standard = plan_run(
+                root,
+                RunRequest(max_workers=1),
+                configuration=configuration,
+            )
             selected = plan_run(
                 root,
                 RunRequest(max_workers=1, include=("plugin.example_plugin",)),
                 configuration=configuration,
             )
 
-            self.assertEqual(["core.system.system_info"], [item.metadata.id for item in standard.collectors])
+            self.assertEqual(
+                ["core.system.system_info"],
+                collector_ids(standard.collectors),
+            )
+
             self.assertEqual(
                 ["core.system.system_info", "plugin.example_plugin"],
-                [item.metadata.id for item in selected.collectors],
+                collector_ids(selected.collectors),
             )
+
             with self.assertRaisesRegex(PlanError, "maximum_workers"):
-                plan_run(root, RunRequest(max_workers=3), configuration=configuration)
+                plan_run(
+                    root,
+                    RunRequest(max_workers=3),
+                    configuration=configuration,
+                )
+
             with self.assertRaisesRegex(PlanError, "either configuration or config_path"):
-                plan_run(root, RunRequest(max_workers=1), configuration=configuration, config_path="settings.json")
-            plugin_path.write_text('"""Invalid optional plugin."""\n', encoding="utf-8")
-            quarantined = plan_run(root, RunRequest(max_workers=1), configuration=configuration)
-            self.assertEqual(["core.system.system_info"], [item.metadata.id for item in quarantined.collectors])
+                plan_run(
+                    root,
+                    RunRequest(max_workers=1),
+                    configuration=configuration,
+                    config_path="settings.json",
+                )
+
+            plugin_path.write_text(
+                '"""Invalid optional plugin."""\n',
+                encoding="utf-8",
+            )
+
+            quarantined = plan_run(
+                root,
+                RunRequest(max_workers=1),
+                configuration=configuration,
+            )
+
+            self.assertEqual(
+                ["core.system.system_info"],
+                collector_ids(quarantined.collectors),
+            )
+
             with self.assertRaises(PreflightError):
                 plan_run(
                     root,
-                    RunRequest(max_workers=1, include=("plugin.example_plugin",)),
+                    RunRequest(
+                        max_workers=1,
+                        include=("plugin.example_plugin",),
+                    ),
                     configuration=configuration,
                 )
-            collector_path.write_text('"""Invalid shipped core collector."""\n', encoding="utf-8")
+
+            collector_path.write_text(
+                '"""Invalid shipped core collector."""\n',
+                encoding="utf-8",
+            )
+
             with self.assertRaises(PreflightError):
-                plan_run(root, RunRequest(max_workers=1), configuration=configuration)
+                plan_run(
+                    root,
+                    RunRequest(max_workers=1),
+                    configuration=configuration,
+                )
+
             self.assertFalse(configuration.runtime.output_root.exists())
 
     def test_public_api_runs_queries_and_reads_verified_registered_evidence(self) -> None:
@@ -144,9 +207,9 @@ class PublicApiTests(unittest.TestCase):
                 read_artifact(root, snapshot.run_id, snapshot.artifacts[0].id, configuration=configuration),
             )
             with self.assertRaises(FrozenInstanceError):
-                snapshot.status = RunStatus.FAILED
+                setattr(snapshot, "status", RunStatus.FAILED)
             with self.assertRaises(FrozenInstanceError):
-                collector.status = "failed"
+                setattr(collector, "status", "failed")
 
     def test_public_run_snapshot_and_cli_expose_verified_collector_failure_and_duration(
             self,
@@ -184,6 +247,8 @@ class PublicApiTests(unittest.TestCase):
                 self.fail("failed collector must expose duration_seconds")
 
             self.assertGreaterEqual(duration_seconds, 0)
+            self.assertIsNotNone(collector.summary)
+            assert collector.summary is not None
             self.assertIn("worker crashed", collector.summary)
             self.assertTrue(
                 any(
