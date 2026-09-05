@@ -826,6 +826,10 @@ class ShippedCollectorTests(unittest.TestCase):
                     with self.subTest(
                             collector=metadata.id
                     ):
+                        metadata = candidate.metadata
+                        self.assertIsNotNone(metadata)
+                        assert metadata is not None
+
                         workspace = root / metadata.id.replace(".", "_")
 
                         artifact_root = (

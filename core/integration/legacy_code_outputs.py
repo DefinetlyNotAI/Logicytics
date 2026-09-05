@@ -129,8 +129,8 @@ class LegacyCodeOutputsCollector(CoreCollector):
 
             try:
                 with (
-                    source.open("rb") as source_stream,
-                    temporary.open("xb") as destination_stream,
+                    open(source, "rb") as source_stream,
+                    open(temporary, "xb") as destination_stream,
                 ):
                     while block := source_stream.read(1024 * 1024):
                         if context.is_cancelled:

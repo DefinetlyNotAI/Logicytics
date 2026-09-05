@@ -18,7 +18,7 @@ from logicytics.configuration import MaintenanceSettings
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _VERSION = re.compile(
-    r"^(\d+)\.(\d+)\.(\d+)(?:(?:-([0-9A-Za-z.-]+))|((?:a|b|rc|\.dev)\d+))?$"
+    r"^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+)|((?:a|b|rc|\.dev)\d+))?$"
 )
 _MAXIMUM_MANIFEST_BYTES = 2 * 1024 * 1024
 _EXCLUDED_PARTS = frozenset(
@@ -226,10 +226,10 @@ def write_legacy_ini_manifest(
         text = payload.decode("utf-8-sig")
     except UnicodeDecodeError as error:
         raise ValueError(f"legacy config.ini is not valid UTF-8: {error}") from error
-    header = re.search(r"(?m)^\[System Settings\][ \t]*\r?$", text)
+    header = re.search(r"(?m)^\[System Settings][ \t]*\r?$", text)
     if header is None:
         raise ValueError("legacy config.ini is missing [System Settings]")
-    following = re.search(r"(?m)^\[[^]\r\n]+\][ \t]*\r?$", text[header.end():])
+    following = re.search(r"(?m)^\[[^]\r\n]+][ \t]*\r?$", text[header.end():])
     section_end = header.end() + following.start() if following is not None else len(text)
     replacement = text[header.start():section_end]
     files = ", ".join(sorted(manifest.files))

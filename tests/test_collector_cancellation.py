@@ -601,7 +601,7 @@ class CollectorCancellationTests(unittest.TestCase):
                 return next(dlls)
 
             with patch(
-                    "core.process.memory_map.ctypes.WinDLL",
+                    "logicytics.ctypes_collector.ctypes.WinDLL",
                     side_effect=fake_windll,
             ):
                 memory_result = (
