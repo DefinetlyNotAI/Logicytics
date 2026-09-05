@@ -2,39 +2,12 @@
 
 from __future__ import annotations
 
-import ctypes
 import json
 from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
-from logicytics.platform_adapters import windows_api_adapter
-
-
-class _MemoryStatus(ctypes.Structure):
-    """Mirror the Windows MEMORYSTATUSEX structure used by GlobalMemoryStatusEx."""
-
-    _fields_ = [
-        ("dwLength", ctypes.c_ulong),
-        ("dwMemoryLoad", ctypes.c_ulong),
-        ("ullTotalPhys", ctypes.c_ulonglong),
-        ("ullAvailPhys", ctypes.c_ulonglong),
-        ("ullTotalPageFile", ctypes.c_ulonglong),
-        ("ullAvailPageFile", ctypes.c_ulonglong),
-        ("ullTotalVirtual", ctypes.c_ulonglong),
-        ("ullAvailVirtual", ctypes.c_ulonglong),
-        ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
-    ]
-
-
-def _read_memory_status() -> _MemoryStatus:
-    """Read Windows aggregate memory counters or raise the platform error."""
-    status = _MemoryStatus()
-    status.dwLength = ctypes.sizeof(_MemoryStatus)
-    kernel32 = windows_api_adapter.load_library("kernel32")
-    if not kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
-        raise ctypes.WinError()
-    return status
+from logicytics.ctypes_collector import global_memory_status
 
 
 class MemorySnapshotCollector(CoreCollector):
@@ -62,7 +35,7 @@ class MemorySnapshotCollector(CoreCollector):
         if context.is_cancelled:
             return ValidationResult(False, reasons=("run cancellation was requested",))
         try:
-            _read_memory_status()
+            global_memory_status()
         except OSError as error:
             return ValidationResult(False, reasons=(f"memory API is unavailable: {error}",))
         return ValidationResult(True)
@@ -73,7 +46,7 @@ class MemorySnapshotCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before memory collection")
         context.report_progress("memory_snapshot_started")
         try:
-            status = _read_memory_status()
+            status = global_memory_status()
         except OSError as error:
             return CollectorResult(CollectorStatus.FAILED, "could not read Windows memory status", errors=(str(error),))
         report = {

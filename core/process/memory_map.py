@@ -2,21 +2,14 @@
 
 from __future__ import annotations
 
-import ctypes
 import json
-from ctypes import wintypes
 from pathlib import Path
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
-from logicytics.ctypes_collector import ProcessMemoryCounters
-from logicytics.platform_adapters import filesystem_adapter, windows_api_adapter
-
-
-class _MemoryBasicInformation(ctypes.Structure):
-    _fields_ = [("BaseAddress", wintypes.LPVOID), ("AllocationBase", wintypes.LPVOID),
-                ("AllocationProtect", wintypes.DWORD), ("PartitionId", wintypes.WORD), ("RegionSize", ctypes.c_size_t),
-                ("State", wintypes.DWORD), ("Protect", wintypes.DWORD), ("Type", wintypes.DWORD)]
+from logicytics.ctypes_collector import ProcessMemoryCounters, MemoryBasicInformation, get_process_memory_info, \
+    virtual_query, get_mapped_file_name, get_current_process, pointer_value
+from logicytics.platform_adapters import filesystem_adapter
 
 
 def _permissions(protection: int) -> str:
@@ -91,7 +84,11 @@ class MemoryMapCollector(CoreCollector):
     def collect(self, context: CollectorContext) -> CollectorResult:
         """Query readable local memory regions and write metadata-only JSON evidence."""
         if context.is_cancelled:
-            return CollectorResult(CollectorStatus.CANCELLED, "cancelled before memory-map collection")
+            return CollectorResult(
+                CollectorStatus.CANCELLED,
+                "cancelled before memory-map collection",
+            )
+
         maximum = context.setting_int("max_regions", 5_000)
         output_limit = context.setting_int(
             "output_limit_bytes",
@@ -101,93 +98,170 @@ class MemoryMapCollector(CoreCollector):
             "disk_safety_margin_bytes",
             100 * 1024 * 1024,
         )
+
         configured_directory = Path(
             context.setting_str("dump_directory", "memory_maps")
         )
-        output_directory = (context.workspace / configured_directory).resolve()
+        output_directory = (
+                context.workspace / configured_directory
+        ).resolve()
+
         try:
             output_directory.relative_to(context.workspace.resolve())
         except ValueError:
-            return CollectorResult(CollectorStatus.FAILED,
-                                   "memory-map dump_directory must stay inside the collector workspace")
-        try:
-            kernel32 = windows_api_adapter.load_library("kernel32")
-            psapi = windows_api_adapter.load_library("psapi")
-        except OSError as error:
             return CollectorResult(
                 CollectorStatus.FAILED,
-                "could not load Windows memory-map APIs",
-                errors=(str(error),),
+                "memory-map dump_directory must stay inside the collector workspace",
             )
-        process = kernel32.GetCurrentProcess()
+
+        process = get_current_process()
+
         counters = ProcessMemoryCounters()
-        psapi.GetProcessMemoryInfo(process, ctypes.byref(counters), ctypes.sizeof(counters))
-        memory = _MemoryBasicInformation()
+        if not get_process_memory_info(process, counters):
+            return CollectorResult(
+                CollectorStatus.FAILED,
+                "could not query process memory counters",
+            )
+
+        memory = MemoryBasicInformation()
         address = 0
         regions: list[dict[str, object]] = []
-        context.report_progress("memory_map_started", max_regions=maximum)
+
+        context.report_progress(
+            "memory_map_started",
+            max_regions=maximum,
+        )
+
         while len(regions) < maximum:
             if context.is_cancelled:
-                return CollectorResult(CollectorStatus.CANCELLED, "cancelled during memory-map collection")
-            queried = kernel32.VirtualQuery(ctypes.c_void_p(address), ctypes.byref(memory), ctypes.sizeof(memory))
-            if not queried or memory.RegionSize == 0:
-                break
-            base = ctypes.cast(memory.BaseAddress, ctypes.c_void_p).value or address
-            readable = memory.State == 0x1000 and not memory.Protect & 0x101
-            if readable:
-                base_address = int(base)
+                return CollectorResult(
+                    CollectorStatus.CANCELLED,
+                    "cancelled during memory-map collection",
+                )
 
-                mapped = ctypes.create_unicode_buffer(32_768)
-                mapped_length = psapi.GetMappedFileNameW(
+            queried = virtual_query(address, memory)
+            region_size = int(memory.RegionSize)
+
+            if not queried or region_size == 0:
+                break
+
+            base_address = pointer_value(memory.BaseAddress)
+            if base_address is None:
+                base_address = address
+
+            readable = (
+                    memory.State == 0x1000
+                    and not memory.Protect & 0x101
+            )
+
+            if readable:
+                mapped_path = get_mapped_file_name(
                     process,
-                    ctypes.c_void_p(base_address),
-                    mapped,
-                    len(mapped),
+                    base_address,
                 )
 
                 regions.append(
                     {
                         "index": len(regions),
                         "address": f"0x{base_address:016X}",
-                        "size_bytes": memory.RegionSize,
-                        "rss_bytes": counters.WorkingSetSize,
-                        "permissions": _permissions(memory.Protect),
-                        "mapped_path": mapped.value if mapped_length else None,
-                        "state": memory.State,
-                        "type": memory.Type,
+                        "size_bytes": region_size,
+                        "rss_bytes": int(counters.WorkingSetSize),
+                        "permissions": _permissions(int(memory.Protect)),
+                        "mapped_path": mapped_path,
+                        "state": int(memory.State),
+                        "type": int(memory.Type),
                     }
                 )
 
-            next_address = base + memory.RegionSize
+            next_address = base_address + region_size
+
             if next_address <= address:
                 break
+
             address = next_address
+
         truncated = False
+
         while True:
             if context.is_cancelled:
-                return CollectorResult(CollectorStatus.CANCELLED, "cancelled during memory-map serialization")
-            serialized = json.dumps({"region_count": len(regions), "truncated": truncated, "regions": regions},
-                                    indent=2) + "\n"
-            if len(serialized.encode("utf-8")) <= output_limit or not regions:
+                return CollectorResult(
+                    CollectorStatus.CANCELLED,
+                    "cancelled during memory-map serialization",
+                )
+
+            serialized = json.dumps(
+                {
+                    "region_count": len(regions),
+                    "truncated": truncated,
+                    "regions": regions,
+                },
+                indent=2,
+            ) + "\n"
+
+            serialized_size = len(serialized.encode("utf-8"))
+
+            if serialized_size <= output_limit or not regions:
                 break
+
             regions.pop()
             truncated = True
-        if filesystem_adapter.disk_usage(context.workspace).free < len(serialized.encode("utf-8")) + safety_margin:
-            return CollectorResult(CollectorStatus.SKIPPED,
-                                   "insufficient free disk space after configured memory-map safety margin")
+
+        if (
+                filesystem_adapter.disk_usage(context.workspace).free
+                < serialized_size + safety_margin
+        ):
+            return CollectorResult(
+                CollectorStatus.SKIPPED,
+                "insufficient free disk space after configured memory-map safety margin",
+            )
+
         if context.is_cancelled:
-            return CollectorResult(CollectorStatus.CANCELLED, "cancelled before memory-map publication")
-        output_directory.mkdir(parents=True, exist_ok=True)
+            return CollectorResult(
+                CollectorStatus.CANCELLED,
+                "cancelled before memory-map publication",
+            )
+
+        output_directory.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
         output = output_directory / "memory_map.json"
-        output.write_text(serialized, encoding="utf-8")
+        output.write_text(
+            serialized,
+            encoding="utf-8",
+        )
+
         if context.is_cancelled:
             output.unlink(missing_ok=True)
-            return CollectorResult(CollectorStatus.CANCELLED, "cancelled during memory-map publication")
-        artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("memory_map_finished", region_count=len(regions), truncated=str(truncated).lower(),
-                                bytes_written=artifact.size_bytes)
-        summary = "process memory map collected" if not truncated else "process memory map collected with configured output truncation"
-        return CollectorResult.succeeded(summary, (artifact,))
+
+            return CollectorResult(
+                CollectorStatus.CANCELLED,
+                "cancelled during memory-map publication",
+            )
+
+        artifact = context.artifacts.register_file(
+            output,
+            media_type="application/json",
+        )
+
+        context.report_progress(
+            "memory_map_finished",
+            region_count=len(regions),
+            truncated=str(truncated).lower(),
+            bytes_written=artifact.size_bytes,
+        )
+
+        summary = (
+            "process memory map collected"
+            if not truncated
+            else "process memory map collected with configured output truncation"
+        )
+
+        return CollectorResult.succeeded(
+            summary,
+            (artifact,),
+        )
 
     def cleanup(self, context: CollectorContext) -> None:
         """Release no resources because the collector only queries its own process."""

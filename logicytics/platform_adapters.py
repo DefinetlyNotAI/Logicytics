@@ -15,6 +15,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from logicytics.ctypes_collector import query_registry_key_info, filetime
+
 try:
     import winreg as _winreg
 except ImportError:  # pragma: no cover - exercised by non-Windows package imports
@@ -221,14 +223,13 @@ class RegistryAdapter:
         """Return one key's Win32 last-write timestamp in UTC when available."""
         if _winreg is None:
             return None
-        import ctypes
-        from ctypes import wintypes
 
-        timestamp = wintypes.FILETIME()
-        result = ctypes.windll.advapi32.RegQueryInfoKeyW(
-            wintypes.HKEY(key.handle), None, None, None, None, None, None,
-            None, None, None, None, ctypes.byref(timestamp),
+        timestamp = filetime()
+        result = query_registry_key_info(
+            key.handle,
+            timestamp,
         )
+
         if result != 0:
             return None
         ticks = (timestamp.dwHighDateTime << 32) | timestamp.dwLowDateTime

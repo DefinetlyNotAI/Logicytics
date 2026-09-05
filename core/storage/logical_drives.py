@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import ctypes
 import json
 from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
-from logicytics.platform_adapters import windows_api_adapter
+from logicytics.ctypes_collector import get_logical_drives, ularge_integer, get_disk_free_space, get_drive_type
 
 _DRIVE_TYPES = {
     0: "unknown",
@@ -23,35 +22,38 @@ _DRIVE_TYPES = {
 
 def _logical_drives() -> list[dict[str, int | str]]:
     """Return Windows logical drive metadata without walking any filesystem contents."""
-    kernel32 = windows_api_adapter.load_library("kernel32")
-    mask = kernel32.GetLogicalDrives()
-    if mask == 0:
-        raise ctypes.WinError()
+    mask = get_logical_drives()
     drives: list[dict[str, int | str]] = []
+
     for offset in range(26):
         if not mask & (1 << offset):
             continue
+
         root = f"{chr(ord('A') + offset)}:\\"
-        available = ctypes.c_ulonglong()
-        total = ctypes.c_ulonglong()
-        free = ctypes.c_ulonglong()
-        if not kernel32.GetDiskFreeSpaceExW(
+        available = ularge_integer()
+        total = ularge_integer()
+        free = ularge_integer()
+
+        if not get_disk_free_space(
                 root,
-                ctypes.byref(available),
-                ctypes.byref(total),
-                ctypes.byref(free),
+                available,
+                total,
+                free,
         ):
             continue
-        drive_type_code = kernel32.GetDriveTypeW(root)
+
+        drive_type_code = get_drive_type(root)
+
         drives.append(
             {
                 "root": root,
                 "type": _DRIVE_TYPES.get(drive_type_code, "unknown"),
-                "total_bytes": total.value,
-                "free_bytes": free.value,
-                "available_bytes": available.value,
+                "total_bytes": int(total.value),
+                "free_bytes": int(free.value),
+                "available_bytes": int(available.value),
             }
         )
+
     return drives
 
 
