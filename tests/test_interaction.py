@@ -8,11 +8,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 from logicytics.cli import CLI, main
-from logicytics.configuration import (
+from logicytics.module.configuration import (
     load_config,
 )
-from logicytics.errors import PlanError
-from logicytics.interaction import load_history, match_flag, usage_statistics
+from logicytics.module.errors import PlanError
+from logicytics.module.interaction import load_history, match_flag, usage_statistics
 
 
 class InteractionTests(unittest.TestCase):
@@ -33,7 +33,7 @@ class InteractionTests(unittest.TestCase):
             self.assertFalse(payload["history_persisted"])
             self.assertFalse((root / "output" / "data" / "interaction_history.json.gz").exists())
 
-            (root / "logicytics.json").write_text(
+            (root / "logicytics.yaml").write_text(
                 json.dumps({
                     "schema_version": 4,
                     "interaction": {
@@ -99,7 +99,7 @@ class InteractionTests(unittest.TestCase):
         for section in invalid_sections:
             with self.subTest(section=section), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
-                (root / "logicytics.json").write_text(
+                (root / "logicytics.yaml").write_text(
                     json.dumps({"schema_version": 4, "interaction": section}),
                     encoding="utf-8",
                 )

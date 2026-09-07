@@ -13,7 +13,7 @@ from typing import Any, NoReturn, cast, Callable
 from unittest.mock import patch
 
 from logicytics import ResourceClass
-from logicytics.artifacts import WorkspaceArtifactWriter
+from logicytics.module.artifacts import WorkspaceArtifactWriter
 from logicytics.contracts import (
     ArtifactWriter,
     CollectorContext,
@@ -21,9 +21,9 @@ from logicytics.contracts import (
     EventLogger,
     EvidenceKind,
 )
-from logicytics.discovery import preflight
-from logicytics.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
-from logicytics.output_contracts import core_output_contract
+from logicytics.module.discovery import preflight
+from logicytics.module.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
+from logicytics.module.output_contracts import core_output_contract
 from logicytics.platform_adapters import (
     filesystem_adapter,
     network_adapter,

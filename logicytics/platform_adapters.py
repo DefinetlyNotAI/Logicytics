@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes
+import importlib
 import os
 import shutil
 import signal
@@ -15,7 +16,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from logicytics.ctypes_collector import query_registry_key_info, filetime
+_ctypes_collector = importlib.import_module("logicytics.global.ctypes_collector")
+query_registry_key_info = _ctypes_collector.query_registry_key_info
+filetime = _ctypes_collector.filetime
 
 try:
     import winreg as _winreg
@@ -44,13 +47,13 @@ class ProcessAdapter:
 
         return normalized
 
+    @staticmethod
     def run(
-            self,
             command: Sequence[str | os.PathLike[str]],
             **options: Any,
     ) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]:
         """Delegate to the guarded stdlib runner while retaining its familiar result contract."""
-        normalized = self._command(command)
+        normalized = ProcessAdapter._command(command)
         capture_directory = options.pop("capture_directory", None)
 
         if options.get("shell"):
@@ -104,12 +107,12 @@ class ProcessAdapter:
             stderr_size = stderr.tell()
 
             if (
-                    stdout_size > self.maximum_capture_bytes
-                    or stderr_size > self.maximum_capture_bytes
+                    stdout_size > ProcessAdapter.maximum_capture_bytes
+                    or stderr_size > ProcessAdapter.maximum_capture_bytes
             ):
                 raise ValueError(
                     f"command output exceeds the "
-                    f"{self.maximum_capture_bytes}-byte capture limit"
+                    f"{ProcessAdapter.maximum_capture_bytes}-byte capture limit"
                 )
 
             stdout.seek(0)

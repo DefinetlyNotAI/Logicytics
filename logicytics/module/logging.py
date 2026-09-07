@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+import textwrap
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
@@ -11,9 +12,9 @@ from threading import RLock
 from time import perf_counter, time
 from typing import Callable, Iterable, ParamSpec, TextIO, TypeVar
 
-from logicytics.configuration import LoggingSettings
+from logicytics.module.configuration import LoggingSettings
 from logicytics.contracts import EventLogger
-from logicytics.redaction import redact_mapping, redact_text
+from logicytics.module.redaction import redact_mapping, redact_text
 
 Parameters = ParamSpec("Parameters")
 Result = TypeVar("Result")
@@ -81,6 +82,16 @@ class ApplicationLogger(EventLogger):
             retained = retained[newline + 1:] if newline >= 0 else retained
             self.path.write_bytes(b"[log truncated to configured maximum]\n" + retained)
 
+    @staticmethod
+    def _rows(level: str, source: str, message: str) -> tuple[str, ...]:
+        """Format aligned, deterministic human log rows for file inspection."""
+        timestamp = datetime.now(timezone.utc).strftime("%H:%M:%S")
+        source_column = source[:24]
+        wrapped = textwrap.wrap(message, width=76, break_long_words=False, break_on_hyphens=False) or [""]
+        first = f"{timestamp} | {level:<9} | {source_column:<24} | {wrapped[0]}"
+        continuation = f"{'':8} | {'':9} | {'':24} | "
+        return tuple([first, *(continuation + row for row in wrapped[1:])])
+
     def event(self, level: str, message: str, **fields: int | float | str) -> None:
         """Dispatch one typed, redacted event to configured console and file sinks."""
         normalized = level.upper()
@@ -90,22 +101,24 @@ class ApplicationLogger(EventLogger):
             return
         safe_message = redact_text(message)
         safe_fields = redact_mapping(fields)
+        source = str(safe_fields.pop("source", "logicytics.module"))
         suffix = "" if not safe_fields else " " + " ".join(
             f"{key}={json.dumps(value, ensure_ascii=True, sort_keys=True)}"
             for key, value in sorted(safe_fields.items())
         )
-        timestamp = datetime.now(timezone.utc).isoformat()
-        row = f"[{timestamp}] [{normalized}] {safe_message}{suffix}"
+        rows = self._rows(normalized, source, safe_message + suffix)
         with self._lock:
             if self.settings.file_enabled:
                 with self.path.open("a", encoding="utf-8") as stream:
-                    stream.write(row + "\n")
+                    stream.write("\n".join(rows) + "\n")
                 self._truncate_file()
             if self.settings.console_enabled:
                 if self.settings.color_enabled and self.console.isatty():
-                    self.console.write(f"{_LEVEL_COLORS[normalized]}{row}\033[0m\n")
+                    self.console.write(f"{_LEVEL_COLORS[normalized]}{rows[0]}\033[0m\n")
+                    for row in rows[1:]:
+                        self.console.write(row + "\n")
                 else:
-                    self.console.write(row + "\n")
+                    self.console.write("\n".join(rows) + "\n")
                 self.console.flush()
 
     def raw(self, message: str, *, end: str = "\n") -> None:
@@ -125,6 +138,17 @@ class ApplicationLogger(EventLogger):
     def separator(self) -> None:
         """Write one blank line through the raw logging path."""
         self.raw("")
+
+    def box(self, title: str, lines: Iterable[str]) -> None:
+        """Render non-log command output in a restrained grey ASCII panel."""
+        content = tuple(redact_text(line) for line in lines)
+        width = min(100, max([len(title) + 4, *(len(line) + 2 for line in content)]))
+        border = "+" + "-" * width + "+"
+        rows = [border, f"| {title[:width - 2]:<{width - 2}} |", border]
+        rows.extend(f"| {line[:width - 2]:<{width - 2}} |" for line in content)
+        rows.append(border)
+        for row in rows:
+            self.raw(row)
 
     def dispatch(self, messages: Iterable[str]) -> None:
         """Parse and dispatch a batch of optional `LEVEL: message` rows."""

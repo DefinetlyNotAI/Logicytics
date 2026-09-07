@@ -11,12 +11,12 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, IO
 
-from logicytics.artifacts import sha256_file
+from logicytics.module.artifacts import sha256_file
 from logicytics.contracts import Artifact
-from logicytics.manifest import RunManifest, write_manifest
+from logicytics.module.manifest import RunManifest, write_manifest
 
 if TYPE_CHECKING:
-    from logicytics.runtime import RunOutcome
+    from logicytics.module.runtime import RunOutcome
 
 _STREAM_BLOCK_BYTES = 1024 * 1024
 _MANIFEST_ARCHIVE_PATH = "metadata/manifest.json"

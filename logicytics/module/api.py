@@ -13,13 +13,13 @@ from math import isfinite
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from logicytics.configuration import AppConfig, load_config
+from logicytics.module.configuration import AppConfig, load_config
 from logicytics.contracts import Artifact, CollectorStatus, RunRequest, RunStatus
-from logicytics.discovery import preflight
-from logicytics.errors import ArtifactError, PlanError
-from logicytics.manifest import MANIFEST_SCHEMA_VERSION
-from logicytics.planner import RunPlan, build_plan
-from logicytics.runtime import RunOutcome, RunSupervisor
+from logicytics.module.discovery import preflight
+from logicytics.module.errors import ArtifactError, PlanError
+from logicytics.module.manifest import MANIFEST_SCHEMA_VERSION
+from logicytics.module.planner import RunPlan, build_plan
+from logicytics.module.runtime import RunOutcome, RunSupervisor
 
 _RUN_ID = re.compile(r"run-[0-9a-f]{32}")
 _ARTIFACT_ID = re.compile(r"artifact\.[0-9a-f]{32}")

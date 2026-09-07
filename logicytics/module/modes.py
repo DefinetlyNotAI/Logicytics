@@ -8,7 +8,7 @@ from types import MappingProxyType
 from typing import Iterable, TypedDict, Mapping
 
 from logicytics.contracts import CollectorKind
-from logicytics.discovery import CollectorCandidate
+from logicytics.module.discovery import CollectorCandidate
 
 
 class ModeMatrixCollector(TypedDict):

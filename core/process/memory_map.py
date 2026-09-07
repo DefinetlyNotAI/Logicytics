@@ -7,7 +7,7 @@ from pathlib import Path
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
-from logicytics.ctypes_collector import ProcessMemoryCounters, MemoryBasicInformation, get_process_memory_info, \
+from logicytics import ProcessMemoryCounters, MemoryBasicInformation, get_process_memory_info, \
     virtual_query, get_mapped_file_name, get_current_process, pointer_value
 from logicytics.platform_adapters import filesystem_adapter
 

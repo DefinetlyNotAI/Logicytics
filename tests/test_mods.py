@@ -9,12 +9,12 @@ import zipfile
 from pathlib import Path
 
 from logicytics.cli import cli_methods
-from logicytics.configuration import default_config
+from logicytics.module.configuration import default_config
 from logicytics.contracts import Capability, RunRequest
-from logicytics.discovery import preflight
-from logicytics.errors import PlanError, PreflightError
-from logicytics.planner import build_plan
-from logicytics.runtime import RunSupervisor
+from logicytics.module.discovery import preflight
+from logicytics.module.errors import PlanError, PreflightError
+from logicytics.module.planner import build_plan
+from logicytics.module.runtime import RunSupervisor
 from tests.fixtures.collectors import mod_metadata
 
 
@@ -140,7 +140,7 @@ class ModTests(unittest.TestCase):
         """The Python MOD bootstrap blocks host writes while an independent MOD still succeeds."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            configuration_path = root / "logicytics.json"
+            configuration_path = root / "logicytics.yaml"
 
             configuration_path.write_text(
                 '{"schema_version":4}\n',

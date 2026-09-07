@@ -10,9 +10,9 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from logicytics.contracts import Capability, CollectorKind, RunRequest
-from logicytics.discovery import CollectorCandidate, PreflightReport
-from logicytics.environment import inspect_environment
-from logicytics.errors import PlanError, PreflightError
+from logicytics.module.discovery import CollectorCandidate, PreflightReport
+from logicytics.module.environment import inspect_environment
+from logicytics.module.errors import PlanError, PreflightError
 
 BUILTIN_PROFILES = MappingProxyType({
     "minimal": "Essential local system, memory, and storage inventory only.",

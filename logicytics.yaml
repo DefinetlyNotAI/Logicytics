@@ -1,0 +1,27 @@
+# Logicytics user configuration
+schema_version: 4
+runtime:
+  output_root: output/data
+  default_max_workers: 4
+  maximum_workers: 16
+  package_completed_runs: true
+interaction:
+  history_enabled: false
+  similarity_threshold: 0.55
+  model_name: stdlib-sequence-matcher
+  model_debug: false
+maintenance:
+  local_manifest_path: project.manifest.json
+  minimum_python: "3.11"
+  recommended_python: "3.11"
+  sysinternals_enabled: true
+  sysinternals_download_url: https://download.sysinternals.com/files/SysinternalsSuite.zip
+logging:
+  level: INFO
+  console_enabled: true
+  color_enabled: true
+  file_enabled: true
+  maximum_bytes: 4194304
+  delete_previous: false
+  retention_days: 30
+collectors: {}

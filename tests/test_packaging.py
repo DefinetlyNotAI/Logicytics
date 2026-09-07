@@ -12,20 +12,20 @@ from pathlib import Path
 from typing import Any, Callable, cast
 from unittest.mock import patch
 
-from logicytics import packaging
+from logicytics.module import packaging
 from logicytics.cli import cli_methods
-from logicytics.configuration import (
+from logicytics.module.configuration import (
     default_config,
     load_config,
 )
 from logicytics.contracts import (
     RunRequest,
 )
-from logicytics.discovery import preflight
-from logicytics.manifest import write_manifest
-from logicytics.packaging import package_run
-from logicytics.planner import build_plan
-from logicytics.runtime import RunSupervisor
+from logicytics.module.discovery import preflight
+from logicytics.module.manifest import write_manifest
+from logicytics.module.packaging import package_run
+from logicytics.module.planner import build_plan
+from logicytics.module.runtime import RunSupervisor
 from tests.fixtures.collectors import COLLECTOR, delayed_collector_source
 
 
@@ -52,7 +52,7 @@ class PackagingTests(unittest.TestCase):
                 persisted_states.append(manifest.status.value)
                 write_manifest(path, manifest)
 
-            with patch("logicytics.runtime.write_manifest", side_effect=capture_manifest_state):
+            with patch("logicytics.module.runtime.write_manifest", side_effect=capture_manifest_state):
                 outcome = RunSupervisor(root, configuration).run(plan)
             self.assertEqual("planned", persisted_states[0])
             self.assertEqual("running", persisted_states[1])
@@ -236,7 +236,7 @@ class PackagingTests(unittest.TestCase):
             legacy_evidence = root / "ACCESS" / "RUNS" / "legacy-evidence.txt"
             legacy_evidence.parent.mkdir(parents=True)
             legacy_evidence.write_text("preserve existing evidence", encoding="utf-8")
-            (root / "logicytics.json").write_text(
+            (root / "logicytics.yaml").write_text(
                 '{"schema_version":4,"runtime":{"output_root":"custom/evidence"}}',
                 encoding="utf-8",
             )
@@ -392,7 +392,7 @@ class PackagingTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            (root / "logicytics.json").write_text(
+            (root / "logicytics.yaml").write_text(
                 json.dumps(
                     {
                         "schema_version": 4,
@@ -540,13 +540,13 @@ class PackagingTests(unittest.TestCase):
                 RunRequest(max_workers=1, acknowledge_authorization=True, performance_check=True),
             )
             snapshots: list[dict[str, Any]] = []
-            from logicytics.manifest import write_manifest as original_write_manifest
+            from logicytics.module.manifest import write_manifest as original_write_manifest
 
             def capture_manifest(path: Path, manifest: Any) -> None:
                 snapshots.append(json.loads(json.dumps(manifest.to_dict())))
                 original_write_manifest(path, manifest)
 
-            with patch("logicytics.runtime.write_manifest", side_effect=capture_manifest):
+            with patch("logicytics.module.runtime.write_manifest", side_effect=capture_manifest):
                 outcome = RunSupervisor(root, default_config(root)).run(plan)
             record = outcome.manifest.collectors[0]
             expected = {
@@ -663,7 +663,7 @@ class PackagingTests(unittest.TestCase):
                     raise OSError("simulated sidecar publication failure")
                 original_replace(source, destination)
 
-            with patch("logicytics.packaging.os.replace", side_effect=fail_sidecar):
+            with patch("logicytics.module.packaging.os.replace", side_effect=fail_sidecar):
                 with self.assertRaisesRegex(OSError, "sidecar publication failure"):
                     package_run(outcome)
             self.assertEqual(original_package, package_path.read_bytes())

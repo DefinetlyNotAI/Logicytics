@@ -8,8 +8,8 @@ import unittest
 from pathlib import Path
 
 from logicytics.contracts import Specialty
-from logicytics.discovery import preflight
-from logicytics.modes import EXECUTION_MODES
+from logicytics.module.discovery import preflight
+from logicytics.module.modes import EXECUTION_MODES
 
 
 class ReleaseDocumentationTests(unittest.TestCase):

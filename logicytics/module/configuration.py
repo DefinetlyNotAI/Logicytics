@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import configparser
 import hashlib
 import json
 import re
@@ -12,8 +11,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Mapping
 
-from logicytics.errors import PlanError
-from logicytics.redaction import redact_mapping
+from logicytics.module.errors import PlanError
+from logicytics.module.redaction import redact_mapping
 
 SCHEMA_VERSION = 4
 MAXIMUM_CONFIGURATION_BYTES = 2 * 1024 * 1024
@@ -32,22 +31,15 @@ _RUNTIME_FIELDS = frozenset({
 _INTERACTION_FIELDS = frozenset({"history_enabled", "similarity_threshold", "model_name", "model_debug"})
 _MAINTENANCE_FIELDS = frozenset({
     "remote_manifest_url", "remote_manifest_sha256", "local_manifest_path",
-    "minimum_python", "recommended_python",
+    "minimum_python", "recommended_python", "sysinternals_enabled", "sysinternals_download_url",
 })
 _LOGGING_FIELDS = frozenset({
     "level", "console_enabled", "color_enabled", "file_enabled", "maximum_bytes",
     "delete_previous", "retention_days",
 })
 _LOG_LEVELS = frozenset({"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INTERNAL", "EXCEPTION"})
-_LEGACY_ROOT_FIELDS = _ROOT_FIELDS.union({
-    "collector_settings", "workers", "worker_count", "max_workers", "output_root",
-    "package_completed_runs", "maximum_run_output_bytes",
-})
-_LEGACY_RUNTIME_ALIASES = MappingProxyType({
-    "workers": "default_max_workers",
-    "worker_count": "default_max_workers",
-    "max_workers": "maximum_workers",
-})
+DEFAULT_CONFIGURATION_FILENAME = "logicytics.yaml"
+DEFAULT_SYSINTERNALS_DOWNLOAD_URL = "https://download.sysinternals.com/files/SysinternalsSuite.zip"
 
 type CollectorSettingValue = str | int | float
 type CollectorSettings = Mapping[str, CollectorSettingValue]
@@ -176,127 +168,117 @@ def _finite_json_number(value: str) -> float:
     return result
 
 
-def _assign_migrated_runtime(runtime: dict[str, Any], target: str, value: Any, source: str) -> None:
-    """Refuse legacy aliases that would silently override another runtime setting."""
-    if target in runtime:
-        raise PlanError(f"legacy configuration contains conflicting settings for {target}: {source}")
-    runtime[target] = value
+def _yaml_scalar(value: str, *, line_number: int) -> object:
+    """Parse the safe scalar subset supported by the root configuration format."""
+    if not value:
+        return {}
+    if value in {"null", "Null", "NULL", "~"}:
+        return None
+    if value in {"true", "True", "TRUE"}:
+        return True
+    if value in {"false", "False", "FALSE"}:
+        return False
+    if value == "{}":
+        return {}
+    if value.startswith(("\"", "'")):
+        if not value.endswith(value[0]):
+            raise PlanError(f"invalid YAML string at line {line_number}")
+        if value[0] == "\"":
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError as error:
+                raise PlanError(f"invalid YAML string at line {line_number}: {error.msg}") from error
+        return value[1:-1].replace("''", "'")
+    if value.startswith(("[", "{", "&", "*", "|", ">", "!")):
+        raise PlanError(f"unsupported YAML value at line {line_number}; use a scalar or indented mapping")
+    if re.fullmatch(r"[-+]?\d+", value):
+        return int(value)
+    if re.fullmatch(r"[-+]?(?:\d+\.\d*|\d*\.\d+)(?:[eE][-+]?\d+)?", value):
+        parsed = float(value)
+        if not isfinite(parsed):
+            raise PlanError(f"non-finite YAML number at line {line_number}")
+        return parsed
+    return value
 
 
-def _migrate_v3_configuration(raw: Mapping[str, Any], project_root: Path) -> dict[str, Any]:
-    """Upgrade the explicitly supported v3 shape without writing or activating collectors."""
-    unknown = sorted(set(raw) - _LEGACY_ROOT_FIELDS)
-    if unknown:
-        raise PlanError(f"legacy configuration contains unsupported root settings: {', '.join(unknown)}")
-    runtime_value = raw.get("runtime", {})
-    if not isinstance(runtime_value, dict):
-        raise PlanError("legacy runtime configuration must be an object")
-    runtime: dict[str, Any] = {}
-    for key, value in runtime_value.items():
-        _assign_migrated_runtime(runtime, _LEGACY_RUNTIME_ALIASES.get(key, key), value, f"runtime.{key}")
-    root_aliases = {
-        "workers": "default_max_workers",
-        "worker_count": "default_max_workers",
-        "max_workers": "maximum_workers",
-        "output_root": "output_root",
-        "package_completed_runs": "package_completed_runs",
-        "maximum_run_output_bytes": "maximum_run_output_bytes",
-    }
-    for source, target in root_aliases.items():
-        if source in raw:
-            _assign_migrated_runtime(runtime, target, raw[source], source)
-    if "collectors" in raw and "collector_settings" in raw:
-        raise PlanError("legacy configuration contains conflicting collectors and collector_settings sections")
-    collectors = raw.get("collectors", raw.get("collector_settings", {}))
-    output_root = runtime.get("output_root")
-    if isinstance(output_root, str):
-        candidate = Path(output_root)
-        relative_parts = tuple(part.casefold() for part in candidate.parts)
-        if relative_parts == ("access", "runs") or candidate == project_root / "ACCESS" / "RUNS":
-            runtime["output_root"] = str(project_root / "output" / "data")
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "runtime": runtime,
-        "interaction": raw.get("interaction", {}),
-        "maintenance": raw.get("maintenance", {}),
-        "logging": raw.get("logging", {}),
-        "collectors": collectors,
-    }
-
-
-def _legacy_ini_payload(path: Path) -> dict[str, Any]:
-    """Translate the bounded historical CODE/config.ini schema into typed v4 sections."""
-    try:
-        payload = path.read_bytes()
-    except OSError as error:
-        raise PlanError(f"invalid legacy configuration file {path}: {error}") from error
-    if len(payload) > MAXIMUM_CONFIGURATION_BYTES:
-        raise PlanError("legacy configuration exceeds the 2 MiB limit")
+def _load_yaml_mapping(payload: bytes) -> dict[str, Any]:
+    """Load strict, dependency-free mapping YAML for deterministic user settings."""
     try:
         text = payload.decode("utf-8-sig")
-        parser = configparser.ConfigParser(interpolation=None, strict=True)
-        parser.read_string(text, source=str(path))
-    except (UnicodeDecodeError, configparser.Error) as error:
-        raise PlanError(f"invalid legacy configuration file {path}: {error}") from error
+    except UnicodeDecodeError as error:
+        raise PlanError(f"invalid YAML configuration encoding: {error}") from error
+    if text.lstrip().startswith("{"):
+        try:
+            parsed = json.loads(
+                text,
+                object_pairs_hook=_unique_json_object,
+                parse_constant=_reject_json_constant,
+                parse_float=_finite_json_number,
+            )
+        except ValueError as error:
+            raise PlanError(f"invalid YAML configuration: {error}") from error
+        if not isinstance(parsed, dict):
+            raise PlanError("YAML configuration root must be a mapping")
+        return parsed
+    records: list[tuple[int, int, str, str]] = []
+    for number, raw_line in enumerate(text.splitlines(), start=1):
+        if "\t" in raw_line:
+            raise PlanError(f"invalid YAML indentation at line {number}; use spaces")
+        line = raw_line.split("#", 1)[0].rstrip()
+        if not line.strip():
+            continue
+        indent = len(line) - len(line.lstrip(" "))
+        if indent % 2:
+            raise PlanError(f"invalid YAML indentation at line {number}; use multiples of two spaces")
+        content = line.strip()
+        if content.startswith("-") or ":" not in content:
+            raise PlanError(f"invalid YAML mapping entry at line {number}")
+        key, value = content.split(":", 1)
+        key = key.strip()
+        if not key or key.startswith(("\"", "'")) or any(character.isspace() for character in key):
+            raise PlanError(f"invalid YAML key at line {number}")
+        records.append((indent, number, key, value.strip()))
+    if not records:
+        raise PlanError("YAML configuration must contain a root mapping")
 
-    try:
-        runtime: dict[str, Any] = {}
-        logging: dict[str, Any] = {}
-        interaction: dict[str, Any] = {}
-        collectors: dict[str, dict[str, Any]] = {}
-        if parser.has_option("Settings", "max_workers"):
-            workers = parser.getint("Settings", "max_workers")
-            runtime.update({"default_max_workers": workers, "maximum_workers": workers})
-        if parser.has_option("Settings", "log_using_debug"):
-            logging["level"] = "DEBUG" if parser.getboolean("Settings", "log_using_debug") else "INFO"
-        if parser.has_option("Settings", "delete_old_logs"):
-            logging["delete_previous"] = parser.getboolean("Settings", "delete_old_logs")
-        if parser.has_option("Settings", "save_preferences"):
-            interaction["history_enabled"] = parser.getboolean("Settings", "save_preferences")
+    def parse_mapping(index: int, indentation: int) -> tuple[dict[str, Any], int]:
+        """Parse one indentation-delimited YAML mapping level."""
+        result: dict[str, Any] = {}
+        while index < len(records):
+            indent, number, key, value = records[index]
+            if indent < indentation:
+                break
+            if indent != indentation:
+                raise PlanError(f"invalid YAML nesting at line {number}")
+            if key in result:
+                raise PlanError(f"duplicate YAML key {key!r} at line {number}")
+            index += 1
+            if not value and index < len(records) and records[index][0] > indentation:
+                result[key], index = parse_mapping(index, records[index][0])
+            else:
+                result[key] = _yaml_scalar(value, line_number=number)
+        return result, index
 
-        if parser.has_section("Flag Settings"):
-            if parser.has_option("Flag Settings", "accuracy_min"):
-                interaction["similarity_threshold"] = parser.getfloat("Flag Settings", "accuracy_min") / 100
-            if parser.has_option("Flag Settings", "model_to_use"):
-                interaction["model_name"] = parser.get("Flag Settings", "model_to_use")
-            if parser.has_option("Flag Settings", "model_debug"):
-                interaction["model_debug"] = parser.getboolean("Flag Settings", "model_debug")
+    root, consumed = parse_mapping(0, 0)
+    if consumed != len(records):
+        raise PlanError("invalid YAML configuration nesting")
+    return root
 
-        if parser.has_section("DumpMemory Settings"):
-            limit_mib = parser.getint("DumpMemory Settings", "file_size_limit", fallback=0)
-            safety_factor = parser.getfloat("DumpMemory Settings", "file_size_safety", fallback=1.0)
-            if limit_mib < 0 or safety_factor < 1:
-                raise ValueError("memory limits require file_size_limit >= 0 and file_size_safety >= 1")
-            output_limit = min(64 * 1024 * 1024, limit_mib * 1024 * 1024) if limit_mib else 64 * 1024 * 1024
-            collectors["core.process.memory_map"] = {
-                "output_limit_bytes": output_limit,
-                "disk_safety_margin_bytes": int(output_limit * (safety_factor - 1)),
-                "dump_directory": "memory_maps",
-            }
 
-        if parser.has_section("NetWorkPsutil Settings"):
-            collectors["core.network.bandwidth_sample"] = {
-                "sample_count": parser.getint("NetWorkPsutil Settings", "sample_count", fallback=3),
-                "interval_seconds": parser.getfloat("NetWorkPsutil Settings", "interval", fallback=1.0),
-            }
+def default_configuration_yaml() -> str:
+    """Return the YAML template written by installer and repair flows."""
+    return """# Logicytics user configuration\nschema_version: 4\nruntime:\n  output_root: output/data\n  default_max_workers: 4\n  maximum_workers: 16\n  package_completed_runs: true\ninteraction:\n  history_enabled: false\n  similarity_threshold: 0.55\n  model_name: stdlib-sequence-matcher\n  model_debug: false\nmaintenance:\n  local_manifest_path: project.manifest.json\n  minimum_python: \"3.11\"\n  recommended_python: \"3.11\"\n  sysinternals_enabled: true\n  sysinternals_download_url: https://download.sysinternals.com/files/SysinternalsSuite.zip\nlogging:\n  level: INFO\n  console_enabled: true\n  color_enabled: true\n  file_enabled: true\n  maximum_bytes: 4194304\n  delete_previous: false\n  retention_days: 30\ncollectors: {}\n"""
 
-        if parser.has_section("PacketSniffer Settings"):
-            collectors["core.packet.packet_capture"] = {
-                "interface": parser.get("PacketSniffer Settings", "interface", fallback="WiFi"),
-                "packet_count": parser.getint("PacketSniffer Settings", "packet_count", fallback=100),
-                "timeout_seconds": parser.getfloat("PacketSniffer Settings", "timeout", fallback=10),
-                "retry_window_seconds": parser.getfloat("PacketSniffer Settings", "max_retry_time", fallback=0),
-            }
-    except (configparser.Error, ValueError) as error:
-        raise PlanError(f"invalid legacy configuration file {path}: {error}") from error
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "runtime": runtime,
-        "interaction": interaction,
-        "maintenance": {},
-        "logging": logging,
-        "collectors": collectors,
-    }
+
+def write_default_configuration(project_root: Path, *, overwrite: bool = False) -> Path:
+    """Atomically create the authoritative root YAML configuration template."""
+    path = project_root / DEFAULT_CONFIGURATION_FILENAME
+    if path.exists() and not overwrite:
+        return path
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(default_configuration_yaml(), encoding="utf-8")
+    temporary.replace(path)
+    return path
 
 
 @dataclass(frozen=True, slots=True)
@@ -329,6 +311,8 @@ class MaintenanceSettings:
     local_manifest_path: Path = Path("project.manifest.json")
     minimum_python: str = "3.11"
     recommended_python: str = "3.11"
+    sysinternals_enabled: bool = True
+    sysinternals_download_url: str = DEFAULT_SYSINTERNALS_DOWNLOAD_URL
 
 
 @dataclass(frozen=True, slots=True)
@@ -346,7 +330,7 @@ class LoggingSettings:
 
 @dataclass(frozen=True, slots=True)
 class AppConfig:
-    """Validated settings loaded from an optional JSON configuration file."""
+    """Validated settings loaded exclusively from the root YAML configuration file."""
 
     schema_version: int
     runtime: RuntimeSettings
@@ -383,47 +367,29 @@ def default_config(project_root: Path) -> AppConfig:
 
 
 def load_config(project_root: Path, config_path: Path | None = None) -> AppConfig:
-    """Load typed JSON, migrate historical CODE/config.ini, or use safe defaults."""
-    modern_path = project_root / "logicytics.json"
-    legacy_path = project_root / "CODE" / "config.ini"
-    path = config_path or (modern_path if modern_path.exists() else legacy_path)
+    """Load and validate the single authoritative root YAML configuration file."""
+    path = config_path or project_root / DEFAULT_CONFIGURATION_FILENAME
     if not path.is_absolute():
         path = project_root / path
     if not path.exists():
         return default_config(project_root)
-    legacy_ini = path.suffix.casefold() == ".ini"
-    if legacy_ini:
-        raw = _legacy_ini_payload(path)
-    else:
-        try:
-            payload = path.read_bytes()
-        except OSError as error:
-            raise PlanError(f"invalid configuration file {path}: {error}") from error
-        if len(payload) > MAXIMUM_CONFIGURATION_BYTES:
-            raise PlanError("configuration exceeds the 2 MiB limit")
-        try:
-            raw = json.loads(
-                payload.decode("utf-8-sig"),
-                object_pairs_hook=_unique_json_object,
-                parse_constant=_reject_json_constant,
-                parse_float=_finite_json_number,
-            )
-        except (UnicodeDecodeError, ValueError) as error:
-            raise PlanError(f"invalid configuration file {path}: {error}") from error
+    if path.suffix.casefold() not in {".yaml", ".yml"}:
+        raise PlanError("configuration must be a YAML file")
+    try:
+        payload = path.read_bytes()
+    except OSError as error:
+        raise PlanError(f"invalid YAML configuration file {path}: {error}") from error
+    if len(payload) > MAXIMUM_CONFIGURATION_BYTES:
+        raise PlanError("YAML configuration exceeds the 2 MiB limit")
+    raw = _load_yaml_mapping(payload)
     if not isinstance(raw, dict):
-        raise PlanError("configuration root must be a JSON object")
+        raise PlanError("YAML configuration root must be a mapping")
     schema_version = raw.get("schema_version", SCHEMA_VERSION)
     if not isinstance(schema_version, int) or isinstance(schema_version, bool):
         raise PlanError("configuration schema_version must be an integer")
-    migrated_from_schema: int | None = 3 if legacy_ini else None
-    if schema_version == 3:
-        raw = _migrate_v3_configuration(raw, project_root)
-        migrated_from_schema = schema_version
-        schema_version = SCHEMA_VERSION
     if schema_version != SCHEMA_VERSION:
         raise PlanError(
-            f"unsupported configuration schema_version {schema_version}; expected {SCHEMA_VERSION} "
-            "or supported legacy schema 3"
+            f"unsupported configuration schema_version {schema_version}; expected {SCHEMA_VERSION}"
         )
     unknown_root = sorted(set(raw) - _ROOT_FIELDS)
     if unknown_root:
@@ -533,6 +499,15 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             map(int, minimum_python.split("."))
     ):
         raise PlanError("recommended_python must not be older than minimum_python")
+    sysinternals_enabled = maintenance_raw.get("sysinternals_enabled", True)
+    sysinternals_download_url = maintenance_raw.get(
+        "sysinternals_download_url",
+        DEFAULT_SYSINTERNALS_DOWNLOAD_URL,
+    )
+    if not isinstance(sysinternals_enabled, bool):
+        raise PlanError("maintenance sysinternals_enabled must be boolean")
+    if not isinstance(sysinternals_download_url, str) or not sysinternals_download_url.startswith("https://"):
+        raise PlanError("maintenance sysinternals_download_url must be an HTTPS URL")
 
     logging_raw = raw.get("logging", {})
     if not isinstance(logging_raw, dict):
@@ -597,6 +572,8 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             local_manifest_path=local_manifest_path,
             minimum_python=minimum_python,
             recommended_python=recommended_python,
+            sysinternals_enabled=sysinternals_enabled,
+            sysinternals_download_url=sysinternals_download_url,
         ),
         logging=LoggingSettings(
             level=logging_level.upper(),
@@ -608,5 +585,5 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             retention_days=retention_days,
         ),
         collector_settings=collector_settings,
-        migrated_from_schema=migrated_from_schema,
+        migrated_from_schema=None,
     )

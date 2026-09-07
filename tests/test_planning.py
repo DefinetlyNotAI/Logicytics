@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from logicytics.cli import CLI, cli_methods, main
-from logicytics.configuration import (
+from logicytics.module.configuration import (
     default_config,
     load_config,
 )
@@ -20,15 +20,15 @@ from logicytics.contracts import (
     RunRequest,
     RunStatus,
 )
-from logicytics.discovery import PreflightReport, preflight
-from logicytics.environment import EnvironmentReport
-from logicytics.errors import PlanError
-from logicytics.logging import (
+from logicytics.module.discovery import PreflightReport, preflight
+from logicytics.module.environment import EnvironmentReport
+from logicytics.module.errors import PlanError
+from logicytics.module.logging import (
     FileEventLogger,
 )
-from logicytics.planner import BUILTIN_PROFILES, build_plan
+from logicytics.module.planner import BUILTIN_PROFILES, build_plan
 from logicytics.platform_adapters import ProcessAdapter
-from logicytics.runtime import RunSupervisor
+from logicytics.module.runtime import RunSupervisor
 from tests.fixtures.collectors import COLLECTOR, delayed_collector_source
 
 
@@ -300,7 +300,7 @@ class PlanningTests(unittest.TestCase):
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
             collector_path.write_text(COLLECTOR, encoding="utf-8")
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             config_path.write_text(
                 '{"schema_version":4,"runtime":{"default_max_workers":1,"maximum_workers":2}}',
                 encoding="utf-8",
@@ -576,11 +576,11 @@ class PlanningTests(unittest.TestCase):
             for administrator_state in (False, None):
                 with self.subTest(administrator_state=administrator_state):
                     environment = EnvironmentReport(administrator_state, True, None)
-                    with patch("logicytics.planner.inspect_environment", return_value=environment):
+                    with patch("logicytics.module.planner.inspect_environment", return_value=environment):
                         with self.assertRaisesRegex(PlanError, "administrator account"):
                             build_plan(report, approved)
             with patch(
-                    "logicytics.planner.inspect_environment",
+                    "logicytics.module.planner.inspect_environment",
                     return_value=EnvironmentReport(True, True, None),
             ):
                 plan = build_plan(report, approved)

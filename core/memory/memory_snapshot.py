@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
-from logicytics.ctypes_collector import global_memory_status
+from logicytics import global_memory_status
 
 
 class MemorySnapshotCollector(CoreCollector):

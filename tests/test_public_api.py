@@ -25,8 +25,8 @@ from logicytics.contracts import (
     RunRequest,
     RunStatus,
 )
-from logicytics.discovery import CollectorCandidate
-from logicytics.errors import ArtifactError, PlanError, PreflightError
+from logicytics.module.discovery import CollectorCandidate
+from logicytics.module.errors import ArtifactError, PlanError, PreflightError
 from tests.fixtures.collectors import COLLECTOR, plugin_collector_source
 
 
@@ -44,7 +44,7 @@ class PublicApiTests(unittest.TestCase):
                 "import pathlib, sys; "
                 "before = tuple(pathlib.Path.cwd().iterdir()); "
                 "import logicytics; "
-                "assert 'logicytics.runtime' not in sys.modules; "
+                "assert 'logicytics.module.runtime' not in sys.modules; "
                 "assert {'load_configuration', 'plan_run', 'run_collection', 'query_run', 'read_artifact'}"
                 ".issubset(logicytics.__all__); "
                 "assert tuple(pathlib.Path.cwd().iterdir()) == before"
@@ -404,7 +404,7 @@ class PublicApiTests(unittest.TestCase):
             original = stored.read_bytes()
             manifest_source = outcome.manifest_path.read_text(encoding="utf-8")
 
-            with patch("logicytics.api.os.startfile") as startfile:
+            with patch("logicytics.module.api.os.startfile") as startfile:
                 self.assertEqual(
                     stored,
                     open_artifact(root, outcome.manifest.run_id, artifact.id),

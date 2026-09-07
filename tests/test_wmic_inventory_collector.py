@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from core.system import wmic_inventory
-from logicytics.artifacts import WorkspaceArtifactWriter
+from logicytics.module.artifacts import WorkspaceArtifactWriter
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 

@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
-from logicytics.ctypes_collector import get_logical_drives, ularge_integer, get_disk_free_space, get_drive_type
+from logicytics import get_logical_drives, ularge_integer, get_disk_free_space, get_drive_type
 
 _DRIVE_TYPES = {
     0: "unknown",

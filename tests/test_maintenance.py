@@ -9,16 +9,16 @@ import zipfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from logicytics import (
+from logicytics.module import (
     maintenance,
 )
 from logicytics.cli import CLI, main
-from logicytics.configuration import (
+from logicytics.module.configuration import (
     MaintenanceSettings,
     load_config,
 )
-from logicytics.errors import PlanError
-from logicytics.maintenance import (
+from logicytics.module.errors import PlanError
+from logicytics.module.maintenance import (
     build_manifest,
     compare_files,
     compare_versions,
@@ -26,7 +26,7 @@ from logicytics.maintenance import (
     project_files,
     write_local_manifest,
 )
-from logicytics.sysinternals import ensure_sysinternals
+from logicytics.module.sysinternals import ensure_sysinternals
 
 
 class MaintenanceTests(unittest.TestCase):
@@ -38,7 +38,7 @@ class MaintenanceTests(unittest.TestCase):
         """Integrity endpoints and Python policy fail closed during configuration loading."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            config = root / "logicytics.json"
+            config = root / "logicytics.yaml"
             valid = {
                 "schema_version": 4,
                 "maintenance": {

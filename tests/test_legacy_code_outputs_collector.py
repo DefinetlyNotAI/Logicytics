@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from core.integration.legacy_code_outputs import LegacyCodeOutputsCollector
-from logicytics.artifacts import WorkspaceArtifactWriter
+from logicytics.module.artifacts import WorkspaceArtifactWriter
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 

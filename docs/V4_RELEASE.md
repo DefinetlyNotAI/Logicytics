@@ -18,7 +18,7 @@ wiki commit `eaf7628`.
 
 - Package version: `4.0.0`.
 - Collector contract: `4.0`.
-- Configuration schema: `4` with bounded schema-3 JSON and `CODE/config.ini`
+- Configuration schema: `4` with a validated root `logicytics.yaml`
   migration.
 - Run manifest schema: `1`.
 - Package layout: `1.0`.

@@ -7,17 +7,17 @@ import zipfile
 from pathlib import Path
 from typing import Any, cast
 
-from logicytics.configuration import (
+from logicytics.module.configuration import (
     default_config,
     load_config,
 )
 from logicytics.contracts import (
     RunRequest,
 )
-from logicytics.discovery import preflight
-from logicytics.errors import PlanError
-from logicytics.planner import build_plan
-from logicytics.runtime import RunSupervisor
+from logicytics.module.discovery import preflight
+from logicytics.module.errors import PlanError
+from logicytics.module.planner import build_plan
+from logicytics.module.runtime import RunSupervisor
 from tests.fixtures.collectors import COLLECTOR
 
 
@@ -28,7 +28,7 @@ class ConfigurationTests(unittest.TestCase):
         """Current v4 and explicitly migrated v3 schemas are accepted; other versions are not."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             for unsupported in (0, 1, 2, 5):
                 with self.subTest(schema_version=unsupported):
                     config_path.write_text(json.dumps({"schema_version": unsupported}), encoding="utf-8")
@@ -50,7 +50,7 @@ class ConfigurationTests(unittest.TestCase):
         """A supported v3 configuration migrates once in memory and preserves its source bytes."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             settings = {"core.packet.packet_capture": {"packet_count": 7, "timeout_seconds": 5}}
             original = json.dumps({
                 "schema_version": 3,
@@ -131,7 +131,7 @@ max_retry_time = 30
             self.assertEqual(5000, configuration.settings_for("core.packet.packet_capture")["packet_count"])
             self.assertEqual(original, config_path.read_text(encoding="utf-8"))
 
-            (root / "logicytics.json").write_text('{"schema_version":4}', encoding="utf-8")
+            (root / "logicytics.yaml").write_text('{"schema_version":4}', encoding="utf-8")
             self.assertIsNone(load_config(root).migrated_from_schema)
             self.assertFalse((root / "output").exists())
             self.assertEqual(3, configuration.to_manifest_dict()["migrated_from_schema"])
@@ -140,7 +140,7 @@ max_retry_time = 30
         """Migration cannot override settings, weaken validation, or silently enable extensions."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             invalid = (
                 ({"workers": 2, "worker_count": 3}, "conflicting settings"),
                 ({"workers": 2, "runtime": {"default_max_workers": 2}}, "conflicting settings"),
@@ -172,7 +172,7 @@ max_retry_time = 30
             legacy.parent.mkdir(parents=True)
             legacy.write_text("keep legacy evidence", encoding="utf-8")
 
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             original = json.dumps(
                 {
                     "schema_version": 3,
@@ -214,7 +214,7 @@ max_retry_time = 30
             expected = root / "output" / "data"
             self.assertEqual(expected, default_config(root).runtime.output_root)
             self.assertEqual(expected, load_config(root).runtime.output_root)
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             config_path.write_text('{"schema_version":4,"runtime":{}}', encoding="utf-8")
             self.assertEqual(expected, load_config(root).runtime.output_root)
             config_path.write_text(
@@ -235,7 +235,7 @@ max_retry_time = 30
                 "private_key": "private-value",
                 "ordinary": "safe",
             }
-            (root / "logicytics.json").write_text(
+            (root / "logicytics.yaml").write_text(
                 json.dumps({"schema_version": 4, "collectors": {collector_id: settings}}),
                 encoding="utf-8",
             )
@@ -256,7 +256,7 @@ max_retry_time = 30
         """Runtime worker limits and output locations must retain strict JSON types."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             invalid_configurations = (
                 ('{"schema_version":true}', "schema_version"),
                 ('{"schema_version":4,"runtime":{"default_max_workers":true}}', "worker limits"),
@@ -276,7 +276,7 @@ max_retry_time = 30
         """Ambiguous keys, typos, malformed IDs, and nonstandard JSON fail before planning."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             invalid = (
                 ('{"schema_version":4,"unexpected":true}', "unsupported root"),
                 ('{"schema_version":4,"runtime":{"worker_typo":2}}', "unsupported settings"),
@@ -305,7 +305,7 @@ max_retry_time = 30
         """Traversal and sensitive inventory limits cannot silently coerce or expand in workers."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             invalid = (
                 ("core.filesystem.system_drive_tree", {"max_entries": True}, "max_entries"),
                 ("core.filesystem.system_drive_tree", {"max_depth": 33}, "max_depth"),
@@ -340,7 +340,7 @@ max_retry_time = 30
         """The existing metadata-only memory mapper rejects unsafe values before worker launch."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             collector_id = "core.process.memory_map"
             invalid = (
                 ({"max_regions": True}, "max_regions"),
@@ -384,7 +384,7 @@ max_retry_time = 30
                 "disk_safety_margin_bytes": 4096,
                 "dump_directory": "maps",
             }
-            (root / "logicytics.json").write_text(
+            (root / "logicytics.yaml").write_text(
                 json.dumps({
                     "schema_version": 4,
                     "runtime": {"default_max_workers": 3, "maximum_workers": 8},
@@ -412,7 +412,7 @@ max_retry_time = 30
         """Collector-specific settings fail early rather than being silently coerced at runtime."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             config_path.write_text(
                 '{"schema_version":4,"collectors":{"core.network.bandwidth_sample":'
                 '{"sample_count":11}}}',

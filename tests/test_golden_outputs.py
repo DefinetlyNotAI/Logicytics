@@ -16,7 +16,7 @@ from core.system.bios_info import render_bios_table
 from logicytics.contracts import (
     Artifact, ArtifactWriter, CollectorContext, EvidenceKind, EventLogger, RunStatus,
 )
-from logicytics.manifest import CollectorRecord, RunManifest
+from logicytics.module.manifest import CollectorRecord, RunManifest
 
 _GOLDEN = Path(__file__).parent / "golden"
 

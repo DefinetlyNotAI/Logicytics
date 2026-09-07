@@ -12,10 +12,10 @@ from typing import Sequence, BinaryIO
 from unittest.mock import Mock, patch
 
 from core.packet import packet_capture
-from logicytics import environment
-from logicytics.artifacts import WorkspaceArtifactWriter
+from logicytics.module import environment
+from logicytics.module.artifacts import WorkspaceArtifactWriter
 from logicytics.contracts import CollectorContext, CollectorStatus
-from logicytics.environment import inspect_environment
+from logicytics.module.environment import inspect_environment
 from logicytics.platform_adapters import (
     FilesystemAdapter, NetworkAdapter, ProcessAdapter, RegistryAdapter, WindowsApiAdapter,
     which, windows_api_adapter, registry_adapter,

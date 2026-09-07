@@ -786,12 +786,12 @@ def _accept_runtime_metadata(candidate: CollectorCandidate, payload: object) -> 
 
 
 def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
-    engine_root = Path(__file__).resolve().parent.parent
+    engine_root = Path(__file__).resolve().parents[2]
     pythonpath = os.pathsep.join((str(engine_root), str(project_root)))
     command = [
         sys.executable,
         "-m",
-        "logicytics.validation_worker",
+        "logicytics.module.validation_worker",
         str(candidate.path),
         candidate.kind.value,
         candidate.expected_class,

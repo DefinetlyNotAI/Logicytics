@@ -647,14 +647,13 @@ Windows platform allows.
 - [x] Check whether the process has administrator privileges.
 - [x] Check the PowerShell execution policy.
 - [x] Check whether UAC is enabled.
-- [x] Detect and extract the bundled Sysinternals archive unless a local ignore
-      marker opts out.
+- [x] Detect, download, and extract Sysinternals when enabled by root YAML.
 - [x] Report missing, archived, or extracted Sysinternals tools without stopping
       unrelated collection.
 
 ### Configuration
 
-- [x] Load `config.ini` from the project CODE directory.
+- [x] Load the root YAML configuration as the sole settings source.
 - [x] Expose debug level, version, current file manifest, log retention, worker
       count, preference persistence, and all collector settings.
 - [x] Support remote configuration retrieval for update/integrity checks.
@@ -845,7 +844,7 @@ appropriate default/deep/non-Python mode.
       one-main-feature-per-file organization.
 - [x] Compare current files against the configured manifest.
 - [x] Display added, removed, and unchanged files with colored status markers.
-- [x] Update the manifest in `config.ini` after confirmation.
+- [x] Update the configured integrity manifest after confirmation.
 - [x] Prompt for and validate the next semantic version.
 - [x] Keep excluded history/cache/Sysinternals files out of manifest comparisons.
 

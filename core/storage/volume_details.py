@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
 from logicytics.contracts import CollectorContext, CollectorStatus
-from logicytics.ctypes_collector import get_volume_information, get_disk_free_space, ularge_integer, \
+from logicytics import get_volume_information, get_disk_free_space, ularge_integer, \
     create_unicode_buffer, dword
 from logicytics.platform_adapters import windows_api_adapter
 

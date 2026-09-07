@@ -7,9 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from logicytics.artifacts import WorkspaceArtifactWriter
-from logicytics.discovery import preflight
-from logicytics.output_contracts import core_output_contract
+from logicytics.module.artifacts import WorkspaceArtifactWriter
+from logicytics.module.discovery import preflight
+from logicytics.module.output_contracts import core_output_contract
 from logicytics.platform_adapters import (
     process_adapter, registry_adapter, which, windows_api_adapter,
 )

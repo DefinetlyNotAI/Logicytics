@@ -1,5 +1,8 @@
-"""Logicytics v4 public engine API."""
-from logicytics.api import run_collection, read_artifact, query_run, open_artifact, plan_run, load_configuration, \
+"""Logicytics v4 public contracts and lazily loaded application API."""
+
+import importlib
+
+from logicytics.module.api import run_collection, read_artifact, query_run, open_artifact, plan_run, load_configuration, \
     RunSnapshot, CollectorSnapshot, CollectorFailureSnapshot
 from logicytics.contracts import (
     CONTRACT_VERSION,
@@ -31,11 +34,16 @@ _APPLICATION_EXPORTS = frozenset({
 
 
 def __getattr__(name: str):
-    """Load application services only when callers explicitly request them."""
+    """Load application services and global host infrastructure on explicit access."""
     if name in _APPLICATION_EXPORTS:
-        from logicytics import api
+        from logicytics.module import api
 
         return getattr(api, name)
+    if name == "ctypes_collector":
+        return importlib.import_module("logicytics.global.ctypes_collector")
+    global_infrastructure = importlib.import_module("logicytics.global.ctypes_collector")
+    if hasattr(global_infrastructure, name):
+        return getattr(global_infrastructure, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 

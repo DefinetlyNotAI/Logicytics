@@ -9,13 +9,13 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, cast
 
-from logicytics.command_runner import parse_level_messages, run_command
-from logicytics.configuration import (
+from logicytics.module.command_runner import parse_level_messages, run_command
+from logicytics.module.configuration import (
     LoggingSettings,
     load_config,
 )
-from logicytics.errors import PlanError
-from logicytics.logging import (
+from logicytics.module.errors import PlanError
+from logicytics.module.logging import (
     ApplicationLogger,
     FileEventLogger,
     deprecated,
@@ -24,7 +24,7 @@ from logicytics.logging import (
     raise_logged,
     timed,
 )
-from logicytics.output_layout import ensure_output_layout
+from logicytics.module.output_layout import ensure_output_layout
 from tests.fixtures.file_listing import list_files
 
 
@@ -72,7 +72,7 @@ class LoggingTests(unittest.TestCase):
             self.assertLessEqual(path.stat().st_size, settings.maximum_bytes)
             self.assertFalse(old.exists())
             self.assertIn("\033[", console.getvalue())
-            self.assertIn("[EXCEPTION]", console.getvalue())
+            self.assertIn("| EXCEPTION", console.getvalue())
             with self.assertRaisesRegex(ValueError, "unsupported log level"):
                 logger.event("TRACE", "unsupported")
             with self.assertRaisesRegex(ValueError, "raw log end"):
@@ -115,7 +115,7 @@ class LoggingTests(unittest.TestCase):
                     layout.hashes,
             ):
                 self.assertTrue(directory.is_dir())
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             config_path.write_text(
                 json.dumps({
                     "schema_version": 4,

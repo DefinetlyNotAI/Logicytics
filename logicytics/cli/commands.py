@@ -1,4 +1,4 @@
-"""Minimal command-line interface for v4 planning and supervised execution."""
+"""Command-line orchestration for v4 planning and supervised execution."""
 
 from __future__ import annotations
 
@@ -12,42 +12,75 @@ import sys
 from pathlib import Path
 from typing import Literal
 
-from logicytics.configuration import AppConfig, load_config
+from logicytics.module.configuration import AppConfig, load_config
 from logicytics.contracts import Capability, OutputPolicy, PostRunAction, RunRequest
-from logicytics.discovery import preflight
-from logicytics.environment import inspect_environment
-from logicytics.errors import LogicyticsError
-from logicytics.interaction import load_history, match_flag, record_match, usage_statistics, write_usage_graph
-from logicytics.logging import get_application_logger
-from logicytics.maintenance import (
+from logicytics.module.discovery import preflight
+from logicytics.module.environment import inspect_environment
+from logicytics.module.errors import LogicyticsError
+from logicytics.module.interaction import load_history, match_flag, record_match, usage_statistics, write_usage_graph
+from logicytics.module.logging import get_application_logger
+from logicytics.module.maintenance import (
     build_manifest,
     compare_files,
     developer_checks,
     load_local_manifest,
     local_version,
     maintenance_diagnostics,
-    write_legacy_ini_manifest,
     write_local_manifest,
 )
-from logicytics.manifest import MANIFEST_SCHEMA_VERSION
-from logicytics.modes import (
+from logicytics.module.manifest import MANIFEST_SCHEMA_VERSION
+from logicytics.module.modes import (
     EXECUTION_MODES,
     LEGACY_MODE_ALIASES,
     ExecutionStrategy,
     mode_matrix,
     resolve_execution_mode,
 )
-from logicytics.output_layout import ensure_output_layout
-from logicytics.planner import BUILTIN_PROFILES, build_plan
+from logicytics.module.output_layout import ensure_output_layout
+from logicytics.module.planner import BUILTIN_PROFILES, build_plan
 from logicytics.platform_adapters import process_adapter
-from logicytics.runtime import RunSupervisor
-from logicytics.sysinternals import ensure_sysinternals
+from logicytics.module.runtime import RunSupervisor
+from logicytics.module.sysinternals import ensure_sysinternals
 
 
 class CLI:
     @staticmethod
+    def render_preflight(
+            logger: object,
+            validation: dict[str, list[dict[str, object]]],
+            sysinternals: dict[str, str],
+    ) -> None:
+        """Present validated collectors and diagnostics without exposing internal JSON."""
+        valid = validation["valid"]
+        invalid = validation["invalid"]
+        quarantined = validation["quarantined"]
+        logger.box(
+            "Preflight",
+            (
+                f"Valid collectors: {len(valid)}",
+                f"Quarantined extensions: {len(quarantined)}",
+                f"Blocking failures: {len(invalid)}",
+                f"Sysinternals: {sysinternals['status']}",
+            ),
+        )
+        for item in (*invalid, *quarantined):
+            diagnostics = item.get("diagnostics", [])
+            details = "; ".join(
+                str(diagnostic.get("message", "invalid collector"))
+                for diagnostic in diagnostics
+                if isinstance(diagnostic, dict)
+            )
+            logger.event(
+                "ERROR" if item in invalid else "WARNING",
+                details or "collector validation failed",
+                source="logicytics.cli",
+                collector=str(item["id"]),
+            )
+
+    @staticmethod
     def project_root() -> Path:
-        return Path(__file__).resolve().parent.parent
+        """Return the repository root from the relocated CLI package."""
+        return Path(__file__).resolve().parents[2]
 
     @staticmethod
     def request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
@@ -258,7 +291,7 @@ class CLI:
         parser.add_argument(
             "--config",
             type=Path,
-            help="Path to a v4 JSON or supported legacy INI configuration file",
+            help="Path to the authoritative Logicytics YAML configuration file",
         )
         parser.add_argument("--usage", action="store_true",
                             help="Show local interaction statistics and create a usage graph.")
@@ -542,17 +575,11 @@ class CLI:
                 )
 
             manifest = build_manifest(root, settings, next_version)
-            legacy_ini = root / "CODE" / "config.ini"
-            modern_config = root / "logicytics.json"
-
-            if legacy_ini.is_file() and not modern_config.exists():
-                written_manifest = write_legacy_ini_manifest(root, manifest)
-            else:
-                written_manifest = write_local_manifest(
-                    root,
-                    settings,
-                    manifest,
-                )
+            written_manifest = write_local_manifest(
+                root,
+                settings,
+                manifest,
+            )
 
             manifest_path = str(written_manifest)
 
@@ -573,6 +600,13 @@ class CLI:
 
 def main(argv: list[str] | None = None) -> int:
     """Run the selected preflight, planning, or supervised execution command."""
+    if sys.prefix == sys.base_prefix:
+        print(
+            "ERROR | Logicytics must run inside a virtual environment. "
+            "Run python -m logicytics.cli.installer first.",
+            file=sys.stderr,
+        )
+        return 2
     cli_parser = cli_methods.parser()
     arguments = cli_parser.parse_args(argv)
 
@@ -620,6 +654,7 @@ def main(argv: list[str] | None = None) -> int:
         application_logger.event(
             "INFO",
             "command_started",
+            source="logicytics.cli",
             command=arguments.command,
         )
 
@@ -729,19 +764,8 @@ def main(argv: list[str] | None = None) -> int:
                 enable_mods=arguments.mods,
             )
 
-            payload: dict[str, object] = {
-                "environment": inspect_environment().to_dict(),
-                "sysinternals": ensure_sysinternals(root).to_dict(),
-                **validation,
-            }
-
-            print(
-                json.dumps(
-                    payload,
-                    indent=2,
-                    sort_keys=True,
-                )
-            )
+            sysinternals = ensure_sysinternals(root, configuration.maintenance).to_dict()
+            cli_methods.render_preflight(application_logger, validation, sysinternals)
 
             return 0 if not validation["invalid"] else 2
 
@@ -768,7 +792,7 @@ def main(argv: list[str] | None = None) -> int:
                     "cpu_count": os.cpu_count(),
                 },
                 "sysinternals": (
-                    ensure_sysinternals(root).to_dict()
+                    ensure_sysinternals(root, configuration.maintenance).to_dict()
                 ),
                 "preflight": {
                     "valid_collectors": len(report.valid),

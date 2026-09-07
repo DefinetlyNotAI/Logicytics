@@ -8,23 +8,23 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from logicytics import (
+from logicytics.module import (
     discovery,
 )
 from logicytics.cli import CLI, main
-from logicytics.configuration import (
+from logicytics.module.configuration import (
     load_config,
 )
 from logicytics.contracts import (
     Capability,
     RunRequest,
 )
-from logicytics.discovery import preflight
-from logicytics.environment import EnvironmentReport
-from logicytics.errors import PlanError, PreflightError
-from logicytics.planner import build_plan
+from logicytics.module.discovery import preflight
+from logicytics.module.environment import EnvironmentReport
+from logicytics.module.errors import PlanError, PreflightError
+from logicytics.module.planner import build_plan
 from logicytics.platform_adapters import ProcessAdapter
-from logicytics.runtime import RunSupervisor
+from logicytics.module.runtime import RunSupervisor
 from tests.fixtures.collectors import COLLECTOR, plugin_collector_source, delayed_collector_source
 
 
@@ -171,7 +171,7 @@ class PreflightTests(unittest.TestCase):
                     '            supported_platforms=("win32",),\n            maximum_output_bytes=4,',
                 )
                 (core_directory / f"{filename}.py").write_text(source, encoding="utf-8")
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             config_path.write_text(
                 '{"schema_version":4,"runtime":{"maximum_run_output_bytes":7}}',
                 encoding="utf-8",
@@ -203,7 +203,7 @@ class PreflightTests(unittest.TestCase):
                     '            supported_platforms=("win32",),\n            maximum_output_bytes=4,',
                 )
                 (core_directory / f"{filename}.py").write_text(source, encoding="utf-8")
-            config_path = root / "logicytics.json"
+            config_path = root / "logicytics.yaml"
             config_path.write_text(
                 '{"schema_version":4,"runtime":{"maximum_run_output_bytes":4}}',
                 encoding="utf-8",
@@ -660,7 +660,7 @@ class PreflightTests(unittest.TestCase):
             plugin_path.write_text(source, encoding="utf-8")
             report = preflight(root)
             self.assertEqual((), report.invalid)
-            with patch("logicytics.planner.inspect_environment") as inspect:
+            with patch("logicytics.module.planner.inspect_environment") as inspect:
                 plan = build_plan(report, RunRequest())
             self.assertEqual((), plan.collectors)
             inspect.assert_not_called()
@@ -669,7 +669,7 @@ class PreflightTests(unittest.TestCase):
                 approved_capabilities=(Capability.ELEVATED_PRIVILEGES,),
             )
             with patch(
-                    "logicytics.planner.inspect_environment",
+                    "logicytics.module.planner.inspect_environment",
                     return_value=EnvironmentReport(False, True, None),
             ):
                 with self.assertRaisesRegex(PlanError, "administrator account"):

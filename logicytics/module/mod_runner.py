@@ -28,7 +28,7 @@ def main(argv: list[str] | None = None) -> int:
     engine_root = Path(__file__).resolve().parent.parent
     sys.path.insert(0, str(engine_root))
     from logicytics.contracts import Capability
-    from logicytics.runtime import _WorkerMutationGuard
+    from logicytics.module.runtime import _WorkerMutationGuard
 
     try:
         capabilities = tuple(Capability(value) for value in capability_values)

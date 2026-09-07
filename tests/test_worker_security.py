@@ -5,16 +5,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from logicytics.configuration import (
+from logicytics.module.configuration import (
     default_config,
 )
 from logicytics.contracts import (
     Capability,
     RunRequest,
 )
-from logicytics.discovery import preflight
-from logicytics.planner import build_plan
-from logicytics.runtime import RunSupervisor
+from logicytics.module.discovery import preflight
+from logicytics.module.planner import build_plan
+from logicytics.module.runtime import RunSupervisor
 from tests.fixtures.collectors import COLLECTOR, delayed_collector_source
 
 
@@ -303,7 +303,7 @@ class WorkerSecurityTests(unittest.TestCase):
             (root / "plugins").mkdir()
             peer_path = core_directory / "z_independent.py"
             peer_path.write_text(delayed_collector_source("z_independent", 0.0), encoding="utf-8")
-            protected_configuration = root / "logicytics.json"
+            protected_configuration = root / "logicytics.yaml"
             attempts = (
                 ([sys.executable, "-m", "logicytics", "preflight"], "main_application"),
                 ([sys.executable, "-m", "pip", "--version"], "repository_or_package_management"),
@@ -369,8 +369,8 @@ class WorkerSecurityTests(unittest.TestCase):
                 "from logicytics import run_collection",
                 "from logicytics import packaging",
                 "import logicytics\nlogicytics.run_collection",
-                "import logicytics\nlogicytics.configuration",
-                "from logicytics.api import query_run",
+                "import logicytics\nlogicytics.module.configuration",
+                "from logicytics.module.api import query_run",
             )
             for statement in attempts:
                 with self.subTest(statement=statement):

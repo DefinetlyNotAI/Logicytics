@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping, TypedDict
 
-from logicytics.configuration import MaintenanceSettings
+from logicytics.module.configuration import MaintenanceSettings
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _VERSION = re.compile(
@@ -203,45 +203,6 @@ def write_local_manifest(
         + "\n",
         encoding="utf-8",
     )
-    temporary.replace(path)
-    return path
-
-
-def write_legacy_ini_manifest(
-        project_root: Path,
-        manifest: IntegrityManifest,
-) -> Path:
-    """Atomically update only version and file membership in historical CODE/config.ini."""
-    if _VERSION.fullmatch(manifest.version) is None:
-        raise ValueError("next version must use semantic versioning")
-    path = (project_root / "CODE" / "config.ini").resolve()
-    try:
-        path.relative_to(project_root.resolve())
-        payload = path.read_bytes()
-    except (ValueError, OSError) as error:
-        raise ValueError(f"legacy config.ini is unavailable: {error}") from error
-    if len(payload) > _MAXIMUM_MANIFEST_BYTES:
-        raise ValueError("legacy config.ini exceeds the 2 MiB limit")
-    try:
-        text = payload.decode("utf-8-sig")
-    except UnicodeDecodeError as error:
-        raise ValueError(f"legacy config.ini is not valid UTF-8: {error}") from error
-    header = re.search(r"(?m)^\[System Settings][ \t]*\r?$", text)
-    if header is None:
-        raise ValueError("legacy config.ini is missing [System Settings]")
-    following = re.search(r"(?m)^\[[^]\r\n]+][ \t]*\r?$", text[header.end():])
-    section_end = header.end() + following.start() if following is not None else len(text)
-    replacement = text[header.start():section_end]
-    files = ", ".join(sorted(manifest.files))
-    updates = {"version": manifest.version, "files": f'"{files}"'}
-    for key, value in updates.items():
-        pattern = re.compile(rf"(?m)^{re.escape(key)}\s*=.*$")
-        if pattern.search(replacement) is None:
-            raise ValueError(f"legacy config.ini [System Settings] is missing {key}")
-        replacement = pattern.sub(f"{key} = {value}", replacement, count=1)
-    updated = text[:header.start()] + replacement + text[section_end:]
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(updated, encoding="utf-8", newline="")
     temporary.replace(path)
     return path
 

@@ -8,8 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from logicytics import configuration
-from logicytics.errors import PlanError
+from logicytics.module import configuration
+from logicytics.module.errors import PlanError
 
 
 class ConfigurationDocumentationTests(unittest.TestCase):
@@ -46,7 +46,7 @@ class ConfigurationDocumentationTests(unittest.TestCase):
         payload = json.loads(match.group(1))
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            path = root / "logicytics.json"
+            path = root / "logicytics.yaml"
             path.write_text(json.dumps(payload), encoding="utf-8")
             loaded = configuration.load_config(root)
         self.assertEqual(configuration.SCHEMA_VERSION, loaded.schema_version)
@@ -75,7 +75,7 @@ class ConfigurationDocumentationTests(unittest.TestCase):
     def test_core_settings_require_an_explicit_schema_while_extensions_remain_open(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            path = root / "logicytics.json"
+            path = root / "logicytics.yaml"
             path.write_text(
                 json.dumps({
                     "schema_version": 4,

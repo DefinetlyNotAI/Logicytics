@@ -13,7 +13,7 @@ from threading import RLock
 from uuid import uuid4
 
 from logicytics.contracts import Artifact, ArtifactWriter, EvidenceKind
-from logicytics.errors import ArtifactError
+from logicytics.module.errors import ArtifactError
 
 
 def _is_within(path: Path, parent: Path) -> bool:

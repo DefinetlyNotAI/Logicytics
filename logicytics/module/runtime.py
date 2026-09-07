@@ -25,9 +25,9 @@ from time import monotonic, sleep
 from typing import Any, Mapping, TypedDict, cast, Callable, Protocol, TypeVar
 from uuid import uuid4
 
-from logicytics.artifacts import WorkspaceArtifactWriter
-from logicytics.command_runner import parse_level_messages
-from logicytics.configuration import AppConfig
+from logicytics.module.artifacts import WorkspaceArtifactWriter
+from logicytics.module.command_runner import parse_level_messages
+from logicytics.module.configuration import AppConfig
 from logicytics.contracts import (
     Artifact,
     Capability,
@@ -41,14 +41,14 @@ from logicytics.contracts import (
     RunStatus,
     ValidationResult,
 )
-from logicytics.discovery import CollectorCandidate
-from logicytics.errors import LogicyticsError
-from logicytics.logging import FileEventLogger, get_application_logger, get_event_logger
-from logicytics.manifest import CollectorRecord, RunManifest, write_manifest, utc_now
-from logicytics.output_contracts import core_output_contract
-from logicytics.output_layout import ensure_output_layout
-from logicytics.packaging import package_manifest
-from logicytics.planner import RunPlan
+from logicytics.module.discovery import CollectorCandidate
+from logicytics.module.errors import LogicyticsError
+from logicytics.module.logging import FileEventLogger, get_application_logger, get_event_logger
+from logicytics.module.manifest import CollectorRecord, RunManifest, write_manifest, utc_now
+from logicytics.module.output_contracts import core_output_contract
+from logicytics.module.output_layout import ensure_output_layout
+from logicytics.module.packaging import package_manifest
+from logicytics.module.planner import RunPlan
 from logicytics.platform_adapters import process_adapter, windows_api_adapter
 
 _T = TypeVar("_T")

@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
-from logicytics.configuration import (
+from logicytics.module.configuration import (
     default_config,
 )
 from logicytics.contracts import (
@@ -21,9 +21,9 @@ from logicytics.ctypes_collector import (
     STILL_ACTIVE,
     close_handle
 )
-from logicytics.discovery import preflight
-from logicytics.planner import build_plan
-from logicytics.runtime import RunSupervisor
+from logicytics.module.discovery import preflight
+from logicytics.module.planner import build_plan
+from logicytics.module.runtime import RunSupervisor
 from tests.fixtures.collectors import COLLECTOR, delayed_collector_source
 
 
