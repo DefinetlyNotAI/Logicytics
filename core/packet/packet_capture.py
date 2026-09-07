@@ -78,6 +78,7 @@ class PacketCaptureCollector(CoreCollector):
 
     @staticmethod
     def _close_capture(capture_socket: socket.socket) -> None:
+        """Disable Windows promiscuous capture mode and close the socket."""
         try:
             capture_socket.ioctl(
                 socket.SIO_RCVALL,

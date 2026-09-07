@@ -249,6 +249,7 @@ def compare_versions(local: str, remote: str) -> str:
     """Compare semantic versions while treating snapshots as older than stable peers."""
 
     def parsed(value: str) -> tuple[int, int, int, int, tuple[tuple[int, int | str], ...]]:
+        """Parse a supported semantic version into a comparable tuple."""
         match = _VERSION.fullmatch(value)
         if match is None:
             raise ValueError("version comparison requires semantic versions")
@@ -318,6 +319,7 @@ def maintenance_diagnostics(
 
 
 class DeveloperChecks(TypedDict):
+    """Static repository hygiene findings returned by developer checks."""
     naming_violations: list[str]
     misplaced_python: list[str]
     missing_module_docstrings: list[str]

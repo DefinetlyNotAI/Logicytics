@@ -43,6 +43,7 @@ def _fingerprint(request: RunRequest, collectors: tuple[CollectorCandidate, ...]
 
 
 def _selected_by_request(candidate: CollectorCandidate, request: RunRequest) -> bool:
+    """Return whether request flags and profile rules select this validated candidate."""
     assert candidate.metadata is not None
     metadata = candidate.metadata
     if metadata.id in request.exclude:
@@ -67,11 +68,13 @@ def _selected_by_request(candidate: CollectorCandidate, request: RunRequest) -> 
 
 
 def _topological_order(selected: dict[str, CollectorCandidate]) -> tuple[CollectorCandidate, ...]:
+    """Order selected collectors after resolving dependencies and rejecting cycles."""
     ordered: list[CollectorCandidate] = []
     visiting: set[str] = set()
     visited: set[str] = set()
 
     def visit(collector_id: str) -> None:
+        """Depth-first visit one dependency node exactly once."""
         if collector_id in visited:
             return
         if collector_id in visiting:

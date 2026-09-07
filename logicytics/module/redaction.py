@@ -52,6 +52,7 @@ def redact_text(value: str) -> str:
 
 
 def _redact_value(value: Any) -> Any:
+    """Recursively sanitize nested mappings and sequences while preserving their shape."""
     if isinstance(value, Mapping):
         return redact_mapping(value)
     if isinstance(value, list):

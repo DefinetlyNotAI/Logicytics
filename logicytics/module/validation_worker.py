@@ -72,17 +72,21 @@ class _ValidationSideEffectGuard:
     }
 
     def __init__(self) -> None:
+        """Initialize an inactive audit guard for the validation context."""
         self.active = False
 
     def __enter__(self) -> "_ValidationSideEffectGuard":
+        """Install the audit hook and begin rejecting validation side effects."""
         sys.addaudithook(self._reject_side_effect)
         self.active = True
         return self
 
     def __exit__(self, *_: object) -> None:
+        """Stop enforcing validation side-effect checks after the probe exits."""
         self.active = False
 
     def _reject_side_effect(self, event: str, arguments: tuple[object, ...]) -> None:
+        """Raise when an active validation probe attempts a blocked mutation."""
         if not self.active:
             return
         if event == "open":
@@ -100,6 +104,7 @@ class _ValidationSideEffectGuard:
 
 
 def _load_module(path: Path):
+    """Load one collector source module under an isolated probe module name."""
     module_name = f"logicytics_probe_{path.stem}"
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
@@ -113,6 +118,7 @@ def _validate_contract(
         collector_type: type[Collector],
         kind: CollectorKind,
 ) -> CollectorMetadata:
+    """Validate collector signatures, metadata consistency, and probe purity."""
     required_base = CoreCollector if kind is CollectorKind.CORE else PluginCollector
 
     if not issubclass(collector_type, required_base):

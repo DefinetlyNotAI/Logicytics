@@ -89,10 +89,12 @@ class PreflightReport:
 
     @property
     def valid(self) -> tuple[CollectorCandidate, ...]:
+        """Return candidates that passed both static and runtime validation."""
         return tuple(candidate for candidate in self.candidates if candidate.valid)
 
     @property
     def invalid(self) -> tuple[CollectorCandidate, ...]:
+        """Return candidates that must be blocked or quarantined."""
         return tuple(candidate for candidate in self.candidates if not candidate.valid)
 
     def to_dict(
@@ -186,10 +188,12 @@ def _diagnostic_line(path: Path, message: str) -> int:
 
 
 def _pascal_case(filename: str) -> str:
+    """Convert a snake-case collector filename to its required class name."""
     return "".join(part.capitalize() for part in Path(filename).stem.split("_")) + "Collector"
 
 
 def _is_within(path: Path, root: Path) -> bool:
+    """Return whether a candidate path resolves inside its discovery root."""
     try:
         path.resolve().relative_to(root.resolve())
     except ValueError:
@@ -198,6 +202,7 @@ def _is_within(path: Path, root: Path) -> bool:
 
 
 def _iter_candidates(project_root: Path, kind: CollectorKind) -> list[Path]:
+    """Enumerate eligible collector files for one trusted or opt-in source tree."""
     root = project_root / ("core" if kind is CollectorKind.CORE else "plugins")
     if not root.exists():
         return []
@@ -217,6 +222,7 @@ def _iter_candidates(project_root: Path, kind: CollectorKind) -> list[Path]:
 
 
 def _top_level_call_name(node: ast.Call) -> str | None:
+    """Return a stable dotted name for a simple AST call expression."""
     if isinstance(node.func, ast.Name):
         return node.func.id
     if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
@@ -228,6 +234,7 @@ class _ImportTimeCallFinder(ast.NodeVisitor):
     """Find calls whose expressions execute while Python imports a module."""
 
     def __init__(self) -> None:
+        """Initialize an empty call collector for import-time AST expressions."""
         self.calls: list[ast.Call] = []
 
     def visit_Call(self, node: ast.Call) -> None:
@@ -260,6 +267,7 @@ class _ImportTimeCallFinder(ast.NodeVisitor):
             self.visit(item)
 
     def _visit_callable_header(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        """Visit decorators, annotations, and defaults evaluated at definition time."""
         for decorator in node.decorator_list:
             self.visit(decorator)
         self._visit_arguments(node.args)
@@ -267,6 +275,7 @@ class _ImportTimeCallFinder(ast.NodeVisitor):
             self.visit(node.returns)
 
     def _visit_arguments(self, arguments: ast.arguments) -> None:
+        """Visit argument defaults and annotations that execute during module import."""
         for default in (*arguments.defaults, *arguments.kw_defaults):
             if default is not None:
                 self.visit(default)
@@ -329,6 +338,7 @@ def _validate_engine_boundary_imports(tree: ast.Module, candidate: CollectorCand
 
 
 def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
+    """Apply filename, AST shape, import-boundary, and side-effect rules to a candidate."""
     expected_class = _pascal_case(path.name)
     candidate = CollectorCandidate(path=path, kind=kind, expected_class=expected_class)
     if path.name in _VAGUE_NAMES and not (kind is CollectorKind.PLUGIN and path.name == "main.py"):
@@ -786,6 +796,7 @@ def _accept_runtime_metadata(candidate: CollectorCandidate, payload: object) -> 
 
 
 def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
+    """Probe metadata in a short-lived restricted worker after static validation."""
     engine_root = Path(__file__).resolve().parents[2]
     pythonpath = os.pathsep.join((str(engine_root), str(project_root)))
     command = [

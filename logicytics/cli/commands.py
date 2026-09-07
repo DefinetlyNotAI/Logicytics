@@ -44,6 +44,7 @@ from logicytics.module.sysinternals import ensure_sysinternals
 
 
 class CLI:
+    """Translate command-line arguments into validated application requests."""
     @staticmethod
     def render_preflight(
             logger: object,
@@ -84,6 +85,7 @@ class CLI:
 
     @staticmethod
     def request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
+        """Build an immutable run request while enforcing mode and rerun conflicts."""
         legacy_flags = {
             flag: getattr(arguments, flag, False)
             for flag in LEGACY_MODE_ALIASES
@@ -287,6 +289,7 @@ class CLI:
 
     @staticmethod
     def parser() -> argparse.ArgumentParser:
+        """Create the complete parser for maintenance, planning, and collection commands."""
         parser = argparse.ArgumentParser(description="Logicytics v4 run-oriented evidence framework")
         parser.add_argument(
             "--config",

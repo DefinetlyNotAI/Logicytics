@@ -12,6 +12,7 @@ from logicytics.module.discovery import CollectorCandidate
 
 
 class ModeMatrixCollector(TypedDict):
+    """Serialized mode membership and validation details for one collector."""
     id: str
     kind: str
     valid: bool
@@ -22,6 +23,7 @@ class ModeMatrixCollector(TypedDict):
 
 
 class ModeMatrixMode(TypedDict):
+    """Serialized execution mode definition and its selected collectors."""
     name: str
     description: str
     strategy: str
@@ -30,6 +32,7 @@ class ModeMatrixMode(TypedDict):
 
 
 class ModeMatrix(TypedDict):
+    """Versioned machine-readable matrix of modes and collector memberships."""
     schema_version: int
     modes: list[ModeMatrixMode]
     collectors: list[ModeMatrixCollector]

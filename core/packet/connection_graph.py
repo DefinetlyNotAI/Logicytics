@@ -27,6 +27,7 @@ def render_connection_graph(command_output: str) -> str:
         edges.add((source, destination, protocol.upper()))
 
     def quote(value: str) -> str:
+        """Escape one label for safe inclusion in a quoted DOT string."""
         return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
 
     lines = ["digraph connection_graph {", "  rankdir=LR;"]

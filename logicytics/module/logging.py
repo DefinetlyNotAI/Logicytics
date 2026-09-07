@@ -51,6 +51,7 @@ class ApplicationLogger(EventLogger):
             *,
             console: TextIO | None = None,
     ) -> None:
+        """Initialize a bounded application logger with explicit file and console sinks."""
         self.path = path.resolve()
         self.settings = settings
         self.console = sys.stderr if console is None else console
@@ -182,6 +183,7 @@ class FileEventLogger(EventLogger):
     """Append JSONL events to a single run- or collector-owned log file."""
 
     def __init__(self, path: Path, *, run_id: str, collector_id: str | None = None) -> None:
+        """Initialize an append-only JSONL logger scoped to one run and collector."""
         self.path = path
         self.run_id = run_id
         self.collector_id = collector_id
@@ -223,7 +225,9 @@ def timed(
     """Decorate a function so structured start, finish, error, and duration events are written."""
 
     def decorate(function: Callable[Parameters, Result]) -> Callable[Parameters, Result]:
+        """Wrap one callable with lifecycle timing events."""
         def wrapped(*args: Parameters.args, **kwargs: Parameters.kwargs) -> Result:
+            """Emit start, completion, or failure events around one invocation."""
             logger.event(level, "function_started", function=function.__qualname__)
             started = perf_counter()
             try:
@@ -257,7 +261,9 @@ def deprecated(
     """Decorate a function so each invocation emits a structured deprecation warning."""
 
     def decorate(function: Callable[Parameters, Result]) -> Callable[Parameters, Result]:
+        """Wrap one callable with a structured deprecation warning."""
         def wrapped(*args: Parameters.args, **kwargs: Parameters.kwargs) -> Result:
+            """Emit the configured warning and then invoke the deprecated callable."""
             fields: dict[str, str] = {"function": function.__qualname__, "removal_version": removal_version,
                                       "reason": reason}
             if include_stack:

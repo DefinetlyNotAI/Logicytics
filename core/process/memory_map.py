@@ -43,6 +43,7 @@ class MemoryMapCollector(CoreCollector):
             )
 
         def setting_int(name: str, default: int) -> int:
+            """Read one integer setting while rejecting booleans and unsupported objects."""
             value = context.settings.get(name, default)
 
             if isinstance(value, bool):

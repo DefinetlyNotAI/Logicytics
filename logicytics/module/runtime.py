@@ -76,12 +76,14 @@ class _ProcessContext(Protocol):
             *,
             daemon: bool | None = None,
     ) -> BaseProcess:
+        """Create a worker process using the configured multiprocessing context."""
         ...
 
     def Queue(
             self,
             maxsize: int = 0,
     ) -> Queue[_T]:
+        """Create a typed result queue for worker-to-supervisor messages."""
         ...
 
 
@@ -120,6 +122,7 @@ class _WorkerMessage(TypedDict):
 
 @dataclass(slots=True)
 class _ActiveWorker:
+    """Track process, resource, workspace, and progress state for one active collector."""
     candidate_id: str
     process: BaseProcess
     started_at: float
@@ -170,6 +173,7 @@ class _WorkerMutationGuard:
             capabilities: tuple[Capability, ...],
             collector_source: Path,
     ) -> None:
+        """Install audit boundaries for one collector's filesystem and capability scope."""
         self.roots = (workspace.resolve(), (artifact_root / collector_id.replace(".", "_")).resolve())
         self.runtime_roots = (Path(sys.base_prefix).resolve(), Path(__file__).resolve().parent)
         self.collector_source = collector_source.resolve()
@@ -186,6 +190,7 @@ class _WorkerMutationGuard:
         sys.addaudithook(self._check_event)
 
     def _check_path(self, value: object) -> None:
+        """Reject writes that escape the collector workspace or artifact root."""
         if isinstance(value, int):
             return
         if not isinstance(value, (str, bytes, os.PathLike)):
@@ -197,6 +202,7 @@ class _WorkerMutationGuard:
             raise PermissionError(f"collector filesystem mutation escapes its private workspace: {path}")
 
     def _check_read(self, value: object) -> None:
+        """Enforce declared read, browser, sensitive-file, and private-key capabilities."""
         if isinstance(value, int) or not isinstance(value, (str, bytes, os.PathLike)):
             return
         path = Path(os.fsdecode(value)).resolve()
@@ -306,6 +312,7 @@ class _WorkerMutationGuard:
         return None
 
     def _check_event(self, event: str, arguments: tuple[object, ...]) -> None:
+        """Apply capability and mutation policy to one Python audit event."""
         if not self.active:
             return
         if event == "subprocess.Popen":
@@ -351,6 +358,7 @@ class _WorkerMutationGuard:
 
 
 def _load_collector(path: Path, expected_class: str):
+    """Load and instantiate the preflighted collector class from its source path."""
     module_name = f"logicytics_runtime_{uuid4().hex}"
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
@@ -679,6 +687,7 @@ def _worker_entry(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) 
 
 
 def _serialize_result(result: CollectorResult) -> _SerializedResult:
+    """Convert a typed collector result into a queue-safe primitive payload."""
     return {
         "status": result.status.value,
         "summary": result.summary,
@@ -699,6 +708,7 @@ class RunSupervisor:
     """Plans process isolation, timeouts, manifests, and collector failure containment."""
 
     def __init__(self, project_root: Path, configuration: AppConfig) -> None:
+        """Initialize a supervisor rooted at the project and configured output policy."""
         self.project_root = project_root.resolve()
         self.configuration = configuration
         self._active_workers: dict[str, _ActiveWorker] = {}
@@ -1357,6 +1367,7 @@ class RunSupervisor:
             manifest_path: Path,
             reason: str,
     ) -> None:
+        """Terminate active workers, mark their records cancelled, and persist the manifest."""
         for collector_id, worker in tuple(active.items()):
             self._terminate_process_tree(worker.process)
             active.pop(collector_id)
@@ -1376,6 +1387,7 @@ class RunSupervisor:
             manifest_path: Path,
             reason: str,
     ) -> None:
+        """Cancel active and still-planned records, then write the final cancellation state."""
         self._cancel_active(self._active_workers, records, manifest, manifest_path, reason)
         for record in records.values():
             if record.status in {"planned", "running"}:

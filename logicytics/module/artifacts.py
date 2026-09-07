@@ -17,6 +17,7 @@ from logicytics.module.errors import ArtifactError
 
 
 def _is_within(path: Path, parent: Path) -> bool:
+    """Return whether a resolved path remains below its owning root."""
     try:
         path.resolve().relative_to(parent.resolve())
     except ValueError:
@@ -51,6 +52,7 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             allowed_relative_paths: tuple[str, ...] | None = None,
             allowed_media_types: tuple[str, ...] | None = None,
     ) -> None:
+        """Initialize a workspace-bound writer with collector and run output quotas."""
         self._collector_id = collector_id
         collector_parts = collector_id.split(".", 2)
         resolved_category = source_category if source_category is not None else (
@@ -116,6 +118,7 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             evidence_kind: EvidenceKind,
             transformations: tuple[str, ...],
     ) -> Artifact:
+        """Copy one validated source into the run artifact tree and catalog it."""
         if not isinstance(media_type, str) or not re.fullmatch(
                 r"[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*",
                 media_type,
@@ -175,10 +178,12 @@ class WorkspaceArtifactWriter(ArtifactWriter):
         return artifact
 
     def _check_cancellation(self) -> None:
+        """Raise when the run cancellation marker requests cooperative shutdown."""
         if self._cancellation_file is not None and self._cancellation_file.exists():
             raise ArtifactError("artifact registration was cancelled")
 
     def _check_output_limits(self, size_bytes: int) -> None:
+        """Reject publication that would exceed collector or run output budgets."""
         if size_bytes > self._maximum_artifact_bytes:
             raise ArtifactError("collector artifact exceeds its declared maximum_artifact_bytes")
         if self._bytes_registered + size_bytes > self._maximum_output_bytes:

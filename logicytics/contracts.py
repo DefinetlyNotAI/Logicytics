@@ -371,6 +371,7 @@ class Artifact:
         return cls(**values)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return the normalized artifact as a JSON-safe mapping."""
         return asdict(self)
 
 
@@ -436,6 +437,7 @@ class CollectorResult:
 
     @classmethod
     def succeeded(cls, summary: str, artifacts: tuple[Artifact, ...] = ()) -> "CollectorResult":
+        """Return a successful result containing any registered evidence."""
         return cls(CollectorStatus.SUCCEEDED, summary, artifacts)
 
     @classmethod
@@ -564,6 +566,7 @@ class CollectorContext:
             settings: Mapping[str, object],
             cancellation_file: Path,
     ) -> None:
+        """Initialize the limited worker context and its cancellation boundary."""
         self.run_id = run_id
         self.collector_id = collector_id
         self.workspace = workspace

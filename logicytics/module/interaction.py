@@ -43,10 +43,12 @@ class FlagMatch:
 
 
 def _normalized(value: str) -> str:
+    """Normalize free-form input into lowercase, whitespace-separated tokens."""
     return " ".join(_TOKEN.findall(value.casefold()))
 
 
 def _score(query: str, flag: str, description: str) -> float:
+    """Score a query using sequence similarity and token overlap with a flag description."""
     normalized_query = _normalized(query)
     candidate = _normalized(f"{flag} {description}")
     sequence = SequenceMatcher(None, normalized_query, candidate).ratio()

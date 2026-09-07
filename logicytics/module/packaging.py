@@ -41,6 +41,7 @@ def _package_filename(manifest: RunManifest) -> str:
 
 
 def _summary(manifest: RunManifest) -> str:
+    """Render a compact human-readable summary for a packaged run manifest."""
     lines = [
         f"Logicytics run: {manifest.run_id}",
         f"Action: {manifest.action}",

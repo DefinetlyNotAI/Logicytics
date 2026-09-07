@@ -205,20 +205,25 @@ class RegistryAdapter:
 
     @staticmethod
     def _module():
+        """Return the optional Windows registry module or raise on unsupported hosts."""
         if _winreg is None:
             raise OSError("the Windows registry is unavailable on this platform")
         return _winreg
 
     def OpenKey(self, key: Any, sub_key: str):
+        """Open one registry key through the platform boundary."""
         return self._module().OpenKey(key, sub_key)
 
     def QueryValueEx(self, key: Any, value_name: str):
+        """Read one registry value through the platform boundary."""
         return self._module().QueryValueEx(key, value_name)
 
     def EnumKey(self, key: Any, index: int) -> str:
+        """Return one child registry key by index."""
         return self._module().EnumKey(key, index)
 
     def EnumValue(self, key: Any, index: int):
+        """Return one registry value tuple by index."""
         return self._module().EnumValue(key, index)
 
     @staticmethod
@@ -257,22 +262,27 @@ class NetworkAdapter:
 
     @staticmethod
     def gethostname() -> str:
+        """Return the local host name."""
         return _socket.gethostname()
 
     @staticmethod
     def gethostbyname(hostname: str) -> str:
+        """Resolve one host name to an IPv4 address."""
         return _socket.gethostbyname(hostname)
 
     @staticmethod
     def getaddrinfo(host: str, port: int | str | None):
+        """Resolve socket addresses for a host and port."""
         return _socket.getaddrinfo(host, port)
 
     @staticmethod
     def inet_ntoa(packed_ip: bytes) -> str:
+        """Convert packed IPv4 bytes into dotted notation."""
         return _socket.inet_ntoa(packed_ip)
 
     @staticmethod
     def socket(family: int = -1, type: int = -1, proto: int = -1, fileno: int | None = None):
+        """Create a socket through the centrally mockable network boundary."""
         if fileno is None:
             return _socket.socket(family, type, proto)
         return _socket.socket(family, type, proto, fileno=fileno)
@@ -286,6 +296,7 @@ class WindowsApiAdapter:
 
     @staticmethod
     def load_library(name: str):
+        """Load one validated Win32 DLL name when running on Windows."""
         if (
             not isinstance(name, str)
             or not name
@@ -301,6 +312,7 @@ class WindowsApiAdapter:
         return ctypes.WinDLL(name, use_last_error=True)
 
     def is_administrator(self) -> bool | None:
+        """Return administrator status, or None when the Win32 API is unavailable."""
         try:
             return bool(self.load_library("shell32").IsUserAnAdmin())
         except OSError:
@@ -310,6 +322,7 @@ class WindowsApiAdapter:
         """Return a Windows process working set without exposing raw Win32 handles."""
 
         class ProcessMemoryCounters(ctypes.Structure):
+            """Minimal PROCESS_MEMORY_COUNTERS layout used by GetProcessMemoryInfo."""
             _fields_ = [
                 ("cb", ctypes.c_ulong),
                 ("PageFaultCount", ctypes.c_ulong),
@@ -344,6 +357,7 @@ class WindowsApiAdapter:
         """Snapshot descendants of one Windows process through Toolhelp APIs."""
 
         class ProcessEntry(ctypes.Structure):
+            """Minimal PROCESSENTRY32W layout used for descendant enumeration."""
             _fields_ = [
                 ("dwSize", ctypes.c_ulong),
                 ("cntUsage", ctypes.c_ulong),
@@ -410,44 +424,54 @@ class FilesystemAdapter:
 
     @staticmethod
     def home() -> Path:
+        """Return the current user's home directory."""
         return Path.home()
 
     @staticmethod
     def environment_path(name: str, fallback: Path) -> Path:
+        """Read a validated environment variable as a path with a fallback."""
         if not isinstance(name, str) or not name or not name.replace("_", "").isalnum():
             raise ValueError("environment path name must be an alphanumeric variable name")
         return Path(os.environ.get(name, fallback))
 
     @staticmethod
     def system_drive_root() -> Path:
+        """Return the current Windows system-drive root path."""
         return Path(os.environ.get("SystemDrive", "C:") + "\\")
 
     @staticmethod
     def children(path: Path):
+        """Iterate immediate children of a directory."""
         return path.iterdir()
 
     @staticmethod
     def glob(path: Path, pattern: str):
+        """Match direct children using a pathlib glob pattern."""
         return path.glob(pattern)
 
     @staticmethod
     def recursive(path: Path, pattern: str = "*"):
+        """Match descendants using a recursive pathlib pattern."""
         return path.rglob(pattern)
 
     @staticmethod
     def walk(path: Path, **options: Any):
+        """Walk a filesystem tree through the shared adapter."""
         return os.walk(path, **options)
 
     @staticmethod
     def scan(path: Path):
+        """Open a directory iterator through the shared adapter."""
         return os.scandir(path)
 
     @staticmethod
     def copy_file(source: Path, destination: Path) -> None:
+        """Copy file contents and metadata to a destination path."""
         shutil.copy2(source, destination)
 
     @staticmethod
     def disk_usage(path: Path):
+        """Return filesystem usage statistics for a path."""
         return shutil.disk_usage(path)
 
 
