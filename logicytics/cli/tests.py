@@ -10,7 +10,7 @@ from pathlib import Path
 
 from logicytics.module.configuration import load_config
 from logicytics.module.errors import PlanError
-from logicytics.module.logging import get_application_logger
+from logicytics.module.logging import ApplicationLogger, get_application_logger
 from logicytics.module.output_layout import ensure_output_layout
 
 
@@ -33,14 +33,18 @@ def main(argv: list[str] | None = None) -> int:
     try:
         _require_virtual_environment()
     except RuntimeError as error:
-        print(f"ERROR | {error}", file=sys.stderr)
+        ApplicationLogger.render_section(sys.stderr, "Test runner error", (str(error),))
         return 2
     root = project_root()
     try:
         configuration = load_config(root)
         layout = ensure_output_layout(configuration.runtime.output_root)
     except (OSError, PlanError) as error:
-        print(f"ERROR | unable to prepare test presentation: {error}", file=sys.stderr)
+        ApplicationLogger.render_section(
+            sys.stderr,
+            "Test runner error",
+            (f"Unable to prepare test presentation: {error}",),
+        )
         return 2
     logger = get_application_logger(layout.application_log, configuration.logging)
     logger.event("INFO", "test_suite_started", source="logicytics.cli.tests")

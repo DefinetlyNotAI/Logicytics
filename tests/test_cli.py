@@ -148,8 +148,8 @@ class CliTests(unittest.TestCase):
         with patch("sys.stderr"), self.assertRaises(SystemExit):
             parser.parse_args(["run", "--mode", "quick", "--minimal"])
 
-    def test_modes_action_prints_the_complete_machine_readable_matrix(self) -> None:
-        """Users and release checks can inspect the same authoritative mode registry."""
+    def test_modes_action_renders_a_summary_and_writes_the_machine_readable_matrix(self) -> None:
+        """Users see a readable summary while release checks use the saved mode registry."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             output = io.StringIO()
@@ -159,12 +159,20 @@ class CliTests(unittest.TestCase):
                     "project_root",
                     return_value=root,
             ), patch(
-                "sys.stdout",
+                "sys.stderr",
                 output,
             ):
                 self.assertEqual(0, main(["--modes"]))
 
-            payload = json.loads(output.getvalue())
+            rendered = output.getvalue()
+            self.assertIn("Execution modes", rendered)
+            self.assertIn("Machine-readable matrix:", rendered)
+            self.assertNotIn("{", rendered)
+            payload = json.loads(
+                (root / "output" / "logs" / "debug" / "modes.json").read_text(
+                    encoding="utf-8"
+                )
+            )
 
             self.assertEqual(1, payload["schema_version"])
             self.assertEqual(
@@ -219,7 +227,7 @@ class CliTests(unittest.TestCase):
                 CLI.launch_action_window.__name__,
                 return_value=321,
             ) as launch, patch(
-                "sys.stdout",
+                "sys.stderr",
                 output,
             ):
                 self.assertEqual(
@@ -232,7 +240,16 @@ class CliTests(unittest.TestCase):
                     ]),
                 )
 
-            payload = json.loads(output.getvalue())
+            rendered = output.getvalue()
+            self.assertIn("Update result", rendered)
+            self.assertIn("Launched action: debug", rendered)
+            self.assertIn("Launched process id: 321", rendered)
+            self.assertNotIn("{", rendered)
+            payload = json.loads(
+                (root / "output" / "logs" / "debug" / "update.json").read_text(
+                    encoding="utf-8"
+                )
+            )
             self.assertEqual("debug", payload["launched_action"])
             self.assertEqual(321, payload["launched_process_id"])
             launch.assert_called_once_with(root, "debug")

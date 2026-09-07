@@ -11,10 +11,18 @@ from pathlib import Path
 def main(argv: list[str] | None = None) -> int:
     """Run one copied Python MOD with workspace mutation and capability enforcement."""
     arguments = sys.argv[1:] if argv is None else argv
+    engine_root = Path(__file__).resolve().parents[2]
+    sys.path.insert(0, str(engine_root))
+    from logicytics.module.logging import ApplicationLogger
+
     if len(arguments) != 5:
-        print(
-            "Python MOD runner requires script, workspace, collector ID, capabilities, and blocked capabilities",
-            file=sys.stderr,
+        ApplicationLogger.render_section(
+            sys.stderr,
+            "Python MOD runner error",
+            (
+                "The runner requires script, workspace, collector ID, "
+                "capabilities, and blocked capabilities.",
+            ),
         )
         return 2
     script = Path(arguments[0]).resolve()
@@ -28,11 +36,13 @@ def main(argv: list[str] | None = None) -> int:
         if not isinstance(blocked_capability_values, list):
             raise ValueError("blocked capabilities must be a JSON list")
     except (json.JSONDecodeError, ValueError) as error:
-        print(f"Invalid Python MOD capabilities: {error}", file=sys.stderr)
+        ApplicationLogger.render_section(
+            sys.stderr,
+            "Python MOD runner error",
+            (f"Invalid capabilities: {error}",),
+        )
         return 2
 
-    engine_root = Path(__file__).resolve().parents[2]
-    sys.path.insert(0, str(engine_root))
     from logicytics.contracts import Capability
     from logicytics.module.runtime import _WorkerMutationGuard
 
@@ -40,12 +50,20 @@ def main(argv: list[str] | None = None) -> int:
         capabilities = tuple(Capability(value) for value in capability_values)
         blocked_capabilities = tuple(Capability(value) for value in blocked_capability_values)
     except ValueError as error:
-        print(f"Invalid Python MOD capability: {error}", file=sys.stderr)
+        ApplicationLogger.render_section(
+            sys.stderr,
+            "Python MOD runner error",
+            (f"Invalid capability: {error}",),
+        )
         return 2
     try:
         script.relative_to(workspace)
     except ValueError:
-        print("Python MOD script must be copied inside its private workspace", file=sys.stderr)
+        ApplicationLogger.render_section(
+            sys.stderr,
+            "Python MOD runner error",
+            ("The script must be copied inside its private workspace.",),
+        )
         return 2
 
     guard = _WorkerMutationGuard(

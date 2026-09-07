@@ -58,18 +58,18 @@ equivalent:
 
 The CLI has three standalone utility actions and seven subcommands:
 
-| Invocation                                  | Purpose                                                           |
-|---------------------------------------------|-------------------------------------------------------------------|
-| python -m logicytics --usage                | Show local interaction statistics and create flag_usage.svg.      |
-| python -m logicytics --modes                | Print the machine-readable execution-mode matrix.                 |
-| python -m logicytics --match TEXT           | Suggest the closest documented action for natural-language input. |
-| python -m logicytics preflight              | Discover and validate collectors.                                 |
-| python -m logicytics debug                  | Write and print environment and preflight diagnostics.            |
-| python -m logicytics plan                   | Resolve a dependency-safe plan without collecting evidence.       |
-| python -m logicytics run                    | Execute the plan in isolated workers and publish a run.           |
-| python -m logicytics collector COLLECTOR_ID | Execute one exact collector independently.                        |
-| python -m logicytics update                 | Check Git and optionally apply an update.                         |
-| python -m logicytics dev                    | Run repository integrity checks and manage the local manifest.    |
+| Invocation                                  | Purpose                                                         |
+|---------------------------------------------|-----------------------------------------------------------------|
+| python -m logicytics --usage                | Show a formatted interaction summary and create flag_usage.svg. |
+| python -m logicytics --modes                | Show a formatted mode summary and save the JSON matrix to disk. |
+| python -m logicytics --match TEXT           | Show a formatted match result for natural-language input.       |
+| python -m logicytics preflight              | Discover and validate collectors.                               |
+| python -m logicytics debug                  | Show formatted diagnostics and write debug.json.                |
+| python -m logicytics plan                   | Resolve a dependency-safe plan without collecting evidence.     |
+| python -m logicytics run                    | Execute the plan in isolated workers and publish a run.         |
+| python -m logicytics collector COLLECTOR_ID | Execute one exact collector independently.                      |
+| python -m logicytics update                 | Check Git and optionally apply an update.                       |
+| python -m logicytics dev                    | Run repository integrity checks and manage the local manifest.  |
 
 Standalone actions cannot be combined with a subcommand. Use --help after any
 action for the parser-generated help.
@@ -78,13 +78,17 @@ action for the parser-generated help.
 
 These flags go before the action name:
 
-| Flag          | Description                                                          |
-|---------------|----------------------------------------------------------------------|
-| -h, --help    | Show help and exit.                                                  |
-| --config PATH | Load configuration from PATH instead of the root logicytics.yaml.    |
-| --usage       | Show local interaction statistics and create the usage graph.        |
-| --modes       | Print the complete execution-mode and collector matrix.              |
-| --match TEXT  | Match free-form text to a documented action using the local matcher. |
+| Flag          | Description                                                               |
+|---------------|---------------------------------------------------------------------------|
+| -h, --help    | Show help and exit.                                                       |
+| --config PATH | Load configuration from PATH instead of the root logicytics.yaml.         |
+| --usage       | Show local interaction statistics and create the usage graph.             |
+| --modes       | Show the mode summary; save the complete matrix to logs/debug/modes.json. |
+| --match TEXT  | Show a formatted match result using the local matcher.                    |
+
+All normal command output uses the Logicytics console presentation: a severity
+marker, a short message, and readable indented fields. Structured JSON is kept
+in the documented artifact files and is never dumped directly to the console.
 
 ### Shared collector flags
 
@@ -248,9 +252,10 @@ The rerun receives a new run ID and separate evidence directory.
 
 ### Debug
 
-debug prints diagnostic JSON and writes output/data/debug_logs/debug.json. It
-includes configuration, environment, Python/runtime details, Sysinternals
-state, preflight counts, and maintenance checks.
+debug shows a formatted diagnostic summary and writes the complete JSON report
+to output/logs/debug/debug.json. The report includes configuration,
+environment, Python/runtime details, Sysinternals state, preflight counts, and
+maintenance checks.
 
 ```powershell
 python -m logicytics debug

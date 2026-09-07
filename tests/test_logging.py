@@ -186,6 +186,22 @@ class LoggingTests(unittest.TestCase):
             self.assertNotIn("\u25cf", console.getvalue())
             self.assertNotIn("\u256d", console.getvalue())
 
+    def test_application_logging_wraps_long_plain_sections(self) -> None:
+        """Human summaries keep long diagnostics readable within the console width."""
+        with tempfile.TemporaryDirectory() as temporary:
+            console = io.StringIO()
+            logger = ApplicationLogger(
+                Path(temporary) / "Logicytics.log",
+                LoggingSettings(file_enabled=False, color_enabled=False),
+                console=console,
+            )
+            logger.box("Summary", ("detail " * 40,))
+
+            rows = console.getvalue().splitlines()
+            self.assertEqual("Summary", rows[0])
+            self.assertGreater(len(rows), 2)
+            self.assertTrue(all(len(row) <= ApplicationLogger._console_width() for row in rows))
+
     def test_application_logging_colors_info_text_white_and_debug_text_gray(self) -> None:
         """Status markers retain their severity color while message text stays readable."""
 
@@ -213,7 +229,9 @@ class LoggingTests(unittest.TestCase):
                 "\033[90m\033[1m  \u00b7 \033[0m\033[90m\033[1mdebug message",
                 output,
             )
-            self.assertIn("Collector finished collector_id=", output)
+            self.assertIn("Collector finished\n", output)
+            self.assertIn("Collector id: core.system.system_info", output)
+            self.assertNotIn("collector_id=", output)
 
     def test_deprecation_decorator_logs_removal_context(self) -> None:
         """Deprecated functions must preserve behavior while reporting removal context."""

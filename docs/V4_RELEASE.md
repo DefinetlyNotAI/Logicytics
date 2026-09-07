@@ -47,8 +47,9 @@ collectors.
 The canonical profiles are `minimal`, `standard`, `deep`, and `offline`. The
 canonical modes are `standard`, `balanced`, `quick`, `thorough`, `offline`,
 `extensions`, `non-python`, and `performance`; all historical mode flags remain
-validated aliases. The machine-readable `python -m logicytics --modes` output is
-the authoritative collector inclusion matrix.
+validated aliases. `python -m logicytics --modes` shows a human-readable mode
+summary and writes the authoritative machine-readable collector inclusion
+matrix to `output/logs/debug/modes.json`.
 
 Core evidence contracts include `application/json`, `application/octet-stream`,
 `application/xml`, `application/zip`, `text/csv`, `text/html`, `text/plain`, and

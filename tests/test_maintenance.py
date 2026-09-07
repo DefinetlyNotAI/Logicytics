@@ -230,14 +230,19 @@ class MaintenanceTests(unittest.TestCase):
             )
             output = io.StringIO()
             with patch.object(CLI, "project_root", return_value=root), patch(
-                    "sys.stdout",
+                    "sys.stderr",
                     output,
             ):
                 self.assertEqual(
                     0,
                     main(["dev", "--write-manifest", "--next-version", "4.1.0"]),
                 )
-            payload = json.loads(output.getvalue())
+            rendered = output.getvalue()
+            self.assertIn("Development checks", rendered)
+            self.assertIn("Manifest written: yes", rendered)
+            self.assertNotIn("{", rendered)
+            development_path = root / "output" / "logs" / "debug" / "development.json"
+            payload = json.loads(development_path.read_text(encoding="utf-8"))
             self.assertEqual(
                 (root / "project.manifest.json").resolve(),
                 Path(payload["manifest_written"]).resolve(),

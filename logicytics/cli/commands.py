@@ -19,7 +19,7 @@ from logicytics.module.discovery import preflight
 from logicytics.module.environment import inspect_environment
 from logicytics.module.errors import LogicyticsError
 from logicytics.module.interaction import load_history, match_flag, record_match, usage_statistics, write_usage_graph
-from logicytics.module.logging import get_application_logger
+from logicytics.module.logging import ApplicationLogger, get_application_logger
 from logicytics.module.maintenance import (
     build_manifest,
     compare_files,
@@ -505,18 +505,13 @@ class CLI:
         )
         return process.pid
 
-    @staticmethod
-    def _status_marker(label: str, count: int) -> str:
-        """Return a colored interactive repository-status marker when a terminal supports it."""
-        color = "\033[32m" if count == 0 else "\033[33m"
-        reset = "\033[0m"
-        return f"{color}{label}: {count}{reset}" if sys.stdout.isatty() else f"{label}: {count}"
-
     def run_developer_action(
             self,
             root: Path,
             configuration: AppConfig,
             arguments: argparse.Namespace,
+            debug_logs: Path,
+            logger: object,
     ) -> int:
         """Run read-only contribution checks and an explicitly confirmed manifest update."""
         settings = configuration.maintenance
@@ -538,11 +533,6 @@ class CLI:
         write_requested = arguments.write_manifest
 
         if arguments.interactive:
-            print("Contribution and repository organization checks")
-
-            for name in ("missing", "modified", "extra", "unchanged"):
-                print(self._status_marker(name.title(), len(comparison[name])))
-
             organization_checks: tuple[
                 Literal[
                     "naming_violations",
@@ -557,14 +547,15 @@ class CLI:
                 "missing_module_docstrings",
                 "crowded_modules",
             )
-
-            for name in organization_checks:
-                print(
-                    self._status_marker(
-                        name.replace("_", " ").title(),
-                        len(checks[name]),
-                    )
-                )
+            logger.box(
+                "Contribution and repository organization checks",
+                (
+                    *(f"{name.title()}: {len(comparison[name])}" for name in (
+                        "missing", "modified", "extra", "unchanged",
+                    )),
+                    *(f"{name.replace('_', ' ').title()}: {len(checks[name])}" for name in organization_checks),
+                ),
+            )
 
             if next_version is None:
                 current_version = local_version(root)
@@ -614,17 +605,30 @@ class CLI:
             "next_version": next_version,
         }
 
-        print(json.dumps(payload, indent=2, sort_keys=True))
+        development_path = debug_logs / "development.json"
+        self.write_json(development_path, payload)
+        logger.box(
+            "Development checks",
+            (
+                f"Missing files: {len(comparison['missing'])}",
+                f"Modified files: {len(comparison['modified'])}",
+                f"Extra files: {len(comparison['extra'])}",
+                f"Unchanged files: {len(comparison['unchanged'])}",
+                f"Organization issues: {sum(len(checks[name]) for name in ('naming_violations', 'misplaced_python', 'missing_module_docstrings', 'crowded_modules'))}",
+                f"Manifest written: {'yes' if manifest_path else 'no'}",
+                f"Manifest path: {manifest_path or 'none'}",
+                f"Diagnostic report: {development_path}",
+            ),
+        )
         return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     """Run the selected preflight, planning, or supervised execution command."""
     if sys.prefix == sys.base_prefix:
-        print(
-            "ERROR | Logicytics must run inside a virtual environment. "
-            "Run python -m logicytics.cli.installer first.",
-            file=sys.stderr,
+        sys.stderr.write(
+            "  × Logicytics must run inside a virtual environment\n"
+            "    Run python -m logicytics.cli.installer first.\n"
         )
         return 2
     cli_parser = cli_methods.parser()
@@ -724,30 +728,24 @@ def main(argv: list[str] | None = None) -> int:
             if configuration.interaction.history_enabled:
                 record_match(history_path, match)
 
-            payload: dict[str, object] = {
-                "input": match.input,
-                "matched_flag": match.matched_flag,
-                "accuracy": match.accuracy,
-                "source": match.source,
-                "history_persisted": (
-                    configuration.interaction.history_enabled
-                ),
-            }
-
-            if configuration.interaction.model_debug:
-                payload["model_debug"] = {
-                    "model_name": match.model_name,
-                    "threshold": (
-                        configuration.interaction.similarity_threshold
+            application_logger.box(
+                "Match result",
+                (
+                    f"Input: {match.input}",
+                    f"Matched flag: {match.matched_flag or 'none'}",
+                    f"Confidence: {match.accuracy:.1%}",
+                    f"Match source: {match.source.replace('_', ' ')}",
+                    f"History persisted: {'yes' if configuration.interaction.history_enabled else 'no'}",
+                    *(
+                        (
+                            "Model: "
+                            f"{match.model_name} "
+                            f"(threshold {configuration.interaction.similarity_threshold:.1%})",
+                        )
+                        if configuration.interaction.model_debug
+                        else ()
                     ),
-                }
-
-            print(
-                json.dumps(
-                    payload,
-                    indent=2,
-                    sort_keys=True,
-                )
+                ),
             )
 
             exit_code = 0 if match.matched_flag is not None else 1
@@ -768,17 +766,26 @@ def main(argv: list[str] | None = None) -> int:
                 statistics,
             )
 
-            payload: dict[str, object] = {
-                **statistics,
-                "graph_path": str(graph_path),
-            }
-
-            print(
-                json.dumps(
-                    payload,
-                    indent=2,
-                    sort_keys=True,
+            frequencies = statistics.get("per_flag_frequency", {})
+            frequency_rows = (
+                tuple(
+                    f"{flag}: {count}"
+                    for flag, count in sorted(frequencies.items())
                 )
+                if isinstance(frequencies, dict) and frequencies
+                else ("none",)
+            )
+            application_logger.box(
+                "Interaction usage",
+                (
+                    f"Total interactions: {statistics['total_interactions']}",
+                    f"Average confidence: {float(statistics['average_accuracy']):.1%}",
+                    f"Common device: {statistics['common_device'] or 'none'}",
+                    f"Common input: {statistics['common_input'] or 'none'}",
+                    "Flag frequency:",
+                    *(f"  {row}" for row in frequency_rows),
+                    f"Usage graph: {graph_path}",
+                ),
             )
 
             return finish_command(0, status="usage_written")
@@ -808,13 +815,23 @@ def main(argv: list[str] | None = None) -> int:
             payload = mode_matrix(
                 (*report.valid, *report.invalid)
             )
-
-            print(
-                json.dumps(
-                    payload,
-                    indent=2,
-                    sort_keys=True,
+            matrix_path = layout.debug_logs / "modes.json"
+            cli_methods.write_json(matrix_path, payload)
+            mode_rows = []
+            for item in payload["modes"]:
+                aliases = ", ".join(item["legacy_aliases"]) or "none"
+                mode_rows.append(
+                    f"{item['name']}: {item['description']} "
+                    f"({len(item['collector_ids'])} collectors; aliases: {aliases})"
                 )
+            application_logger.box(
+                "Execution modes",
+                (
+                    *mode_rows,
+                    f"Valid collectors: {len(report.valid)}",
+                    f"Invalid collectors: {len(report.invalid)}",
+                    f"Machine-readable matrix: {matrix_path}",
+                ),
             )
 
             return finish_command(
@@ -907,12 +924,14 @@ def main(argv: list[str] | None = None) -> int:
                 payload,
             )
 
-            print(
-                json.dumps(
-                    payload,
-                    indent=2,
-                    sort_keys=True,
-                )
+            application_logger.box(
+                "Diagnostics",
+                (
+                    f"Valid collectors: {len(report.valid)}",
+                    f"Invalid collectors: {len(report.invalid)}",
+                    f"Virtual environment: {'yes' if sys.prefix != sys.base_prefix else 'no'}",
+                    f"Diagnostic report: {debug_path}",
+                ),
             )
 
             exit_code = 0 if not report.invalid else 2
@@ -954,12 +973,16 @@ def main(argv: list[str] | None = None) -> int:
 
             if arguments.apply:
                 if git.returncode != 0 or not is_repository:
-                    print(
-                        json.dumps(
-                            payload,
-                            indent=2,
-                            sort_keys=True,
-                        )
+                    update_path = layout.debug_logs / "update.json"
+                    cli_methods.write_json(update_path, payload)
+                    application_logger.box(
+                        "Update result",
+                        (
+                            "Git available: no",
+                            f"Repository: {'yes' if is_repository else 'no'}",
+                            f"Diagnostic report: {update_path}",
+                            "Update was not applied because Git or the repository is unavailable.",
+                        ),
                     )
                     return finish_command(
                         2,
@@ -1005,13 +1028,31 @@ def main(argv: list[str] | None = None) -> int:
                     launched_process_id
                 )
 
-            print(
-                json.dumps(
-                    payload,
-                    indent=2,
-                    sort_keys=True,
+            update_path = layout.debug_logs / "update.json"
+            cli_methods.write_json(update_path, payload)
+            update_lines = [
+                f"Git available: {'yes' if git.returncode == 0 else 'no'}",
+                f"Repository: {'yes' if is_repository else 'no'}",
+                f"Update applied: {'yes' if arguments.apply else 'no'}",
+                f"Update status: {'succeeded' if update_succeeded else 'failed'}",
+            ]
+            if arguments.apply:
+                update_lines.append(
+                    f"Git pull exit code: {pull_returncode if pull_returncode is not None else 'none'}"
                 )
-            )
+                if payload.get("stdout"):
+                    update_lines.extend(("Git output:", *str(payload["stdout"]).splitlines()))
+                if payload.get("stderr"):
+                    update_lines.extend(("Git warnings:", *str(payload["stderr"]).splitlines()))
+            if payload.get("launched_action"):
+                update_lines.extend(
+                    (
+                        f"Launched action: {payload['launched_action']}",
+                        f"Launched process id: {payload['launched_process_id']}",
+                    )
+                )
+            update_lines.append(f"Diagnostic report: {update_path}")
+            application_logger.box("Update result", tuple(update_lines))
 
             return finish_command(
                 0 if update_succeeded else 1,
@@ -1024,6 +1065,8 @@ def main(argv: list[str] | None = None) -> int:
                 root,
                 configuration,
                 arguments,
+                layout.debug_logs,
+                application_logger,
             )
             return finish_command(
                 exit_code,
@@ -1191,7 +1234,11 @@ def main(argv: list[str] | None = None) -> int:
         if application_logger is not None:
             application_logger.box("Command error", (str(error),))
         else:
-            print(f"Error: {error}")
+            ApplicationLogger.render_section(
+                sys.stderr,
+                "Command error",
+                (str(error),),
+            )
         return 2
 
 

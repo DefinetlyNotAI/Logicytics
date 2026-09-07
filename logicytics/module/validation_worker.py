@@ -21,6 +21,7 @@ from logicytics.contracts import (
     PluginCollector,
     ValidationResult, EventLogger, Artifact, EvidenceKind, ArtifactWriter,
 )
+from logicytics.module.logging import ApplicationLogger
 
 
 class _ProbeLogger(EventLogger):
@@ -230,7 +231,7 @@ def _validate_contract(
 
 
 def main() -> int:
-    """Validate a collector module and emit only JSON to stdout."""
+    """Validate a collector module and keep JSON stdout private to the parent worker."""
     try:
         path = Path(sys.argv[1]).resolve()
         kind = CollectorKind(sys.argv[2])
@@ -248,10 +249,22 @@ def main() -> int:
             raise ValueError(f"{expected_class} is not a Collector")
 
         metadata = _validate_contract(collector_type, kind)
-        print(json.dumps({"metadata": metadata.to_dict()}, sort_keys=True))
+        protocol_message = json.dumps({"metadata": metadata.to_dict()}, sort_keys=True)
+        if sys.stdout.isatty():
+            ApplicationLogger.render_section(
+                sys.stdout,
+                "Collector validation",
+                ("Metadata validated successfully.",),
+            )
+        else:
+            sys.stdout.write(protocol_message + "\n")
         return 0
     except (IndexError, TypeError, ValueError, ImportError, OSError) as error:
-        print(str(error), file=sys.stderr)
+        ApplicationLogger.render_section(
+            sys.stderr,
+            "Collector validation error",
+            (str(error),),
+        )
         return 1
 
 

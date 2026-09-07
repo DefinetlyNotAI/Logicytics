@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from threading import RLock
 from time import perf_counter, time
-from typing import Callable, Iterable, ParamSpec, TextIO, TypeVar
+from typing import Callable, Iterable, Mapping, ParamSpec, TextIO, TypeVar
 
 from logicytics.contracts import EventLogger
 from logicytics.module.configuration import LoggingSettings
@@ -172,6 +172,39 @@ class ApplicationLogger(EventLogger):
             return message.replace("_", " ").capitalize()
         return message
 
+    @classmethod
+    def _console_fields(cls, fields: Mapping[str, object]) -> tuple[str, ...]:
+        """Render structured fields as readable labels instead of JSON fragments."""
+        rows: list[str] = []
+        for key, value in sorted(fields.items()):
+            label = key.replace("_", " ").capitalize()
+            rendered = cls._console_value(value).splitlines() or ["none"]
+            rows.append(f"{label}: {rendered[0]}")
+            rows.extend(f"  {line}" for line in rendered[1:])
+        return tuple(rows)
+
+    @classmethod
+    def _console_value(cls, value: object) -> str:
+        """Normalize common structured values for compact, human-readable console output."""
+        if value is None:
+            return "none"
+        if isinstance(value, bool):
+            return "yes" if value else "no"
+        if isinstance(value, Mapping):
+            if not value:
+                return "none"
+            return "; ".join(
+                f"{str(key).replace('_', ' ')}: {cls._console_value(item)}"
+                for key, item in sorted(value.items(), key=lambda item: str(item[0]))
+            )
+        if isinstance(value, (list, tuple, set, frozenset)):
+            if not value:
+                return "none"
+            return ", ".join(cls._console_value(item) for item in value)
+        if isinstance(value, float):
+            return f"{value:.6f}".rstrip("0").rstrip(".")
+        return str(value)
+
     def event(self, level: str, message: str, **fields: int | float | str) -> None:
         """Dispatch one typed, redacted event to configured console and file sinks."""
         normalized = level.upper()
@@ -187,7 +220,9 @@ class ApplicationLogger(EventLogger):
             for key, value in sorted(safe_fields.items())
         )
         rendered_message = safe_message + suffix
-        console_message = self._console_message(safe_message) + suffix
+        console_lines = [self._console_message(safe_message)]
+        console_lines.extend(self._console_fields(safe_fields))
+        console_message = "\n".join(console_lines)
         rows = self._rows(normalized, source, rendered_message)
         with self._lock:
             if self.settings.file_enabled:
@@ -228,18 +263,39 @@ class ApplicationLogger(EventLogger):
         """Write one presentation-only blank line to the configured console."""
         self.raw("")
 
-    def box(self, title: str, lines: Iterable[str]) -> None:
-        """Render console-only output as plain redacted lines."""
+    @classmethod
+    def render_section(
+            cls,
+            console: TextIO,
+            title: str,
+            lines: Iterable[str],
+    ) -> None:
+        """Render a plain, indented console section for startup and fallback paths."""
         rows = [redact_text(title)]
         for line in lines:
-            rows.extend(
-                f"  {redact_text(row)}"
-                for row in line.splitlines() or [""]
-            )
+            for raw_row in line.splitlines() or [""]:
+                safe_row = redact_text(raw_row)
+                indentation = safe_row[:len(safe_row) - len(safe_row.lstrip())]
+                remaining = safe_row.lstrip().rstrip()
+                prefix = f"  {indentation}"
+                continuation_prefix = f"    {indentation}"
+                available = max(cls._console_width() - len(continuation_prefix), 1)
+                wrapped = textwrap.wrap(
+                    remaining,
+                    width=available,
+                    break_long_words=True,
+                    break_on_hyphens=False,
+                ) or [""]
+                rows.append(prefix + wrapped[0])
+                rows.extend(f"{continuation_prefix}{part}" for part in wrapped[1:])
+        console.write("\n".join(rows) + "\n")
+        console.flush()
+
+    def box(self, title: str, lines: Iterable[str]) -> None:
+        """Render console-only output as plain redacted lines."""
         with self._lock:
             if self.settings.console_enabled:
-                self.console.write("\n".join(rows) + "\n")
-                self.console.flush()
+                self.render_section(self.console, title, lines)
 
     def dispatch(self, messages: Iterable[str]) -> None:
         """Parse and dispatch a batch of optional `LEVEL: message` rows."""
@@ -262,7 +318,12 @@ def get_application_logger(
     resolved = path.resolve()
     with _LOGGER_LOCK:
         logger = _APPLICATION_LOGGERS.get(resolved)
-        if logger is None or logger.settings != settings or console is not None:
+        if (
+                logger is None
+                or logger.settings != settings
+                or console is not None
+                or (console is None and logger.console is not sys.stderr)
+        ):
             logger = ApplicationLogger(resolved, settings, console=console)
             if console is None:
                 _APPLICATION_LOGGERS[resolved] = logger

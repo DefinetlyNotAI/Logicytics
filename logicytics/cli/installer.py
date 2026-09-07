@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import sys
 import venv
 from pathlib import Path
 
 from logicytics.module.configuration import write_default_configuration
+from logicytics.module.logging import ApplicationLogger
 
 
 def project_root() -> Path:
@@ -22,14 +24,22 @@ def main(argv: list[str] | None = None) -> int:
     arguments = parser.parse_args(argv)
     root = project_root()
     environment = arguments.environment if arguments.environment.is_absolute() else root / arguments.environment
+    environment_status: str
     if not environment.exists():
         venv.EnvBuilder(with_pip=True).create(environment)
-        print(f"Created virtual environment: {environment}")
+        environment_status = f"Created virtual environment: {environment}"
     else:
-        print(f"Using existing virtual environment: {environment}")
+        environment_status = f"Using existing virtual environment: {environment}"
     configuration = write_default_configuration(root, overwrite=arguments.overwrite_config)
-    print(f"Configuration ready: {configuration}")
-    print(f"Run: {environment / 'Scripts' / 'python.exe'} -m logicytics preflight")
+    ApplicationLogger.render_section(
+        sys.stdout,
+        "Logicytics installation",
+        (
+            environment_status,
+            f"Configuration ready: {configuration}",
+            f"Next step: {environment / 'Scripts' / 'python.exe'} -m logicytics preflight",
+        ),
+    )
     return 0
 
 

@@ -24,13 +24,16 @@ class InteractionTests(unittest.TestCase):
             root = Path(temporary)
             output = io.StringIO()
             with patch.object(CLI, "project_root", return_value=root), patch(
-                    "sys.stdout",
+                    "sys.stderr",
                     output,
             ):
                 self.assertEqual(0, main(["--match", "run a quick basic collection"]))
-            payload = json.loads(output.getvalue())
-            self.assertEqual("minimal", payload["matched_flag"])
-            self.assertFalse(payload["history_persisted"])
+            rendered = output.getvalue()
+            self.assertIn("Match result", rendered)
+            self.assertIn("Matched flag: minimal", rendered)
+            self.assertIn("History persisted: no", rendered)
+            self.assertNotIn("{", rendered)
+            self.assertNotIn('"matched_flag"', rendered)
             self.assertFalse((root / "output" / "data" / "interaction_history.json.gz").exists())
 
             (root / "logicytics.yaml").write_text(
@@ -47,13 +50,16 @@ class InteractionTests(unittest.TestCase):
             )
             output = io.StringIO()
             with patch.object(CLI, "project_root", return_value=root), patch(
-                    "sys.stdout",
+                    "sys.stderr",
                     output,
             ):
                 self.assertEqual(0, main(["--match", "an exhaustive slow scan"]))
-            payload = json.loads(output.getvalue())
-            self.assertEqual("depth", payload["matched_flag"])
-            self.assertEqual("stdlib-test-model", payload["model_debug"]["model_name"])
+            rendered = output.getvalue()
+            self.assertIn("Match result", rendered)
+            self.assertIn("Matched flag: depth", rendered)
+            self.assertIn("Model: stdlib-test-model", rendered)
+            self.assertIn("History persisted: yes", rendered)
+            self.assertNotIn("{", rendered)
             history_path = root / "output" / "data" / "interaction_history.json.gz"
             history = load_history(history_path)
             self.assertEqual(1, len(history))
@@ -62,14 +68,16 @@ class InteractionTests(unittest.TestCase):
 
             output = io.StringIO()
             with patch.object(CLI, "project_root", return_value=root), patch(
-                    "sys.stdout",
+                    "sys.stderr",
                     output,
             ):
                 self.assertEqual(0, main(["--usage"]))
-            usage = json.loads(output.getvalue())
-            self.assertEqual(1, usage["total_interactions"])
-            self.assertEqual(1, usage["per_flag_frequency"]["depth"])
-            graph_path = Path(usage["graph_path"])
+            rendered = output.getvalue()
+            self.assertIn("Interaction usage", rendered)
+            self.assertIn("Total interactions: 1", rendered)
+            self.assertIn("depth: 1", rendered)
+            self.assertNotIn("{", rendered)
+            graph_path = root / "output" / "data" / "flag_usage.svg"
             self.assertTrue(graph_path.exists())
             self.assertIn("<svg", graph_path.read_text(encoding="utf-8"))
 
