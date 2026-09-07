@@ -5,7 +5,7 @@ set -eu
 commit_msg_file="$1"
 first_line="$(head -n 1 "$commit_msg_file")"
 
-pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([A-Za-z0-9._/-]+\))?!?: .+$'
+pattern='^((fixup|squash)! )?(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([A-Za-z0-9._/-]+\))?!?: .+$'
 
 if printf '%s\n' "$first_line" | grep -Eq "$pattern"; then
     exit 0
