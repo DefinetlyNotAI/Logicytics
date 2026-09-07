@@ -76,6 +76,7 @@ class VolumeDetailsCollector(CoreCollector):
             output_media_types=("application/json",),
             description="Exports mounted drive type, filesystem, label, and capacity metadata.", author="Logicytics",
             supported_platforms=("win32",), default_profiles=("deep",), timeout_seconds=15,
+            capabilities=(),
             maximum_output_bytes=128 * 1024,
         )
 

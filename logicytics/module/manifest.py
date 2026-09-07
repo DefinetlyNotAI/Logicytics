@@ -89,7 +89,7 @@ class CollectorRecord:
             retry_safe = False
         elif "permission" in diagnostic or "capability" in diagnostic or "access is denied" in diagnostic:
             operation = "access"
-            remediation = "Declare and explicitly approve the required capability or run with authorized privileges."
+            remediation = "Declare the capability in CollectorMetadata.capabilities and remove any active block before retrying."
             retry_safe = False
         elif "artifact" in diagnostic or "output limit" in diagnostic:
             operation = "artifact_registration"

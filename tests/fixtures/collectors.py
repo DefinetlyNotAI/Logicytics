@@ -32,6 +32,7 @@ class SystemInfoCollector(CoreCollector):
             description="Creates a harmless text artifact for core tests.",
             author="tests",
             supported_platforms=("win32",),
+            capabilities=(),
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -55,7 +56,6 @@ def plugin_collector_source() -> str:
     return COLLECTOR.replace("CoreCollector", "PluginCollector").replace(
         '            author="tests",',
         '            author="tests",\n'
-        '            capabilities=(),\n'
         '            privilege_level=PrivilegeLevel.STANDARD,\n'
         '            sensitive_data_categories=(),\n'
         '            network_access=NetworkAccess.NONE,\n'

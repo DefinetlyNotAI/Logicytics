@@ -44,9 +44,6 @@ from logicytics.module.sysinternals import ensure_sysinternals
 from logicytics.platform_adapters import process_adapter
 
 
-_STANDARD_CORE_CAPABILITIES = (Capability.SUBPROCESS, Capability.NETWORK)
-
-
 class CLI:
     """Translate command-line arguments into validated application requests."""
 
@@ -89,7 +86,11 @@ class CLI:
         return Path(__file__).resolve().parents[2]
 
     @staticmethod
-    def request(arguments: argparse.Namespace, default_workers: int) -> RunRequest:
+    def request(
+            arguments: argparse.Namespace,
+            default_workers: int,
+            configured_blocked_capabilities: tuple[Capability, ...] = (),
+    ) -> RunRequest:
         """Build an immutable run request while enforcing mode and rerun conflicts."""
         legacy_flags = {
             flag: getattr(arguments, flag, False)
@@ -264,20 +265,12 @@ class CLI:
             else include_arguments
         )
 
-        requested_capabilities = tuple(
+        requested_blocked_capabilities = tuple(
             Capability(value)
-            for value in getattr(arguments, "allow_capability", ())
+            for value in getattr(arguments, "block_capability", ())
         )
-        default_capabilities = (
-            _STANDARD_CORE_CAPABILITIES
-            if profile == "standard"
-            and not plugins_enabled
-            and not enable_mods
-            and not selection_only
-            else ()
-        )
-        approved_capabilities = tuple(dict.fromkeys(
-            (*default_capabilities, *requested_capabilities)
+        blocked_capabilities = tuple(dict.fromkeys(
+            (*configured_blocked_capabilities, *requested_blocked_capabilities)
         ))
 
         return RunRequest(
@@ -294,7 +287,7 @@ class CLI:
                 "acknowledge_authorization",
                 False,
             ),
-            approved_capabilities=approved_capabilities,
+            blocked_capabilities=blocked_capabilities,
             performance_check=performance_check,
             rerun_from=parent_run_id,
             output_policy=(
@@ -355,11 +348,11 @@ class CLI:
                 help="Bound concurrent isolated workers to this positive count.",
             )
             subparser.add_argument(
-                "--allow-capability",
+                "--block-capability",
                 action="append",
                 default=[],
                 choices=[capability.value for capability in Capability],
-                help="Approve an access capability requested by the selected collectors.",
+                help="Block a declared capability for the selected collectors; repeat as needed.",
             )
             if command == "run":
                 subparser.add_argument(
@@ -1040,6 +1033,7 @@ def main(argv: list[str] | None = None) -> int:
         request = cli_methods.request(
             arguments,
             configuration.runtime.default_max_workers,
+            configuration.runtime.blocked_capabilities,
         )
         application_logger.event(
             "INFO",
@@ -1048,7 +1042,7 @@ def main(argv: list[str] | None = None) -> int:
             profile=request.profile,
             include_count=len(request.include),
             exclude_count=len(request.exclude),
-            approved_capabilities=len(request.approved_capabilities),
+            blocked_capabilities=len(request.blocked_capabilities),
             enable_plugins=request.enable_plugins,
             enable_mods=request.enable_mods,
             max_workers=request.max_workers,

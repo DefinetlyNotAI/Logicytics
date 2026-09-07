@@ -11,8 +11,11 @@ from pathlib import Path
 def main(argv: list[str] | None = None) -> int:
     """Run one copied Python MOD with workspace mutation and capability enforcement."""
     arguments = sys.argv[1:] if argv is None else argv
-    if len(arguments) != 4:
-        print("Python MOD runner requires script, workspace, collector ID, and capabilities", file=sys.stderr)
+    if len(arguments) != 5:
+        print(
+            "Python MOD runner requires script, workspace, collector ID, capabilities, and blocked capabilities",
+            file=sys.stderr,
+        )
         return 2
     script = Path(arguments[0]).resolve()
     workspace = Path(arguments[1]).resolve()
@@ -21,6 +24,9 @@ def main(argv: list[str] | None = None) -> int:
         capability_values = json.loads(arguments[3])
         if not isinstance(capability_values, list):
             raise ValueError("capabilities must be a JSON list")
+        blocked_capability_values = json.loads(arguments[4])
+        if not isinstance(blocked_capability_values, list):
+            raise ValueError("blocked capabilities must be a JSON list")
     except (json.JSONDecodeError, ValueError) as error:
         print(f"Invalid Python MOD capabilities: {error}", file=sys.stderr)
         return 2
@@ -32,6 +38,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         capabilities = tuple(Capability(value) for value in capability_values)
+        blocked_capabilities = tuple(Capability(value) for value in blocked_capability_values)
     except ValueError as error:
         print(f"Invalid Python MOD capability: {error}", file=sys.stderr)
         return 2
@@ -47,6 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         collector_id,
         capabilities,
         script,
+        blocked_capabilities,
     )
     guard.active = True
     previous_argv = sys.argv

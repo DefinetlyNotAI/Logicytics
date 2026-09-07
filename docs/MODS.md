@@ -46,13 +46,12 @@ This example is intentionally bounded and non-sensitive:
 ```
 
 The ID must be `mod.<filename_stem>`. Legacy adapters must request the
-`subprocess` capability, and the user must approve it with
-`--allow-capability subprocess`. Other access must also be declared and
-approved. Python MODs are audit-confined to their private workspace by default.
+`subprocess` capability. Other access must also be declared and remains
+subject to the active blocked-capability policy. Python MODs are audit-confined
+to their private workspace by default.
 PowerShell, batch, and executable MODs must additionally declare
-`filesystem_write` and the user must explicitly approve it with
-`--allow-capability filesystem_write`, because Python cannot enforce filesystem
-boundaries inside native child processes. A Python MOD needs that capability
+`filesystem_write`, because Python cannot enforce filesystem boundaries inside
+native child processes. A Python MOD needs that capability
 only when intentionally writing outside its workspace. Invalid or missing
 sidecars quarantine the mod; selecting all mods
 then fails preflight before any collector launches.
@@ -82,10 +81,10 @@ SHA-256 sidecar.
 ## Security boundary
 
 Mods are untrusted, opt-in local code. Worker/process isolation, a private
-workspace, capability approval, bounded resources, packaging allowlists, and
-process-tree termination contain engine state and evidence publication. Python
-MOD mutation attempts outside the workspace fail unless `filesystem_write` was
-approved. Native MOD types require that explicit high-risk approval before
-preflight accepts them. Approval does not grant access beyond the Windows
-account running Logicytics, nor replace Windows ACLs or an AppContainer. Review
-a mod and its declared capabilities before approving execution.
+workspace, declared-capability enforcement, bounded resources, packaging
+allowlists, and process-tree termination contain engine state and evidence
+publication. Python MOD mutation attempts outside the workspace fail unless
+`filesystem_write` was declared. Native MOD types require that declaration
+before preflight accepts them. A configured or command-line block still
+overrides a declaration. Review a mod and its declared capabilities before
+executing it.

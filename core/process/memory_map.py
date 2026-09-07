@@ -31,6 +31,7 @@ class MemoryMapCollector(CoreCollector):
             description="Exports readable virtual-memory region addresses, sizes, permissions, paths, and process RSS.",
             author="Logicytics",
             supported_platforms=("win32",), sensitive_data_categories=("process_metadata",), default_profiles=("deep",),
+            capabilities=(),
             timeout_seconds=90, maximum_output_bytes=64 * 1024 * 1024,
         )
 

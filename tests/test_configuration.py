@@ -16,6 +16,7 @@ from logicytics.module.configuration import (
 )
 from logicytics.module.discovery import preflight
 from logicytics.module.errors import PlanError
+from logicytics.contracts import Capability
 from logicytics.module.planner import build_plan
 from logicytics.module.runtime import RunSupervisor
 from tests.fixtures.collectors import COLLECTOR
@@ -23,6 +24,37 @@ from tests.fixtures.collectors import COLLECTOR
 
 class ConfigurationTests(unittest.TestCase):
     """Configuration parsing, migration, validation, and manifest behavior."""
+
+    def test_runtime_blocked_capabilities_are_typed_and_default_empty(self) -> None:
+        """Capability blocks are explicit configuration policy rather than implicit approvals."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.assertEqual((), default_config(root).runtime.blocked_capabilities)
+            config_path = root / "logicytics.yaml"
+            config_path.write_text(
+                json.dumps({
+                    "schema_version": 4,
+                    "runtime": {
+                        "blocked_capabilities": {
+                            "network": True,
+                            "subprocess": False,
+                        },
+                    },
+                }),
+                encoding="utf-8",
+            )
+            configuration = load_config(root)
+            self.assertEqual(
+                (Capability.NETWORK,),
+                configuration.runtime.blocked_capabilities,
+            )
+
+            config_path.write_text(
+                '{"schema_version":4,"runtime":{"blocked_capabilities":["invented"]}}',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(PlanError, "unsupported capability"):
+                load_config(root)
 
     def test_configuration_schema_version_is_enforced(self) -> None:
         """Only the current v4 schema is accepted by the authoritative YAML loader."""

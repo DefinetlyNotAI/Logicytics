@@ -17,7 +17,7 @@ from logicytics.module.errors import PlanError, PreflightError
 BUILTIN_PROFILES = MappingProxyType({
     "minimal": "Essential local system, memory, and storage inventory only.",
     "standard": "Shipped core collectors explicitly declaring standard membership.",
-    "deep": "Extended declared inventory, subject to explicit capability approval.",
+    "deep": "Extended declared inventory, subject to declared-capability blocking policy.",
     "offline": "Declared local-only inventory with network and packet access prohibited.",
 })
 _OFFLINE_PROHIBITED_CAPABILITIES = frozenset({Capability.NETWORK, Capability.PACKET_CAPTURE})
@@ -153,7 +153,7 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
                 selected[dependency_id] = dependency
                 pending_dependencies.append(dependency_id)
     policy_errors: list[str] = []
-    missing_capabilities_for_request: set[Capability] = set()
+    blocked_capabilities_for_request: set[Capability] = set()
     for candidate in sorted(
             selected.values(),
             key=lambda item: item.metadata.id if item.metadata else "",
@@ -168,25 +168,25 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
                 )
         if sys.platform not in candidate.metadata.supported_platforms:
             policy_errors.append(f"{candidate.metadata.id}: does not support {sys.platform}")
-        missing_capabilities = set(candidate.metadata.capabilities) - set(request.approved_capabilities)
-        if missing_capabilities:
-            missing_capabilities_for_request.update(missing_capabilities)
-            required = ", ".join(sorted(capability.value for capability in missing_capabilities))
+        blocked_capabilities = set(candidate.metadata.capabilities).intersection(request.blocked_capabilities)
+        if blocked_capabilities:
+            blocked_capabilities_for_request.update(blocked_capabilities)
+            required = ", ".join(sorted(capability.value for capability in blocked_capabilities))
             policy_errors.append(
-                f"{candidate.metadata.id}: requires unapproved capabilities: {required}"
+                f"{candidate.metadata.id}: capability blocked by policy: {required}"
             )
     if policy_errors:
         details = "\n".join(f"- {error}" for error in policy_errors)
         hint = ""
-        if missing_capabilities_for_request:
+        if blocked_capabilities_for_request:
             flags = " ".join(
-                f"--allow-capability {capability.value}"
+                f"--block-capability {capability.value}"
                 for capability in sorted(
-                    missing_capabilities_for_request,
+                    blocked_capabilities_for_request,
                     key=lambda capability: capability.value,
                 )
             )
-            hint = f"\nRerun with: {flags}"
+            hint = f"\nBlocked by: {flags}"
         raise PlanError(f"selected collector policy validation failed:\n{details}{hint}")
     elevated_collectors: list[str] = []
 

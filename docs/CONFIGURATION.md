@@ -10,12 +10,12 @@ The root fields are `schema_version`, `runtime`, `interaction`, `maintenance`, `
 
 | Section       | Fields                                                                                                                                                              |
 |---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `runtime`     | `output_root`, `default_max_workers`, `maximum_workers`, `package_completed_runs`, `maximum_run_output_bytes`                                                       |
+| `runtime`     | `output_root`, `default_max_workers`, `maximum_workers`, `package_completed_runs`, `maximum_run_output_bytes`, `blocked_capabilities`                               |
 | `interaction` | `history_enabled`, `similarity_threshold`, `model_name`, `model_debug`                                                                                              |
 | `maintenance` | `remote_manifest_url`, `remote_manifest_sha256`, `local_manifest_path`, `minimum_python`, `recommended_python`, `sysinternals_enabled`, `sysinternals_download_url` |
 | `logging`     | `level`, `console_enabled`, `color_enabled`, `file_enabled`, `maximum_bytes`, `delete_previous`, `retention_days`                                                   |
 
-`runtime.output_root` and `maintenance.local_manifest_path` must stay inside the project when relative. Worker, output, log, and retention values are bounded by the parser. Remote manifests require a matching HTTPS URL and lowercase SHA-256 digest. Sysinternals is enabled by default; set `maintenance.sysinternals_enabled: false` to disable discovery, download, and extraction.
+`runtime.output_root` and `maintenance.local_manifest_path` must stay inside the project when relative. Worker, output, log, and retention values are bounded by the parser. `runtime.blocked_capabilities` is a mapping of capability names to booleans; true values disable matching metadata requests for the run. Remote manifests require a matching HTTPS URL and lowercase SHA-256 digest. Sysinternals is enabled by default; set `maintenance.sysinternals_enabled: false` to disable discovery, download, and extraction.
 
 Application events use the same redacted data for both sinks. The console follows AIBrain's compact, colored status style with severity markers and terminal-width word wrapping; machine-oriented lifecycle names such as `collector_finished` are shown as readable text such as `Collector finished`. File rows keep the stable aligned `LOCAL DATE AND TIME | SEVERITY | SOURCE | MESSAGE` layout, wrap at 140 columns, and align continuation text beneath the message column. Command lifecycle events include terminal status and elapsed time, while run and collector events add worker, retry, artifact, and resource context. Console-only command results are rendered as plain line-by-line output and do not pollute the application event log. `logging.console_enabled`, `logging.color_enabled`, and `logging.file_enabled` control those sinks independently.
 
@@ -42,7 +42,11 @@ The `collectors` mapping is keyed by a validated collector ID. Shipped collector
     "default_max_workers": 4,
     "maximum_workers": 16,
     "package_completed_runs": true,
-    "maximum_run_output_bytes": 4294967296
+    "maximum_run_output_bytes": 4294967296,
+    "blocked_capabilities": {
+      "network": false,
+      "subprocess": false
+    }
   },
   "interaction": {
     "history_enabled": false,

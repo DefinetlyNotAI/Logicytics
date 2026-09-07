@@ -267,19 +267,12 @@ class ModTests(unittest.TestCase):
                 report.invalid,
             )
 
-            with self.assertRaisesRegex(
-                    PlanError,
-                    "filesystem_write",
-            ):
-                build_plan(
-                    report,
-                    RunRequest(
-                        enable_mods=True,
-                        approved_capabilities=(
-                            Capability.SUBPROCESS,
-                        ),
-                    ),
-                )
+            plan = build_plan(report, RunRequest(enable_mods=True))
+            self.assertEqual(("mod.native",), tuple(
+                item.metadata.id
+                for item in plan.collectors
+                if item.metadata is not None
+            ))
 
     def test_nopy_and_modded_modes_select_declared_mod_types_without_helpers(
             self,

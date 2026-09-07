@@ -100,7 +100,7 @@ class Specialty(StrEnum):
 
 
 class Capability(StrEnum):
-    """Explicitly approved platform access a collector may request."""
+    """Platform access a collector must declare before requesting it."""
 
     FILESYSTEM_READ = "filesystem_read"
     FILESYSTEM_WRITE = "filesystem_write"
@@ -490,6 +490,9 @@ class RunRequest:
     non_python_only: bool = False
     max_workers: int = 4
     acknowledge_authorization: bool = False
+    blocked_capabilities: tuple[Capability, ...] = ()
+    """Capabilities globally disabled for this request, unless absent from metadata."""
+    # Retained for manifest/API compatibility; declared metadata is now allowed by default.
     approved_capabilities: tuple[Capability, ...] = ()
     performance_check: bool = False
     rerun_from: str | None = None
@@ -530,6 +533,12 @@ class RunRequest:
             raise ValueError("request max_workers must be an integer from 1 to 64")
         if self.performance_check and self.max_workers != 1:
             raise ValueError("request performance_check requires max_workers=1")
+        if not isinstance(self.blocked_capabilities, tuple) or not all(
+                isinstance(capability, Capability) for capability in self.blocked_capabilities
+        ):
+            raise ValueError("request blocked_capabilities must be a tuple of Capability values")
+        if len(set(self.blocked_capabilities)) != len(self.blocked_capabilities):
+            raise ValueError("request blocked_capabilities must not contain duplicates")
         if not isinstance(self.approved_capabilities, tuple) or not all(
                 isinstance(capability, Capability) for capability in self.approved_capabilities
         ):

@@ -26,59 +26,48 @@ class CliTests(unittest.TestCase):
         self.assertTrue(request.performance_check)
         self.assertEqual(1, request.max_workers)
 
-    def test_standard_core_requests_approve_baseline_capabilities(self) -> None:
-        """The standard built-in CLI profile includes its required baseline access."""
+    def test_capabilities_default_to_metadata_and_cli_can_block_them(self) -> None:
+        """Declared capabilities run by default and can be disabled per invocation."""
         parser = cli_methods.parser()
 
         request = cli_methods.request(
             parser.parse_args(["run", "--profile", "standard"]),
             default_workers=4,
         )
-        self.assertEqual(
-            (Capability.SUBPROCESS, Capability.NETWORK),
-            request.approved_capabilities,
-        )
+        self.assertEqual((), request.blocked_capabilities)
 
-        with_extra_approval = cli_methods.request(
+        blocked = cli_methods.request(
             parser.parse_args([
                 "run",
                 "--profile",
                 "standard",
-                "--allow-capability",
+                "--block-capability",
                 "network",
-                "--allow-capability",
+                "--block-capability",
                 "filesystem_read",
             ]),
             default_workers=4,
         )
         self.assertEqual(
             (
-                Capability.SUBPROCESS,
                 Capability.NETWORK,
                 Capability.FILESYSTEM_READ,
             ),
-            with_extra_approval.approved_capabilities,
+            blocked.blocked_capabilities,
         )
 
-    def test_baseline_capabilities_remain_explicit_for_extensions_and_direct_runs(self) -> None:
-        """Opt-in and direct execution keep the capability boundary fail-closed."""
+    def test_configuration_capabilities_are_combined_with_cli_blocks(self) -> None:
+        """Configuration and invocation policy blocks are merged without duplicates."""
         parser = cli_methods.parser()
-        restricted_requests = (
-            ["run", "--profile", "standard", "--plugins"],
-            ["run", "--profile", "standard", "--mods"],
-            ["run", "--mode", "extensions"],
-            ["run", "--mode", "non-python"],
-            ["run", "--profile", "deep"],
-            ["collector", "core.network.network_adapters"],
+        request = cli_methods.request(
+            parser.parse_args(["run", "--block-capability", "subprocess"]),
+            default_workers=4,
+            configured_blocked_capabilities=(Capability.NETWORK, Capability.SUBPROCESS),
         )
-
-        for arguments in restricted_requests:
-            with self.subTest(arguments=arguments):
-                request = cli_methods.request(
-                    parser.parse_args(arguments),
-                    default_workers=4,
-                )
-                self.assertEqual((), request.approved_capabilities)
+        self.assertEqual(
+            (Capability.NETWORK, Capability.SUBPROCESS),
+            request.blocked_capabilities,
+        )
 
     def test_typed_mode_registry_maps_every_user_mode_and_legacy_alias(self) -> None:
         """One immutable matrix owns profile, scheduling, MODS, and performance behavior."""

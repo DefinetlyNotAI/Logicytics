@@ -526,6 +526,12 @@ def _validate_class_shape(
                     f"{', '.join(missing_fields)}"
                 )
 
+    if candidate.kind is CollectorKind.CORE and len(metadata_calls) == 1:
+        if not any(keyword.arg == "capabilities" for keyword in metadata_calls[0].keywords):
+            candidate.static_errors.append(
+                "CAPABILITY_METADATA_MISSING: core metadata must explicitly declare capabilities"
+            )
+
     collect_method = methods.get("collect")
 
     if collect_method is not None and len(metadata_calls) == 1:

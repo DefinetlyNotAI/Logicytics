@@ -135,8 +135,7 @@ class PlanningTests(unittest.TestCase):
                 "from logicytics import CollectorMetadata",
                 "from logicytics import Capability, CollectorMetadata",
             ).replace(
-                '            supported_platforms=("win32",),',
-                '            supported_platforms=("win32",),\n'
+                '            capabilities=(),',
                 '            capabilities=(Capability.SENSITIVE_FILES,),\n'
                 '            sensitive_data_categories=("credentials",),\n'
                 '            default_profiles=("deep",),',
@@ -147,8 +146,14 @@ class PlanningTests(unittest.TestCase):
 
             standard = build_plan(report, RunRequest())
             self.assertEqual(["core.system.a_standard"], self._collector_ids(standard.collectors))
-            with self.assertRaisesRegex(PlanError, "unapproved capabilities"):
-                build_plan(report, RunRequest(include=(sensitive_id,)))
+            with self.assertRaisesRegex(PlanError, "capability blocked by policy"):
+                build_plan(
+                    report,
+                    RunRequest(
+                        include=(sensitive_id,),
+                        blocked_capabilities=(Capability.SENSITIVE_FILES,),
+                    ),
+                )
             opted_in = build_plan(
                 report,
                 RunRequest(
@@ -214,8 +219,7 @@ class PlanningTests(unittest.TestCase):
                 "from logicytics import CollectorMetadata",
                 "from logicytics import Capability, CollectorMetadata",
             ).replace(
-                '            supported_platforms=("win32",),',
-                '            supported_platforms=("win32",),\n'
+                '            capabilities=(),',
                 '            capabilities=(Capability.NETWORK,),\n'
                 '            network_access=NetworkAccess.LOCAL,\n'
                 '            default_profiles=("standard",),',
@@ -249,9 +253,8 @@ class PlanningTests(unittest.TestCase):
                     "from logicytics import CollectorMetadata",
                     "from logicytics import Capability, CollectorMetadata",
                 ).replace(
-                    '            supported_platforms=("win32",),',
-                    '            supported_platforms=("win32",),\n'
-                    f"            capabilities=({capability},),\n"
+                    '            capabilities=(),',
+                    f'            capabilities=({capability},),\n'
                     + (
                         "            network_access=NetworkAccess.LOCAL,\n"
                         if capability == "Capability.NETWORK"
@@ -261,10 +264,15 @@ class PlanningTests(unittest.TestCase):
                 (core_directory / f"{filename}.py").write_text(source, encoding="utf-8")
 
             with self.assertRaisesRegex(
-                    PlanError,
-                    "selected collector policy validation failed",
+                PlanError,
+                "selected collector policy validation failed",
             ) as rejected:
-                build_plan(preflight(root), RunRequest())
+                build_plan(
+                    preflight(root),
+                    RunRequest(
+                        blocked_capabilities=(Capability.NETWORK, Capability.SUBPROCESS),
+                    ),
+                )
 
             message = str(rejected.exception)
             self.assertLess(
@@ -282,7 +290,7 @@ class PlanningTests(unittest.TestCase):
             ):
                 self.assertIn(collector_id, message)
             self.assertIn(
-                "Rerun with: --allow-capability network --allow-capability subprocess",
+                "Blocked by: --block-capability network --block-capability subprocess",
                 message,
             )
 
@@ -297,8 +305,7 @@ class PlanningTests(unittest.TestCase):
                     "from logicytics import CollectorMetadata",
                     "from logicytics import Capability, CollectorMetadata",
                 ).replace(
-                    '            supported_platforms=("win32",),',
-                    '            supported_platforms=("win32",),\n'
+                    '            capabilities=(),',
                     '            capabilities=(Capability.SENSITIVE_FILES,),\n'
                     '            sensitive_data_categories=("credentials", "personal_documents"),\n'
                     '            default_profiles=("deep",),',
@@ -556,8 +563,7 @@ class PlanningTests(unittest.TestCase):
                 "from logicytics import CollectorMetadata,",
                 "from logicytics import Capability, CollectorMetadata,",
             ).replace(
-                '            supported_platforms=("win32",),',
-                '            supported_platforms=("win32",),\n'
+                '            capabilities=(),',
                 '            capabilities=(Capability.SENSITIVE_FILES,),\n'
                 '            sensitive_data_categories=("credentials",),\n'
                 '            default_profiles=("deep",),',
@@ -595,16 +601,14 @@ class PlanningTests(unittest.TestCase):
                 "from logicytics import CollectorMetadata",
                 "from logicytics import Capability, CollectorMetadata",
             ).replace(
-                'supported_platforms=("win32",),',
-                'supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ,),',
+                'capabilities=(),',
+                'capabilities=(Capability.FILESYSTEM_READ,),',
             )
             collector_path.write_text(secured_collector, encoding="utf-8")
             report = preflight(root)
-            with self.assertRaises(PlanError):
-                build_plan(report, RunRequest())
             plan = build_plan(
                 report,
-                RunRequest(approved_capabilities=(Capability.FILESYSTEM_READ,)),
+                RunRequest(),
             )
             self.assertEqual(1, len(plan.collectors))
 
@@ -618,15 +622,18 @@ class PlanningTests(unittest.TestCase):
                 "from logicytics import CollectorMetadata",
                 "from logicytics import Capability, CollectorMetadata",
             ).replace(
-                'supported_platforms=("win32",),',
-                'supported_platforms=("win32",), capabilities=(Capability.ELEVATED_PRIVILEGES,), '
+                'capabilities=(),',
+                'capabilities=(Capability.ELEVATED_PRIVILEGES,), '
                 'privilege_level=PrivilegeLevel.ELEVATED,',
             )
             collector_path.write_text(secured_collector, encoding="utf-8")
             report = preflight(root)
-            with self.assertRaisesRegex(PlanError, "unapproved capabilities"):
-                build_plan(report, RunRequest())
-            approved = RunRequest(approved_capabilities=(Capability.ELEVATED_PRIVILEGES,))
+            with self.assertRaisesRegex(PlanError, "capability blocked by policy"):
+                build_plan(
+                    report,
+                    RunRequest(blocked_capabilities=(Capability.ELEVATED_PRIVILEGES,)),
+                )
+            approved = RunRequest()
             for administrator_state in (False, None):
                 with self.subTest(administrator_state=administrator_state):
                     environment = EnvironmentReport(administrator_state, True, None)

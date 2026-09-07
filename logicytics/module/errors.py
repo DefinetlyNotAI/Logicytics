@@ -17,3 +17,19 @@ class PlanError(LogicyticsError):
 
 class ArtifactError(LogicyticsError):
     """Raised when an artifact violates workspace or output rules."""
+
+
+class CapabilityPolicyError(PermissionError):
+    """Raised when a collector's declared capability policy is violated."""
+
+    def __init__(self, code: str, capability: str, operation: str, detail: str = "") -> None:
+        """Create a stable, machine-searchable capability diagnostic."""
+        self.code = code
+        self.capability = capability
+        self.operation = operation
+        action = "requested blocked" if code == "CAPABILITY_BLOCKED" else "used undeclared"
+        suffix = f"; {detail}" if detail else ""
+        super().__init__(
+            f"{code}: collector {action} {capability} capability; "
+            f"operation={operation}{suffix}"
+        )

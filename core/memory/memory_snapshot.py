@@ -25,6 +25,7 @@ class MemorySnapshotCollector(CoreCollector):
             description="Captures aggregate physical, virtual, and page-file memory statistics.",
             author="Logicytics",
             supported_platforms=("win32",),
+            capabilities=(),
             default_profiles=("minimal", "standard", "deep", "offline"),
             timeout_seconds=10,
             maximum_output_bytes=64 * 1024,

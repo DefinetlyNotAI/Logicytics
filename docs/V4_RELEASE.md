@@ -92,8 +92,10 @@ sizes, and hashes before returning or opening evidence.
 
 Collection cannot start without explicit authorization acknowledgement.
 Sensitive, network, packet, browser, private-key, filesystem, subprocess,
-registry, and elevation capabilities are declared per collector and require
-approval. Elevated selection also requires a live administrator check.
+registry, and elevation capabilities are declared per collector and run by
+default unless blocked by request flags or runtime configuration. Sensitive
+selection still requires authorization acknowledgement, and elevated selection
+also requires a live administrator check.
 
 One collector failure does not abort independent work, but its failure cannot be
 hidden by a successful package. The manifest records operation, platform error,

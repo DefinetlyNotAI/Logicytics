@@ -11,6 +11,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Mapping
 
+from logicytics.contracts import Capability
 from logicytics.module.errors import PlanError
 from logicytics.module.redaction import redact_mapping
 
@@ -27,6 +28,7 @@ _ROOT_FIELDS = frozenset({
 })
 _RUNTIME_FIELDS = frozenset({
     "output_root", "default_max_workers", "maximum_workers", "package_completed_runs", "maximum_run_output_bytes",
+    "blocked_capabilities",
 })
 _INTERACTION_FIELDS = frozenset({"history_enabled", "similarity_threshold", "model_name", "model_debug"})
 _MAINTENANCE_FIELDS = frozenset({
@@ -106,6 +108,27 @@ def _positive_integer(value: object, *, minimum: int, maximum: int) -> bool:
 def _bounded_number(value: object, *, minimum: float, maximum: float) -> bool:
     """Whether a JSON value is a bounded finite numeric setting."""
     return isinstance(value, (int, float)) and not isinstance(value, bool) and minimum <= value <= maximum
+
+
+def _configured_capabilities(value: object, setting_name: str) -> tuple[Capability, ...]:
+    """Parse capabilities disabled by configuration without accepting ambiguous values."""
+    if value is None:
+        return ()
+    if isinstance(value, dict):
+        if not all(isinstance(name, str) and isinstance(enabled, bool) for name, enabled in value.items()):
+            raise PlanError(f"{setting_name} must map capability names to booleans")
+        names = [name for name, enabled in value.items() if enabled]
+    elif isinstance(value, (list, tuple)):
+        names = list(value)
+    else:
+        raise PlanError(f"{setting_name} must be a capability list or a capability-to-boolean mapping")
+    try:
+        capabilities = tuple(Capability(name) for name in names)
+    except (TypeError, ValueError) as error:
+        raise PlanError(f"{setting_name} contains an unsupported capability: {error}") from error
+    if len(set(capabilities)) != len(capabilities):
+        raise PlanError(f"{setting_name} must not contain duplicate capabilities")
+    return capabilities
 
 
 def _validate_collector_settings(settings: Mapping[str, Mapping[str, Any]]) -> None:
@@ -267,7 +290,7 @@ def _load_yaml_mapping(payload: bytes) -> dict[str, Any]:
 
 def default_configuration_yaml() -> str:
     """Return the YAML template written by installer and repair flows."""
-    return """# Logicytics user configuration\nschema_version: 4\nruntime:\n  output_root: output/data\n  default_max_workers: 4\n  maximum_workers: 16\n  package_completed_runs: true\ninteraction:\n  history_enabled: false\n  similarity_threshold: 0.55\n  model_name: stdlib-sequence-matcher\n  model_debug: false\nmaintenance:\n  local_manifest_path: project.manifest.json\n  minimum_python: \"3.11\"\n  recommended_python: \"3.11\"\n  sysinternals_enabled: true\n  sysinternals_download_url: https://download.sysinternals.com/files/SysinternalsSuite.zip\nlogging:\n  level: INFO\n  console_enabled: true\n  color_enabled: true\n  file_enabled: true\n  maximum_bytes: 4194304\n  delete_previous: false\n  retention_days: 30\ncollectors: {}\n"""
+    return """# Logicytics user configuration\nschema_version: 4\nruntime:\n  output_root: output/data\n  default_max_workers: 4\n  maximum_workers: 16\n  package_completed_runs: true\n  blocked_capabilities: {}\ninteraction:\n  history_enabled: false\n  similarity_threshold: 0.55\n  model_name: stdlib-sequence-matcher\n  model_debug: false\nmaintenance:\n  local_manifest_path: project.manifest.json\n  minimum_python: \"3.11\"\n  recommended_python: \"3.11\"\n  sysinternals_enabled: true\n  sysinternals_download_url: https://download.sysinternals.com/files/SysinternalsSuite.zip\nlogging:\n  level: INFO\n  console_enabled: true\n  color_enabled: true\n  file_enabled: true\n  maximum_bytes: 4194304\n  delete_previous: false\n  retention_days: 30\ncollectors: {}\n"""
 
 
 def write_default_configuration(project_root: Path, *, overwrite: bool = False) -> Path:
@@ -290,6 +313,7 @@ class RuntimeSettings:
     maximum_workers: int = 16
     package_completed_runs: bool = True
     maximum_run_output_bytes: int = DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES
+    blocked_capabilities: tuple[Capability, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -430,6 +454,10 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             maximum=MAXIMUM_RUN_OUTPUT_BYTES,
     ):
         raise PlanError("runtime maximum_run_output_bytes must be an integer from 1 to 68719476736")
+    blocked_capabilities = _configured_capabilities(
+        runtime_raw.get("blocked_capabilities", {}),
+        "runtime blocked_capabilities",
+    )
 
     interaction_raw = raw.get("interaction", {})
     if not isinstance(interaction_raw, dict):
@@ -559,6 +587,7 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             maximum_workers=maximum_workers,
             package_completed_runs=package_completed_runs,
             maximum_run_output_bytes=maximum_run_output_bytes,
+            blocked_capabilities=blocked_capabilities,
         ),
         interaction=InteractionSettings(
             history_enabled=history_enabled,

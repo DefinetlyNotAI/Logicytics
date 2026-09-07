@@ -43,7 +43,7 @@ from logicytics.module.artifacts import WorkspaceArtifactWriter
 from logicytics.module.command_runner import parse_level_messages
 from logicytics.module.configuration import AppConfig
 from logicytics.module.discovery import CollectorCandidate
-from logicytics.module.errors import LogicyticsError
+from logicytics.module.errors import CapabilityPolicyError, LogicyticsError
 from logicytics.module.logging import FileEventLogger, get_application_logger, get_event_logger
 from logicytics.module.manifest import CollectorRecord, RunManifest, write_manifest, utc_now
 from logicytics.module.output_contracts import core_output_contract
@@ -97,6 +97,7 @@ class _WorkerPayload(TypedDict):
     expected_class: str
     execution_type: str
     metadata: dict[str, object]
+    blocked_capabilities: tuple[Capability, ...]
     workspace: str
     artifact_root: str
     cancellation_file: str
@@ -173,6 +174,7 @@ class _WorkerMutationGuard:
             collector_id: str,
             capabilities: tuple[Capability, ...],
             collector_source: Path,
+            blocked_capabilities: tuple[Capability, ...] = (),
     ) -> None:
         """Install audit boundaries for one collector's filesystem and capability scope."""
         self.roots = (workspace.resolve(), (artifact_root / collector_id.replace(".", "_")).resolve())
@@ -187,8 +189,26 @@ class _WorkerMutationGuard:
             (source_tree.parent / "plugins").resolve(),
         )
         self.capabilities = frozenset(capabilities)
+        self.blocked_capabilities = frozenset(blocked_capabilities)
         self.active = False
         sys.addaudithook(self._check_event)
+
+    def _require_capability(self, capability: Capability, operation: str, detail: str = "") -> None:
+        """Reject blocked access and undeclared access with distinct stable diagnostics."""
+        if capability in self.blocked_capabilities:
+            raise CapabilityPolicyError(
+                "CAPABILITY_BLOCKED",
+                capability.value,
+                operation,
+                detail or "blocked by the active run policy",
+            )
+        if capability not in self.capabilities:
+            raise CapabilityPolicyError(
+                "CAPABILITY_DECLARATION_MISMATCH",
+                capability.value,
+                operation,
+                detail or "not declared in CollectorMetadata.capabilities",
+            )
 
     def _check_path(self, value: object) -> None:
         """Reject writes that escape the collector workspace or artifact root."""
@@ -197,9 +217,16 @@ class _WorkerMutationGuard:
         if not isinstance(value, (str, bytes, os.PathLike)):
             raise PermissionError("collector filesystem mutation has an unsupported target")
         path = Path(os.fsdecode(value)).resolve()
-        if Capability.FILESYSTEM_WRITE in self.capabilities:
+        if Capability.FILESYSTEM_WRITE in self.capabilities and (
+                Capability.FILESYSTEM_WRITE not in self.blocked_capabilities
+        ):
             return
         if not any(path == root or root in path.parents for root in self.roots):
+            self._require_capability(
+                Capability.FILESYSTEM_WRITE,
+                "filesystem_write",
+                f"target={path}; collector filesystem mutation escapes its private workspace",
+            )
             raise PermissionError(f"collector filesystem mutation escapes its private workspace: {path}")
 
     def _check_read(self, value: object) -> None:
@@ -211,8 +238,11 @@ class _WorkerMutationGuard:
                 path == root or root in path.parents for root in (*self.roots, *self.runtime_roots)
         ):
             return
-        if Capability.FILESYSTEM_READ not in self.capabilities:
-            raise PermissionError("collector requires declared filesystem_read capability")
+        self._require_capability(
+            Capability.FILESYSTEM_READ,
+            "filesystem_read",
+            f"target={path}",
+        )
         components = tuple(part.casefold() for part in path.parts)
         browser_data = any(part in {"chrome", "edge", "firefox", "opera software", "opera gx"} for part in components)
         private_key = ".ssh" in components or path.name.casefold() in {
@@ -222,12 +252,12 @@ class _WorkerMutationGuard:
             label in path.name.casefold() for label in
             ("cookie", "credential", "password", "token", "secret", "login data")
         )
-        if browser_data and Capability.BROWSER_DATA not in self.capabilities:
-            raise PermissionError("collector requires declared browser_data capability")
-        if sensitive and Capability.SENSITIVE_FILES not in self.capabilities:
-            raise PermissionError("collector requires declared sensitive_files capability")
-        if private_key and Capability.PRIVATE_KEYS not in self.capabilities:
-            raise PermissionError("collector requires declared private_keys capability")
+        if browser_data:
+            self._require_capability(Capability.BROWSER_DATA, "browser_data", f"target={path}")
+        if sensitive:
+            self._require_capability(Capability.SENSITIVE_FILES, "sensitive_files", f"target={path}")
+        if private_key:
+            self._require_capability(Capability.PRIVATE_KEYS, "private_keys", f"target={path}")
 
     @staticmethod
     def _subprocess_tokens(arguments: tuple[object, ...]) -> tuple[str, ...]:
@@ -321,25 +351,22 @@ class _WorkerMutationGuard:
         if not self.active:
             return
         if event == "subprocess.Popen":
-            if Capability.SUBPROCESS not in self.capabilities:
-                raise PermissionError("collector requires declared subprocess capability")
+            self._require_capability(Capability.SUBPROCESS, "subprocess")
             if prohibited := self._prohibited_subprocess(arguments):
                 raise PermissionError(f"collector subprocess command is prohibited: {prohibited}")
         if event.startswith("socket.") and event in {
             "socket.__new__", "socket.bind", "socket.connect", "socket.sendto", "socket.getaddrinfo"
         }:
-            if Capability.NETWORK not in self.capabilities:
-                raise PermissionError("collector requires declared network capability")
+            self._require_capability(Capability.NETWORK, "network")
             socket_type = arguments[2] if len(arguments) > 2 else None
             if (
                     event == "socket.__new__"
                     and isinstance(socket_type, int)
                     and socket_type == int(socket.SOCK_RAW)
             ):
-                if Capability.PACKET_CAPTURE not in self.capabilities:
-                    raise PermissionError("collector requires declared packet_capture capability")
-        if event.startswith("winreg.") and Capability.REGISTRY_READ not in self.capabilities:
-            raise PermissionError("collector requires declared registry_read capability")
+                self._require_capability(Capability.PACKET_CAPTURE, "packet_capture")
+        if event.startswith("winreg."):
+            self._require_capability(Capability.REGISTRY_READ, "registry_read")
         if event in self._BLOCKED_EVENTS:
             raise PermissionError(f"collector must not modify process state: {event}")
         if event == "open":
@@ -395,6 +422,7 @@ def _mod_command(
         workspace: Path | None = None,
         collector_id: str = "mod.legacy",
         capabilities: tuple[Capability, ...] = (),
+        blocked_capabilities: tuple[Capability, ...] = (),
 ) -> list[str]:
     """Build a shell-free command for one copied legacy MODS script."""
     if execution_type == "mod_python":
@@ -409,6 +437,7 @@ def _mod_command(
             str(workspace),
             collector_id,
             json.dumps([capability.value for capability in capabilities]),
+            json.dumps([capability.value for capability in blocked_capabilities]),
         ]
     if execution_type == "mod_powershell":
         return ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(script)]
@@ -448,7 +477,14 @@ def _run_mod_worker(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]
     )
     stdout_path = workspace / "script_stdout.txt"
     stderr_path = workspace / "script_stderr.txt"
-    guard = _WorkerMutationGuard(workspace, artifact_root, metadata.id, metadata.capabilities, source)
+    guard = _WorkerMutationGuard(
+        workspace,
+        artifact_root,
+        metadata.id,
+        metadata.capabilities,
+        source,
+        payload["blocked_capabilities"],
+    )
     result: CollectorResult
     try:
         if cancellation_file.exists():
@@ -460,6 +496,7 @@ def _run_mod_worker(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]
                 workspace,
                 metadata.id,
                 metadata.capabilities,
+                payload["blocked_capabilities"],
             )
             environment = {
                 "PATH": os.environ.get("PATH", ""),
@@ -516,6 +553,20 @@ def _run_mod_worker(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]
                     errors=(f"exit code {completed.returncode}", completed.stderr.strip() or "no stderr"),
                     artifacts=tuple(artifacts),
                 )
+    except CapabilityPolicyError as error:
+        guard.active = False
+        logger.event(
+            "error",
+            "capability_policy_violation",
+            code=error.code,
+            capability=error.capability,
+            operation=error.operation,
+        )
+        result = CollectorResult.failed(
+            "legacy mod capability policy violation",
+            errors=(str(error),),
+            artifacts=writer.artifacts,
+        )
     except BaseException as error:
         guard.active = False
         result = CollectorResult.failed(
@@ -597,6 +648,7 @@ def _worker_entry(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) 
                     metadata.id,
                     metadata.capabilities,
                     Path(payload["path"]),
+                    payload["blocked_capabilities"],
                 )
                 mutation_guard.active = True
                 try:
@@ -646,6 +698,16 @@ def _worker_entry(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) 
                                 raise TypeError("finalize() must return CollectorResult")
                             if result.artifacts != writer.artifacts:
                                 raise TypeError("finalized result artifacts must exactly match registered artifacts")
+                except CapabilityPolicyError as error:
+                    failure_summary = "collector capability policy violation"
+                    context.logger.event(
+                        "error",
+                        "capability_policy_violation",
+                        code=error.code,
+                        capability=error.capability,
+                        operation=error.operation,
+                    )
+                    lifecycle_errors.extend((str(error), traceback.format_exc()))
                 except BaseException as error:
                     lifecycle_errors.extend((f"{type(error).__name__}: {error}", traceback.format_exc()))
                 finally:
@@ -720,6 +782,32 @@ class RunSupervisor:
 
     def run(self, plan: RunPlan) -> RunOutcome:
         """Execute a preflighted plan and persist the manifest throughout the run."""
+        configured_blocks = set(self.configuration.runtime.blocked_capabilities)
+        request_blocks = set(plan.request.blocked_capabilities)
+        blocked = configured_blocks.union(request_blocks)
+        policy_violations = {
+            metadata.id: sorted(
+                capability.value
+                for capability in set(metadata.capabilities).intersection(blocked)
+            )
+            for metadata in (_require_metadata(candidate) for candidate in plan.collectors)
+        }
+        policy_violations = {
+            collector_id: capabilities
+            for collector_id, capabilities in policy_violations.items()
+            if capabilities
+        }
+        if policy_violations:
+            details = "; ".join(
+                f"{collector_id}={', '.join(capabilities)}"
+                for collector_id, capabilities in sorted(policy_violations.items())
+            )
+            raise CapabilityPolicyError(
+                "CAPABILITY_BLOCKED",
+                "multiple" if len(policy_violations) > 1 else next(iter(policy_violations.values()))[0],
+                "run",
+                f"collector policy prevents execution: {details}",
+            )
         if plan.collectors and not plan.request.acknowledge_authorization:
             selected_metadata = tuple(_require_metadata(candidate) for candidate in plan.collectors)
             categories = sorted(str(metadata.specialty) for metadata in selected_metadata)
@@ -1095,6 +1183,7 @@ class RunSupervisor:
                     "expected_class": candidate.expected_class,
                     "execution_type": candidate.execution_type,
                     "metadata": dict(cast(Mapping[str, object], metadata.to_dict())),
+                    "blocked_capabilities": plan.request.blocked_capabilities,
                     "workspace": str(workspace),
                     "artifact_root": str(artifact_root),
                     "cancellation_file": str(cancellation_file),
@@ -1132,6 +1221,9 @@ class RunSupervisor:
                     "output_budget_bytes": output_budget,
                     "resource_class": metadata.resource_class.value,
                     "parallel_safe": metadata.parallel_safe,
+                    "declared_capabilities": ",".join(
+                        sorted(capability.value for capability in metadata.capabilities)
+                    ) or "none",
                 }
                 run_logger.event("info", "collector_started", **start_fields)
                 application_logger.event(
@@ -1159,6 +1251,24 @@ class RunSupervisor:
                     artifact_bytes = self._collector_artifact_bytes(artifact_root, collector_id)
                     committed_output_bytes += artifact_bytes
                     self._cleanup_worker_temporary_directory(worker)
+                    capability_error = next(
+                        (
+                            error
+                            for error in record.errors
+                            if error.startswith(("CAPABILITY_BLOCKED:", "CAPABILITY_DECLARATION_MISMATCH:"))
+                        ),
+                        None,
+                    )
+                    if capability_error is not None:
+                        application_logger.event(
+                            "ERROR",
+                            "capability_policy_violation",
+                            source="logicytics.runtime",
+                            run_id=run_id,
+                            collector_id=collector_id,
+                            code=capability_error.split(":", 1)[0],
+                            detail=capability_error,
+                        )
                     attempt_status = record.status
                     attempt_duration = record.duration_seconds or 0.0
                     retry_scheduled = self._schedule_retry(

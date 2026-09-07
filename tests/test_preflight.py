@@ -50,6 +50,27 @@ class PreflightTests(unittest.TestCase):
             self.assertEqual(1, len(report.valid), report.invalid)
             self.assertEqual((), report.invalid)
 
+    def test_core_preflight_requires_explicit_capability_metadata(self) -> None:
+        """A core script missing its capability declaration is rejected before execution."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                COLLECTOR.replace("            capabilities=(),\n", ""),
+                encoding="utf-8",
+            )
+
+            report = preflight(root)
+
+            self.assertEqual((), report.valid)
+            self.assertEqual(1, len(report.invalid))
+            self.assertIn(
+                "CAPABILITY_METADATA_MISSING",
+                report.invalid[0].static_errors[0],
+            )
+
     def test_plugin_preflight_requires_explicit_security_cost_and_output_metadata(self) -> None:
         """A plugin cannot silently inherit fields that affect consent or scheduling."""
         with tempfile.TemporaryDirectory() as temporary:

@@ -28,6 +28,7 @@ class SystemInfoCollector(CoreCollector):
             description="Collects a bounded operating-system and hardware inventory.",
             author="Logicytics",
             supported_platforms=("win32",),
+            capabilities=(),
             default_profiles=("minimal", "standard", "deep", "offline"),
             timeout_seconds=15,
             maximum_output_bytes=128 * 1024,

@@ -92,40 +92,39 @@ These flags are parser-exposed on every subcommand. They affect collector
 selection and planning on preflight, debug, plan, run, and collector; update
 and dev accept them for CLI consistency but do not execute collection.
 
-| Flag                                      | Description                                                                                                                                             |
-|-------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| --profile {minimal,standard,deep,offline} | Select built-in collector membership and access policy.                                                                                                 |
-| --include COLLECTOR_ID                    | Include one exact dotted collector ID; repeat as needed.                                                                                                |
-| --exclude COLLECTOR_ID                    | Exclude one exact dotted collector ID; repeat as needed.                                                                                                |
-| --plugins                                 | Enable all valid opt-in plugins for the selected profile.                                                                                               |
-| --mods                                    | Enable valid sidecar-declared scripts from MODS.                                                                                                        |
-| --workers COUNT                           | Bound concurrent isolated workers; configuration supplies the default.                                                                                  |
-| --allow-capability CAPABILITY             | Approve one declared access capability; repeat for each capability. The standard built-in CLI profile supplies its baseline capabilities automatically. |
+| Flag                                      | Description                                                                        |
+|-------------------------------------------|------------------------------------------------------------------------------------|
+| --profile {minimal,standard,deep,offline} | Select built-in collector membership and access policy.                            |
+| --include COLLECTOR_ID                    | Include one exact dotted collector ID; repeat as needed.                           |
+| --exclude COLLECTOR_ID                    | Exclude one exact dotted collector ID; repeat as needed.                           |
+| --plugins                                 | Enable all valid opt-in plugins for the selected profile.                          |
+| --mods                                    | Enable valid sidecar-declared scripts from MODS.                                   |
+| --workers COUNT                           | Bound concurrent isolated workers; configuration supplies the default.             |
+| --block-capability CAPABILITY             | Block one capability requested by selected collectors; repeat for each capability. |
 
-The standard built-in CLI profile automatically approves the `subprocess` and
-`network` capabilities required by its shipped core collectors. The typed
-`RunRequest` API remains fail-closed by default. Other capabilities, opt-in
-plugins, MODS, deep/offline profiles, and direct collector runs require
-explicit `--allow-capability` flags:
+Collector metadata declares the capabilities each script requests. Declared
+capabilities run by default unless blocked with `--block-capability` or the
+`runtime.blocked_capabilities` configuration setting. The offline profile still
+enforces its network restrictions, and authorization is still required before
+collection starts:
 
 | Capability          | Permission                                                    |
 |---------------------|---------------------------------------------------------------|
 | filesystem_read     | Read files through the filesystem boundary.                   |
 | filesystem_write    | Write outside a collector private workspace where permitted.  |
 | registry_read       | Read Windows registry data through the registry adapter.      |
-| subprocess          | Launch an approved child process through the process adapter. |
-| network             | Use approved local or remote network access.                  |
-| packet_capture      | Capture raw packets; network approval is not enough.          |
-| browser_data        | Read approved local browser profile data.                     |
+| subprocess          | Launch a child process through the process adapter.           |
+| network             | Use declared local or remote network access.                  |
+| packet_capture      | Capture raw packets; network declaration is not enough.       |
+| browser_data        | Read declared local browser profile data.                     |
 | sensitive_files     | Read the selected sensitive-file surface.                     |
-| private_keys        | Read approved private-key material.                           |
+| private_keys        | Read declared private-key material.                           |
 | elevated_privileges | Select collectors requiring administrator privileges.         |
 
-To make the standard approvals explicit, or to approve capabilities for an
-extension/direct run, use `--allow-capability <capability>` flag
-
-If planning finds missing approvals, it reports every affected collector and
-prints a copyable rerun command. The approvals must also be supplied to run.
+If planning finds a blocked capability, it reports every affected collector and
+prints the blocking policy in the error. A script that accesses a capability
+without declaring it in `CollectorMetadata.capabilities` is refused by the
+isolated worker with the unique `CAPABILITY_DECLARATION_MISMATCH` diagnostic.
 
 ### Profiles
 
@@ -161,8 +160,8 @@ It does not launch collection workers or create a run-owned evidence tree.
 python -m logicytics plan --profile minimal
 python -m logicytics plan --profile standard
 python -m logicytics plan --profile standard --include core.system.system_info --exclude core.network.network_identity
-python -m logicytics plan --profile standard --plugins --allow-capability subprocess
-python -m logicytics plan --profile standard --mods --allow-capability subprocess
+python -m logicytics plan --profile standard --plugins
+python -m logicytics plan --profile standard --mods
 python -m logicytics plan --profile offline
 ```
 
@@ -227,11 +226,11 @@ exclude, plugin, or MOD selection flags.
 
 ```powershell
 python -m logicytics collector core.system.system_info --acknowledge-authorization
-python -m logicytics collector core.network.network_adapters --allow-capability subprocess --acknowledge-authorization
-python -m logicytics collector core.network.network_identity --allow-capability network --acknowledge-authorization
+python -m logicytics collector core.network.network_adapters --acknowledge-authorization
+python -m logicytics collector core.network.network_identity --acknowledge-authorization
 ```
 
-Direct collector runs also accept --allow-capability, --no-package, and
+Direct collector runs also accept --block-capability, --no-package, and
 --interactive, and retain the same manifest and artifact contracts.
 
 ### Reruns

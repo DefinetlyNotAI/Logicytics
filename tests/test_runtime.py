@@ -582,8 +582,7 @@ class RuntimeTests(unittest.TestCase):
                 "from pathlib import Path\n",
                 "from pathlib import Path\nimport subprocess\nimport sys\nfrom logicytics import Capability\n",
             ).replace(
-                '            supported_platforms=("win32",),',
-                '            supported_platforms=("win32",),\n'
+                '            capabilities=(),',
                 '            capabilities=(Capability.SUBPROCESS,),\n            timeout_seconds=2,',
             ).replace(
                 '        output = context.workspace / "system.txt"',

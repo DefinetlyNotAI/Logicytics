@@ -7,7 +7,7 @@ import json
 import os
 import re
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from math import isfinite
 from pathlib import Path, PurePosixPath
@@ -110,6 +110,10 @@ def plan_run(
     root, settings = _configuration(project_root, configuration, config_path)
     if not isinstance(request, RunRequest):
         raise PlanError("request must be an immutable RunRequest instance")
+    blocked_capabilities = tuple(dict.fromkeys(
+        (*settings.runtime.blocked_capabilities, *request.blocked_capabilities)
+    ))
+    request = replace(request, blocked_capabilities=blocked_capabilities)
     if request.max_workers > settings.runtime.maximum_workers:
         raise PlanError("requested workers exceed configured maximum_workers")
     return build_plan(preflight(root, configuration_hash=settings.fingerprint()), request)

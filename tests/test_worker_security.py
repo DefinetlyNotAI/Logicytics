@@ -201,8 +201,7 @@ class WorkerSecurityTests(unittest.TestCase):
                             "from pathlib import Path\n",
                             "from pathlib import Path\nfrom logicytics import Capability\n",
                         ).replace(
-                            '            supported_platforms=("win32",),',
-                            f'            supported_platforms=("win32",),\n'
+                            '            capabilities=(),',
                             f'            capabilities=({declared}),',
                         ).replace(
                             '        output = context.workspace / "system.txt"',
@@ -216,7 +215,6 @@ class WorkerSecurityTests(unittest.TestCase):
                         RunRequest(
                             max_workers=1,
                             acknowledge_authorization=True,
-                            approved_capabilities=capabilities,
                         ),
                     )
                     outcome = RunSupervisor(root, default_config(root)).run(plan)
@@ -226,6 +224,10 @@ class WorkerSecurityTests(unittest.TestCase):
                     else:
                         self.assertEqual("failed", record.status)
                         self.assertIn(denied, "\n".join(record.errors))
+                        self.assertIn(
+                            "CAPABILITY_DECLARATION_MISMATCH",
+                            "\n".join(record.errors),
+                        )
 
     def test_worker_rejects_raw_packet_socket_without_packet_capture_capability(self) -> None:
         """General network approval must not silently authorize raw packet capture."""
@@ -239,8 +241,7 @@ class WorkerSecurityTests(unittest.TestCase):
                     "from pathlib import Path\n",
                     "from pathlib import Path\nimport socket\nfrom logicytics import Capability\n",
                 ).replace(
-                    '            supported_platforms=("win32",),',
-                    '            supported_platforms=("win32",),\n'
+                    '            capabilities=(),',
                     '            capabilities=(Capability.NETWORK,),\n'
                     '            network_access=NetworkAccess.LOCAL,',
                 ).replace(
@@ -262,8 +263,8 @@ class WorkerSecurityTests(unittest.TestCase):
             self.assertEqual("failed", outcome.manifest.collectors[0].status)
             self.assertIn("packet_capture capability", "\n".join(outcome.manifest.collectors[0].errors))
 
-    def test_worker_allows_an_explicitly_declared_and_approved_subprocess(self) -> None:
-        """A declared subprocess capability remains usable after explicit request approval."""
+    def test_worker_allows_an_explicitly_declared_subprocess_by_default(self) -> None:
+        """A declared subprocess capability is usable without a separate approval flag."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             collector_path = root / "core" / "system" / "system_info.py"
@@ -274,8 +275,8 @@ class WorkerSecurityTests(unittest.TestCase):
                     "from pathlib import Path\n",
                     "from pathlib import Path\nimport subprocess\nimport sys\nfrom logicytics import Capability\n",
                 ).replace(
-                    '            supported_platforms=("win32",),',
-                    '            supported_platforms=("win32",),\n            capabilities=(Capability.SUBPROCESS,),',
+                    '            capabilities=(),',
+                    '            capabilities=(Capability.SUBPROCESS,),',
                 ).replace(
                     '        output = context.workspace / "system.txt"',
                     '        subprocess.run([sys.executable, "-c", "pass"], check=True)\n'
@@ -285,11 +286,10 @@ class WorkerSecurityTests(unittest.TestCase):
             )
             plan = build_plan(
                 preflight(root),
-                RunRequest(
-                    max_workers=1,
-                    acknowledge_authorization=True,
-                    approved_capabilities=(Capability.SUBPROCESS,),
-                ),
+                        RunRequest(
+                            max_workers=1,
+                            acknowledge_authorization=True,
+                        ),
             )
             outcome = RunSupervisor(root, default_config(root)).run(plan)
             self.assertEqual("succeeded", outcome.manifest.collectors[0].status)
@@ -326,8 +326,7 @@ class WorkerSecurityTests(unittest.TestCase):
                         "from pathlib import Path\n",
                         "from pathlib import Path\nimport subprocess\nfrom logicytics import Capability\n",
                     ).replace(
-                        '            supported_platforms=("win32",),',
-                        '            supported_platforms=("win32",),\n'
+                        '            capabilities=(),',
                         '            capabilities=(Capability.SUBPROCESS,),',
                     ).replace(
                         '        output = context.workspace / "system.txt"',
