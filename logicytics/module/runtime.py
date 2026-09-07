@@ -32,6 +32,7 @@ from logicytics.contracts import (
     CollectorMetadata,
     CollectorResult,
     CollectorStatus,
+    EventLogger,
     OutputPolicy,
     PostRunAction,
     ResourceClass,
@@ -762,12 +763,25 @@ class RunSupervisor:
         write_manifest(manifest_path, manifest)
         manifest.status = RunStatus.RUNNING
         write_manifest(manifest_path, manifest)
-        run_logger.event("info", "run_started", collectors=len(plan.collectors))
+        run_started_at = monotonic()
+        run_logger.event(
+            "info",
+            "run_started",
+            collectors=len(plan.collectors),
+            profile=plan.request.profile,
+            max_workers=plan.request.max_workers,
+            plan_fingerprint=plan.fingerprint,
+            output_policy=plan.request.output_policy.value,
+        )
         application_logger.event(
             "INFO",
             "run_started",
+            source="logicytics.runtime",
             run_id=run_id,
             collectors=len(plan.collectors),
+            profile=plan.request.profile,
+            max_workers=plan.request.max_workers,
+            plan_fingerprint=plan.fingerprint,
         )
 
         records = {record.id: record for record in manifest.collectors}
@@ -782,10 +796,17 @@ class RunSupervisor:
                 manifest_path,
                 records,
                 run_logger,
+                application_logger,
             )
         except KeyboardInterrupt:
             cancellation_file.touch()
             run_logger.event("warning", "run_cancellation_requested")
+            application_logger.event(
+                "WARNING",
+                "run_cancellation_requested",
+                source="logicytics.runtime",
+                run_id=run_id,
+            )
             self._cancel_records(records, manifest, manifest_path, "run cancelled by user")
 
         manifest.finalize_status()
@@ -796,6 +817,13 @@ class RunSupervisor:
                 and plan.request.output_policy is OutputPolicy.PACKAGE
         )
         if should_package:
+            run_logger.event("info", "run_packaging_started")
+            application_logger.event(
+                "INFO",
+                "run_packaging_started",
+                source="logicytics.runtime",
+                run_id=run_id,
+            )
             try:
                 package_path, hash_path = package_manifest(run_directory, manifest, manifest_path)
                 run_logger.event(
@@ -807,6 +835,7 @@ class RunSupervisor:
                 application_logger.event(
                     "INFO",
                     "run_packaged",
+                    source="logicytics.runtime",
                     run_id=run_id,
                     package_path=str(package_path),
                 )
@@ -817,20 +846,61 @@ class RunSupervisor:
                 application_logger.event(
                     "ERROR",
                     "run_packaging_failed",
+                    source="logicytics.runtime",
                     run_id=run_id,
                     error_type=type(error).__name__,
                 )
+        else:
+            packaging_skip_reason = (
+                "manifest_only_output"
+                if plan.request.output_policy is OutputPolicy.MANIFEST_ONLY
+                else "configuration_disabled"
+            )
+            run_logger.event(
+                "info",
+                "run_packaging_skipped",
+                reason=packaging_skip_reason,
+            )
+            application_logger.event(
+                "INFO",
+                "run_packaging_skipped",
+                source="logicytics.runtime",
+                run_id=run_id,
+                reason=packaging_skip_reason,
+            )
         write_manifest(manifest_path, manifest)
-        run_logger.event("info", "run_finished", status=manifest.status.value, artifacts=manifest.total_artifact_bytes)
+        status_counts = {
+            status: sum(1 for record in manifest.collectors if record.status == status)
+            for status in sorted({record.status for record in manifest.collectors})
+        }
+        run_logger.event(
+            "info",
+            "run_finished",
+            status=manifest.status.value,
+            artifacts=manifest.total_artifact_bytes,
+            duration_seconds=round(monotonic() - run_started_at, 3),
+            **{f"{status}_count": count for status, count in status_counts.items()},
+        )
         application_logger.event(
             "INFO",
             "run_finished",
+            source="logicytics.runtime",
             run_id=run_id,
             status=manifest.status.value,
             artifacts=manifest.total_artifact_bytes,
+            duration_seconds=round(monotonic() - run_started_at, 3),
+            **{f"{status}_count": count for status, count in status_counts.items()},
         )
         if plan.request.post_run_action is not PostRunAction.NONE:
             self._execute_post_run_action(plan.request.post_run_action, manifest, run_logger)
+            application_logger.event(
+                "WARNING",
+                "post_run_action_scheduled",
+                source="logicytics.runtime",
+                run_id=run_id,
+                action=plan.request.post_run_action.value,
+                delay_seconds=60,
+            )
         return RunOutcome(manifest=manifest, run_directory=run_directory, manifest_path=manifest_path)
 
     @staticmethod
@@ -893,6 +963,7 @@ class RunSupervisor:
             manifest_path: Path,
             records: dict[str, CollectorRecord],
             run_logger: FileEventLogger,
+            application_logger: EventLogger,
     ) -> None:
         """Schedule bounded isolated workers and contain each terminal failure."""
         pending = list(plan.collectors)
@@ -1052,7 +1123,24 @@ class RunSupervisor:
                     metadata.resource_class,
                     output_budget,
                 )
-                run_logger.event("info", "collector_started", collector_id=metadata.id)
+                start_fields = {
+                    "collector_id": metadata.id,
+                    "attempt": records[metadata.id].attempt_count,
+                    "worker_pid": process.pid or 0,
+                    "timeout_seconds": metadata.timeout_seconds,
+                    "maximum_memory_bytes": metadata.maximum_memory_bytes,
+                    "output_budget_bytes": output_budget,
+                    "resource_class": metadata.resource_class.value,
+                    "parallel_safe": metadata.parallel_safe,
+                }
+                run_logger.event("info", "collector_started", **start_fields)
+                application_logger.event(
+                    "INFO",
+                    "collector_started",
+                    source="logicytics.runtime",
+                    run_id=run_id,
+                    **start_fields,
+                )
                 write_manifest(manifest_path, manifest)
                 if not metadata.parallel_safe:
                     break
@@ -1066,11 +1154,14 @@ class RunSupervisor:
                 worker = active.pop(collector_id, None)
                 if worker is not None:
                     worker.process.join(timeout=1)
-                    self._apply_worker_result(records[collector_id], _result_from_dict(message["result"]), worker)
+                    record = records[collector_id]
+                    self._apply_worker_result(record, _result_from_dict(message["result"]), worker)
                     artifact_bytes = self._collector_artifact_bytes(artifact_root, collector_id)
                     committed_output_bytes += artifact_bytes
                     self._cleanup_worker_temporary_directory(worker)
-                    if not self._schedule_retry(
+                    attempt_status = record.status
+                    attempt_duration = record.duration_seconds or 0.0
+                    retry_scheduled = self._schedule_retry(
                             candidates[collector_id],
                             records[collector_id],
                             artifact_bytes,
@@ -1078,8 +1169,31 @@ class RunSupervisor:
                             retry_not_before,
                             cancellation_file,
                             run_logger,
-                    ):
-                        run_logger.event("info", "collector_finished", collector_id=collector_id)
+                    )
+                    finish_level = "warning" if retry_scheduled else "info"
+                    finish_fields = {
+                        "collector_id": collector_id,
+                        "status": record.status,
+                        "attempt_status": attempt_status,
+                        "attempt": record.attempt_count,
+                        "duration_seconds": record.duration_seconds or 0.0,
+                        "attempt_duration_seconds": attempt_duration,
+                        "artifact_count": len(record.artifacts),
+                        "artifact_bytes": artifact_bytes,
+                        "event_count": record.event_count,
+                        "peak_memory_bytes": record.peak_memory_bytes,
+                        "worker_exit_code": worker.process.exitcode or 0,
+                        "termination_reason": record.termination_reason or "unknown",
+                        "retry_scheduled": retry_scheduled,
+                    }
+                    run_logger.event(finish_level, "collector_finished", **finish_fields)
+                    application_logger.event(
+                        "WARNING" if retry_scheduled else "INFO",
+                        "collector_finished",
+                        source="logicytics.runtime",
+                        run_id=run_id,
+                        **finish_fields,
+                    )
                     write_manifest(manifest_path, manifest)
 
             for collector_id, worker in tuple(active.items()):

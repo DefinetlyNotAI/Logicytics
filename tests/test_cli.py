@@ -266,6 +266,12 @@ class CliTests(unittest.TestCase):
                 "Command error",
                 ("--new-window and --launch-action must be provided together",),
             )
+            event_messages = [
+                call.args[1]
+                for call in error_logger.event.call_args_list
+                if len(call.args) > 1
+            ]
+            self.assertIn("command_finished", event_messages)
 
     def test_new_window_launcher_uses_current_interpreter_without_a_shell(
             self,

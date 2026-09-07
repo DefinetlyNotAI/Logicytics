@@ -202,6 +202,7 @@ class LoggingTests(unittest.TestCase):
             )
             logger.event("INFO", "info message")
             logger.event("DEBUG", "debug message")
+            logger.event("INFO", "collector_finished", collector_id="core.system.system_info")
 
             output = console.getvalue()
             self.assertIn(
@@ -212,6 +213,7 @@ class LoggingTests(unittest.TestCase):
                 "\033[90m\033[1m  \u00b7 \033[0m\033[90m\033[1mdebug message",
                 output,
             )
+            self.assertIn("Collector finished collector_id=", output)
 
     def test_deprecation_decorator_logs_removal_context(self) -> None:
         """Deprecated functions must preserve behavior while reporting removal context."""

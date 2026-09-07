@@ -48,6 +48,7 @@ _DEFAULT_CONSOLE_WIDTH = 82
 _MIN_CONSOLE_WIDTH = 60
 _RIGHT_EDGE_MARGIN = 4
 _RECORD_START = re.compile(rb"(?m)^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \|")
+_EVENT_NAME = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)+$")
 _LOGGER_LOCK = RLock()
 _APPLICATION_LOGGERS: dict[Path, "ApplicationLogger"] = {}
 _EVENT_LOGGERS: dict[tuple[Path, str, str | None], "FileEventLogger"] = {}
@@ -164,6 +165,13 @@ class ApplicationLogger(EventLogger):
             rows.append(current_prefix + remaining)
         return tuple(rows)
 
+    @staticmethod
+    def _console_message(message: str) -> str:
+        """Make machine-oriented lifecycle event names readable on the console."""
+        if _EVENT_NAME.fullmatch(message):
+            return message.replace("_", " ").capitalize()
+        return message
+
     def event(self, level: str, message: str, **fields: int | float | str) -> None:
         """Dispatch one typed, redacted event to configured console and file sinks."""
         normalized = level.upper()
@@ -179,6 +187,7 @@ class ApplicationLogger(EventLogger):
             for key, value in sorted(safe_fields.items())
         )
         rendered_message = safe_message + suffix
+        console_message = self._console_message(safe_message) + suffix
         rows = self._rows(normalized, source, rendered_message)
         with self._lock:
             if self.settings.file_enabled:
@@ -189,7 +198,7 @@ class ApplicationLogger(EventLogger):
                 marker, marker_color, text_color = _LEVEL_PRESENTATION[normalized]
                 if not self._supports_unicode():
                     marker = {"\u25cf": "*", "\u00d7": "X", "\u00b7": "."}.get(marker, marker)
-                console_rows = self._console_rows(marker, rendered_message)
+                console_rows = self._console_rows(marker, console_message)
                 if self.settings.color_enabled and self.console.isatty():
                     marker_prefix = f"  {marker} "
                     colored_rows = (

@@ -340,7 +340,7 @@ Each run follows a simple, auditable path:
 
 `request → validated plan → isolated collectors → normalized artifacts → manifest → package`
 
-The console keeps status and progress easy to scan. Command output is rendered line by line; application events are written separately in an aligned, human-readable log. Evidence and package metadata remain with the run they describe.
+The console keeps status and progress easy to scan. Lifecycle events are shown with readable messages, while application events are written separately in an aligned, human-readable log with duration and execution context. Evidence and package metadata remain with the run they describe.
 
 Sysinternals is enabled by default. Logicytics detects an existing installation or securely downloads and extracts the official archive to its dedicated application location. Set `maintenance.sysinternals_enabled: false` in `logicytics.yaml` to opt out completely.
 

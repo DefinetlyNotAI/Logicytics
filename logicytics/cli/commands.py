@@ -10,6 +10,7 @@ import os
 import platform
 import sys
 from pathlib import Path
+from time import perf_counter
 from typing import Literal
 
 from logicytics.contracts import Capability, OutputPolicy, PostRunAction, RunRequest
@@ -668,6 +669,7 @@ def main(argv: list[str] | None = None) -> int:
 
     root = cli_methods.project_root()
     application_logger = None
+    command_started_at: float | None = None
 
     try:
         configuration = load_config(root, arguments.config)
@@ -687,6 +689,27 @@ def main(argv: list[str] | None = None) -> int:
             source="logicytics.cli",
             command=arguments.command,
         )
+        started_at = perf_counter()
+        command_started_at = started_at
+
+        def finish_command(
+                exit_code: int,
+                *,
+                status: str | None = None,
+                **fields: int | float | str,
+        ) -> int:
+            """Record one command's terminal status and elapsed time."""
+            application_logger.event(
+                "INFO" if exit_code == 0 else "WARNING",
+                "command_finished",
+                source="logicytics.cli",
+                command=str(arguments.command),
+                exit_code=exit_code,
+                status=status or ("succeeded" if exit_code == 0 else "failed"),
+                duration_seconds=round(perf_counter() - started_at, 3),
+                **fields,
+            )
+            return exit_code
 
         history_path = (
                 configuration.runtime.output_root
@@ -734,7 +757,12 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
 
-            return 0 if match.matched_flag is not None else 1
+            exit_code = 0 if match.matched_flag is not None else 1
+            return finish_command(
+                exit_code,
+                status="matched" if exit_code == 0 else "not_matched",
+                matched_flag=match.matched_flag or "none",
+            )
 
         if arguments.command == "usage":
             statistics = usage_statistics(
@@ -760,12 +788,28 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
 
-            return 0
+            return finish_command(0, status="usage_written")
 
         if arguments.command == "modes":
+            modes_configuration_hash = configuration.fingerprint()
+            application_logger.event(
+                "INFO",
+                "preflight_started",
+                source="logicytics.cli",
+                configuration_hash=modes_configuration_hash,
+                purpose="mode_matrix",
+            )
             report = preflight(
                 root,
-                configuration_hash=configuration.fingerprint(),
+                configuration_hash=modes_configuration_hash,
+            )
+            application_logger.event(
+                "INFO",
+                "preflight_finished",
+                source="logicytics.cli",
+                valid_collectors=len(report.valid),
+                invalid_collectors=len(report.invalid),
+                purpose="mode_matrix",
             )
 
             payload = mode_matrix(
@@ -780,7 +824,12 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
 
-            return 0
+            return finish_command(
+                0,
+                status="mode_matrix_written",
+                valid_collectors=len(report.valid),
+                invalid_collectors=len(report.invalid),
+            )
 
         application_logger.event(
             "INFO",
@@ -810,7 +859,13 @@ def main(argv: list[str] | None = None) -> int:
             sysinternals = ensure_sysinternals(root, configuration.maintenance).to_dict()
             cli_methods.render_preflight(application_logger, validation, sysinternals)
 
-            return 0 if not validation["invalid"] else 2
+            exit_code = 0 if not validation["invalid"] else 2
+            return finish_command(
+                exit_code,
+                status="validated" if exit_code == 0 else "invalid_collectors",
+                valid_collectors=len(validation["valid"]),
+                invalid_collectors=len(validation["invalid"]),
+            )
 
         if arguments.command == "debug":
             payload: dict[str, object] = {
@@ -867,7 +922,13 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
 
-            return 0 if not report.invalid else 2
+            exit_code = 0 if not report.invalid else 2
+            return finish_command(
+                exit_code,
+                status="diagnostics_written" if exit_code == 0 else "invalid_collectors",
+                valid_collectors=len(report.valid),
+                invalid_collectors=len(report.invalid),
+            )
 
         if arguments.command == "update":
             if arguments.new_window != (
@@ -907,7 +968,12 @@ def main(argv: list[str] | None = None) -> int:
                             sort_keys=True,
                         )
                     )
-                    return 2
+                    return finish_command(
+                        2,
+                        status="git_unavailable",
+                        git_available=git.returncode == 0,
+                        is_repository=is_repository,
+                    )
 
                 pulled = process_adapter.run(
                     ["git", "pull"],
@@ -954,13 +1020,21 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
 
-            return 0 if update_succeeded else 1
+            return finish_command(
+                0 if update_succeeded else 1,
+                status="updated" if update_succeeded else "update_failed",
+                applied=arguments.apply,
+            )
 
         if arguments.command == "dev":
-            return cli_methods.run_developer_action(
+            exit_code = cli_methods.run_developer_action(
                 root,
                 configuration,
                 arguments,
+            )
+            return finish_command(
+                exit_code,
+                status="checks_completed" if exit_code == 0 else "checks_failed",
             )
 
         request = cli_methods.request(
@@ -975,6 +1049,9 @@ def main(argv: list[str] | None = None) -> int:
             include_count=len(request.include),
             exclude_count=len(request.exclude),
             approved_capabilities=len(request.approved_capabilities),
+            enable_plugins=request.enable_plugins,
+            enable_mods=request.enable_mods,
+            max_workers=request.max_workers,
         )
         plan = build_plan(
             report,
@@ -1004,7 +1081,7 @@ def main(argv: list[str] | None = None) -> int:
                 collectors=len(plan.collectors),
             )
 
-            return 0
+            return finish_command(0, status="plan_rendered", collectors=len(plan.collectors))
 
         outcome = RunSupervisor(
             root,
@@ -1082,7 +1159,12 @@ def main(argv: list[str] | None = None) -> int:
             except EOFError:
                 pass
 
-        return exit_code
+        return finish_command(
+            exit_code,
+            status=outcome.manifest.status.value,
+            run_id=outcome.manifest.run_id,
+            collectors=len(outcome.manifest.collectors),
+        )
 
     except (
             LogicyticsError,
@@ -1095,8 +1177,22 @@ def main(argv: list[str] | None = None) -> int:
                 application_logger.event(
                     "EXCEPTION",
                     str(error),
+                    source="logicytics.cli",
+                    command=str(arguments.command),
                     error_type=type(error).__name__,
                 )
+
+                if command_started_at is not None:
+                    application_logger.event(
+                        "ERROR",
+                        "command_finished",
+                        source="logicytics.cli",
+                        command=str(arguments.command),
+                        exit_code=2,
+                        status="failed",
+                        duration_seconds=round(perf_counter() - command_started_at, 3),
+                        error_type=type(error).__name__,
+                    )
 
         if application_logger is not None:
             application_logger.box("Command error", (str(error),))
