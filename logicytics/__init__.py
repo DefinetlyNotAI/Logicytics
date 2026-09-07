@@ -23,6 +23,8 @@ from logicytics.contracts import (
     Specialty,
     ValidationResult,
 )
+from logicytics.module.api import CollectorFailureSnapshot, CollectorSnapshot, RunSnapshot, load_configuration, \
+    open_artifact, plan_run, query_run, read_artifact, run_collection
 
 _APPLICATION_EXPORTS = frozenset({
     "CollectorFailureSnapshot", "CollectorSnapshot", "RunSnapshot", "load_configuration", "open_artifact", "plan_run",
