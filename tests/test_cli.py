@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from logicytics.cli import CLI, cli_methods, main
+from logicytics.contracts import Capability
 from logicytics.module.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
 from logicytics.platform_adapters import process_adapter
 
@@ -24,6 +25,60 @@ class CliTests(unittest.TestCase):
         request = cli_methods.request(arguments, default_workers=4)
         self.assertTrue(request.performance_check)
         self.assertEqual(1, request.max_workers)
+
+    def test_standard_core_requests_approve_baseline_capabilities(self) -> None:
+        """The standard built-in CLI profile includes its required baseline access."""
+        parser = cli_methods.parser()
+
+        request = cli_methods.request(
+            parser.parse_args(["run", "--profile", "standard"]),
+            default_workers=4,
+        )
+        self.assertEqual(
+            (Capability.SUBPROCESS, Capability.NETWORK),
+            request.approved_capabilities,
+        )
+
+        with_extra_approval = cli_methods.request(
+            parser.parse_args([
+                "run",
+                "--profile",
+                "standard",
+                "--allow-capability",
+                "network",
+                "--allow-capability",
+                "filesystem_read",
+            ]),
+            default_workers=4,
+        )
+        self.assertEqual(
+            (
+                Capability.SUBPROCESS,
+                Capability.NETWORK,
+                Capability.FILESYSTEM_READ,
+            ),
+            with_extra_approval.approved_capabilities,
+        )
+
+    def test_baseline_capabilities_remain_explicit_for_extensions_and_direct_runs(self) -> None:
+        """Opt-in and direct execution keep the capability boundary fail-closed."""
+        parser = cli_methods.parser()
+        restricted_requests = (
+            ["run", "--profile", "standard", "--plugins"],
+            ["run", "--profile", "standard", "--mods"],
+            ["run", "--mode", "extensions"],
+            ["run", "--mode", "non-python"],
+            ["run", "--profile", "deep"],
+            ["collector", "core.network.network_adapters"],
+        )
+
+        for arguments in restricted_requests:
+            with self.subTest(arguments=arguments):
+                request = cli_methods.request(
+                    parser.parse_args(arguments),
+                    default_workers=4,
+                )
+                self.assertEqual((), request.approved_capabilities)
 
     def test_typed_mode_registry_maps_every_user_mode_and_legacy_alias(self) -> None:
         """One immutable matrix owns profile, scheduling, MODS, and performance behavior."""

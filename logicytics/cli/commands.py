@@ -43,6 +43,9 @@ from logicytics.module.sysinternals import ensure_sysinternals
 from logicytics.platform_adapters import process_adapter
 
 
+_STANDARD_CORE_CAPABILITIES = (Capability.SUBPROCESS, Capability.NETWORK)
+
+
 class CLI:
     """Translate command-line arguments into validated application requests."""
 
@@ -260,6 +263,22 @@ class CLI:
             else include_arguments
         )
 
+        requested_capabilities = tuple(
+            Capability(value)
+            for value in getattr(arguments, "allow_capability", ())
+        )
+        default_capabilities = (
+            _STANDARD_CORE_CAPABILITIES
+            if profile == "standard"
+            and not plugins_enabled
+            and not enable_mods
+            and not selection_only
+            else ()
+        )
+        approved_capabilities = tuple(dict.fromkeys(
+            (*default_capabilities, *requested_capabilities)
+        ))
+
         return RunRequest(
             profile=profile,
             include=includes,
@@ -274,10 +293,7 @@ class CLI:
                 "acknowledge_authorization",
                 False,
             ),
-            approved_capabilities=tuple(
-                Capability(value)
-                for value in getattr(arguments, "allow_capability", ())
-            ),
+            approved_capabilities=approved_capabilities,
             performance_check=performance_check,
             rerun_from=parent_run_id,
             output_policy=(
