@@ -569,40 +569,23 @@ class CollectorCancellationTests(unittest.TestCase):
                 collector_id="core.process.memory_map",
             )
 
-            class FakeKernel:
-                """Minimal kernel32 replacement."""
+            def cancel_on_current_process() -> int:
+                """Signal cancellation as soon as the memory query begins."""
+                memory_cancellation.touch()
+                return 1
 
-                @staticmethod
-                def GetCurrentProcess() -> int:
-                    memory_cancellation.touch()
-                    return 1
-
-            class FakePsapi:
-                """Minimal psapi replacement."""
-
-                @staticmethod
-                def GetProcessMemoryInfo(
-                        *_args: object,
-                ) -> int:
-                    return 1
-
-            dlls = iter(
-                (
-                    FakeKernel(),
-                    FakePsapi(),
-                )
-            )
-
-            def fake_windll(
-                    _name: str,
-                    *_args: object,
-                    **_kwargs: object,
-            ) -> object:
-                return next(dlls)
-
-            with patch(
-                    "logicytics.ctypes_collector.ctypes.WinDLL",
-                    side_effect=fake_windll,
+            with patch.object(
+                    memory_map,
+                    "get_current_process",
+                    side_effect=cancel_on_current_process,
+            ), patch.object(
+                    memory_map,
+                    "get_process_memory_info",
+                    return_value=True,
+            ), patch.object(
+                    memory_map,
+                    "virtual_query",
+                    return_value=0,
             ):
                 memory_result = (
                     memory_map

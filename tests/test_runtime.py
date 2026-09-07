@@ -15,11 +15,11 @@ from logicytics.contracts import (
     Capability,
     RunRequest,
 )
-from logicytics.ctypes_collector import (
-    open_process,
-    get_exit_code_process,
+from logicytics import (
     STILL_ACTIVE,
-    close_handle
+    close_handle,
+    get_exit_code_process,
+    open_process,
 )
 from logicytics.module.discovery import preflight
 from logicytics.module.planner import build_plan

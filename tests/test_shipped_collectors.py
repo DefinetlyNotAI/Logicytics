@@ -557,9 +557,7 @@ class ShippedCollectorTests(unittest.TestCase):
     ) -> None:
         """Public compatibility stays explicit and canonical-output-only."""
         project_root = Path(__file__).resolve().parent.parent
-        migration = (
-                project_root / "MIGRATION.md"
-        ).read_text(encoding="utf-8")
+        migration = (project_root / "docs" / "MIGRATION.md").read_text(encoding="utf-8")
 
         command_flags = {
             "default_mode": "default",

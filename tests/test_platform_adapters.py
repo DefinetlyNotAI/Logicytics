@@ -65,11 +65,15 @@ class ProcessAdapterTests(unittest.TestCase):
         adapter = ProcessAdapter()
         adapter.maximum_capture_bytes = 3
 
-        def execute(command, *, stdout, _stderr, **_options):
+        def execute(command, *, stdout, stderr, **_options):
             stdout.write(b"four")
+            stderr.write(b"")
             return subprocess.CompletedProcess(command, 0)
 
-        with patch("logicytics.platform_adapters.subprocess.run", side_effect=execute):
+        with patch.object(ProcessAdapter, "maximum_capture_bytes", 3), patch(
+                "logicytics.platform_adapters.subprocess.run",
+                side_effect=execute,
+        ):
             with self.assertRaisesRegex(ValueError, "capture limit"):
                 adapter.run(["tool"], capture_output=True, text=True)
 
@@ -102,10 +106,6 @@ class ProcessAdapterTests(unittest.TestCase):
             )
         self.assertEqual(("tool", "argument"), popen.call_args.args[0])
         with patch.object(
-                os,
-                os.name.__name__,
-                "nt",
-        ), patch.object(
             windows_api_adapter,
             windows_api_adapter.process_working_set.__name__,
             return_value=4096,
@@ -182,7 +182,8 @@ class ProcessAdapterTests(unittest.TestCase):
     def test_application_host_process_and_privilege_access_stays_behind_adapters(self) -> None:
         project_root = Path(__file__).resolve().parent.parent
         modules = (
-            "cli.py", "discovery.py", "environment.py", "manifest.py", "runtime.py",
+            "cli/commands.py", "module/discovery.py", "module/environment.py",
+            "module/manifest.py", "module/runtime.py",
         )
         forbidden = (
             "subprocess.run(", "subprocess.Popen(", "ctypes.windll", "import winreg",

@@ -2,8 +2,8 @@
 
 Release date: 2026-08-31
 
-Logicytics 4.0.0 is the complete recreation of the feature surface defined in
-[TODO.md](TODO.md). It preserves the supported Windows system-data collection,
+Logicytics 4.0.0 is the complete recreation of the documented v4 feature
+surface. It preserves the supported Windows system-data collection,
 interaction, maintenance, extension, output, and packaging capabilities while
 replacing the historical shared-script design with a typed, run-oriented,
 isolated architecture.
@@ -124,9 +124,8 @@ live Windows boundaries, stable outputs, golden structured bytes, profiles and
 modes, extension isolation, API reads, configuration migration, run/package/hash
 integrity, and the complete flow matrix in [FLOW_MATRIX.md](FLOW_MATRIX.md).
 
-[FEATURE_STATUS.md](FEATURE_STATUS.md) assigns every TODO section an owner,
-status, and implementation/test evidence. The TODO checkboxes remain the
-authoritative item-level completion record.
+The versioned contract documents in this directory define the supported
+configuration, migration, MOD, output, flow, and release behavior.
 
 ## Upgrade and support
 

@@ -86,10 +86,10 @@ class SchedulerTests(unittest.TestCase):
                 arguments = cli_methods.parser().parse_args(
                     ["run", execution_mode, "--acknowledge-authorization"]
                 )
-                request = request(arguments, default_workers=2)
+                run_request = cli_methods.request(arguments, default_workers=2)
                 report = preflight(root)
                 self.assertEqual((), report.invalid)
-                outcome = RunSupervisor(root, default_config(root)).run(build_plan(report, request))
+                outcome = RunSupervisor(root, default_config(root)).run(build_plan(report, run_request))
                 records = {record.id: record for record in outcome.manifest.collectors}
                 first = records["core.system.a_first"]
                 second = records["core.system.z_second"]

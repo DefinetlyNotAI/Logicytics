@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ctypes
 import json
 from datetime import datetime, timezone
 
@@ -21,7 +20,7 @@ def _volume_details() -> list[dict[str, int | str]]:
     kernel32 = windows_api_adapter.load_library("kernel32")
     mask = kernel32.GetLogicalDrives()
     if mask == 0:
-        raise ctypes.WinError()
+        raise OSError("GetLogicalDrives failed")
     volumes: list[dict[str, int | str]] = []
     for offset in range(26):
         if not mask & (1 << offset):

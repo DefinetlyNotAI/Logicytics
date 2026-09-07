@@ -286,7 +286,11 @@ class _WorkerMutationGuard:
                 if module == "logicytics" or module.startswith("logicytics."):
                     return "main_application"
         command_text = " ".join(normalized)
-        if re.search(r"(?<![a-z0-9_.-])logicytics\.json(?![a-z0-9_.-])", command_text, re.IGNORECASE):
+        if re.search(
+                r"(?<![a-z0-9_.-])logicytics\.(?:json|ya?ml)(?![a-z0-9_.-])",
+                command_text,
+                re.IGNORECASE,
+        ):
             return "configuration_mutation"
         if re.search(
                 r"(?<![a-z0-9_.\\/:-])logicytics(?:\.[a-z_][a-z0-9_]*)?(?![a-z0-9_.\\/:-])",

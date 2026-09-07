@@ -76,7 +76,7 @@ class MaintenanceTests(unittest.TestCase):
             {
                 "schema_version": 1,
                 "version": "4.1.0-snapshot.2",
-                "files": {"logicytics/cli.py": "a" * 64},
+                "files": {"logicytics/cli/commands.py": "a" * 64},
             }
         ).encode("utf-8")
         settings = MaintenanceSettings(
@@ -136,7 +136,7 @@ class MaintenanceTests(unittest.TestCase):
     def test_integrity_manifest_comparison_and_snapshot_version_ordering(self) -> None:
         """Developer integrity reports file states and compare snapshots semantically."""
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
+            root = Path(temporary).resolve()
             settings = MaintenanceSettings()
             (root / "same.txt").write_text("same", encoding="utf-8")
             (root / "changed.txt").write_text("before", encoding="utf-8")
@@ -173,6 +173,10 @@ class MaintenanceTests(unittest.TestCase):
                 '[project]\nname = "fixture"\nversion = "4.0.0"\n',
                 encoding="utf-8",
             )
+            (root / "logicytics.yaml").write_text(
+                "schema_version: 4\nmaintenance:\n  sysinternals_enabled: false\n",
+                encoding="utf-8",
+            )
             with patch.object(CLI, "project_root", return_value=root), patch(
                     "sys.stdout",
                     new_callable=io.StringIO,
@@ -199,10 +203,10 @@ class MaintenanceTests(unittest.TestCase):
                 debug["maintenance"]["python_support"]["status"],
                 {"recommended", "supported", "incompatible"},
             )
-            self.assertEqual("missing", debug["sysinternals"]["status"])
+            self.assertEqual("disabled", debug["sysinternals"]["status"])
 
-    def test_dev_updates_legacy_ini_manifest_after_explicit_confirmation(self) -> None:
-        """Legacy dev mode preserves comments and updates only its version and file list."""
+    def test_dev_writes_manifest_without_mutating_legacy_ini(self) -> None:
+        """The v4 developer action writes its JSON manifest and leaves legacy files untouched."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "pyproject.toml").write_text(
@@ -234,25 +238,27 @@ class MaintenanceTests(unittest.TestCase):
                     main(["dev", "--write-manifest", "--next-version", "4.1.0"]),
                 )
             payload = json.loads(output.getvalue())
-            self.assertEqual(str(legacy), payload["manifest_written"])
+            self.assertEqual(
+                (root / "project.manifest.json").resolve(),
+                Path(payload["manifest_written"]).resolve(),
+            )
             self.assertEqual([], payload["checks"]["misplaced_python"])
             updated = legacy.read_text(encoding="utf-8")
             self.assertIn("# preserve this comment", updated)
-            self.assertIn("version = 4.1.0", updated)
-            self.assertIn("CODE/config.ini", updated)
-            self.assertIn("core/system/example.py", updated)
+            self.assertIn("version = 3.6.0", updated)
+            self.assertIn('files = "old.py"', updated)
             self.assertIn("value = untouched", updated)
-            self.assertNotIn("old.py", updated)
-            self.assertFalse((root / "project.manifest.json").exists())
+            self.assertTrue((root / "project.manifest.json").exists())
 
-    def test_sysinternals_archive_lifecycle_honors_ignore_and_extracts_safely(self) -> None:
-        """The local bundle must honor opt-out and extract only within its target directory."""
+    def test_sysinternals_archive_lifecycle_honors_yaml_opt_out_and_extracts_safely(self) -> None:
+        """The local bundle must honor YAML opt-out and extract only within its target directory."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            (root / ".ignore-sysinternals").write_text("", encoding="utf-8")
-            self.assertEqual("ignored", ensure_sysinternals(root).status)
-            (root / ".ignore-sysinternals").unlink()
-            with zipfile.ZipFile(root / "SysinternalsSuite.zip", "w") as archive:
+            disabled = MaintenanceSettings(sysinternals_enabled=False)
+            self.assertEqual("disabled", ensure_sysinternals(root, disabled).status)
+            archive_path = root / "tools" / "SysinternalsSuite.zip"
+            archive_path.parent.mkdir(parents=True)
+            with zipfile.ZipFile(archive_path, "w") as archive:
                 archive.writestr("PsInfo.exe", "fixture")
             state = ensure_sysinternals(root)
             self.assertEqual("extracted", state.status)

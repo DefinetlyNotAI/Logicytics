@@ -31,17 +31,17 @@ The canonical pipeline is:
 
 `request -> validated plan -> isolated collectors -> registered artifacts -> manifest -> package`
 
-- `logicytics/cli.py` parses and renders. It does not collect evidence.
-- `logicytics/planner.py` resolves one deterministic plan from immutable
+- `logicytics/cli/` parses and renders. It does not collect evidence.
+- `logicytics/module/planner.py` resolves one deterministic plan from immutable
   `RunRequest` policy and validated metadata.
-- `logicytics/runtime.py` owns per-run and per-worker lifecycle, cancellation,
+- `logicytics/module/runtime.py` owns per-run and per-worker lifecycle, cancellation,
   retries, timeouts, failure aggregation, and post-run actions.
 - `logicytics/platform_adapters.py` owns host command, process, registry,
   filesystem, network, privilege, and Win32 access. Collectors must use these
   injectable seams instead of importing host APIs directly.
-- `logicytics/artifacts.py` is the only publication path from collector
+- `logicytics/module/artifacts.py` is the only publication path from collector
   workspaces into the run artifact catalog.
-- `logicytics/packaging.py` consumes the finalized catalog; it never scans source
+- `logicytics/module/packaging.py` consumes the finalized catalog; it never scans source
   directories for arbitrary files.
 - Maintenance, debug, update, developer, and usage behavior stays separate from
   normal collection.
@@ -149,7 +149,6 @@ Keep user and developer documentation synchronized with behavior:
 - [MODS.md](docs/MODS.md): extension contract.
 - [MIGRATION.md](docs/MIGRATION.md): supported compatibility boundary.
 - [FLOW_MATRIX.md](docs/FLOW_MATRIX.md): executable flow evidence.
-- [FEATURE_STATUS.md](docs/FEATURE_STATUS.md): TODO ownership and completion evidence.
 - [V4_RELEASE.md](docs/V4_RELEASE.md): v4 recreation scope and release verification.
 
 The repository wiki is complementary documentation, not a substitute for the

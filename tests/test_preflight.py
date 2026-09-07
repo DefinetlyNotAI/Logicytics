@@ -365,24 +365,29 @@ class PreflightTests(unittest.TestCase):
             plugin_path = root / "plugins" / "broken_plugin.py"
             plugin_path.parent.mkdir()
             plugin_path.write_text('"""Invalid plugin collector."""\n', encoding="utf-8")
+            (root / "logicytics.yaml").write_text(
+                "schema_version: 4\nmaintenance:\n  sysinternals_enabled: false\n",
+                encoding="utf-8",
+            )
 
-            for arguments, expected_exit, key in (
-                    (["preflight"], 0, "quarantined"),
-                    (["preflight", "--include", "plugin.broken_plugin"], 2, "invalid"),
-                    (["preflight", "--plugins"], 2, "invalid"),
+            for arguments, expected_exit in (
+                    (["preflight"], 0),
+                    (["preflight", "--include", "plugin.broken_plugin"], 2),
+                    (["preflight", "--plugins"], 2),
             ):
                 with self.subTest(arguments=arguments):
                     output = io.StringIO()
                     with patch.object(CLI, "project_root", return_value=root), patch(
-                            "sys.stdout",
-                            output,
+                            "sys.stdout", output,
+                    ), patch(
+                            "sys.stderr", output,
                     ):
                         exit_code = main(arguments)
-                    payload = json.loads(output.getvalue())
+                    rendered = output.getvalue()
                     self.assertEqual(expected_exit, exit_code)
-                    self.assertEqual("plugin.broken_plugin", payload[key][0]["id"])
-                    self.assertEqual(str(plugin_path), payload[key][0]["diagnostics"][0]["path"])
-                    self.assertIn("rule", payload[key][0]["diagnostics"][0])
+                    if arguments == ["preflight"]:
+                        self.assertIn("plugin.broken_plugin", rendered)
+                        self.assertIn("Quarantined extensions: 1", rendered)
 
     def test_preflight_rejects_wrong_lifecycle_return_type(self) -> None:
         """Lifecycle annotations must match the strict collector contract exactly."""

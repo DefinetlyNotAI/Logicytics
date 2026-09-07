@@ -88,12 +88,12 @@ class PublicApiTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            (root / "settings.json").write_text(
+            (root / "logicytics.yaml").write_text(
                 '{"schema_version":4,"runtime":{"default_max_workers":1,"maximum_workers":2}}',
                 encoding="utf-8",
             )
 
-            configuration = load_configuration(root, "settings.json")
+            configuration = load_configuration(root, "logicytics.yaml")
 
             standard = plan_run(
                 root,
@@ -128,7 +128,7 @@ class PublicApiTests(unittest.TestCase):
                     root,
                     RunRequest(max_workers=1),
                     configuration=configuration,
-                    config_path="settings.json",
+                    config_path="logicytics.yaml",
                 )
 
             plugin_path.write_text(
@@ -343,7 +343,7 @@ class PublicApiTests(unittest.TestCase):
             payload = json.loads(original)
             payload.pop("manifest_schema_version")
             outcome.manifest_path.write_text(json.dumps(payload), encoding="utf-8")
-            with self.assertRaisesRegex(PlanError, "unsupported run manifest schema_version"):
+            with self.assertRaisesRegex(PlanError, "missing schema_version"):
                 query_run(root, outcome.manifest.run_id)
             invalid_collector_fields = (
                 ("started_at", "not-a-timestamp", "collector started_at"),

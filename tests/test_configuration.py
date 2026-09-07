@@ -25,7 +25,7 @@ class ConfigurationTests(unittest.TestCase):
     """Configuration parsing, migration, validation, and manifest behavior."""
 
     def test_configuration_schema_version_is_enforced(self) -> None:
-        """Current v4 and explicitly migrated v3 schemas are accepted; other versions are not."""
+        """Only the current v4 schema is accepted by the authoritative YAML loader."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             config_path = root / "logicytics.yaml"
@@ -35,9 +35,8 @@ class ConfigurationTests(unittest.TestCase):
                     with self.assertRaisesRegex(PlanError, "unsupported configuration schema_version"):
                         load_config(root)
             config_path.write_text('{"schema_version": 3}', encoding="utf-8")
-            migrated = load_config(root)
-            self.assertEqual(4, migrated.schema_version)
-            self.assertEqual(3, migrated.migrated_from_schema)
+            with self.assertRaisesRegex(PlanError, "unsupported configuration schema_version"):
+                load_config(root)
             config_path.write_text('{"schema_version": 4, "collectors": {}}', encoding="utf-8")
             current = load_config(root)
             self.assertEqual(4, current.schema_version)
@@ -46,33 +45,8 @@ class ConfigurationTests(unittest.TestCase):
             with self.assertRaisesRegex(PlanError, "package_completed_runs"):
                 load_config(root)
 
-    def test_legacy_configuration_migrates_runtime_and_collector_aliases_without_writing(self) -> None:
-        """A supported v3 configuration migrates once in memory and preserves its source bytes."""
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            config_path = root / "logicytics.yaml"
-            settings = {"core.packet.packet_capture": {"packet_count": 7, "timeout_seconds": 5}}
-            original = json.dumps({
-                "schema_version": 3,
-                "workers": 3,
-                "max_workers": 6,
-                "output_root": "ACCESS/RUNS",
-                "collector_settings": settings,
-            }, indent=2)
-            config_path.write_text(original, encoding="utf-8")
-            configuration = load_config(root)
-
-            self.assertEqual(4, configuration.schema_version)
-            self.assertEqual(3, configuration.migrated_from_schema)
-            self.assertEqual(3, configuration.runtime.default_max_workers)
-            self.assertEqual(6, configuration.runtime.maximum_workers)
-            self.assertEqual(root / "output" / "data", configuration.runtime.output_root)
-            self.assertEqual(settings["core.packet.packet_capture"],
-                             configuration.settings_for("core.packet.packet_capture"))
-            self.assertEqual(original, config_path.read_text(encoding="utf-8"))
-
-    def test_historical_code_config_ini_migrates_into_typed_v4_settings(self) -> None:
-        """The original CODE/config.ini is a bounded read-only fallback when JSON is absent."""
+    def test_historical_code_config_ini_is_not_loaded(self) -> None:
+        """The removed CODE/config.ini format cannot override the root YAML defaults."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             code = root / "CODE"
@@ -107,60 +81,26 @@ max_retry_time = 30
 
             configuration = load_config(root)
 
-            self.assertEqual(3, configuration.migrated_from_schema)
-            self.assertEqual(6, configuration.runtime.default_max_workers)
-            self.assertEqual(6, configuration.runtime.maximum_workers)
-            self.assertEqual("DEBUG", configuration.logging.level)
-            self.assertTrue(configuration.logging.delete_previous)
-            self.assertFalse(configuration.interaction.history_enabled)
-            self.assertEqual(0.3, configuration.interaction.similarity_threshold)
-            self.assertEqual("all-MiniLM-L6-v2", configuration.interaction.model_name)
-            self.assertTrue(configuration.interaction.model_debug)
-            self.assertEqual(
-                {
-                    "output_limit_bytes": 8 * 1024 * 1024,
-                    "disk_safety_margin_bytes": 4 * 1024 * 1024,
-                    "dump_directory": "memory_maps",
-                },
-                configuration.settings_for("core.process.memory_map"),
-            )
-            self.assertEqual(
-                {"sample_count": 5, "interval_seconds": 1.5},
-                configuration.settings_for("core.network.bandwidth_sample"),
-            )
-            self.assertEqual(5000, configuration.settings_for("core.packet.packet_capture")["packet_count"])
+            self.assertIsNone(configuration.migrated_from_schema)
+            self.assertEqual(4, configuration.schema_version)
+            self.assertEqual(4, configuration.runtime.default_max_workers)
+            self.assertEqual("INFO", configuration.logging.level)
             self.assertEqual(original, config_path.read_text(encoding="utf-8"))
 
             (root / "logicytics.yaml").write_text('{"schema_version":4}', encoding="utf-8")
             self.assertIsNone(load_config(root).migrated_from_schema)
             self.assertFalse((root / "output").exists())
-            self.assertEqual(3, configuration.to_manifest_dict()["migrated_from_schema"])
-
-    def test_legacy_configuration_rejects_ambiguous_unsafe_and_plugin_enabling_migrations(self) -> None:
-        """Migration cannot override settings, weaken validation, or silently enable extensions."""
+    def test_non_yaml_configuration_is_rejected(self) -> None:
+        """Superseded JSON settings files are rejected instead of becoming a second source of truth."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            config_path = root / "logicytics.yaml"
-            invalid = (
-                ({"workers": 2, "worker_count": 3}, "conflicting settings"),
-                ({"workers": 2, "runtime": {"default_max_workers": 2}}, "conflicting settings"),
-                ({"runtime": {"workers": 2, "worker_count": 3}}, "conflicting settings"),
-                ({"collectors": {}, "collector_settings": {}}, "conflicting collectors"),
-                ({"enable_plugins": True}, "unsupported root"),
-                ({"workers": True}, "worker limits"),
-                ({"collector_settings": {"core.process.memory_map": {"dump_directory": "../outside"}}},
-                 "collector-workspace"),
-                ({"collector_settings": {"core.packet.packet_capture": {"packet_count": 0}}}, "packet_count"),
-            )
-            for legacy, message in invalid:
-                with self.subTest(legacy=legacy):
-                    config_path.write_text(json.dumps({"schema_version": 3, **legacy}), encoding="utf-8")
-                    with self.assertRaisesRegex(PlanError, message):
-                        load_config(root)
-                    self.assertFalse((root / "output").exists())
+            settings = root / "settings.json"
+            settings.write_text('{"schema_version": 4}', encoding="utf-8")
+            with self.assertRaisesRegex(PlanError, "configuration must be a YAML file"):
+                load_config(root, settings)
 
-    def test_migrated_configuration_run_preserves_manifest_provenance_and_legacy_evidence(self) -> None:
-        """Migrated collection stays isolated, packages normally, and never moves old evidence."""
+    def test_yaml_configuration_run_preserves_manifest_provenance_and_legacy_evidence(self) -> None:
+        """Current YAML collection stays isolated, packages normally, and preserves old evidence."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             collector_path = root / "core" / "system" / "system_info.py"
@@ -175,9 +115,8 @@ max_retry_time = 30
             config_path = root / "logicytics.yaml"
             original = json.dumps(
                 {
-                    "schema_version": 3,
-                    "worker_count": 1,
-                    "output_root": "ACCESS/RUNS",
+                    "schema_version": 4,
+                    "runtime": {"default_max_workers": 1, "maximum_workers": 1},
                 }
             )
             config_path.write_text(original, encoding="utf-8")
@@ -193,7 +132,7 @@ max_retry_time = 30
             outcome = RunSupervisor(root, configuration).run(plan)
 
             self.assertEqual(root / "output" / "data", outcome.run_directory.parent)
-            self.assertEqual(3, outcome.manifest.configuration["migrated_from_schema"])
+            self.assertIsNone(outcome.manifest.configuration["migrated_from_schema"])
             self.assertEqual("keep legacy evidence", legacy.read_text(encoding="utf-8"))
             self.assertEqual(original, config_path.read_text(encoding="utf-8"))
 
@@ -205,7 +144,7 @@ max_retry_time = 30
                 packaged = json.loads(archive.read("metadata/manifest.json"))
 
             self.assertEqual(4, packaged["configuration"]["schema_version"])
-            self.assertEqual(3, packaged["configuration"]["migrated_from_schema"])
+            self.assertIsNone(packaged["configuration"]["migrated_from_schema"])
 
     def test_configuration_defaults_to_one_canonical_output_data_root(self) -> None:
         """Defaults and loaded settings share output/data while explicit roots remain supported."""

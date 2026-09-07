@@ -134,10 +134,12 @@ class CLI:
 
         non_python_only = mode.non_python_only if mode is not None else False
 
-        if sequential and arguments.workers is not None and arguments.workers != 1:
+        requested_workers = getattr(arguments, "workers", None)
+
+        if sequential and requested_workers is not None and requested_workers != 1:
             raise ValueError("sequential execution requires --workers=1")
 
-        worker_count = 1 if sequential else arguments.workers or default_workers
+        worker_count = 1 if sequential else requested_workers or default_workers
 
         if parallel and worker_count < 2:
             raise ValueError(
@@ -235,30 +237,34 @@ class CLI:
             parent_run_id = previous["run_id"]
 
         selection_only = getattr(arguments, "command", None) == "collector"
+        include_arguments = tuple(getattr(arguments, "include", ()) or ())
+        exclude_arguments = tuple(getattr(arguments, "exclude", ()) or ())
+        plugins_enabled = bool(getattr(arguments, "plugins", False))
+        mods_enabled = bool(getattr(arguments, "mods", False))
 
         if selection_only and (
-                arguments.include
-                or arguments.exclude
+                include_arguments
+                or exclude_arguments
                 or arguments.profile is not None
-                or arguments.plugins
-                or arguments.mods
+                or plugins_enabled
+                or mods_enabled
         ):
             raise ValueError(
                 "collector execution cannot combine its ID with profile or selection flags"
             )
 
         includes = (
-            (arguments.collector_id,)
+            (getattr(arguments, "collector_id"),)
             if selection_only
-            else tuple(arguments.include)
+            else include_arguments
         )
 
         return RunRequest(
             profile=profile,
             include=includes,
-            exclude=tuple(arguments.exclude),
+            exclude=exclude_arguments,
             selection_only=selection_only,
-            enable_plugins=arguments.plugins,
+            enable_plugins=plugins_enabled,
             enable_mods=enable_mods,
             non_python_only=non_python_only,
             max_workers=worker_count,
@@ -269,7 +275,7 @@ class CLI:
             ),
             approved_capabilities=tuple(
                 Capability(value)
-                for value in arguments.allow_capability
+                for value in getattr(arguments, "allow_capability", ())
             ),
             performance_check=performance_check,
             rerun_from=parent_run_id,
@@ -638,6 +644,10 @@ def main(argv: list[str] | None = None) -> int:
         arguments.command = "match"
     elif arguments.modes:
         arguments.command = "modes"
+
+    if arguments.command is None:
+        cli_parser.print_help()
+        return 0
 
     root = cli_methods.project_root()
     application_logger = None

@@ -25,7 +25,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Invalid Python MOD capabilities: {error}", file=sys.stderr)
         return 2
 
-    engine_root = Path(__file__).resolve().parent.parent
+    engine_root = Path(__file__).resolve().parents[2]
     sys.path.insert(0, str(engine_root))
     from logicytics.contracts import Capability
     from logicytics.module.runtime import _WorkerMutationGuard

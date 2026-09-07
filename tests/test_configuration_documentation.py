@@ -15,7 +15,7 @@ from logicytics.module.errors import PlanError
 class ConfigurationDocumentationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.project_root = Path(__file__).resolve().parent.parent
-        self.guide = (self.project_root / "CONFIGURATION.md").read_text(encoding="utf-8")
+        self.guide = (self.project_root / "docs" / "CONFIGURATION.md").read_text(encoding="utf-8")
 
     def test_every_engine_and_collector_setting_is_documented(self) -> None:
         field_groups = (
@@ -55,22 +55,22 @@ class ConfigurationDocumentationTests(unittest.TestCase):
         self.assertEqual(3, loaded.settings_for("core.network.bandwidth_sample")["sample_count"])
 
     def test_repository_guides_link_the_configuration_contract(self) -> None:
-        for name in ("README.md", "CONTRIBUTING.md"):
-            with self.subTest(document=name):
-                text = (self.project_root / name).read_text(encoding="utf-8")
-                self.assertIn("CONFIGURATION.md", text)
+        contributor = (self.project_root / "CONTRIBUTING.md").read_text(encoding="utf-8")
+        self.assertIn("CONFIGURATION.md", contributor)
+        readme = (self.project_root / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Logicytics Wiki", readme)
 
-    def test_modern_json_is_bounded_and_relative_explicit_paths_use_the_project(self) -> None:
+    def test_yaml_is_bounded_and_relative_explicit_paths_use_the_project(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            selected = root / "settings.json"
-            selected.write_text('{"schema_version":4}', encoding="utf-8")
-            loaded = configuration.load_config(root, Path("settings.json"))
+            selected = root / "selected.yaml"
+            selected.write_text("schema_version: 4\n", encoding="utf-8")
+            loaded = configuration.load_config(root, Path("selected.yaml"))
             self.assertEqual(configuration.SCHEMA_VERSION, loaded.schema_version)
 
             selected.write_bytes(b" " * (configuration.MAXIMUM_CONFIGURATION_BYTES + 1))
             with self.assertRaisesRegex(PlanError, "exceeds the 2 MiB limit"):
-                configuration.load_config(root, Path("settings.json"))
+                configuration.load_config(root, Path("selected.yaml"))
 
     def test_core_settings_require_an_explicit_schema_while_extensions_remain_open(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

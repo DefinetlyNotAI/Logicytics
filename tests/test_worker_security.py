@@ -369,7 +369,7 @@ class WorkerSecurityTests(unittest.TestCase):
                 "from logicytics import run_collection",
                 "from logicytics import packaging",
                 "import logicytics\nlogicytics.run_collection",
-                "import logicytics\nlogicytics.module.configuration",
+                "import logicytics.module.configuration",
                 "from logicytics.module.api import query_run",
             )
             for statement in attempts:

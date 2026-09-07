@@ -246,7 +246,7 @@ class LoggingTests(unittest.TestCase):
             (root / ".venv").mkdir()
             (root / ".venv" / "hidden.py").write_text("", encoding="utf-8")
             files = list_files(root, extensions=(".py",), excluded_directories=(".venv",))
-            self.assertEqual((root / "collectors" / "valid.py",), files)
+            self.assertEqual(((root / "collectors" / "valid.py").resolve(),), files)
 
     def test_command_runner_captures_output_and_parses_structured_levels(self) -> None:
         """Core command execution must avoid a shell and preserve structured output."""

@@ -34,7 +34,7 @@ class FlowMatrixTests(unittest.TestCase):
             "cancellation": "test_cancelled_run_writes_a_recoverable_package_and_manifest",
             "permission-denied": "test_access_denied_is_skipped_not_failed",
         }
-        documented = (project_root / "FLOW_MATRIX.md").read_text(encoding="utf-8")
+        documented = (project_root / "docs" / "FLOW_MATRIX.md").read_text(encoding="utf-8")
         for flow, test_name in required.items():
             with self.subTest(flow=flow):
                 self.assertIn(test_name, test_names)
