@@ -6,9 +6,9 @@ import json
 from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
-from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics import get_volume_information, get_disk_free_space, ularge_integer, \
     create_unicode_buffer, dword
+from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import windows_api_adapter
 
 _DRIVE_TYPES = {0: "unknown", 1: "no_root_directory", 2: "removable", 3: "fixed", 4: "remote", 5: "optical",

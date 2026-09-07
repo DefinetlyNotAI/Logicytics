@@ -11,8 +11,8 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, IO
 
-from logicytics.module.artifacts import sha256_file
 from logicytics.contracts import Artifact
+from logicytics.module.artifacts import sha256_file
 from logicytics.module.manifest import RunManifest, write_manifest
 
 if TYPE_CHECKING:

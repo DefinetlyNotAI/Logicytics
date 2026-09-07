@@ -8,12 +8,12 @@ Unknown keys, duplicate keys, unsafe paths, non-finite numbers, unsupported valu
 
 The root fields are `schema_version`, `runtime`, `interaction`, `maintenance`, `logging`, and `collectors`. The current schema is version `4`.
 
-| Section | Fields |
-| --- | --- |
-| `runtime` | `output_root`, `default_max_workers`, `maximum_workers`, `package_completed_runs`, `maximum_run_output_bytes` |
-| `interaction` | `history_enabled`, `similarity_threshold`, `model_name`, `model_debug` |
+| Section       | Fields                                                                                                                                                              |
+|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `runtime`     | `output_root`, `default_max_workers`, `maximum_workers`, `package_completed_runs`, `maximum_run_output_bytes`                                                       |
+| `interaction` | `history_enabled`, `similarity_threshold`, `model_name`, `model_debug`                                                                                              |
 | `maintenance` | `remote_manifest_url`, `remote_manifest_sha256`, `local_manifest_path`, `minimum_python`, `recommended_python`, `sysinternals_enabled`, `sysinternals_download_url` |
-| `logging` | `level`, `console_enabled`, `color_enabled`, `file_enabled`, `maximum_bytes`, `delete_previous`, `retention_days` |
+| `logging`     | `level`, `console_enabled`, `color_enabled`, `file_enabled`, `maximum_bytes`, `delete_previous`, `retention_days`                                                   |
 
 `runtime.output_root` and `maintenance.local_manifest_path` must stay inside the project when relative. Worker, output, log, and retention values are bounded by the parser. Remote manifests require a matching HTTPS URL and lowercase SHA-256 digest. Sysinternals is enabled by default; set `maintenance.sysinternals_enabled: false` to disable discovery, download, and extraction.
 
@@ -23,14 +23,14 @@ Application events use the same structured data for both sinks. File rows follow
 
 The `collectors` mapping is keyed by a validated collector ID. Shipped collectors reject settings they do not declare. Extension IDs may define their own settings. The shipped configurable fields are:
 
-| Collector | Fields and bounds |
-| --- | --- |
-| `core.network.bandwidth_sample` | `sample_count` 1–10; `interval_seconds` 0.1–60 |
-| `core.packet.packet_capture` | `packet_count` 1–10000; `timeout_seconds` 1–60; `retry_window_seconds` 0–60; `interface` text |
-| `core.filesystem.system_drive_tree` | `max_entries` 1–50000; `max_depth` 1–32 |
-| `core.filesystem.system_drive_listing` | `max_entries` 1–50000; `max_depth` 1–32 |
-| `core.filesystem.sensitive_file_inventory` | `root` absolute path; `max_directories` 1–50000; `max_matches` 1–5000 |
-| `core.process.memory_map` | `max_regions` 1–100000; `output_limit_bytes` 1024–67108864; `disk_safety_margin_bytes` 0–68719476736; `dump_directory` relative workspace path |
+| Collector                                  | Fields and bounds                                                                                                                              |
+|--------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| `core.network.bandwidth_sample`            | `sample_count` 1–10; `interval_seconds` 0.1–60                                                                                                 |
+| `core.packet.packet_capture`               | `packet_count` 1–10000; `timeout_seconds` 1–60; `retry_window_seconds` 0–60; `interface` text                                                  |
+| `core.filesystem.system_drive_tree`        | `max_entries` 1–50000; `max_depth` 1–32                                                                                                        |
+| `core.filesystem.system_drive_listing`     | `max_entries` 1–50000; `max_depth` 1–32                                                                                                        |
+| `core.filesystem.sensitive_file_inventory` | `root` absolute path; `max_directories` 1–50000; `max_matches` 1–5000                                                                          |
+| `core.process.memory_map`                  | `max_regions` 1–100000; `output_limit_bytes` 1024–67108864; `disk_safety_margin_bytes` 0–68719476736; `dump_directory` relative workspace path |
 
 ## Complete example
 

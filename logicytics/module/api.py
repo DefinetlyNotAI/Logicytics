@@ -13,8 +13,8 @@ from math import isfinite
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from logicytics.module.configuration import AppConfig, load_config
 from logicytics.contracts import Artifact, CollectorStatus, RunRequest, RunStatus
+from logicytics.module.configuration import AppConfig, load_config
 from logicytics.module.discovery import preflight
 from logicytics.module.errors import ArtifactError, PlanError
 from logicytics.module.manifest import MANIFEST_SCHEMA_VERSION

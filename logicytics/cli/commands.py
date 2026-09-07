@@ -12,8 +12,8 @@ import sys
 from pathlib import Path
 from typing import Literal
 
-from logicytics.module.configuration import AppConfig, load_config
 from logicytics.contracts import Capability, OutputPolicy, PostRunAction, RunRequest
+from logicytics.module.configuration import AppConfig, load_config
 from logicytics.module.discovery import preflight
 from logicytics.module.environment import inspect_environment
 from logicytics.module.errors import LogicyticsError
@@ -38,13 +38,14 @@ from logicytics.module.modes import (
 )
 from logicytics.module.output_layout import ensure_output_layout
 from logicytics.module.planner import BUILTIN_PROFILES, build_plan
-from logicytics.platform_adapters import process_adapter
 from logicytics.module.runtime import RunSupervisor
 from logicytics.module.sysinternals import ensure_sysinternals
+from logicytics.platform_adapters import process_adapter
 
 
 class CLI:
     """Translate command-line arguments into validated application requests."""
+
     @staticmethod
     def render_preflight(
             logger: object,
@@ -1002,19 +1003,19 @@ def main(argv: list[str] | None = None) -> int:
                 and "path" in outcome.manifest.package
         ):
             result_lines.extend((
-                f"Package: "
-                f"{outcome.manifest.package['path']}\n"
-                f"SHA-256: "
-                f"{outcome.manifest.package.get(
-                    'sha256_path',
-                    'unavailable',
-                )}"
-            ).splitlines())
+                                    f"Package: "
+                                    f"{outcome.manifest.package['path']}\n"
+                                    f"SHA-256: "
+                                    f"{outcome.manifest.package.get(
+                                        'sha256_path',
+                                        'unavailable',
+                                    )}"
+                                ).splitlines())
 
         result_lines.extend((
-            f"Run: {outcome.manifest_path}\n"
-            f"Status: {outcome.manifest.status.value}"
-        ).splitlines())
+                                f"Run: {outcome.manifest_path}\n"
+                                f"Status: {outcome.manifest.status.value}"
+                            ).splitlines())
         application_logger.box("Collection result", result_lines)
 
         exit_code = (

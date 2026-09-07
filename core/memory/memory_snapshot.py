@@ -6,8 +6,8 @@ import json
 from datetime import datetime, timezone
 
 from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
-from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics import global_memory_status
+from logicytics.contracts import CollectorContext, CollectorStatus
 
 
 class MemorySnapshotCollector(CoreCollector):

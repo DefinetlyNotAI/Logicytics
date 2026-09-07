@@ -12,8 +12,8 @@ from threading import RLock
 from time import perf_counter, time
 from typing import Callable, Iterable, ParamSpec, TextIO, TypeVar
 
-from logicytics.module.configuration import LoggingSettings
 from logicytics.contracts import EventLogger
+from logicytics.module.configuration import LoggingSettings
 from logicytics.module.redaction import redact_mapping, redact_text
 
 Parameters = ParamSpec("Parameters")
@@ -241,6 +241,7 @@ def timed(
 
     def decorate(function: Callable[Parameters, Result]) -> Callable[Parameters, Result]:
         """Wrap one callable with lifecycle timing events."""
+
         def wrapped(*args: Parameters.args, **kwargs: Parameters.kwargs) -> Result:
             """Emit start, completion, or failure events around one invocation."""
             logger.event(level, "function_started", function=function.__qualname__)
@@ -277,6 +278,7 @@ def deprecated(
 
     def decorate(function: Callable[Parameters, Result]) -> Callable[Parameters, Result]:
         """Wrap one callable with a structured deprecation warning."""
+
         def wrapped(*args: Parameters.args, **kwargs: Parameters.kwargs) -> Result:
             """Emit the configured warning and then invoke the deprecated callable."""
             fields: dict[str, str] = {"function": function.__qualname__, "removal_version": removal_version,

@@ -25,9 +25,6 @@ from time import monotonic, sleep
 from typing import Any, Mapping, TypedDict, cast, Callable, Protocol, TypeVar
 from uuid import uuid4
 
-from logicytics.module.artifacts import WorkspaceArtifactWriter
-from logicytics.module.command_runner import parse_level_messages
-from logicytics.module.configuration import AppConfig
 from logicytics.contracts import (
     Artifact,
     Capability,
@@ -41,6 +38,9 @@ from logicytics.contracts import (
     RunStatus,
     ValidationResult,
 )
+from logicytics.module.artifacts import WorkspaceArtifactWriter
+from logicytics.module.command_runner import parse_level_messages
+from logicytics.module.configuration import AppConfig
 from logicytics.module.discovery import CollectorCandidate
 from logicytics.module.errors import LogicyticsError
 from logicytics.module.logging import FileEventLogger, get_application_logger, get_event_logger

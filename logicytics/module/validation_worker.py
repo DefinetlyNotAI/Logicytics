@@ -171,11 +171,11 @@ def _validate_contract(
     declared_dependencies = dependencies()
 
     if (
-        not isinstance(declared_dependencies, tuple)
-        or not all(
-            isinstance(item, str)
-            for item in declared_dependencies
-        )
+            not isinstance(declared_dependencies, tuple)
+            or not all(
+        isinstance(item, str)
+        for item in declared_dependencies
+    )
     ):
         raise ValueError(
             "dependencies() must return tuple[str, ...]"
@@ -196,7 +196,7 @@ def _validate_contract(
     collector = collector_type()
 
     with tempfile.TemporaryDirectory(
-        prefix="logicytics-validation-"
+            prefix="logicytics-validation-"
     ) as temporary:
         workspace = Path(temporary)
         temporary_directory = workspace / "tmp"

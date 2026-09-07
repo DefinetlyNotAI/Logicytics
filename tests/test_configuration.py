@@ -7,12 +7,12 @@ import zipfile
 from pathlib import Path
 from typing import Any, cast
 
+from logicytics.contracts import (
+    RunRequest,
+)
 from logicytics.module.configuration import (
     default_config,
     load_config,
-)
-from logicytics.contracts import (
-    RunRequest,
 )
 from logicytics.module.discovery import preflight
 from logicytics.module.errors import PlanError
@@ -90,6 +90,7 @@ max_retry_time = 30
             (root / "logicytics.yaml").write_text('{"schema_version":4}', encoding="utf-8")
             self.assertIsNone(load_config(root).migrated_from_schema)
             self.assertFalse((root / "output").exists())
+
     def test_non_yaml_configuration_is_rejected(self) -> None:
         """Superseded JSON settings files are rejected instead of becoming a second source of truth."""
         with tempfile.TemporaryDirectory() as temporary:

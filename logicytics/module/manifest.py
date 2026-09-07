@@ -12,8 +12,8 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
 from logicytics.contracts import CONTRACT_VERSION, Artifact, CollectorResult, RunStatus
-from logicytics.platform_adapters import windows_api_adapter
 from logicytics.module.redaction import redact_mapping, redact_text
+from logicytics.platform_adapters import windows_api_adapter
 
 MANIFEST_SCHEMA_VERSION = 1
 

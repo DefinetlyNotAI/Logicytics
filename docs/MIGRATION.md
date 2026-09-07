@@ -8,14 +8,14 @@ Run `python -m logicytics.cli.installer` to prepare the virtual environment and 
 
 The old mode flags remain explicit compatibility aliases. Their v4 equivalents are:
 
-| Legacy flag | v4 mode |
-| --- | --- |
-| `--default` | `--mode standard` |
-| `--threaded` | `--mode balanced` |
-| `--minimal` | `--mode quick` |
-| `--depth` | `--mode thorough` |
-| `--modded` | `--mode extensions` |
-| `--nopy` | `--mode non-python` |
+| Legacy flag           | v4 mode              |
+|-----------------------|----------------------|
+| `--default`           | `--mode standard`    |
+| `--threaded`          | `--mode balanced`    |
+| `--minimal`           | `--mode quick`       |
+| `--depth`             | `--mode thorough`    |
+| `--modded`            | `--mode extensions`  |
+| `--nopy`              | `--mode non-python`  |
 | `--performance-check` | `--mode performance` |
 
 Only one mode or alias may be selected per invocation. Prefer named `--mode` values in new automation.

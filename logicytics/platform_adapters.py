@@ -298,9 +298,9 @@ class WindowsApiAdapter:
     def load_library(name: str):
         """Load one validated Win32 DLL name when running on Windows."""
         if (
-            not isinstance(name, str)
-            or not name
-            or any(character in name for character in "/\\\x00")
+                not isinstance(name, str)
+                or not name
+                or any(character in name for character in "/\\\x00")
         ):
             raise ValueError(
                 "Win32 library name must be a simple non-empty name"
