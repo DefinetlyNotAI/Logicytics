@@ -153,6 +153,7 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
                 selected[dependency_id] = dependency
                 pending_dependencies.append(dependency_id)
     policy_errors: list[str] = []
+    missing_capabilities_for_request: set[Capability] = set()
     for candidate in sorted(
             selected.values(),
             key=lambda item: item.metadata.id if item.metadata else "",
@@ -169,13 +170,24 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
             policy_errors.append(f"{candidate.metadata.id}: does not support {sys.platform}")
         missing_capabilities = set(candidate.metadata.capabilities) - set(request.approved_capabilities)
         if missing_capabilities:
+            missing_capabilities_for_request.update(missing_capabilities)
             required = ", ".join(sorted(capability.value for capability in missing_capabilities))
             policy_errors.append(
                 f"{candidate.metadata.id}: requires unapproved capabilities: {required}"
             )
     if policy_errors:
         details = "\n".join(f"- {error}" for error in policy_errors)
-        raise PlanError(f"selected collector policy validation failed:\n{details}")
+        hint = ""
+        if missing_capabilities_for_request:
+            flags = " ".join(
+                f"--allow-capability {capability.value}"
+                for capability in sorted(
+                    missing_capabilities_for_request,
+                    key=lambda capability: capability.value,
+                )
+            )
+            hint = f"\nRerun with: {flags}"
+        raise PlanError(f"selected collector policy validation failed:\n{details}{hint}")
     elevated_collectors: list[str] = []
 
     for candidate in selected.values():

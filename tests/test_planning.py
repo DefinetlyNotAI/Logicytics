@@ -281,6 +281,10 @@ class PlanningTests(unittest.TestCase):
                     "core.system.c_subprocess",
             ):
                 self.assertIn(collector_id, message)
+            self.assertIn(
+                "Rerun with: --allow-capability network --allow-capability subprocess",
+                message,
+            )
 
     def test_authorization_error_summarizes_categories_and_sensitive_outputs(self) -> None:
         """Collection consent must explain requested evidence before creating a workspace."""

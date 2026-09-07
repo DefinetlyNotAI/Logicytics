@@ -35,8 +35,8 @@ python -m logicytics preflight
 When preflight is clean, plan before collecting:
 
 ```powershell
-python -m logicytics plan --profile standard
-python -m logicytics run --profile standard --acknowledge-authorization
+python -m logicytics plan --profile standard --allow-capability subprocess --allow-capability network
+python -m logicytics run --profile standard --allow-capability subprocess --allow-capability network --acknowledge-authorization
 ```
 
 Use the bundled runner for the complete dynamically discovered test suite:
@@ -51,7 +51,7 @@ Each run follows a simple, auditable path:
 
 `request → validated plan → isolated collectors → normalized artifacts → manifest → package`
 
-The console keeps status and progress easy to scan. Detailed command output is boxed; application events are written separately in an aligned, human-readable log. Evidence and package metadata remain with the run they describe.
+The console keeps status and progress easy to scan. Command output is rendered line by line; application events are written separately in an aligned, human-readable log. Evidence and package metadata remain with the run they describe.
 
 Sysinternals is enabled by default. Logicytics detects an existing installation or securely downloads and extracts the official archive to its dedicated application location. Set `maintenance.sysinternals_enabled: false` in `logicytics.yaml` to opt out completely.
 

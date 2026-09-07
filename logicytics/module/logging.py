@@ -40,7 +40,6 @@ _LEVEL_PRESENTATION = {
 }
 _RESET = "\033[0m"
 _BOLD = "\033[1m"
-_BOX_COLOR = "\033[96m"
 _FILE_LOG_LINE_WIDTH = 140
 _TIME_WIDTH = 19
 _SEVERITY_WIDTH = 9
@@ -221,52 +220,16 @@ class ApplicationLogger(EventLogger):
         self.raw("")
 
     def box(self, title: str, lines: Iterable[str]) -> None:
-        """Render console-only output in an AIBrain-style summary panel."""
-        width = self._console_width()
-        content_width = width - 4
-        content: list[str] = []
+        """Render console-only output as plain redacted lines."""
+        rows = [redact_text(title)]
         for line in lines:
-            safe = redact_text(line)
-            wrapped = textwrap.wrap(
-                safe,
-                width=content_width,
-                break_long_words=False,
-                break_on_hyphens=False,
-            ) or [""]
-            for row in wrapped:
-                content.extend(
-                    row[index:index + content_width]
-                    for index in range(0, len(row), content_width)
-                )
-        inner = width - 2
-        if self._supports_unicode():
-            horizontal, vertical = "\u2500", "\u2502"
-            top_left, top_right = "\u256d", "\u256e"
-            middle_left, middle_right = "\u251c", "\u2524"
-            bottom_left, bottom_right = "\u2570", "\u256f"
-        else:
-            horizontal, vertical = "-", "|"
-            top_left = top_right = "+"
-            middle_left = middle_right = "+"
-            bottom_left = bottom_right = "+"
-        top = top_left + horizontal * inner + top_right
-        middle = middle_left + horizontal * inner + middle_right
-        bottom = bottom_left + horizontal * inner + bottom_right
-        rows = [
-            "",
-            top,
-            f"{vertical} {title[:content_width].center(content_width)} {vertical}",
-            middle,
-            *(f"{vertical} {line:<{content_width}} {vertical}" for line in content),
-            bottom,
-            "",
-        ]
+            rows.extend(
+                f"  {redact_text(row)}"
+                for row in line.splitlines() or [""]
+            )
         with self._lock:
             if self.settings.console_enabled:
-                if self.settings.color_enabled and self.console.isatty():
-                    self.console.write(f"{_BOX_COLOR}{chr(10).join(rows)}{_RESET}\n")
-                else:
-                    self.console.write("\n".join(rows) + "\n")
+                self.console.write("\n".join(rows) + "\n")
                 self.console.flush()
 
     def dispatch(self, messages: Iterable[str]) -> None:

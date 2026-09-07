@@ -10,7 +10,7 @@ class TestRunnerCliTests(unittest.TestCase):
     """Presentation and result handling for the dynamically discovered test command."""
 
     def test_runner_reports_discovered_suite_through_the_application_console(self) -> None:
-        """A successful dynamic run renders a boxed summary and returns a CI-success status."""
+        """A successful dynamic run renders a line-based summary and returns CI success."""
         result = MagicMock()
         result.failures = ()
         result.errors = ()

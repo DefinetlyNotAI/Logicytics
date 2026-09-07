@@ -79,7 +79,7 @@ class LoggingTests(unittest.TestCase):
             self.assertTrue(all(" | " in line for line in contents.splitlines()))
             self.assertIn("\033[91m\033[1m  \u00d7 ", console.getvalue())
             self.assertIn("typed event", console.getvalue())
-            self.assertIn("\u256d", console.getvalue())
+            self.assertNotIn("\u256d", console.getvalue())
             first_row = contents.splitlines()[0]
             self.assertRegex(first_row, r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \|")
             self.assertLessEqual(max(map(len, contents.splitlines())), 140)
@@ -182,7 +182,7 @@ class LoggingTests(unittest.TestCase):
             rows = console.getvalue().splitlines()
             self.assertTrue(rows[0].startswith("  * "))
             self.assertTrue(rows[1].startswith("    "))
-            self.assertTrue(any(row.startswith("+") for row in rows))
+            self.assertEqual(["Summary", "  finished"], rows[-2:])
             self.assertNotIn("\u25cf", console.getvalue())
             self.assertNotIn("\u256d", console.getvalue())
 
