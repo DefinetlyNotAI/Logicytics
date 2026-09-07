@@ -17,7 +17,7 @@ The root fields are `schema_version`, `runtime`, `interaction`, `maintenance`, `
 
 `runtime.output_root` and `maintenance.local_manifest_path` must stay inside the project when relative. Worker, output, log, and retention values are bounded by the parser. Remote manifests require a matching HTTPS URL and lowercase SHA-256 digest. Sysinternals is enabled by default; set `maintenance.sysinternals_enabled: false` to disable discovery, download, and extraction.
 
-Application events use the same structured data for both sinks. File rows follow `TIME | SEVERITY | CODE SOURCE | MESSAGE`; console-only command results are rendered as grey ASCII boxes and do not pollute the application event log. `logging.console_enabled`, `logging.color_enabled`, and `logging.file_enabled` control those sinks independently.
+Application events use the same redacted data for both sinks. The console follows AIBrain's compact, colored status style with severity markers and terminal-width word wrapping. File rows use the aligned `LOCAL DATE AND TIME | SEVERITY | SOURCE | MESSAGE` layout, wrap at 140 columns, and align continuation text beneath the message column. Console-only command results use the same rounded summary panels as AIBrain and do not pollute the application event log. `logging.console_enabled`, `logging.color_enabled`, and `logging.file_enabled` control those sinks independently.
 
 ## Collector settings
 

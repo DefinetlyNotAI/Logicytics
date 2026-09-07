@@ -22,6 +22,6 @@ logging:
   color_enabled: true
   file_enabled: true
   maximum_bytes: 4194304
-  delete_previous: false
+  delete_previous: true
   retention_days: 30
 collectors: {}

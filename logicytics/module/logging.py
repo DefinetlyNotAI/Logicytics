@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import re
+import shutil
 import sys
 import textwrap
 import traceback
@@ -27,16 +29,26 @@ _LEVEL_ORDER = {
     "EXCEPTION": 45,
     "CRITICAL": 50,
 }
-_LEVEL_COLORS = {
-    "DEBUG": "\033[36m",
-    "INTERNAL": "\033[35m",
-    "INFO": "\033[32m",
-    "WARNING": "\033[33m",
-    "ERROR": "\033[31m",
-    "EXCEPTION": "\033[91m",
-    "CRITICAL": "\033[97;41m",
+_LEVEL_PRESENTATION = {
+    "DEBUG": ("\u00b7", "\033[90m"),
+    "INTERNAL": ("\u00b7", "\033[95m"),
+    "INFO": ("\u25cf", "\033[96m"),
+    "WARNING": ("!", "\033[93m"),
+    "ERROR": ("\u00d7", "\033[91m"),
+    "EXCEPTION": ("\u00d7", "\033[91m"),
+    "CRITICAL": ("\u00d7", "\033[91m"),
 }
-_BOX_COLOR = "\033[90m"
+_RESET = "\033[0m"
+_BOLD = "\033[1m"
+_BOX_COLOR = "\033[96m"
+_FILE_LOG_LINE_WIDTH = 140
+_TIME_WIDTH = 19
+_SEVERITY_WIDTH = 9
+_SOURCE_WIDTH = 28
+_DEFAULT_CONSOLE_WIDTH = 82
+_MIN_CONSOLE_WIDTH = 60
+_RIGHT_EDGE_MARGIN = 4
+_RECORD_START = re.compile(rb"(?m)^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \|")
 _LOGGER_LOCK = RLock()
 _APPLICATION_LOGGERS: dict[Path, "ApplicationLogger"] = {}
 _EVENT_LOGGERS: dict[tuple[Path, str, str | None], "FileEventLogger"] = {}
@@ -78,24 +90,80 @@ class ApplicationLogger(EventLogger):
         """Retain the newest complete rows when the configured byte limit is exceeded."""
         if self.path.is_file() and self.path.stat().st_size > self.settings.maximum_bytes:
             with self.path.open("rb") as stream:
-                stream.seek(-self.settings.maximum_bytes // 2, 2)
+                stream.seek(-self.settings.maximum_bytes, 2)
+                stream.readline()
                 retained = stream.read()
-            newline = retained.find(b"\n")
-            retained = retained[newline + 1:] if newline >= 0 else retained
-            marker = "\n".join(
-                self._rows("WARNING", "logicytics.logging", "log truncated to configured maximum")
-            ).encode("utf-8") + b"\n"
-            self.path.write_bytes(marker + retained)
+            record = _RECORD_START.search(retained)
+            retained = retained[record.start():] if record is not None else b""
+            self.path.write_bytes(retained)
 
     @staticmethod
     def _rows(level: str, source: str, message: str) -> tuple[str, ...]:
-        """Format aligned, deterministic human log rows for file inspection."""
-        timestamp = datetime.now(timezone.utc).strftime("%H:%M:%S")
-        source_column = source[:24]
-        wrapped = textwrap.wrap(message, width=76, break_long_words=False, break_on_hyphens=False) or [""]
-        first = f"{timestamp} | {level:<9} | {source_column:<24} | {wrapped[0]}"
-        continuation = f"{'':8} | {'':9} | {'':24} | "
+        """Format AIBrain-style fixed columns and aligned wrapped rows."""
+        timestamp = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S")
+        source_column = source.removeprefix("logicytics.")
+        if len(source_column) > _SOURCE_WIDTH:
+            source_column = source_column[:_SOURCE_WIDTH - 3] + "..."
+        prefix = (
+            f"{timestamp:<{_TIME_WIDTH}} | {level:<{_SEVERITY_WIDTH}} | "
+            f"{source_column:<{_SOURCE_WIDTH}} | "
+        )
+        continuation = (
+            f"{'':<{_TIME_WIDTH}} | {'':<{_SEVERITY_WIDTH}} | "
+            f"{'':<{_SOURCE_WIDTH}} | "
+        )
+        available = max(_FILE_LOG_LINE_WIDTH - len(prefix), 1)
+        wrapped = [
+            segment
+            for line in message.splitlines() or [""]
+            for segment in (
+                textwrap.wrap(
+                    line,
+                    width=available,
+                    break_long_words=True,
+                    break_on_hyphens=False,
+                ) or [""]
+            )
+        ]
+        first = prefix + wrapped[0]
         return tuple([first, *(continuation + row for row in wrapped[1:])])
+
+    @staticmethod
+    def _console_width() -> int:
+        """Return the AIBrain console width with its safety margin and minimum."""
+        width = shutil.get_terminal_size((_DEFAULT_CONSOLE_WIDTH, 24)).columns
+        return max(width - _RIGHT_EDGE_MARGIN, _MIN_CONSOLE_WIDTH)
+
+    def _supports_unicode(self) -> bool:
+        """Return whether this console can encode AIBrain's presentation glyphs."""
+        encoding = getattr(self.console, "encoding", None) or "utf-8"
+        try:
+            "\u00b7\u25cf\u00d7\u256d\u2500\u256e\u2502\u251c\u2524\u2570\u256f".encode(encoding)
+        except (LookupError, UnicodeEncodeError):
+            return False
+        return True
+
+    @classmethod
+    def _console_rows(cls, marker: str, message: str) -> tuple[str, ...]:
+        """Word-wrap compact status text with aligned continuation indentation."""
+        prefix = f"  {marker} "
+        continuation = " " * len(prefix)
+        width = cls._console_width()
+        rows: list[str] = []
+        for index, raw_line in enumerate(message.expandtabs(4).splitlines() or [""]):
+            indentation = raw_line[:len(raw_line) - len(raw_line.lstrip())]
+            remaining = raw_line.lstrip().rstrip()
+            current_prefix = (prefix if index == 0 else continuation) + indentation
+            while len(remaining) > max(width - len(current_prefix), 1):
+                available = max(width - len(current_prefix), 1)
+                split_at = remaining.rfind(" ", 0, available + 1)
+                if split_at <= 0:
+                    split_at = available
+                rows.append(current_prefix + remaining[:split_at].rstrip())
+                remaining = remaining[split_at:].lstrip()
+                current_prefix = continuation + indentation
+            rows.append(current_prefix + remaining)
+        return tuple(rows)
 
     def event(self, level: str, message: str, **fields: int | float | str) -> None:
         """Dispatch one typed, redacted event to configured console and file sinks."""
@@ -111,19 +179,22 @@ class ApplicationLogger(EventLogger):
             f"{key}={json.dumps(value, ensure_ascii=True, sort_keys=True)}"
             for key, value in sorted(safe_fields.items())
         )
-        rows = self._rows(normalized, source, safe_message + suffix)
+        rendered_message = safe_message + suffix
+        rows = self._rows(normalized, source, rendered_message)
         with self._lock:
             if self.settings.file_enabled:
                 with self.path.open("a", encoding="utf-8") as stream:
                     stream.write("\n".join(rows) + "\n")
                 self._truncate_file()
             if self.settings.console_enabled:
+                marker, color = _LEVEL_PRESENTATION[normalized]
+                if not self._supports_unicode():
+                    marker = {"\u25cf": "*", "\u00d7": "X", "\u00b7": "."}.get(marker, marker)
+                console_rows = self._console_rows(marker, rendered_message)
                 if self.settings.color_enabled and self.console.isatty():
-                    self.console.write(f"{_LEVEL_COLORS[normalized]}{rows[0]}\033[0m\n")
-                    for row in rows[1:]:
-                        self.console.write(row + "\n")
+                    self.console.write(f"{color}{_BOLD}{chr(10).join(console_rows)}{_RESET}\n")
                 else:
-                    self.console.write("\n".join(rows) + "\n")
+                    self.console.write("\n".join(console_rows) + "\n")
                 self.console.flush()
 
     def raw(self, message: str, *, end: str = "\n") -> None:
@@ -141,27 +212,50 @@ class ApplicationLogger(EventLogger):
         self.raw("")
 
     def box(self, title: str, lines: Iterable[str]) -> None:
-        """Render non-log command output in a wrapped, restrained grey ASCII panel."""
+        """Render console-only output in an AIBrain-style summary panel."""
+        width = self._console_width()
+        content_width = width - 4
         content: list[str] = []
         for line in lines:
             safe = redact_text(line)
             wrapped = textwrap.wrap(
                 safe,
-                width=96,
+                width=content_width,
                 break_long_words=False,
                 break_on_hyphens=False,
             ) or [""]
             for row in wrapped:
-                content.extend(row[index:index + 96] for index in range(0, len(row), 96))
-        width = max(len(title) + 4, *(len(line) + 2 for line in content), 4)
-        border = "+" + "-" * width + "+"
-        rows = [border, f"| {title[:width - 2]:<{width - 2}} |", border]
-        rows.extend(f"| {line:<{width - 2}} |" for line in content)
-        rows.append(border)
+                content.extend(
+                    row[index:index + content_width]
+                    for index in range(0, len(row), content_width)
+                )
+        inner = width - 2
+        if self._supports_unicode():
+            horizontal, vertical = "\u2500", "\u2502"
+            top_left, top_right = "\u256d", "\u256e"
+            middle_left, middle_right = "\u251c", "\u2524"
+            bottom_left, bottom_right = "\u2570", "\u256f"
+        else:
+            horizontal, vertical = "-", "|"
+            top_left = top_right = "+"
+            middle_left = middle_right = "+"
+            bottom_left = bottom_right = "+"
+        top = top_left + horizontal * inner + top_right
+        middle = middle_left + horizontal * inner + middle_right
+        bottom = bottom_left + horizontal * inner + bottom_right
+        rows = [
+            "",
+            top,
+            f"{vertical} {title[:content_width].center(content_width)} {vertical}",
+            middle,
+            *(f"{vertical} {line:<{content_width}} {vertical}" for line in content),
+            bottom,
+            "",
+        ]
         with self._lock:
             if self.settings.console_enabled:
                 if self.settings.color_enabled and self.console.isatty():
-                    self.console.write(f"{_BOX_COLOR}{chr(10).join(rows)}\033[0m\n")
+                    self.console.write(f"{_BOX_COLOR}{chr(10).join(rows)}{_RESET}\n")
                 else:
                     self.console.write("\n".join(rows) + "\n")
                 self.console.flush()
@@ -222,7 +316,9 @@ class FileEventLogger(EventLogger):
                 stream.write(json.dumps(payload, sort_keys=True) + "\n")
 
 
-def get_event_logger(path: Path, *, run_id: str, collector_id: str | None = None) -> FileEventLogger:
+def get_event_logger(
+        path: Path, *, run_id: str, collector_id: str | None = None
+) -> FileEventLogger:
     """Return the process-local singleton for one canonical engine or collector channel."""
     identity = (path.resolve(), run_id, collector_id)
     with _LOGGER_LOCK:
@@ -249,8 +345,13 @@ def timed(
             try:
                 value = function(*args, **kwargs)
             except Exception as error:
-                logger.event("error", "function_failed", function=function.__qualname__,
-                             duration_seconds=round(perf_counter() - started, 6), error_type=type(error).__name__)
+                logger.event(
+                    "error",
+                    "function_failed",
+                    function=function.__qualname__,
+                    duration_seconds=round(perf_counter() - started, 6),
+                    error_type=type(error).__name__,
+                )
                 raise
             logger.event(level, "function_finished", function=function.__qualname__,
                          duration_seconds=round(perf_counter() - started, 6))
@@ -281,8 +382,11 @@ def deprecated(
 
         def wrapped(*args: Parameters.args, **kwargs: Parameters.kwargs) -> Result:
             """Emit the configured warning and then invoke the deprecated callable."""
-            fields: dict[str, str] = {"function": function.__qualname__, "removal_version": removal_version,
-                                      "reason": reason}
+            fields: dict[str, str] = {
+                "function": function.__qualname__,
+                "removal_version": removal_version,
+                "reason": reason,
+            }
             if include_stack:
                 fields["stack"] = "".join(traceback.format_stack(limit=8))
             logger.event("warning", "function_deprecated", **fields)

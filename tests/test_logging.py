@@ -77,7 +77,11 @@ class LoggingTests(unittest.TestCase):
             self.assertNotIn("Presentation", contents)
             self.assertNotIn("raw", contents)
             self.assertTrue(all(" | " in line for line in contents.splitlines()))
-            self.assertIn("| EXCEPTION", console.getvalue())
+            self.assertIn("\u00d7 typed event", console.getvalue())
+            self.assertIn("\u256d", console.getvalue())
+            first_row = contents.splitlines()[0]
+            self.assertRegex(first_row, r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \|")
+            self.assertLessEqual(max(map(len, contents.splitlines())), 140)
             with self.assertRaisesRegex(ValueError, "unsupported log level"):
                 logger.event("TRACE", "unsupported")
             with self.assertRaisesRegex(ValueError, "raw log end"):
@@ -155,6 +159,32 @@ class LoggingTests(unittest.TestCase):
                 with self.subTest(logging=invalid_logging), self.assertRaises(PlanError):
                     load_config(root, config_path)
 
+    def test_application_logging_wraps_console_rows_and_falls_back_to_ascii(self) -> None:
+        """Compact console records stay aligned on terminals without Unicode support."""
+
+        class AsciiTerminalBuffer(io.StringIO):
+            encoding = "ascii"
+
+            def isatty(self) -> bool:
+                return False
+
+        with tempfile.TemporaryDirectory() as temporary:
+            console = AsciiTerminalBuffer()
+            logger = ApplicationLogger(
+                Path(temporary) / "Logicytics.log",
+                LoggingSettings(file_enabled=False, color_enabled=False),
+                console=console,
+            )
+            logger.event("INFO", "a long message " * 12)
+            logger.box("Summary", ("finished",))
+
+            rows = console.getvalue().splitlines()
+            self.assertTrue(rows[0].startswith("  * "))
+            self.assertTrue(rows[1].startswith("    "))
+            self.assertTrue(any(row.startswith("+") for row in rows))
+            self.assertNotIn("\u25cf", console.getvalue())
+            self.assertNotIn("\u256d", console.getvalue())
+
     def test_deprecation_decorator_logs_removal_context(self) -> None:
         """Deprecated functions must preserve behavior while reporting removal context."""
         events: list[tuple[str, str, dict[str, Any]]] = []
@@ -206,7 +236,11 @@ class LoggingTests(unittest.TestCase):
         """Structured diagnostics must preserve useful fields without exposing secrets."""
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "events.jsonl"
-            logger = FileEventLogger(path, run_id="test-run", collector_id="core.system.private_keys")
+            logger = FileEventLogger(
+                path,
+                run_id="test-run",
+                collector_id="core.system.private_keys",
+            )
             logger.event(
                 "INFO",
                 "Authorization: Bearer bearer-value password=message-value",
@@ -231,7 +265,12 @@ class LoggingTests(unittest.TestCase):
             logger = FileEventLogger(path, run_id="concurrent-run", collector_id="core.system.test")
 
             def write_event(index: int) -> None:
-                logger.event("info", "collector_progress", sequence=index, password=f"secret-{index}")
+                logger.event(
+                    "info",
+                    "collector_progress",
+                    sequence=index,
+                    password=f"secret-{index}",
+                )
 
             with ThreadPoolExecutor(max_workers=12) as executor:
                 list(executor.map(write_event, range(120)))

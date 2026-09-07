@@ -29,20 +29,20 @@ The installer is the only Logicytics command designed to run outside a virtual e
 
 ```powershell
 python -m logicytics.cli.installer
-.\.venv\Scripts\python.exe -m logicytics preflight
+python -m logicytics preflight
 ```
 
 When preflight is clean, plan before collecting:
 
 ```powershell
-.\.venv\Scripts\python.exe -m logicytics plan --profile standard
-.\.venv\Scripts\python.exe -m logicytics run --profile standard --acknowledge-authorization
+python -m logicytics plan --profile standard
+python -m logicytics run --profile standard --acknowledge-authorization
 ```
 
 Use the bundled runner for the complete dynamically discovered test suite:
 
 ```powershell
-.\.venv\Scripts\python.exe -m logicytics.cli.tests
+python -m logicytics.cli.tests
 ```
 
 ## What to expect
