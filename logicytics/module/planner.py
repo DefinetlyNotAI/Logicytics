@@ -152,19 +152,30 @@ def build_plan(report: PreflightReport, request: RunRequest) -> RunPlan:
             if dependency_id not in selected:
                 selected[dependency_id] = dependency
                 pending_dependencies.append(dependency_id)
-    for candidate in selected.values():
+    policy_errors: list[str] = []
+    for candidate in sorted(
+            selected.values(),
+            key=lambda item: item.metadata.id if item.metadata else "",
+    ):
         assert candidate.metadata is not None
         if request.profile == "offline":
             prohibited = set(candidate.metadata.capabilities).intersection(_OFFLINE_PROHIBITED_CAPABILITIES)
             if prohibited:
                 names = ", ".join(sorted(capability.value for capability in prohibited))
-                raise PlanError(f"offline profile prohibits network-capable collector {candidate.metadata.id}: {names}")
+                policy_errors.append(
+                    f"{candidate.metadata.id}: offline profile prohibits network-capable collector: {names}"
+                )
         if sys.platform not in candidate.metadata.supported_platforms:
-            raise PlanError(f"{candidate.metadata.id} does not support {sys.platform}")
+            policy_errors.append(f"{candidate.metadata.id}: does not support {sys.platform}")
         missing_capabilities = set(candidate.metadata.capabilities) - set(request.approved_capabilities)
         if missing_capabilities:
             required = ", ".join(sorted(capability.value for capability in missing_capabilities))
-            raise PlanError(f"{candidate.metadata.id} requires unapproved capabilities: {required}")
+            policy_errors.append(
+                f"{candidate.metadata.id}: requires unapproved capabilities: {required}"
+            )
+    if policy_errors:
+        details = "\n".join(f"- {error}" for error in policy_errors)
+        raise PlanError(f"selected collector policy validation failed:\n{details}")
     elevated_collectors: list[str] = []
 
     for candidate in selected.values():

@@ -77,7 +77,8 @@ class LoggingTests(unittest.TestCase):
             self.assertNotIn("Presentation", contents)
             self.assertNotIn("raw", contents)
             self.assertTrue(all(" | " in line for line in contents.splitlines()))
-            self.assertIn("\u00d7 typed event", console.getvalue())
+            self.assertIn("\033[91m\033[1m  \u00d7 ", console.getvalue())
+            self.assertIn("typed event", console.getvalue())
             self.assertIn("\u256d", console.getvalue())
             first_row = contents.splitlines()[0]
             self.assertRegex(first_row, r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \|")
@@ -184,6 +185,33 @@ class LoggingTests(unittest.TestCase):
             self.assertTrue(any(row.startswith("+") for row in rows))
             self.assertNotIn("\u25cf", console.getvalue())
             self.assertNotIn("\u256d", console.getvalue())
+
+    def test_application_logging_colors_info_text_white_and_debug_text_gray(self) -> None:
+        """Status markers retain their severity color while message text stays readable."""
+
+        class TerminalBuffer(io.StringIO):
+            def isatty(self) -> bool:
+                return True
+
+        with tempfile.TemporaryDirectory() as temporary:
+            console = TerminalBuffer()
+            logger = ApplicationLogger(
+                Path(temporary) / "Logicytics.log",
+                LoggingSettings(level="DEBUG", file_enabled=False, color_enabled=True),
+                console=console,
+            )
+            logger.event("INFO", "info message")
+            logger.event("DEBUG", "debug message")
+
+            output = console.getvalue()
+            self.assertIn(
+                "\033[96m\033[1m  \u25cf \033[0m\033[97m\033[1minfo message",
+                output,
+            )
+            self.assertIn(
+                "\033[90m\033[1m  \u00b7 \033[0m\033[90m\033[1mdebug message",
+                output,
+            )
 
     def test_deprecation_decorator_logs_removal_context(self) -> None:
         """Deprecated functions must preserve behavior while reporting removal context."""

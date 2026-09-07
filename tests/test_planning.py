@@ -232,6 +232,56 @@ class PlanningTests(unittest.TestCase):
                     RunRequest(profile="offline", include=(collector_id,), approved_capabilities=(Capability.NETWORK,)),
                 )
 
+    def test_policy_error_reports_every_selected_collector(self) -> None:
+        """Planning reports all selected capability failures in one deterministic result."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+
+            for filename, capability in (
+                    ("a_subprocess", "Capability.SUBPROCESS"),
+                    ("b_network", "Capability.NETWORK"),
+                    ("c_subprocess", "Capability.SUBPROCESS"),
+            ):
+                source = delayed_collector_source(filename, 0.0).replace(
+                    "from logicytics import CollectorMetadata",
+                    "from logicytics import Capability, CollectorMetadata",
+                ).replace(
+                    '            supported_platforms=("win32",),',
+                    '            supported_platforms=("win32",),\n'
+                    f"            capabilities=({capability},),\n"
+                    + (
+                        "            network_access=NetworkAccess.LOCAL,\n"
+                        if capability == "Capability.NETWORK"
+                        else ""
+                    ),
+                )
+                (core_directory / f"{filename}.py").write_text(source, encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                    PlanError,
+                    "selected collector policy validation failed",
+            ) as rejected:
+                build_plan(preflight(root), RunRequest())
+
+            message = str(rejected.exception)
+            self.assertLess(
+                message.index("core.system.a_subprocess"),
+                message.index("core.system.b_network"),
+            )
+            self.assertLess(
+                message.index("core.system.b_network"),
+                message.index("core.system.c_subprocess"),
+            )
+            for collector_id in (
+                    "core.system.a_subprocess",
+                    "core.system.b_network",
+                    "core.system.c_subprocess",
+            ):
+                self.assertIn(collector_id, message)
+
     def test_authorization_error_summarizes_categories_and_sensitive_outputs(self) -> None:
         """Collection consent must explain requested evidence before creating a workspace."""
         with tempfile.TemporaryDirectory() as temporary:

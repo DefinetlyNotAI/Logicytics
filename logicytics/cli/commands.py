@@ -766,9 +766,22 @@ def main(argv: list[str] | None = None) -> int:
 
             return 0
 
+        application_logger.event(
+            "INFO",
+            "preflight_started",
+            source="logicytics.cli",
+            configuration_hash=configuration.fingerprint(),
+        )
         report = preflight(
             root,
             configuration_hash=configuration.fingerprint(),
+        )
+        application_logger.event(
+            "INFO",
+            "preflight_finished",
+            source="logicytics.cli",
+            valid_collectors=len(report.valid),
+            invalid_collectors=len(report.invalid),
         )
 
         if arguments.command == "preflight":
@@ -934,12 +947,29 @@ def main(argv: list[str] | None = None) -> int:
                 arguments,
             )
 
+        request = cli_methods.request(
+            arguments,
+            configuration.runtime.default_max_workers,
+        )
+        application_logger.event(
+            "INFO",
+            "plan_requested",
+            source="logicytics.cli",
+            profile=request.profile,
+            include_count=len(request.include),
+            exclude_count=len(request.exclude),
+            approved_capabilities=len(request.approved_capabilities),
+        )
         plan = build_plan(
             report,
-            cli_methods.request(
-                arguments,
-                configuration.runtime.default_max_workers,
-            ),
+            request,
+        )
+        application_logger.event(
+            "INFO",
+            "plan_created",
+            source="logicytics.cli",
+            collectors=len(plan.collectors),
+            fingerprint=plan.fingerprint,
         )
 
         if arguments.command == "plan":
@@ -950,6 +980,12 @@ def main(argv: list[str] | None = None) -> int:
                     for candidate in plan.collectors
                     if candidate.metadata is not None
                 ) or ("No collectors were selected.",),
+            )
+            application_logger.event(
+                "INFO",
+                "plan_rendered",
+                source="logicytics.cli",
+                collectors=len(plan.collectors),
             )
 
             return 0

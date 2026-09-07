@@ -30,13 +30,13 @@ _LEVEL_ORDER = {
     "CRITICAL": 50,
 }
 _LEVEL_PRESENTATION = {
-    "DEBUG": ("\u00b7", "\033[90m"),
-    "INTERNAL": ("\u00b7", "\033[95m"),
-    "INFO": ("\u25cf", "\033[96m"),
-    "WARNING": ("!", "\033[93m"),
-    "ERROR": ("\u00d7", "\033[91m"),
-    "EXCEPTION": ("\u00d7", "\033[91m"),
-    "CRITICAL": ("\u00d7", "\033[91m"),
+    "DEBUG": ("\u00b7", "\033[90m", "\033[90m"),
+    "INTERNAL": ("\u00b7", "\033[95m", "\033[95m"),
+    "INFO": ("\u25cf", "\033[96m", "\033[97m"),
+    "WARNING": ("!", "\033[93m", "\033[93m"),
+    "ERROR": ("\u00d7", "\033[91m", "\033[91m"),
+    "EXCEPTION": ("\u00d7", "\033[91m", "\033[91m"),
+    "CRITICAL": ("\u00d7", "\033[91m", "\033[91m"),
 }
 _RESET = "\033[0m"
 _BOLD = "\033[1m"
@@ -187,12 +187,21 @@ class ApplicationLogger(EventLogger):
                     stream.write("\n".join(rows) + "\n")
                 self._truncate_file()
             if self.settings.console_enabled:
-                marker, color = _LEVEL_PRESENTATION[normalized]
+                marker, marker_color, text_color = _LEVEL_PRESENTATION[normalized]
                 if not self._supports_unicode():
                     marker = {"\u25cf": "*", "\u00d7": "X", "\u00b7": "."}.get(marker, marker)
                 console_rows = self._console_rows(marker, rendered_message)
                 if self.settings.color_enabled and self.console.isatty():
-                    self.console.write(f"{color}{_BOLD}{chr(10).join(console_rows)}{_RESET}\n")
+                    marker_prefix = f"  {marker} "
+                    colored_rows = (
+                        f"{marker_color}{_BOLD}{marker_prefix}{_RESET}"
+                        f"{text_color}{_BOLD}{console_rows[0][len(marker_prefix):]}"
+                    )
+                    if len(console_rows) > 1:
+                        colored_rows += "\n" + "\n".join(
+                            f"{text_color}{_BOLD}{row}" for row in console_rows[1:]
+                        )
+                    self.console.write(f"{colored_rows}{_RESET}\n")
                 else:
                     self.console.write("\n".join(console_rows) + "\n")
                 self.console.flush()
