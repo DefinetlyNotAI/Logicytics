@@ -63,6 +63,7 @@ class LoggingTests(unittest.TestCase):
             logger.dispatch(("WARNING: parsed warning", "plain batch row"))
             logger.raw("raw access_token=hidden")
             logger.separator()
+            logger.box("Presentation", ("non-log output stays out of the event file",))
             for index in range(40):
                 logger.event("INFO", "bounded row " + str(index) + " " + "x" * 80)
 
@@ -72,6 +73,10 @@ class LoggingTests(unittest.TestCase):
             self.assertLessEqual(path.stat().st_size, settings.maximum_bytes)
             self.assertFalse(old.exists())
             self.assertIn("\033[", console.getvalue())
+            self.assertIn("Presentation", console.getvalue())
+            self.assertNotIn("Presentation", contents)
+            self.assertNotIn("raw", contents)
+            self.assertTrue(all(" | " in line for line in contents.splitlines()))
             self.assertIn("| EXCEPTION", console.getvalue())
             with self.assertRaisesRegex(ValueError, "unsupported log level"):
                 logger.event("TRACE", "unsupported")

@@ -193,22 +193,23 @@ class CliTests(unittest.TestCase):
             self.assertEqual(321, payload["launched_process_id"])
             launch.assert_called_once_with(root, "debug")
 
+            error_logger = MagicMock()
             with patch.object(
                     CLI,
                     CLI.project_root.__name__,
                     return_value=root,
             ), patch(
-                "sys.stdout",
-                new_callable=io.StringIO,
-            ) as invalid_output:
+                "logicytics.cli.commands.get_application_logger",
+                return_value=error_logger,
+            ):
                 self.assertEqual(
                     2,
                     main(["update", "--new-window"]),
                 )
 
-            self.assertIn(
-                "must be provided together",
-                invalid_output.getvalue(),
+            error_logger.box.assert_called_once_with(
+                "Command error",
+                ("--new-window and --launch-action must be provided together",),
             )
 
     def test_new_window_launcher_uses_current_interpreter_without_a_shell(

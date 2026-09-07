@@ -26,7 +26,11 @@ _APPLICATION_IMPORTS = {
     "run_collection", "validation_worker",
 }
 _CACHE_SCHEMA_VERSION = 2
-_COLLECTOR_SERVICE_MODULES = {"logicytics.contracts", "logicytics.platform_adapters"}
+_COLLECTOR_SERVICE_MODULES = {
+    "logicytics.contracts",
+    "logicytics.global.ctypes_collector",
+    "logicytics.platform_adapters",
+}
 
 
 @dataclass(frozen=True, slots=True)

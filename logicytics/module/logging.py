@@ -36,6 +36,7 @@ _LEVEL_COLORS = {
     "EXCEPTION": "\033[91m",
     "CRITICAL": "\033[97;41m",
 }
+_BOX_COLOR = "\033[90m"
 _LOGGER_LOCK = RLock()
 _APPLICATION_LOGGERS: dict[Path, "ApplicationLogger"] = {}
 _EVENT_LOGGERS: dict[tuple[Path, str, str | None], "FileEventLogger"] = {}
@@ -81,7 +82,10 @@ class ApplicationLogger(EventLogger):
                 retained = stream.read()
             newline = retained.find(b"\n")
             retained = retained[newline + 1:] if newline >= 0 else retained
-            self.path.write_bytes(b"[log truncated to configured maximum]\n" + retained)
+            marker = "\n".join(
+                self._rows("WARNING", "logicytics.logging", "log truncated to configured maximum")
+            ).encode("utf-8") + b"\n"
+            self.path.write_bytes(marker + retained)
 
     @staticmethod
     def _rows(level: str, source: str, message: str) -> tuple[str, ...]:
@@ -123,33 +127,44 @@ class ApplicationLogger(EventLogger):
                 self.console.flush()
 
     def raw(self, message: str, *, end: str = "\n") -> None:
-        """Write redacted raw text while retaining configured sink ownership."""
+        """Write redacted console-only presentation that never pollutes the event log."""
         if end not in {"", "\n"}:
             raise ValueError("raw log end must be empty or a newline")
         safe = redact_text(message)
         with self._lock:
-            if self.settings.file_enabled:
-                with self.path.open("a", encoding="utf-8") as stream:
-                    stream.write(safe + end)
-                self._truncate_file()
             if self.settings.console_enabled:
                 self.console.write(safe + end)
                 self.console.flush()
 
     def separator(self) -> None:
-        """Write one blank line through the raw logging path."""
+        """Write one presentation-only blank line to the configured console."""
         self.raw("")
 
     def box(self, title: str, lines: Iterable[str]) -> None:
-        """Render non-log command output in a restrained grey ASCII panel."""
-        content = tuple(redact_text(line) for line in lines)
-        width = min(100, max([len(title) + 4, *(len(line) + 2 for line in content)]))
+        """Render non-log command output in a wrapped, restrained grey ASCII panel."""
+        content: list[str] = []
+        for line in lines:
+            safe = redact_text(line)
+            wrapped = textwrap.wrap(
+                safe,
+                width=96,
+                break_long_words=False,
+                break_on_hyphens=False,
+            ) or [""]
+            for row in wrapped:
+                content.extend(row[index:index + 96] for index in range(0, len(row), 96))
+        width = max(len(title) + 4, *(len(line) + 2 for line in content), 4)
         border = "+" + "-" * width + "+"
         rows = [border, f"| {title[:width - 2]:<{width - 2}} |", border]
-        rows.extend(f"| {line[:width - 2]:<{width - 2}} |" for line in content)
+        rows.extend(f"| {line:<{width - 2}} |" for line in content)
         rows.append(border)
-        for row in rows:
-            self.raw(row)
+        with self._lock:
+            if self.settings.console_enabled:
+                if self.settings.color_enabled and self.console.isatty():
+                    self.console.write(f"{_BOX_COLOR}{chr(10).join(rows)}\033[0m\n")
+                else:
+                    self.console.write("\n".join(rows) + "\n")
+                self.console.flush()
 
     def dispatch(self, messages: Iterable[str]) -> None:
         """Parse and dispatch a batch of optional `LEVEL: message` rows."""

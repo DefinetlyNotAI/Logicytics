@@ -17,6 +17,8 @@ The root fields are `schema_version`, `runtime`, `interaction`, `maintenance`, `
 
 `runtime.output_root` and `maintenance.local_manifest_path` must stay inside the project when relative. Worker, output, log, and retention values are bounded by the parser. Remote manifests require a matching HTTPS URL and lowercase SHA-256 digest. Sysinternals is enabled by default; set `maintenance.sysinternals_enabled: false` to disable discovery, download, and extraction.
 
+Application events use the same structured data for both sinks. File rows follow `TIME | SEVERITY | CODE SOURCE | MESSAGE`; console-only command results are rendered as grey ASCII boxes and do not pollute the application event log. `logging.console_enabled`, `logging.color_enabled`, and `logging.file_enabled` control those sinks independently.
+
 ## Collector settings
 
 The `collectors` mapping is keyed by a validated collector ID. Shipped collectors reject settings they do not declare. Extension IDs may define their own settings. The shipped configurable fields are:

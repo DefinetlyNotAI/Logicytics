@@ -31,6 +31,25 @@ from tests.fixtures.collectors import COLLECTOR, plugin_collector_source, delaye
 class PreflightTests(unittest.TestCase):
     """Static/runtime preflight validation and quarantine behavior."""
 
+    def test_preflight_allows_global_ctypes_collector_infrastructure(self) -> None:
+        """Collectors may use the public ctypes export without accessing the application layer."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                COLLECTOR.replace(
+                    "from pathlib import Path\n",
+                    "from pathlib import Path\n"
+                    "from logicytics import ctypes_collector\n",
+                ),
+                encoding="utf-8",
+            )
+            report = preflight(root)
+            self.assertEqual(1, len(report.valid), report.invalid)
+            self.assertEqual((), report.invalid)
+
     def test_plugin_preflight_requires_explicit_security_cost_and_output_metadata(self) -> None:
         """A plugin cannot silently inherit fields that affect consent or scheduling."""
         with tempfile.TemporaryDirectory() as temporary:

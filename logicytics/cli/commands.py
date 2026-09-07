@@ -942,12 +942,13 @@ def main(argv: list[str] | None = None) -> int:
         )
 
         if arguments.command == "plan":
-            print(
-                "\n".join(
+            application_logger.box(
+                "Collection plan",
+                tuple(
                     candidate.metadata.id
                     for candidate in plan.collectors
                     if candidate.metadata is not None
-                )
+                ) or ("No collectors were selected.",),
             )
 
             return 0
@@ -957,7 +958,7 @@ def main(argv: list[str] | None = None) -> int:
             configuration,
         ).run(plan)
 
-        print("Collectors:")
+        result_lines = ["Collectors:"]
 
         for record in outcome.manifest.collectors:
             duration = (
@@ -966,7 +967,7 @@ def main(argv: list[str] | None = None) -> int:
                 else f"{record.duration_seconds:.3f}"
             )
 
-            print(
+            result_lines.append(
                 f"- {record.id} "
                 f"status={record.status} "
                 f"duration_seconds={duration} "
@@ -974,7 +975,7 @@ def main(argv: list[str] | None = None) -> int:
             )
 
             if record.failure is not None:
-                print(
+                result_lines.append(
                     f"  failure "
                     f"operation={record.failure['operation']} "
                     f"retry_safe="
@@ -992,7 +993,7 @@ def main(argv: list[str] | None = None) -> int:
                     / "performance.json"
             )
 
-            print(
+            result_lines.append(
                 f"Performance: {performance_path}"
             )
 
@@ -1000,7 +1001,7 @@ def main(argv: list[str] | None = None) -> int:
                 outcome.manifest.package
                 and "path" in outcome.manifest.package
         ):
-            print(
+            result_lines.extend((
                 f"Package: "
                 f"{outcome.manifest.package['path']}\n"
                 f"SHA-256: "
@@ -1008,12 +1009,13 @@ def main(argv: list[str] | None = None) -> int:
                     'sha256_path',
                     'unavailable',
                 )}"
-            )
+            ).splitlines())
 
-        print(
+        result_lines.extend((
             f"Run: {outcome.manifest_path}\n"
             f"Status: {outcome.manifest.status.value}"
-        )
+        ).splitlines())
+        application_logger.box("Collection result", result_lines)
 
         exit_code = (
             0
@@ -1043,7 +1045,10 @@ def main(argv: list[str] | None = None) -> int:
                     error_type=type(error).__name__,
                 )
 
-        print(f"Error: {error}")
+        if application_logger is not None:
+            application_logger.box("Command error", (str(error),))
+        else:
+            print(f"Error: {error}")
         return 2
 
 

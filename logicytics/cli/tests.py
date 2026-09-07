@@ -3,9 +3,20 @@
 from __future__ import annotations
 
 import argparse
+import io
 import sys
 import unittest
 from pathlib import Path
+
+from logicytics.module.configuration import load_config
+from logicytics.module.errors import PlanError
+from logicytics.module.logging import get_application_logger
+from logicytics.module.output_layout import ensure_output_layout
+
+
+def project_root() -> Path:
+    """Return the repository root containing the dynamically discovered test package."""
+    return Path(__file__).resolve().parents[2]
 
 
 def _require_virtual_environment() -> None:
@@ -24,14 +35,32 @@ def main(argv: list[str] | None = None) -> int:
     except RuntimeError as error:
         print(f"ERROR | {error}", file=sys.stderr)
         return 2
-    root = Path(__file__).resolve().parents[2]
-    result = unittest.TextTestRunner(verbosity=arguments.verbosity).run(
-        unittest.defaultTestLoader.discover(str(root / "tests"), top_level_dir=str(root))
+    root = project_root()
+    try:
+        configuration = load_config(root)
+        layout = ensure_output_layout(configuration.runtime.output_root)
+    except (OSError, PlanError) as error:
+        print(f"ERROR | unable to prepare test presentation: {error}", file=sys.stderr)
+        return 2
+    logger = get_application_logger(layout.application_log, configuration.logging)
+    logger.event("INFO", "test_suite_started", source="logicytics.cli.tests")
+    transcript = io.StringIO()
+    suite = unittest.defaultTestLoader.discover(str(root / "tests"), top_level_dir=str(root))
+    result = unittest.TextTestRunner(stream=transcript, verbosity=arguments.verbosity).run(suite)
+    summary = (
+        f"Tests: {result.testsRun}",
+        f"Failures: {len(result.failures)}",
+        f"Errors: {len(result.errors)}",
+        f"Skipped: {len(result.skipped)}",
+        f"Result: {'passed' if result.wasSuccessful() else 'failed'}",
     )
-    print(
-        f"Result: failures={len(result.failures)} errors={len(result.errors)} skipped={len(result.skipped)} "
-        f"tests={result.testsRun}"
-    )
+    logger.box("Test suite", summary)
+    if not result.wasSuccessful():
+        details = tuple(line for line in transcript.getvalue().splitlines() if line.strip())
+        logger.box("Test failures", details or ("The test runner did not provide failure details.",))
+        logger.event("ERROR", "test_suite_failed", source="logicytics.cli.tests")
+    else:
+        logger.event("INFO", "test_suite_finished", source="logicytics.cli.tests")
     return 0 if result.wasSuccessful() else 1
 
 

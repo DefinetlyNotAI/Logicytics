@@ -339,7 +339,7 @@ class PlanningTests(unittest.TestCase):
                     "project_root",
                     return_value=root,
             ), patch(
-                "sys.stdout",
+                "sys.stderr",
                 output,
             ):
                 self.assertEqual(

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 import json
 import os
 import subprocess
@@ -10,7 +9,7 @@ import unittest
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 from typing import Iterable
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from logicytics import (
     load_configuration,
@@ -270,15 +269,15 @@ class PublicApiTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            output = io.StringIO()
+            console_logger = MagicMock()
 
             with patch.object(
                     CLI,
                     "project_root",
                     return_value=root,
             ), patch(
-                "sys.stdout",
-                output,
+                "logicytics.cli.commands.get_application_logger",
+                return_value=console_logger,
             ), patch(
                 "builtins.input",
                 return_value="",
@@ -292,16 +291,19 @@ class PublicApiTests(unittest.TestCase):
                     ]
                 )
 
-            self.assertEqual(0, exit_code, output.getvalue())
+            self.assertEqual(0, exit_code)
             final_prompt.assert_called_once_with("Press Enter to exit...")
-            self.assertIn("Collectors:", output.getvalue())
+            console_logger.box.assert_called_once()
+            title, rendered = console_logger.box.call_args.args
+            self.assertEqual("Collection result", title)
+            self.assertIn("Collectors:", rendered)
             self.assertIn(
                 "core.system.system_info status=succeeded duration_seconds=",
-                output.getvalue(),
+                "\n".join(rendered),
             )
             self.assertIn(
                 "summary=test artifact created",
-                output.getvalue(),
+                "\n".join(rendered),
             )
 
     def test_public_run_queries_reject_traversal_forged_identity_and_manifest_links(self) -> None:
