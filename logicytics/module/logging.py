@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
 import json
+import math
 import re
 import shutil
 import sys
@@ -41,17 +43,27 @@ _LEVEL_PRESENTATION = {
 _RESET = "\033[0m"
 _BOLD = "\033[1m"
 _FILE_LOG_LINE_WIDTH = 140
-_TIME_WIDTH = 19
+_TIME_WIDTH = 23
 _SEVERITY_WIDTH = 9
 _SOURCE_WIDTH = 28
 _DEFAULT_CONSOLE_WIDTH = 82
 _MIN_CONSOLE_WIDTH = 60
 _RIGHT_EDGE_MARGIN = 4
-_RECORD_START = re.compile(rb"(?m)^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \|")
+_RECORD_START = re.compile(rb"(?m)^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{3})? \|")
 _EVENT_NAME = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)+$")
 _LOGGER_LOCK = RLock()
 _APPLICATION_LOGGERS: dict[Path, "ApplicationLogger"] = {}
 _EVENT_LOGGERS: dict[tuple[Path, str, str | None], "FileEventLogger"] = {}
+
+
+def _normalize_level(level: str) -> str:
+    """Normalize one severity spelling and reject values no sink can interpret."""
+    if not isinstance(level, str):
+        raise ValueError(f"unsupported log level: {level!r}")
+    normalized = level.strip().upper()
+    if normalized not in _LEVEL_ORDER:
+        raise ValueError(f"unsupported log level: {level}")
+    return normalized
 
 
 class ApplicationLogger(EventLogger):
@@ -100,7 +112,7 @@ class ApplicationLogger(EventLogger):
     @staticmethod
     def _rows(level: str, source: str, message: str) -> tuple[str, ...]:
         """Format AIBrain-style fixed columns and aligned wrapped rows."""
-        timestamp = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         source_column = source.removeprefix("logicytics.")
         if len(source_column) > _SOURCE_WIDTH:
             source_column = source_column[:_SOURCE_WIDTH - 3] + "..."
@@ -173,6 +185,29 @@ class ApplicationLogger(EventLogger):
         return message
 
     @classmethod
+    def _message_lines(cls, message: str) -> tuple[str, ...]:
+        """Render ordinary or JSON-looking messages as readable presentation lines."""
+        safe_message = redact_text(message)
+        stripped = safe_message.strip()
+        if stripped.startswith(("{", "[")) and stripped.endswith(("}", "]")):
+            try:
+                parsed = json.loads(stripped)
+            except json.JSONDecodeError:
+                parsed = None
+            if isinstance(parsed, Mapping):
+                rows = ["Structured details"]
+                rows.extend(cls._console_fields(parsed))
+                return tuple(rows)
+            if isinstance(parsed, list):
+                rows = ["Structured details"]
+                rows.extend(
+                    f"Item {index}: {cls._console_value(item)}"
+                    for index, item in enumerate(parsed, start=1)
+                )
+                return tuple(rows)
+        return (cls._console_message(safe_message),)
+
+    @classmethod
     def _console_fields(cls, fields: Mapping[str, object]) -> tuple[str, ...]:
         """Render structured fields as readable labels instead of JSON fragments."""
         rows: list[str] = []
@@ -197,30 +232,45 @@ class ApplicationLogger(EventLogger):
                 f"{str(key).replace('_', ' ')}: {cls._console_value(item)}"
                 for key, item in sorted(value.items(), key=lambda item: str(item[0]))
             )
-        if isinstance(value, (list, tuple, set, frozenset)):
+        if isinstance(value, (set, frozenset)):
+            if not value:
+                return "none"
+            rendered_items = sorted(cls._console_value(item) for item in value)
+            return ", ".join(rendered_items)
+        if isinstance(value, (list, tuple)):
             if not value:
                 return "none"
             return ", ".join(cls._console_value(item) for item in value)
+        if isinstance(value, (bytes, bytearray, memoryview)):
+            return f"<{len(value)} bytes>"
         if isinstance(value, float):
+            if not math.isfinite(value):
+                return "non-finite float"
             return f"{value:.6f}".rstrip("0").rstrip(".")
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.startswith(("{", "[")) and stripped.endswith(("}", "]")):
+                try:
+                    parsed = json.loads(stripped)
+                except json.JSONDecodeError:
+                    parsed = None
+                if parsed is not None:
+                    return cls._console_value(parsed)
         return str(value)
 
     def event(self, level: str, message: str, **fields: int | float | str) -> None:
         """Dispatch one typed, redacted event to configured console and file sinks."""
-        normalized = level.upper()
-        if normalized not in _LEVEL_ORDER:
-            raise ValueError(f"unsupported log level: {level}")
-        if _LEVEL_ORDER[normalized] < _LEVEL_ORDER[self.settings.level]:
+        normalized = _normalize_level(level)
+        minimum_level = _normalize_level(self.settings.level)
+        if _LEVEL_ORDER[normalized] < _LEVEL_ORDER[minimum_level]:
             return
         safe_message = redact_text(message)
         safe_fields = redact_mapping(fields)
         source = str(safe_fields.pop("source", "logicytics.module"))
-        suffix = "" if not safe_fields else " " + " ".join(
-            f"{key}={json.dumps(value, ensure_ascii=True, sort_keys=True)}"
-            for key, value in sorted(safe_fields.items())
-        )
-        rendered_message = safe_message + suffix
-        console_lines = [self._console_message(safe_message)]
+        file_lines = list(self._message_lines(safe_message))
+        file_lines.extend(self._console_fields(safe_fields))
+        rendered_message = "\n".join(file_lines)
+        console_lines = list(self._message_lines(safe_message))
         console_lines.extend(self._console_fields(safe_fields))
         console_message = "\n".join(console_lines)
         rows = self._rows(normalized, source, rendered_message)
@@ -271,7 +321,7 @@ class ApplicationLogger(EventLogger):
             lines: Iterable[str],
     ) -> None:
         """Render a plain, indented console section for startup and fallback paths."""
-        rows = [redact_text(title)]
+        rows = list(cls._message_lines(title))
         for line in lines:
             for raw_row in line.splitlines() or [""]:
                 safe_row = redact_text(raw_row)
@@ -280,14 +330,17 @@ class ApplicationLogger(EventLogger):
                 prefix = f"  {indentation}"
                 continuation_prefix = f"    {indentation}"
                 available = max(cls._console_width() - len(continuation_prefix), 1)
-                wrapped = textwrap.wrap(
-                    remaining,
-                    width=available,
-                    break_long_words=True,
-                    break_on_hyphens=False,
-                ) or [""]
-                rows.append(prefix + wrapped[0])
-                rows.extend(f"{continuation_prefix}{part}" for part in wrapped[1:])
+                presentation_rows = cls._message_lines(remaining)
+                for presentation_index, presentation_row in enumerate(presentation_rows):
+                    wrapped = textwrap.wrap(
+                        presentation_row,
+                        width=available,
+                        break_long_words=True,
+                        break_on_hyphens=False,
+                    ) or [""]
+                    row_prefix = prefix if presentation_index == 0 else continuation_prefix
+                    rows.append(row_prefix + wrapped[0])
+                    rows.extend(f"{continuation_prefix}{part}" for part in wrapped[1:])
         console.write("\n".join(rows) + "\n")
         console.flush()
 
@@ -306,6 +359,22 @@ class ApplicationLogger(EventLogger):
                 self.event(normalized, text.strip())
             else:
                 self.event("INFO", message.strip())
+
+
+class HumanArgumentParser(argparse.ArgumentParser):
+    """Present argparse failures through the same readable CLI section layout."""
+
+    def error(self, message: str) -> None:
+        """Render one concise argument error and its usage without raw argparse output."""
+        usage = self.format_usage().strip()
+        if usage.lower().startswith("usage:"):
+            usage = usage[len("usage:"):].strip()
+        ApplicationLogger.render_section(
+            sys.stderr,
+            "Command-line error",
+            (f"Error: {message}", f"Usage: {usage}"),
+        )
+        raise SystemExit(2)
 
 
 def get_application_logger(
@@ -343,9 +412,10 @@ class FileEventLogger(EventLogger):
 
     def event(self, level: str, message: str, **fields: int | float | str) -> None:
         """Write a timestamped, structured event without relying on global handlers."""
+        normalized = _normalize_level(level)
         payload: dict[str, object] = {
             "at": datetime.now(timezone.utc).isoformat(),
-            "level": level.lower(),
+            "level": normalized.lower(),
             "message": redact_text(message),
             "run_id": self.run_id,
         }

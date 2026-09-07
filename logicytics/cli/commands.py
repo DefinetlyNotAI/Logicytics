@@ -19,7 +19,7 @@ from logicytics.module.discovery import preflight
 from logicytics.module.environment import inspect_environment
 from logicytics.module.errors import LogicyticsError
 from logicytics.module.interaction import load_history, match_flag, record_match, usage_statistics, write_usage_graph
-from logicytics.module.logging import ApplicationLogger, get_application_logger
+from logicytics.module.logging import ApplicationLogger, HumanArgumentParser, get_application_logger
 from logicytics.module.maintenance import (
     build_manifest,
     compare_files,
@@ -307,7 +307,7 @@ class CLI:
     @staticmethod
     def parser() -> argparse.ArgumentParser:
         """Create the complete parser for maintenance, planning, and collection commands."""
-        parser = argparse.ArgumentParser(description="Logicytics v4 run-oriented evidence framework")
+        parser = HumanArgumentParser(description="Logicytics v4 run-oriented evidence framework")
         parser.add_argument(
             "--config",
             type=Path,
@@ -318,7 +318,7 @@ class CLI:
         parser.add_argument("--modes", action="store_true", help="Show the typed execution-mode inclusion matrix.")
         parser.add_argument("--match", metavar="TEXT",
                             help="Suggest the closest documented action for natural-language input.")
-        subcommands = parser.add_subparsers(dest="command")
+        subcommands = parser.add_subparsers(dest="command", parser_class=HumanArgumentParser)
         for command in ("preflight", "debug", "update", "dev", "plan", "run", "collector"):
             subparser = subcommands.add_parser(command, help=f"Run the {command} action.")
             subparser.add_argument(
@@ -626,9 +626,13 @@ class CLI:
 def main(argv: list[str] | None = None) -> int:
     """Run the selected preflight, planning, or supervised execution command."""
     if sys.prefix == sys.base_prefix:
-        sys.stderr.write(
-            "  × Logicytics must run inside a virtual environment\n"
-            "    Run python -m logicytics.cli.installer first.\n"
+        ApplicationLogger.render_section(
+            sys.stderr,
+            "Logicytics startup error",
+            (
+                "Logicytics must run inside a virtual environment.",
+                "Next step: run python -m logicytics.cli.installer first.",
+            ),
         )
         return 2
     cli_parser = cli_methods.parser()

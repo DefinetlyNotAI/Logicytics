@@ -57,3 +57,13 @@ the same retained-with-run rule but has no ZIP or package-hash sidecar.
 Global application, debug, and performance logs live under `output/logs/` and
 follow the logging limits described in the configuration documentation; they are
 not collector outputs and never enter the evidence catalog.
+
+## Logging presentation
+
+The application log is a bounded, human-readable text log. Each row contains a
+local timestamp with milliseconds, severity, source, and message; long messages
+and fields continue on aligned rows. Console output uses the same redaction and
+humanization rules, with colored severity markers and readable indented fields.
+It never emits raw JSON or `key=value` field fragments. Structured run and
+collector event logs are stored separately as JSONL for tooling and remain
+redacted; they are not printed to the console.

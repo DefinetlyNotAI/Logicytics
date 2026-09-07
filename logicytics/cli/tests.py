@@ -10,7 +10,7 @@ from pathlib import Path
 
 from logicytics.module.configuration import load_config
 from logicytics.module.errors import PlanError
-from logicytics.module.logging import ApplicationLogger, get_application_logger
+from logicytics.module.logging import ApplicationLogger, HumanArgumentParser, get_application_logger
 from logicytics.module.output_layout import ensure_output_layout
 
 
@@ -27,7 +27,7 @@ def _require_virtual_environment() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     """Dynamically discover tests and return a CI-appropriate result code."""
-    parser = argparse.ArgumentParser(description="Run all discovered Logicytics tests.")
+    parser = HumanArgumentParser(description="Run all discovered Logicytics tests.")
     parser.add_argument("--verbosity", type=int, choices=(0, 1, 2), default=2)
     arguments = parser.parse_args(argv)
     try:

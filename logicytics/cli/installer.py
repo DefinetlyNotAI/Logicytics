@@ -8,7 +8,7 @@ import venv
 from pathlib import Path
 
 from logicytics.module.configuration import write_default_configuration
-from logicytics.module.logging import ApplicationLogger
+from logicytics.module.logging import ApplicationLogger, HumanArgumentParser
 
 
 def project_root() -> Path:
@@ -18,7 +18,7 @@ def project_root() -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     """Create the local virtual environment and initialize YAML configuration."""
-    parser = argparse.ArgumentParser(description="Prepare a Logicytics installation.")
+    parser = HumanArgumentParser(description="Prepare a Logicytics installation.")
     parser.add_argument("--environment", type=Path, default=Path(".venv"), help="Virtual environment directory.")
     parser.add_argument("--overwrite-config", action="store_true", help="Replace the root YAML template.")
     arguments = parser.parse_args(argv)

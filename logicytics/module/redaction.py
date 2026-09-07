@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Mapping
 from typing import Any
@@ -48,7 +49,17 @@ def redact_text(value: str) -> str:
     """Remove common inline assignments, bearer credentials, and private-key blocks."""
     value = _PRIVATE_KEY_PATTERN.sub(REDACTED, value)
     value = _BEARER_PATTERN.sub(lambda match: f"{match.group(1)}{REDACTED}", value)
-    return _ASSIGNMENT_PATTERN.sub(lambda match: f"{match.group(1)}{REDACTED}", value)
+    value = _ASSIGNMENT_PATTERN.sub(lambda match: f"{match.group(1)}{REDACTED}", value)
+    stripped = value.strip()
+    if stripped.startswith(("{", "[")) and stripped.endswith(("}", "]")):
+        try:
+            parsed = json.loads(stripped)
+        except json.JSONDecodeError:
+            parsed = None
+        if isinstance(parsed, (dict, list)):
+            sanitized = _redact_value(parsed)
+            return json.dumps(sanitized, ensure_ascii=True, sort_keys=True)
+    return value
 
 
 def _redact_value(value: Any) -> Any:

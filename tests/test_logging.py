@@ -81,7 +81,7 @@ class LoggingTests(unittest.TestCase):
             self.assertIn("typed event", console.getvalue())
             self.assertNotIn("\u256d", console.getvalue())
             first_row = contents.splitlines()[0]
-            self.assertRegex(first_row, r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \|")
+            self.assertRegex(first_row, r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{3})? \|")
             self.assertLessEqual(max(map(len, contents.splitlines())), 140)
             with self.assertRaisesRegex(ValueError, "unsupported log level"):
                 logger.event("TRACE", "unsupported")
@@ -185,6 +185,43 @@ class LoggingTests(unittest.TestCase):
             self.assertEqual(["Summary", "  finished"], rows[-2:])
             self.assertNotIn("\u25cf", console.getvalue())
             self.assertNotIn("\u256d", console.getvalue())
+
+    def test_application_logging_humanizes_structured_values_and_lowercase_settings(self) -> None:
+        """Human sinks normalize structured messages, collections, binary values, and levels."""
+        with tempfile.TemporaryDirectory() as temporary:
+            console = io.StringIO()
+            logger = ApplicationLogger(
+                Path(temporary) / "Logicytics.log",
+                LoggingSettings(level="debug", color_enabled=False),
+                console=console,
+            )
+            logger.event(
+                "info",
+                '{"status": "complete", "token": "secret-value"}',
+                capabilities={"network", "subprocess"},
+                payload=b"binary evidence",
+            )
+
+            rendered = console.getvalue()
+            file_contents = (Path(temporary) / "Logicytics.log").read_text(encoding="utf-8")
+            for output in (rendered, file_contents):
+                self.assertIn("Structured details", output)
+                self.assertIn("Status: complete", output)
+                self.assertIn("Capabilities: network, subprocess", output)
+                self.assertIn("Payload: <15 bytes>", output)
+                self.assertNotIn("{\"status\"", output)
+                self.assertNotIn("capabilities=", output)
+                self.assertNotIn("secret-value", output)
+
+    def test_application_logging_rejects_invalid_configured_level(self) -> None:
+        """A direct logger API cannot silently fail because of an invalid level policy."""
+        with tempfile.TemporaryDirectory() as temporary:
+            logger = ApplicationLogger(
+                Path(temporary) / "Logicytics.log",
+                LoggingSettings(level="trace", console_enabled=False),
+            )
+            with self.assertRaisesRegex(ValueError, "unsupported log level"):
+                logger.event("INFO", "event")
 
     def test_application_logging_wraps_long_plain_sections(self) -> None:
         """Human summaries keep long diagnostics readable within the console width."""
@@ -305,6 +342,8 @@ class LoggingTests(unittest.TestCase):
             self.assertEqual("[REDACTED]", event["fields"]["password"])
             self.assertEqual("[REDACTED]", event["fields"]["api_key"])
             self.assertEqual("safe", event["fields"]["ordinary"])
+            with self.assertRaisesRegex(ValueError, "unsupported log level"):
+                logger.event("TRACE", "unsupported")
 
     def test_structured_event_logger_serializes_concurrent_jsonl_events(self) -> None:
         """Concurrent diagnostics stay complete, independently parseable, and redacted."""
