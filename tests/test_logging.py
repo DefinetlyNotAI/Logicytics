@@ -69,9 +69,11 @@ class LoggingTests(unittest.TestCase):
             render_virtual_environment_error(actual, root)
 
             self.assertEqual(expected.getvalue(), actual.getvalue())
-            self.assertIn("+ Logicytics startup error", actual.getvalue())
-            self.assertIn("| ! ", actual.getvalue())
-            self.assertIn("| > ", actual.getvalue())
+            self.assertIn("Logicytics startup error\n", actual.getvalue())
+            self.assertIn("  ! ", actual.getvalue())
+            self.assertIn("  > ", actual.getvalue())
+            self.assertNotIn("+", actual.getvalue())
+            self.assertNotIn("|", actual.getvalue())
 
     def test_application_logging_levels_colors_retention_and_dispatch_are_bounded(self) -> None:
         """The application sink is typed, redacted, reusable, colored, and size bounded."""

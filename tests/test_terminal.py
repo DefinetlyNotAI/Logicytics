@@ -55,9 +55,12 @@ class TerminalLifecycleTests(unittest.TestCase):
         render_banner(console, width=lambda: 101)
 
         rows = console.getvalue().splitlines()
-        self.assertEqual(101, len(rows[0]))
-        self.assertEqual("+", rows[0][0])
-        self.assertEqual("+", rows[0][-1])
+        self.assertEqual("LOGICYTICS", rows[0])
+        self.assertEqual(101, len(rows[1]))
+        self.assertTrue(set(rows[1]) == {"-"})
+        self.assertEqual("Local evidence collection framework", rows[2])
+        self.assertNotIn("+", console.getvalue())
+        self.assertNotIn("|", console.getvalue())
         self.assertTrue(all(ord(character) < 128 for row in rows for character in row))
 
     def test_interactive_lifecycle_clears_once_and_ends_with_a_newline(self) -> None:

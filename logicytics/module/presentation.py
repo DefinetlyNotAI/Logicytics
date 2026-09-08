@@ -46,14 +46,13 @@ def _heading(title: str, *, width: ConsoleWidth = console_width) -> str:
 
 def render_banner(console: TextIO, *, width: ConsoleWidth = terminal_width) -> None:
     """Render a full-width, strictly ASCII startup banner after a real clear."""
-    available = max(width() - 2, _MIN_CONSOLE_WIDTH - 2)
-    title = " LOGICYTICS "
+    available = max(width(), _MIN_CONSOLE_WIDTH)
+    title = "LOGICYTICS"
     subtitle = "Local evidence collection framework"
     rows = (
-        "+" + "-" * available + "+",
-        "|" + title.center(available) + "|",
-        "|" + subtitle.center(available) + "|",
-        "+" + "-" * available + "+",
+        title,
+        "-" * available,
+        subtitle,
         "",
     )
     console.write("\n".join(rows))
@@ -69,11 +68,6 @@ def render_step_heading(
     """Separate a lifecycle phase with a titled ASCII rule and breathing room."""
     console.write(f"{_heading(title, width=width)}\n\n")
     console.flush()
-
-
-def _alert_symbols() -> tuple[str, str, str, str, str, str, str, str]:
-    """Return an unambiguous ASCII alert frame for every terminal."""
-    return ("+", "-", "+", "|", "+", "+", "!", ">")
 
 
 def render_section(
@@ -122,39 +116,23 @@ def render_alert(
     message_lines: MessageLines = _plain_message_lines,
     width: ConsoleWidth = console_width,
 ) -> None:
-    """Render a severity-marked, bordered alert with wrapped actionable details."""
-    (
-        top_left,
-        horizontal,
-        top_right,
-        vertical,
-        bottom_left,
-        bottom_right,
-        error_marker,
-        next_step_marker,
-    ) = _alert_symbols()
-    inner_width = min(max(width(), _MIN_CONSOLE_WIDTH), 88) - 2
+    """Render a severity-marked alert with a clean title and ASCII rule."""
+    available = max(width(), _MIN_CONSOLE_WIDTH)
     safe_title = redact_text(title).strip()
-    heading = f" {safe_title} "[:inner_width]
-    rows = [
-        f"{top_left}{heading}{horizontal * max(inner_width - len(heading), 0)}{top_right}",
-    ]
+    rows = [safe_title, "-" * available, ""]
     for line_index, line in enumerate(lines):
-        marker = error_marker if line_index == 0 else next_step_marker
-        prefix = f" {marker} "
-        continuation_prefix = "   "
+        marker = "!" if line_index == 0 else ">"
+        prefix = f"  {marker} "
+        continuation_prefix = "    "
         for raw_row in line.splitlines() or [""]:
             for presentation_row in message_lines(raw_row.strip()):
                 wrapped = textwrap.wrap(
                     presentation_row,
-                    width=max(inner_width - len(prefix), 1),
+                    width=max(available - len(prefix), 1),
                     break_long_words=True,
                     break_on_hyphens=False,
                 ) or [""]
-                rows.append(f"{vertical}{prefix}{wrapped[0]:<{inner_width - len(prefix)}}{vertical}")
-                rows.extend(
-                    f"{vertical}{continuation_prefix}{row:<{inner_width - len(continuation_prefix)}}{vertical}" for row in wrapped[1:]
-                )
-    rows.append(f"{bottom_left}{horizontal * inner_width}{bottom_right}")
+                rows.append(prefix + wrapped[0])
+                rows.extend(f"{continuation_prefix}{row}" for row in wrapped[1:])
     console.write("\n".join(rows) + "\n")
     console.flush()
