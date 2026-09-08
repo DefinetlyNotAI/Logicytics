@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 from typing import TextIO
 
-from logicytics.module.presentation import render_section
+from logicytics.module.presentation import render_alert
 
 
 _LOCAL_ENVIRONMENT = Path(".venv")
@@ -34,4 +34,4 @@ def virtual_environment_error(root: Path) -> tuple[str, str]:
 
 def render_virtual_environment_error(stream: TextIO, root: Path) -> None:
     """Render the startup guard through the shared logging presentation format."""
-    render_section(stream, "Logicytics startup error", virtual_environment_error(root))
+    render_alert(stream, "Logicytics startup error", virtual_environment_error(root))

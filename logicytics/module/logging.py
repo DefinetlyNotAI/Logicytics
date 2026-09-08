@@ -6,7 +6,6 @@ import argparse
 import json
 import math
 import re
-import shutil
 import sys
 import textwrap
 import traceback
@@ -18,7 +17,11 @@ from typing import Callable, Iterable, Mapping, ParamSpec, TextIO, TypeVar
 
 from logicytics.contracts import EventLogger
 from logicytics.module.configuration import LoggingSettings
-from logicytics.module.presentation import render_section as render_presentation_section
+from logicytics.module.presentation import (
+    console_width as presentation_console_width,
+    render_alert as render_presentation_alert,
+    render_section as render_presentation_section,
+)
 from logicytics.module.redaction import redact_mapping, redact_text
 
 Parameters = ParamSpec("Parameters")
@@ -47,9 +50,6 @@ _FILE_LOG_LINE_WIDTH = 140
 _TIME_WIDTH = 23
 _SEVERITY_WIDTH = 9
 _SOURCE_WIDTH = 28
-_DEFAULT_CONSOLE_WIDTH = 82
-_MIN_CONSOLE_WIDTH = 60
-_RIGHT_EDGE_MARGIN = 4
 _RECORD_START = re.compile(rb"(?m)^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{3})? \|")
 _EVENT_NAME = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)+$")
 _LOGGER_LOCK = RLock()
@@ -144,8 +144,7 @@ class ApplicationLogger(EventLogger):
     @staticmethod
     def _console_width() -> int:
         """Return the AIBrain console width with its safety margin and minimum."""
-        width = shutil.get_terminal_size((_DEFAULT_CONSOLE_WIDTH, 24)).columns
-        return max(width - _RIGHT_EDGE_MARGIN, _MIN_CONSOLE_WIDTH)
+        return presentation_console_width()
 
     def _supports_unicode(self) -> bool:
         """Return whether this console can encode AIBrain's presentation glyphs."""
@@ -323,6 +322,22 @@ class ApplicationLogger(EventLogger):
     ) -> None:
         """Render a plain, indented console section for startup and fallback paths."""
         render_presentation_section(
+            console,
+            title,
+            lines,
+            message_lines=cls._message_lines,
+            width=cls._console_width,
+        )
+
+    @classmethod
+    def render_alert(
+            cls,
+            console: TextIO,
+            title: str,
+            lines: Iterable[str],
+    ) -> None:
+        """Render a bordered startup or error alert using the shared logger presentation."""
+        render_presentation_alert(
             console,
             title,
             lines,

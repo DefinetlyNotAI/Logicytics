@@ -50,8 +50,8 @@ class LoggingTests(unittest.TestCase):
 
         self.assertEqual([], violations)
 
-    def test_virtual_environment_error_uses_the_logging_section_formatter(self) -> None:
-        """Bootstrap errors retain the exact redacted, wrapped logger presentation."""
+    def test_virtual_environment_error_uses_the_logging_alert_formatter(self) -> None:
+        """Bootstrap errors retain the exact redacted, wrapped logger alert presentation."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             activation_script = root / ".venv" / "Scripts" / "Activate.ps1"
@@ -60,7 +60,7 @@ class LoggingTests(unittest.TestCase):
             expected = io.StringIO()
             actual = io.StringIO()
 
-            ApplicationLogger.render_section(
+            ApplicationLogger.render_alert(
                 expected,
                 "Logicytics startup error",
                 virtual_environment_error(root),
@@ -68,6 +68,9 @@ class LoggingTests(unittest.TestCase):
             render_virtual_environment_error(actual, root)
 
             self.assertEqual(expected.getvalue(), actual.getvalue())
+            self.assertIn("╭", actual.getvalue())
+            self.assertIn("│ ×", actual.getvalue())
+            self.assertIn("│ →", actual.getvalue())
 
     def test_application_logging_levels_colors_retention_and_dispatch_are_bounded(self) -> None:
         """The application sink is typed, redacted, reusable, colored, and size bounded."""
