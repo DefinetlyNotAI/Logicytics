@@ -46,7 +46,7 @@ collectors.
 
 The canonical profiles are `minimal`, `standard`, `deep`, and `offline`. The
 canonical modes are `standard`, `balanced`, `quick`, `thorough`, `offline`,
-`extensions`, `non-python`, and `performance`; all historical mode flags remain
+`extensions` and `performance`; supported historical mode flags remain
 validated aliases. `python -m logicytics --modes` shows a human-readable mode
 summary and writes the authoritative machine-readable collector inclusion
 matrix to `output/logs/debug/modes.json`.
@@ -63,10 +63,9 @@ is the complete parser-backed schema reference. Profiles, explicit selections,
 extensions, capabilities, authorization, scheduling, reruns, output policy, and
 power actions remain invocation-only.
 
-Plugins and MODs remain opt-in extension points. Python, PowerShell, batch, and
-executable MOD payloads require sidecars and use the same preflight, planning,
-capability, isolation, artifact, failure, and packaging boundaries as core
-collectors. Historical generated `CODE` evidence has one bounded compatibility
+Plugins and Python MODs remain opt-in extension points. MOD payloads require
+sidecars and use the same preflight, planning, capability, isolation, artifact,
+failure, and packaging boundaries as core collectors. Historical generated `CODE` evidence has one bounded compatibility
 collector; source and executable material is excluded.
 
 ## Predictable and inspectable results

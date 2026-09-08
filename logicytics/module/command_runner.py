@@ -32,7 +32,7 @@ def run_command(command: Iterable[str], *, timeout_seconds: float = 30) -> Comma
 
 
 def parse_level_messages(output: str) -> tuple[tuple[str, str], ...]:
-    """Parse non-Python `LEVEL: message` lines into normalized structured entries."""
+    """Parse `LEVEL: message` lines into normalized structured entries."""
     messages: list[tuple[str, str]] = []
     for line in output.splitlines():
         level, separator, message = line.partition(":")

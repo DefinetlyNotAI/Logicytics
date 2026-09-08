@@ -1,22 +1,22 @@
 # MODS compatibility contract
 
-`MODS/` is the opt-in compatibility area for legacy Python, PowerShell, batch,
-and Windows executable collectors. Normal runs never execute these files.
-Use `run --modded` to run the standard core profile followed by valid mods, or
-`run --nopy` to run only `.ps1`, `.bat`, and `.exe` mods.
+`MODS/` is the opt-in compatibility area for Python collectors. Normal runs
+never execute these files. Use `run --modded` to run the standard core profile
+followed by valid MODS payloads. Only Python `.py` scripts are accepted.
 
 ## Layout and discovery
 
 Mods are discovered recursively. Runnable filenames must be lowercase
-`snake_case` and use `.py`, `.ps1`, `.bat`, or `.exe`. Files and directories
-whose names begin with `_` are ignored. Every runnable file needs an adjacent
+`snake_case` and use `.py`. PowerShell, batch, and executable payloads are
+rejected during preflight. Files and directories whose names begin with `_` are
+ignored. Every runnable file needs an adjacent
 sidecar named `<filename>.<extension>.mod.json`; for example:
 
 ```text
 MODS/
   inventory/
-    local_report.ps1
-    local_report.ps1.mod.json
+    local_report.py
+    local_report.py.mod.json
 ```
 
 The sidecar must declare the complete immutable collector metadata contract.
@@ -45,25 +45,21 @@ This example is intentionally bounded and non-sensitive:
 }
 ```
 
-The ID must be `mod.<filename_stem>`. Legacy adapters must request the
+The ID must be `mod.<filename_stem>`. MODS scripts must request the
 `subprocess` capability. Other access must also be declared and remains
 subject to the active blocked-capability policy. Python MODs are audit-confined
 to their private workspace by default.
-PowerShell, batch, and executable MODs must additionally declare
-`filesystem_write`, because Python cannot enforce filesystem boundaries inside
-native child processes. A Python MOD needs that capability
-only when intentionally writing outside its workspace. Invalid or missing
-sidecars quarantine the mod; selecting all mods
-then fails preflight before any collector launches.
+Python MODS need `filesystem_write` only when intentionally writing outside
+their private workspace. Invalid or missing sidecars quarantine the MOD;
+selecting all MODS then fails preflight before any collector launches.
 
 ## Execution and output
 
 Core collectors run before mods. Each mod receives its own worker process,
 private workspace, temporary directory, event channel, timeout, memory limit,
 artifact quota, cancellation signal, and result record. The source is copied
-into the private workspace before execution. Python uses the configured running
-interpreter, PowerShell uses a non-interactive execution-policy-bypass process,
-batch uses `cmd.exe`, and executables launch directly without a command shell.
+into the private workspace before execution and uses the configured Python
+interpreter.
 
 Write generated evidence beneath the current working directory, exposed as
 `LOGICYTICS_WORKSPACE`. Only non-empty files whose MIME type appears in
@@ -84,7 +80,6 @@ Mods are untrusted, opt-in local code. Worker/process isolation, a private
 workspace, declared-capability enforcement, bounded resources, packaging
 allowlists, and process-tree termination contain engine state and evidence
 publication. Python MOD mutation attempts outside the workspace fail unless
-`filesystem_write` was declared. Native MOD types require that declaration
-before preflight accepts them. A configured or command-line block still
-overrides a declaration. Review a mod and its declared capabilities before
+`filesystem_write` was declared. A configured or command-line block still
+overrides a declaration. Review a MOD and its declared capabilities before
 executing it.

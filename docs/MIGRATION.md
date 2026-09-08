@@ -15,7 +15,6 @@ The old mode flags remain explicit compatibility aliases. Their v4 equivalents a
 | `--minimal`           | `--mode quick`       |
 | `--depth`             | `--mode thorough`    |
 | `--modded`            | `--mode extensions`  |
-| `--nopy`              | `--mode non-python`  |
 | `--performance-check` | `--mode performance` |
 
 Only one mode or alias may be selected per invocation. Prefer named `--mode` values in new automation.
@@ -24,7 +23,7 @@ Only one mode or alias may be selected per invocation. Prefer named `--mode` val
 
 - `CODE/config.ini` is read only as a legacy compatibility input; v4 writes canonical manifests and does not mutate the file.
 - `core.integration.legacy_code_outputs` remains the explicit bridge for approved legacy `CODE` output. It is not an implicit scan of the repository.
-- `MODS/` is an opt-in extension area. MOD sidecars declare the executable, capabilities, output paths, and media types before a run can select them.
+- `MODS/` is an opt-in Python extension area. MOD sidecars declare the script, capabilities, output paths, and media types before a run can select them.
 - There are no global `ACCESS/`, `RUNS/`, `LOGS/`, or `PACKAGES/` stores. Run-owned evidence is written below the configured `runtime.output_root` and each run has its own manifest, logs, artifacts, and package hashes.
 
 Do not copy v3 JSON settings into the v4 YAML path. Translate supported values using [CONFIGURATION.md](CONFIGURATION.md), then run `python -m logicytics preflight` before collecting.

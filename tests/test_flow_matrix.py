@@ -24,7 +24,6 @@ class FlowMatrixTests(unittest.TestCase):
             "threaded": "test_explicit_execution_modes_control_isolated_worker_overlap",
             "minimal": "test_typed_mode_registry_maps_every_user_mode_and_legacy_alias",
             "deep": "test_typed_mode_registry_maps_every_user_mode_and_legacy_alias",
-            "non-python": "test_nopy_and_modded_modes_select_declared_mod_types_without_helpers",
             "performance": "test_performance_report_is_finalized_before_automatic_packaging",
             "modded": "test_mods_require_sidecars_and_run_as_isolated_registered_artifacts",
             "debug": "test_dev_writes_explicit_manifest_and_debug_persists_diagnostics",

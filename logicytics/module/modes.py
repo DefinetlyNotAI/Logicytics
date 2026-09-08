@@ -55,7 +55,6 @@ class ExecutionMode:
     profile: str
     strategy: ExecutionStrategy = ExecutionStrategy.CONFIGURED
     enable_mods: bool = False
-    non_python_only: bool = False
     performance_check: bool = False
 
 
@@ -82,13 +81,6 @@ _MODE_LIST = (
         enable_mods=True,
     ),
     ExecutionMode(
-        "non-python",
-        "Run only declared PowerShell, batch, and executable MODS payloads.",
-        "standard",
-        enable_mods=True,
-        non_python_only=True,
-    ),
-    ExecutionMode(
         "performance",
         "Sequential standard collection with per-collector duration reporting.",
         "standard",
@@ -106,7 +98,6 @@ LEGACY_MODE_ALIASES: Mapping[str, str] = MappingProxyType({
     "minimal": "quick",
     "depth": "thorough",
     "modded": "extensions",
-    "nopy": "non-python",
     "performance_check": "performance",
 })
 
@@ -138,13 +129,11 @@ def _candidate_modes(candidate: CollectorCandidate) -> tuple[str, ...]:
     selected: list[str] = []
     for mode in EXECUTION_MODES.values():
         if candidate.kind is CollectorKind.MOD:
-            enabled = mode.enable_mods and not (
-                    mode.non_python_only and candidate.execution_type == "mod_python"
-            )
+            enabled = mode.enable_mods
         elif candidate.kind is CollectorKind.PLUGIN:
             enabled = False
         else:
-            enabled = not mode.non_python_only and mode.profile in metadata.default_profiles
+            enabled = mode.profile in metadata.default_profiles
         if enabled:
             selected.append(mode.name)
     return tuple(selected)

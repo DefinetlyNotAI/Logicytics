@@ -143,8 +143,6 @@ class CLI:
             mode.enable_mods if mode is not None else False
         )
 
-        non_python_only = mode.non_python_only if mode is not None else False
-
         requested_workers = getattr(arguments, "workers", None)
 
         if sequential and requested_workers is not None and requested_workers != 1:
@@ -285,7 +283,6 @@ class CLI:
             selection_only=selection_only,
             enable_plugins=plugins_enabled,
             enable_mods=enable_mods,
-            non_python_only=non_python_only,
             max_workers=worker_count,
             acknowledge_authorization=getattr(
                 arguments,
@@ -390,8 +387,6 @@ class CLI:
                 mode.add_argument("--depth", action="store_true", help="Run the deep built-in profile.")
                 mode.add_argument("--modded", action="store_true",
                                   help="Run the standard profile plus all valid MODS scripts.")
-                mode.add_argument("--nopy", action="store_true",
-                                  help="Run only non-Python PowerShell, batch, and executable MODS scripts.")
                 mode.add_argument(
                     "--performance-check",
                     action="store_true",

@@ -57,13 +57,7 @@ def _selected_by_request(candidate: CollectorCandidate, request: RunRequest) -> 
     if candidate.kind is CollectorKind.PLUGIN and not request.enable_plugins:
         return False
     if candidate.kind is CollectorKind.MOD:
-        if not request.enable_mods:
-            return False
-        if request.non_python_only and candidate.execution_type == "mod_python":
-            return False
-        return True
-    if request.non_python_only:
-        return False
+        return request.enable_mods
     return request.profile in metadata.default_profiles
 
 

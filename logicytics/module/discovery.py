@@ -17,8 +17,9 @@ from logicytics.contracts import CONTRACT_VERSION, Capability, CollectorKind, Co
 from logicytics.platform_adapters import process_adapter
 
 _FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.py$")
-_MOD_FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.(?:py|ps1|bat|exe)$")
-_MOD_EXTENSIONS = {".py": "mod_python", ".ps1": "mod_powershell", ".bat": "mod_batch", ".exe": "mod_executable"}
+_MOD_FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.py$")
+_MOD_EXTENSIONS = {".py": "mod_python"}
+_REMOVED_MOD_EXTENSIONS = frozenset({".ps1", ".bat", ".exe"})
 _VAGUE_NAMES = {"main.py", "misc.py", "stuff.py", "utils.py"}
 _APPLICATION_IMPORTS = {
     "CollectorSnapshot", "RunSnapshot", "api", "artifacts", "cli", "configuration", "discovery", "environment",
@@ -399,6 +400,9 @@ def _validate_mod(path: Path, mods_root: Path) -> CollectorCandidate:
     if not _is_within(path, mods_root) or path.is_symlink():
         candidate.static_errors.append("mod path must remain a regular file inside MODS")
         return candidate
+    if path.suffix.casefold() in _REMOVED_MOD_EXTENSIONS:
+        candidate.static_errors.append("MODS supports Python (.py) scripts only")
+        return candidate
     if not _MOD_FILENAME.fullmatch(path.name):
         candidate.static_errors.append("mod filename must be lowercase snake_case with a supported extension")
     sidecar = path.with_suffix(path.suffix + ".mod.json")
@@ -433,14 +437,6 @@ def _validate_mod(path: Path, mods_root: Path) -> CollectorCandidate:
         candidate.runtime_error = f"mod ID must match its filename: {expected_id}"
     elif Capability.SUBPROCESS not in metadata.capabilities:
         candidate.runtime_error = "legacy script mods must declare the subprocess capability"
-    elif (
-            candidate.execution_type != "mod_python"
-            and Capability.FILESYSTEM_WRITE not in metadata.capabilities
-    ):
-        candidate.runtime_error = (
-            "non-Python mods must declare filesystem_write because their host mutations "
-            "cannot be audit-confined"
-        )
     else:
         candidate.metadata = metadata
     return candidate
@@ -759,7 +755,7 @@ def discover(project_root: Path) -> tuple[CollectorCandidate, ...]:
             relative = path.relative_to(mods_root)
             if any(part.startswith("_") for part in relative.parts):
                 continue
-            if path.suffix.casefold() in _MOD_EXTENSIONS:
+            if path.suffix.casefold() in _MOD_EXTENSIONS or path.suffix.casefold() in _REMOVED_MOD_EXTENSIONS:
                 candidates.append(_validate_mod(path, mods_root))
     return tuple(candidates)
 

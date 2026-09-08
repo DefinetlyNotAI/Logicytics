@@ -425,27 +425,21 @@ def _mod_command(
         blocked_capabilities: tuple[Capability, ...] = (),
 ) -> list[str]:
     """Build a shell-free command for one copied legacy MODS script."""
-    if execution_type == "mod_python":
-        if workspace is None:
-            raise ValueError("Python mod execution requires a private workspace")
-        runner = Path(__file__).with_name("mod_runner.py")
-        return [
-            sys.executable,
-            "-I",
-            str(runner),
-            str(script),
-            str(workspace),
-            collector_id,
-            json.dumps([capability.value for capability in capabilities]),
-            json.dumps([capability.value for capability in blocked_capabilities]),
-        ]
-    if execution_type == "mod_powershell":
-        return ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(script)]
-    if execution_type == "mod_batch":
-        return ["cmd.exe", "/d", "/c", str(script)]
-    if execution_type == "mod_executable":
-        return [str(script)]
-    raise ValueError(f"unsupported mod execution type: {execution_type}")
+    if execution_type != "mod_python":
+        raise ValueError("MODS supports Python (.py) scripts only")
+    if workspace is None:
+        raise ValueError("Python mod execution requires a private workspace")
+    runner = Path(__file__).with_name("mod_runner.py")
+    return [
+        sys.executable,
+        "-I",
+        str(runner),
+        str(script),
+        str(workspace),
+        collector_id,
+        json.dumps([capability.value for capability in capabilities]),
+        json.dumps([capability.value for capability in blocked_capabilities]),
+    ]
 
 
 def _run_mod_worker(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) -> None:

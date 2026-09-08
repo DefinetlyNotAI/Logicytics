@@ -213,7 +213,6 @@ exclusive.
 | thorough    | deep     | Configured bounded parallelism | None                       |
 | offline     | offline  | Configured bounded parallelism | None                       |
 | extensions  | standard | Configured bounded parallelism | All valid plugins and MODs |
-| non-python  | standard | Configured bounded parallelism | Non-Python MODs only       |
 | performance | standard | Sequential                     | Duration report enabled    |
 
 ```powershell
@@ -231,7 +230,6 @@ python -m logicytics run --mode performance --acknowledge-authorization
 | --minimal           | quick           |
 | --depth             | thorough        |
 | --modded            | extensions      |
-| --nopy              | non-python      |
 | --performance-check | performance     |
 
 ### Direct collector runs

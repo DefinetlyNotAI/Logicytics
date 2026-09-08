@@ -18,6 +18,7 @@ def _is_interactive_terminal() -> bool:
 def _clear_terminal() -> None:
     """Clear the shared terminal screen through the platform's real console command."""
     os.system("cls" if os.name == "nt" else "clear")
+    print()
 
 
 @contextmanager

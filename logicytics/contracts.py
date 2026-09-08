@@ -487,7 +487,6 @@ class RunRequest:
     selection_only: bool = False
     enable_plugins: bool = False
     enable_mods: bool = False
-    non_python_only: bool = False
     max_workers: int = 4
     acknowledge_authorization: bool = False
     blocked_capabilities: tuple[Capability, ...] = ()
@@ -521,7 +520,7 @@ class RunRequest:
         if self.rerun_from is not None and not self.include:
             raise ValueError("request rerun_from requires explicit included collector IDs")
         for name in (
-                "selection_only", "enable_plugins", "enable_mods", "non_python_only",
+                "selection_only", "enable_plugins", "enable_mods",
                 "acknowledge_authorization", "performance_check",
         ):
             if not isinstance(getattr(self, name), bool):

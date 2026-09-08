@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
-import shutil
 import tempfile
 import unittest
 import zipfile
@@ -222,10 +220,8 @@ class ModTests(unittest.TestCase):
                 configuration_path.read_text(encoding="utf-8"),
             )
 
-    def test_native_mod_requires_explicit_filesystem_write_declaration(
-            self,
-    ) -> None:
-        """Native child processes are quarantined unless their unconfined write risk is declared."""
+    def test_non_python_mod_files_are_rejected_before_sidecar_processing(self) -> None:
+        """MODS rejects former native script formats before metadata can enable them."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             mods = root / "MODS"
@@ -237,7 +233,7 @@ class ModTests(unittest.TestCase):
                 encoding="utf-8",
             )
             script.with_suffix(".bat.mod.json").write_text(
-                json.dumps(mod_metadata("native")),
+                json.dumps(mod_metadata("native", filesystem_write=True)),
                 encoding="utf-8",
             )
 
@@ -245,259 +241,46 @@ class ModTests(unittest.TestCase):
 
             self.assertEqual(1, len(report.invalid))
             self.assertIn(
-                "filesystem_write",
-                report.invalid[0].runtime_error or "",
+                "MODS supports Python (.py) scripts only",
+                report.invalid[0].static_errors,
             )
 
-            script.with_suffix(".bat.mod.json").write_text(
-                json.dumps(
-                    mod_metadata(
-                        "native",
-                        filesystem_write=True,
-                    )
-                ),
-                encoding="utf-8",
-            )
-
-            report = preflight(root)
-
-            self.assertEqual(
-                1,
-                len(report.valid),
-                report.invalid,
-            )
-
-            plan = build_plan(report, RunRequest(enable_mods=True))
-            self.assertEqual(("mod.native",), tuple(
-                item.metadata.id
-                for item in plan.collectors
-                if item.metadata is not None
-            ))
-
-    def test_nopy_and_modded_modes_select_declared_mod_types_without_helpers(
-            self,
-    ) -> None:
-        """Compatibility modes include all MODS or only non-Python MODS deterministically."""
+    def test_extensions_mode_selects_python_mods_and_rejects_nopy(self) -> None:
+        """The extension mode accepts Python MODS only and has no non-Python alias."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             mods = root / "MODS"
             mods.mkdir()
 
-            for name, extension in (
-                    ("python_mod", ".py"),
-                    ("batch_mod", ".bat"),
-            ):
-                script = mods / f"{name}{extension}"
-                script.write_text(
-                    (
-                        "pass\n"
-                        if extension == ".py"
-                        else "@echo off\n"
-                    ),
-                    encoding="utf-8",
-                )
-                script.with_suffix(
-                    extension + ".mod.json"
-                ).write_text(
-                    json.dumps(
-                        mod_metadata(
-                            name,
-                            filesystem_write=extension != ".py",
-                        )
-                    ),
-                    encoding="utf-8",
-                )
+            script = mods / "python_mod.py"
+            script.write_text("pass\n", encoding="utf-8")
+            script.with_suffix(".py.mod.json").write_text(
+                json.dumps(mod_metadata("python_mod")),
+                encoding="utf-8",
+            )
 
             report = preflight(root)
+            self.assertEqual(1, len(report.valid), report.invalid)
 
-            self.assertEqual(
-                2,
-                len(report.valid),
-                report.invalid,
-            )
-
-            modded = build_plan(
+            extensions = build_plan(
                 report,
                 RunRequest(
                     enable_mods=True,
-                    approved_capabilities=(
-                        Capability.SUBPROCESS,
-                        Capability.FILESYSTEM_WRITE,
-                    ),
                 ),
             )
-
-            nopy = build_plan(
-                report,
-                RunRequest(
-                    enable_mods=True,
-                    non_python_only=True,
-                    approved_capabilities=(
-                        Capability.SUBPROCESS,
-                        Capability.FILESYSTEM_WRITE,
-                    ),
-                ),
-            )
-
-            modded_ids: list[str] = []
-            for item in modded.collectors:
-                metadata = item.metadata
-                if metadata is None:
-                    self.fail(
-                        "planned MOD collector unexpectedly has no metadata"
-                    )
-                modded_ids.append(metadata.id)
-
-            nopy_ids: list[str] = []
-            for item in nopy.collectors:
-                metadata = item.metadata
-                if metadata is None:
-                    self.fail(
-                        "planned non-Python MOD collector unexpectedly has no metadata"
-                    )
-                nopy_ids.append(metadata.id)
-
             self.assertEqual(
-                ["mod.batch_mod", "mod.python_mod"],
-                modded_ids,
-            )
-            self.assertEqual(
-                ["mod.batch_mod"],
-                nopy_ids,
+                ("mod.python_mod",),
+                tuple(item.metadata.id for item in extensions.collectors if item.metadata is not None),
             )
 
             parser = cli_methods.parser()
-
             modded_request = cli_methods.request(
                 parser.parse_args(["run", "--modded"]),
                 2,
             )
             self.assertTrue(modded_request.enable_mods)
-
-            nopy_request = cli_methods.request(
-                parser.parse_args(["run", "--nopy"]),
-                2,
-            )
-            self.assertTrue(nopy_request.enable_mods)
-            self.assertTrue(nopy_request.non_python_only)
-
-    @unittest.skipUnless(
-        os.name == "nt",
-        "legacy script adapters require Windows",
-    )
-    def test_non_python_mod_adapters_execute_powershell_batch_and_executable_files(
-            self,
-    ) -> None:
-        """Every documented non-Python MODS type executes through its explicit adapter."""
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            mods = root / "MODS"
-            mods.mkdir()
-
-            scripts = {
-                "powershell_mod.ps1": (
-                    "Set-Content -LiteralPath report.txt "
-                    "-Value 'powershell evidence'\n"
-                ),
-                "batch_mod.bat": (
-                    "@echo off\r\n"
-                    "echo batch evidence>report.txt\r\n"
-                ),
-            }
-
-            for filename, contents in scripts.items():
-                script = mods / filename
-                script.write_text(
-                    contents,
-                    encoding="utf-8",
-                )
-                script.with_suffix(
-                    script.suffix + ".mod.json"
-                ).write_text(
-                    json.dumps(
-                        mod_metadata(
-                            script.stem,
-                            filesystem_write=True,
-                        )
-                    ),
-                    encoding="utf-8",
-                )
-
-            executable = (
-                    Path(
-                        os.environ.get(
-                            "WINDIR",
-                            r"C:\Windows",
-                        )
-                    )
-                    / "System32"
-                    / "whoami.exe"
-            )
-
-            self.assertTrue(executable.is_file())
-
-            copied_executable = (
-                    mods / "identity_mod.exe"
-            )
-            shutil.copy2(
-                executable,
-                copied_executable,
-            )
-
-            copied_executable.with_suffix(
-                ".exe.mod.json"
-            ).write_text(
-                json.dumps(
-                    mod_metadata(
-                        "identity_mod",
-                        filesystem_write=True,
-                    )
-                ),
-                encoding="utf-8",
-            )
-
-            report = preflight(root)
-
-            self.assertEqual(
-                3,
-                len(report.valid),
-                report.invalid,
-            )
-
-            plan = build_plan(
-                report,
-                RunRequest(
-                    enable_mods=True,
-                    non_python_only=True,
-                    approved_capabilities=(
-                        Capability.SUBPROCESS,
-                        Capability.FILESYSTEM_WRITE,
-                    ),
-                    acknowledge_authorization=True,
-                    max_workers=1,
-                ),
-            )
-
-            outcome = RunSupervisor(
-                root,
-                default_config(root),
-            ).run(plan)
-
-            self.assertEqual(
-                [
-                    "succeeded",
-                    "succeeded",
-                    "succeeded",
-                ],
-                [
-                    record.status
-                    for record in outcome.manifest.collectors
-                ],
-                [
-                    record.errors
-                    for record in outcome.manifest.collectors
-                ],
-            )
+            with self.assertRaises(SystemExit):
+                parser.parse_args(["run", "--nopy"])
 
 
 if __name__ == "__main__":

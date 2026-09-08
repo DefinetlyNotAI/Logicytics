@@ -18,7 +18,6 @@ FLAG_DESCRIPTIONS: Mapping[str, str] = {
     "threaded": "standard collection with bounded parallel workers",
     "minimal": "quick basic essential collection",
     "depth": "deep exhaustive slow collection",
-    "nopy": "non Python PowerShell executable and batch collectors",
     "modded": "normal collection plus opt in MODS extensions",
     "performance-check": "sequential collector duration performance analysis",
     "usage": "interaction statistics and flag usage graph",

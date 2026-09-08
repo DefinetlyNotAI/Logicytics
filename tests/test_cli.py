@@ -107,14 +107,13 @@ class CliTests(unittest.TestCase):
         """One immutable matrix owns profile, scheduling, MODS, and performance behavior."""
         parser = cli_methods.parser()
         expected = {
-            "standard": ("standard", 1, False, False, False),
-            "balanced": ("standard", 4, False, False, False),
-            "quick": ("minimal", 4, False, False, False),
-            "thorough": ("deep", 4, False, False, False),
-            "offline": ("offline", 4, False, False, False),
-            "extensions": ("standard", 4, True, False, False),
-            "non-python": ("standard", 4, True, True, False),
-            "performance": ("standard", 1, False, False, True),
+            "standard": ("standard", 1, False, False),
+            "balanced": ("standard", 4, False, False),
+            "quick": ("minimal", 4, False, False),
+            "thorough": ("deep", 4, False, False),
+            "offline": ("offline", 4, False, False),
+            "extensions": ("standard", 4, True, False),
+            "performance": ("standard", 1, False, True),
         }
 
         self.assertEqual(set(expected), set(EXECUTION_MODES))
@@ -140,7 +139,6 @@ class CliTests(unittest.TestCase):
                         run_request.profile,
                         run_request.max_workers,
                         run_request.enable_mods,
-                        run_request.non_python_only,
                         run_request.performance_check,
                     ),
                 )
@@ -151,7 +149,6 @@ class CliTests(unittest.TestCase):
             "minimal": "--minimal",
             "depth": "--depth",
             "modded": "--modded",
-            "nopy": "--nopy",
             "performance_check": "--performance-check",
         }
 
