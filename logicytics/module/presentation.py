@@ -21,6 +21,12 @@ MessageLines = Callable[[str], tuple[str, ...]]
 ConsoleWidth = Callable[[], int]
 
 
+def terminal_width() -> int:
+    """Return the full physical terminal width for full-span presentation."""
+    width = shutil.get_terminal_size((_DEFAULT_CONSOLE_WIDTH, 24)).columns
+    return max(width, _MIN_CONSOLE_WIDTH)
+
+
 def console_width() -> int:
     """Return the shared terminal width with a safety margin and minimum."""
     width = shutil.get_terminal_size((_DEFAULT_CONSOLE_WIDTH, 24)).columns
@@ -33,21 +39,15 @@ def _plain_message_lines(message: str) -> tuple[str, ...]:
 
 
 def _heading(title: str, *, width: ConsoleWidth = console_width) -> str:
-    """Return an ASCII title box that remains stable across terminals."""
+    """Return a title followed by a full-width ASCII rule."""
     safe_title = redact_text(title).strip() or "Logicytics"
     available = max(width(), _MIN_CONSOLE_WIDTH)
-    inner_width = available - 2
-    heading = f" {safe_title} "[:inner_width]
-    return "\n".join((
-        "+" + "-" * inner_width + "+",
-        "|" + heading.ljust(inner_width) + "|",
-        "+" + "-" * inner_width + "+",
-    ))
+    return f"{safe_title}\n" + "-" * available
 
 
-def render_banner(console: TextIO, *, width: ConsoleWidth = console_width) -> None:
-    """Render the compact startup banner after a real terminal clear."""
-    available = min(max(width() - 2, _MIN_CONSOLE_WIDTH - 2), 86)
+def render_banner(console: TextIO, *, width: ConsoleWidth = terminal_width) -> None:
+    """Render a full-width, strictly ASCII startup banner after a real clear."""
+    available = max(width() - 2, _MIN_CONSOLE_WIDTH - 2)
     title = " LOGICYTICS "
     subtitle = "Local evidence collection framework"
     rows = (
@@ -67,20 +67,14 @@ def render_step_heading(
         *,
         width: ConsoleWidth = console_width,
 ) -> None:
-    """Separate a lifecycle phase with a titled ASCII box and breathing room."""
+    """Separate a lifecycle phase with a titled ASCII rule and breathing room."""
     console.write(f"{_heading(title, width=width)}\n\n")
     console.flush()
 
 
-def _alert_symbols(console: TextIO) -> tuple[str, str, str, str, str, str, str, str]:
-    """Use Unicode alert framing when the destination can encode it."""
-    encoding = getattr(console, "encoding", None) or "utf-8"
-    symbols = ("╭", "─", "╮", "│", "╰", "╯", "×", "→")
-    try:
-        "".join(symbols).encode(encoding)
-    except (LookupError, UnicodeEncodeError):
-        return ("+", "-", "+", "|", "+", "+", "!", ">")
-    return symbols
+def _alert_symbols() -> tuple[str, str, str, str, str, str, str, str]:
+    """Return an unambiguous ASCII alert frame for every terminal."""
+    return ("+", "-", "+", "|", "+", "+", "!", ">")
 
 
 def render_section(
@@ -142,7 +136,7 @@ def render_alert(
         bottom_right,
         error_marker,
         next_step_marker,
-    ) = _alert_symbols(console)
+    ) = _alert_symbols()
     inner_width = min(max(width(), _MIN_CONSOLE_WIDTH), 88) - 2
     safe_title = redact_text(title).strip()
     heading = f" {safe_title} "[:inner_width]

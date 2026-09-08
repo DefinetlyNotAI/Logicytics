@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from logicytics import terminal
+from logicytics.module.presentation import render_banner
 
 
 class _InteractiveBuffer(io.StringIO):
@@ -42,6 +43,17 @@ class TerminalLifecycleTests(unittest.TestCase):
         system.assert_called_once_with("cls")
         self.assertEqual("", output.getvalue())
         self.assertIn("LOGICYTICS", errors.getvalue())
+
+    def test_banner_is_full_width_and_strictly_ascii(self) -> None:
+        """The startup banner spans the terminal without Unicode border glyphs."""
+        console = io.StringIO()
+        render_banner(console, width=lambda: 101)
+
+        rows = console.getvalue().splitlines()
+        self.assertEqual(101, len(rows[0]))
+        self.assertEqual("+", rows[0][0])
+        self.assertEqual("+", rows[0][-1])
+        self.assertTrue(all(ord(character) < 128 for row in rows for character in row))
 
     def test_interactive_lifecycle_clears_once_and_ends_with_a_newline(self) -> None:
         """The outer lifecycle performs real clearing once and leaves a clean prompt line."""

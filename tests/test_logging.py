@@ -68,9 +68,9 @@ class LoggingTests(unittest.TestCase):
             render_virtual_environment_error(actual, root)
 
             self.assertEqual(expected.getvalue(), actual.getvalue())
-            self.assertIn("╭", actual.getvalue())
-            self.assertIn("│ ×", actual.getvalue())
-            self.assertIn("│ →", actual.getvalue())
+            self.assertIn("+ Logicytics startup error", actual.getvalue())
+            self.assertIn("| ! ", actual.getvalue())
+            self.assertIn("| > ", actual.getvalue())
 
     def test_application_logging_levels_colors_retention_and_dispatch_are_bounded(self) -> None:
         """The application sink is typed, redacted, reusable, colored, and size bounded."""
@@ -223,13 +223,10 @@ class LoggingTests(unittest.TestCase):
             rows = console.getvalue().splitlines()
             self.assertTrue(rows[0].startswith("  * "))
             self.assertTrue(rows[1].startswith("    "))
-            border = "+" + "-" * (ApplicationLogger._console_width() - 2) + "+"
-            summary_start = rows.index(border, 2)
-            self.assertEqual(border, rows[summary_start])
-            self.assertTrue(rows[summary_start + 1].startswith("| Summary "))
-            self.assertEqual(border, rows[summary_start + 2])
-            self.assertEqual("", rows[summary_start + 3])
-            self.assertEqual("  > finished", rows[summary_start + 4])
+            summary_start = rows.index("Summary", 2)
+            self.assertEqual("-" * ApplicationLogger._console_width(), rows[summary_start + 1])
+            self.assertEqual("", rows[summary_start + 2])
+            self.assertEqual("  > finished", rows[summary_start + 3])
             self.assertNotIn("\u25cf", console.getvalue())
             self.assertNotIn("\u256d", console.getvalue())
 
@@ -282,12 +279,10 @@ class LoggingTests(unittest.TestCase):
             logger.box("Summary", ("detail " * 40,))
 
             rows = console.getvalue().splitlines()
-            border = "+" + "-" * (ApplicationLogger._console_width() - 2) + "+"
-            self.assertEqual(border, rows[0])
-            self.assertTrue(rows[1].startswith("| Summary "))
-            self.assertEqual(border, rows[2])
-            self.assertEqual("", rows[3])
-            self.assertGreater(len(rows), 4)
+            self.assertEqual("Summary", rows[0])
+            self.assertEqual("-" * ApplicationLogger._console_width(), rows[1])
+            self.assertEqual("", rows[2])
+            self.assertGreater(len(rows), 3)
             self.assertTrue(all(len(row) <= ApplicationLogger._console_width() for row in rows))
 
     def test_application_logging_groups_lifecycle_events_into_titled_steps(self) -> None:
@@ -305,16 +300,16 @@ class LoggingTests(unittest.TestCase):
             logger.event("INFO", "run_packaged", run_id="run-test")
 
             rendered = console.getvalue()
-            border = "+" + "-" * (ApplicationLogger._console_width() - 2) + "+"
-            self.assertIn(f"{border}\n| Command ", rendered)
-            self.assertIn(f"{border}\n| Preflight ", rendered)
-            self.assertIn(f"{border}\n\n  ● Command started", rendered)
+            rule = "-" * ApplicationLogger._console_width()
+            self.assertIn(f"Command\n{rule}", rendered)
+            self.assertIn(f"Preflight\n{rule}", rendered)
+            self.assertIn(f"{rule}\n\n  ● Command started", rendered)
             self.assertIn("  ● Command started\n    > Command: preflight", rendered)
             self.assertIn(
                 "  ● Preflight started\n    > Configuration hash: aaaaaaa",
                 rendered,
             )
-            self.assertEqual(1, rendered.count("| Packaging "))
+            self.assertEqual(1, rendered.count("Packaging\n"))
 
     def test_application_logging_compacts_configuration_hash_only_outside_debug(self) -> None:
         """Normal console output stays concise without losing the logged hash."""
