@@ -9,6 +9,7 @@ from logicytics.virtual_environment import (
     is_running_in_virtual_environment,
     render_virtual_environment_error,
 )
+from logicytics.terminal import terminal_lifecycle
 
 __all__ = ["CLI", "cli_methods", "main"]
 
@@ -20,12 +21,13 @@ def _project_root() -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     """Guard the interpreter before loading the full CLI implementation."""
-    if not is_running_in_virtual_environment():
-        render_virtual_environment_error(sys.stderr, _project_root())
-        return 2
-    from logicytics.cli.commands import main as command_main
+    with terminal_lifecycle():
+        if not is_running_in_virtual_environment():
+            render_virtual_environment_error(sys.stderr, _project_root())
+            return 2
+        from logicytics.cli.commands import main as command_main
 
-    return command_main(argv)
+        return command_main(argv)
 
 
 def __getattr__(name: str) -> object:

@@ -42,6 +42,7 @@ from logicytics.module.planner import BUILTIN_PROFILES, build_plan
 from logicytics.module.runtime import RunSupervisor
 from logicytics.module.sysinternals import ensure_sysinternals
 from logicytics.platform_adapters import process_adapter
+from logicytics.terminal import terminal_lifecycle
 from logicytics.virtual_environment import (
     is_running_in_virtual_environment,
     virtual_environment_error,
@@ -1249,4 +1250,5 @@ def main(argv: list[str] | None = None) -> int:
 
 cli_methods = CLI()
 if __name__ == "__main__":
-    raise SystemExit(main())
+    with terminal_lifecycle():
+        raise SystemExit(main())

@@ -12,6 +12,7 @@ from logicytics.virtual_environment import (
     is_running_in_virtual_environment,
     render_virtual_environment_error,
 )
+from logicytics.terminal import terminal_lifecycle
 
 
 def project_root() -> Path:
@@ -70,4 +71,5 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    with terminal_lifecycle():
+        raise SystemExit(main())

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from logicytics.module.configuration import write_default_configuration
 from logicytics.module.logging import ApplicationLogger, HumanArgumentParser
+from logicytics.terminal import terminal_lifecycle
 
 
 def project_root() -> Path:
@@ -44,4 +45,5 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    with terminal_lifecycle():
+        raise SystemExit(main())

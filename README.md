@@ -91,6 +91,9 @@ These flags go before the action name:
 All normal command output uses the Logicytics console presentation: a severity
 marker, a short message, and readable indented fields. Structured JSON is kept
 in the documented artifact files and is never dumped directly to the console.
+Each user-facing command clears an interactive terminal before it starts and
+leaves one final newline when it returns; redirected and worker-protocol output
+is left untouched.
 INFO text is white, DEBUG text is gray, warnings are yellow, and failures are
 red. Long messages wrap to the terminal width; application log fields are
 written as readable continuation lines with millisecond timestamps. Argument
