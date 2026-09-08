@@ -210,18 +210,19 @@ class ApplicationLogger(EventLogger):
         return (cls._console_message(safe_message),)
 
     @classmethod
-    def _console_fields(cls, fields: Mapping[str, object]) -> tuple[str, ...]:
+    def _console_fields(
+            cls,
+            fields: Mapping[str, object],
+            *,
+            compact_configuration_hash: bool = False,
+    ) -> tuple[str, ...]:
         """Render structured fields as readable labels instead of JSON fragments."""
         rows: list[str] = []
         for key, value in fields.items():
             label = key.replace("_", " ").capitalize()
             rendered_value = cls._console_value(value)
-            if (
-                    key in {"configuration_hash", "fingerprint"}
-                    and isinstance(value, str)
-                    and len(rendered_value) > 28
-            ):
-                rendered_value = f"{rendered_value[:12]}...{rendered_value[-12:]}"
+            if compact_configuration_hash and key == "configuration_hash":
+                rendered_value = rendered_value[:7]
             rendered = rendered_value.splitlines() or ["none"]
             rows.append(f"> {label}: {rendered[0]}")
             rows.extend(f"  {line}" for line in rendered[1:])
@@ -311,7 +312,12 @@ class ApplicationLogger(EventLogger):
         file_lines.extend(self._console_fields(safe_fields))
         rendered_message = "\n".join(file_lines)
         console_lines = list(self._message_lines(safe_message))
-        console_lines.extend(self._console_fields(safe_fields))
+        console_lines.extend(
+            self._console_fields(
+                safe_fields,
+                compact_configuration_hash=minimum_level != "DEBUG",
+            )
+        )
         console_message = "\n".join(console_lines)
         rows = self._rows(normalized, source, rendered_message)
         with self._lock:

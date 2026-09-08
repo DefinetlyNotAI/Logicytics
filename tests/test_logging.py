@@ -307,11 +307,45 @@ class LoggingTests(unittest.TestCase):
             self.assertIn("[ Preflight ]\n", rendered)
             self.assertIn("  ● Command started\n    > Command: preflight", rendered)
             self.assertIn(
-                "  ● Preflight started\n    > Configuration hash: "
-                "aaaaaaaaaaaa...aaaaaaaaaaaa",
+                "  ● Preflight started\n    > Configuration hash: aaaaaaa",
                 rendered,
             )
             self.assertEqual(1, rendered.count("[ Packaging ]"))
+
+    def test_application_logging_compacts_configuration_hash_only_outside_debug(self) -> None:
+        """Normal console output stays concise without losing the logged hash."""
+        configuration_hash = "0123456789abcdef" * 4
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "Logicytics.log"
+            normal_console = io.StringIO()
+            normal_logger = ApplicationLogger(
+                path,
+                LoggingSettings(color_enabled=False),
+                console=normal_console,
+            )
+            normal_logger.event(
+                "INFO",
+                "preflight_started",
+                configuration_hash=configuration_hash,
+            )
+
+            self.assertIn("> Configuration hash: 0123456", normal_console.getvalue())
+            self.assertNotIn(configuration_hash, normal_console.getvalue())
+            self.assertIn(configuration_hash, path.read_text(encoding="utf-8"))
+
+            debug_console = io.StringIO()
+            debug_logger = ApplicationLogger(
+                path,
+                LoggingSettings(level="DEBUG", file_enabled=False, color_enabled=False),
+                console=debug_console,
+            )
+            debug_logger.event(
+                "INFO",
+                "preflight_started",
+                configuration_hash=configuration_hash,
+            )
+
+            self.assertIn(configuration_hash, debug_console.getvalue())
 
     def test_application_logging_colors_info_text_white_and_debug_text_gray(self) -> None:
         """Status markers retain their severity color while message text stays readable."""
