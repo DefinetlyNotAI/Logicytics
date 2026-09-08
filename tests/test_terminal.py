@@ -64,6 +64,24 @@ class TerminalLifecycleTests(unittest.TestCase):
         clear_terminal.assert_not_called()
         self.assertEqual("machine output", output.getvalue())
 
+    def test_interactive_lifecycle_ends_with_a_newline_after_an_exception(self) -> None:
+        """An exception unwinds the terminal lifecycle and leaves a clean prompt line."""
+        output = _InteractiveBuffer()
+        errors = _InteractiveBuffer()
+
+        with patch.object(terminal.sys, "stdout", output), patch.object(
+                terminal.sys,
+                "stderr",
+                errors,
+        ), patch.object(terminal, "_clear_terminal") as clear_terminal:
+            with self.assertRaisesRegex(RuntimeError, "interrupted"):
+                with terminal.terminal_lifecycle():
+                    output.write("command output")
+                    raise RuntimeError("interrupted")
+
+        clear_terminal.assert_called_once_with()
+        self.assertEqual("command output\n", output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()
