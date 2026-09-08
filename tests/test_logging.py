@@ -299,6 +299,14 @@ class LoggingTests(unittest.TestCase):
             )
             logger.event("INFO", "command_started", command="preflight")
             logger.event("INFO", "preflight_started", configuration_hash="a" * 64)
+            logger.event(
+                "INFO",
+                "preflight_progress",
+                phase="validating collectors",
+                checked=12,
+                total=66,
+                current="core.system.system_info",
+            )
             logger.event("INFO", "run_packaging_started", run_id="run-test")
             logger.event("INFO", "run_packaged", run_id="run-test")
 
@@ -310,6 +318,14 @@ class LoggingTests(unittest.TestCase):
             self.assertIn("  ● Command started\n    > Command: preflight", rendered)
             self.assertIn(
                 "  ● Preflight started\n    > Configuration hash: aaaaaaa",
+                rendered,
+            )
+            self.assertIn(
+                "  ● Preflight progress\n"
+                "    > Phase: validating collectors\n"
+                "    > Checked: 12\n"
+                "    > Total: 66\n"
+                "    > Current: core.system.system_info",
                 rendered,
             )
             self.assertEqual(1, rendered.count("Packaging\n"))

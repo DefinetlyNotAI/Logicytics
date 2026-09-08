@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import tempfile
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from subprocess import TimeoutExpired
@@ -53,6 +54,8 @@ _COLLECTOR_SERVICE_MODULES = {
     "logicytics.global.ctypes_collector",
     "logicytics.platform_adapters",
 }
+
+PreflightProgress = Callable[[str, int, int, str], None]
 
 
 @dataclass(frozen=True, slots=True)
@@ -824,14 +827,26 @@ def _write_cache(project_root: Path, configuration_hash: str, candidates: list[C
     temporary.replace(path)
 
 
-def preflight(project_root: Path, *, configuration_hash: str = "unconfigured") -> PreflightReport:
+def preflight(
+    project_root: Path,
+    *,
+    configuration_hash: str = "unconfigured",
+    progress: PreflightProgress | None = None,
+) -> PreflightReport:
     """Perform static checks then a short-lived isolated metadata probe."""
     candidates = list(discover(project_root))
     cached = _load_cache(project_root, configuration_hash)
-    for candidate in candidates:
+    total = len(candidates)
+    for index, candidate in enumerate(candidates, start=1):
+        if progress is not None:
+            progress("checking", index - 1, total, candidate.selection_id)
         if candidate.static_errors:
+            if progress is not None:
+                progress("checked", index, total, candidate.selection_id)
             continue
         if candidate.kind is CollectorKind.MOD:
+            if progress is not None:
+                progress("checked", index, total, candidate.selection_id)
             continue
         relative_path = candidate.path.resolve().relative_to(project_root.resolve()).as_posix()
         entry = cached.get(relative_path)
@@ -843,6 +858,8 @@ def preflight(project_root: Path, *, configuration_hash: str = "unconfigured") -
             _accept_runtime_metadata(candidate, entry.get("metadata"))
         else:
             _runtime_probe(project_root, candidate)
+        if progress is not None:
+            progress("checked", index, total, candidate.selection_id)
     seen_ids: set[str] = set()
     for candidate in candidates:
         if candidate.metadata is None:

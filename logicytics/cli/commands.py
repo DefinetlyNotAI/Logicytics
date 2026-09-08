@@ -663,6 +663,27 @@ def main(argv: list[str] | None = None) -> int:
 
         history_path = configuration.runtime.output_root / "interaction_history.json.gz"
 
+        last_preflight_progress_at = 0.0
+
+        def report_preflight_progress(phase: str, checked: int, total: int, current: str) -> None:
+            """Keep long sequential collector validation visibly alive without flooding output."""
+            nonlocal last_preflight_progress_at
+            now = perf_counter()
+            should_report = (
+                last_preflight_progress_at == 0.0 or now - last_preflight_progress_at >= 1.0 or (phase == "checked" and checked == total)
+            )
+            if should_report:
+                application_logger.event(
+                    "INFO",
+                    "preflight_progress",
+                    source="logicytics.cli",
+                    phase="validating collectors",
+                    checked=checked,
+                    total=total,
+                    current=current,
+                )
+                last_preflight_progress_at = now
+
         if arguments.command == "match":
             history = load_history(history_path)
 
@@ -740,6 +761,7 @@ def main(argv: list[str] | None = None) -> int:
             report = preflight(
                 root,
                 configuration_hash=modes_configuration_hash,
+                progress=report_preflight_progress,
             )
             application_logger.event(
                 "INFO",
@@ -780,9 +802,11 @@ def main(argv: list[str] | None = None) -> int:
             source="logicytics.cli",
             configuration_hash=configuration.fingerprint(),
         )
+
         report = preflight(
             root,
             configuration_hash=configuration.fingerprint(),
+            progress=report_preflight_progress,
         )
         application_logger.event(
             "INFO",

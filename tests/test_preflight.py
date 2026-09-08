@@ -119,6 +119,21 @@ class PreflightTests(unittest.TestCase):
                 self.assertEqual(1, len(invalidated.valid), invalidated.invalid)
                 self.assertEqual(1, probe.call_count)
 
+    def test_preflight_reports_collector_progress_before_and_after_validation(self) -> None:
+        """Long-running isolated probes expose their current collector to callers."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            collector_path.write_text(COLLECTOR, encoding="utf-8")
+            progress: list[tuple[str, int, int, str]] = []
+
+            report = preflight(root, progress=lambda phase, checked, total, current: progress.append((phase, checked, total, current)))
+
+            self.assertEqual(1, len(report.valid), report.invalid)
+            self.assertEqual(("checking", 0, 1, "core.system_info"), progress[0])
+            self.assertEqual(("checked", 1, 1, "core.system.system_info"), progress[-1])
+
     def test_preflight_requires_exact_declared_artifact_media_types(self) -> None:
         """A collector cannot disguise or omit the output contract used by registration."""
         with tempfile.TemporaryDirectory() as temporary:
