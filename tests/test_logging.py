@@ -223,7 +223,14 @@ class LoggingTests(unittest.TestCase):
             rows = console.getvalue().splitlines()
             self.assertTrue(rows[0].startswith("  * "))
             self.assertTrue(rows[1].startswith("    "))
-            self.assertEqual(["Summary", "  finished"], rows[-2:])
+            self.assertEqual(
+                [
+                    "[ Summary ]",
+                    "-" * ApplicationLogger._console_width(),
+                    "  > finished",
+                ],
+                rows[-3:],
+            )
             self.assertNotIn("\u25cf", console.getvalue())
             self.assertNotIn("\u256d", console.getvalue())
 
@@ -276,9 +283,35 @@ class LoggingTests(unittest.TestCase):
             logger.box("Summary", ("detail " * 40,))
 
             rows = console.getvalue().splitlines()
-            self.assertEqual("Summary", rows[0])
+            self.assertEqual("[ Summary ]", rows[0])
+            self.assertEqual("-" * ApplicationLogger._console_width(), rows[1])
             self.assertGreater(len(rows), 2)
             self.assertTrue(all(len(row) <= ApplicationLogger._console_width() for row in rows))
+
+    def test_application_logging_groups_lifecycle_events_into_titled_steps(self) -> None:
+        """Lifecycle output has titled ASCII steps and consistently marked details."""
+        with tempfile.TemporaryDirectory() as temporary:
+            console = io.StringIO()
+            logger = ApplicationLogger(
+                Path(temporary) / "Logicytics.log",
+                LoggingSettings(file_enabled=False, color_enabled=False),
+                console=console,
+            )
+            logger.event("INFO", "command_started", command="preflight")
+            logger.event("INFO", "preflight_started", configuration_hash="a" * 64)
+            logger.event("INFO", "run_packaging_started", run_id="run-test")
+            logger.event("INFO", "run_packaged", run_id="run-test")
+
+            rendered = console.getvalue()
+            self.assertIn("[ Command ]\n", rendered)
+            self.assertIn("[ Preflight ]\n", rendered)
+            self.assertIn("  ● Command started\n    > Command: preflight", rendered)
+            self.assertIn(
+                "  ● Preflight started\n    > Configuration hash: "
+                "aaaaaaaaaaaa...aaaaaaaaaaaa",
+                rendered,
+            )
+            self.assertEqual(1, rendered.count("[ Packaging ]"))
 
     def test_application_logging_colors_info_text_white_and_debug_text_gray(self) -> None:
         """Status markers retain their severity color while message text stays readable."""

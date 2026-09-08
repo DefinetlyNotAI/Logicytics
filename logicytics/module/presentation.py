@@ -29,6 +29,40 @@ def _plain_message_lines(message: str) -> tuple[str, ...]:
     return (redact_text(message),)
 
 
+def _heading(title: str, *, width: ConsoleWidth = console_width) -> str:
+    """Return an ASCII section heading that remains stable across terminals."""
+    safe_title = redact_text(title).strip() or "Logicytics"
+    available = max(width(), _MIN_CONSOLE_WIDTH)
+    return f"[ {safe_title} ]\n" + "-" * available
+
+
+def render_banner(console: TextIO, *, width: ConsoleWidth = console_width) -> None:
+    """Render the compact startup banner after a real terminal clear."""
+    available = min(max(width(), _MIN_CONSOLE_WIDTH), 88)
+    title = " LOGICYTICS "
+    subtitle = "Local evidence collection framework"
+    rows = (
+        "+" + "-" * available + "+",
+        "|" + title.center(available) + "|",
+        "|" + subtitle.center(available) + "|",
+        "+" + "-" * available + "+",
+        "",
+    )
+    console.write("\n".join(rows))
+    console.flush()
+
+
+def render_step_heading(
+        console: TextIO,
+        title: str,
+        *,
+        width: ConsoleWidth = console_width,
+) -> None:
+    """Separate a lifecycle phase with a titled ASCII rule."""
+    console.write(f"{_heading(title, width=width)}\n")
+    console.flush()
+
+
 def _alert_symbols(console: TextIO) -> tuple[str, str, str, str, str, str, str, str]:
     """Use Unicode alert framing when the destination can encode it."""
     encoding = getattr(console, "encoding", None) or "utf-8"
@@ -49,13 +83,13 @@ def render_section(
         width: ConsoleWidth = console_width,
 ) -> None:
     """Render the shared indented, wrapped console section presentation."""
-    rows = list(message_lines(title))
+    rows = [_heading(title, width=width)]
     for line in lines:
         for raw_row in line.splitlines() or [""]:
             safe_row = redact_text(raw_row)
             indentation = safe_row[:len(safe_row) - len(safe_row.lstrip())]
             remaining = safe_row.lstrip().rstrip()
-            prefix = f"  {indentation}"
+            prefix = f"  > {indentation}"
             continuation_prefix = f"    {indentation}"
             available = max(width() - len(continuation_prefix), 1)
             presentation_rows = message_lines(remaining)

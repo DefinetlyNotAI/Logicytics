@@ -21,6 +21,7 @@ from logicytics.module.presentation import (
     console_width as presentation_console_width,
     render_alert as render_presentation_alert,
     render_section as render_presentation_section,
+    render_step_heading as render_presentation_step_heading,
 )
 from logicytics.module.redaction import redact_mapping, redact_text
 
@@ -82,6 +83,7 @@ class ApplicationLogger(EventLogger):
         self.settings = settings
         self.console = sys.stderr if console is None else console
         self._lock = RLock()
+        self._last_console_step: str | None = None
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._prepare_file()
 
@@ -211,12 +213,50 @@ class ApplicationLogger(EventLogger):
     def _console_fields(cls, fields: Mapping[str, object]) -> tuple[str, ...]:
         """Render structured fields as readable labels instead of JSON fragments."""
         rows: list[str] = []
-        for key, value in sorted(fields.items()):
+        for key, value in fields.items():
             label = key.replace("_", " ").capitalize()
-            rendered = cls._console_value(value).splitlines() or ["none"]
-            rows.append(f"{label}: {rendered[0]}")
+            rendered_value = cls._console_value(value)
+            if (
+                    key in {"configuration_hash", "fingerprint"}
+                    and isinstance(value, str)
+                    and len(rendered_value) > 28
+            ):
+                rendered_value = f"{rendered_value[:12]}...{rendered_value[-12:]}"
+            rendered = rendered_value.splitlines() or ["none"]
+            rows.append(f"> {label}: {rendered[0]}")
             rows.extend(f"  {line}" for line in rendered[1:])
         return tuple(rows)
+
+    @staticmethod
+    def _lifecycle_step(message: str) -> str | None:
+        """Map lifecycle events to the console phase that owns their details."""
+        if not _EVENT_NAME.fullmatch(message):
+            return None
+        if message.startswith("run_packag") or message.startswith("package_"):
+            return "Packaging"
+        prefix = message.partition("_")[0]
+        return {
+            "command": "Command",
+            "preflight": "Preflight",
+            "plan": "Planning",
+            "run": "Collection",
+            "collector": "Collector execution",
+            "package": "Packaging",
+        }.get(prefix)
+
+    def _render_step(self, message: str) -> None:
+        """Insert a visual break when lifecycle output moves to a new phase."""
+        step = self._lifecycle_step(message)
+        if step is None or step == self._last_console_step:
+            return
+        if self._last_console_step is not None:
+            self.console.write("\n")
+        render_presentation_step_heading(
+            self.console,
+            step,
+            width=self._console_width,
+        )
+        self._last_console_step = step
 
     @classmethod
     def _console_value(cls, value: object) -> str:
@@ -280,6 +320,7 @@ class ApplicationLogger(EventLogger):
                     stream.write("\n".join(rows) + "\n")
                 self._truncate_file()
             if self.settings.console_enabled:
+                self._render_step(message)
                 marker, marker_color, text_color = _LEVEL_PRESENTATION[normalized]
                 if not self._supports_unicode():
                     marker = {"\u25cf": "*", "\u00d7": "X", "\u00b7": "."}.get(marker, marker)
@@ -349,7 +390,10 @@ class ApplicationLogger(EventLogger):
         """Render console-only output as plain redacted lines."""
         with self._lock:
             if self.settings.console_enabled:
+                if self._last_console_step is not None:
+                    self.console.write("\n")
                 self.render_section(self.console, title, lines)
+                self._last_console_step = title
 
     def dispatch(self, messages: Iterable[str]) -> None:
         """Parse and dispatch a batch of optional `LEVEL: message` rows."""

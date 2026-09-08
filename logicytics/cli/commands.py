@@ -63,7 +63,7 @@ class CLI:
         invalid = validation["invalid"]
         quarantined = validation["quarantined"]
         logger.box(
-            "Preflight",
+            "Preflight summary",
             (
                 f"Valid collectors: {len(valid)}",
                 f"Quarantined extensions: {len(quarantined)}",
