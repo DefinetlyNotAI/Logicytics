@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import io
 import json
 import os
@@ -30,6 +31,23 @@ from tests.fixtures.file_listing import list_files
 
 class LoggingTests(unittest.TestCase):
     """Logging, output layout, file listing, and command-runner behavior."""
+
+    def test_application_sources_do_not_call_print(self) -> None:
+        """Production output must use structured logging instead of direct console prints."""
+        root = Path(__file__).resolve().parent.parent
+        violations: list[str] = []
+        for source_root in (root / "logicytics", root / "core"):
+            for source in source_root.rglob("*.py"):
+                tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+                violations.extend(
+                    f"{source.relative_to(root)}:{node.lineno}"
+                    for node in ast.walk(tree)
+                    if isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Name)
+                    and node.func.id == "print"
+                )
+
+        self.assertEqual([], violations)
 
     def test_application_logging_levels_colors_retention_and_dispatch_are_bounded(self) -> None:
         """The application sink is typed, redacted, reusable, colored, and size bounded."""
