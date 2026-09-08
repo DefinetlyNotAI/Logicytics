@@ -630,7 +630,7 @@ class CLI:
 def main(argv: list[str] | None = None) -> int:
     """Run the selected preflight, planning, or supervised execution command."""
     if not is_running_in_virtual_environment():
-        ApplicationLogger.render_section(
+        ApplicationLogger.render_alert(
             sys.stderr,
             "Logicytics startup error",
             virtual_environment_error(CLI.project_root()),
