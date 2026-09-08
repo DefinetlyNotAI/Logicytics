@@ -45,6 +45,7 @@ _LEVEL_PRESENTATION = {
     "EXCEPTION": ("\u00d7", "\033[91m", "\033[91m"),
     "CRITICAL": ("\u00d7", "\033[91m", "\033[91m"),
 }
+_DETAIL_MARKER_COLOR = "\033[95m"
 _RESET = "\033[0m"
 _BOLD = "\033[1m"
 _FILE_LOG_LINE_WIDTH = 140
@@ -178,6 +179,19 @@ class ApplicationLogger(EventLogger):
                 current_prefix = continuation + indentation
             rows.append(current_prefix + remaining)
         return tuple(rows)
+
+    @staticmethod
+    def _color_console_text(row: str, text_color: str) -> str:
+        """Color a leading detail marker purple while retaining the event color."""
+        indentation_length = len(row) - len(row.lstrip())
+        detail = row[indentation_length:]
+        if detail.startswith("> "):
+            return (
+                f"{text_color}{_BOLD}{row[:indentation_length]}"
+                f"{_DETAIL_MARKER_COLOR}{_BOLD}>{_RESET}"
+                f"{text_color}{_BOLD}{detail[1:]}"
+            )
+        return f"{text_color}{_BOLD}{row}"
 
     @staticmethod
     def _console_message(message: str) -> str:
@@ -333,13 +347,18 @@ class ApplicationLogger(EventLogger):
                 console_rows = self._console_rows(marker, console_message)
                 if self.settings.color_enabled and self.console.isatty():
                     marker_prefix = f"  {marker} "
+                    first_row = self._color_console_text(
+                        console_rows[0][len(marker_prefix):],
+                        text_color,
+                    )
                     colored_rows = (
                         f"{marker_color}{_BOLD}{marker_prefix}{_RESET}"
-                        f"{text_color}{_BOLD}{console_rows[0][len(marker_prefix):]}"
+                        f"{first_row}"
                     )
                     if len(console_rows) > 1:
                         colored_rows += "\n" + "\n".join(
-                            f"{text_color}{_BOLD}{row}" for row in console_rows[1:]
+                            self._color_console_text(row, text_color)
+                            for row in console_rows[1:]
                         )
                     self.console.write(f"{colored_rows}{_RESET}\n")
                 else:
@@ -398,7 +417,14 @@ class ApplicationLogger(EventLogger):
             if self.settings.console_enabled:
                 if self._last_console_step is not None:
                     self.console.write("\n")
-                self.render_section(self.console, title, lines)
+                render_presentation_section(
+                    self.console,
+                    title,
+                    lines,
+                    message_lines=self._message_lines,
+                    width=self._console_width,
+                    color_enabled=self.settings.color_enabled,
+                )
                 self._last_console_step = title
 
     def dispatch(self, messages: Iterable[str]) -> None:

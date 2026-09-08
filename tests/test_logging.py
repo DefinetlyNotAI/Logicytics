@@ -223,14 +223,13 @@ class LoggingTests(unittest.TestCase):
             rows = console.getvalue().splitlines()
             self.assertTrue(rows[0].startswith("  * "))
             self.assertTrue(rows[1].startswith("    "))
-            self.assertEqual(
-                [
-                    "[ Summary ]",
-                    "-" * ApplicationLogger._console_width(),
-                    "  > finished",
-                ],
-                rows[-3:],
-            )
+            border = "+" + "-" * (ApplicationLogger._console_width() - 2) + "+"
+            summary_start = rows.index(border, 2)
+            self.assertEqual(border, rows[summary_start])
+            self.assertTrue(rows[summary_start + 1].startswith("| Summary "))
+            self.assertEqual(border, rows[summary_start + 2])
+            self.assertEqual("", rows[summary_start + 3])
+            self.assertEqual("  > finished", rows[summary_start + 4])
             self.assertNotIn("\u25cf", console.getvalue())
             self.assertNotIn("\u256d", console.getvalue())
 
@@ -283,9 +282,12 @@ class LoggingTests(unittest.TestCase):
             logger.box("Summary", ("detail " * 40,))
 
             rows = console.getvalue().splitlines()
-            self.assertEqual("[ Summary ]", rows[0])
-            self.assertEqual("-" * ApplicationLogger._console_width(), rows[1])
-            self.assertGreater(len(rows), 2)
+            border = "+" + "-" * (ApplicationLogger._console_width() - 2) + "+"
+            self.assertEqual(border, rows[0])
+            self.assertTrue(rows[1].startswith("| Summary "))
+            self.assertEqual(border, rows[2])
+            self.assertEqual("", rows[3])
+            self.assertGreater(len(rows), 4)
             self.assertTrue(all(len(row) <= ApplicationLogger._console_width() for row in rows))
 
     def test_application_logging_groups_lifecycle_events_into_titled_steps(self) -> None:
@@ -303,14 +305,16 @@ class LoggingTests(unittest.TestCase):
             logger.event("INFO", "run_packaged", run_id="run-test")
 
             rendered = console.getvalue()
-            self.assertIn("[ Command ]\n", rendered)
-            self.assertIn("[ Preflight ]\n", rendered)
+            border = "+" + "-" * (ApplicationLogger._console_width() - 2) + "+"
+            self.assertIn(f"{border}\n| Command ", rendered)
+            self.assertIn(f"{border}\n| Preflight ", rendered)
+            self.assertIn(f"{border}\n\n  ● Command started", rendered)
             self.assertIn("  ● Command started\n    > Command: preflight", rendered)
             self.assertIn(
                 "  ● Preflight started\n    > Configuration hash: aaaaaaa",
                 rendered,
             )
-            self.assertEqual(1, rendered.count("[ Packaging ]"))
+            self.assertEqual(1, rendered.count("| Packaging "))
 
     def test_application_logging_compacts_configuration_hash_only_outside_debug(self) -> None:
         """Normal console output stays concise without losing the logged hash."""
@@ -364,6 +368,7 @@ class LoggingTests(unittest.TestCase):
             logger.event("INFO", "info message")
             logger.event("DEBUG", "debug message")
             logger.event("INFO", "collector_finished", collector_id="core.system.system_info")
+            logger.box("Summary", ("finished",))
 
             output = console.getvalue()
             self.assertIn(
@@ -376,6 +381,11 @@ class LoggingTests(unittest.TestCase):
             )
             self.assertIn("Collector finished\n", output)
             self.assertIn("Collector id: core.system.system_info", output)
+            self.assertIn(
+                "\033[95m\033[1m>\033[0m\033[97m\033[1m Collector id:",
+                output,
+            )
+            self.assertIn("\033[95m\033[1m>\033[0m finished", output)
             self.assertNotIn("collector_id=", output)
 
     def test_deprecation_decorator_logs_removal_context(self) -> None:

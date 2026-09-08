@@ -13,6 +13,9 @@ from logicytics.module.redaction import redact_text
 _DEFAULT_CONSOLE_WIDTH = 82
 _MIN_CONSOLE_WIDTH = 60
 _RIGHT_EDGE_MARGIN = 4
+_DETAIL_MARKER_COLOR = "\033[95m"
+_BOLD = "\033[1m"
+_RESET = "\033[0m"
 
 MessageLines = Callable[[str], tuple[str, ...]]
 ConsoleWidth = Callable[[], int]
@@ -30,15 +33,21 @@ def _plain_message_lines(message: str) -> tuple[str, ...]:
 
 
 def _heading(title: str, *, width: ConsoleWidth = console_width) -> str:
-    """Return an ASCII section heading that remains stable across terminals."""
+    """Return an ASCII title box that remains stable across terminals."""
     safe_title = redact_text(title).strip() or "Logicytics"
     available = max(width(), _MIN_CONSOLE_WIDTH)
-    return f"[ {safe_title} ]\n" + "-" * available
+    inner_width = available - 2
+    heading = f" {safe_title} "[:inner_width]
+    return "\n".join((
+        "+" + "-" * inner_width + "+",
+        "|" + heading.ljust(inner_width) + "|",
+        "+" + "-" * inner_width + "+",
+    ))
 
 
 def render_banner(console: TextIO, *, width: ConsoleWidth = console_width) -> None:
     """Render the compact startup banner after a real terminal clear."""
-    available = min(max(width(), _MIN_CONSOLE_WIDTH), 88)
+    available = min(max(width() - 2, _MIN_CONSOLE_WIDTH - 2), 86)
     title = " LOGICYTICS "
     subtitle = "Local evidence collection framework"
     rows = (
@@ -58,8 +67,8 @@ def render_step_heading(
         *,
         width: ConsoleWidth = console_width,
 ) -> None:
-    """Separate a lifecycle phase with a titled ASCII rule."""
-    console.write(f"{_heading(title, width=width)}\n")
+    """Separate a lifecycle phase with a titled ASCII box and breathing room."""
+    console.write(f"{_heading(title, width=width)}\n\n")
     console.flush()
 
 
@@ -81,9 +90,11 @@ def render_section(
         *,
         message_lines: MessageLines = _plain_message_lines,
         width: ConsoleWidth = console_width,
+        color_enabled: bool = False,
 ) -> None:
     """Render the shared indented, wrapped console section presentation."""
-    rows = [_heading(title, width=width)]
+    rows = [_heading(title, width=width), ""]
+    use_color = color_enabled and console.isatty()
     for line in lines:
         for raw_row in line.splitlines() or [""]:
             safe_row = redact_text(raw_row)
@@ -101,7 +112,13 @@ def render_section(
                     break_on_hyphens=False,
                 ) or [""]
                 row_prefix = prefix if presentation_index == 0 else continuation_prefix
-                rows.append(row_prefix + wrapped[0])
+                first_row = row_prefix + wrapped[0]
+                if use_color and presentation_index == 0:
+                    first_row = (
+                        f"{prefix[:-2]}{_DETAIL_MARKER_COLOR}{_BOLD}>{_RESET} "
+                        f"{indentation}{wrapped[0]}"
+                    )
+                rows.append(first_row)
                 rows.extend(f"{continuation_prefix}{part}" for part in wrapped[1:])
     console.write("\n".join(rows) + "\n")
     console.flush()
