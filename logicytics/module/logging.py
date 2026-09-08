@@ -18,6 +18,7 @@ from typing import Callable, Iterable, Mapping, ParamSpec, TextIO, TypeVar
 
 from logicytics.contracts import EventLogger
 from logicytics.module.configuration import LoggingSettings
+from logicytics.module.presentation import render_section as render_presentation_section
 from logicytics.module.redaction import redact_mapping, redact_text
 
 Parameters = ParamSpec("Parameters")
@@ -321,28 +322,13 @@ class ApplicationLogger(EventLogger):
             lines: Iterable[str],
     ) -> None:
         """Render a plain, indented console section for startup and fallback paths."""
-        rows = list(cls._message_lines(title))
-        for line in lines:
-            for raw_row in line.splitlines() or [""]:
-                safe_row = redact_text(raw_row)
-                indentation = safe_row[:len(safe_row) - len(safe_row.lstrip())]
-                remaining = safe_row.lstrip().rstrip()
-                prefix = f"  {indentation}"
-                continuation_prefix = f"    {indentation}"
-                available = max(cls._console_width() - len(continuation_prefix), 1)
-                presentation_rows = cls._message_lines(remaining)
-                for presentation_index, presentation_row in enumerate(presentation_rows):
-                    wrapped = textwrap.wrap(
-                        presentation_row,
-                        width=available,
-                        break_long_words=True,
-                        break_on_hyphens=False,
-                    ) or [""]
-                    row_prefix = prefix if presentation_index == 0 else continuation_prefix
-                    rows.append(row_prefix + wrapped[0])
-                    rows.extend(f"{continuation_prefix}{part}" for part in wrapped[1:])
-        console.write("\n".join(rows) + "\n")
-        console.flush()
+        render_presentation_section(
+            console,
+            title,
+            lines,
+            message_lines=cls._message_lines,
+            width=cls._console_width,
+        )
 
     def box(self, title: str, lines: Iterable[str]) -> None:
         """Render console-only output as plain redacted lines."""

@@ -26,6 +26,7 @@ from logicytics.module.logging import (
     timed,
 )
 from logicytics.module.output_layout import ensure_output_layout
+from logicytics.virtual_environment import render_virtual_environment_error, virtual_environment_error
 from tests.fixtures.file_listing import list_files
 
 
@@ -48,6 +49,25 @@ class LoggingTests(unittest.TestCase):
                 )
 
         self.assertEqual([], violations)
+
+    def test_virtual_environment_error_uses_the_logging_section_formatter(self) -> None:
+        """Bootstrap errors retain the exact redacted, wrapped logger presentation."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            activation_script = root / ".venv" / "Scripts" / "Activate.ps1"
+            activation_script.parent.mkdir(parents=True)
+            activation_script.write_text("", encoding="utf-8")
+            expected = io.StringIO()
+            actual = io.StringIO()
+
+            ApplicationLogger.render_section(
+                expected,
+                "Logicytics startup error",
+                virtual_environment_error(root),
+            )
+            render_virtual_environment_error(actual, root)
+
+            self.assertEqual(expected.getvalue(), actual.getvalue())
 
     def test_application_logging_levels_colors_retention_and_dispatch_are_bounded(self) -> None:
         """The application sink is typed, redacted, reusable, colored, and size bounded."""

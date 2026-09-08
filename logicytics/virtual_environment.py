@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 from typing import TextIO
 
+from logicytics.module.presentation import render_section
+
 
 _LOCAL_ENVIRONMENT = Path(".venv")
 _ACTIVATION_SCRIPT = Path("Scripts") / "Activate.ps1"
@@ -31,7 +33,5 @@ def virtual_environment_error(root: Path) -> tuple[str, str]:
 
 
 def render_virtual_environment_error(stream: TextIO, root: Path) -> None:
-    """Write the startup guard error without importing the normal CLI stack."""
-    stream.write("Logicytics startup error\n")
-    for detail in virtual_environment_error(root):
-        stream.write(f"  {detail}\n")
+    """Render the startup guard through the shared logging presentation format."""
+    render_section(stream, "Logicytics startup error", virtual_environment_error(root))
