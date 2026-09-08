@@ -9,7 +9,6 @@ from typing import TextIO
 
 from logicytics.module.redaction import redact_text
 
-
 _DEFAULT_CONSOLE_WIDTH = 82
 _MIN_CONSOLE_WIDTH = 60
 _RIGHT_EDGE_MARGIN = 4
@@ -62,10 +61,10 @@ def render_banner(console: TextIO, *, width: ConsoleWidth = terminal_width) -> N
 
 
 def render_step_heading(
-        console: TextIO,
-        title: str,
-        *,
-        width: ConsoleWidth = console_width,
+    console: TextIO,
+    title: str,
+    *,
+    width: ConsoleWidth = console_width,
 ) -> None:
     """Separate a lifecycle phase with a titled ASCII rule and breathing room."""
     console.write(f"{_heading(title, width=width)}\n\n")
@@ -78,13 +77,13 @@ def _alert_symbols() -> tuple[str, str, str, str, str, str, str, str]:
 
 
 def render_section(
-        console: TextIO,
-        title: str,
-        lines: Iterable[str],
-        *,
-        message_lines: MessageLines = _plain_message_lines,
-        width: ConsoleWidth = console_width,
-        color_enabled: bool = False,
+    console: TextIO,
+    title: str,
+    lines: Iterable[str],
+    *,
+    message_lines: MessageLines = _plain_message_lines,
+    width: ConsoleWidth = console_width,
+    color_enabled: bool = False,
 ) -> None:
     """Render the shared indented, wrapped console section presentation."""
     rows = [_heading(title, width=width), ""]
@@ -92,7 +91,7 @@ def render_section(
     for line in lines:
         for raw_row in line.splitlines() or [""]:
             safe_row = redact_text(raw_row)
-            indentation = safe_row[:len(safe_row) - len(safe_row.lstrip())]
+            indentation = safe_row[: len(safe_row) - len(safe_row.lstrip())]
             remaining = safe_row.lstrip().rstrip()
             prefix = f"  > {indentation}"
             continuation_prefix = f"    {indentation}"
@@ -108,10 +107,7 @@ def render_section(
                 row_prefix = prefix if presentation_index == 0 else continuation_prefix
                 first_row = row_prefix + wrapped[0]
                 if use_color and presentation_index == 0:
-                    first_row = (
-                        f"{prefix[:-2]}{_DETAIL_MARKER_COLOR}{_BOLD}>{_RESET} "
-                        f"{indentation}{wrapped[0]}"
-                    )
+                    first_row = f"{prefix[:-2]}{_DETAIL_MARKER_COLOR}{_BOLD}>{_RESET} {indentation}{wrapped[0]}"
                 rows.append(first_row)
                 rows.extend(f"{continuation_prefix}{part}" for part in wrapped[1:])
     console.write("\n".join(rows) + "\n")
@@ -119,12 +115,12 @@ def render_section(
 
 
 def render_alert(
-        console: TextIO,
-        title: str,
-        lines: Iterable[str],
-        *,
-        message_lines: MessageLines = _plain_message_lines,
-        width: ConsoleWidth = console_width,
+    console: TextIO,
+    title: str,
+    lines: Iterable[str],
+    *,
+    message_lines: MessageLines = _plain_message_lines,
+    width: ConsoleWidth = console_width,
 ) -> None:
     """Render a severity-marked, bordered alert with wrapped actionable details."""
     (
@@ -155,12 +151,9 @@ def render_alert(
                     break_long_words=True,
                     break_on_hyphens=False,
                 ) or [""]
-                rows.append(
-                    f"{vertical}{prefix}{wrapped[0]:<{inner_width - len(prefix)}}{vertical}"
-                )
+                rows.append(f"{vertical}{prefix}{wrapped[0]:<{inner_width - len(prefix)}}{vertical}")
                 rows.extend(
-                    f"{vertical}{continuation_prefix}{row:<{inner_width - len(continuation_prefix)}}{vertical}"
-                    for row in wrapped[1:]
+                    f"{vertical}{continuation_prefix}{row:<{inner_width - len(continuation_prefix)}}{vertical}" for row in wrapped[1:]
                 )
     rows.append(f"{bottom_left}{horizontal * inner_width}{bottom_right}")
     console.write("\n".join(rows) + "\n")

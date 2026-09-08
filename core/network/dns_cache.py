@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -21,13 +28,19 @@ class DnsCacheCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the subprocess-gated sensitive DNS-cache artifact contract."""
         return CollectorMetadata(
-            id="core.network.dns_cache", name="DNS resolver cache", version="4.0.0", specialty=Specialty.NETWORK,
+            id="core.network.dns_cache",
+            name="DNS resolver cache",
+            version="4.0.0",
+            specialty=Specialty.NETWORK,
             output_media_types=("text/plain",),
             description="Exports local DNS resolver cache records through read-only ipconfig output.",
             author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
+            supported_platforms=("win32",),
+            capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("dns_history",),
-            default_profiles=("deep",), timeout_seconds=30, maximum_output_bytes=4 * 1024 * 1024,
+            default_profiles=("deep",),
+            timeout_seconds=30,
+            maximum_output_bytes=4 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -47,8 +60,11 @@ class DnsCacheCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"ipconfig exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "DNS-cache access was denied for the current account",
-                                       errors=(detail,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "DNS-cache access was denied for the current account",
+                    errors=(detail,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "DNS-cache query failed", errors=(detail,))
         output = context.workspace / "dns_cache.txt"
         output.write_text(completed.stdout, encoding="utf-8")

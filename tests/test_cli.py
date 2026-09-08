@@ -27,11 +27,15 @@ class CliTests(unittest.TestCase):
             activation_script.write_text("", encoding="utf-8")
             output = io.StringIO()
 
-            with patch("logicytics.cli._project_root", return_value=root), patch.object(
+            with (
+                patch("logicytics.cli._project_root", return_value=root),
+                patch.object(
                     sys,
                     "prefix",
                     sys.base_prefix,
-            ), patch("sys.stderr", output):
+                ),
+                patch("sys.stderr", output),
+            ):
                 self.assertEqual(2, main(["preflight"]))
 
             self.assertIn(r".\.venv\Scripts\Activate.ps1", output.getvalue())
@@ -42,11 +46,15 @@ class CliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             output = io.StringIO()
 
-            with patch("logicytics.cli._project_root", return_value=Path(temporary)), patch.object(
+            with (
+                patch("logicytics.cli._project_root", return_value=Path(temporary)),
+                patch.object(
                     sys,
                     "prefix",
                     sys.base_prefix,
-            ), patch("sys.stderr", output):
+                ),
+                patch("sys.stderr", output),
+            ):
                 self.assertEqual(2, main(["preflight"]))
 
             rendered = " ".join(output.getvalue().split())
@@ -71,15 +79,17 @@ class CliTests(unittest.TestCase):
         self.assertEqual((), request.blocked_capabilities)
 
         blocked = cli_methods.request(
-            parser.parse_args([
-                "run",
-                "--profile",
-                "standard",
-                "--block-capability",
-                "network",
-                "--block-capability",
-                "filesystem_read",
-            ]),
+            parser.parse_args(
+                [
+                    "run",
+                    "--profile",
+                    "standard",
+                    "--block-capability",
+                    "network",
+                    "--block-capability",
+                    "filesystem_read",
+                ]
+            ),
             default_workers=4,
         )
         self.assertEqual(
@@ -166,13 +176,15 @@ class CliTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "--profile"):
             cli_methods.request(
-                parser.parse_args([
-                    "run",
-                    "--mode",
-                    "quick",
-                    "--profile",
-                    "deep",
-                ]),
+                parser.parse_args(
+                    [
+                        "run",
+                        "--mode",
+                        "quick",
+                        "--profile",
+                        "deep",
+                    ]
+                ),
                 4,
             )
 
@@ -185,13 +197,16 @@ class CliTests(unittest.TestCase):
             root = Path(temporary)
             output = io.StringIO()
 
-            with patch.object(
+            with (
+                patch.object(
                     CLI,
                     "project_root",
                     return_value=root,
-            ), patch(
-                "sys.stderr",
-                output,
+                ),
+                patch(
+                    "sys.stderr",
+                    output,
+                ),
             ):
                 self.assertEqual(0, main(["--modes"]))
 
@@ -199,20 +214,14 @@ class CliTests(unittest.TestCase):
             self.assertIn("Execution modes", rendered)
             self.assertIn("Machine-readable matrix:", rendered)
             self.assertNotIn("{", rendered)
-            payload = json.loads(
-                (root / "output" / "logs" / "debug" / "modes.json").read_text(
-                    encoding="utf-8"
-                )
-            )
+            payload = json.loads((root / "output" / "logs" / "debug" / "modes.json").read_text(encoding="utf-8"))
 
             self.assertEqual(1, payload["schema_version"])
             self.assertEqual(
                 list(EXECUTION_MODES),
                 [item["name"] for item in payload["modes"]],
             )
-            self.assertTrue(
-                all("legacy_aliases" in item for item in payload["modes"])
-            )
+            self.assertTrue(all("legacy_aliases" in item for item in payload["modes"]))
             self.assertEqual([], payload["collectors"])
 
     def test_cli_without_action_prints_help_and_modes_are_parser_exclusive(self) -> None:
@@ -230,7 +239,7 @@ class CliTests(unittest.TestCase):
         self.assertIn("not allowed with argument", errors.getvalue())
 
     def test_update_can_explicitly_launch_an_allowlisted_action_in_a_new_window(
-            self,
+        self,
     ) -> None:
         """The paired update options launch exactly one shell-free visible Windows action."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -245,30 +254,37 @@ class CliTests(unittest.TestCase):
             )
             output = io.StringIO()
 
-            with patch.object(
+            with (
+                patch.object(
                     CLI,
                     CLI.project_root.__name__,
                     return_value=root,
-            ), patch.object(
-                process_adapter,
-                process_adapter.run.__name__,
-                return_value=git,
-            ), patch.object(
-                CLI,
-                CLI.launch_action_window.__name__,
-                return_value=321,
-            ) as launch, patch(
-                "sys.stderr",
-                output,
+                ),
+                patch.object(
+                    process_adapter,
+                    process_adapter.run.__name__,
+                    return_value=git,
+                ),
+                patch.object(
+                    CLI,
+                    CLI.launch_action_window.__name__,
+                    return_value=321,
+                ) as launch,
+                patch(
+                    "sys.stderr",
+                    output,
+                ),
             ):
                 self.assertEqual(
                     0,
-                    main([
-                        "update",
-                        "--launch-action",
-                        "debug",
-                        "--new-window",
-                    ]),
+                    main(
+                        [
+                            "update",
+                            "--launch-action",
+                            "debug",
+                            "--new-window",
+                        ]
+                    ),
                 )
 
             rendered = output.getvalue()
@@ -276,23 +292,22 @@ class CliTests(unittest.TestCase):
             self.assertIn("Launched action: debug", rendered)
             self.assertIn("Launched process id: 321", rendered)
             self.assertNotIn("{", rendered)
-            payload = json.loads(
-                (root / "output" / "logs" / "debug" / "update.json").read_text(
-                    encoding="utf-8"
-                )
-            )
+            payload = json.loads((root / "output" / "logs" / "debug" / "update.json").read_text(encoding="utf-8"))
             self.assertEqual("debug", payload["launched_action"])
             self.assertEqual(321, payload["launched_process_id"])
             launch.assert_called_once_with(root, "debug")
 
             error_logger = MagicMock()
-            with patch.object(
+            with (
+                patch.object(
                     CLI,
                     CLI.project_root.__name__,
                     return_value=root,
-            ), patch(
-                "logicytics.cli.commands.get_application_logger",
-                return_value=error_logger,
+                ),
+                patch(
+                    "logicytics.cli.commands.get_application_logger",
+                    return_value=error_logger,
+                ),
             ):
                 self.assertEqual(
                     2,
@@ -303,28 +318,27 @@ class CliTests(unittest.TestCase):
                 "Command error",
                 ("--new-window and --launch-action must be provided together",),
             )
-            event_messages = [
-                call.args[1]
-                for call in error_logger.event.call_args_list
-                if len(call.args) > 1
-            ]
+            event_messages = [call.args[1] for call in error_logger.event.call_args_list if len(call.args) > 1]
             self.assertIn("command_finished", event_messages)
 
     def test_new_window_launcher_uses_current_interpreter_without_a_shell(
-            self,
+        self,
     ) -> None:
         """Visible maintenance windows preserve argument boundaries and repository cwd."""
         root = Path("C:/repo").resolve()
         process = MagicMock(pid=42)
 
-        with patch(
+        with (
+            patch(
                 "sys.platform",
                 "win32",
-        ), patch.object(
-            process_adapter,
-            process_adapter.popen.__name__,
-            return_value=process,
-        ) as popen:
+            ),
+            patch.object(
+                process_adapter,
+                process_adapter.popen.__name__,
+                return_value=process,
+            ) as popen,
+        ):
             self.assertEqual(
                 42,
                 cli_methods.launch_action_window(root, "preflight"),
@@ -338,12 +352,15 @@ class CliTests(unittest.TestCase):
             close_fds=True,
         )
 
-        with patch(
+        with (
+            patch(
                 "sys.platform",
                 "linux",
-        ), self.assertRaisesRegex(
-            OSError,
-            "only on Windows",
+            ),
+            self.assertRaisesRegex(
+                OSError,
+                "only on Windows",
+            ),
         ):
             cli_methods.launch_action_window(root, "debug")
 

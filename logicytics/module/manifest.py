@@ -6,10 +6,11 @@ import getpass
 import json
 import os
 import platform
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
-from typing import Any, Mapping
+from typing import Any
 
 from logicytics.contracts import CONTRACT_VERSION, Artifact, CollectorResult, RunStatus
 from logicytics.module.redaction import redact_mapping, redact_text
@@ -20,7 +21,7 @@ MANIFEST_SCHEMA_VERSION = 1
 
 def utc_now() -> str:
     """Return a stable UTC timestamp for manifests and records."""
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 @dataclass(slots=True)
@@ -135,15 +136,15 @@ class RunManifest:
 
     @classmethod
     def create(
-            cls,
-            run_id: str,
-            request: Mapping[str, Any],
-            configuration: Mapping[str, Any],
-            collector_sources: list[tuple[str, Path]],
-            *,
-            parent_run_id: str | None = None,
-            plan_fingerprint: str | None = None,
-    ) -> "RunManifest":
+        cls,
+        run_id: str,
+        request: Mapping[str, Any],
+        configuration: Mapping[str, Any],
+        collector_sources: list[tuple[str, Path]],
+        *,
+        parent_run_id: str | None = None,
+        plan_fingerprint: str | None = None,
+    ) -> RunManifest:
         """Create the initial planned manifest before collection begins."""
         return cls(
             run_id=run_id,
@@ -151,8 +152,7 @@ class RunManifest:
             status=RunStatus.PLANNED,
             request=request,
             configuration=configuration,
-            collectors=[CollectorRecord(id=collector_id, source=str(source)) for collector_id, source in
-                        collector_sources],
+            collectors=[CollectorRecord(id=collector_id, source=str(source)) for collector_id, source in collector_sources],
             resolved_plan=tuple(collector_id for collector_id, _ in collector_sources),
             plan_fingerprint=plan_fingerprint,
             action="rerun" if parent_run_id is not None else "run",
@@ -180,17 +180,16 @@ class RunManifest:
         self.cancellation_requested = "cancelled" in statuses
         self.skipped_collectors = [record.id for record in self.collectors if record.status == "skipped"]
         self.errors = [
-            {"collector_id": record.id, "status": record.status, "message": error}
-            for record in self.collectors
-            for error in record.errors
+            {"collector_id": record.id, "status": record.status, "message": error} for record in self.collectors for error in record.errors
         ]
         self.finished_at = utc_now()
         self.total_artifact_bytes = sum(artifact.size_bytes for artifact in self.artifact_list())
 
     def artifact_list(self) -> tuple[Artifact, ...]:
         """Return all registered artifacts reconstructed from the manifest."""
-        return tuple(Artifact.from_dict({key: value for key, value in item.items() if key != "producer_status"})
-                     for item in self.artifact_catalog())
+        return tuple(
+            Artifact.from_dict({key: value for key, value in item.items() if key != "producer_status"}) for item in self.artifact_catalog()
+        )
 
     def artifact_catalog(self) -> tuple[dict[str, Any], ...]:
         """Build the globally unique, ownership-validated run-wide evidence catalog."""
@@ -201,19 +200,19 @@ class RunManifest:
             for item in record.artifacts:
                 artifact = Artifact.from_dict(item)
                 if artifact.collector_id != record.id:
-                    raise ValueError(f"manifest artifact collector ownership is invalid: {artifact.relative_path}")
+                    raise ValueError("manifest artifact collector ownership is invalid: " + artifact.relative_path)
                 relative = PurePosixPath(artifact.relative_path)
                 if (
-                        "\\" in artifact.relative_path
-                        or relative.is_absolute()
-                        or ".." in relative.parts
-                        or relative.as_posix() != artifact.relative_path
-                        or len(relative.parts) < 2
-                        or relative.parts[0] != record.id.replace(".", "_")
+                    "\\" in artifact.relative_path
+                    or relative.is_absolute()
+                    or ".." in relative.parts
+                    or relative.as_posix() != artifact.relative_path
+                    or len(relative.parts) < 2
+                    or relative.parts[0] != record.id.replace(".", "_")
                 ):
                     raise ValueError(f"manifest artifact escapes its collector-owned store: {artifact.relative_path}")
                 if artifact.name != relative.name:
-                    raise ValueError(f"manifest artifact name does not match its registered path: {artifact.name}")
+                    raise ValueError("manifest artifact name does not match its registered path: " + artifact.name)
                 if artifact.id in artifact_ids:
                     raise ValueError(f"manifest contains duplicate artifact id: {artifact.id}")
                 if artifact.relative_path in artifact_paths:
@@ -226,13 +225,12 @@ class RunManifest:
     def to_dict(self) -> dict[str, Any]:
         """Produce JSON-safe manifest data."""
         if (
-                not isinstance(self.manifest_schema_version, int)
-                or isinstance(self.manifest_schema_version, bool)
-                or self.manifest_schema_version != MANIFEST_SCHEMA_VERSION
+            not isinstance(self.manifest_schema_version, int)
+            or isinstance(self.manifest_schema_version, bool)
+            or self.manifest_schema_version != MANIFEST_SCHEMA_VERSION
         ):
             raise ValueError(
-                f"unsupported run manifest schema_version {self.manifest_schema_version!r}; "
-                f"expected {MANIFEST_SCHEMA_VERSION}"
+                f"unsupported run manifest schema_version {self.manifest_schema_version!r}; expected {MANIFEST_SCHEMA_VERSION}"
             )
         data = asdict(self)
         data["status"] = self.status.value

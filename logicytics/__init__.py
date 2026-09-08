@@ -5,13 +5,13 @@ import importlib
 from logicytics.contracts import (
     CONTRACT_VERSION,
     Capability,
-    Collector,
     CollectionEstimate,
+    Collector,
     CollectorMetadata,
     CollectorResult,
     CoreCollector,
-    EvidenceKind,
     EstimatedCost,
+    EvidenceKind,
     NetworkAccess,
     OutputPolicy,
     PluginCollector,
@@ -23,11 +23,20 @@ from logicytics.contracts import (
     Specialty,
     ValidationResult,
 )
-_APPLICATION_EXPORTS = frozenset({
-    "CollectorFailureSnapshot", "CollectorSnapshot", "RunSnapshot", "load_configuration", "open_artifact", "plan_run",
-    "query_run", "read_artifact",
-    "run_collection",
-})
+
+_APPLICATION_EXPORTS = frozenset(
+    {
+        "CollectorFailureSnapshot",
+        "CollectorSnapshot",
+        "RunSnapshot",
+        "load_configuration",
+        "open_artifact",
+        "plan_run",
+        "query_run",
+        "read_artifact",
+        "run_collection",
+    }
+)
 
 
 def __getattr__(name: str):
@@ -47,15 +56,15 @@ def __getattr__(name: str):
 __all__ = [
     "CONTRACT_VERSION",
     "Capability",
-    "Collector",
     "CollectionEstimate",
+    "Collector",
+    "CollectorFailureSnapshot",
     "CollectorMetadata",
     "CollectorResult",
-    "CollectorFailureSnapshot",
     "CollectorSnapshot",
     "CoreCollector",
-    "EvidenceKind",
     "EstimatedCost",
+    "EvidenceKind",
     "NetworkAccess",
     "OutputPolicy",
     "PluginCollector",
@@ -72,5 +81,5 @@ __all__ = [
     "plan_run",
     "query_run",
     "read_artifact",
-    "run_collection"
+    "run_collection",
 ]

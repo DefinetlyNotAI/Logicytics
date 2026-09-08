@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -11,11 +18,7 @@ from logicytics.platform_adapters import which
 def _is_access_denied(detail: str, return_code: int) -> bool:
     """Recognize textual and HRESULT access-denied results from manage-bde."""
     normalized = detail.casefold()
-    return (
-            return_code == 2147749891
-            or "permission denied" in normalized
-            or ("access" in normalized and "denied" in normalized)
-    )
+    return return_code == 2147749891 or "permission denied" in normalized or ("access" in normalized and "denied" in normalized)
 
 
 class BitlockerStatusCollector(CoreCollector):
@@ -57,8 +60,11 @@ class BitlockerStatusCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"manage-bde exit code {completed.returncode}"
             if _is_access_denied(detail, completed.returncode):
-                return CollectorResult(CollectorStatus.SKIPPED,
-                                       "BitLocker status access was denied for the current account", errors=(detail,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "BitLocker status access was denied for the current account",
+                    errors=(detail,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "BitLocker status query failed", errors=(detail,))
         output = context.workspace / "bitlocker_status.txt"
         output.write_text(completed.stdout, encoding="utf-8")

@@ -7,11 +7,11 @@ import json
 import platform
 import re
 from collections import Counter
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Iterable, Mapping
 
 FLAG_DESCRIPTIONS: Mapping[str, str] = {
     "default": "standard collection sequentially",
@@ -59,11 +59,11 @@ def _score(query: str, flag: str, description: str) -> float:
 
 
 def match_flag(
-        user_input: str,
-        *,
-        threshold: float,
-        model_name: str,
-        history: Iterable[Mapping[str, object]] = (),
+    user_input: str,
+    *,
+    threshold: float,
+    model_name: str,
+    history: Iterable[Mapping[str, object]] = (),
 ) -> FlagMatch:
     """Match names and descriptions, then consult prior accepted inputs when weak."""
     if not isinstance(user_input, str) or not user_input.strip():
@@ -81,7 +81,11 @@ def match_flag(
         old_flag = item.get("matched_flag")
         if isinstance(old_input, str) and isinstance(old_flag, str) and old_flag in FLAG_DESCRIPTIONS:
             historical.append(
-                (SequenceMatcher(None, _normalized(user_input), _normalized(old_input)).ratio(), old_flag))
+                (
+                    SequenceMatcher(None, _normalized(user_input), _normalized(old_input)).ratio(),
+                    old_flag,
+                )
+            )
     if historical:
         history_score, history_flag = sorted(historical, key=lambda item: (-item[0], item[1]))[0]
         if history_score > direct_score:
@@ -106,11 +110,13 @@ def load_history(path: Path) -> list[dict[str, object]]:
 def record_match(path: Path, match: FlagMatch) -> None:
     """Atomically append one compressed, local-only interaction record."""
     history = load_history(path)
-    history.append({
-        **asdict(match),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "device_name": platform.node() or "unknown",
-    })
+    history.append(
+        {
+            **asdict(match),
+            "timestamp": datetime.now(UTC).isoformat(),
+            "device_name": platform.node() or "unknown",
+        }
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     with gzip.open(temporary, "wt", encoding="utf-8") as stream:
@@ -147,11 +153,7 @@ def usage_statistics(history: Iterable[Mapping[str, object]]) -> dict[str, objec
 
     return {
         "total_interactions": len(records),
-        "average_accuracy": (
-            round(sum(accuracies) / len(accuracies), 6)
-            if accuracies
-            else 0.0
-        ),
+        "average_accuracy": (round(sum(accuracies) / len(accuracies), 6) if accuracies else 0.0),
         "common_device": devices.most_common(1)[0][0] if devices else None,
         "common_input": inputs.most_common(1)[0][0] if inputs else None,
         "per_flag_frequency": dict(sorted(flags.items())),
@@ -171,16 +173,17 @@ def write_usage_graph(path: Path, statistics: Mapping[str, object]) -> Path:
         count = int(counts.get(label, 0))
         y = 48 + index * row_height
         bar_width = int(500 * count / maximum)
-        rows.extend((
-            f'<text x="12" y="{y + 16}" font-family="monospace" font-size="13">{label}</text>',
-            f'<rect x="190" y="{y}" width="{bar_width}" height="20" fill="#3b82f6"/>',
-            f'<text x="{200 + bar_width}" y="{y + 16}" font-family="monospace" font-size="13">{count}</text>',
-        ))
+        rows.extend(
+            (
+                f'<text x="12" y="{y + 16}" font-family="monospace" font-size="13">{label}</text>',
+                f'<rect x="190" y="{y}" width="{bar_width}" height="20" fill="#3b82f6"/>',
+                f'<text x="{200 + bar_width}" y="{y + 16}" font-family="monospace" font-size="13">{count}</text>',
+            )
+        )
     svg = (
-            f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-            f'viewBox="0 0 {width} {height}"><rect width="100%" height="100%" fill="white"/>'
-            '<text x="12" y="28" font-family="sans-serif" font-size="20">Logicytics flag usage</text>'
-            + "".join(rows) + "</svg>\n"
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+        f'viewBox="0 0 {width} {height}"><rect width="100%" height="100%" fill="white"/>'
+        '<text x="12" y="28" font-family="sans-serif" font-size="20">Logicytics flag usage</text>' + "".join(rows) + "</svg>\n"
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(svg, encoding="utf-8")

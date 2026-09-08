@@ -5,11 +5,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from logicytics.terminal import terminal_lifecycle
 from logicytics.virtual_environment import (
     is_running_in_virtual_environment,
     render_virtual_environment_error,
 )
-from logicytics.terminal import terminal_lifecycle
 
 __all__ = ["CLI", "cli_methods", "main"]
 

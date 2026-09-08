@@ -10,16 +10,15 @@ import re
 import sys
 import tomllib
 import urllib.request
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, Mapping, TypedDict
+from typing import Any, TypedDict
 
 from logicytics.module.configuration import MaintenanceSettings
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
-_VERSION = re.compile(
-    r"^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+)|((?:a|b|rc|\.dev)\d+))?$"
-)
+_VERSION = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+)|((?:a|b|rc|\.dev)\d+))?$")
 _MAXIMUM_MANIFEST_BYTES = 2 * 1024 * 1024
 _EXCLUDED_PARTS = frozenset(
     {
@@ -88,25 +87,12 @@ def _parse_manifest(payload: object, source: str) -> IntegrityManifest:
         raise ValueError("integrity manifest files must be an object")
     validated: dict[str, str] = {}
     for name, digest in files.items():
-        if (
-                not isinstance(name, str)
-                or not isinstance(digest, str)
-                or _SHA256.fullmatch(digest) is None
-        ):
+        if not isinstance(name, str) or not isinstance(digest, str) or _SHA256.fullmatch(digest) is None:
             raise ValueError("integrity manifest file entries require path and SHA-256 strings")
         path = PurePosixPath(name)
-        if (
-                name == "."
-                or path.is_absolute()
-                or ".." in path.parts
-                or path.as_posix() != name
-                or "\\" in name
-        ):
+        if name == "." or path.is_absolute() or ".." in path.parts or path.as_posix() != name or "\\" in name:
             raise ValueError(f"integrity manifest path is unsafe: {name!r}")
-        if any(
-                part in _EXCLUDED_PARTS or part.startswith(".") and part != ".github"
-                for part in path.parts
-        ):
+        if any(part in _EXCLUDED_PARTS or part.startswith(".") and part != ".github" for part in path.parts):
             raise ValueError(f"integrity manifest path is excluded: {name!r}")
         validated[name] = digest
     return IntegrityManifest(version, dict(sorted(validated.items())), source)
@@ -133,9 +119,7 @@ def fetch_remote_manifest(settings: MaintenanceSettings) -> IntegrityManifest | 
     return _parse_manifest(raw, settings.remote_manifest_url)
 
 
-def load_local_manifest(
-        project_root: Path, settings: MaintenanceSettings
-) -> IntegrityManifest | None:
+def load_local_manifest(project_root: Path, settings: MaintenanceSettings) -> IntegrityManifest | None:
     """Load the configured project-owned manifest without leaving the repository."""
     path = (project_root / settings.local_manifest_path).resolve()
     try:
@@ -171,24 +155,19 @@ def project_files(project_root: Path, settings: MaintenanceSettings) -> tuple[Pa
     return tuple(sorted(files))
 
 
-def build_manifest(
-        project_root: Path, settings: MaintenanceSettings, version: str
-) -> IntegrityManifest:
+def build_manifest(project_root: Path, settings: MaintenanceSettings, version: str) -> IntegrityManifest:
     """Create a deterministic required-file manifest from eligible project files."""
     if _VERSION.fullmatch(version) is None:
         raise ValueError("next version must use semantic versioning")
     root = project_root.resolve()
-    files = {
-        path.relative_to(root).as_posix(): sha256_path(path)
-        for path in project_files(root, settings)
-    }
+    files = {path.relative_to(root).as_posix(): sha256_path(path) for path in project_files(root, settings)}
     return IntegrityManifest(version, files, "generated")
 
 
 def write_local_manifest(
-        project_root: Path,
-        settings: MaintenanceSettings,
-        manifest: IntegrityManifest,
+    project_root: Path,
+    settings: MaintenanceSettings,
+    manifest: IntegrityManifest,
 ) -> Path:
     """Atomically publish an explicitly approved local manifest update."""
     path = (project_root / settings.local_manifest_path).resolve()
@@ -208,30 +187,19 @@ def write_local_manifest(
 
 
 def compare_files(
-        project_root: Path,
-        settings: MaintenanceSettings,
-        manifest: IntegrityManifest,
+    project_root: Path,
+    settings: MaintenanceSettings,
+    manifest: IntegrityManifest,
 ) -> dict[str, list[str]]:
     """Report exact missing, modified, extra, and unchanged project files."""
     root = project_root.resolve()
-    current = {
-        path.relative_to(root).as_posix(): sha256_path(path)
-        for path in project_files(root, settings)
-    }
+    current = {path.relative_to(root).as_posix(): sha256_path(path) for path in project_files(root, settings)}
     expected = dict(manifest.files)
     return {
         "missing": sorted(set(expected) - set(current)),
-        "modified": sorted(
-            name
-            for name in set(expected).intersection(current)
-            if expected[name] != current[name]
-        ),
+        "modified": sorted(name for name in set(expected).intersection(current) if expected[name] != current[name]),
         "extra": sorted(set(current) - set(expected)),
-        "unchanged": sorted(
-            name
-            for name in set(expected).intersection(current)
-            if expected[name] == current[name]
-        ),
+        "unchanged": sorted(name for name in set(expected).intersection(current) if expected[name] == current[name]),
     }
 
 
@@ -261,10 +229,7 @@ def compare_versions(local: str, remote: str) -> str:
             label, number = pep_match.groups()
             identifiers = ((0, {".dev": 0, "a": 1, "b": 2, "rc": 3}[label]), (0, int(number)))
         elif prerelease is not None:
-            identifiers = tuple(
-                (0, int(identifier)) if identifier.isdigit() else (1, identifier)
-                for identifier in prerelease.split(".")
-            )
+            identifiers = tuple((0, int(identifier)) if identifier.isdigit() else (1, identifier) for identifier in prerelease.split("."))
         is_stable = prerelease is None and pep_prerelease is None
         return int(major), int(minor), int(patch), 1 if is_stable else 0, identifiers
 
@@ -277,13 +242,7 @@ def python_support(settings: MaintenanceSettings) -> dict[str, str]:
     running = (sys.version_info.major, sys.version_info.minor)
     minimum = tuple(map(int, settings.minimum_python.split(".")))
     recommended = tuple(map(int, settings.recommended_python.split(".")))
-    status = (
-        "incompatible"
-        if running < minimum
-        else "recommended"
-        if running == recommended
-        else "supported"
-    )
+    status = "incompatible" if running < minimum else "recommended" if running == recommended else "supported"
     return {
         "running": f"{running[0]}.{running[1]}",
         "minimum": settings.minimum_python,
@@ -292,9 +251,7 @@ def python_support(settings: MaintenanceSettings) -> dict[str, str]:
     }
 
 
-def maintenance_diagnostics(
-        project_root: Path, settings: MaintenanceSettings
-) -> dict[str, object]:
+def maintenance_diagnostics(project_root: Path, settings: MaintenanceSettings) -> dict[str, object]:
     """Resolve optional remote/local integrity evidence without changing collection state."""
     remote = fetch_remote_manifest(settings)
     local_manifest = load_local_manifest(project_root, settings)
@@ -304,15 +261,9 @@ def maintenance_diagnostics(
         "local_version": local_version(project_root),
         "manifest_source": selected.source if selected else None,
         "manifest_version": selected.version if selected else None,
-        "version_status": (
-            compare_versions(local_version(project_root), selected.version)
-            if selected
-            else "unconfigured"
-        ),
+        "version_status": (compare_versions(local_version(project_root), selected.version) if selected else "unconfigured"),
         "files": (
-            compare_files(project_root, settings, selected)
-            if selected
-            else {"missing": [], "modified": [], "extra": [], "unchanged": []}
+            compare_files(project_root, settings, selected) if selected else {"missing": [], "modified": [], "extra": [], "unchanged": []}
         ),
         "remote_enabled": remote is not None,
     }
@@ -320,6 +271,7 @@ def maintenance_diagnostics(
 
 class DeveloperChecks(TypedDict):
     """Static repository hygiene findings returned by developer checks."""
+
     naming_violations: list[str]
     misplaced_python: list[str]
     missing_module_docstrings: list[str]
@@ -351,10 +303,9 @@ def developer_checks(project_root: Path, settings: MaintenanceSettings) -> Devel
             missing_docstrings.append(relative.as_posix())
 
         public_features = [
-            node.name for node in tree.body
-            if isinstance(
-                node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
-            ) and not node.name.startswith("_")
+            node.name
+            for node in tree.body
+            if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and not node.name.startswith("_")
         ]
 
         if len(public_features) > 12:

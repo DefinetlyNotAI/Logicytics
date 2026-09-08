@@ -2,22 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 
 def list_files(
-        root: Path,
-        *,
-        extensions: Iterable[str] = (),
-        excluded_names: Iterable[str] = (),
-        excluded_directories: Iterable[str] = (),
-        append_to: Iterable[Path] = (),
+    root: Path,
+    *,
+    extensions: Iterable[str] = (),
+    excluded_names: Iterable[str] = (),
+    excluded_directories: Iterable[str] = (),
+    append_to: Iterable[Path] = (),
 ) -> tuple[Path, ...]:
     """Return sorted normalized files under root, applying explicit filters safely."""
     resolved_root = root.resolve()
-    normalized_extensions = {extension.casefold() if extension.startswith(".") else f".{extension.casefold()}" for
-                             extension in extensions}
+    normalized_extensions = {extension.casefold() if extension.startswith(".") else f".{extension.casefold()}" for extension in extensions}
     names = {name.casefold() for name in excluded_names}
     directories = {name.casefold() for name in excluded_directories}
     results = {Path(path).resolve() for path in append_to}

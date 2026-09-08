@@ -77,20 +77,24 @@ class ConfigurationDocumentationTests(unittest.TestCase):
             root = Path(temporary)
             path = root / "logicytics.yaml"
             path.write_text(
-                json.dumps({
-                    "schema_version": 4,
-                    "collectors": {"core.system.system_info": {"typo": 1}},
-                }),
+                json.dumps(
+                    {
+                        "schema_version": 4,
+                        "collectors": {"core.system.system_info": {"typo": 1}},
+                    }
+                ),
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(PlanError, "does not declare configurable settings"):
                 configuration.load_config(root)
 
             path.write_text(
-                json.dumps({
-                    "schema_version": 4,
-                    "collectors": {"plugin.example": {"extension_option": 1}},
-                }),
+                json.dumps(
+                    {
+                        "schema_version": 4,
+                        "collectors": {"plugin.example": {"extension_option": 1}},
+                    }
+                ),
                 encoding="utf-8",
             )
             loaded = configuration.load_config(root)

@@ -13,13 +13,17 @@ from pathlib import Path
 from typing import cast
 
 from logicytics.contracts import (
+    Artifact,
+    ArtifactWriter,
     Collector,
     CollectorContext,
     CollectorKind,
     CollectorMetadata,
     CoreCollector,
+    EventLogger,
+    EvidenceKind,
     PluginCollector,
-    ValidationResult, EventLogger, Artifact, EvidenceKind, ArtifactWriter,
+    ValidationResult,
 )
 from logicytics.module.logging import ApplicationLogger
 
@@ -27,7 +31,7 @@ from logicytics.module.logging import ApplicationLogger
 class _ProbeLogger(EventLogger):
     """Discard structured events emitted during the side-effect-free validation probe."""
 
-    def event(self, level: str, message: str, **fields: int | float | str) -> None:
+    def event(self, level: str, message: str, **fields: float | str) -> None:
         """Accept probe events without exposing them through the JSON-only worker output."""
 
 
@@ -35,12 +39,12 @@ class _ProbeArtifactWriter(ArtifactWriter):
     """Reject evidence registration during preflight validation."""
 
     def register_file(
-            self,
-            source: Path,
-            *,
-            media_type: str = "application/octet-stream",
-            evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
-            transformations: tuple[str, ...] = (),
+        self,
+        source: Path,
+        *,
+        media_type: str = "application/octet-stream",
+        evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
+        transformations: tuple[str, ...] = (),
     ) -> Artifact:
         """Prevent a validation method from registering collection artifacts."""
         raise RuntimeError("validate() must not register artifacts")
@@ -76,7 +80,7 @@ class _ValidationSideEffectGuard:
         """Initialize an inactive audit guard for the validation context."""
         self.active = False
 
-    def __enter__(self) -> "_ValidationSideEffectGuard":
+    def __enter__(self) -> _ValidationSideEffectGuard:
         """Install the audit hook and begin rejecting validation side effects."""
         sys.addaudithook(self._reject_side_effect)
         self.active = True
@@ -94,9 +98,7 @@ class _ValidationSideEffectGuard:
             mode = arguments[1] if len(arguments) > 1 else None
             flags = arguments[2] if len(arguments) > 2 else 0
             writing = isinstance(mode, str) and any(flag in mode for flag in "wax+")
-            writing = writing or isinstance(flags, int) and bool(
-                flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND)
-            )
+            writing = writing or isinstance(flags, int) and bool(flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND))
             if not writing:
                 return
         elif event not in self._BLOCKED_EVENTS:
@@ -116,16 +118,14 @@ def _load_module(path: Path):
 
 
 def _validate_contract(
-        collector_type: type[Collector],
-        kind: CollectorKind,
+    collector_type: type[Collector],
+    kind: CollectorKind,
 ) -> CollectorMetadata:
     """Validate collector signatures, metadata consistency, and probe purity."""
     required_base = CoreCollector if kind is CollectorKind.CORE else PluginCollector
 
     if not issubclass(collector_type, required_base):
-        raise ValueError(
-            f"collector must inherit from {required_base.__name__}"
-        )
+        raise ValueError(f"collector must inherit from {required_base.__name__}")
 
     for method_name, expected_parameters in {
         "metadata": 0,
@@ -143,18 +143,12 @@ def _validate_contract(
         parameters = list(inspect.signature(method).parameters.values())
 
         if method_name == "metadata":
-            parameters = (
-                parameters[1:]
-                if parameters and parameters[0].name == "cls"
-                else parameters
-            )
+            parameters = parameters[1:] if parameters and parameters[0].name == "cls" else parameters
         elif parameters and parameters[0].name == "self":
             parameters = parameters[1:]
 
         if len(parameters) != expected_parameters:
-            raise ValueError(
-                f"{method_name} has an invalid signature"
-            )
+            raise ValueError(f"{method_name} has an invalid signature")
 
     raw_dependencies = getattr(collector_type, "dependencies", None)
 
@@ -171,34 +165,20 @@ def _validate_contract(
 
     declared_dependencies = dependencies()
 
-    if (
-            not isinstance(declared_dependencies, tuple)
-            or not all(
-        isinstance(item, str)
-        for item in declared_dependencies
-    )
-    ):
-        raise ValueError(
-            "dependencies() must return tuple[str, ...]"
-        )
+    if not isinstance(declared_dependencies, tuple) or not all(isinstance(item, str) for item in declared_dependencies):
+        raise ValueError("dependencies() must return tuple[str, ...]")
 
     metadata = collector_type.metadata()
 
     if not isinstance(metadata, CollectorMetadata):
-        raise ValueError(
-            "metadata() must return CollectorMetadata"
-        )
+        raise ValueError("metadata() must return CollectorMetadata")
 
     if declared_dependencies != metadata.dependencies:
-        raise ValueError(
-            "dependencies() must match metadata.dependencies"
-        )
+        raise ValueError("dependencies() must match metadata.dependencies")
 
     collector = collector_type()
 
-    with tempfile.TemporaryDirectory(
-            prefix="logicytics-validation-"
-    ) as temporary:
+    with tempfile.TemporaryDirectory(prefix="logicytics-validation-") as temporary:
         workspace = Path(temporary)
         temporary_directory = workspace / "tmp"
         temporary_directory.mkdir()
@@ -218,14 +198,10 @@ def _validate_contract(
             with _ValidationSideEffectGuard():
                 validation = collector.validate(context)
         except Exception as error:
-            raise ValueError(
-                f"validate() probe failed: {error}"
-            ) from error
+            raise ValueError(f"validate() probe failed: {error}") from error
 
     if not isinstance(validation, ValidationResult):
-        raise ValueError(
-            "validate() must return ValidationResult"
-        )
+        raise ValueError("validate() must return ValidationResult")
 
     return metadata
 

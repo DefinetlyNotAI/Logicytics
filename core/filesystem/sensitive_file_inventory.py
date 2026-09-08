@@ -4,15 +4,57 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, \
-    ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    EvidenceKind,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import filesystem_adapter
 
-KEYWORDS = ("password", "secret", "code", "login", "api", "key", "token", "auth", "credential", "private",
-            "certificate", "ssh", "pgp", "wallet")
-EXTENSIONS = {".txt", ".csv", ".json", ".xml", ".yml", ".yaml", ".ini", ".cfg", ".conf", ".log", ".pdf", ".doc",
-              ".docx", ".xls", ".xlsx", ".zip", ".db", ".sqlite", ".pem", ".key", ".ppk"}
+KEYWORDS = (
+    "password",
+    "secret",
+    "code",
+    "login",
+    "api",
+    "key",
+    "token",
+    "auth",
+    "credential",
+    "private",
+    "certificate",
+    "ssh",
+    "pgp",
+    "wallet",
+)
+EXTENSIONS = {
+    ".txt",
+    ".csv",
+    ".json",
+    ".xml",
+    ".yml",
+    ".yaml",
+    ".ini",
+    ".cfg",
+    ".conf",
+    ".log",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".zip",
+    ".db",
+    ".sqlite",
+    ".pem",
+    ".key",
+    ".ppk",
+}
 MAX_FILE_BYTES = 10 * 1024 * 1024
 
 
@@ -33,14 +75,19 @@ class SensitiveFileInventoryCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the explicit-consent sensitive-file inventory artifact contract."""
         return CollectorMetadata(
-            id="core.filesystem.sensitive_file_inventory", name="Sensitive file inventory", version="4.0.0",
+            id="core.filesystem.sensitive_file_inventory",
+            name="Sensitive file inventory",
+            version="4.0.0",
             specialty=Specialty.FILESYSTEM,
             output_media_types=("application/octet-stream",),
             description="Finds and copies bounded supported files with sensitive-data keywords in their names.",
             author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),
-            sensitive_data_categories=("credentials", "private_keys", "personal_documents"), default_profiles=("deep",),
-            timeout_seconds=300, maximum_output_bytes=256 * 1024 * 1024,
+            supported_platforms=("win32",),
+            capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),
+            sensitive_data_categories=("credentials", "private_keys", "personal_documents"),
+            default_profiles=("deep",),
+            timeout_seconds=300,
+            maximum_output_bytes=256 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -112,19 +159,24 @@ class SensitiveFileInventoryCollector(CoreCollector):
                 copied_path.unlink(missing_ok=True)
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled during sensitive-file copy")
         if not copied:
-            return CollectorResult(CollectorStatus.SKIPPED,
-                                   "no sensitive-named supported files met the bounded inventory policy")
+            return CollectorResult(
+                CollectorStatus.SKIPPED,
+                "no sensitive-named supported files met the bounded inventory policy",
+            )
         artifacts = []
         for path in copied:
             if context.is_cancelled:
-                for unpublished in copied[len(artifacts):]:
+                for unpublished in copied[len(artifacts) :]:
                     unpublished.unlink(missing_ok=True)
                 return CollectorResult.cancelled("cancelled during sensitive-file registration", tuple(artifacts))
             artifacts.append(context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW))
         artifact_tuple = tuple(artifacts)
-        context.report_progress("sensitive_file_inventory_finished", scanned_directories=scanned_directories,
-                                copied_files=len(artifact_tuple),
-                                bytes_written=sum(item.size_bytes for item in artifact_tuple))
+        context.report_progress(
+            "sensitive_file_inventory_finished",
+            scanned_directories=scanned_directories,
+            copied_files=len(artifact_tuple),
+            bytes_written=sum(item.size_bytes for item in artifact_tuple),
+        )
         return CollectorResult.succeeded("sensitive file inventory collected", artifact_tuple)
 
     def cleanup(self, context: CollectorContext) -> None:

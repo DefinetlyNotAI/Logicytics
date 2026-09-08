@@ -5,17 +5,34 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
-from logicytics import ProcessMemoryCounters, MemoryBasicInformation, get_process_memory_info, \
-    virtual_query, get_mapped_file_name, get_current_process, pointer_value
+from logicytics import (
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    MemoryBasicInformation,
+    ProcessMemoryCounters,
+    Specialty,
+    ValidationResult,
+    get_current_process,
+    get_mapped_file_name,
+    get_process_memory_info,
+    pointer_value,
+    virtual_query,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import filesystem_adapter
 
 
 def _permissions(protection: int) -> str:
     """Return a readable Windows page-protection summary."""
-    values = {0x02: "read", 0x04: "read_write", 0x08: "write_copy", 0x20: "execute_read", 0x40: "execute_read_write",
-              0x80: "execute_write_copy"}
+    values = {
+        0x02: "read",
+        0x04: "read_write",
+        0x08: "write_copy",
+        0x20: "execute_read",
+        0x40: "execute_read_write",
+        0x80: "execute_write_copy",
+    }
     return values.get(protection & 0xFF, "unreadable")
 
 
@@ -26,13 +43,19 @@ class MemoryMapCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the bounded memory-region JSON artifact contract."""
         return CollectorMetadata(
-            id="core.process.memory_map", name="Process memory map", version="4.0.0", specialty=Specialty.PROCESS,
+            id="core.process.memory_map",
+            name="Process memory map",
+            version="4.0.0",
+            specialty=Specialty.PROCESS,
             output_media_types=("application/json",),
             description="Exports readable virtual-memory region addresses, sizes, permissions, paths, and process RSS.",
             author="Logicytics",
-            supported_platforms=("win32",), sensitive_data_categories=("process_metadata",), default_profiles=("deep",),
+            supported_platforms=("win32",),
+            sensitive_data_categories=("process_metadata",),
+            default_profiles=("deep",),
             capabilities=(),
-            timeout_seconds=90, maximum_output_bytes=64 * 1024 * 1024,
+            timeout_seconds=90,
+            maximum_output_bytes=64 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -71,11 +94,7 @@ class MemoryMapCollector(CoreCollector):
                 reasons=("memory-map limits must be integers",),
             )
 
-        if (
-                not 1 <= maximum <= 100_000
-                or not 1_024 <= output_limit <= 64 * 1024 * 1024
-                or safety_margin < 0
-        ):
+        if not 1 <= maximum <= 100_000 or not 1_024 <= output_limit <= 64 * 1024 * 1024 or safety_margin < 0:
             return ValidationResult(
                 False,
                 reasons=("invalid memory-map region, output, or safety limits",),
@@ -101,12 +120,8 @@ class MemoryMapCollector(CoreCollector):
             100 * 1024 * 1024,
         )
 
-        configured_directory = Path(
-            context.setting_str("dump_directory", "memory_maps")
-        )
-        output_directory = (
-                context.workspace / configured_directory
-        ).resolve()
+        configured_directory = Path(context.setting_str("dump_directory", "memory_maps"))
+        output_directory = (context.workspace / configured_directory).resolve()
 
         try:
             output_directory.relative_to(context.workspace.resolve())
@@ -151,10 +166,7 @@ class MemoryMapCollector(CoreCollector):
             if base_address is None:
                 base_address = address
 
-            readable = (
-                    memory.State == 0x1000
-                    and not memory.Protect & 0x101
-            )
+            readable = memory.State == 0x1000 and not memory.Protect & 0x101
 
             if readable:
                 mapped_path = get_mapped_file_name(
@@ -191,14 +203,17 @@ class MemoryMapCollector(CoreCollector):
                     "cancelled during memory-map serialization",
                 )
 
-            serialized = json.dumps(
-                {
-                    "region_count": len(regions),
-                    "truncated": truncated,
-                    "regions": regions,
-                },
-                indent=2,
-            ) + "\n"
+            serialized = (
+                json.dumps(
+                    {
+                        "region_count": len(regions),
+                        "truncated": truncated,
+                        "regions": regions,
+                    },
+                    indent=2,
+                )
+                + "\n"
+            )
 
             serialized_size = len(serialized.encode("utf-8"))
 
@@ -208,10 +223,7 @@ class MemoryMapCollector(CoreCollector):
             regions.pop()
             truncated = True
 
-        if (
-                filesystem_adapter.disk_usage(context.workspace).free
-                < serialized_size + safety_margin
-        ):
+        if filesystem_adapter.disk_usage(context.workspace).free < serialized_size + safety_margin:
             return CollectorResult(
                 CollectorStatus.SKIPPED,
                 "insufficient free disk space after configured memory-map safety margin",
@@ -254,11 +266,7 @@ class MemoryMapCollector(CoreCollector):
             bytes_written=artifact.size_bytes,
         )
 
-        summary = (
-            "process memory map collected"
-            if not truncated
-            else "process memory map collected with configured output truncation"
-        )
+        summary = "process memory map collected" if not truncated else "process memory map collected with configured output truncation"
 
         return CollectorResult.succeeded(
             summary,

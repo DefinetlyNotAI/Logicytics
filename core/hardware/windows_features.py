@@ -57,10 +57,7 @@ class WindowsFeaturesCollector(CoreCollector):
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before optional-feature collection")
         context.report_progress("windows_features_started")
-        command = (
-            "Get-WindowsOptionalFeature -Online | "
-            "Select-Object FeatureName, State | ConvertTo-Json -Depth 2"
-        )
+        command = "Get-WindowsOptionalFeature -Online | Select-Object FeatureName, State | ConvertTo-Json -Depth 2"
         completed = subprocess.run(
             ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
             capture_output=True,
@@ -93,8 +90,11 @@ class WindowsFeaturesCollector(CoreCollector):
         output = context.workspace / "windows_features.json"
         output.write_text(json.dumps(features, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("windows_features_finished", feature_count=len(features),
-                                bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "windows_features_finished",
+            feature_count=len(features),
+            bytes_written=artifact.size_bytes,
+        )
         return CollectorResult.succeeded("Windows optional features collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

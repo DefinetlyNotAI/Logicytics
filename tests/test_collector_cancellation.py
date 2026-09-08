@@ -24,8 +24,8 @@ from logicytics.contracts import (
     ArtifactWriter,
     CollectorContext,
     CollectorStatus,
-    EvidenceKind,
     EventLogger,
+    EvidenceKind,
 )
 
 
@@ -33,35 +33,33 @@ class _RejectingArtifactWriter(ArtifactWriter):
     """Reject artifact publication during cancellation tests."""
 
     def register_file(
-            self,
-            source: Path,
-            *,
-            media_type: str = "application/octet-stream",
-            evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
-            transformations: tuple[str, ...] = (),
+        self,
+        source: Path,
+        *,
+        media_type: str = "application/octet-stream",
+        evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
+        transformations: tuple[str, ...] = (),
     ) -> Artifact:
-        raise AssertionError(
-            f"cancelled collector unexpectedly registered {source}"
-        )
+        raise AssertionError(f"cancelled collector unexpectedly registered {source}")
 
 
 class _NullEventLogger(EventLogger):
     """Discard structured progress events emitted during tests."""
 
     def event(
-            self,
-            level: str,
-            message: str,
-            **fields: int | float | str,
+        self,
+        level: str,
+        message: str,
+        **fields: float | str,
     ) -> None:
         return None
 
 
 def _context(
-        workspace: Path,
-        settings: dict[str, object] | None = None,
-        *,
-        collector_id: str = "core.test.cancellation",
+    workspace: Path,
+    settings: dict[str, object] | None = None,
+    *,
+    collector_id: str = "core.test.cancellation",
 ) -> tuple[CollectorContext, Path]:
     """Create a real CollectorContext and its cancellation sentinel."""
 
@@ -114,8 +112,8 @@ class CollectorCancellationTests(unittest.TestCase):
             )
 
             def cancel_after_copy(
-                    source: Path,
-                    destination: Path,
+                source: Path,
+                destination: Path,
             ) -> Path:
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes(source.read_bytes())
@@ -123,14 +121,10 @@ class CollectorCancellationTests(unittest.TestCase):
                 return destination
 
             with patch(
-                    "core.filesystem.sensitive_file_inventory._copy",
-                    side_effect=cancel_after_copy,
+                "core.filesystem.sensitive_file_inventory._copy",
+                side_effect=cancel_after_copy,
             ):
-                result = (
-                    sensitive_file_inventory
-                    .SensitiveFileInventoryCollector()
-                    .collect(context)
-                )
+                result = sensitive_file_inventory.SensitiveFileInventoryCollector().collect(context)
 
             self.assertEqual(
                 CollectorStatus.CANCELLED,
@@ -139,15 +133,11 @@ class CollectorCancellationTests(unittest.TestCase):
 
             self.assertEqual(
                 [],
-                [
-                    path
-                    for path in context.workspace.rglob("*")
-                    if path.is_file() and path != cancellation_file
-                ],
+                [path for path in context.workspace.rglob("*") if path.is_file() and path != cancellation_file],
             )
 
     def test_browser_and_media_copy_cancellation_remove_unpublished_bytes(
-            self,
+        self,
     ) -> None:
         """Browser and media collectors remove incomplete private copies."""
 
@@ -157,13 +147,7 @@ class CollectorCancellationTests(unittest.TestCase):
             local = root / "local"
             roaming = root / "roaming"
 
-            profile = (
-                    local
-                    / "Google"
-                    / "Chrome"
-                    / "User Data"
-                    / "Default"
-            )
+            profile = local / "Google" / "Chrome" / "User Data" / "Default"
             profile.mkdir(parents=True)
 
             (profile / "History").write_bytes(b"history")
@@ -174,9 +158,9 @@ class CollectorCancellationTests(unittest.TestCase):
             )
 
             def cancel_browser_copy(
-                    _source: Path,
-                    destination: Path,
-                    copied_bytes: int,
+                _source: Path,
+                destination: Path,
+                copied_bytes: int,
             ) -> tuple[Path, int]:
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes(b"history")
@@ -198,11 +182,7 @@ class CollectorCancellationTests(unittest.TestCase):
                     side_effect=cancel_browser_copy,
                 ),
             ):
-                browser_result = (
-                    browser_data_backup
-                    .BrowserDataBackupCollector()
-                    .collect(browser_context)
-                )
+                browser_result = browser_data_backup.BrowserDataBackupCollector().collect(browser_context)
 
             self.assertEqual(
                 CollectorStatus.CANCELLED,
@@ -211,11 +191,7 @@ class CollectorCancellationTests(unittest.TestCase):
 
             self.assertEqual(
                 [],
-                [
-                    path
-                    for path in browser_context.workspace.rglob("*")
-                    if path.is_file() and path != browser_cancellation
-                ],
+                [path for path in browser_context.workspace.rglob("*") if path.is_file() and path != browser_cancellation],
             )
 
             home = root / "home"
@@ -230,8 +206,8 @@ class CollectorCancellationTests(unittest.TestCase):
             )
 
             def cancel_media_copy(
-                    source: Path,
-                    destination: Path,
+                source: Path,
+                destination: Path,
             ) -> None:
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes(source.read_bytes())
@@ -250,11 +226,7 @@ class CollectorCancellationTests(unittest.TestCase):
                     side_effect=cancel_media_copy,
                 ),
             ):
-                media_result = (
-                    media_backup
-                    .MediaBackupCollector()
-                    .collect(media_context)
-                )
+                media_result = media_backup.MediaBackupCollector().collect(media_context)
 
             self.assertEqual(
                 CollectorStatus.CANCELLED,
@@ -263,11 +235,7 @@ class CollectorCancellationTests(unittest.TestCase):
 
             self.assertEqual(
                 [],
-                [
-                    path
-                    for path in media_context.workspace.rglob("*")
-                    if path.is_file() and path != media_cancellation
-                ],
+                [path for path in media_context.workspace.rglob("*") if path.is_file() and path != media_cancellation],
             )
 
     def test_event_queries_cannot_publish_after_cancellation(self) -> None:
@@ -296,7 +264,7 @@ class CollectorCancellationTests(unittest.TestCase):
 
             for collector_type, subprocess_target, collector_id in collectors:
                 with self.subTest(
-                        collector=collector_type.__name__,
+                    collector=collector_type.__name__,
                 ):
                     context, cancellation_file = _context(
                         root / collector_type.__name__,
@@ -304,8 +272,8 @@ class CollectorCancellationTests(unittest.TestCase):
                     )
 
                     def finish_after_cancellation(
-                            *_args: Any,
-                            **_kwargs: Any,
+                        *_args: Any,
+                        **_kwargs: Any,
                     ) -> subprocess.CompletedProcess[str]:
                         cancellation_file.touch()
 
@@ -317,8 +285,8 @@ class CollectorCancellationTests(unittest.TestCase):
                         )
 
                     with patch(
-                            subprocess_target,
-                            side_effect=finish_after_cancellation,
+                        subprocess_target,
+                        side_effect=finish_after_cancellation,
                     ):
                         result = collector_type().collect(context)
 
@@ -329,15 +297,11 @@ class CollectorCancellationTests(unittest.TestCase):
 
                     self.assertEqual(
                         [],
-                        [
-                            path
-                            for path in context.workspace.rglob("*")
-                            if path.is_file() and path != cancellation_file
-                        ],
+                        [path for path in context.workspace.rglob("*") if path.is_file() and path != cancellation_file],
                     )
 
     def test_system_data_and_ssh_copy_cancellation_remove_partial_backups(
-            self,
+        self,
     ) -> None:
         """System and SSH collectors delete private incomplete copies."""
 
@@ -346,13 +310,7 @@ class CollectorCancellationTests(unittest.TestCase):
 
             windows = root / "Windows"
 
-            event_log = (
-                    windows
-                    / "System32"
-                    / "winevt"
-                    / "Logs"
-                    / "System.evtx"
-            )
+            event_log = windows / "System32" / "winevt" / "Logs" / "System.evtx"
 
             event_log.parent.mkdir(parents=True)
             event_log.write_bytes(b"event log")
@@ -363,8 +321,8 @@ class CollectorCancellationTests(unittest.TestCase):
             )
 
             def cancel_system_copy(
-                    source: Path,
-                    destination: Path,
+                source: Path,
+                destination: Path,
             ) -> None:
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes(source.read_bytes())
@@ -380,18 +338,11 @@ class CollectorCancellationTests(unittest.TestCase):
                     },
                 ),
                 patch(
-                    (
-                            "core.system.windows_system_data_backup."
-                            "filesystem_adapter.copy_file"
-                    ),
+                    ("core.system.windows_system_data_backup.filesystem_adapter.copy_file"),
                     side_effect=cancel_system_copy,
                 ),
             ):
-                system_result = (
-                    windows_system_data_backup
-                    .WindowsSystemDataBackupCollector()
-                    .collect(system_context)
-                )
+                system_result = windows_system_data_backup.WindowsSystemDataBackupCollector().collect(system_context)
 
             self.assertEqual(
                 CollectorStatus.CANCELLED,
@@ -400,11 +351,7 @@ class CollectorCancellationTests(unittest.TestCase):
 
             self.assertEqual(
                 [],
-                [
-                    path
-                    for path in system_context.workspace.rglob("*")
-                    if path.is_file() and path != system_cancellation
-                ],
+                [path for path in system_context.workspace.rglob("*") if path.is_file() and path != system_cancellation],
             )
 
             home = root / "home"
@@ -421,11 +368,11 @@ class CollectorCancellationTests(unittest.TestCase):
             original_write = zipfile.ZipFile.write
 
             def cancel_archive_write(
-                    archive: zipfile.ZipFile,
-                    filename: str | os.PathLike[str],
-                    arcname: str | os.PathLike[str] | None = None,
-                    compress_type: int | None = None,
-                    compresslevel: int | None = None,
+                archive: zipfile.ZipFile,
+                filename: str | os.PathLike[str],
+                arcname: str | os.PathLike[str] | None = None,
+                compress_type: int | None = None,
+                compresslevel: int | None = None,
             ) -> None:
                 bound_write = original_write.__get__(archive, type(archive))
 
@@ -450,26 +397,17 @@ class CollectorCancellationTests(unittest.TestCase):
                     new=cancel_archive_write,
                 ),
             ):
-                ssh_result = (
-                    ssh_backup
-                    .SshBackupCollector()
-                    .collect(ssh_context)
-                )
+                ssh_result = ssh_backup.SshBackupCollector().collect(ssh_context)
 
             self.assertEqual(
                 CollectorStatus.CANCELLED,
                 ssh_result.status,
             )
 
-            self.assertFalse(
-                (
-                        ssh_context.workspace
-                        / "ssh_backup.zip"
-                ).exists()
-            )
+            self.assertFalse((ssh_context.workspace / "ssh_backup.zip").exists())
 
     def test_packet_and_memory_loops_stop_before_serialization(
-            self,
+        self,
     ) -> None:
         """Packet and memory loops stop before serializing evidence."""
 
@@ -496,19 +434,19 @@ class CollectorCancellationTests(unittest.TestCase):
 
                 @staticmethod
                 def setsockopt(
-                        *_args: object,
+                    *_args: object,
                 ) -> None:
                     return None
 
                 @staticmethod
                 def ioctl(
-                        *_args: object,
+                    *_args: object,
                 ) -> None:
                     return None
 
                 @staticmethod
                 def recvfrom(
-                        _buffer_size: int,
+                    _buffer_size: int,
                 ) -> tuple[bytes, tuple[str, int]]:
                     return b"", ("127.0.0.1", 0)
 
@@ -517,8 +455,8 @@ class CollectorCancellationTests(unittest.TestCase):
                     return None
 
             def cancel_wait(
-                    *_args: object,
-                    **_kwargs: object,
+                *_args: object,
+                **_kwargs: object,
             ) -> tuple[
                 list[object],
                 list[object],
@@ -540,23 +478,14 @@ class CollectorCancellationTests(unittest.TestCase):
                     side_effect=cancel_wait,
                 ),
             ):
-                packet_result = (
-                    packet_capture
-                    .PacketCaptureCollector()
-                    .collect(packet_context)
-                )
+                packet_result = packet_capture.PacketCaptureCollector().collect(packet_context)
 
             self.assertEqual(
                 CollectorStatus.CANCELLED,
                 packet_result.status,
             )
 
-            self.assertFalse(
-                (
-                        packet_context.workspace
-                        / "packet_capture.csv"
-                ).exists()
-            )
+            self.assertFalse((packet_context.workspace / "packet_capture.csv").exists())
 
             memory_context, memory_cancellation = _context(
                 root / "memory",
@@ -574,24 +503,24 @@ class CollectorCancellationTests(unittest.TestCase):
                 memory_cancellation.touch()
                 return 1
 
-            with patch.object(
+            with (
+                patch.object(
                     memory_map,
                     "get_current_process",
                     side_effect=cancel_on_current_process,
-            ), patch.object(
+                ),
+                patch.object(
                     memory_map,
                     "get_process_memory_info",
                     return_value=True,
-            ), patch.object(
+                ),
+                patch.object(
                     memory_map,
                     "virtual_query",
                     return_value=0,
+                ),
             ):
-                memory_result = (
-                    memory_map
-                    .MemoryMapCollector()
-                    .collect(memory_context)
-                )
+                memory_result = memory_map.MemoryMapCollector().collect(memory_context)
 
             self.assertEqual(
                 CollectorStatus.CANCELLED,
@@ -600,11 +529,7 @@ class CollectorCancellationTests(unittest.TestCase):
 
             self.assertEqual(
                 [],
-                [
-                    path
-                    for path in memory_context.workspace.rglob("*")
-                    if path.is_file() and path != memory_cancellation
-                ],
+                [path for path in memory_context.workspace.rglob("*") if path.is_file() and path != memory_cancellation],
             )
 
 

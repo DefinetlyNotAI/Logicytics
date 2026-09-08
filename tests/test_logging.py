@@ -26,7 +26,10 @@ from logicytics.module.logging import (
     timed,
 )
 from logicytics.module.output_layout import ensure_output_layout
-from logicytics.virtual_environment import render_virtual_environment_error, virtual_environment_error
+from logicytics.virtual_environment import (
+    render_virtual_environment_error,
+    virtual_environment_error,
+)
 from tests.fixtures.file_listing import list_files
 
 
@@ -43,9 +46,7 @@ class LoggingTests(unittest.TestCase):
                 violations.extend(
                     f"{source.relative_to(root)}:{node.lineno}"
                     for node in ast.walk(tree)
-                    if isinstance(node, ast.Call)
-                    and isinstance(node.func, ast.Name)
-                    and node.func.id == "print"
+                    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "print"
                 )
 
         self.assertEqual([], violations)
@@ -97,9 +98,7 @@ class LoggingTests(unittest.TestCase):
                 retention_days=1,
             )
             logger = ApplicationLogger(path, settings, console=console)
-            for level in (
-                    "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INTERNAL", "EXCEPTION"
-            ):
+            for level in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INTERNAL", "EXCEPTION"):
                 logger.event(level, "typed event", password="hidden", sequence=1)
             logger.dispatch(("WARNING: parsed warning", "plain batch row"))
             logger.raw("raw access_token=hidden")
@@ -158,28 +157,30 @@ class LoggingTests(unittest.TestCase):
             root = Path(temporary)
             layout = ensure_output_layout(root / "output" / "data")
             for directory in (
-                    layout.data,
-                    layout.logs,
-                    layout.debug_logs,
-                    layout.performance_logs,
-                    layout.packages,
-                    layout.hashes,
+                layout.data,
+                layout.logs,
+                layout.debug_logs,
+                layout.performance_logs,
+                layout.packages,
+                layout.hashes,
             ):
                 self.assertTrue(directory.is_dir())
             config_path = root / "logicytics.yaml"
             config_path.write_text(
-                json.dumps({
-                    "schema_version": 4,
-                    "logging": {
-                        "level": "debug",
-                        "console_enabled": False,
-                        "color_enabled": False,
-                        "file_enabled": True,
-                        "maximum_bytes": 2048,
-                        "delete_previous": True,
-                        "retention_days": 7,
-                    },
-                }),
+                json.dumps(
+                    {
+                        "schema_version": 4,
+                        "logging": {
+                            "level": "debug",
+                            "console_enabled": False,
+                            "color_enabled": False,
+                            "file_enabled": True,
+                            "maximum_bytes": 2048,
+                            "delete_previous": True,
+                            "retention_days": 7,
+                        },
+                    }
+                ),
                 encoding="utf-8",
             )
             configuration = load_config(root, config_path)
@@ -188,11 +189,11 @@ class LoggingTests(unittest.TestCase):
             self.assertEqual(7, configuration.logging.retention_days)
 
             for invalid_logging in (
-                    {"level": "TRACE"},
-                    {"maximum_bytes": True},
-                    {"retention_days": -1},
-                    {"console_enabled": 1},
-                    {"unknown": True},
+                {"level": "TRACE"},
+                {"maximum_bytes": True},
+                {"retention_days": -1},
+                {"console_enabled": 1},
+                {"unknown": True},
             ):
                 config_path.write_text(
                     json.dumps({"schema_version": 4, "logging": invalid_logging}),
@@ -253,7 +254,7 @@ class LoggingTests(unittest.TestCase):
                 self.assertIn("Status: complete", output)
                 self.assertIn("Capabilities: network, subprocess", output)
                 self.assertIn("Payload: <15 bytes>", output)
-                self.assertNotIn("{\"status\"", output)
+                self.assertNotIn('{"status"', output)
                 self.assertNotIn("capabilities=", output)
                 self.assertNotIn("secret-value", output)
 

@@ -1,31 +1,30 @@
 from __future__ import annotations
 
 import io
-import json
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from logicytics.module import (
-    discovery,
-)
 from logicytics.cli import CLI, main
-from logicytics.module.configuration import (
-    load_config,
-)
 from logicytics.contracts import (
     Capability,
     RunRequest,
+)
+from logicytics.module import (
+    discovery,
+)
+from logicytics.module.configuration import (
+    load_config,
 )
 from logicytics.module.discovery import preflight
 from logicytics.module.environment import EnvironmentReport
 from logicytics.module.errors import PlanError, PreflightError
 from logicytics.module.planner import build_plan
-from logicytics.platform_adapters import ProcessAdapter
 from logicytics.module.runtime import RunSupervisor
-from tests.fixtures.collectors import COLLECTOR, plugin_collector_source, delayed_collector_source
+from logicytics.platform_adapters import ProcessAdapter
+from tests.fixtures.collectors import COLLECTOR, delayed_collector_source, plugin_collector_source
 
 
 class PreflightTests(unittest.TestCase):
@@ -41,8 +40,7 @@ class PreflightTests(unittest.TestCase):
             collector_path.write_text(
                 COLLECTOR.replace(
                     "from pathlib import Path\n",
-                    "from pathlib import Path\n"
-                    "from logicytics import ctypes_collector\n",
+                    "from pathlib import Path\nfrom logicytics import ctypes_collector\n",
                 ),
                 encoding="utf-8",
             )
@@ -91,7 +89,7 @@ class PreflightTests(unittest.TestCase):
             )
 
     def test_preflight_cache_requires_source_interpreter_contract_and_configuration_identity(
-            self,
+        self,
     ) -> None:
         """Only an exact validation context may reuse an isolated runtime probe."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -104,18 +102,18 @@ class PreflightTests(unittest.TestCase):
             self.assertEqual(1, len(initial.valid), initial.invalid)
 
             with patch.object(
-                    ProcessAdapter,
-                    ProcessAdapter.run.__name__,
-                    wraps=ProcessAdapter.run,
+                ProcessAdapter,
+                ProcessAdapter.run.__name__,
+                wraps=ProcessAdapter.run,
             ) as probe:
                 cached = preflight(root, configuration_hash="configuration-a")
                 self.assertEqual(1, len(cached.valid), cached.invalid)
                 probe.assert_not_called()
 
             with patch.object(
-                    ProcessAdapter,
-                    ProcessAdapter.run.__name__,
-                    wraps=ProcessAdapter.run,
+                ProcessAdapter,
+                ProcessAdapter.run.__name__,
+                wraps=ProcessAdapter.run,
             ) as probe:
                 invalidated = preflight(root, configuration_hash="configuration-b")
                 self.assertEqual(1, len(invalidated.valid), invalidated.invalid)
@@ -187,8 +185,7 @@ class PreflightTests(unittest.TestCase):
             collector_path.write_text(
                 COLLECTOR.replace(
                     '            supported_platforms=("win32",),',
-                    '            supported_platforms=("win32",),\n'
-                    '            sensitive_data_categories=("credentials",),',
+                    '            supported_platforms=("win32",),\n            sensitive_data_categories=("credentials",),',
                 ),
                 encoding="utf-8",
             )
@@ -223,11 +220,13 @@ class PreflightTests(unittest.TestCase):
             outcome = RunSupervisor(root, configuration).run(plan)
 
             records = {record.id: record for record in outcome.manifest.collectors}
-            self.assertEqual("succeeded", records["core.system.a_first"].status, records["core.system.a_first"].errors)
-            self.assertEqual("failed", records["core.system.b_second"].status)
-            self.assertTrue(
-                any("maximum_run_output_bytes" in error for error in records["core.system.b_second"].errors)
+            self.assertEqual(
+                "succeeded",
+                records["core.system.a_first"].status,
+                records["core.system.a_first"].errors,
             )
+            self.assertEqual("failed", records["core.system.b_second"].status)
+            self.assertTrue(any("maximum_run_output_bytes" in error for error in records["core.system.b_second"].errors))
             self.assertLessEqual(outcome.manifest.total_artifact_bytes, 7)
 
     def test_exhausted_run_output_budget_skips_unstarted_collectors(self) -> None:
@@ -253,7 +252,11 @@ class PreflightTests(unittest.TestCase):
             outcome = RunSupervisor(root, configuration).run(plan)
             records = {record.id: record for record in outcome.manifest.collectors}
 
-            self.assertEqual("succeeded", records["core.system.a_first"].status, records["core.system.a_first"].errors)
+            self.assertEqual(
+                "succeeded",
+                records["core.system.a_first"].status,
+                records["core.system.a_first"].errors,
+            )
             second = records["core.system.b_second"]
             self.assertEqual("skipped", second.status)
             self.assertIsNone(second.started_at)
@@ -411,16 +414,22 @@ class PreflightTests(unittest.TestCase):
             )
 
             for arguments, expected_exit in (
-                    (["preflight"], 0),
-                    (["preflight", "--include", "plugin.broken_plugin"], 2),
-                    (["preflight", "--plugins"], 2),
+                (["preflight"], 0),
+                (["preflight", "--include", "plugin.broken_plugin"], 2),
+                (["preflight", "--plugins"], 2),
             ):
                 with self.subTest(arguments=arguments):
                     output = io.StringIO()
-                    with patch.object(CLI, "project_root", return_value=root), patch(
-                            "sys.stdout", output,
-                    ), patch(
-                            "sys.stderr", output,
+                    with (
+                        patch.object(CLI, "project_root", return_value=root),
+                        patch(
+                            "sys.stdout",
+                            output,
+                        ),
+                        patch(
+                            "sys.stderr",
+                            output,
+                        ),
                     ):
                         exit_code = main(arguments)
                     rendered = output.getvalue()
@@ -437,20 +446,20 @@ class PreflightTests(unittest.TestCase):
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
             collector_path.write_text(
-                COLLECTOR.replace("def collect(self, context: CollectorContext) -> CollectorResult:",
-                                  "def collect(self, context: CollectorContext) -> ValidationResult:"),
+                COLLECTOR.replace(
+                    "def collect(self, context: CollectorContext) -> CollectorResult:",
+                    "def collect(self, context: CollectorContext) -> ValidationResult:",
+                ),
                 encoding="utf-8",
             )
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
             self.assertIn("collect must return CollectorResult", report.invalid[0].static_errors)
-            diagnostic = next(
-                item for item in report.invalid[0].diagnostics
-                if item.message == "collect must return CollectorResult"
-            )
+            diagnostic = next(item for item in report.invalid[0].diagnostics if item.message == "collect must return CollectorResult")
             source_lines = collector_path.read_text(encoding="utf-8").splitlines()
             expected_line = next(
-                index for index, line in enumerate(source_lines, start=1)
+                index
+                for index, line in enumerate(source_lines, start=1)
                 if "def collect(self, context: CollectorContext) -> ValidationResult:" in line
             )
             self.assertEqual(expected_line, diagnostic.line)
@@ -468,7 +477,7 @@ class PreflightTests(unittest.TestCase):
                 COLLECTOR.replace(
                     "    def cleanup(self, context: CollectorContext) -> None:",
                     "    def estimate(self, context: CollectorContext) -> ValidationResult:\n"
-                    "        \"\"\"Return an invalid estimate type for this test.\"\"\"\n"
+                    '        """Return an invalid estimate type for this test."""\n'
                     "        return ValidationResult(valid=True)\n\n"
                     "    def cleanup(self, context: CollectorContext) -> None:",
                 ),
@@ -489,7 +498,7 @@ class PreflightTests(unittest.TestCase):
                 COLLECTOR.replace(
                     "    def cleanup(self, context: CollectorContext) -> None:",
                     "    def dependencies(self) -> tuple[str, ...]:\n"
-                    "        \"\"\"Return an invalid instance-level dependency declaration.\"\"\"\n"
+                    '        """Return an invalid instance-level dependency declaration."""\n'
                     "        return ()\n\n"
                     "    def cleanup(self, context: CollectorContext) -> None:",
                 ),
@@ -511,7 +520,7 @@ class PreflightTests(unittest.TestCase):
                     "    def cleanup(self, context: CollectorContext) -> None:",
                     "    @classmethod\n"
                     "    def dependencies(cls) -> tuple[str, ...]:\n"
-                    "        \"\"\"Return a dependency absent from metadata for this test.\"\"\"\n"
+                    '        """Return a dependency absent from metadata for this test."""\n'
                     "        return ('core.system.missing',)\n\n"
                     "    def cleanup(self, context: CollectorContext) -> None:",
                 ),
@@ -519,7 +528,10 @@ class PreflightTests(unittest.TestCase):
             )
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
-            self.assertIn("dependencies() must match metadata.dependencies", report.invalid[0].runtime_error or "")
+            self.assertIn(
+                "dependencies() must match metadata.dependencies",
+                report.invalid[0].runtime_error or "",
+            )
 
     def test_preflight_rejects_malformed_validate_result(self) -> None:
         """The isolated preflight probe must reject a non-ValidationResult response."""
@@ -536,7 +548,9 @@ class PreflightTests(unittest.TestCase):
             self.assertEqual(1, len(report.invalid))
             self.assertIn("validate() must return ValidationResult", report.invalid[0].runtime_error or "")
 
-    def test_preflight_rejects_validation_filesystem_process_network_and_environment_side_effects(self) -> None:
+    def test_preflight_rejects_validation_filesystem_process_network_and_environment_side_effects(
+        self,
+    ) -> None:
         """No validation probe may mutate files, launch processes, open sockets, or alter its environment."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -566,7 +580,10 @@ class PreflightTests(unittest.TestCase):
                     )
                     report = preflight(root)
                     self.assertEqual(1, len(report.invalid))
-                    self.assertIn("validate() must not perform side effects", report.invalid[0].runtime_error or "")
+                    self.assertIn(
+                        "validate() must not perform side effects",
+                        report.invalid[0].runtime_error or "",
+                    )
                     self.assertIn(event, report.invalid[0].runtime_error or "")
             self.assertFalse(outside.exists())
 
@@ -578,8 +595,14 @@ class PreflightTests(unittest.TestCase):
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
             attempts = (
-                ("context.artifacts.register_file(context.workspace / 'evidence.txt')", "must not register artifacts"),
-                ("raise RuntimeError('unexpected validation failure')", "unexpected validation failure"),
+                (
+                    "context.artifacts.register_file(context.workspace / 'evidence.txt')",
+                    "must not register artifacts",
+                ),
+                (
+                    "raise RuntimeError('unexpected validation failure')",
+                    "unexpected validation failure",
+                ),
             )
             for statement, message in attempts:
                 with self.subTest(message=message):
@@ -603,12 +626,12 @@ class PreflightTests(unittest.TestCase):
             (root / "plugins").mkdir()
             collector_path.write_text(COLLECTOR, encoding="utf-8")
             with patch.object(
-                    discovery.process_adapter,
-                    discovery.process_adapter.run.__name__,
-                    side_effect=subprocess.TimeoutExpired(
-                        ["validation-worker"],
-                        timeout=10,
-                    ),
+                discovery.process_adapter,
+                discovery.process_adapter.run.__name__,
+                side_effect=subprocess.TimeoutExpired(
+                    ["validation-worker"],
+                    timeout=10,
+                ),
             ):
                 report = preflight(root)
             self.assertEqual(1, len(report.invalid))
@@ -623,14 +646,18 @@ class PreflightTests(unittest.TestCase):
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
             collector_path.write_text(
-                COLLECTOR.replace("return CollectorResult.succeeded(\"test artifact created\", (artifact,))",
-                                  "print('unexpected output')\n        return CollectorResult.succeeded(\"test artifact created\", (artifact,))"),
+                COLLECTOR.replace(
+                    'return CollectorResult.succeeded("test artifact created", (artifact,))',
+                    "print('unexpected output')\n        return CollectorResult.succeeded(\"test artifact created\", (artifact,))",
+                ),
                 encoding="utf-8",
             )
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
-            self.assertIn("collectors must not print; use structured progress or logging",
-                          report.invalid[0].static_errors)
+            self.assertIn(
+                "collectors must not print; use structured progress or logging",
+                report.invalid[0].static_errors,
+            )
 
     def test_preflight_rejects_import_time_calls_in_headers_and_class_body(self) -> None:
         """Collection-like work must not run before a worker has isolated the collector."""
@@ -643,10 +670,12 @@ class PreflightTests(unittest.TestCase):
                 COLLECTOR.replace(
                     "class SystemInfoCollector(CoreCollector):",
                     "class SystemInfoCollector(CoreCollector, type(open('unexpected.txt'))):",
-                ).replace(
+                )
+                .replace(
                     "    @classmethod\n    def metadata",
                     "    marker = input('unexpected prompt')\n\n    @classmethod\n    def metadata",
-                ).replace(
+                )
+                .replace(
                     "def validate(self, context: CollectorContext) -> ValidationResult:",
                     "def validate(self, context: CollectorContext = open('another.txt')) -> ValidationResult:",
                 ),
@@ -692,15 +721,19 @@ class PreflightTests(unittest.TestCase):
             source = plugin_collector_source()
             source = source.replace("SystemInfoCollector", "AdminPluginCollector")
             source = source.replace("core.system.system_info", "plugin.admin_plugin")
-            source = source.replace(
-                "from logicytics import CollectorMetadata",
-                "from logicytics import Capability, CollectorMetadata",
-            ).replace(
-                "            capabilities=(),",
-                "            capabilities=(Capability.ELEVATED_PRIVILEGES,),",
-            ).replace(
-                "            privilege_level=PrivilegeLevel.STANDARD,",
-                "            privilege_level=PrivilegeLevel.ELEVATED,",
+            source = (
+                source.replace(
+                    "from logicytics import CollectorMetadata",
+                    "from logicytics import Capability, CollectorMetadata",
+                )
+                .replace(
+                    "            capabilities=(),",
+                    "            capabilities=(Capability.ELEVATED_PRIVILEGES,),",
+                )
+                .replace(
+                    "            privilege_level=PrivilegeLevel.STANDARD,",
+                    "            privilege_level=PrivilegeLevel.ELEVATED,",
+                )
             )
             plugin_path.write_text(source, encoding="utf-8")
             report = preflight(root)
@@ -713,12 +746,14 @@ class PreflightTests(unittest.TestCase):
                 enable_plugins=True,
                 approved_capabilities=(Capability.ELEVATED_PRIVILEGES,),
             )
-            with patch(
+            with (
+                patch(
                     "logicytics.module.planner.inspect_environment",
                     return_value=EnvironmentReport(False, True, None),
+                ),
+                self.assertRaisesRegex(PlanError, "administrator account"),
             ):
-                with self.assertRaisesRegex(PlanError, "administrator account"):
-                    build_plan(report, enabled)
+                build_plan(report, enabled)
 
 
 if __name__ == "__main__":

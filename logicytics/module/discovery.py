@@ -13,7 +13,13 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from subprocess import TimeoutExpired
 
-from logicytics.contracts import CONTRACT_VERSION, Capability, CollectorKind, CollectorMetadata, Specialty
+from logicytics.contracts import (
+    CONTRACT_VERSION,
+    Capability,
+    CollectorKind,
+    CollectorMetadata,
+    Specialty,
+)
 from logicytics.platform_adapters import process_adapter
 
 _FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.py$")
@@ -22,9 +28,24 @@ _MOD_EXTENSIONS = {".py": "mod_python"}
 _REMOVED_MOD_EXTENSIONS = frozenset({".ps1", ".bat", ".exe"})
 _VAGUE_NAMES = {"main.py", "misc.py", "stuff.py", "utils.py"}
 _APPLICATION_IMPORTS = {
-    "CollectorSnapshot", "RunSnapshot", "api", "artifacts", "cli", "configuration", "discovery", "environment",
-    "load_configuration", "manifest", "packaging", "plan_run", "planner", "query_run", "read_artifact", "runtime",
-    "run_collection", "validation_worker",
+    "CollectorSnapshot",
+    "RunSnapshot",
+    "api",
+    "artifacts",
+    "cli",
+    "configuration",
+    "discovery",
+    "environment",
+    "load_configuration",
+    "manifest",
+    "packaging",
+    "plan_run",
+    "planner",
+    "query_run",
+    "read_artifact",
+    "runtime",
+    "run_collection",
+    "validation_worker",
 }
 _CACHE_SCHEMA_VERSION = 2
 _COLLECTOR_SERVICE_MODULES = {
@@ -103,11 +124,11 @@ class PreflightReport:
         return tuple(candidate for candidate in self.candidates if not candidate.valid)
 
     def to_dict(
-            self,
-            *,
-            selected_plugins: tuple[str, ...] = (),
-            enable_plugins: bool = False,
-            enable_mods: bool = False,
+        self,
+        *,
+        selected_plugins: tuple[str, ...] = (),
+        enable_plugins: bool = False,
+        enable_mods: bool = False,
     ) -> dict[str, list[dict[str, object]]]:
         """Classify invalid plugins as quarantined unless the request selects them."""
         valid = [
@@ -126,10 +147,10 @@ class PreflightReport:
                 "diagnostics": [asdict(diagnostic) for diagnostic in candidate.diagnostics],
             }
             if (
-                    candidate.kind is CollectorKind.CORE
-                    or (enable_plugins and candidate.kind is CollectorKind.PLUGIN)
-                    or (enable_mods and candidate.kind is CollectorKind.MOD)
-                    or candidate.selection_id in selected
+                candidate.kind is CollectorKind.CORE
+                or (enable_plugins and candidate.kind is CollectorKind.PLUGIN)
+                or (enable_mods and candidate.kind is CollectorKind.MOD)
+                or candidate.selection_id in selected
             ):
                 invalid.append(item)
             else:
@@ -299,9 +320,7 @@ def _validate_import_time_expressions(tree: ast.Module, candidate: CollectorCand
     finder.visit(tree)
     for call in finder.calls:
         name = _top_level_call_name(call) or ast.unparse(call.func)
-        candidate.static_errors.append(
-            f"forbidden import-time call: {name} (line {call.lineno})"
-        )
+        candidate.static_errors.append(f"forbidden import-time call: {name} (line {call.lineno})")
 
 
 def _validate_engine_boundary_imports(tree: ast.Module, candidate: CollectorCandidate) -> None:
@@ -311,35 +330,25 @@ def _validate_engine_boundary_imports(tree: ast.Module, candidate: CollectorCand
         if isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.name.startswith("logicytics.") and alias.name not in _COLLECTOR_SERVICE_MODULES:
-                    candidate.static_errors.append(
-                        f"forbidden application import: {alias.name} (line {node.lineno})"
-                    )
+                    candidate.static_errors.append(f"forbidden application import: {alias.name} (line {node.lineno})")
                 elif alias.name == "logicytics":
                     application_aliases.add(alias.asname or "logicytics")
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
             if module.startswith("logicytics.") and module not in _COLLECTOR_SERVICE_MODULES:
-                candidate.static_errors.append(
-                    f"forbidden application import: {module} (line {node.lineno})"
-                )
+                candidate.static_errors.append(f"forbidden application import: {module} (line {node.lineno})")
             elif module == "logicytics":
-                forbidden = sorted(
-                    alias.name for alias in node.names if alias.name in _APPLICATION_IMPORTS
-                )
+                forbidden = sorted(alias.name for alias in node.names if alias.name in _APPLICATION_IMPORTS)
                 if forbidden:
-                    candidate.static_errors.append(
-                        f"forbidden application import: {', '.join(forbidden)} (line {node.lineno})"
-                    )
+                    candidate.static_errors.append(f"forbidden application import: {', '.join(forbidden)} (line {node.lineno})")
     for node in ast.walk(tree):
         if (
-                isinstance(node, ast.Attribute)
-                and isinstance(node.value, ast.Name)
-                and node.value.id in application_aliases
-                and node.attr in _APPLICATION_IMPORTS
+            isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.value.id in application_aliases
+            and node.attr in _APPLICATION_IMPORTS
         ):
-            candidate.static_errors.append(
-                f"forbidden application import: {node.value.id}.{node.attr} (line {node.lineno})"
-            )
+            candidate.static_errors.append(f"forbidden application import: {node.value.id}.{node.attr} (line {node.lineno})")
 
 
 def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
@@ -366,11 +375,9 @@ def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
     elif public_classes[0].name != expected_class:
         candidate.static_errors.append(f"collector class must be named {expected_class}")
     elif not any(
-            (isinstance(base, ast.Name) and base.id == (
-                    "CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
-            or (isinstance(base, ast.Attribute) and base.attr == (
-                    "CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
-            for base in public_classes[0].bases
+        (isinstance(base, ast.Name) and base.id == ("CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
+        or (isinstance(base, ast.Attribute) and base.attr == ("CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
+        for base in public_classes[0].bases
     ):
         candidate.static_errors.append("collector class must inherit from its required base class")
     elif public_classes:
@@ -418,10 +425,24 @@ def _validate_mod(path: Path, mods_root: Path) -> CollectorCandidate:
         candidate.static_errors.append("mod metadata sidecar must contain an object")
         return candidate
     required = {
-        "id", "name", "version", "specialty", "description", "author", "supported_platforms",
-        "capabilities", "privilege_level", "sensitive_data_categories", "network_access",
-        "estimated_cost", "timeout_seconds", "maximum_output_bytes", "maximum_artifact_files",
-        "output_media_types", "minimum_contract_version", "default_profiles",
+        "id",
+        "name",
+        "version",
+        "specialty",
+        "description",
+        "author",
+        "supported_platforms",
+        "capabilities",
+        "privilege_level",
+        "sensitive_data_categories",
+        "network_access",
+        "estimated_cost",
+        "timeout_seconds",
+        "maximum_output_bytes",
+        "maximum_artifact_files",
+        "output_media_types",
+        "minimum_contract_version",
+        "default_profiles",
     }
     missing = sorted(required - set(raw))
     if missing:
@@ -443,8 +464,8 @@ def _validate_mod(path: Path, mods_root: Path) -> CollectorCandidate:
 
 
 def _validate_class_shape(
-        class_node: ast.ClassDef,
-        candidate: CollectorCandidate,
+    class_node: ast.ClassDef,
+    candidate: CollectorCandidate,
 ) -> None:
     """Enforce the small, documented public API allowed on a collector class."""
     if ast.get_docstring(class_node) is None:
@@ -476,21 +497,15 @@ def _validate_class_shape(
             if not isinstance(node, ast.Call):
                 continue
 
-            is_metadata_constructor = (
-                                              isinstance(node.func, ast.Name)
-                                              and node.func.id == "CollectorMetadata"
-                                      ) or (
-                                              isinstance(node.func, ast.Attribute)
-                                              and node.func.attr == "CollectorMetadata"
-                                      )
+            is_metadata_constructor = (isinstance(node.func, ast.Name) and node.func.id == "CollectorMetadata") or (
+                isinstance(node.func, ast.Attribute) and node.func.attr == "CollectorMetadata"
+            )
 
             if is_metadata_constructor:
                 metadata_calls.append(node)
 
     if metadata_method is not None and len(metadata_calls) != 1:
-        candidate.static_errors.append(
-            "metadata must construct one CollectorMetadata object directly"
-        )
+        candidate.static_errors.append("metadata must construct one CollectorMetadata object directly")
 
     if candidate.kind is CollectorKind.PLUGIN and metadata_method is not None:
         required_plugin_fields = {
@@ -508,25 +523,16 @@ def _validate_class_shape(
         if len(metadata_calls) == 1:
             metadata_call = metadata_calls[0]
 
-            declared_fields = {
-                keyword.arg
-                for keyword in metadata_call.keywords
-                if keyword.arg is not None
-            }
+            declared_fields = {keyword.arg for keyword in metadata_call.keywords if keyword.arg is not None}
 
             missing_fields = sorted(required_plugin_fields - declared_fields)
 
             if missing_fields:
-                candidate.static_errors.append(
-                    "plugin metadata must explicitly declare: "
-                    f"{', '.join(missing_fields)}"
-                )
+                candidate.static_errors.append(f"plugin metadata must explicitly declare: {', '.join(missing_fields)}")
 
     if candidate.kind is CollectorKind.CORE and len(metadata_calls) == 1:
         if not any(keyword.arg == "capabilities" for keyword in metadata_calls[0].keywords):
-            candidate.static_errors.append(
-                "CAPABILITY_METADATA_MISSING: core metadata must explicitly declare capabilities"
-            )
+            candidate.static_errors.append("CAPABILITY_METADATA_MISSING: core metadata must explicitly declare capabilities")
 
     collect_method = methods.get("collect")
 
@@ -534,32 +540,22 @@ def _validate_class_shape(
         metadata_call = metadata_calls[0]
 
         declared_keyword = next(
-            (
-                keyword
-                for keyword in metadata_call.keywords
-                if keyword.arg == "output_media_types"
-            ),
+            (keyword for keyword in metadata_call.keywords if keyword.arg == "output_media_types"),
             None,
         )
 
         if declared_keyword is None:
-            candidate.static_errors.append(
-                "metadata must explicitly declare output_media_types"
-            )
+            candidate.static_errors.append("metadata must explicitly declare output_media_types")
         else:
             try:
                 evaluated_media_types = ast.literal_eval(declared_keyword.value)
                 declared_media_types = set(evaluated_media_types)
             except (TypeError, ValueError):
-                candidate.static_errors.append(
-                    "metadata output_media_types must be a literal tuple"
-                )
+                candidate.static_errors.append("metadata output_media_types must be a literal tuple")
             else:
                 registered_media_types: set[str] = set()
 
-                lifecycle_methods: list[
-                    ast.FunctionDef | ast.AsyncFunctionDef
-                    ] = [collect_method]
+                lifecycle_methods: list[ast.FunctionDef | ast.AsyncFunctionDef] = [collect_method]
 
                 finalize_method = methods.get("finalize")
                 if finalize_method is not None:
@@ -570,53 +566,28 @@ def _validate_class_shape(
                         if not isinstance(call, ast.Call):
                             continue
 
-                        if not (
-                                isinstance(call.func, ast.Attribute)
-                                and call.func.attr == "register_file"
-                        ):
+                        if not (isinstance(call.func, ast.Attribute) and call.func.attr == "register_file"):
                             continue
 
                         media_keyword = next(
-                            (
-                                keyword
-                                for keyword in call.keywords
-                                if keyword.arg == "media_type"
-                            ),
+                            (keyword for keyword in call.keywords if keyword.arg == "media_type"),
                             None,
                         )
 
                         if media_keyword is None:
-                            registered_media_types.add(
-                                "application/octet-stream"
-                            )
-                        elif (
-                                isinstance(media_keyword.value, ast.Constant)
-                                and isinstance(media_keyword.value.value, str)
-                        ):
-                            registered_media_types.add(
-                                media_keyword.value.value
-                            )
+                            registered_media_types.add("application/octet-stream")
+                        elif isinstance(media_keyword.value, ast.Constant) and isinstance(media_keyword.value.value, str):
+                            registered_media_types.add(media_keyword.value.value)
                         else:
-                            candidate.static_errors.append(
-                                "register_file media_type must be a literal "
-                                f"string (line {call.lineno})"
-                            )
+                            candidate.static_errors.append(f"register_file media_type must be a literal string (line {call.lineno})")
 
-                if not registered_media_types.issubset(
-                        declared_media_types
-                ):
-                    candidate.static_errors.append(
-                        "metadata output_media_types must include every "
-                        "registered artifact type"
-                    )
+                if not registered_media_types.issubset(declared_media_types):
+                    candidate.static_errors.append("metadata output_media_types must include every registered artifact type")
 
     unknown = sorted(set(methods) - allowed)
 
     if unknown:
-        candidate.static_errors.append(
-            "unsupported public collector methods: "
-            f"{', '.join(unknown)}"
-        )
+        candidate.static_errors.append(f"unsupported public collector methods: {', '.join(unknown)}")
 
     required = {
         "metadata",
@@ -639,67 +610,39 @@ def _validate_class_shape(
     missing = sorted(required - set(methods))
 
     if missing:
-        candidate.static_errors.append(
-            f"missing required collector methods: {', '.join(missing)}"
-        )
+        candidate.static_errors.append(f"missing required collector methods: {', '.join(missing)}")
 
     for name, method in methods.items():
         if ast.get_docstring(method) is None:
-            candidate.static_errors.append(
-                f"{name} requires a docstring"
-            )
+            candidate.static_errors.append(f"{name} requires a docstring")
 
         if method.returns is None:
-            candidate.static_errors.append(
-                f"{name} requires a return type annotation"
-            )
+            candidate.static_errors.append(f"{name} requires a return type annotation")
         elif name in expected_returns:
             actual_return = ast.unparse(method.returns).replace(" ", "")
             expected_return = expected_returns[name]
 
             if actual_return != expected_return:
-                candidate.static_errors.append(
-                    f"{name} must return {expected_return}"
-                )
+                candidate.static_errors.append(f"{name} must return {expected_return}")
 
         parameters = method.args.args
 
-        expected_parameter_count = (
-            1
-            if name in {"metadata", "dependencies"}
-            else 3
-            if name == "finalize"
-            else 2
-        )
+        expected_parameter_count = 1 if name in {"metadata", "dependencies"} else 3 if name == "finalize" else 2
 
         if len(parameters) != expected_parameter_count:
-            candidate.static_errors.append(
-                f"{name} has an invalid parameter count"
-            )
+            candidate.static_errors.append(f"{name} has an invalid parameter count")
             continue
 
-        expected_first = (
-            "cls"
-            if name in {"metadata", "dependencies"}
-            else "self"
-        )
+        expected_first = "cls" if name in {"metadata", "dependencies"} else "self"
 
         if parameters[0].arg != expected_first:
-            candidate.static_errors.append(
-                f"{name} must begin with {expected_first}"
-            )
+            candidate.static_errors.append(f"{name} must begin with {expected_first}")
 
         if name in {"metadata", "dependencies"}:
-            is_classmethod = any(
-                isinstance(decorator, ast.Name)
-                and decorator.id == "classmethod"
-                for decorator in method.decorator_list
-            )
+            is_classmethod = any(isinstance(decorator, ast.Name) and decorator.id == "classmethod" for decorator in method.decorator_list)
 
             if not is_classmethod:
-                candidate.static_errors.append(
-                    f"{name} must be a classmethod"
-                )
+                candidate.static_errors.append(f"{name} must be a classmethod")
 
             continue
 
@@ -708,17 +651,10 @@ def _validate_class_shape(
         if context_parameter.annotation is None:
             context_annotation = None
         else:
-            context_annotation = ast.unparse(
-                context_parameter.annotation
-            ).rsplit(".", 1)[-1]
+            context_annotation = ast.unparse(context_parameter.annotation).rsplit(".", 1)[-1]
 
-        if (
-                context_parameter.arg != "context"
-                or context_annotation != "CollectorContext"
-        ):
-            candidate.static_errors.append(
-                f"{name} must accept an annotated context parameter"
-            )
+        if context_parameter.arg != "context" or context_annotation != "CollectorContext":
+            candidate.static_errors.append(f"{name} must accept an annotated context parameter")
 
         if name == "finalize":
             result_parameter = parameters[2]
@@ -726,29 +662,16 @@ def _validate_class_shape(
             if result_parameter.annotation is None:
                 result_annotation = None
             else:
-                result_annotation = ast.unparse(
-                    result_parameter.annotation
-                ).rsplit(".", 1)[-1]
+                result_annotation = ast.unparse(result_parameter.annotation).rsplit(".", 1)[-1]
 
-            if (
-                    result_parameter.arg != "result"
-                    or result_annotation != "CollectorResult"
-            ):
-                candidate.static_errors.append(
-                    "finalize must accept an annotated result parameter"
-                )
+            if result_parameter.arg != "result" or result_annotation != "CollectorResult":
+                candidate.static_errors.append("finalize must accept an annotated result parameter")
 
 
 def discover(project_root: Path) -> tuple[CollectorCandidate, ...]:
     """Discover candidates without importing their modules."""
-    candidates = [
-        _validate_static(path, CollectorKind.CORE)
-        for path in _iter_candidates(project_root, CollectorKind.CORE)
-    ]
-    candidates.extend(
-        _validate_static(path, CollectorKind.PLUGIN)
-        for path in _iter_candidates(project_root, CollectorKind.PLUGIN)
-    )
+    candidates = [_validate_static(path, CollectorKind.CORE) for path in _iter_candidates(project_root, CollectorKind.CORE)]
+    candidates.extend(_validate_static(path, CollectorKind.PLUGIN) for path in _iter_candidates(project_root, CollectorKind.PLUGIN))
     mods_root = project_root / "MODS"
     if mods_root.exists():
         for path in sorted(item for item in mods_root.rglob("*") if item.is_file()):
@@ -773,11 +696,7 @@ def _accept_runtime_metadata(candidate: CollectorCandidate, payload: object) -> 
         candidate.runtime_error = f"invalid validation response: {error}"
         return
 
-    specialty = (
-        metadata.specialty.value
-        if isinstance(metadata.specialty, Specialty)
-        else metadata.specialty
-    )
+    specialty = metadata.specialty.value if isinstance(metadata.specialty, Specialty) else metadata.specialty
 
     if metadata.minimum_contract_version != CONTRACT_VERSION:
         candidate.runtime_error = "collector contract version is unsupported"
@@ -787,12 +706,10 @@ def _accept_runtime_metadata(candidate: CollectorCandidate, payload: object) -> 
         candidate.runtime_error = "collector ID must start with its owner kind"
     elif candidate.kind is CollectorKind.CORE and specialty != candidate.path.parent.name:
         candidate.runtime_error = "core collector specialty must match its parent folder"
-    elif candidate.kind is CollectorKind.CORE and metadata.id != (
-            f"core.{candidate.path.parent.name}.{candidate.path.stem}"
-    ):
+    elif candidate.kind is CollectorKind.CORE and metadata.id != (f"core.{candidate.path.parent.name}.{candidate.path.stem}"):
         candidate.runtime_error = "core collector ID must match core/<specialty>/<filename>.py"
     elif candidate.kind is CollectorKind.PLUGIN and metadata.id != (
-            f"plugin.{candidate.path.parent.name if candidate.path.name == 'main.py' else candidate.path.stem}"
+        f"plugin.{candidate.path.parent.name if candidate.path.name == 'main.py' else candidate.path.stem}"
     ):
         candidate.runtime_error = "plugin collector ID must match its plugin folder or filename"
     elif candidate.kind is CollectorKind.MOD and metadata.id != f"mod.{candidate.path.stem}":
@@ -919,9 +836,9 @@ def preflight(project_root: Path, *, configuration_hash: str = "unconfigured") -
         relative_path = candidate.path.resolve().relative_to(project_root.resolve()).as_posix()
         entry = cached.get(relative_path)
         if (
-                isinstance(entry, dict)
-                and entry.get("kind") == candidate.kind.value
-                and entry.get("source_hash") == _source_hash(candidate.path)
+            isinstance(entry, dict)
+            and entry.get("kind") == candidate.kind.value
+            and entry.get("source_hash") == _source_hash(candidate.path)
         ):
             _accept_runtime_metadata(candidate, entry.get("metadata"))
         else:

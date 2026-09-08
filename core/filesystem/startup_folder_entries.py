@@ -6,7 +6,14 @@ import json
 import os
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import filesystem_adapter
 
@@ -69,8 +76,11 @@ class StartupFolderEntriesCollector(CoreCollector):
             try:
                 children = sorted(filesystem_adapter.children(folder), key=lambda path: path.name.casefold())
             except OSError as error:
-                return CollectorResult(CollectorStatus.SKIPPED, "Startup-folder access was denied",
-                                       errors=(str(error),))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "Startup-folder access was denied",
+                    errors=(str(error),),
+                )
             for child in children:
                 if context.is_cancelled:
                     return CollectorResult(CollectorStatus.CANCELLED, "cancelled during Startup-folder collection")
@@ -80,19 +90,26 @@ class StartupFolderEntriesCollector(CoreCollector):
                     stat = child.stat()
                 except OSError:
                     continue
-                entries.append({
-                    "name": child.name,
-                    "path": str(child),
-                    "is_directory": str(child.is_dir()).lower(),
-                    "size_bytes": stat.st_size,
-                    "modified_epoch": int(stat.st_mtime),
-                })
+                entries.append(
+                    {
+                        "name": child.name,
+                        "path": str(child),
+                        "is_directory": str(child.is_dir()).lower(),
+                        "size_bytes": stat.st_size,
+                        "modified_epoch": int(stat.st_mtime),
+                    }
+                )
         output = context.workspace / "startup_folder_entries.json"
-        output.write_text(json.dumps({"entries": entries, "missing_folders": missing_folders}, indent=2) + "\n",
-                          encoding="utf-8")
+        output.write_text(
+            json.dumps({"entries": entries, "missing_folders": missing_folders}, indent=2) + "\n",
+            encoding="utf-8",
+        )
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("startup_folder_entries_finished", entry_count=len(entries),
-                                bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "startup_folder_entries_finished",
+            entry_count=len(entries),
+            bytes_written=artifact.size_bytes,
+        )
         return CollectorResult.succeeded("Startup-folder entries collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

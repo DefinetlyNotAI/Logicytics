@@ -8,18 +8,18 @@ import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
-from logicytics.module.configuration import (
-    default_config,
-)
-from logicytics.contracts import (
-    Capability,
-    RunRequest,
-)
 from logicytics import (
     STILL_ACTIVE,
     close_handle,
     get_exit_code_process,
     open_process,
+)
+from logicytics.contracts import (
+    Capability,
+    RunRequest,
+)
+from logicytics.module.configuration import (
+    default_config,
 )
 from logicytics.module.discovery import preflight
 from logicytics.module.planner import build_plan
@@ -74,10 +74,7 @@ class RuntimeTests(unittest.TestCase):
                 default_config(root),
             ).run(plan)
 
-            records = {
-                record.id: record
-                for record in outcome.manifest.collectors
-            }
+            records = {record.id: record for record in outcome.manifest.collectors}
 
             self.assertEqual(
                 "failed",
@@ -91,12 +88,7 @@ class RuntimeTests(unittest.TestCase):
                 dependent.status,
             )
             self.assertIsNone(dependent.started_at)
-            self.assertTrue(
-                any(
-                    dependency_id in error
-                    for error in dependent.errors
-                )
-            )
+            self.assertTrue(any(dependency_id in error for error in dependent.errors))
 
             self.assertEqual(
                 ["core.system.b_dependent"],
@@ -108,22 +100,15 @@ class RuntimeTests(unittest.TestCase):
                     dependency_id,
                     "core.system.b_dependent",
                 },
-                {
-                    error["collector_id"]
-                    for error in outcome.manifest.errors
-                },
+                {error["collector_id"] for error in outcome.manifest.errors},
             )
 
             package = outcome.manifest.package
             assert package is not None
 
             with zipfile.ZipFile(Path(package["path"])) as archive:
-                packaged = json.loads(
-                    archive.read("metadata/manifest.json")
-                )
-                summary = archive.read(
-                    "reports/summary.txt"
-                ).decode("utf-8")
+                packaged = json.loads(archive.read("metadata/manifest.json"))
+                summary = archive.read("reports/summary.txt").decode("utf-8")
 
             self.assertEqual(
                 ["core.system.b_dependent"],
@@ -189,13 +174,11 @@ class RuntimeTests(unittest.TestCase):
             collector_path.write_text(
                 COLLECTOR.replace(
                     '            supported_platforms=("win32",),',
-                    '            supported_platforms=("win32",),\n'
-                    '            maximum_retries=1,\n'
-                    '            retry_delay_seconds=0.01,',
+                    '            supported_platforms=("win32",),\n            maximum_retries=1,\n            retry_delay_seconds=0.01,',
                 ).replace(
                     '        output = context.workspace / "system.txt"',
                     '        marker = context.workspace / "attempt.marker"\n'
-                    '        if not marker.exists():\n'
+                    "        if not marker.exists():\n"
                     '            marker.write_text("first attempt failed", encoding="utf-8")\n'
                     '            raise RuntimeError("temporary collector failure")\n'
                     '        output = context.workspace / "system.txt"',
@@ -214,9 +197,7 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(1, len(record.retry_history))
             self.assertEqual("collect", record.retry_history[0]["failure"]["operation"])
             self.assertTrue(record.retry_history[0]["failure"]["retry_safe"])
-            self.assertTrue(
-                any("temporary collector failure" in error for error in record.retry_history[0]["errors"])
-            )
+            self.assertTrue(any("temporary collector failure" in error for error in record.retry_history[0]["errors"]))
             self.assertIsInstance(record.worker_pid, int)
             self.assertIsInstance(record.retry_history[0]["worker_pid"], int)
             self.assertNotEqual(record.worker_pid, record.retry_history[0]["worker_pid"])
@@ -226,9 +207,7 @@ class RuntimeTests(unittest.TestCase):
             assert package is not None
 
             with zipfile.ZipFile(Path(package["path"])) as archive:
-                packaged_record = json.loads(
-                    archive.read("metadata/manifest.json")
-                )["collectors"][0]
+                packaged_record = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
                 summary = archive.read("reports/summary.txt").decode("utf-8")
             self.assertEqual(2, packaged_record["attempt_count"])
             self.assertEqual(1, len(packaged_record["retry_history"]))
@@ -313,30 +292,34 @@ class RuntimeTests(unittest.TestCase):
                     "evidence/derived/core_system_system_info/system.txt",
                     archive.namelist(),
                 )
-                packaged = json.loads(
-                    archive.read("metadata/manifest.json")
-                )["collectors"][0]
+                packaged = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
                 summary = archive.read("reports/summary.txt").decode("utf-8")
             self.assertEqual(record.failure, packaged["failure"])
             self.assertIn("Failed operation: collect", summary)
             self.assertIn("Retry safe: false", summary)
             self.assertIn("Remediation:", summary)
 
-    def test_crashed_collector_runs_cleanup_and_packages_partial_evidence_and_isolation_results(self) -> None:
+    def test_crashed_collector_runs_cleanup_and_packages_partial_evidence_and_isolation_results(
+        self,
+    ) -> None:
         """A failed process finalizes once, preserves evidence, and cannot stop its neighbor."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             core_directory = root / "core" / "system"
             core_directory.mkdir(parents=True)
             (root / "plugins").mkdir()
-            failing_source = delayed_collector_source("a_failed", 0.0).replace(
-                '        return CollectorResult.succeeded("test artifact created", (artifact,))',
-                '        raise RuntimeError("collection failed after evidence registration")',
-            ).replace(
-                '        """Release test resources."""',
-                '        """Release test resources."""\n'
-                '        (context.workspace / "cleanup.marker").write_text("cleaned", encoding="utf-8")\n'
-                '        (context.temporary_directory / "scratch.txt").write_text("scratch", encoding="utf-8")',
+            failing_source = (
+                delayed_collector_source("a_failed", 0.0)
+                .replace(
+                    '        return CollectorResult.succeeded("test artifact created", (artifact,))',
+                    '        raise RuntimeError("collection failed after evidence registration")',
+                )
+                .replace(
+                    '        """Release test resources."""',
+                    '        """Release test resources."""\n'
+                    '        (context.workspace / "cleanup.marker").write_text("cleaned", encoding="utf-8")\n'
+                    '        (context.temporary_directory / "scratch.txt").write_text("scratch", encoding="utf-8")',
+                )
             )
             (core_directory / "a_failed.py").write_text(failing_source, encoding="utf-8")
             (core_directory / "z_independent.py").write_text(
@@ -368,12 +351,7 @@ class RuntimeTests(unittest.TestCase):
             assert package is not None
 
             with zipfile.ZipFile(Path(package["path"])) as archive:
-                packaged = {
-                    item["id"]: item
-                    for item in json.loads(
-                        archive.read("metadata/manifest.json")
-                    )["collectors"]
-                }
+                packaged = {item["id"]: item for item in json.loads(archive.read("metadata/manifest.json"))["collectors"]}
                 summary = archive.read("reports/summary.txt").decode("utf-8")
                 self.assertIn(
                     "evidence/derived/core_system_a_failed/system.txt",
@@ -387,20 +365,25 @@ class RuntimeTests(unittest.TestCase):
             self.assertIn("Termination: failed", summary)
             self.assertIn("collection failed after evidence registration", summary)
 
-    def test_cleanup_failure_preserves_original_collector_crash_and_independent_results(self) -> None:
+    def test_cleanup_failure_preserves_original_collector_crash_and_independent_results(
+        self,
+    ) -> None:
         """Cleanup errors must be reported without replacing the original failure."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             core_directory = root / "core" / "system"
             core_directory.mkdir(parents=True)
             (root / "plugins").mkdir()
-            failing_source = delayed_collector_source("a_failed", 0.0).replace(
-                '        return CollectorResult.succeeded("test artifact created", (artifact,))',
-                '        raise RuntimeError("original collection failure")',
-            ).replace(
-                '        """Release test resources."""',
-                '        """Release test resources."""\n'
-                '        raise ValueError("secondary cleanup failure")',
+            failing_source = (
+                delayed_collector_source("a_failed", 0.0)
+                .replace(
+                    '        return CollectorResult.succeeded("test artifact created", (artifact,))',
+                    '        raise RuntimeError("original collection failure")',
+                )
+                .replace(
+                    '        """Release test resources."""',
+                    '        """Release test resources."""\n        raise ValueError("secondary cleanup failure")',
+                )
             )
             (core_directory / "a_failed.py").write_text(failing_source, encoding="utf-8")
             (core_directory / "z_independent.py").write_text(
@@ -429,8 +412,7 @@ class RuntimeTests(unittest.TestCase):
             collector_path.write_text(
                 COLLECTOR.replace(
                     '        """Release test resources."""',
-                    '        """Release test resources."""\n'
-                    '        raise RuntimeError("finalizer failed after collecting evidence")',
+                    '        """Release test resources."""\n        raise RuntimeError("finalizer failed after collecting evidence")',
                 ),
                 encoding="utf-8",
             )
@@ -465,17 +447,13 @@ class RuntimeTests(unittest.TestCase):
 
             remediation = failure["remediation"]
             if not isinstance(remediation, str):
-                self.fail(
-                    f"remediation must be str, got {type(remediation).__name__}"
-                )
+                self.fail(f"remediation must be str, got {type(remediation).__name__}")
 
             self.assertIn("cleanup", remediation)
 
             retry_safe = failure["retry_safe"]
             if not isinstance(retry_safe, bool):
-                self.fail(
-                    f"retry_safe must be bool, got {type(retry_safe).__name__}"
-                )
+                self.fail(f"retry_safe must be bool, got {type(retry_safe).__name__}")
 
             self.assertFalse(retry_safe)
 
@@ -499,8 +477,7 @@ class RuntimeTests(unittest.TestCase):
 
             timeout_source = delayed_collector_source("a_timeout", 2.0).replace(
                 '            supported_platforms=("win32",),',
-                '            supported_platforms=("win32",),\n'
-                '            timeout_seconds=1,',
+                '            supported_platforms=("win32",),\n            timeout_seconds=1,',
             )
 
             (core_directory / "a_timeout.py").write_text(
@@ -529,17 +506,12 @@ class RuntimeTests(unittest.TestCase):
                 default_config(root),
             ).run(plan)
 
-            records = {
-                record.id: record
-                for record in outcome.manifest.collectors
-            }
+            records = {record.id: record for record in outcome.manifest.collectors}
 
             timeout_record = records["core.system.a_timeout"]
 
             self.assertEqual("failed", timeout_record.status)
-            self.assertTrue(
-                any("timeout" in error for error in timeout_record.errors)
-            )
+            self.assertTrue(any("timeout" in error for error in timeout_record.errors))
             self.assertEqual(
                 "timeout_exceeded",
                 timeout_record.termination_reason,
@@ -550,17 +522,13 @@ class RuntimeTests(unittest.TestCase):
 
             retry_safe = timeout_failure["retry_safe"]
             if not isinstance(retry_safe, bool):
-                self.fail(
-                    f"retry_safe must be bool, got {type(retry_safe).__name__}"
-                )
+                self.fail(f"retry_safe must be bool, got {type(retry_safe).__name__}")
 
             self.assertTrue(retry_safe)
 
             remediation = timeout_failure["remediation"]
             if not isinstance(remediation, str):
-                self.fail(
-                    f"remediation must be str, got {type(remediation).__name__}"
-                )
+                self.fail(f"remediation must be str, got {type(remediation).__name__}")
 
             self.assertIn("timeout", remediation)
 
@@ -578,18 +546,23 @@ class RuntimeTests(unittest.TestCase):
             core_directory = root / "core" / "system"
             core_directory.mkdir(parents=True)
             (root / "plugins").mkdir()
-            source = delayed_collector_source("a_tree", 0.0).replace(
-                "from pathlib import Path\n",
-                "from pathlib import Path\nimport subprocess\nimport sys\nfrom logicytics import Capability\n",
-            ).replace(
-                '            capabilities=(),',
-                '            capabilities=(Capability.SUBPROCESS,),\n            timeout_seconds=2,',
-            ).replace(
-                '        output = context.workspace / "system.txt"',
-                '        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])\n'
-                '        (context.workspace / "child.pid").write_text(str(child.pid), encoding="ascii")\n'
-                '        sleep(5)\n'
-                '        output = context.workspace / "system.txt"',
+            source = (
+                delayed_collector_source("a_tree", 0.0)
+                .replace(
+                    "from pathlib import Path\n",
+                    "from pathlib import Path\nimport subprocess\nimport sys\nfrom logicytics import Capability\n",
+                )
+                .replace(
+                    "            capabilities=(),",
+                    "            capabilities=(Capability.SUBPROCESS,),\n            timeout_seconds=2,",
+                )
+                .replace(
+                    '        output = context.workspace / "system.txt"',
+                    '        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])\n'
+                    '        (context.workspace / "child.pid").write_text(str(child.pid), encoding="ascii")\n'
+                    "        sleep(5)\n"
+                    '        output = context.workspace / "system.txt"',
+                )
             )
             (core_directory / "a_tree.py").write_text(source, encoding="utf-8")
             (core_directory / "z_independent.py").write_text(
@@ -608,11 +581,7 @@ class RuntimeTests(unittest.TestCase):
             )
             outcome = RunSupervisor(root, default_config(root)).run(plan)
             records = {record.id: record for record in outcome.manifest.collectors}
-            child_pid = int(
-                (outcome.run_directory / "collectors" / "core_system_a_tree" / "child.pid").read_text(
-                    encoding="ascii"
-                )
-            )
+            child_pid = int((outcome.run_directory / "collectors" / "core_system_a_tree" / "child.pid").read_text(encoding="ascii"))
 
             handle = open_process(child_pid)
             if handle is not None:
@@ -642,8 +611,7 @@ class RuntimeTests(unittest.TestCase):
 
             limited_source = delayed_collector_source("a_limited", 2.0).replace(
                 '            supported_platforms=("win32",),',
-                '            supported_platforms=("win32",),\n'
-                '            maximum_memory_bytes=1,',
+                '            supported_platforms=("win32",),\n            maximum_memory_bytes=1,',
             )
 
             (core_directory / "a_limited.py").write_text(
@@ -672,10 +640,7 @@ class RuntimeTests(unittest.TestCase):
                 default_config(root),
             ).run(plan)
 
-            records = {
-                record.id: record
-                for record in outcome.manifest.collectors
-            }
+            records = {record.id: record for record in outcome.manifest.collectors}
 
             limited = records["core.system.a_limited"]
 
@@ -685,12 +650,7 @@ class RuntimeTests(unittest.TestCase):
             assert peak_memory_bytes is not None
 
             self.assertGreater(peak_memory_bytes, 1)
-            self.assertTrue(
-                any(
-                    "maximum_memory_bytes=1" in error
-                    for error in limited.errors
-                )
-            )
+            self.assertTrue(any("maximum_memory_bytes=1" in error for error in limited.errors))
             self.assertEqual(
                 "memory_limit_exceeded",
                 limited.termination_reason,
@@ -706,9 +666,7 @@ class RuntimeTests(unittest.TestCase):
 
             remediation = limited_failure["remediation"]
             if not isinstance(remediation, str):
-                self.fail(
-                    f"remediation must be str, got {type(remediation).__name__}"
-                )
+                self.fail(f"remediation must be str, got {type(remediation).__name__}")
 
             self.assertIn(
                 "memory limit",
@@ -717,9 +675,7 @@ class RuntimeTests(unittest.TestCase):
 
             retry_safe = limited_failure["retry_safe"]
             if not isinstance(retry_safe, bool):
-                self.fail(
-                    f"retry_safe must be bool, got {type(retry_safe).__name__}"
-                )
+                self.fail(f"retry_safe must be bool, got {type(retry_safe).__name__}")
 
             self.assertTrue(retry_safe)
 
@@ -757,9 +713,9 @@ class RuntimeTests(unittest.TestCase):
             )
 
             with patch.object(
-                    supervisor,
-                    supervisor._supervise.__name__,
-                    side_effect=KeyboardInterrupt,
+                supervisor,
+                supervisor._supervise.__name__,
+                side_effect=KeyboardInterrupt,
             ):
                 outcome = supervisor.run(plan)
 
@@ -781,13 +737,9 @@ class RuntimeTests(unittest.TestCase):
             self.assertTrue(package_path.is_file())
 
             with zipfile.ZipFile(package_path) as archive:
-                summary = archive.read(
-                    "reports/summary.txt"
-                ).decode("utf-8")
+                summary = archive.read("reports/summary.txt").decode("utf-8")
 
-                packaged_manifest = json.loads(
-                    archive.read("metadata/manifest.json")
-                )
+                packaged_manifest = json.loads(archive.read("metadata/manifest.json"))
 
             self.assertTrue(packaged_manifest["cancellation_requested"])
             self.assertIn("Status: cancelled", summary)
@@ -813,14 +765,14 @@ class RuntimeTests(unittest.TestCase):
             source = COLLECTOR.replace(
                 "    def collect(self, context: CollectorContext) -> CollectorResult:",
                 "    def prepare(self, context: CollectorContext) -> ValidationResult:\n"
-                "        \"\"\"Prepare worker-local lifecycle state.\"\"\"\n"
+                '        """Prepare worker-local lifecycle state."""\n'
                 "        context.settings['prepared'] = 'yes'\n"
                 "        return ValidationResult(True)\n\n"
                 "    def collect(self, context: CollectorContext) -> CollectorResult:",
             ).replace(
                 "    def cleanup(self, context: CollectorContext) -> None:",
                 "    def finalize(self, context: CollectorContext, result: CollectorResult) -> CollectorResult:\n"
-                "        \"\"\"Finalize the typed result before it crosses the worker boundary.\"\"\"\n"
+                '        """Finalize the typed result before it crosses the worker boundary."""\n'
                 "        if context.settings.get('prepared') != 'yes':\n"
                 "            raise RuntimeError('prepare phase did not run')\n"
                 "        return CollectorResult.succeeded('finalized lifecycle', result.artifacts)\n\n"

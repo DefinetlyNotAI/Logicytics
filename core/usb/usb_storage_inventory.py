@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from logicytics import (
     Capability,
@@ -107,12 +107,15 @@ class UsbStorageInventoryCollector(CoreCollector):
                 "USBSTOR registry access was denied during collection",
                 errors=(str(error),),
             )
-        report = {"collected_at": datetime.now(timezone.utc).isoformat(), "devices": devices}
+        report = {"collected_at": datetime.now(UTC).isoformat(), "devices": devices}
         output = context.workspace / "usb_storage_inventory.json"
         output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("usb_storage_inventory_finished", device_count=len(devices),
-                                bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "usb_storage_inventory_finished",
+            device_count=len(devices),
+            bytes_written=artifact.size_bytes,
+        )
         return CollectorResult.succeeded("USB storage inventory collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

@@ -22,11 +22,15 @@ class TestRunnerCliTests(unittest.TestCase):
             activation_script.write_text("", encoding="utf-8")
             output = io.StringIO()
 
-            with patch.object(test_runner, "project_root", return_value=root), patch.object(
+            with (
+                patch.object(test_runner, "project_root", return_value=root),
+                patch.object(
                     sys,
                     "prefix",
                     sys.base_prefix,
-            ), patch("sys.stderr", output):
+                ),
+                patch("sys.stderr", output),
+            ):
                 self.assertEqual(2, test_runner.main([]))
 
             self.assertIn(r".\.venv\Scripts\Activate.ps1", output.getvalue())
@@ -36,11 +40,15 @@ class TestRunnerCliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             output = io.StringIO()
 
-            with patch.object(test_runner, "project_root", return_value=Path(temporary)), patch.object(
+            with (
+                patch.object(test_runner, "project_root", return_value=Path(temporary)),
+                patch.object(
                     sys,
                     "prefix",
                     sys.base_prefix,
-            ), patch("sys.stderr", output):
+                ),
+                patch("sys.stderr", output),
+            ):
                 self.assertEqual(2, test_runner.main([]))
 
             rendered = " ".join(output.getvalue().split())
@@ -58,11 +66,17 @@ class TestRunnerCliTests(unittest.TestCase):
         runner = MagicMock()
         runner.run.return_value = result
 
-        with patch("logicytics.module.configuration.load_config", return_value=MagicMock()), \
-                patch("logicytics.module.output_layout.ensure_output_layout", return_value=MagicMock()), \
-                patch("logicytics.module.logging.get_application_logger", return_value=logger), \
-                patch.object(test_runner.unittest.defaultTestLoader, "discover", return_value=unittest.TestSuite()), \
-                patch.object(test_runner.unittest, "TextTestRunner", return_value=runner):
+        with (
+            patch("logicytics.module.configuration.load_config", return_value=MagicMock()),
+            patch("logicytics.module.output_layout.ensure_output_layout", return_value=MagicMock()),
+            patch("logicytics.module.logging.get_application_logger", return_value=logger),
+            patch.object(
+                test_runner.unittest.defaultTestLoader,
+                "discover",
+                return_value=unittest.TestSuite(),
+            ),
+            patch.object(test_runner.unittest, "TextTestRunner", return_value=runner),
+        ):
             self.assertEqual(0, test_runner.main(["--verbosity", "0"]))
 
         logger.box.assert_called_once_with(
@@ -92,11 +106,17 @@ class TestRunnerCliTests(unittest.TestCase):
                 self.stream.write("FAIL: example test\nassertion failed\n")
                 return result
 
-        with patch("logicytics.module.configuration.load_config", return_value=MagicMock()), \
-                patch("logicytics.module.output_layout.ensure_output_layout", return_value=MagicMock()), \
-                patch("logicytics.module.logging.get_application_logger", return_value=logger), \
-                patch.object(test_runner.unittest.defaultTestLoader, "discover", return_value=unittest.TestSuite()), \
-                patch.object(test_runner.unittest, "TextTestRunner", FailingRunner):
+        with (
+            patch("logicytics.module.configuration.load_config", return_value=MagicMock()),
+            patch("logicytics.module.output_layout.ensure_output_layout", return_value=MagicMock()),
+            patch("logicytics.module.logging.get_application_logger", return_value=logger),
+            patch.object(
+                test_runner.unittest.defaultTestLoader,
+                "discover",
+                return_value=unittest.TestSuite(),
+            ),
+            patch.object(test_runner.unittest, "TextTestRunner", FailingRunner),
+        ):
             self.assertEqual(1, test_runner.main([]))
 
         logger.box.assert_any_call("Test failures", ("FAIL: example test", "assertion failed"))

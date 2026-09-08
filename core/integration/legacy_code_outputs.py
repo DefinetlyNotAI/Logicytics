@@ -17,12 +17,30 @@ from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import filesystem_adapter
 
 _EVIDENCE_EXTENSIONS = {
-    ".csv", ".dot", ".evtx", ".html", ".htm", ".json", ".log", ".reg",
-    ".svg", ".txt", ".xml", ".zip",
+    ".csv",
+    ".dot",
+    ".evtx",
+    ".html",
+    ".htm",
+    ".json",
+    ".log",
+    ".reg",
+    ".svg",
+    ".txt",
+    ".xml",
+    ".zip",
 }
 _EXCLUDED_DIRECTORIES = {
-    ".git", ".idea", ".mypy_cache", ".pytest_cache", ".venv", "__pycache__",
-    "lib", "libs", "site-packages", "venv",
+    ".git",
+    ".idea",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".venv",
+    "__pycache__",
+    "lib",
+    "libs",
+    "site-packages",
+    "venv",
 }
 _MAXIMUM_FILES = 500
 _MAXIMUM_FILE_BYTES = 64 * 1024 * 1024
@@ -78,29 +96,24 @@ class LegacyCodeOutputsCollector(CoreCollector):
         candidates: list[Path] = []
 
         for path in sorted(
-                filesystem_adapter.recursive(code_root),
-                key=lambda candidate: candidate.as_posix(),
+            filesystem_adapter.recursive(code_root),
+            key=lambda candidate: candidate.as_posix(),
         ):
             if context.is_cancelled:
-                return CollectorResult.cancelled(
-                    "cancelled during legacy CODE discovery"
-                )
+                return CollectorResult.cancelled("cancelled during legacy CODE discovery")
 
             relative = path.relative_to(code_root)
 
-            if any(
-                    part.casefold() in _EXCLUDED_DIRECTORIES
-                    for part in relative.parts
-            ):
+            if any(part.casefold() in _EXCLUDED_DIRECTORIES for part in relative.parts):
                 continue
 
             try:
                 if (
-                        not path.is_file()
-                        or path.is_symlink()
-                        or path.resolve().parent != (code_root / relative.parent).resolve()
-                        or path.suffix.casefold() not in _EVIDENCE_EXTENSIONS
-                        or path.stat().st_size > _MAXIMUM_FILE_BYTES
+                    not path.is_file()
+                    or path.is_symlink()
+                    or path.resolve().parent != (code_root / relative.parent).resolve()
+                    or path.suffix.casefold() not in _EVIDENCE_EXTENSIONS
+                    or path.stat().st_size > _MAXIMUM_FILE_BYTES
                 ):
                     continue
             except OSError:
@@ -145,9 +158,7 @@ class LegacyCodeOutputsCollector(CoreCollector):
                         destination,
                         media_type="application/octet-stream",
                         evidence_kind=EvidenceKind.RAW,
-                        transformations=(
-                            "imported from historical CODE output",
-                        ),
+                        transformations=("imported from historical CODE output",),
                     )
                 )
 
@@ -165,9 +176,7 @@ class LegacyCodeOutputsCollector(CoreCollector):
                 errors.append(f"{relative.as_posix()}: {error}")
 
         if not artifacts and not errors:
-            return CollectorResult.skipped(
-                "no generated legacy CODE evidence matched the import policy"
-            )
+            return CollectorResult.skipped("no generated legacy CODE evidence matched the import policy")
 
         if errors:
             return CollectorResult.partial(
@@ -179,10 +188,7 @@ class LegacyCodeOutputsCollector(CoreCollector):
         context.report_progress(
             "legacy_code_outputs_finished",
             imported_files=len(artifacts),
-            bytes_written=sum(
-                artifact.size_bytes
-                for artifact in artifacts
-            ),
+            bytes_written=sum(artifact.size_bytes for artifact in artifacts),
         )
 
         return CollectorResult.succeeded(

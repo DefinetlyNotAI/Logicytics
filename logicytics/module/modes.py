@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from types import MappingProxyType
-from typing import Iterable, TypedDict, Mapping
+from typing import TypedDict
 
 from logicytics.contracts import CollectorKind
 from logicytics.module.discovery import CollectorCandidate
@@ -13,6 +14,7 @@ from logicytics.module.discovery import CollectorCandidate
 
 class ModeMatrixCollector(TypedDict):
     """Serialized mode membership and validation details for one collector."""
+
     id: str
     kind: str
     valid: bool
@@ -24,6 +26,7 @@ class ModeMatrixCollector(TypedDict):
 
 class ModeMatrixMode(TypedDict):
     """Serialized execution mode definition and its selected collectors."""
+
     name: str
     description: str
     strategy: str
@@ -33,6 +36,7 @@ class ModeMatrixMode(TypedDict):
 
 class ModeMatrix(TypedDict):
     """Versioned machine-readable matrix of modes and collector memberships."""
+
     schema_version: int
     modes: list[ModeMatrixMode]
     collectors: list[ModeMatrixCollector]
@@ -89,22 +93,22 @@ _MODE_LIST = (
     ),
 )
 
-EXECUTION_MODES: Mapping[str, ExecutionMode] = MappingProxyType(
-    {mode.name: mode for mode in _MODE_LIST}
+EXECUTION_MODES: Mapping[str, ExecutionMode] = MappingProxyType({mode.name: mode for mode in _MODE_LIST})
+LEGACY_MODE_ALIASES: Mapping[str, str] = MappingProxyType(
+    {
+        "default_mode": "standard",
+        "threaded": "balanced",
+        "minimal": "quick",
+        "depth": "thorough",
+        "modded": "extensions",
+        "performance_check": "performance",
+    }
 )
-LEGACY_MODE_ALIASES: Mapping[str, str] = MappingProxyType({
-    "default_mode": "standard",
-    "threaded": "balanced",
-    "minimal": "quick",
-    "depth": "thorough",
-    "modded": "extensions",
-    "performance_check": "performance",
-})
 
 
 def resolve_execution_mode(
-        selected: str | None,
-        legacy_flags: Mapping[str, bool],
+    selected: str | None,
+    legacy_flags: Mapping[str, bool],
 ) -> ExecutionMode | None:
     """Resolve a user-facing name or exactly one parser-exclusive legacy alias."""
     aliases = [name for flag, name in LEGACY_MODE_ALIASES.items() if legacy_flags.get(flag, False)]
@@ -140,40 +144,27 @@ def _candidate_modes(candidate: CollectorCandidate) -> tuple[str, ...]:
 
 
 def mode_matrix(
-        candidates: Iterable[CollectorCandidate] = (),
+    candidates: Iterable[CollectorCandidate] = (),
 ) -> ModeMatrix:
     """Return the versioned mode definitions and complete collector inclusion matrix."""
     aliases_by_mode = {
-        name: sorted(
-            f"--{flag.removesuffix('_mode').replace('_', '-')}"
-            for flag, target in LEGACY_MODE_ALIASES.items()
-            if target == name
-        )
+        name: sorted(f"--{flag.removesuffix('_mode').replace('_', '-')}" for flag, target in LEGACY_MODE_ALIASES.items() if target == name)
         for name in EXECUTION_MODES
     }
 
     ordered_candidates = sorted(
         candidates,
         key=lambda candidate: (
-            candidate.metadata.id
-            if candidate.metadata is not None
-            else candidate.selection_id,
+            candidate.metadata.id if candidate.metadata is not None else candidate.selection_id,
             str(candidate.path),
         ),
     )
 
     collector_rows: list[ModeMatrixCollector] = []
-    memberships: dict[str, list[str]] = {
-        name: []
-        for name in EXECUTION_MODES
-    }
+    memberships: dict[str, list[str]] = {name: [] for name in EXECUTION_MODES}
 
     for candidate in ordered_candidates:
-        collector_id = (
-            candidate.metadata.id
-            if candidate.metadata is not None
-            else candidate.selection_id
-        )
+        collector_id = candidate.metadata.id if candidate.metadata is not None else candidate.selection_id
         assigned_modes = _candidate_modes(candidate)
 
         for mode_name in assigned_modes:
@@ -249,10 +240,7 @@ def render_mode_matrix_markdown(matrix: Mapping[str, object]) -> str:
         else:
             selection = "mode selected"
 
-        rows.append(
-            f"| `{collector.get('id', '')}` | `{collector.get('kind', '')}` | "
-            f"{'yes' if valid else 'no'} | {modes} | {selection} |"
-        )
+        rows.append(f"| `{collector.get('id', '')}` | `{collector.get('kind', '')}` | {'yes' if valid else 'no'} | {modes} | {selection} |")
 
     rows.append("")
     return "\n".join(rows)

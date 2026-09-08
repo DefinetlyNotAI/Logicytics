@@ -75,8 +75,11 @@ class InstalledDriversCollector(CoreCollector):
         output.write_text(completed.stdout, encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/csv")
         driver_count = sum(1 for line in completed.stdout.splitlines() if line.strip())
-        context.report_progress("installed_drivers_finished", driver_count=driver_count,
-                                bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "installed_drivers_finished",
+            driver_count=driver_count,
+            bytes_written=artifact.size_bytes,
+        )
         return CollectorResult.succeeded("installed-driver inventory collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

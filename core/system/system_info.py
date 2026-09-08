@@ -6,9 +6,15 @@ import getpass
 import json
 import os
 import platform
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import network_adapter as socket
 
@@ -46,7 +52,7 @@ class SystemInfoCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before system inventory collection")
         context.report_progress("system_inventory_started")
         inventory = {
-            "collected_at": datetime.now(timezone.utc).isoformat(),
+            "collected_at": datetime.now(UTC).isoformat(),
             "hostname": socket.gethostname(),
             "username": getpass.getuser(),
             "operating_system": {

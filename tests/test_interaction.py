@@ -23,9 +23,12 @@ class InteractionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             output = io.StringIO()
-            with patch.object(CLI, "project_root", return_value=root), patch(
+            with (
+                patch.object(CLI, "project_root", return_value=root),
+                patch(
                     "sys.stderr",
                     output,
+                ),
             ):
                 self.assertEqual(0, main(["--match", "run a quick basic collection"]))
             rendered = output.getvalue()
@@ -37,21 +40,26 @@ class InteractionTests(unittest.TestCase):
             self.assertFalse((root / "output" / "data" / "interaction_history.json.gz").exists())
 
             (root / "logicytics.yaml").write_text(
-                json.dumps({
-                    "schema_version": 4,
-                    "interaction": {
-                        "history_enabled": True,
-                        "similarity_threshold": 0.5,
-                        "model_name": "stdlib-test-model",
-                        "model_debug": True,
-                    },
-                }),
+                json.dumps(
+                    {
+                        "schema_version": 4,
+                        "interaction": {
+                            "history_enabled": True,
+                            "similarity_threshold": 0.5,
+                            "model_name": "stdlib-test-model",
+                            "model_debug": True,
+                        },
+                    }
+                ),
                 encoding="utf-8",
             )
             output = io.StringIO()
-            with patch.object(CLI, "project_root", return_value=root), patch(
+            with (
+                patch.object(CLI, "project_root", return_value=root),
+                patch(
                     "sys.stderr",
                     output,
+                ),
             ):
                 self.assertEqual(0, main(["--match", "an exhaustive slow scan"]))
             rendered = output.getvalue()
@@ -67,9 +75,12 @@ class InteractionTests(unittest.TestCase):
             self.assertIn("device_name", history[0])
 
             output = io.StringIO()
-            with patch.object(CLI, "project_root", return_value=root), patch(
+            with (
+                patch.object(CLI, "project_root", return_value=root),
+                patch(
                     "sys.stderr",
                     output,
+                ),
             ):
                 self.assertEqual(0, main(["--usage"]))
             rendered = output.getvalue()

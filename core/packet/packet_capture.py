@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import csv
+import select
 import struct
 import time
-
-import select
 
 from logicytics import (
     Capability,
@@ -35,10 +34,15 @@ def _packet_row(payload: bytes) -> dict[str, str] | None:
     destination = socket.inet_ntoa(payload[16:20])
     source_port = destination_port = ""
     if protocol in {6, 17} and len(payload) >= header_length + 4:
-        source_port, destination_port = (str(value) for value in
-                                         struct.unpack("!HH", payload[header_length:header_length + 4]))
-    return {"source_ip": source, "destination_ip": destination, "protocol": names.get(protocol, str(protocol)),
-            "source_port": source_port, "destination_port": destination_port, "packet_bytes": str(len(payload))}
+        source_port, destination_port = (str(value) for value in struct.unpack("!HH", payload[header_length : header_length + 4]))
+    return {
+        "source_ip": source,
+        "destination_ip": destination,
+        "protocol": names.get(protocol, str(protocol)),
+        "source_port": source_port,
+        "destination_port": destination_port,
+        "packet_bytes": str(len(payload)),
+    }
 
 
 class PacketCaptureCollector(CoreCollector):
@@ -48,13 +52,24 @@ class PacketCaptureCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the explicitly approved packet-capture CSV artifact contract."""
         return CollectorMetadata(
-            id="core.packet.packet_capture", name="IPv4 packet capture", version="4.0.0", specialty=Specialty.PACKET,
+            id="core.packet.packet_capture",
+            name="IPv4 packet capture",
+            version="4.0.0",
+            specialty=Specialty.PACKET,
             output_media_types=("text/csv",),
-            description="Captures bounded IPv4 packet metadata without saving packet payloads.", author="Logicytics",
+            description="Captures bounded IPv4 packet metadata without saving packet payloads.",
+            author="Logicytics",
             supported_platforms=("win32",),
-            capabilities=(Capability.NETWORK, Capability.PACKET_CAPTURE, Capability.ELEVATED_PRIVILEGES),
-            privilege_level=PrivilegeLevel.ELEVATED, network_access=NetworkAccess.LOCAL,
-            sensitive_data_categories=("network_metadata",), default_profiles=("deep",), timeout_seconds=90,
+            capabilities=(
+                Capability.NETWORK,
+                Capability.PACKET_CAPTURE,
+                Capability.ELEVATED_PRIVILEGES,
+            ),
+            privilege_level=PrivilegeLevel.ELEVATED,
+            network_access=NetworkAccess.LOCAL,
+            sensitive_data_categories=("network_metadata",),
+            default_profiles=("deep",),
+            timeout_seconds=90,
             maximum_output_bytes=2 * 1024 * 1024,
         )
 
@@ -67,8 +82,10 @@ class PacketCaptureCollector(CoreCollector):
             timeout = context.setting_float("timeout_seconds", 10.0)
             retry_window = context.setting_float("retry_window_seconds", 0.0)
         except (TypeError, ValueError):
-            return ValidationResult(False, reasons=(
-                "packet_count, timeout_seconds, and retry_window_seconds must be numeric",))
+            return ValidationResult(
+                False,
+                reasons=("packet_count, timeout_seconds, and retry_window_seconds must be numeric",),
+            )
         if not 1 <= count <= 10_000 or not 1 <= timeout <= 60 or not 0 <= retry_window <= 60:
             return ValidationResult(
                 False,
@@ -152,10 +169,7 @@ class PacketCaptureCollector(CoreCollector):
                 deadline = time.monotonic() + timeout
                 retry_deadline = time.monotonic() + retry_window
 
-                while (
-                        observation_count < count
-                        and time.monotonic() < deadline
-                ):
+                while observation_count < count and time.monotonic() < deadline:
                     if context.is_cancelled:
                         early_result = CollectorResult(
                             CollectorStatus.CANCELLED,

@@ -40,7 +40,7 @@ def render_bios_table(bios: dict[str, str | None]) -> str:
         (
             "<!doctype html>",
             '<html lang="en">',
-            "  <head><meta charset=\"utf-8\"><title>BIOS information</title></head>",
+            '  <head><meta charset="utf-8"><title>BIOS information</title></head>',
             "  <body>",
             "    <h1>BIOS information</h1>",
             "    <table>",

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from logicytics.platform_adapters import process_adapter
 
@@ -25,9 +25,7 @@ def run_command(command: Iterable[str], *, timeout_seconds: float = 30) -> Comma
         raise ValueError("command must contain at least one argument")
     if timeout_seconds <= 0:
         raise ValueError("timeout_seconds must be positive")
-    completed = process_adapter.run(
-        normalized, capture_output=True, check=False, text=True, timeout=timeout_seconds
-    )
+    completed = process_adapter.run(normalized, capture_output=True, check=False, text=True, timeout=timeout_seconds)
     return CommandResult(normalized, completed.returncode, completed.stdout, completed.stderr)
 
 
@@ -37,8 +35,15 @@ def parse_level_messages(output: str) -> tuple[tuple[str, str], ...]:
     for line in output.splitlines():
         level, separator, message = line.partition(":")
         normalized_level = level.strip().upper()
-        if not separator or normalized_level not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INTERNAL",
-                                                     "EXCEPTION"}:
+        if not separator or normalized_level not in {
+            "DEBUG",
+            "INFO",
+            "WARNING",
+            "ERROR",
+            "CRITICAL",
+            "INTERNAL",
+            "EXCEPTION",
+        }:
             continue
         messages.append((normalized_level, message.strip()))
     return tuple(messages)

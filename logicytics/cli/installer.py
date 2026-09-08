@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import sys
 import venv
 from pathlib import Path

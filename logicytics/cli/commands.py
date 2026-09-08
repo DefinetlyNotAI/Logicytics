@@ -18,7 +18,13 @@ from logicytics.module.configuration import AppConfig, load_config
 from logicytics.module.discovery import preflight
 from logicytics.module.environment import inspect_environment
 from logicytics.module.errors import LogicyticsError
-from logicytics.module.interaction import load_history, match_flag, record_match, usage_statistics, write_usage_graph
+from logicytics.module.interaction import (
+    load_history,
+    match_flag,
+    record_match,
+    usage_statistics,
+    write_usage_graph,
+)
 from logicytics.module.logging import ApplicationLogger, HumanArgumentParser, get_application_logger
 from logicytics.module.maintenance import (
     build_manifest,
@@ -54,9 +60,9 @@ class CLI:
 
     @staticmethod
     def render_preflight(
-            logger: object,
-            validation: dict[str, list[dict[str, object]]],
-            sysinternals: dict[str, str],
+        logger: object,
+        validation: dict[str, list[dict[str, object]]],
+        sysinternals: dict[str, str],
     ) -> None:
         """Present validated collectors and diagnostics without exposing internal JSON."""
         valid = validation["valid"]
@@ -74,9 +80,7 @@ class CLI:
         for item in (*invalid, *quarantined):
             diagnostics = item.get("diagnostics", [])
             details = "; ".join(
-                str(diagnostic.get("message", "invalid collector"))
-                for diagnostic in diagnostics
-                if isinstance(diagnostic, dict)
+                str(diagnostic.get("message", "invalid collector")) for diagnostic in diagnostics if isinstance(diagnostic, dict)
             )
             logger.event(
                 "ERROR" if item in invalid else "WARNING",
@@ -92,15 +96,12 @@ class CLI:
 
     @staticmethod
     def request(
-            arguments: argparse.Namespace,
-            default_workers: int,
-            configured_blocked_capabilities: tuple[Capability, ...] = (),
+        arguments: argparse.Namespace,
+        default_workers: int,
+        configured_blocked_capabilities: tuple[Capability, ...] = (),
     ) -> RunRequest:
         """Build an immutable run request while enforcing mode and rerun conflicts."""
-        legacy_flags = {
-            flag: getattr(arguments, flag, False)
-            for flag in LEGACY_MODE_ALIASES
-        }
+        legacy_flags = {flag: getattr(arguments, flag, False) for flag in LEGACY_MODE_ALIASES}
 
         mode = resolve_execution_mode(getattr(arguments, "mode", None), legacy_flags)
         explicit_profile = getattr(arguments, "profile", None)
@@ -116,32 +117,20 @@ class CLI:
         if mode is not None:
             if explicit_sequential and mode.strategy is ExecutionStrategy.PARALLEL:
                 if legacy_flags["threaded"]:
-                    raise ValueError(
-                        "sequential execution conflicts with legacy --threaded mode"
-                    )
-                raise ValueError(
-                    f"{mode.name} mode requires configured parallel execution"
-                )
+                    raise ValueError("sequential execution conflicts with legacy --threaded mode")
+                raise ValueError(f"{mode.name} mode requires configured parallel execution")
 
             if explicit_parallel and mode.strategy is ExecutionStrategy.SEQUENTIAL:
                 if legacy_flags["performance_check"] or legacy_flags["default_mode"]:
-                    raise ValueError(
-                        "parallel execution conflicts with sequential performance/default mode"
-                    )
+                    raise ValueError("parallel execution conflicts with sequential performance/default mode")
                 raise ValueError(f"{mode.name} mode requires sequential execution")
 
-        sequential = explicit_sequential or (
-                mode is not None and mode.strategy is ExecutionStrategy.SEQUENTIAL
-        )
-        parallel = explicit_parallel or (
-                mode is not None and mode.strategy is ExecutionStrategy.PARALLEL
-        )
+        sequential = explicit_sequential or (mode is not None and mode.strategy is ExecutionStrategy.SEQUENTIAL)
+        parallel = explicit_parallel or (mode is not None and mode.strategy is ExecutionStrategy.PARALLEL)
 
         performance_check = mode.performance_check if mode is not None else False
 
-        enable_mods = getattr(arguments, "mods", False) or (
-            mode.enable_mods if mode is not None else False
-        )
+        enable_mods = getattr(arguments, "mods", False) or (mode.enable_mods if mode is not None else False)
 
         requested_workers = getattr(arguments, "workers", None)
 
@@ -151,9 +140,7 @@ class CLI:
         worker_count = 1 if sequential else requested_workers or default_workers
 
         if parallel and worker_count < 2:
-            raise ValueError(
-                "parallel execution requires at least two configured workers"
-            )
+            raise ValueError("parallel execution requires at least two configured workers")
 
         parent_run_id: str | None = None
 
@@ -161,56 +148,37 @@ class CLI:
 
         if rerun_value is not None:
             if not isinstance(rerun_value, (str, os.PathLike)):
-                raise TypeError(
-                    f"rerun_from must be a path-like value, got {type(rerun_value).__name__}"
-                )
+                raise TypeError(f"rerun_from must be a path-like value, got {type(rerun_value).__name__}")
 
             rerun_path = Path(rerun_value)
 
             if not arguments.include:
-                raise ValueError(
-                    "--rerun-from requires at least one explicit --include collector ID"
-                )
+                raise ValueError("--rerun-from requires at least one explicit --include collector ID")
 
-            manifest_path = (
-                rerun_path / "manifest.json"
-                if rerun_path.is_dir()
-                else rerun_path
-            )
+            manifest_path = rerun_path / "manifest.json" if rerun_path.is_dir() else rerun_path
 
             try:
-                previous = json.loads(
-                    manifest_path.read_text(encoding="utf-8")
-                )
+                previous = json.loads(manifest_path.read_text(encoding="utf-8"))
             except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
-                raise ValueError(
-                    f"original run manifest cannot be loaded: {error}"
-                ) from error
+                raise ValueError(f"original run manifest cannot be loaded: {error}") from error
 
             if not isinstance(previous, dict) or not isinstance(
-                    previous.get("run_id"),
-                    str,
+                previous.get("run_id"),
+                str,
             ):
-                raise ValueError(
-                    "original run manifest must contain a valid run_id"
-                )
+                raise ValueError("original run manifest must contain a valid run_id")
 
             manifest_schema_version = previous.get("manifest_schema_version")
 
             if (
-                    not isinstance(manifest_schema_version, int)
-                    or isinstance(manifest_schema_version, bool)
-                    or manifest_schema_version != MANIFEST_SCHEMA_VERSION
+                not isinstance(manifest_schema_version, int)
+                or isinstance(manifest_schema_version, bool)
+                or manifest_schema_version != MANIFEST_SCHEMA_VERSION
             ):
-                schema_version_display = (
-                    "None"
-                    if manifest_schema_version is None
-                    else repr(manifest_schema_version)
-                )
+                schema_version_display = "None" if manifest_schema_version is None else repr(manifest_schema_version)
 
                 raise ValueError(
-                    f"original run manifest uses unsupported schema_version "
-                    f"{schema_version_display}; expected {MANIFEST_SCHEMA_VERSION}"
+                    f"original run manifest uses unsupported schema_version {schema_version_display}; expected {MANIFEST_SCHEMA_VERSION}"
                 )
 
             if previous.get("status") not in {
@@ -219,29 +187,17 @@ class CLI:
                 "failed",
                 "cancelled",
             }:
-                raise ValueError(
-                    "original run manifest must describe a finalized run"
-                )
+                raise ValueError("original run manifest must describe a finalized run")
 
             resolved = previous.get("resolved_plan")
 
-            if not isinstance(resolved, list) or not all(
-                    isinstance(item, str)
-                    for item in resolved
-            ):
-                raise ValueError(
-                    "original run manifest must contain a valid resolved_plan"
-                )
+            if not isinstance(resolved, list) or not all(isinstance(item, str) for item in resolved):
+                raise ValueError("original run manifest must contain a valid resolved_plan")
 
-            unknown = sorted(
-                set(arguments.include) - set(resolved)
-            )
+            unknown = sorted(set(arguments.include) - set(resolved))
 
             if unknown:
-                raise ValueError(
-                    "rerun collectors were not present in the original run: "
-                    f"{', '.join(unknown)}"
-                )
+                raise ValueError(f"rerun collectors were not present in the original run: {', '.join(unknown)}")
 
             parent_run_id = previous["run_id"]
 
@@ -251,30 +207,13 @@ class CLI:
         plugins_enabled = bool(getattr(arguments, "plugins", False))
         mods_enabled = bool(getattr(arguments, "mods", False))
 
-        if selection_only and (
-                include_arguments
-                or exclude_arguments
-                or arguments.profile is not None
-                or plugins_enabled
-                or mods_enabled
-        ):
-            raise ValueError(
-                "collector execution cannot combine its ID with profile or selection flags"
-            )
+        if selection_only and (include_arguments or exclude_arguments or arguments.profile is not None or plugins_enabled or mods_enabled):
+            raise ValueError("collector execution cannot combine its ID with profile or selection flags")
 
-        includes = (
-            (getattr(arguments, "collector_id"),)
-            if selection_only
-            else include_arguments
-        )
+        includes = (arguments.collector_id,) if selection_only else include_arguments
 
-        requested_blocked_capabilities = tuple(
-            Capability(value)
-            for value in getattr(arguments, "block_capability", ())
-        )
-        blocked_capabilities = tuple(dict.fromkeys(
-            (*configured_blocked_capabilities, *requested_blocked_capabilities)
-        ))
+        requested_blocked_capabilities = tuple(Capability(value) for value in getattr(arguments, "block_capability", ()))
+        blocked_capabilities = tuple(dict.fromkeys((*configured_blocked_capabilities, *requested_blocked_capabilities)))
 
         return RunRequest(
             profile=profile,
@@ -292,11 +231,7 @@ class CLI:
             blocked_capabilities=blocked_capabilities,
             performance_check=performance_check,
             rerun_from=parent_run_id,
-            output_policy=(
-                OutputPolicy.MANIFEST_ONLY
-                if getattr(arguments, "no_package", False)
-                else OutputPolicy.PACKAGE
-            ),
+            output_policy=(OutputPolicy.MANIFEST_ONLY if getattr(arguments, "no_package", False) else OutputPolicy.PACKAGE),
             post_run_action=(
                 PostRunAction.REBOOT
                 if getattr(arguments, "reboot", False)
@@ -315,11 +250,17 @@ class CLI:
             type=Path,
             help="Path to the authoritative Logicytics YAML configuration file",
         )
-        parser.add_argument("--usage", action="store_true",
-                            help="Show local interaction statistics and create a usage graph.")
+        parser.add_argument(
+            "--usage",
+            action="store_true",
+            help="Show local interaction statistics and create a usage graph.",
+        )
         parser.add_argument("--modes", action="store_true", help="Show the typed execution-mode inclusion matrix.")
-        parser.add_argument("--match", metavar="TEXT",
-                            help="Suggest the closest documented action for natural-language input.")
+        parser.add_argument(
+            "--match",
+            metavar="TEXT",
+            help="Suggest the closest documented action for natural-language input.",
+        )
         subcommands = parser.add_subparsers(dest="command", parser_class=HumanArgumentParser)
         for command in ("preflight", "debug", "update", "dev", "plan", "run", "collector"):
             subparser = subcommands.add_parser(command, help=f"Run the {command} action.")
@@ -330,23 +271,33 @@ class CLI:
                 help="Named built-in collector membership and access policy.",
             )
             subparser.add_argument(
-                "--include", action="append", default=[], metavar="COLLECTOR_ID",
+                "--include",
+                action="append",
+                default=[],
+                metavar="COLLECTOR_ID",
                 help="Include a collector by exact dotted ID; repeat for multiple collectors.",
             )
             subparser.add_argument(
-                "--exclude", action="append", default=[], metavar="COLLECTOR_ID",
+                "--exclude",
+                action="append",
+                default=[],
+                metavar="COLLECTOR_ID",
                 help="Exclude a collector by exact dotted ID; repeat for multiple collectors.",
             )
             subparser.add_argument(
-                "--plugins", action="store_true",
+                "--plugins",
+                action="store_true",
                 help="Enable all valid opt-in plugin collectors for the selected profile.",
             )
             subparser.add_argument(
-                "--mods", action="store_true",
+                "--mods",
+                action="store_true",
                 help="Enable valid sidecar-declared scripts from the MODS directory.",
             )
             subparser.add_argument(
-                "--workers", type=int, metavar="COUNT",
+                "--workers",
+                type=int,
+                metavar="COUNT",
                 help="Bound concurrent isolated workers to this positive count.",
             )
             subparser.add_argument(
@@ -379,14 +330,24 @@ class CLI:
                     choices=tuple(EXECUTION_MODES),
                     help="Select one user-facing typed execution mode.",
                 )
-                mode.add_argument("--default", dest="default_mode", action="store_true",
-                                  help="Run the standard built-in profile.")
-                mode.add_argument("--threaded", action="store_true",
-                                  help="Run the standard built-in profile with configured parallel workers.")
+                mode.add_argument(
+                    "--default",
+                    dest="default_mode",
+                    action="store_true",
+                    help="Run the standard built-in profile.",
+                )
+                mode.add_argument(
+                    "--threaded",
+                    action="store_true",
+                    help="Run the standard built-in profile with configured parallel workers.",
+                )
                 mode.add_argument("--minimal", action="store_true", help="Run the minimal built-in profile.")
                 mode.add_argument("--depth", action="store_true", help="Run the deep built-in profile.")
-                mode.add_argument("--modded", action="store_true",
-                                  help="Run the standard profile plus all valid MODS scripts.")
+                mode.add_argument(
+                    "--modded",
+                    action="store_true",
+                    help="Run the standard profile plus all valid MODS scripts.",
+                )
                 mode.add_argument(
                     "--performance-check",
                     action="store_true",
@@ -436,8 +397,11 @@ class CLI:
                     help="Pause at the final status so an interactive command window remains visible.",
                 )
             if command == "update":
-                subparser.add_argument("--apply", action="store_true",
-                                       help="Explicitly run git pull after repository checks.")
+                subparser.add_argument(
+                    "--apply",
+                    action="store_true",
+                    help="Explicitly run git pull after repository checks.",
+                )
                 subparser.add_argument(
                     "--launch-action",
                     choices=("preflight", "debug", "dev"),
@@ -457,25 +421,16 @@ class CLI:
                 subparser.add_argument(
                     "--write-manifest",
                     action="store_true",
-                    help=(
-                        "Write the reviewed local integrity manifest; requires --next-version "
-                        "unless interactive."
-                    ),
+                    help=("Write the reviewed local integrity manifest; requires --next-version unless interactive."),
                 )
                 subparser.add_argument(
                     "--next-version",
-                    help=(
-                        "Semantic version to validate and record in a newly written "
-                        "integrity manifest."
-                    ),
+                    help=("Semantic version to validate and record in a newly written integrity manifest."),
                 )
                 subparser.add_argument(
                     "--interactive",
                     action="store_true",
-                    help=(
-                        "Show contribution checks and prompt before changing the local "
-                        "integrity manifest."
-                    ),
+                    help=("Show contribution checks and prompt before changing the local integrity manifest."),
                 )
         return parser
 
@@ -506,12 +461,12 @@ class CLI:
         return process.pid
 
     def run_developer_action(
-            self,
-            root: Path,
-            configuration: AppConfig,
-            arguments: argparse.Namespace,
-            debug_logs: Path,
-            logger: object,
+        self,
+        root: Path,
+        configuration: AppConfig,
+        arguments: argparse.Namespace,
+        debug_logs: Path,
+        logger: object,
     ) -> int:
         """Run read-only contribution checks and an explicitly confirmed manifest update."""
         settings = configuration.maintenance
@@ -550,40 +505,36 @@ class CLI:
             logger.box(
                 "Contribution and repository organization checks",
                 (
-                    *(f"{name.title()}: {len(comparison[name])}" for name in (
-                        "missing", "modified", "extra", "unchanged",
-                    )),
+                    *(
+                        f"{name.title()}: {len(comparison[name])}"
+                        for name in (
+                            "missing",
+                            "modified",
+                            "extra",
+                            "unchanged",
+                        )
+                    ),
                     *(f"{name.replace('_', ' ').title()}: {len(checks[name])}" for name in organization_checks),
                 ),
             )
 
             if next_version is None:
                 current_version = local_version(root)
-                entered = input(
-                    f"Next semantic version [{current_version}]: "
-                ).strip()
+                entered = input(f"Next semantic version [{current_version}]: ").strip()
                 next_version = entered or current_version
 
-            answer = input(
-                "Write the reviewed integrity manifest? [y/N]: "
-            ).strip().casefold()
+            answer = input("Write the reviewed integrity manifest? [y/N]: ").strip().casefold()
 
             write_requested = answer in {"y", "yes"}
 
         if arguments.write_manifest and next_version is None:
-            raise ValueError(
-                "--write-manifest requires --next-version unless "
-                "--interactive is used"
-            )
+            raise ValueError("--write-manifest requires --next-version unless --interactive is used")
 
         manifest_path: str | None = None
 
         if write_requested:
             if next_version is None:
-                raise ValueError(
-                    "a semantic next version is required to write "
-                    "the integrity manifest"
-                )
+                raise ValueError("a semantic next version is required to write the integrity manifest")
 
             manifest = build_manifest(root, settings, next_version)
             written_manifest = write_local_manifest(
@@ -598,15 +549,22 @@ class CLI:
             "checks": checks,
             "comparison": comparison,
             "current_version": local_version(root),
-            "existing_manifest_version": (
-                existing.version if existing else None
-            ),
+            "existing_manifest_version": (existing.version if existing else None),
             "manifest_written": manifest_path,
             "next_version": next_version,
         }
 
         development_path = debug_logs / "development.json"
         self.write_json(development_path, payload)
+        organization_issues = sum(
+            len(checks[name])
+            for name in (
+                "naming_violations",
+                "misplaced_python",
+                "missing_module_docstrings",
+                "crowded_modules",
+            )
+        )
         logger.box(
             "Development checks",
             (
@@ -614,7 +572,7 @@ class CLI:
                 f"Modified files: {len(comparison['modified'])}",
                 f"Extra files: {len(comparison['extra'])}",
                 f"Unchanged files: {len(comparison['unchanged'])}",
-                f"Organization issues: {sum(len(checks[name]) for name in ('naming_violations', 'misplaced_python', 'missing_module_docstrings', 'crowded_modules'))}",
+                f"Organization issues: {organization_issues}",
                 f"Manifest written: {'yes' if manifest_path else 'no'}",
                 f"Manifest path: {manifest_path or 'none'}",
                 f"Diagnostic report: {development_path}",
@@ -645,14 +603,10 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     if standalone_actions > 1:
-        cli_parser.error(
-            "--usage, --match, and --modes are mutually exclusive"
-        )
+        cli_parser.error("--usage, --match, and --modes are mutually exclusive")
 
     if arguments.command is not None and standalone_actions:
-        cli_parser.error(
-            "--usage, --match, and --modes are standalone actions"
-        )
+        cli_parser.error("--usage, --match, and --modes are standalone actions")
 
     if arguments.usage:
         arguments.command = "usage"
@@ -672,9 +626,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         configuration = load_config(root, arguments.config)
 
-        layout = ensure_output_layout(
-            configuration.runtime.output_root
-        )
+        layout = ensure_output_layout(configuration.runtime.output_root)
 
         application_logger = get_application_logger(
             layout.application_log,
@@ -691,10 +643,10 @@ def main(argv: list[str] | None = None) -> int:
         command_started_at = started_at
 
         def finish_command(
-                exit_code: int,
-                *,
-                status: str | None = None,
-                **fields: int | float | str,
+            exit_code: int,
+            *,
+            status: str | None = None,
+            **fields: float | str,
         ) -> int:
             """Record one command's terminal status and elapsed time."""
             application_logger.event(
@@ -709,19 +661,14 @@ def main(argv: list[str] | None = None) -> int:
             )
             return exit_code
 
-        history_path = (
-                configuration.runtime.output_root
-                / "interaction_history.json.gz"
-        )
+        history_path = configuration.runtime.output_root / "interaction_history.json.gz"
 
         if arguments.command == "match":
             history = load_history(history_path)
 
             match = match_flag(
                 arguments.match,
-                threshold=(
-                    configuration.interaction.similarity_threshold
-                ),
+                threshold=(configuration.interaction.similarity_threshold),
                 model_name=configuration.interaction.model_name,
                 history=history,
             )
@@ -738,11 +685,7 @@ def main(argv: list[str] | None = None) -> int:
                     f"Match source: {match.source.replace('_', ' ')}",
                     f"History persisted: {'yes' if configuration.interaction.history_enabled else 'no'}",
                     *(
-                        (
-                            "Model: "
-                            f"{match.model_name} "
-                            f"(threshold {configuration.interaction.similarity_threshold:.1%})",
-                        )
+                        (f"Model: {match.model_name} (threshold {configuration.interaction.similarity_threshold:.1%})",)
                         if configuration.interaction.model_debug
                         else ()
                     ),
@@ -757,22 +700,16 @@ def main(argv: list[str] | None = None) -> int:
             )
 
         if arguments.command == "usage":
-            statistics = usage_statistics(
-                load_history(history_path)
-            )
+            statistics = usage_statistics(load_history(history_path))
 
             graph_path = write_usage_graph(
-                configuration.runtime.output_root
-                / "flag_usage.svg",
+                configuration.runtime.output_root / "flag_usage.svg",
                 statistics,
             )
 
             frequencies = statistics.get("per_flag_frequency", {})
             frequency_rows = (
-                tuple(
-                    f"{flag}: {count}"
-                    for flag, count in sorted(frequencies.items())
-                )
+                tuple(f"{flag}: {count}" for flag, count in sorted(frequencies.items()))
                 if isinstance(frequencies, dict) and frequencies
                 else ("none",)
             )
@@ -813,18 +750,13 @@ def main(argv: list[str] | None = None) -> int:
                 purpose="mode_matrix",
             )
 
-            payload = mode_matrix(
-                (*report.valid, *report.invalid)
-            )
+            payload = mode_matrix((*report.valid, *report.invalid))
             matrix_path = layout.debug_logs / "modes.json"
             cli_methods.write_json(matrix_path, payload)
             mode_rows = []
             for item in payload["modes"]:
                 aliases = ", ".join(item["legacy_aliases"]) or "none"
-                mode_rows.append(
-                    f"{item['name']}: {item['description']} "
-                    f"({len(item['collector_ids'])} collectors; aliases: {aliases})"
-                )
+                mode_rows.append(f"{item['name']}: {item['description']} ({len(item['collector_ids'])} collectors; aliases: {aliases})")
             application_logger.box(
                 "Execution modes",
                 (
@@ -880,29 +812,18 @@ def main(argv: list[str] | None = None) -> int:
 
         if arguments.command == "debug":
             payload: dict[str, object] = {
-                "configuration": (
-                    configuration.to_manifest_dict()
-                ),
+                "configuration": (configuration.to_manifest_dict()),
                 "environment": inspect_environment().to_dict(),
                 "python": {
                     "executable": sys.executable,
-                    "implementation": (
-                        platform.python_implementation()
-                    ),
+                    "implementation": (platform.python_implementation()),
                     "version": platform.python_version(),
                     "prefix": sys.prefix,
-                    "virtual_environment": (
-                            sys.prefix != sys.base_prefix
-                    ),
-                    "psutil_available": (
-                            importlib.util.find_spec("psutil")
-                            is not None
-                    ),
+                    "virtual_environment": (sys.prefix != sys.base_prefix),
+                    "psutil_available": (importlib.util.find_spec("psutil") is not None),
                     "cpu_count": os.cpu_count(),
                 },
-                "sysinternals": (
-                    ensure_sysinternals(root, configuration.maintenance).to_dict()
-                ),
+                "sysinternals": (ensure_sysinternals(root, configuration.maintenance).to_dict()),
                 "preflight": {
                     "valid_collectors": len(report.valid),
                     "invalid_collectors": len(report.invalid),
@@ -913,10 +834,7 @@ def main(argv: list[str] | None = None) -> int:
                 ),
             }
 
-            debug_path = (
-                    layout.debug_logs
-                    / "debug.json"
-            )
+            debug_path = layout.debug_logs / "debug.json"
 
             payload["debug_log"] = str(debug_path)
 
@@ -944,13 +862,8 @@ def main(argv: list[str] | None = None) -> int:
             )
 
         if arguments.command == "update":
-            if arguments.new_window != (
-                    arguments.launch_action is not None
-            ):
-                raise ValueError(
-                    "--new-window and --launch-action "
-                    "must be provided together"
-                )
+            if arguments.new_window != (arguments.launch_action is not None):
+                raise ValueError("--new-window and --launch-action must be provided together")
 
             git = process_adapter.run(
                 ["git", "--version"],
@@ -963,9 +876,7 @@ def main(argv: list[str] | None = None) -> int:
 
             payload: dict[str, object] = {
                 "git_available": git.returncode == 0,
-                "git_version": (
-                        git.stdout.strip() or None
-                ),
+                "git_version": (git.stdout.strip() or None),
                 "is_repository": is_repository,
                 "applied": False,
             }
@@ -1011,10 +922,7 @@ def main(argv: list[str] | None = None) -> int:
                     }
                 )
 
-            update_succeeded = (
-                    not arguments.apply
-                    or pull_returncode == 0
-            )
+            update_succeeded = not arguments.apply or pull_returncode == 0
 
             if arguments.new_window and update_succeeded:
                 launched_process_id = cli_methods.launch_action_window(
@@ -1022,12 +930,8 @@ def main(argv: list[str] | None = None) -> int:
                     arguments.launch_action,
                 )
 
-                payload["launched_action"] = (
-                    arguments.launch_action
-                )
-                payload["launched_process_id"] = (
-                    launched_process_id
-                )
+                payload["launched_action"] = arguments.launch_action
+                payload["launched_process_id"] = launched_process_id
 
             update_path = layout.debug_logs / "update.json"
             cli_methods.write_json(update_path, payload)
@@ -1038,9 +942,8 @@ def main(argv: list[str] | None = None) -> int:
                 f"Update status: {'succeeded' if update_succeeded else 'failed'}",
             ]
             if arguments.apply:
-                update_lines.append(
-                    f"Git pull exit code: {pull_returncode if pull_returncode is not None else 'none'}"
-                )
+                pull_exit_code = pull_returncode if pull_returncode is not None else "none"
+                update_lines.append(f"Git pull exit code: {pull_exit_code}")
                 if payload.get("stdout"):
                     update_lines.extend(("Git output:", *str(payload["stdout"]).splitlines()))
                 if payload.get("stderr"):
@@ -1106,11 +1009,8 @@ def main(argv: list[str] | None = None) -> int:
         if arguments.command == "plan":
             application_logger.box(
                 "Collection plan",
-                tuple(
-                    candidate.metadata.id
-                    for candidate in plan.collectors
-                    if candidate.metadata is not None
-                ) or ("No collectors were selected.",),
+                tuple(candidate.metadata.id for candidate in plan.collectors if candidate.metadata is not None)
+                or ("No collectors were selected.",),
             )
             application_logger.event(
                 "INFO",
@@ -1129,17 +1029,10 @@ def main(argv: list[str] | None = None) -> int:
         result_lines = ["Collectors:"]
 
         for record in outcome.manifest.collectors:
-            duration = (
-                "not-started"
-                if record.duration_seconds is None
-                else f"{record.duration_seconds:.3f}"
-            )
+            duration = "not-started" if record.duration_seconds is None else f"{record.duration_seconds:.3f}"
 
             result_lines.append(
-                f"- {record.id} "
-                f"status={record.status} "
-                f"duration_seconds={duration} "
-                f"summary={record.summary or 'not-finished'}"
+                f"- {record.id} status={record.status} duration_seconds={duration} summary={record.summary or 'not-finished'}"
             )
 
             if record.failure is not None:
@@ -1155,41 +1048,18 @@ def main(argv: list[str] | None = None) -> int:
                 )
 
         if plan.request.performance_check:
-            performance_path = (
-                    outcome.run_directory
-                    / "logs"
-                    / "performance.json"
-            )
+            performance_path = outcome.run_directory / "logs" / "performance.json"
 
-            result_lines.append(
-                f"Performance: {performance_path}"
-            )
+            result_lines.append(f"Performance: {performance_path}")
 
-        if (
-                outcome.manifest.package
-                and "path" in outcome.manifest.package
-        ):
-            result_lines.extend((
-                                    f"Package: "
-                                    f"{outcome.manifest.package['path']}\n"
-                                    f"SHA-256: "
-                                    f"{outcome.manifest.package.get(
-                                        'sha256_path',
-                                        'unavailable',
-                                    )}"
-                                ).splitlines())
+        if outcome.manifest.package and "path" in outcome.manifest.package:
+            package_sha_path = outcome.manifest.package.get("sha256_path", "unavailable")
+            result_lines.extend((f"Package: {outcome.manifest.package['path']}\nSHA-256: {package_sha_path}").splitlines())
 
-        result_lines.extend((
-                                f"Run: {outcome.manifest_path}\n"
-                                f"Status: {outcome.manifest.status.value}"
-                            ).splitlines())
+        result_lines.extend((f"Run: {outcome.manifest_path}\nStatus: {outcome.manifest.status.value}").splitlines())
         application_logger.box("Collection result", result_lines)
 
-        exit_code = (
-            0
-            if outcome.manifest.status.value == "succeeded"
-            else 1
-        )
+        exit_code = 0 if outcome.manifest.status.value == "succeeded" else 1
 
         if arguments.interactive:
             try:
@@ -1205,10 +1075,10 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     except (
-            LogicyticsError,
-            OSError,
-            PermissionError,
-            ValueError,
+        LogicyticsError,
+        OSError,
+        PermissionError,
+        ValueError,
     ) as error:
         if application_logger is not None:
             with contextlib.suppress(OSError):

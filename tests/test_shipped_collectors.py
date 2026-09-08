@@ -7,13 +7,13 @@ import importlib.util
 import subprocess
 import tempfile
 import unittest
+from collections.abc import Callable
 from contextlib import ExitStack
 from pathlib import Path
-from typing import Any, NoReturn, cast, Callable
+from typing import Any, NoReturn, cast
 from unittest.mock import patch
 
 from logicytics import ResourceClass
-from logicytics.module.artifacts import WorkspaceArtifactWriter
 from logicytics.contracts import (
     ArtifactWriter,
     CollectorContext,
@@ -21,6 +21,7 @@ from logicytics.contracts import (
     EventLogger,
     EvidenceKind,
 )
+from logicytics.module.artifacts import WorkspaceArtifactWriter
 from logicytics.module.discovery import preflight
 from logicytics.module.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
 from logicytics.module.output_contracts import core_output_contract
@@ -37,26 +38,24 @@ class _RejectingWriter(ArtifactWriter):
     """Prove cancellation paths never attempt to publish evidence."""
 
     def register_file(
-            self,
-            source: Path,
-            *,
-            media_type: str = "application/octet-stream",
-            evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
-            transformations: tuple[str, ...] = (),
+        self,
+        source: Path,
+        *,
+        media_type: str = "application/octet-stream",
+        evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
+        transformations: tuple[str, ...] = (),
     ) -> NoReturn:
-        raise AssertionError(
-            "a cancelled collector must not register an artifact"
-        )
+        raise AssertionError("a cancelled collector must not register an artifact")
 
 
 class _NoopLogger(EventLogger):
     """Discard test events."""
 
     def event(
-            self,
-            level: str,
-            message: str,
-            **fields: int | float | str,
+        self,
+        level: str,
+        message: str,
+        **fields: float | str,
     ) -> None:
         return None
 
@@ -75,9 +74,7 @@ def _load_collector(path: Path, class_name: str) -> Any:
     collector_object: object = getattr(module, class_name, None)
 
     if not isinstance(collector_object, type):
-        raise TypeError(
-            f"{class_name} in {path} is missing or is not a class"
-        )
+        raise TypeError(f"{class_name} in {path} is missing or is not a class")
 
     collector_factory = cast(Callable[[], Any], collector_object)
     return collector_factory()
@@ -175,7 +172,7 @@ class ShippedCollectorTests(unittest.TestCase):
         )
 
     def test_event_log_collectors_explicitly_allow_bounded_parallel_scheduling(
-            self,
+        self,
     ) -> None:
         """The independent event channels may overlap while retaining separate identities."""
         project_root = Path(__file__).resolve().parent.parent
@@ -214,7 +211,7 @@ class ShippedCollectorTests(unittest.TestCase):
             )
 
     def test_mode_matrix_represents_every_discovered_collector_exactly_once(
-            self,
+        self,
     ) -> None:
         """Mode documentation covers selected, manual-only, and quarantined collectors."""
         project_root = Path(__file__).resolve().parent.parent
@@ -233,10 +230,7 @@ class ShippedCollectorTests(unittest.TestCase):
             else:
                 expected_ids.add(candidate.selection_id)
 
-        represented_ids = [
-            row["id"]
-            for row in collector_rows
-        ]
+        represented_ids = [row["id"] for row in collector_rows]
 
         self.assertEqual(
             expected_ids,
@@ -247,10 +241,7 @@ class ShippedCollectorTests(unittest.TestCase):
             len(set(represented_ids)),
         )
 
-        modes = {
-            row["name"]: row
-            for row in matrix["modes"]
-        }
+        modes = {row["name"]: row for row in matrix["modes"]}
 
         self.assertEqual(
             set(EXECUTION_MODES),
@@ -271,11 +262,7 @@ class ShippedCollectorTests(unittest.TestCase):
                     )
 
         for mode_name, mode in modes.items():
-            expected = {
-                row["id"]
-                for row in collector_rows
-                if mode_name in row["modes"]
-            }
+            expected = {row["id"] for row in collector_rows if mode_name in row["modes"]}
 
             self.assertEqual(
                 expected,
@@ -283,32 +270,23 @@ class ShippedCollectorTests(unittest.TestCase):
             )
 
     def test_every_core_collector_uses_context_artifacts_without_mutable_globals(
-            self,
+        self,
     ) -> None:
         """Migration is complete only when all core modules use owned workspaces and catalogs."""
         project_root = Path(__file__).resolve().parent.parent
         report = preflight(project_root)
 
-        core_candidates = [
-            candidate
-            for candidate in report.valid
-            if candidate.kind.value == "core"
-        ]
+        core_candidates = [candidate for candidate in report.valid if candidate.kind.value == "core"]
 
         self.assertTrue(core_candidates)
 
         for candidate in core_candidates:
             metadata = candidate.metadata
             if metadata is None:
-                self.fail(
-                    f"valid core candidate {candidate.selection_id} "
-                    "has no metadata"
-                )
+                self.fail(f"valid core candidate {candidate.selection_id} has no metadata")
 
             with self.subTest(collector=metadata.id):
-                source = candidate.path.read_text(
-                    encoding="utf-8"
-                )
+                source = candidate.path.read_text(encoding="utf-8")
                 tree = ast.parse(
                     source,
                     filename=str(candidate.path),
@@ -329,35 +307,29 @@ class ShippedCollectorTests(unittest.TestCase):
 
                 for node in ast.walk(tree):
                     if (
-                            isinstance(
-                                node,
-                                (
-                                        ast.FunctionDef,
-                                        ast.AsyncFunctionDef,
-                                ),
-                            )
-                            and node.name == "collect"
+                        isinstance(
+                            node,
+                            (
+                                ast.FunctionDef,
+                                ast.AsyncFunctionDef,
+                            ),
+                        )
+                        and node.name == "collect"
                     ):
                         collect = node
                         break
 
                 if collect is None:
-                    self.fail(
-                        f"{metadata.id} does not define collect()"
-                    )
+                    self.fail(f"{metadata.id} does not define collect()")
 
-                attributes = {
-                    node.attr
-                    for node in ast.walk(collect)
-                    if isinstance(node, ast.Attribute)
-                }
+                attributes = {node.attr for node in ast.walk(collect) if isinstance(node, ast.Attribute)}
 
                 self.assertIn("workspace", attributes)
                 self.assertIn("artifacts", attributes)
                 self.assertIn("register_file", attributes)
 
     def test_every_core_collector_has_a_stable_output_contract(
-            self,
+        self,
     ) -> None:
         """Every shipped output has explicit names, formats, package paths, and retention."""
         project_root = Path(__file__).resolve().parent.parent
@@ -369,10 +341,7 @@ class ShippedCollectorTests(unittest.TestCase):
 
             metadata = candidate.metadata
             if metadata is None:
-                self.fail(
-                    f"valid core candidate {candidate.selection_id} "
-                    "has no metadata"
-                )
+                self.fail(f"valid core candidate {candidate.selection_id} has no metadata")
 
             with self.subTest(collector=metadata.id):
                 contract = core_output_contract(metadata)
@@ -381,35 +350,20 @@ class ShippedCollectorTests(unittest.TestCase):
                     metadata.output_media_types,
                     contract.media_types,
                 )
-                self.assertTrue(
-                    contract.workspace_patterns
-                )
-                self.assertTrue(
-                    all(
-                        "\\" not in pattern
-                        and not pattern.startswith("/")
-                        for pattern in contract.workspace_patterns
-                    )
-                )
+                self.assertTrue(contract.workspace_patterns)
+                self.assertTrue(all("\\" not in pattern and not pattern.startswith("/") for pattern in contract.workspace_patterns))
                 self.assertEqual(
                     len(contract.workspace_patterns),
                     len(contract.package_patterns),
                 )
-                self.assertTrue(
-                    all(
-                        path.startswith(
-                            "evidence/{kind}/core_"
-                        )
-                        for path in contract.package_patterns
-                    )
-                )
+                self.assertTrue(all(path.startswith("evidence/{kind}/core_") for path in contract.package_patterns))
                 self.assertEqual(
                     "retained_with_run",
                     contract.retention,
                 )
 
     def test_every_core_collector_obeys_the_typed_lifecycle_contract(
-            self,
+        self,
     ) -> None:
         """All shipped collectors fail closed on cancellation without platform access or artifacts."""
         project_root = Path(__file__).resolve().parent.parent
@@ -421,10 +375,7 @@ class ShippedCollectorTests(unittest.TestCase):
 
             metadata = candidate.metadata
             if metadata is None:
-                self.fail(
-                    f"valid core candidate {candidate.selection_id} "
-                    "has no metadata"
-                )
+                self.fail(f"valid core candidate {candidate.selection_id} has no metadata")
 
             with (
                 self.subTest(collector=metadata.id),
@@ -455,9 +406,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 self.assertTrue(validation.reasons)
 
                 prepared = collector.prepare(context)
-                self.assertTrue(
-                    hasattr(prepared, "valid")
-                )
+                self.assertTrue(hasattr(prepared, "valid"))
 
                 result = collector.collect(context)
 
@@ -478,7 +427,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 collector.cleanup(context)
 
     def test_every_registered_artifact_media_type_is_declared(
-            self,
+        self,
     ) -> None:
         """Static artifact calls cannot introduce an undeclared output format."""
         project_root = Path(__file__).resolve().parent.parent
@@ -490,15 +439,10 @@ class ShippedCollectorTests(unittest.TestCase):
 
             metadata = candidate.metadata
             if metadata is None:
-                self.fail(
-                    f"valid core candidate {candidate.selection_id} "
-                    "has no metadata"
-                )
+                self.fail(f"valid core candidate {candidate.selection_id} has no metadata")
 
             tree = ast.parse(
-                candidate.path.read_text(
-                    encoding="utf-8"
-                ),
+                candidate.path.read_text(encoding="utf-8"),
                 filename=str(candidate.path),
             )
 
@@ -509,11 +453,11 @@ class ShippedCollectorTests(unittest.TestCase):
                     continue
 
                 if (
-                        isinstance(
-                            node.func,
-                            ast.Attribute,
-                        )
-                        and node.func.attr == "register_file"
+                    isinstance(
+                        node.func,
+                        ast.Attribute,
+                    )
+                    and node.func.attr == "register_file"
                 ):
                     register_calls.append(node)
 
@@ -527,22 +471,12 @@ class ShippedCollectorTests(unittest.TestCase):
                     value = keyword.value
 
                     if isinstance(value, ast.Constant) and isinstance(value.value, str):
-                        declared_at_calls.add(
-                            value.value
-                        )
+                        declared_at_calls.add(value.value)
 
-            has_implicit_media_type = any(
-                not any(
-                    keyword.arg == "media_type"
-                    for keyword in call.keywords
-                )
-                for call in register_calls
-            )
+            has_implicit_media_type = any(not any(keyword.arg == "media_type" for keyword in call.keywords) for call in register_calls)
 
             if has_implicit_media_type:
-                declared_at_calls.add(
-                    "application/octet-stream"
-                )
+                declared_at_calls.add("application/octet-stream")
 
             with self.subTest(collector=metadata.id):
                 self.assertTrue(register_calls)
@@ -553,7 +487,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 )
 
     def test_migration_documentation_covers_every_supported_bridge(
-            self,
+        self,
     ) -> None:
         """Public compatibility stays explicit and canonical-output-only."""
         project_root = Path(__file__).resolve().parent.parent
@@ -572,9 +506,9 @@ class ShippedCollectorTests(unittest.TestCase):
                 )
 
         for bridge in (
-                "CODE/config.ini",
-                "core.integration.legacy_code_outputs",
-                "MODS/",
+            "CODE/config.ini",
+            "core.integration.legacy_code_outputs",
+            "MODS/",
         ):
             self.assertIn(
                 bridge,
@@ -593,22 +527,14 @@ class ShippedCollectorTests(unittest.TestCase):
             if metadata is None:
                 continue
 
-            if (
-                    metadata.id
-                    == "core.integration.legacy_code_outputs"
-            ):
+            if metadata.id == "core.integration.legacy_code_outputs":
                 legacy_metadata = metadata
                 break
 
         if legacy_metadata is None:
-            self.fail(
-                "core.integration.legacy_code_outputs "
-                "was not discovered during preflight"
-            )
+            self.fail("core.integration.legacy_code_outputs was not discovered during preflight")
 
-        contract = core_output_contract(
-            legacy_metadata
-        )
+        contract = core_output_contract(legacy_metadata)
 
         self.assertEqual(
             ("legacy_code/**",),
@@ -616,7 +542,7 @@ class ShippedCollectorTests(unittest.TestCase):
         )
 
     def test_each_core_module_owns_exactly_one_policy_contract(
-            self,
+        self,
     ) -> None:
         """Different permission, sensitivity, timeout, or output policies require separate IDs."""
         project_root = Path(__file__).resolve().parent.parent
@@ -633,53 +559,34 @@ class ShippedCollectorTests(unittest.TestCase):
 
             metadata = candidate.metadata
             if metadata is None:
-                self.fail(
-                    f"valid core candidate {candidate.selection_id} "
-                    "has no metadata"
-                )
+                self.fail(f"valid core candidate {candidate.selection_id} has no metadata")
 
             tree = ast.parse(
-                candidate.path.read_text(
-                    encoding="utf-8"
-                ),
+                candidate.path.read_text(encoding="utf-8"),
                 filename=str(candidate.path),
             )
 
-            collector_classes: list[
-                ast.ClassDef
-            ] = []
+            collector_classes: list[ast.ClassDef] = []
 
             for node in tree.body:
                 if not isinstance(
-                        node,
-                        ast.ClassDef,
+                    node,
+                    ast.ClassDef,
                 ):
                     continue
 
-                inherits_core_collector = any(
-                    ast.unparse(base).endswith(
-                        "CoreCollector"
-                    )
-                    for base in node.bases
-                )
+                inherits_core_collector = any(ast.unparse(base).endswith("CoreCollector") for base in node.bases)
 
                 if inherits_core_collector:
-                    collector_classes.append(
-                        node
-                    )
+                    collector_classes.append(node)
 
             with self.subTest(collector=metadata.id):
                 self.assertEqual(
                     [candidate.expected_class],
-                    [
-                        node.name
-                        for node in collector_classes
-                    ],
+                    [node.name for node in collector_classes],
                 )
 
-                contract = core_output_contract(
-                    metadata
-                )
+                contract = core_output_contract(metadata)
 
                 signatures[metadata.id] = (
                     metadata.capabilities,
@@ -698,7 +605,7 @@ class ShippedCollectorTests(unittest.TestCase):
         )
 
     def test_every_core_collector_handles_mocked_windows_platform_responses(
-            self,
+        self,
     ) -> None:
         """Each collector returns a typed result when Windows adapters report unavailable data."""
         project_root = Path(__file__).resolve().parent.parent
@@ -727,9 +634,7 @@ class ShippedCollectorTests(unittest.TestCase):
                     patch.object(
                         registry_adapter,
                         "OpenKey",
-                        side_effect=OSError(
-                            "missing key"
-                        ),
+                        side_effect=OSError("missing key"),
                     )
                 )
 
@@ -737,9 +642,7 @@ class ShippedCollectorTests(unittest.TestCase):
                     patch.object(
                         windows_api_adapter,
                         "load_library",
-                        side_effect=OSError(
-                            "API unavailable"
-                        ),
+                        side_effect=OSError("API unavailable"),
                     )
                 )
 
@@ -779,9 +682,7 @@ class ShippedCollectorTests(unittest.TestCase):
                     patch.object(
                         network_adapter,
                         "socket",
-                        side_effect=PermissionError(
-                            "denied"
-                        ),
+                        side_effect=PermissionError("denied"),
                     )
                 )
 
@@ -815,24 +716,16 @@ class ShippedCollectorTests(unittest.TestCase):
 
                     metadata = candidate.metadata
                     if metadata is None:
-                        self.fail(
-                            f"valid core candidate "
-                            f"{candidate.selection_id} "
-                            "has no metadata"
-                        )
+                        self.fail(f"valid core candidate {candidate.selection_id} has no metadata")
 
-                    with self.subTest(
-                            collector=metadata.id
-                    ):
+                    with self.subTest(collector=metadata.id):
                         metadata = candidate.metadata
                         self.assertIsNotNone(metadata)
                         assert metadata is not None
 
                         workspace = root / metadata.id.replace(".", "_")
 
-                        artifact_root = (
-                                workspace / "published"
-                        )
+                        artifact_root = workspace / "published"
 
                         workspace.mkdir()
                         artifact_root.mkdir()
@@ -841,9 +734,7 @@ class ShippedCollectorTests(unittest.TestCase):
                             run_id="run-" + "0" * 32,
                             collector_id=metadata.id,
                             workspace=workspace,
-                            temporary_directory=(
-                                    workspace / "tmp"
-                            ),
+                            temporary_directory=(workspace / "tmp"),
                             artifacts=WorkspaceArtifactWriter(
                                 metadata.id,
                                 workspace,
@@ -853,10 +744,7 @@ class ShippedCollectorTests(unittest.TestCase):
                             ),
                             logger=_NoopLogger(),
                             settings={},
-                            cancellation_file=(
-                                    workspace
-                                    / ".cancelled"
-                            ),
+                            cancellation_file=(workspace / ".cancelled"),
                         )
 
                         collector = _load_collector(
@@ -864,9 +752,7 @@ class ShippedCollectorTests(unittest.TestCase):
                             candidate.expected_class,
                         )
 
-                        result = collector.collect(
-                            context
-                        )
+                        result = collector.collect(context)
 
                         self.assertIn(
                             result.status,
@@ -874,7 +760,7 @@ class ShippedCollectorTests(unittest.TestCase):
                         )
 
     def test_default_profiles_keep_quick_runs_small_and_deep_runs_complete(
-            self,
+        self,
     ) -> None:
         """Minimal and standard stay bounded while deep explicitly owns the exhaustive surface."""
         project_root = Path(__file__).resolve().parent.parent
@@ -892,11 +778,7 @@ class ShippedCollectorTests(unittest.TestCase):
             metadata.append(candidate_metadata)
 
         memberships = {
-            profile: {
-                item.id
-                for item in metadata
-                if profile in item.default_profiles
-            }
+            profile: {item.id for item in metadata if profile in item.default_profiles}
             for profile in (
                 "minimal",
                 "standard",
@@ -914,10 +796,7 @@ class ShippedCollectorTests(unittest.TestCase):
             len(memberships["standard"]),
         )
         self.assertEqual(
-            {
-                item.id
-                for item in metadata
-            },
+            {item.id for item in metadata},
             memberships["deep"],
         )
         self.assertLess(
@@ -933,22 +812,10 @@ class ShippedCollectorTests(unittest.TestCase):
             memberships["offline"],
         )
         self.assertLessEqual(
-            sum(
-                item.timeout_seconds
-                for item in metadata
-                if item.id
-                in memberships["standard"]
-            ),
+            sum(item.timeout_seconds for item in metadata if item.id in memberships["standard"]),
             90,
         )
-        self.assertTrue(
-            all(
-                not item.sensitive_data_categories
-                for item in metadata
-                if item.id
-                in memberships["standard"]
-            )
-        )
+        self.assertTrue(all(not item.sensitive_data_categories for item in metadata if item.id in memberships["standard"]))
 
 
 if __name__ == "__main__":

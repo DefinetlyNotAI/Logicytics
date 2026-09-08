@@ -7,13 +7,13 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
-from logicytics.module.artifacts import WorkspaceArtifactWriter
-from logicytics.module.configuration import (
-    default_config,
-)
 from logicytics.contracts import (
     EvidenceKind,
     RunRequest,
+)
+from logicytics.module.artifacts import WorkspaceArtifactWriter
+from logicytics.module.configuration import (
+    default_config,
 )
 from logicytics.module.discovery import preflight
 from logicytics.module.errors import ArtifactError

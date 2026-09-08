@@ -9,8 +9,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from core.system import wmic_inventory
-from logicytics.module.artifacts import WorkspaceArtifactWriter
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.module.artifacts import WorkspaceArtifactWriter
 
 
 class WmicInventoryCollectorTests(unittest.TestCase):
@@ -26,23 +26,24 @@ class WmicInventoryCollectorTests(unittest.TestCase):
                 collector_id="core.system.wmic_inventory",
                 workspace=workspace,
                 temporary_directory=workspace / "tmp",
-                artifacts=WorkspaceArtifactWriter(
-                    "core.system.wmic_inventory", workspace, artifacts, 256 * 1024, 1
-                ),
+                artifacts=WorkspaceArtifactWriter("core.system.wmic_inventory", workspace, artifacts, 256 * 1024, 1),
                 logger=Mock(),
                 settings={},
                 cancellation_file=workspace / ".cancelled",
             )
             response = "Manufacturer=Example Corp\r\nModel=Example Model\r\n"
-            with patch.object(
+            with (
+                patch.object(
                     wmic_inventory,
                     wmic_inventory.which.__name__,
                     return_value="C:/Windows/System32/wbem/WMIC.exe",
-            ), patch.object(
-                wmic_inventory.subprocess,
-                wmic_inventory.subprocess.run.__name__,
-                return_value=subprocess.CompletedProcess((), 0, response, ""),
-            ) as run:
+                ),
+                patch.object(
+                    wmic_inventory.subprocess,
+                    wmic_inventory.subprocess.run.__name__,
+                    return_value=subprocess.CompletedProcess((), 0, response, ""),
+                ) as run,
+            ):
                 collector = wmic_inventory.WmicInventoryCollector()
                 self.assertTrue(collector.validate(context).valid)
                 result = collector.collect(context)
@@ -72,9 +73,9 @@ class WmicInventoryCollectorTests(unittest.TestCase):
                 cancellation_file=root / ".cancelled",
             )
             with patch.object(
-                    wmic_inventory,
-                    wmic_inventory.which.__name__,
-                    return_value=None,
+                wmic_inventory,
+                wmic_inventory.which.__name__,
+                return_value=None,
             ):
                 collector = wmic_inventory.WmicInventoryCollector()
                 validation = collector.validate(context)

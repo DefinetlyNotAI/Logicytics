@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import filesystem_adapter
 
@@ -27,13 +34,18 @@ class SystemDriveTreeCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the filesystem-read, bounded system-drive tree artifact contract."""
         return CollectorMetadata(
-            id="core.filesystem.system_drive_tree", name="System drive tree", version="4.0.0",
+            id="core.filesystem.system_drive_tree",
+            name="System drive tree",
+            version="4.0.0",
             specialty=Specialty.FILESYSTEM,
             output_media_types=("text/plain",),
             description="Exports a configurable bounded recursive directory tree for the Windows system drive.",
             author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ,),
-            sensitive_data_categories=("filesystem_metadata",), default_profiles=("deep",), timeout_seconds=120,
+            supported_platforms=("win32",),
+            capabilities=(Capability.FILESYSTEM_READ,),
+            sensitive_data_categories=("filesystem_metadata",),
+            default_profiles=("deep",),
+            timeout_seconds=120,
             maximum_output_bytes=8 * 1024 * 1024,
         )
 
@@ -53,13 +65,16 @@ class SystemDriveTreeCollector(CoreCollector):
         maximum_entries = _bounded_setting(context.settings, "max_entries", _DEFAULT_MAX_ENTRIES, _HARD_MAX_ENTRIES)
         maximum_depth = _bounded_setting(context.settings, "max_depth", _DEFAULT_MAX_DEPTH, _HARD_MAX_DEPTH)
         root = filesystem_adapter.system_drive_root()
-        lines = [f"# system_drive={root}", f"# max_entries={maximum_entries}", f"# max_depth={maximum_depth}"]
+        lines = [
+            f"# system_drive={root}",
+            f"# max_entries={maximum_entries}",
+            f"# max_depth={maximum_depth}",
+        ]
         entries = 0
         skipped = 0
         truncated = False
         context.report_progress("system_drive_tree_started", max_entries=maximum_entries, max_depth=maximum_depth)
-        for current, directories, filenames in filesystem_adapter.walk(root, topdown=True, followlinks=False,
-                                                                       onerror=lambda _error: None):
+        for current, directories, filenames in filesystem_adapter.walk(root, topdown=True, followlinks=False, onerror=lambda _error: None):
             if context.is_cancelled:
                 return CollectorResult(CollectorStatus.CANCELLED, "cancelled during system-drive tree collection")
             relative = Path(current).relative_to(root)
@@ -80,8 +95,13 @@ class SystemDriveTreeCollector(CoreCollector):
         output = context.workspace / "system_drive_tree.txt"
         output.write_text("\n".join(lines) + "\n", encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/plain")
-        context.report_progress("system_drive_tree_finished", entry_count=entries, skipped_directories=skipped,
-                                truncated=str(truncated).lower(), bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "system_drive_tree_finished",
+            entry_count=entries,
+            skipped_directories=skipped,
+            truncated=str(truncated).lower(),
+            bytes_written=artifact.size_bytes,
+        )
         summary = "system-drive tree collected" if not truncated else "system-drive tree collected with configured entry limit"
         return CollectorResult.succeeded(summary, (artifact,))
 

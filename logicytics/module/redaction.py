@@ -77,7 +77,4 @@ def _redact_value(value: Any) -> Any:
 
 def redact_mapping(values: Mapping[str, Any]) -> dict[str, Any]:
     """Return a recursively sanitized copy without changing worker-owned settings."""
-    return {
-        key: REDACTED if _is_secret_key(key) else _redact_value(value)
-        for key, value in values.items()
-    }
+    return {key: REDACTED if _is_secret_key(key) else _redact_value(value) for key, value in values.items()}

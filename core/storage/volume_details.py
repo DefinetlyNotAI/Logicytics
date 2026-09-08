@@ -3,16 +3,32 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
-from logicytics import get_volume_information, get_disk_free_space, ularge_integer, \
-    create_unicode_buffer, dword
+from logicytics import (
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+    create_unicode_buffer,
+    dword,
+    get_disk_free_space,
+    get_volume_information,
+    ularge_integer,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import windows_api_adapter
 
-_DRIVE_TYPES = {0: "unknown", 1: "no_root_directory", 2: "removable", 3: "fixed", 4: "remote", 5: "optical",
-                6: "ram_disk"}
+_DRIVE_TYPES = {
+    0: "unknown",
+    1: "no_root_directory",
+    2: "removable",
+    3: "fixed",
+    4: "remote",
+    5: "optical",
+    6: "ram_disk",
+}
 
 
 def _volume_details() -> list[dict[str, int | str]]:
@@ -32,10 +48,10 @@ def _volume_details() -> list[dict[str, int | str]]:
         free = ularge_integer()
 
         if not get_disk_free_space(
-                root,
-                available,
-                total,
-                free,
+            root,
+            available,
+            total,
+            free,
         ):
             continue
 
@@ -53,15 +69,17 @@ def _volume_details() -> list[dict[str, int | str]]:
             flags,
             filesystem,
         )
-        volumes.append({
-            "root": root,
-            "drive_type": _DRIVE_TYPES.get(kernel32.GetDriveTypeW(root), "unknown"),
-            "filesystem": filesystem.value if information_available else "unavailable",
-            "volume_name": label.value if information_available else "unavailable",
-            "total_bytes": total.value,
-            "free_bytes": free.value,
-            "available_bytes": available.value,
-        })
+        volumes.append(
+            {
+                "root": root,
+                "drive_type": _DRIVE_TYPES.get(kernel32.GetDriveTypeW(root), "unknown"),
+                "filesystem": filesystem.value if information_available else "unavailable",
+                "volume_name": label.value if information_available else "unavailable",
+                "total_bytes": total.value,
+                "free_bytes": free.value,
+                "available_bytes": available.value,
+            }
+        )
     return volumes
 
 
@@ -72,10 +90,16 @@ class VolumeDetailsCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the capability-free detailed volume artifact contract."""
         return CollectorMetadata(
-            id="core.storage.volume_details", name="Volume details", version="4.0.0", specialty=Specialty.STORAGE,
+            id="core.storage.volume_details",
+            name="Volume details",
+            version="4.0.0",
+            specialty=Specialty.STORAGE,
             output_media_types=("application/json",),
-            description="Exports mounted drive type, filesystem, label, and capacity metadata.", author="Logicytics",
-            supported_platforms=("win32",), default_profiles=("deep",), timeout_seconds=15,
+            description="Exports mounted drive type, filesystem, label, and capacity metadata.",
+            author="Logicytics",
+            supported_platforms=("win32",),
+            default_profiles=("deep",),
+            timeout_seconds=15,
             capabilities=(),
             maximum_output_bytes=128 * 1024,
         )
@@ -98,12 +122,21 @@ class VolumeDetailsCollector(CoreCollector):
         try:
             volumes = _volume_details()
         except OSError as error:
-            return CollectorResult(CollectorStatus.FAILED, "could not read detailed volume metadata",
-                                   errors=(str(error),))
+            return CollectorResult(
+                CollectorStatus.FAILED,
+                "could not read detailed volume metadata",
+                errors=(str(error),),
+            )
         output = context.workspace / "volume_details.json"
         output.write_text(
-            json.dumps({"collected_at": datetime.now(timezone.utc).isoformat(), "volumes": volumes}, indent=2,
-                       sort_keys=True) + "\n", encoding="utf-8")
+            json.dumps(
+                {"collected_at": datetime.now(UTC).isoformat(), "volumes": volumes},
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         artifact = context.artifacts.register_file(output, media_type="application/json")
         context.report_progress("volume_details_finished", volume_count=len(volumes), bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("detailed volume metadata collected", (artifact,))

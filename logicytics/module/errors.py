@@ -29,7 +29,4 @@ class CapabilityPolicyError(PermissionError):
         self.operation = operation
         action = "requested blocked" if code == "CAPABILITY_BLOCKED" else "used undeclared"
         suffix = f"; {detail}" if detail else ""
-        super().__init__(
-            f"{code}: collector {action} {capability} capability; "
-            f"operation={operation}{suffix}"
-        )
+        super().__init__(f"{code}: collector {action} {capability} capability; operation={operation}{suffix}")

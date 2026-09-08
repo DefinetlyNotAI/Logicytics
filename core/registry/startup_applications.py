@@ -3,17 +3,40 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import registry_adapter as winreg
 
 _RUN_PATHS = (
-    ("HKEY_CURRENT_USER", winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run"),
-    ("HKEY_CURRENT_USER", winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\RunOnce"),
-    ("HKEY_LOCAL_MACHINE", winreg.HKEY_LOCAL_MACHINE, r"Software\Microsoft\Windows\CurrentVersion\Run"),
-    ("HKEY_LOCAL_MACHINE", winreg.HKEY_LOCAL_MACHINE, r"Software\Microsoft\Windows\CurrentVersion\RunOnce"),
+    (
+        "HKEY_CURRENT_USER",
+        winreg.HKEY_CURRENT_USER,
+        r"Software\Microsoft\Windows\CurrentVersion\Run",
+    ),
+    (
+        "HKEY_CURRENT_USER",
+        winreg.HKEY_CURRENT_USER,
+        r"Software\Microsoft\Windows\CurrentVersion\RunOnce",
+    ),
+    (
+        "HKEY_LOCAL_MACHINE",
+        winreg.HKEY_LOCAL_MACHINE,
+        r"Software\Microsoft\Windows\CurrentVersion\Run",
+    ),
+    (
+        "HKEY_LOCAL_MACHINE",
+        winreg.HKEY_LOCAL_MACHINE,
+        r"Software\Microsoft\Windows\CurrentVersion\RunOnce",
+    ),
 )
 
 
@@ -44,13 +67,19 @@ class StartupApplicationsCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the registry-read startup-application artifact contract."""
         return CollectorMetadata(
-            id="core.registry.startup_applications", name="Startup applications", version="4.0.0",
+            id="core.registry.startup_applications",
+            name="Startup applications",
+            version="4.0.0",
             specialty=Specialty.REGISTRY,
             output_media_types=("application/json",),
-            description="Exports standard user and machine Run/RunOnce startup registry entries.", author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.REGISTRY_READ,),
+            description="Exports standard user and machine Run/RunOnce startup registry entries.",
+            author="Logicytics",
+            supported_platforms=("win32",),
+            capabilities=(Capability.REGISTRY_READ,),
             sensitive_data_categories=("system_configuration",),
-            default_profiles=("deep",), timeout_seconds=30, maximum_output_bytes=512 * 1024,
+            default_profiles=("deep",),
+            timeout_seconds=30,
+            maximum_output_bytes=512 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -67,11 +96,20 @@ class StartupApplicationsCollector(CoreCollector):
         entries = _startup_entries()
         output = context.workspace / "startup_applications.json"
         output.write_text(
-            json.dumps({"collected_at": datetime.now(timezone.utc).isoformat(), "entries": entries}, indent=2,
-                       sort_keys=True) + "\n", encoding="utf-8")
+            json.dumps(
+                {"collected_at": datetime.now(UTC).isoformat(), "entries": entries},
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("startup_applications_finished", entry_count=len(entries),
-                                bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "startup_applications_finished",
+            entry_count=len(entries),
+            bytes_written=artifact.size_bytes,
+        )
         return CollectorResult.succeeded("startup applications collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

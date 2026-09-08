@@ -9,18 +9,25 @@ import re
 import sys
 import textwrap
 import traceback
-from datetime import datetime, timezone
+from collections.abc import Callable, Iterable, Mapping
+from datetime import UTC, datetime
 from pathlib import Path
 from threading import RLock
 from time import perf_counter, time
-from typing import Callable, Iterable, Mapping, ParamSpec, TextIO, TypeVar
+from typing import ParamSpec, TextIO, TypeVar
 
 from logicytics.contracts import EventLogger
 from logicytics.module.configuration import LoggingSettings
 from logicytics.module.presentation import (
     console_width as presentation_console_width,
+)
+from logicytics.module.presentation import (
     render_alert as render_presentation_alert,
+)
+from logicytics.module.presentation import (
     render_section as render_presentation_section,
+)
+from logicytics.module.presentation import (
     render_step_heading as render_presentation_step_heading,
 )
 from logicytics.module.redaction import redact_mapping, redact_text
@@ -55,8 +62,8 @@ _SOURCE_WIDTH = 28
 _RECORD_START = re.compile(rb"(?m)^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{3})? \|")
 _EVENT_NAME = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)+$")
 _LOGGER_LOCK = RLock()
-_APPLICATION_LOGGERS: dict[Path, "ApplicationLogger"] = {}
-_EVENT_LOGGERS: dict[tuple[Path, str, str | None], "FileEventLogger"] = {}
+_APPLICATION_LOGGERS: dict[Path, ApplicationLogger] = {}
+_EVENT_LOGGERS: dict[tuple[Path, str, str | None], FileEventLogger] = {}
 
 
 def _normalize_level(level: str) -> str:
@@ -73,11 +80,11 @@ class ApplicationLogger(EventLogger):
     """Thread-safe human-readable file and colored-console event sink."""
 
     def __init__(
-            self,
-            path: Path,
-            settings: LoggingSettings,
-            *,
-            console: TextIO | None = None,
+        self,
+        path: Path,
+        settings: LoggingSettings,
+        *,
+        console: TextIO | None = None,
     ) -> None:
         """Initialize a bounded application logger with explicit file and console sinks."""
         self.path = path.resolve()
@@ -94,11 +101,7 @@ class ApplicationLogger(EventLogger):
             self.path.unlink()
         cutoff = time() - self.settings.retention_days * 86400
         for candidate in self.path.parent.glob("Logicytics*.log"):
-            if (
-                    candidate != self.path
-                    and candidate.is_file()
-                    and candidate.stat().st_mtime < cutoff
-            ):
+            if candidate != self.path and candidate.is_file() and candidate.stat().st_mtime < cutoff:
                 candidate.unlink()
         self._truncate_file()
 
@@ -110,7 +113,7 @@ class ApplicationLogger(EventLogger):
                 stream.readline()
                 retained = stream.read()
             record = _RECORD_START.search(retained)
-            retained = retained[record.start():] if record is not None else b""
+            retained = retained[record.start() :] if record is not None else b""
             self.path.write_bytes(retained)
 
     @staticmethod
@@ -119,15 +122,9 @@ class ApplicationLogger(EventLogger):
         timestamp = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         source_column = source.removeprefix("logicytics.")
         if len(source_column) > _SOURCE_WIDTH:
-            source_column = source_column[:_SOURCE_WIDTH - 3] + "..."
-        prefix = (
-            f"{timestamp:<{_TIME_WIDTH}} | {level:<{_SEVERITY_WIDTH}} | "
-            f"{source_column:<{_SOURCE_WIDTH}} | "
-        )
-        continuation = (
-            f"{'':<{_TIME_WIDTH}} | {'':<{_SEVERITY_WIDTH}} | "
-            f"{'':<{_SOURCE_WIDTH}} | "
-        )
+            source_column = source_column[: _SOURCE_WIDTH - 3] + "..."
+        prefix = f"{timestamp:<{_TIME_WIDTH}} | {level:<{_SEVERITY_WIDTH}} | {source_column:<{_SOURCE_WIDTH}} | "
+        continuation = f"{'':<{_TIME_WIDTH}} | {'':<{_SEVERITY_WIDTH}} | {'':<{_SOURCE_WIDTH}} | "
         available = max(_FILE_LOG_LINE_WIDTH - len(prefix), 1)
         wrapped = [
             segment
@@ -138,7 +135,8 @@ class ApplicationLogger(EventLogger):
                     width=available,
                     break_long_words=True,
                     break_on_hyphens=False,
-                ) or [""]
+                )
+                or [""]
             )
         ]
         first = prefix + wrapped[0]
@@ -166,7 +164,7 @@ class ApplicationLogger(EventLogger):
         width = cls._console_width()
         rows: list[str] = []
         for index, raw_line in enumerate(message.expandtabs(4).splitlines() or [""]):
-            indentation = raw_line[:len(raw_line) - len(raw_line.lstrip())]
+            indentation = raw_line[: len(raw_line) - len(raw_line.lstrip())]
             remaining = raw_line.lstrip().rstrip()
             current_prefix = (prefix if index == 0 else continuation) + indentation
             while len(remaining) > max(width - len(current_prefix), 1):
@@ -186,11 +184,7 @@ class ApplicationLogger(EventLogger):
         indentation_length = len(row) - len(row.lstrip())
         detail = row[indentation_length:]
         if detail.startswith("> "):
-            return (
-                f"{text_color}{_BOLD}{row[:indentation_length]}"
-                f"{_DETAIL_MARKER_COLOR}{_BOLD}>{_RESET}"
-                f"{text_color}{_BOLD}{detail[1:]}"
-            )
+            return f"{text_color}{_BOLD}{row[:indentation_length]}{_DETAIL_MARKER_COLOR}{_BOLD}>{_RESET}{text_color}{_BOLD}{detail[1:]}"
         return f"{text_color}{_BOLD}{row}"
 
     @staticmethod
@@ -216,19 +210,16 @@ class ApplicationLogger(EventLogger):
                 return tuple(rows)
             if isinstance(parsed, list):
                 rows = ["Structured details"]
-                rows.extend(
-                    f"Item {index}: {cls._console_value(item)}"
-                    for index, item in enumerate(parsed, start=1)
-                )
+                rows.extend(f"Item {index}: {cls._console_value(item)}" for index, item in enumerate(parsed, start=1))
                 return tuple(rows)
         return (cls._console_message(safe_message),)
 
     @classmethod
     def _console_fields(
-            cls,
-            fields: Mapping[str, object],
-            *,
-            compact_configuration_hash: bool = False,
+        cls,
+        fields: Mapping[str, object],
+        *,
+        compact_configuration_hash: bool = False,
     ) -> tuple[str, ...]:
         """Render structured fields as readable labels instead of JSON fragments."""
         rows: list[str] = []
@@ -313,7 +304,7 @@ class ApplicationLogger(EventLogger):
                     return cls._console_value(parsed)
         return str(value)
 
-    def event(self, level: str, message: str, **fields: int | float | str) -> None:
+    def event(self, level: str, message: str, **fields: float | str) -> None:
         """Dispatch one typed, redacted event to configured console and file sinks."""
         normalized = _normalize_level(level)
         minimum_level = _normalize_level(self.settings.level)
@@ -348,18 +339,12 @@ class ApplicationLogger(EventLogger):
                 if self.settings.color_enabled and self.console.isatty():
                     marker_prefix = f"  {marker} "
                     first_row = self._color_console_text(
-                        console_rows[0][len(marker_prefix):],
+                        console_rows[0][len(marker_prefix) :],
                         text_color,
                     )
-                    colored_rows = (
-                        f"{marker_color}{_BOLD}{marker_prefix}{_RESET}"
-                        f"{first_row}"
-                    )
+                    colored_rows = f"{marker_color}{_BOLD}{marker_prefix}{_RESET}{first_row}"
                     if len(console_rows) > 1:
-                        colored_rows += "\n" + "\n".join(
-                            self._color_console_text(row, text_color)
-                            for row in console_rows[1:]
-                        )
+                        colored_rows += "\n" + "\n".join(self._color_console_text(row, text_color) for row in console_rows[1:])
                     self.console.write(f"{colored_rows}{_RESET}\n")
                 else:
                     self.console.write("\n".join(console_rows) + "\n")
@@ -381,10 +366,10 @@ class ApplicationLogger(EventLogger):
 
     @classmethod
     def render_section(
-            cls,
-            console: TextIO,
-            title: str,
-            lines: Iterable[str],
+        cls,
+        console: TextIO,
+        title: str,
+        lines: Iterable[str],
     ) -> None:
         """Render a plain, indented console section for startup and fallback paths."""
         render_presentation_section(
@@ -397,10 +382,10 @@ class ApplicationLogger(EventLogger):
 
     @classmethod
     def render_alert(
-            cls,
-            console: TextIO,
-            title: str,
-            lines: Iterable[str],
+        cls,
+        console: TextIO,
+        title: str,
+        lines: Iterable[str],
     ) -> None:
         """Render a bordered startup or error alert using the shared logger presentation."""
         render_presentation_alert(
@@ -445,7 +430,7 @@ class HumanArgumentParser(argparse.ArgumentParser):
         """Render one concise argument error and its usage without raw argparse output."""
         usage = self.format_usage().strip()
         if usage.lower().startswith("usage:"):
-            usage = usage[len("usage:"):].strip()
+            usage = usage[len("usage:") :].strip()
         ApplicationLogger.render_section(
             sys.stderr,
             "Command-line error",
@@ -455,21 +440,16 @@ class HumanArgumentParser(argparse.ArgumentParser):
 
 
 def get_application_logger(
-        path: Path,
-        settings: LoggingSettings,
-        *,
-        console: TextIO | None = None,
+    path: Path,
+    settings: LoggingSettings,
+    *,
+    console: TextIO | None = None,
 ) -> ApplicationLogger:
     """Return one configured logger instance per canonical application log path."""
     resolved = path.resolve()
     with _LOGGER_LOCK:
         logger = _APPLICATION_LOGGERS.get(resolved)
-        if (
-                logger is None
-                or logger.settings != settings
-                or console is not None
-                or (console is None and logger.console is not sys.stderr)
-        ):
+        if logger is None or logger.settings != settings or console is not None or (console is None and logger.console is not sys.stderr):
             logger = ApplicationLogger(resolved, settings, console=console)
             if console is None:
                 _APPLICATION_LOGGERS[resolved] = logger
@@ -487,11 +467,11 @@ class FileEventLogger(EventLogger):
         self._event_lock = RLock()
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
-    def event(self, level: str, message: str, **fields: int | float | str) -> None:
+    def event(self, level: str, message: str, **fields: float | str) -> None:
         """Write a timestamped, structured event without relying on global handlers."""
         normalized = _normalize_level(level)
         payload: dict[str, object] = {
-            "at": datetime.now(timezone.utc).isoformat(),
+            "at": datetime.now(UTC).isoformat(),
             "level": normalized.lower(),
             "message": redact_text(message),
             "run_id": self.run_id,
@@ -500,14 +480,11 @@ class FileEventLogger(EventLogger):
             payload["collector_id"] = self.collector_id
         if fields:
             payload["fields"] = redact_mapping(fields)
-        with self._event_lock:
-            with self.path.open("a", encoding="utf-8") as stream:
-                stream.write(json.dumps(payload, sort_keys=True) + "\n")
+        with self._event_lock, self.path.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(payload, sort_keys=True) + "\n")
 
 
-def get_event_logger(
-        path: Path, *, run_id: str, collector_id: str | None = None
-) -> FileEventLogger:
+def get_event_logger(path: Path, *, run_id: str, collector_id: str | None = None) -> FileEventLogger:
     """Return the process-local singleton for one canonical engine or collector channel."""
     identity = (path.resolve(), run_id, collector_id)
     with _LOGGER_LOCK:
@@ -518,10 +495,7 @@ def get_event_logger(
         return logger
 
 
-def timed(
-        logger: EventLogger, *,
-        level: str = "info"
-) -> Callable[[Callable[Parameters, Result]], Callable[Parameters, Result]]:
+def timed(logger: EventLogger, *, level: str = "info") -> Callable[[Callable[Parameters, Result]], Callable[Parameters, Result]]:
     """Decorate a function so structured start, finish, error, and duration events are written."""
 
     def decorate(function: Callable[Parameters, Result]) -> Callable[Parameters, Result]:
@@ -542,8 +516,12 @@ def timed(
                     error_type=type(error).__name__,
                 )
                 raise
-            logger.event(level, "function_finished", function=function.__qualname__,
-                         duration_seconds=round(perf_counter() - started, 6))
+            logger.event(
+                level,
+                "function_finished",
+                function=function.__qualname__,
+                duration_seconds=round(perf_counter() - started, 6),
+            )
             return value
 
         return wrapped
@@ -551,18 +529,14 @@ def timed(
     return decorate
 
 
-def raise_logged(logger: EventLogger, exception_type: type[Exception], message: str,
-                 **fields: int | float | str) -> None:
+def raise_logged(logger: EventLogger, exception_type: type[Exception], message: str, **fields: float | str) -> None:
     """Record a structured exception event, then raise the requested exception type."""
     logger.event("exception", message, exception_type=exception_type.__name__, **fields)
     raise exception_type(message)
 
 
 def deprecated(
-        logger: EventLogger, *,
-        removal_version: str,
-        reason: str,
-        include_stack: bool = False
+    logger: EventLogger, *, removal_version: str, reason: str, include_stack: bool = False
 ) -> Callable[[Callable[Parameters, Result]], Callable[Parameters, Result]]:
     """Decorate a function so each invocation emits a structured deprecation warning."""
 

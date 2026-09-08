@@ -86,9 +86,9 @@ def load_configuration(project_root: Path | str, config_path: Path | str | None 
 
 
 def _configuration(
-        project_root: Path | str,
-        configuration: AppConfig | None,
-        config_path: Path | str | None,
+    project_root: Path | str,
+    configuration: AppConfig | None,
+    config_path: Path | str | None,
 ) -> tuple[Path, AppConfig]:
     """Resolve one unambiguous, typed configuration source."""
     root = Path(project_root).resolve()
@@ -100,19 +100,17 @@ def _configuration(
 
 
 def plan_run(
-        project_root: Path | str,
-        request: RunRequest,
-        *,
-        configuration: AppConfig | None = None,
-        config_path: Path | str | None = None,
+    project_root: Path | str,
+    request: RunRequest,
+    *,
+    configuration: AppConfig | None = None,
+    config_path: Path | str | None = None,
 ) -> RunPlan:
     """Preflight and resolve a strict run without starting collectors or writing output."""
     root, settings = _configuration(project_root, configuration, config_path)
     if not isinstance(request, RunRequest):
         raise PlanError("request must be an immutable RunRequest instance")
-    blocked_capabilities = tuple(dict.fromkeys(
-        (*settings.runtime.blocked_capabilities, *request.blocked_capabilities)
-    ))
+    blocked_capabilities = tuple(dict.fromkeys((*settings.runtime.blocked_capabilities, *request.blocked_capabilities)))
     request = replace(request, blocked_capabilities=blocked_capabilities)
     if request.max_workers > settings.runtime.maximum_workers:
         raise PlanError("requested workers exceed configured maximum_workers")
@@ -120,11 +118,11 @@ def plan_run(
 
 
 def run_collection(
-        project_root: Path | str,
-        request: RunRequest,
-        *,
-        configuration: AppConfig | None = None,
-        config_path: Path | str | None = None,
+    project_root: Path | str,
+    request: RunRequest,
+    *,
+    configuration: AppConfig | None = None,
+    config_path: Path | str | None = None,
 ) -> RunOutcome:
     """Execute only a strictly validated, authorized, independently isolated run."""
     root, settings = _configuration(project_root, configuration, config_path)
@@ -147,14 +145,14 @@ def _artifact(raw: object, collector_id: str) -> Artifact:
     relative = PurePosixPath(artifact.relative_path)
     owner = collector_id.replace(".", "_")
     if (
-            artifact.collector_id != collector_id
-            or "\\" in artifact.relative_path
-            or relative.is_absolute()
-            or ".." in relative.parts
-            or relative.as_posix() != artifact.relative_path
-            or len(relative.parts) < 2
-            or relative.parts[0] != owner
-            or artifact.name != relative.name
+        artifact.collector_id != collector_id
+        or "\\" in artifact.relative_path
+        or relative.is_absolute()
+        or ".." in relative.parts
+        or relative.as_posix() != artifact.relative_path
+        or len(relative.parts) < 2
+        or relative.parts[0] != owner
+        or artifact.name != relative.name
     ):
         raise PlanError("run manifest artifact violates collector ownership or path boundaries")
     return artifact
@@ -181,10 +179,7 @@ def _collector_snapshot(record: dict[str, Any], collector_id: str, status: str) 
     finished_at = _manifest_timestamp(record.get("finished_at"), "collector finished_at", optional=True)
     duration = record.get("duration_seconds")
     if duration is not None and (
-            not isinstance(duration, (int, float))
-            or isinstance(duration, bool)
-            or not isfinite(duration)
-            or duration < 0
+        not isinstance(duration, (int, float)) or isinstance(duration, bool) or not isfinite(duration) or duration < 0
     ):
         raise PlanError("run manifest collector duration_seconds must be a finite non-negative number or null")
     summary = record.get("summary")
@@ -211,19 +206,12 @@ def _collector_snapshot(record: dict[str, Any], collector_id: str, status: str) 
 
         has_valid_collector_id = raw_failure.get("collector_id") == collector_id
         has_valid_actionable_details = all(
-            isinstance(raw_failure.get(field), str) and raw_failure[field].strip()
-            for field in actionable_fields
+            isinstance(raw_failure.get(field), str) and raw_failure[field].strip() for field in actionable_fields
         )
         has_valid_retry_flag = isinstance(raw_failure.get("retry_safe"), bool)
 
-        if not (
-                has_valid_collector_id
-                and has_valid_actionable_details
-                and has_valid_retry_flag
-        ):
-            raise PlanError(
-                "run manifest collector failure contains invalid actionable details"
-            )
+        if not (has_valid_collector_id and has_valid_actionable_details and has_valid_retry_flag):
+            raise PlanError("run manifest collector failure contains invalid actionable details")
         failure = CollectorFailureSnapshot(
             collector_id=collector_id,
             operation=raw_failure["operation"],
@@ -246,11 +234,11 @@ def _collector_snapshot(record: dict[str, Any], collector_id: str, status: str) 
 
 
 def query_run(
-        project_root: Path | str,
-        run_id: str,
-        *,
-        configuration: AppConfig | None = None,
-        config_path: Path | str | None = None,
+    project_root: Path | str,
+    run_id: str,
+    *,
+    configuration: AppConfig | None = None,
+    config_path: Path | str | None = None,
 ) -> RunSnapshot:
     """Read a run-owned manifest and return immutable, ownership-validated status."""
     _, settings = _configuration(project_root, configuration, config_path)
@@ -273,14 +261,11 @@ def query_run(
     if manifest_schema_version is None:
         raise PlanError("run manifest is missing schema_version")
     if (
-            not isinstance(manifest_schema_version, int)
-            or isinstance(manifest_schema_version, bool)
-            or manifest_schema_version != MANIFEST_SCHEMA_VERSION
+        not isinstance(manifest_schema_version, int)
+        or isinstance(manifest_schema_version, bool)
+        or manifest_schema_version != MANIFEST_SCHEMA_VERSION
     ):
-        raise PlanError(
-            f"unsupported run manifest schema_version {manifest_schema_version!r}; "
-            f"expected {MANIFEST_SCHEMA_VERSION}"
-        )
+        raise PlanError(f"unsupported run manifest schema_version {manifest_schema_version!r}; expected {MANIFEST_SCHEMA_VERSION}")
 
     _manifest_timestamp(payload.get("requested_at"), "requested_at")
     if not isinstance(payload.get("status"), str):
@@ -306,12 +291,12 @@ def query_run(
         collector_id = record.get("id")
         collector_status = record.get("status")
         if (
-                not isinstance(collector_id, str)
-                or _COLLECTOR_ID.fullmatch(collector_id) is None
-                or collector_id in collector_ids
-                or not isinstance(collector_status, str)
-                or collector_status not in valid_collector_statuses
-                or not isinstance(record.get("artifacts"), list)
+            not isinstance(collector_id, str)
+            or _COLLECTOR_ID.fullmatch(collector_id) is None
+            or collector_id in collector_ids
+            or not isinstance(collector_status, str)
+            or collector_status not in valid_collector_statuses
+            or not isinstance(record.get("artifacts"), list)
         ):
             raise PlanError("run manifest contains an invalid or duplicate collector record")
         collector_ids.add(collector_id)
@@ -328,7 +313,7 @@ def query_run(
     if catalog != expected_catalog:
         raise PlanError("run manifest artifact catalog does not match collector-owned evidence")
     if status not in {RunStatus.PLANNED, RunStatus.RUNNING} and payload.get("total_artifact_bytes") != sum(
-            artifact.size_bytes for artifact in artifacts
+        artifact.size_bytes for artifact in artifacts
     ):
         raise PlanError("run manifest total_artifact_bytes does not match registered evidence")
     finished_at = _manifest_timestamp(payload.get("finished_at"), "finished_at", optional=True)
@@ -346,22 +331,18 @@ def query_run(
 
 
 def read_artifact(
-        project_root: Path | str,
-        run_id: str,
-        artifact_id: str,
-        *,
-        maximum_bytes: int = _DEFAULT_ARTIFACT_READ_BYTES,
-        configuration: AppConfig | None = None,
-        config_path: Path | str | None = None,
+    project_root: Path | str,
+    run_id: str,
+    artifact_id: str,
+    *,
+    maximum_bytes: int = _DEFAULT_ARTIFACT_READ_BYTES,
+    configuration: AppConfig | None = None,
+    config_path: Path | str | None = None,
 ) -> bytes:
     """Read bounded, registered evidence only after ownership and SHA-256 verification."""
     if not isinstance(artifact_id, str) or _ARTIFACT_ID.fullmatch(artifact_id) is None:
         raise ArtifactError("artifact_id must be a canonical registered artifact identifier")
-    if (
-            not isinstance(maximum_bytes, int)
-            or isinstance(maximum_bytes, bool)
-            or not 1 <= maximum_bytes <= _MAXIMUM_ARTIFACT_READ_BYTES
-    ):
+    if not isinstance(maximum_bytes, int) or isinstance(maximum_bytes, bool) or not 1 <= maximum_bytes <= _MAXIMUM_ARTIFACT_READ_BYTES:
         raise ArtifactError("maximum_bytes must be an integer from 1 to 67108864")
     snapshot = query_run(project_root, run_id, configuration=configuration, config_path=config_path)
     artifact = next((item for item in snapshot.artifacts if item.id == artifact_id), None)
@@ -383,28 +364,22 @@ def read_artifact(
             contents = stream.read(maximum_bytes + 1)
     except (OSError, ValueError) as error:
         raise ArtifactError("registered artifact escapes its collector-owned store or cannot be read") from error
-    if (
-            len(contents) > maximum_bytes
-            or len(contents) != artifact.size_bytes
-            or hashlib.sha256(contents).hexdigest() != artifact.sha256
-    ):
+    if len(contents) > maximum_bytes or len(contents) != artifact.size_bytes or hashlib.sha256(contents).hexdigest() != artifact.sha256:
         raise ArtifactError("registered artifact failed manifest size or SHA-256 verification")
     return contents
 
 
 def open_artifact(
-        project_root: Path | str,
-        run_id: str,
-        artifact_id: str,
-        *,
-        configuration: AppConfig | None = None,
-        config_path: Path | str | None = None,
+    project_root: Path | str,
+    run_id: str,
+    artifact_id: str,
+    *,
+    configuration: AppConfig | None = None,
+    config_path: Path | str | None = None,
 ) -> Path:
     """Verify and open one registered artifact with the platform's associated application."""
     if not isinstance(artifact_id, str) or _ARTIFACT_ID.fullmatch(artifact_id) is None:
-        raise ArtifactError(
-            "artifact_id must be a canonical registered artifact identifier"
-        )
+        raise ArtifactError("artifact_id must be a canonical registered artifact identifier")
 
     snapshot = query_run(
         project_root,
@@ -418,9 +393,7 @@ def open_artifact(
         None,
     )
     if artifact is None:
-        raise ArtifactError(
-            "artifact is not registered in the selected run manifest"
-        )
+        raise ArtifactError("artifact is not registered in the selected run manifest")
 
     root = snapshot.run_directory / "artifacts"
     source = root.joinpath(*PurePosixPath(artifact.relative_path).parts)
@@ -434,9 +407,7 @@ def open_artifact(
         resolved.relative_to(owner)
 
         if not source.is_file() or source.stat().st_size != artifact.size_bytes:
-            raise ArtifactError(
-                "registered artifact size does not match its manifest"
-            )
+            raise ArtifactError("registered artifact size does not match its manifest")
 
         digest = hashlib.sha256()
         with source.open("rb") as stream:
@@ -444,14 +415,10 @@ def open_artifact(
                 digest.update(block)
 
     except (OSError, ValueError) as error:
-        raise ArtifactError(
-            "registered artifact escapes its collector-owned store or cannot be opened"
-        ) from error
+        raise ArtifactError("registered artifact escapes its collector-owned store or cannot be opened") from error
 
     if digest.hexdigest() != artifact.sha256:
-        raise ArtifactError(
-            "registered artifact failed manifest SHA-256 verification"
-        )
+        raise ArtifactError("registered artifact failed manifest SHA-256 verification")
 
     if sys.platform != "win32":
         raise OSError("opening artifacts requires Windows")

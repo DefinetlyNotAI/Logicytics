@@ -56,12 +56,12 @@ def plugin_collector_source() -> str:
     return COLLECTOR.replace("CoreCollector", "PluginCollector").replace(
         '            author="tests",',
         '            author="tests",\n'
-        '            privilege_level=PrivilegeLevel.STANDARD,\n'
-        '            sensitive_data_categories=(),\n'
-        '            network_access=NetworkAccess.NONE,\n'
-        '            estimated_cost=EstimatedCost.LOW,\n'
-        '            timeout_seconds=60,\n'
-        '            maximum_output_bytes=100 * 1024 * 1024,\n'
+        "            privilege_level=PrivilegeLevel.STANDARD,\n"
+        "            sensitive_data_categories=(),\n"
+        "            network_access=NetworkAccess.NONE,\n"
+        "            estimated_cost=EstimatedCost.LOW,\n"
+        "            timeout_seconds=60,\n"
+        "            maximum_output_bytes=100 * 1024 * 1024,\n"
         '            minimum_contract_version="4.0",',
     )
 
@@ -94,13 +94,13 @@ def mod_metadata(name: str, *, filesystem_write: bool = False) -> dict[str, Any]
 
 
 def delayed_collector_source(
-        filename: str,
-        delay: float,
-        *,
-        parallel_safe: bool = True,
-        dependencies: tuple[str, ...] = (),
-        resource_class: ResourceClass = ResourceClass.GENERAL,
-        fail: bool = False,
+    filename: str,
+    delay: float,
+    *,
+    parallel_safe: bool = True,
+    dependencies: tuple[str, ...] = (),
+    resource_class: ResourceClass = ResourceClass.GENERAL,
+    fail: bool = False,
 ) -> str:
     """Create a valid fixture collector with observable scheduling duration."""
     class_name = "".join(part.title() for part in filename.split("_"))

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from logicytics import (
     Capability,
@@ -62,7 +62,7 @@ class NetworkIdentityCollector(CoreCollector):
         except socket.gaierror as error:
             resolver_error = str(error)
         report = {
-            "collected_at": datetime.now(timezone.utc).isoformat(),
+            "collected_at": datetime.now(UTC).isoformat(),
             "hostname": hostname,
             "addresses": sorted(addresses),
         }

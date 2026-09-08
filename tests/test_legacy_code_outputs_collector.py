@@ -8,8 +8,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from core.integration.legacy_code_outputs import LegacyCodeOutputsCollector
-from logicytics.module.artifacts import WorkspaceArtifactWriter
 from logicytics.contracts import CollectorContext, CollectorStatus
+from logicytics.module.artifacts import WorkspaceArtifactWriter
 
 
 class LegacyCodeOutputsCollectorTests(unittest.TestCase):
@@ -72,9 +72,7 @@ class LegacyCodeOutputsCollectorTests(unittest.TestCase):
 
             self.assertIs(CollectorStatus.SUCCEEDED, result.status)
             self.assertEqual({"report.txt", "events.csv"}, {artifact.name for artifact in result.artifacts})
-            stored = {
-                path.name for path in artifact_root.rglob("*") if path.is_file()
-            }
+            stored = {path.name for path in artifact_root.rglob("*") if path.is_file()}
             self.assertEqual({"report.txt", "events.csv"}, stored)
             for name in excluded:
                 self.assertFalse(any(path.name == name for path in workspace.rglob("*")))

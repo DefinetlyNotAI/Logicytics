@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import json
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -17,11 +24,18 @@ class DisplayAdaptersCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the subprocess-gated display-adapter JSON artifact contract."""
         return CollectorMetadata(
-            id="core.hardware.display_adapters", name="Display adapters", version="4.0.0", specialty=Specialty.HARDWARE,
+            id="core.hardware.display_adapters",
+            name="Display adapters",
+            version="4.0.0",
+            specialty=Specialty.HARDWARE,
             output_media_types=("application/json",),
             description="Exports local display-adapter names, driver versions, resolution, and memory metadata.",
-            author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
-            sensitive_data_categories=("hardware_inventory",), default_profiles=("deep",), timeout_seconds=30,
+            author="Logicytics",
+            supported_platforms=("win32",),
+            capabilities=(Capability.SUBPROCESS,),
+            sensitive_data_categories=("hardware_inventory",),
+            default_profiles=("deep",),
+            timeout_seconds=30,
             maximum_output_bytes=256 * 1024,
         )
 
@@ -43,8 +57,13 @@ class DisplayAdaptersCollector(CoreCollector):
             "VideoProcessor, AdapterRAM, CurrentHorizontalResolution, CurrentVerticalResolution, CurrentRefreshRate "
             "| ConvertTo-Json -Depth 3"
         )
-        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
-                                   capture_output=True, check=False, text=True, timeout=25)
+        completed = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=25,
+        )
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             status = CollectorStatus.SKIPPED if "denied" in detail.casefold() else CollectorStatus.FAILED
@@ -52,8 +71,11 @@ class DisplayAdaptersCollector(CoreCollector):
         try:
             adapters = json.loads(completed.stdout) if completed.stdout.strip() else []
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "display-adapter query returned invalid JSON",
-                                   errors=(str(error),))
+            return CollectorResult(
+                CollectorStatus.FAILED,
+                "display-adapter query returned invalid JSON",
+                errors=(str(error),),
+            )
         if not isinstance(adapters, (dict, list)):
             return CollectorResult(CollectorStatus.FAILED, "display-adapter query returned an unexpected result")
         output = context.workspace / "display_adapters.json"

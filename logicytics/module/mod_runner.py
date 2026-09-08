@@ -19,10 +19,7 @@ def main(argv: list[str] | None = None) -> int:
         ApplicationLogger.render_section(
             sys.stderr,
             "Python MOD runner error",
-            (
-                "The runner requires script, workspace, collector ID, "
-                "capabilities, and blocked capabilities.",
-            ),
+            ("The runner requires script, workspace, collector ID, capabilities, and blocked capabilities.",),
         )
         return 2
     script = Path(arguments[0]).resolve()

@@ -19,19 +19,30 @@ class ContractTests(unittest.TestCase):
     def test_custom_specialty_is_plugin_only(self) -> None:
         """Plugins may extend specialties, but core metadata remains on the closed set."""
         metadata = CollectorMetadata(
-            id="plugin.example", name="Example", version="4.0.0", specialty=Specialty.SYSTEM,
-            description="Test metadata.", author="Test",
+            id="plugin.example",
+            name="Example",
+            version="4.0.0",
+            specialty=Specialty.SYSTEM,
+            description="Test metadata.",
+            author="Test",
         ).to_dict()
         metadata["specialty"] = "evidence_graph"
-        self.assertEqual("evidence_graph", CollectorMetadata.from_dict(metadata, allow_custom_specialty=True).specialty)
+        self.assertEqual(
+            "evidence_graph",
+            CollectorMetadata.from_dict(metadata, allow_custom_specialty=True).specialty,
+        )
         with self.assertRaises(ValueError):
             CollectorMetadata.from_dict(metadata)
 
     def test_collector_metadata_rejects_invalid_identity_and_limits(self) -> None:
         """Collector metadata must be a complete typed declaration rather than free text."""
         common = dict(
-            id="core.system.example", name="Example", version="4.0.0", specialty=Specialty.SYSTEM,
-            description="Example collector.", author="tests",
+            id="core.system.example",
+            name="Example",
+            version="4.0.0",
+            specialty=Specialty.SYSTEM,
+            description="Example collector.",
+            author="tests",
         )
         with self.assertRaisesRegex(ValueError, "id has an invalid schema"):
             CollectorMetadata(**{**common, "id": "example"})
@@ -64,16 +75,25 @@ class ContractTests(unittest.TestCase):
         self.assertIs(ResourceClass.GENERAL, metadata.resource_class)
         disk_metadata = CollectorMetadata(**{**common, "resource_class": ResourceClass.DISK_HEAVY})
         self.assertEqual("disk_heavy", disk_metadata.to_dict()["resource_class"])
-        self.assertIs(ResourceClass.DISK_HEAVY, CollectorMetadata.from_dict(disk_metadata.to_dict()).resource_class)
+        self.assertIs(
+            ResourceClass.DISK_HEAVY,
+            CollectorMetadata.from_dict(disk_metadata.to_dict()).resource_class,
+        )
 
     def test_collector_results_expose_all_strict_typed_terminal_states(self) -> None:
         """Every terminal collector outcome has an explicit, validated result constructor."""
         outcomes = (
             (CollectorResult.succeeded("complete"), CollectorStatus.SUCCEEDED),
-            (CollectorResult.partial("incomplete", errors=("one source unavailable",)), CollectorStatus.PARTIAL),
+            (
+                CollectorResult.partial("incomplete", errors=("one source unavailable",)),
+                CollectorStatus.PARTIAL,
+            ),
             (CollectorResult.skipped("prerequisite unavailable"), CollectorStatus.SKIPPED),
             (CollectorResult.cancelled("operator cancelled"), CollectorStatus.CANCELLED),
-            (CollectorResult.failed("collection failed", errors=("access denied",)), CollectorStatus.FAILED),
+            (
+                CollectorResult.failed("collection failed", errors=("access denied",)),
+                CollectorStatus.FAILED,
+            ),
         )
         for result, status in outcomes:
             with self.subTest(status=status):
@@ -81,12 +101,29 @@ class ContractTests(unittest.TestCase):
         invalid = (
             ({"status": "succeeded", "summary": "complete"}, "status"),
             ({"status": CollectorStatus.SUCCEEDED, "summary": ""}, "summary"),
-            ({"status": CollectorStatus.SUCCEEDED, "summary": "complete", "artifacts": []}, "artifacts"),
-            ({"status": CollectorStatus.FAILED, "summary": "failed", "errors": ["failure"]}, "errors"),
-            ({"status": CollectorStatus.FAILED, "summary": "failed", "errors": ("",)}, "errors"),
-            ({"status": CollectorStatus.PARTIAL, "summary": "partial", "metrics": {"count": True}}, "metrics"),
             (
-                {"status": CollectorStatus.PARTIAL, "summary": "partial", "metrics": {"count": float("inf")}},
+                {"status": CollectorStatus.SUCCEEDED, "summary": "complete", "artifacts": []},
+                "artifacts",
+            ),
+            (
+                {"status": CollectorStatus.FAILED, "summary": "failed", "errors": ["failure"]},
+                "errors",
+            ),
+            ({"status": CollectorStatus.FAILED, "summary": "failed", "errors": ("",)}, "errors"),
+            (
+                {
+                    "status": CollectorStatus.PARTIAL,
+                    "summary": "partial",
+                    "metrics": {"count": True},
+                },
+                "metrics",
+            ),
+            (
+                {
+                    "status": CollectorStatus.PARTIAL,
+                    "summary": "partial",
+                    "metrics": {"count": float("inf")},
+                },
                 "metrics",
             ),
         )

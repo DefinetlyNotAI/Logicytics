@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from logicytics.contracts import (
+    Capability,
     RunRequest,
 )
 from logicytics.module.configuration import (
@@ -16,7 +17,6 @@ from logicytics.module.configuration import (
 )
 from logicytics.module.discovery import preflight
 from logicytics.module.errors import PlanError
-from logicytics.contracts import Capability
 from logicytics.module.planner import build_plan
 from logicytics.module.runtime import RunSupervisor
 from tests.fixtures.collectors import COLLECTOR
@@ -32,15 +32,17 @@ class ConfigurationTests(unittest.TestCase):
             self.assertEqual((), default_config(root).runtime.blocked_capabilities)
             config_path = root / "logicytics.yaml"
             config_path.write_text(
-                json.dumps({
-                    "schema_version": 4,
-                    "runtime": {
-                        "blocked_capabilities": {
-                            "network": True,
-                            "subprocess": False,
+                json.dumps(
+                    {
+                        "schema_version": 4,
+                        "runtime": {
+                            "blocked_capabilities": {
+                                "network": True,
+                                "subprocess": False,
+                            },
                         },
-                    },
-                }),
+                    }
+                ),
                 encoding="utf-8",
             )
             configuration = load_config(root)
@@ -196,7 +198,9 @@ max_retry_time = 30
             self.assertEqual(root / "custom" / "evidence", load_config(root).runtime.output_root)
             self.assertFalse(expected.exists())
 
-    def test_configuration_manifest_redacts_nested_secrets_without_mutating_worker_settings(self) -> None:
+    def test_configuration_manifest_redacts_nested_secrets_without_mutating_worker_settings(
+        self,
+    ) -> None:
         """Manifest snapshots hide credentials while collectors retain configured access."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -233,8 +237,14 @@ max_retry_time = 30
                 ('{"schema_version":true}', "schema_version"),
                 ('{"schema_version":4,"runtime":{"default_max_workers":true}}', "worker limits"),
                 ('{"schema_version":4,"runtime":{"maximum_workers":true}}', "worker limits"),
-                ('{"schema_version":4,"runtime":{"maximum_run_output_bytes":true}}', "maximum_run_output_bytes"),
-                ('{"schema_version":4,"runtime":{"maximum_run_output_bytes":0}}', "maximum_run_output_bytes"),
+                (
+                    '{"schema_version":4,"runtime":{"maximum_run_output_bytes":true}}',
+                    "maximum_run_output_bytes",
+                ),
+                (
+                    '{"schema_version":4,"runtime":{"maximum_run_output_bytes":0}}',
+                    "maximum_run_output_bytes",
+                ),
                 ('{"schema_version":4,"runtime":{"output_root":false}}', "output_root"),
                 ('{"schema_version":4,"runtime":{"output_root":"   "}}', "output_root"),
             )
@@ -254,12 +264,19 @@ max_retry_time = 30
                 ('{"schema_version":4,"runtime":{"worker_typo":2}}', "unsupported settings"),
                 ('{"schema_version":4,"schema_version":4}', "duplicate configuration key"),
                 ('{"schema_version":4,"runtime":{"maximum_workers":NaN}}', "non-finite"),
-                ('{"schema_version":4,"collectors":{"plugin.custom":{"value":1e999}}}', "non-finite"),
+                (
+                    '{"schema_version":4,"collectors":{"plugin.custom":{"value":1e999}}}',
+                    "non-finite",
+                ),
                 ('{"schema_version":4,"collectors":{"../escape":{}}}', "invalid collector ID"),
-                ('{"schema_version":4,"collectors":{"core.system.example":{"invalid-name":1}}}',
-                 "invalid setting name"),
-                ('{"schema_version":4,"collectors":{"core.packet.packet_capture":{"packet_typo":1}}}',
-                 "unsupported settings"),
+                (
+                    '{"schema_version":4,"collectors":{"core.system.example":{"invalid-name":1}}}',
+                    "invalid setting name",
+                ),
+                (
+                    '{"schema_version":4,"collectors":{"core.packet.packet_capture":{"packet_typo":1}}}',
+                    "unsupported settings",
+                ),
             )
             for payload, message in invalid:
                 with self.subTest(payload=payload):
@@ -283,7 +300,11 @@ max_retry_time = 30
                 ("core.filesystem.system_drive_tree", {"max_depth": 33}, "max_depth"),
                 ("core.filesystem.system_drive_listing", {"workers": 2}, "unsupported settings"),
                 ("core.filesystem.system_drive_listing", {"max_entries": "100"}, "max_entries"),
-                ("core.filesystem.sensitive_file_inventory", {"max_directories": 50_001}, "max_directories"),
+                (
+                    "core.filesystem.sensitive_file_inventory",
+                    {"max_directories": 50_001},
+                    "max_directories",
+                ),
                 ("core.filesystem.sensitive_file_inventory", {"max_matches": 0}, "max_matches"),
                 ("core.filesystem.sensitive_file_inventory", {"root": "relative/path"}, "absolute"),
             )
@@ -300,7 +321,9 @@ max_retry_time = 30
                 "core.filesystem.system_drive_tree": {"max_entries": 100, "max_depth": 3},
                 "core.filesystem.system_drive_listing": {"max_entries": 200, "max_depth": 4},
                 "core.filesystem.sensitive_file_inventory": {
-                    "root": str(root), "max_directories": 100, "max_matches": 10,
+                    "root": str(root),
+                    "max_directories": 100,
+                    "max_matches": 10,
                 },
             }
             config_path.write_text(json.dumps({"schema_version": 4, "collectors": valid}), encoding="utf-8")
@@ -308,7 +331,9 @@ max_retry_time = 30
             for collector_id, settings in valid.items():
                 self.assertEqual(settings, configuration.settings_for(collector_id))
 
-    def test_configuration_validates_metadata_only_memory_map_limits_and_workspace_paths(self) -> None:
+    def test_configuration_validates_metadata_only_memory_map_limits_and_workspace_paths(
+        self,
+    ) -> None:
         """The existing metadata-only memory mapper rejects unsafe values before worker launch."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -357,11 +382,13 @@ max_retry_time = 30
                 "dump_directory": "maps",
             }
             (root / "logicytics.yaml").write_text(
-                json.dumps({
-                    "schema_version": 4,
-                    "runtime": {"default_max_workers": 3, "maximum_workers": 8},
-                    "collectors": {collector_id: collector_settings},
-                }),
+                json.dumps(
+                    {
+                        "schema_version": 4,
+                        "runtime": {"default_max_workers": 3, "maximum_workers": 8},
+                        "collectors": {collector_id: collector_settings},
+                    }
+                ),
                 encoding="utf-8",
             )
             configuration = load_config(root)
@@ -386,8 +413,7 @@ max_retry_time = 30
             root = Path(temporary)
             config_path = root / "logicytics.yaml"
             config_path.write_text(
-                '{"schema_version":4,"collectors":{"core.network.bandwidth_sample":'
-                '{"sample_count":11}}}',
+                '{"schema_version":4,"collectors":{"core.network.bandwidth_sample":{"sample_count":11}}}',
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(PlanError, "sample_count"):

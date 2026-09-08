@@ -5,8 +5,15 @@ from __future__ import annotations
 import zipfile
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, \
-    ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    EvidenceKind,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import filesystem_adapter
 
@@ -21,13 +28,23 @@ class SshBackupCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the explicit-consent SSH archive artifact contract."""
         return CollectorMetadata(
-            id="core.ssh.ssh_backup", name="SSH directory backup", version="4.0.0", specialty=Specialty.SSH,
+            id="core.ssh.ssh_backup",
+            name="SSH directory backup",
+            version="4.0.0",
+            specialty=Specialty.SSH,
             output_media_types=("application/zip",),
             description="Archives the current user's .ssh keys and configuration after explicit sensitive-data approval.",
-            author="Logicytics", supported_platforms=("win32",),
-            capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES, Capability.PRIVATE_KEYS),
-            sensitive_data_categories=("private_keys", "ssh_configuration", "credentials"), default_profiles=("deep",),
-            timeout_seconds=120, maximum_output_bytes=128 * 1024 * 1024,
+            author="Logicytics",
+            supported_platforms=("win32",),
+            capabilities=(
+                Capability.FILESYSTEM_READ,
+                Capability.SENSITIVE_FILES,
+                Capability.PRIVATE_KEYS,
+            ),
+            sensitive_data_categories=("private_keys", "ssh_configuration", "credentials"),
+            default_profiles=("deep",),
+            timeout_seconds=120,
+            maximum_output_bytes=128 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -70,9 +87,9 @@ class SshBackupCollector(CoreCollector):
         cancelled = False
 
         with zipfile.ZipFile(
-                archive,
-                "w",
-                compression=zipfile.ZIP_DEFLATED,
+            archive,
+            "w",
+            compression=zipfile.ZIP_DEFLATED,
         ) as output:
             try:
                 candidates: list[Path] = sorted(
@@ -102,10 +119,7 @@ class SshBackupCollector(CoreCollector):
                 if not is_file or is_symlink:
                     continue
 
-                if (
-                        size > MAX_FILE_BYTES
-                        or source_bytes + size > MAX_ARCHIVE_SOURCE_BYTES
-                ):
+                if size > MAX_FILE_BYTES or source_bytes + size > MAX_ARCHIVE_SOURCE_BYTES:
                     skipped_files += 1
                     continue
 
@@ -145,9 +159,7 @@ class SshBackupCollector(CoreCollector):
             archive,
             media_type="application/zip",
             evidence_kind=EvidenceKind.RAW,
-            transformations=(
-                "archived from the current user's SSH directory",
-            ),
+            transformations=("archived from the current user's SSH directory",),
         )
 
         context.report_progress(

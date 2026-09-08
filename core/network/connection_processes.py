@@ -5,7 +5,14 @@ from __future__ import annotations
 import csv
 import io
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -32,7 +39,14 @@ def _parse_connections(netstat_output: str) -> list[dict[str, str]]:
         else:
             continue
         connections.append(
-            {"protocol": protocol, "local_endpoint": local, "remote_endpoint": remote, "state": state, "pid": pid})
+            {
+                "protocol": protocol,
+                "local_endpoint": local,
+                "remote_endpoint": remote,
+                "state": state,
+                "pid": pid,
+            }
+        )
     return connections
 
 
@@ -82,27 +96,47 @@ class ConnectionProcessesCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before connection-process collection")
         context.report_progress("connection_processes_started")
         netstat = subprocess.run(["netstat", "-ano"], capture_output=True, check=False, text=True, timeout=25)
-        tasklist = subprocess.run(["tasklist", "/fo", "csv", "/nh"], capture_output=True, check=False, text=True,
-                                  timeout=25)
+        tasklist = subprocess.run(
+            ["tasklist", "/fo", "csv", "/nh"],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=25,
+        )
         failures = [result for result in (netstat, tasklist) if result.returncode != 0]
         if failures:
             detail = "\n".join(result.stderr.strip() or f"command exit code {result.returncode}" for result in failures)
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED,
-                                       "connection-process access was denied for the current account", errors=(detail,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "connection-process access was denied for the current account",
+                    errors=(detail,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "connection-process query failed", errors=(detail,))
         processes = _parse_processes(tasklist.stdout)
         rows = _parse_connections(netstat.stdout)
         output = context.workspace / "connection_processes.csv"
         with output.open("w", encoding="utf-8", newline="") as stream:
-            writer = csv.DictWriter(stream, fieldnames=("protocol", "local_endpoint", "remote_endpoint", "state", "pid",
-                                                        "process_name"))
+            writer = csv.DictWriter(
+                stream,
+                fieldnames=(
+                    "protocol",
+                    "local_endpoint",
+                    "remote_endpoint",
+                    "state",
+                    "pid",
+                    "process_name",
+                ),
+            )
             writer.writeheader()
             for row in rows:
                 writer.writerow({**row, "process_name": processes.get(row["pid"], "unavailable")})
         artifact = context.artifacts.register_file(output, media_type="text/csv")
-        context.report_progress("connection_processes_finished", connection_count=len(rows),
-                                bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "connection_processes_finished",
+            connection_count=len(rows),
+            bytes_written=artifact.size_bytes,
+        )
         return CollectorResult.succeeded("connection-process associations collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

@@ -6,20 +6,21 @@ import os
 import tempfile
 import unittest
 import zipfile
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, cast
+from typing import Any, cast
 from unittest.mock import patch
 
-from logicytics.module import packaging
 from logicytics.cli import cli_methods
+from logicytics.contracts import (
+    RunRequest,
+)
+from logicytics.module import packaging
 from logicytics.module.configuration import (
     default_config,
     load_config,
-)
-from logicytics.contracts import (
-    RunRequest,
 )
 from logicytics.module.discovery import preflight
 from logicytics.module.manifest import write_manifest
@@ -108,9 +109,7 @@ class PackagingTests(unittest.TestCase):
                 self.assertNotIn("logs/performance.json", archive.namelist())
                 self.assertEqual(1, len([name for name in archive.namelist() if name.startswith("evidence/")]))
                 artifact = outcome.manifest.artifact_list()[0]
-                archived_bytes = archive.read(
-                    f"evidence/{artifact.evidence_kind.value}/{artifact.relative_path}"
-                )
+                archived_bytes = archive.read(f"evidence/{artifact.evidence_kind.value}/{artifact.relative_path}")
                 self.assertEqual(artifact.size_bytes, len(archived_bytes))
                 self.assertEqual(artifact.sha256, hashlib.sha256(archived_bytes).hexdigest())
                 self.assertEqual("system", artifact.source_category)
@@ -162,22 +161,26 @@ class PackagingTests(unittest.TestCase):
             collector_path = root / "core" / "system" / "system_info.py"
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
-            source = COLLECTOR.replace(
-                "CollectorResult, CoreCollector, Specialty",
-                "CollectorResult, CoreCollector, EvidenceKind, Specialty",
-            ).replace(
-                'output_media_types=("text/plain",)',
-                'output_media_types=("text/plain", "application/octet-stream")',
-            ).replace(
-                '        return CollectorResult.succeeded("test artifact created", (artifact,))',
-                '        raw = context.workspace / "source.bin"\n'
-                '        raw.write_bytes(b"raw evidence")\n'
-                '        raw_artifact = context.artifacts.register_file(\n'
-                '            raw, evidence_kind=EvidenceKind.RAW,\n'
-                '        )\n'
-                '        return CollectorResult.succeeded(\n'
-                '            "typed artifacts created", (artifact, raw_artifact),\n'
-                '        )',
+            source = (
+                COLLECTOR.replace(
+                    "CollectorResult, CoreCollector, Specialty",
+                    "CollectorResult, CoreCollector, EvidenceKind, Specialty",
+                )
+                .replace(
+                    'output_media_types=("text/plain",)',
+                    'output_media_types=("text/plain", "application/octet-stream")',
+                )
+                .replace(
+                    '        return CollectorResult.succeeded("test artifact created", (artifact,))',
+                    '        raw = context.workspace / "source.bin"\n'
+                    '        raw.write_bytes(b"raw evidence")\n'
+                    "        raw_artifact = context.artifacts.register_file(\n"
+                    "            raw, evidence_kind=EvidenceKind.RAW,\n"
+                    "        )\n"
+                    "        return CollectorResult.succeeded(\n"
+                    '            "typed artifacts created", (artifact, raw_artifact),\n'
+                    "        )",
+                )
             )
             collector_path.write_text(source, encoding="utf-8")
             report = preflight(root)
@@ -227,7 +230,9 @@ class PackagingTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "unsupported run manifest schema_version"):
                 outcome.manifest.to_dict()
 
-    def test_configured_output_root_colocates_packages_without_touching_legacy_evidence(self) -> None:
+    def test_configured_output_root_colocates_packages_without_touching_legacy_evidence(
+        self,
+    ) -> None:
         """Custom roots own runs and ZIPs; old ACCESS evidence is neither moved nor deleted."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -271,11 +276,11 @@ class PackagingTests(unittest.TestCase):
             collector_path.write_text(
                 COLLECTOR.replace(
                     '        return CollectorResult.succeeded("test artifact created", (artifact,))',
-                    '        return CollectorResult.partial(\n'
+                    "        return CollectorResult.partial(\n"
                     '            "only one evidence source was available",\n'
-                    '            (artifact,),\n'
+                    "            (artifact,),\n"
                     '            errors=("secondary evidence source was unavailable",),\n'
-                    '        )',
+                    "        )",
                 ),
                 encoding="utf-8",
             )
@@ -321,9 +326,7 @@ class PackagingTests(unittest.TestCase):
             report = preflight(root)
             self.assertEqual((), report.invalid)
             configuration = default_config(root)
-            original = RunSupervisor(root, configuration).run(
-                build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True))
-            )
+            original = RunSupervisor(root, configuration).run(build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True)))
             original_package_metadata = original.manifest.package
             assert original_package_metadata is not None
             original_manifest = original.manifest_path.read_bytes()
@@ -370,7 +373,9 @@ class PackagingTests(unittest.TestCase):
             self.assertIn("Action: rerun", summary)
             self.assertIn(f"Parent run: {original.manifest.run_id}", summary)
 
-    def test_sensitive_artifact_bytes_are_preserved_while_packaged_diagnostics_are_redacted(self) -> None:
+    def test_sensitive_artifact_bytes_are_preserved_while_packaged_diagnostics_are_redacted(
+        self,
+    ) -> None:
         """Evidence retains intentional secrets, but no packaged diagnostics disclose them."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -383,12 +388,14 @@ class PackagingTests(unittest.TestCase):
                     '        password = context.settings["password"]\n'
                     '        token = context.settings["nested"]["access_token"]\n'
                     '        output = context.workspace / "system.txt"',
-                ).replace(
+                )
+                .replace(
                     '        artifact = context.artifacts.register_file(output, media_type="text/plain")',
                     '        output.write_text(f"password={password} token={token}", encoding="utf-8")\n'
                     '        context.logger.event("info", f"password={password}", access_token=token)\n'
                     '        artifact = context.artifacts.register_file(output, media_type="text/plain")',
-                ).replace(
+                )
+                .replace(
                     '        return CollectorResult.succeeded("test artifact created", (artifact,))',
                     '        return CollectorResult.succeeded(f"password={password}", (artifact,))',
                 ),
@@ -411,12 +418,15 @@ class PackagingTests(unittest.TestCase):
             plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
             configuration = replace(
                 default_config(root),
-                collector_settings=cast(Any, {
-                    "core.system.system_info": {
-                        "password": "evidence-password",
-                        "nested": {"access_token": "evidence-token"},
-                    }
-                }),
+                collector_settings=cast(
+                    Any,
+                    {
+                        "core.system.system_info": {
+                            "password": "evidence-password",
+                            "nested": {"access_token": "evidence-token"},
+                        }
+                    },
+                ),
             )
             outcome = RunSupervisor(root, configuration).run(plan)
             self.assertEqual("succeeded", outcome.manifest.status.value)
@@ -430,9 +440,7 @@ class PackagingTests(unittest.TestCase):
                     archive.read(f"evidence/{artifact.evidence_kind.value}/{artifact.relative_path}").decode("utf-8"),
                 )
                 diagnostics = "\n".join(
-                    archive.read(name).decode("utf-8")
-                    for name in archive.namelist()
-                    if not name.startswith("evidence/")
+                    archive.read(name).decode("utf-8") for name in archive.namelist() if not name.startswith("evidence/")
                 )
                 self.assertNotIn("evidence-password", diagnostics)
                 self.assertNotIn("evidence-token", diagnostics)
@@ -475,9 +483,7 @@ class PackagingTests(unittest.TestCase):
                 packaged_record = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
                 self.assertEqual(failure, packaged_record["failure"])
                 diagnostics = "\n".join(
-                    archive.read(name).decode("utf-8")
-                    for name in archive.namelist()
-                    if not name.startswith("evidence/")
+                    archive.read(name).decode("utf-8") for name in archive.namelist() if not name.startswith("evidence/")
                 )
                 self.assertNotIn("crash-password", diagnostics)
                 self.assertNotIn("crash-token", diagnostics)
@@ -515,7 +521,9 @@ class PackagingTests(unittest.TestCase):
             with self.assertRaisesRegex(FileNotFoundError, "performance report"):
                 package_run(outcome)
 
-    def test_collector_resource_progress_persists_in_manifest_summary_and_performance_report(self) -> None:
+    def test_collector_resource_progress_persists_in_manifest_summary_and_performance_report(
+        self,
+    ) -> None:
         """Incremental progress fields remain visible live and in every packaged diagnostic."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -523,16 +531,18 @@ class PackagingTests(unittest.TestCase):
             collector_path.parent.mkdir(parents=True)
             (root / "plugins").mkdir()
             collector_path.write_text(
-                COLLECTOR.replace("from pathlib import Path\n",
-                                  "from pathlib import Path\nfrom time import sleep\n").replace(
+                COLLECTOR.replace(
+                    "from pathlib import Path\n",
+                    "from pathlib import Path\nfrom time import sleep\n",
+                ).replace(
                     '        output = context.workspace / "system.txt"',
                     '        context.report_progress("scan_started", scanned_files=3)\n'
-                    '        sleep(0.2)\n'
-                    '        context.report_progress(\n'
+                    "        sleep(0.2)\n"
+                    "        context.report_progress(\n"
                     '            "scan_finished", scanned_files=9, copied_files=4, bytes_written=25,\n'
-                    '            observation_count=6, event_count=11,\n'
-                    '        )\n'
-                    '        sleep(0.2)\n'
+                    "            observation_count=6, event_count=11,\n"
+                    "        )\n"
+                    "        sleep(0.2)\n"
                     '        output = context.workspace / "system.txt"',
                 ),
                 encoding="utf-8",
@@ -563,8 +573,7 @@ class PackagingTests(unittest.TestCase):
             self.assertGreater(float(record.progress["elapsed_seconds"]), 0)
             self.assertTrue(
                 any(
-                    snapshot["collectors"][0]["status"] == "running"
-                    and snapshot["collectors"][0]["progress"]["files_scanned"] >= 3
+                    snapshot["collectors"][0]["status"] == "running" and snapshot["collectors"][0]["progress"]["files_scanned"] >= 3
                     for snapshot in snapshots
                 )
             )
@@ -604,9 +613,9 @@ class PackagingTests(unittest.TestCase):
             original_write = packaging._stream_archive_member
 
             def tampering_write(
-                    archive: zipfile.ZipFile,
-                    filename: Path,
-                    arcname: str,
+                archive: zipfile.ZipFile,
+                filename: Path,
+                arcname: str,
             ) -> None:
                 if arcname.startswith("evidence/"):
                     archive.writestr(arcname, b"tampered artifact bytes")
@@ -675,7 +684,9 @@ class PackagingTests(unittest.TestCase):
             self.assertFalse(hash_path.with_suffix(".sha256.tmp").exists())
             self.assertFalse(hash_path.with_suffix(".sha256.backup").exists())
 
-    def test_package_rejects_manifest_artifact_path_escape_and_forged_collector_ownership(self) -> None:
+    def test_package_rejects_manifest_artifact_path_escape_and_forged_collector_ownership(
+        self,
+    ) -> None:
         """A modified manifest cannot package outside files or another collector's evidence."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -732,8 +743,7 @@ class PackagingTests(unittest.TestCase):
             collector_path.write_text(
                 COLLECTOR.replace(
                     '        output = context.workspace / "system.txt"',
-                    '        output = context.workspace / "nested" / "reports" / "system.txt"\n'
-                    '        output.parent.mkdir(parents=True)',
+                    '        output = context.workspace / "nested" / "reports" / "system.txt"\n        output.parent.mkdir(parents=True)',
                 ),
                 encoding="utf-8",
             )
@@ -852,11 +862,11 @@ class PackagingTests(unittest.TestCase):
                     self.stream = stream
                     self.path = path
 
-                def __enter__(self) -> "BoundedReader":
+                def __enter__(self) -> BoundedReader:
                     self.stream.__enter__()
                     return self
 
-                def __exit__(self, *arguments: Any) -> Any:
+                def __exit__(self, *arguments: object) -> Any:
                     return self.stream.__exit__(*arguments)
 
                 def read(self, size: int = -1) -> bytes:
@@ -868,8 +878,7 @@ class PackagingTests(unittest.TestCase):
             def guarded_open(path: Path, *arguments: Any, **options: Any) -> Any:
                 stream = original_open(path, *arguments, **options)
                 resolved_path = path.resolve()
-                if resolved_path in {source.resolve(), expected_package_path.resolve()} \
-                        and arguments and arguments[0] == "rb":
+                if resolved_path in {source.resolve(), expected_package_path.resolve()} and arguments and arguments[0] == "rb":
                     return BoundedReader(stream, path)
                 return stream
 

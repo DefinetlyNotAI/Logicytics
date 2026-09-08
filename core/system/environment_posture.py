@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import json
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -23,13 +30,19 @@ class EnvironmentPostureCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the bounded, subprocess-gated system posture artifact contract."""
         return CollectorMetadata(
-            id="core.system.environment_posture", name="Environment posture", version="4.0.0",
+            id="core.system.environment_posture",
+            name="Environment posture",
+            version="4.0.0",
             specialty=Specialty.SYSTEM,
             output_media_types=("application/json",),
             description="Exports administrator state, UAC settings, and PowerShell execution policies.",
-            author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
-            sensitive_data_categories=("system_configuration",), default_profiles=("deep",),
-            timeout_seconds=45, maximum_output_bytes=256 * 1024,
+            author="Logicytics",
+            supported_platforms=("win32",),
+            capabilities=(Capability.SUBPROCESS,),
+            sensitive_data_categories=("system_configuration",),
+            default_profiles=("deep",),
+            timeout_seconds=45,
+            maximum_output_bytes=256 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -60,20 +73,28 @@ class EnvironmentPostureCollector(CoreCollector):
         )
         completed = subprocess.run(
             ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
-            capture_output=True, check=False, text=True, timeout=40,
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=40,
         )
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED,
-                                       "environment-posture access was denied for the current account",
-                                       errors=(detail,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "environment-posture access was denied for the current account",
+                    errors=(detail,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "environment-posture query failed", errors=(detail,))
         try:
             posture = json.loads(completed.stdout)
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "environment-posture query returned invalid JSON",
-                                   errors=(str(error),))
+            return CollectorResult(
+                CollectorStatus.FAILED,
+                "environment-posture query returned invalid JSON",
+                errors=(str(error),),
+            )
         if not isinstance(posture, dict):
             return CollectorResult(CollectorStatus.FAILED, "environment-posture query returned an unexpected result")
         output = context.workspace / "environment_posture.json"

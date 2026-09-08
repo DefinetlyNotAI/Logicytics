@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Sequence
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -34,13 +34,10 @@ class ProcessAdapter:
 
     @staticmethod
     def _command(
-            command: Sequence[str | os.PathLike[str]],
+        command: Sequence[str | os.PathLike[str]],
     ) -> tuple[str, ...]:
         """Validate and normalize an explicit shell-free command sequence."""
-        normalized = tuple(
-            argument if isinstance(argument, str) else argument.__fspath__()
-            for argument in command
-        )
+        normalized = tuple(argument if isinstance(argument, str) else argument.__fspath__() for argument in command)
 
         if not normalized:
             raise ValueError("command must contain at least one argument")
@@ -49,8 +46,8 @@ class ProcessAdapter:
 
     @staticmethod
     def run(
-            command: Sequence[str | os.PathLike[str]],
-            **options: Any,
+        command: Sequence[str | os.PathLike[str]],
+        **options: Any,
     ) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]:
         """Delegate to the guarded stdlib runner while retaining its familiar result contract."""
         normalized = ProcessAdapter._command(command)
@@ -61,10 +58,7 @@ class ProcessAdapter:
 
         timeout = options.get("timeout")
 
-        if timeout is not None and (
-                not isinstance(timeout, (int, float))
-                or timeout <= 0
-        ):
+        if timeout is not None and (not isinstance(timeout, (int, float)) or timeout <= 0):
             raise ValueError("command timeout must be positive")
 
         capture_output = options.pop("capture_output", False)
@@ -73,14 +67,9 @@ class ProcessAdapter:
             return subprocess.run(normalized, **options)
 
         if "stdout" in options or "stderr" in options:
-            raise ValueError(
-                "capture_output cannot be combined with explicit streams"
-            )
+            raise ValueError("capture_output cannot be combined with explicit streams")
 
-        wants_text = bool(
-            options.pop("text", False)
-            or options.get("encoding") is not None
-        )
+        wants_text = bool(options.pop("text", False) or options.get("encoding") is not None)
         encoding = options.pop("encoding", None) or "utf-8"
         errors = options.pop("errors", None) or "replace"
 
@@ -88,9 +77,7 @@ class ProcessAdapter:
             capture_directory = Path(capture_directory)
 
             if not capture_directory.is_dir():
-                raise ValueError(
-                    "capture_directory must be an existing directory"
-                )
+                raise ValueError("capture_directory must be an existing directory")
 
         with (
             tempfile.TemporaryFile(dir=capture_directory) as stdout,
@@ -106,14 +93,8 @@ class ProcessAdapter:
             stdout_size = stdout.tell()
             stderr_size = stderr.tell()
 
-            if (
-                    stdout_size > ProcessAdapter.maximum_capture_bytes
-                    or stderr_size > ProcessAdapter.maximum_capture_bytes
-            ):
-                raise ValueError(
-                    f"command output exceeds the "
-                    f"{ProcessAdapter.maximum_capture_bytes}-byte capture limit"
-                )
+            if stdout_size > ProcessAdapter.maximum_capture_bytes or stderr_size > ProcessAdapter.maximum_capture_bytes:
+                raise ValueError(f"command output exceeds the {ProcessAdapter.maximum_capture_bytes}-byte capture limit")
 
             stdout.seek(0)
             stderr.seek(0)
@@ -137,9 +118,9 @@ class ProcessAdapter:
         )
 
     def popen(
-            self,
-            command: Sequence[str | os.PathLike[str]],
-            **options: Any,
+        self,
+        command: Sequence[str | os.PathLike[str]],
+        **options: Any,
     ) -> subprocess.Popen[Any]:
         """Start one explicit long-lived process without invoking a command shell."""
         normalized = self._command(command)
@@ -152,11 +133,7 @@ class ProcessAdapter:
     @staticmethod
     def memory_bytes(process_id: int) -> int | None:
         """Return one process's resident memory through the host-specific boundary."""
-        if (
-                not isinstance(process_id, int)
-                or isinstance(process_id, bool)
-                or process_id <= 0
-        ):
+        if not isinstance(process_id, int) or isinstance(process_id, bool) or process_id <= 0:
             raise ValueError("process_id must be a positive integer")
 
         if os.name == "nt":
@@ -176,11 +153,7 @@ class ProcessAdapter:
     @staticmethod
     def terminate_process_group(process_id: int) -> None:
         """Request termination of one non-Windows process group."""
-        if (
-                not isinstance(process_id, int)
-                or isinstance(process_id, bool)
-                or process_id <= 0
-        ):
+        if not isinstance(process_id, int) or isinstance(process_id, bool) or process_id <= 0:
             raise ValueError("process_id must be a positive integer")
 
         os.killpg(process_id, signal.SIGTERM)
@@ -241,8 +214,7 @@ class RegistryAdapter:
         if result != 0:
             return None
         ticks = (timestamp.dwHighDateTime << 32) | timestamp.dwLowDateTime
-        return (datetime(1601, 1, 1, tzinfo=timezone.utc)
-                + timedelta(microseconds=ticks // 10)).isoformat()
+        return (datetime(1601, 1, 1, tzinfo=UTC) + timedelta(microseconds=ticks // 10)).isoformat()
 
 
 registry_adapter = RegistryAdapter()
@@ -297,14 +269,8 @@ class WindowsApiAdapter:
     @staticmethod
     def load_library(name: str):
         """Load one validated Win32 DLL name when running on Windows."""
-        if (
-                not isinstance(name, str)
-                or not name
-                or any(character in name for character in "/\\\x00")
-        ):
-            raise ValueError(
-                "Win32 library name must be a simple non-empty name"
-            )
+        if not isinstance(name, str) or not name or any(character in name for character in "/\\\x00"):
+            raise ValueError("Win32 library name must be a simple non-empty name")
 
         if sys.platform != "win32":
             raise OSError("Win32 libraries are unavailable on this platform")
@@ -323,6 +289,7 @@ class WindowsApiAdapter:
 
         class ProcessMemoryCounters(ctypes.Structure):
             """Minimal PROCESS_MEMORY_COUNTERS layout used by GetProcessMemoryInfo."""
+
             _fields_ = [
                 ("cb", ctypes.c_ulong),
                 ("PageFaultCount", ctypes.c_ulong),
@@ -358,6 +325,7 @@ class WindowsApiAdapter:
 
         class ProcessEntry(ctypes.Structure):
             """Minimal PROCESSENTRY32W layout used for descendant enumeration."""
+
             _fields_ = [
                 ("dwSize", ctypes.c_ulong),
                 ("cntUsage", ctypes.c_ulong),
@@ -384,9 +352,7 @@ class WindowsApiAdapter:
             relationships: dict[int, list[int]] = {}
             valid = kernel.Process32FirstW(snapshot, ctypes.byref(entry))
             while valid:
-                relationships.setdefault(int(entry.th32ParentProcessID), []).append(
-                    int(entry.th32ProcessID)
-                )
+                relationships.setdefault(int(entry.th32ParentProcessID), []).append(int(entry.th32ProcessID))
                 valid = kernel.Process32NextW(snapshot, ctypes.byref(entry))
             descendants: list[int] = []
             pending = [parent_process_id]

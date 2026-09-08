@@ -2,42 +2,48 @@
 
 from __future__ import annotations
 
-import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence, BinaryIO
+from typing import BinaryIO
 from unittest.mock import Mock, patch
 
 from core.packet import packet_capture
+from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.module import environment
 from logicytics.module.artifacts import WorkspaceArtifactWriter
-from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.module.environment import inspect_environment
 from logicytics.platform_adapters import (
-    FilesystemAdapter, NetworkAdapter, ProcessAdapter, RegistryAdapter, WindowsApiAdapter,
-    which, windows_api_adapter, registry_adapter,
+    FilesystemAdapter,
+    NetworkAdapter,
+    ProcessAdapter,
+    RegistryAdapter,
+    WindowsApiAdapter,
+    registry_adapter,
+    which,
+    windows_api_adapter,
 )
 
 
 class ProcessAdapterTests(unittest.TestCase):
     def test_process_adapter_normalizes_and_delegates_shell_free_commands(self) -> None:
         def execute(
-                command: Sequence[str],
-                *,
-                stdout: BinaryIO,
-                stderr: BinaryIO,
-                **_options: object,
+            command: Sequence[str],
+            *,
+            stdout: BinaryIO,
+            stderr: BinaryIO,
+            **_options: object,
         ) -> subprocess.CompletedProcess[str]:
             stdout.write(b"output")
             stderr.write(b"warning")
             return subprocess.CompletedProcess(command, 7)
 
         with patch(
-                "logicytics.platform_adapters.subprocess.run",
-                side_effect=execute,
+            "logicytics.platform_adapters.subprocess.run",
+            side_effect=execute,
         ) as invoke:
             result = ProcessAdapter().run(
                 ["tool", Path("argument")],
@@ -54,11 +60,7 @@ class ProcessAdapterTests(unittest.TestCase):
         self.assertEqual(("tool", "argument"), invoke.call_args.args[0])
         self.assertEqual(
             {"check": False, "timeout": 5},
-            {
-                key: value
-                for key, value in invoke.call_args.kwargs.items()
-                if key not in {"stdout", "stderr"}
-            },
+            {key: value for key, value in invoke.call_args.kwargs.items() if key not in {"stdout", "stderr"}},
         )
 
     def test_process_adapter_rejects_captured_streams_over_the_hard_limit(self) -> None:
@@ -70,12 +72,15 @@ class ProcessAdapterTests(unittest.TestCase):
             stderr.write(b"")
             return subprocess.CompletedProcess(command, 0)
 
-        with patch.object(ProcessAdapter, "maximum_capture_bytes", 3), patch(
+        with (
+            patch.object(ProcessAdapter, "maximum_capture_bytes", 3),
+            patch(
                 "logicytics.platform_adapters.subprocess.run",
                 side_effect=execute,
+            ),
+            self.assertRaisesRegex(ValueError, "capture limit"),
         ):
-            with self.assertRaisesRegex(ValueError, "capture limit"):
-                adapter.run(["tool"], capture_output=True, text=True)
+            adapter.run(["tool"], capture_output=True, text=True)
 
     def test_process_adapter_can_capture_inside_an_isolated_workspace(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -136,22 +141,27 @@ class ProcessAdapterTests(unittest.TestCase):
                 collector_id="core.packet.packet_capture",
                 workspace=workspace,
                 temporary_directory=workspace / "tmp",
-                artifacts=WorkspaceArtifactWriter(
-                    "core.packet.packet_capture", workspace, artifacts, 1024 * 1024, 1
-                ),
+                artifacts=WorkspaceArtifactWriter("core.packet.packet_capture", workspace, artifacts, 1024 * 1024, 1),
                 logger=Mock(),
-                settings={"interface": "192.0.2.1", "packet_count": 2,
-                          "timeout_seconds": 1, "retry_window_seconds": 0},
+                settings={
+                    "interface": "192.0.2.1",
+                    "packet_count": 2,
+                    "timeout_seconds": 1,
+                    "retry_window_seconds": 0,
+                },
                 cancellation_file=workspace / ".cancelled",
             )
-            with patch.object(
+            with (
+                patch.object(
                     packet_capture.socket,
                     packet_capture.socket.socket.__name__,
                     return_value=capture,
-            ), patch.object(
-                packet_capture.select,
-                packet_capture.select.select.__name__,
-                return_value=([capture], [], []),
+                ),
+                patch.object(
+                    packet_capture.select,
+                    packet_capture.select.select.__name__,
+                    return_value=([capture], [], []),
+                ),
             ):
                 result = packet_capture.PacketCaptureCollector().collect(context)
             rows = (workspace / "packet_capture.csv").read_text(encoding="utf-8").splitlines()
@@ -162,9 +172,9 @@ class ProcessAdapterTests(unittest.TestCase):
     def test_process_adapter_rejects_shell_empty_and_unbounded_timeout_inputs(self) -> None:
         adapter = ProcessAdapter()
         for command, options, message in (
-                ([], {}, "at least one"),
-                (["tool"], {"shell": True}, "shell"),
-                (["tool"], {"timeout": 0}, "timeout"),
+            ([], {}, "at least one"),
+            (["tool"], {"shell": True}, "shell"),
+            (["tool"], {"timeout": 0}, "timeout"),
         ):
             with self.subTest(command=command, options=options):
                 with self.assertRaisesRegex(ValueError, message):
@@ -182,12 +192,19 @@ class ProcessAdapterTests(unittest.TestCase):
     def test_application_host_process_and_privilege_access_stays_behind_adapters(self) -> None:
         project_root = Path(__file__).resolve().parent.parent
         modules = (
-            "cli/commands.py", "module/discovery.py", "module/environment.py",
-            "module/manifest.py", "module/runtime.py",
+            "cli/commands.py",
+            "module/discovery.py",
+            "module/environment.py",
+            "module/manifest.py",
+            "module/runtime.py",
         )
         forbidden = (
-            "subprocess.run(", "subprocess.Popen(", "ctypes.windll", "import winreg",
-            "from shutil import which", "os.killpg(",
+            "subprocess.run(",
+            "subprocess.Popen(",
+            "ctypes.windll",
+            "import winreg",
+            "from shutil import which",
+            "os.killpg(",
         )
         offenders: list[str] = []
         for name in modules:
@@ -256,27 +273,33 @@ class ProcessAdapterTests(unittest.TestCase):
         key.__enter__ = Mock(return_value="uac-key")
         key.__exit__ = Mock(return_value=False)
         completed = subprocess.CompletedProcess((), 0, "RemoteSigned\n", "")
-        with patch.object(
+        with (
+            patch.object(
                 windows_api_adapter,
                 windows_api_adapter.is_administrator.__name__,
                 return_value=True,
-        ), patch.object(
-            registry_adapter,
-            registry_adapter.OpenKey.__name__,
-            return_value=key,
-        ), patch.object(
-            registry_adapter,
-            registry_adapter.QueryValueEx.__name__,
-            return_value=(1, 4),
-        ), patch.object(
-            environment,
-            environment.which.__name__,
-            return_value="C:/Windows/PowerShell.exe",
-        ), patch.object(
-            environment.process_adapter,
-            environment.process_adapter.run.__name__,
-            return_value=completed,
-        ) as run:
+            ),
+            patch.object(
+                registry_adapter,
+                registry_adapter.OpenKey.__name__,
+                return_value=key,
+            ),
+            patch.object(
+                registry_adapter,
+                registry_adapter.QueryValueEx.__name__,
+                return_value=(1, 4),
+            ),
+            patch.object(
+                environment,
+                environment.which.__name__,
+                return_value="C:/Windows/PowerShell.exe",
+            ),
+            patch.object(
+                environment.process_adapter,
+                environment.process_adapter.run.__name__,
+                return_value=completed,
+            ) as run,
+        ):
             report = inspect_environment()
         self.assertTrue(report.is_administrator)
         self.assertTrue(report.uac_enabled)
@@ -297,10 +320,7 @@ class ProcessAdapterTests(unittest.TestCase):
         offenders = [
             str(path.relative_to(project_root))
             for path in (project_root / "core").rglob("*.py")
-            if any(
-                token in path.read_text(encoding="utf-8")
-                for token in forbidden_tokens
-            )
+            if any(token in path.read_text(encoding="utf-8") for token in forbidden_tokens)
         ]
 
         self.assertEqual([], offenders)
@@ -340,8 +360,15 @@ class ProcessAdapterTests(unittest.TestCase):
 
     def test_core_collectors_use_the_filesystem_boundary_for_host_traversal(self) -> None:
         project_root = Path(__file__).resolve().parent.parent
-        forbidden = ("Path.home()", "os.walk(", "os.scandir(", "shutil.copy2(", "shutil.disk_usage(",
-                     ".rglob(", ".iterdir(")
+        forbidden = (
+            "Path.home()",
+            "os.walk(",
+            "os.scandir(",
+            "shutil.copy2(",
+            "shutil.disk_usage(",
+            ".rglob(",
+            ".iterdir(",
+        )
         offenders = []
         for path in (project_root / "core").rglob("*.py"):
             source = path.read_text(encoding="utf-8")

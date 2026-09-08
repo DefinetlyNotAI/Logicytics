@@ -4,8 +4,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, \
-    ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    EvidenceKind,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import filesystem_adapter
 
@@ -19,14 +26,19 @@ class WindowsSystemDataBackupCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the explicit-consent Windows system-data backup contract."""
         return CollectorMetadata(
-            id="core.system.windows_system_data_backup", name="Windows system-data backup", version="4.0.0",
+            id="core.system.windows_system_data_backup",
+            name="Windows system-data backup",
+            version="4.0.0",
             specialty=Specialty.SYSTEM,
             output_media_types=("application/octet-stream",),
             description="Copies bounded Group Policy, event-log, and Windows security-support evidence.",
             author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),
+            supported_platforms=("win32",),
+            capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),
             sensitive_data_categories=("security_logs", "group_policy", "system_configuration"),
-            default_profiles=("deep",), timeout_seconds=180, maximum_output_bytes=256 * 1024 * 1024,
+            default_profiles=("deep",),
+            timeout_seconds=180,
+            maximum_output_bytes=256 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -48,9 +60,10 @@ class WindowsSystemDataBackupCollector(CoreCollector):
             ("event_logs", windows / "System32" / "winevt" / "Logs" / "Application.evtx"),
             ("event_logs", windows / "System32" / "winevt" / "Logs" / "Security.evtx"),
         ]
-        candidates.extend(("security_support", path) for path in filesystem_adapter.glob(
-            program_data / "Microsoft" / "Windows Defender" / "Support", "*.log"
-        ))
+        candidates.extend(
+            ("security_support", path)
+            for path in filesystem_adapter.glob(program_data / "Microsoft" / "Windows Defender" / "Support", "*.log")
+        )
         copied: list[Path] = []
         context.report_progress("windows_system_data_backup_started")
         for label, source in candidates:
@@ -71,18 +84,23 @@ class WindowsSystemDataBackupCollector(CoreCollector):
                 return CollectorResult(CollectorStatus.CANCELLED, "cancelled during Windows system-data backup")
             copied.append(destination)
         if not copied:
-            return CollectorResult(CollectorStatus.SKIPPED,
-                                   "no configured Windows system-data files met the bounded backup policy")
+            return CollectorResult(
+                CollectorStatus.SKIPPED,
+                "no configured Windows system-data files met the bounded backup policy",
+            )
         artifacts = []
         for path in copied:
             if context.is_cancelled:
-                for unpublished in copied[len(artifacts):]:
+                for unpublished in copied[len(artifacts) :]:
                     unpublished.unlink(missing_ok=True)
                 return CollectorResult.cancelled("cancelled during system-data registration", tuple(artifacts))
             artifacts.append(context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW))
         artifact_tuple = tuple(artifacts)
-        context.report_progress("windows_system_data_backup_finished", copied_files=len(artifact_tuple),
-                                bytes_written=sum(item.size_bytes for item in artifact_tuple))
+        context.report_progress(
+            "windows_system_data_backup_finished",
+            copied_files=len(artifact_tuple),
+            bytes_written=sum(item.size_bytes for item in artifact_tuple),
+        )
         return CollectorResult.succeeded("Windows system-data backup collected", artifact_tuple)
 
     def cleanup(self, context: CollectorContext) -> None:

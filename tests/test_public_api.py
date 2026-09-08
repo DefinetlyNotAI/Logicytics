@@ -6,9 +6,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from collections.abc import Iterable
 from dataclasses import FrozenInstanceError
 from pathlib import Path
-from typing import Iterable
 from unittest.mock import MagicMock, patch
 
 from logicytics import (
@@ -186,8 +186,10 @@ class PublicApiTests(unittest.TestCase):
             self.assertEqual(RunStatus.SUCCEEDED, snapshot.status, outcome.manifest.package)
             self.assertEqual(outcome.run_directory, snapshot.run_directory)
             self.assertEqual(outcome.manifest_path, snapshot.manifest_path)
-            self.assertEqual(1,
-                             json.loads(outcome.manifest_path.read_text(encoding="utf-8"))["manifest_schema_version"])
+            self.assertEqual(
+                1,
+                json.loads(outcome.manifest_path.read_text(encoding="utf-8"))["manifest_schema_version"],
+            )
             self.assertEqual(["core.system.system_info"], [item.collector_id for item in snapshot.collectors])
             self.assertEqual(["succeeded"], [item.status for item in snapshot.collectors])
             collector = snapshot.collectors[0]
@@ -206,12 +208,12 @@ class PublicApiTests(unittest.TestCase):
                 read_artifact(root, snapshot.run_id, snapshot.artifacts[0].id, configuration=configuration),
             )
             with self.assertRaises(FrozenInstanceError):
-                setattr(snapshot, "status", RunStatus.FAILED)
+                snapshot.status = RunStatus.FAILED
             with self.assertRaises(FrozenInstanceError):
-                setattr(collector, "status", "failed")
+                collector.status = "failed"
 
     def test_public_run_snapshot_and_cli_expose_verified_collector_failure_and_duration(
-            self,
+        self,
     ) -> None:
         """Callers can inspect redacted lifecycle timing and actionable failure details without parsing manifests."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -223,8 +225,7 @@ class PublicApiTests(unittest.TestCase):
             collector_path.write_text(
                 COLLECTOR.replace(
                     '        output = context.workspace / "system.txt"',
-                    '        raise RuntimeError("fixture lifecycle failure")\n'
-                    '        output = context.workspace / "system.txt"',
+                    '        raise RuntimeError("fixture lifecycle failure")\n        output = context.workspace / "system.txt"',
                 ),
                 encoding="utf-8",
             )
@@ -249,12 +250,7 @@ class PublicApiTests(unittest.TestCase):
             self.assertIsNotNone(collector.summary)
             assert collector.summary is not None
             self.assertIn("worker crashed", collector.summary)
-            self.assertTrue(
-                any(
-                    "fixture lifecycle failure" in error
-                    for error in collector.errors
-                )
-            )
+            self.assertTrue(any("fixture lifecycle failure" in error for error in collector.errors))
             failure = collector.failure
             if failure is None:
                 self.fail("failed collector must expose structured failure details")
@@ -271,17 +267,21 @@ class PublicApiTests(unittest.TestCase):
 
             console_logger = MagicMock()
 
-            with patch.object(
+            with (
+                patch.object(
                     CLI,
                     "project_root",
                     return_value=root,
-            ), patch(
-                "logicytics.cli.commands.get_application_logger",
-                return_value=console_logger,
-            ), patch(
-                "builtins.input",
-                return_value="",
-            ) as final_prompt:
+                ),
+                patch(
+                    "logicytics.cli.commands.get_application_logger",
+                    return_value=console_logger,
+                ),
+                patch(
+                    "builtins.input",
+                    return_value="",
+                ) as final_prompt,
+            ):
                 exit_code = main(
                     [
                         "run",
@@ -392,7 +392,9 @@ class PublicApiTests(unittest.TestCase):
             with self.assertRaisesRegex(PlanError, "escapes its run-owned directory"):
                 query_run(root, outcome.manifest.run_id)
 
-    def test_public_artifact_reads_reject_forgery_tampering_escapes_and_unbounded_access(self) -> None:
+    def test_public_artifact_reads_reject_forgery_tampering_escapes_and_unbounded_access(
+        self,
+    ) -> None:
         """Only exact, bounded, manifest-cataloged bytes from the producing collector may be read."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -5,7 +5,14 @@ from __future__ import annotations
 import ipaddress
 import json
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -98,22 +105,34 @@ class NetworkInterfacesCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED,
-                                       "network-interface access was denied for the current account", errors=(detail,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "network-interface access was denied for the current account",
+                    errors=(detail,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "network-interface query failed", errors=(detail,))
         try:
             interfaces = json.loads(completed.stdout)
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "network-interface query returned invalid JSON",
-                                   errors=(str(error),))
+            return CollectorResult(
+                CollectorStatus.FAILED,
+                "network-interface query returned invalid JSON",
+                errors=(str(error),),
+            )
         records = interfaces if isinstance(interfaces, list) else [interfaces]
         if not all(isinstance(record, dict) for record in records):
             return CollectorResult(CollectorStatus.FAILED, "network-interface query returned an unexpected result")
         output = context.workspace / "network_interfaces.json"
-        output.write_text(json.dumps(_enrich_ipv4_networks(records), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output.write_text(
+            json.dumps(_enrich_ipv4_networks(records), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("network_interfaces_finished", interface_count=len(records),
-                                bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "network_interfaces_finished",
+            interface_count=len(records),
+            bytes_written=artifact.size_bytes,
+        )
         return CollectorResult.succeeded("network-interface inventory collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

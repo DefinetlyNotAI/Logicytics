@@ -5,11 +5,12 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
 from math import isfinite
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Mapping
+from typing import Any
 
 from logicytics.contracts import Capability
 from logicytics.module.errors import PlanError
@@ -19,32 +20,57 @@ SCHEMA_VERSION = 4
 MAXIMUM_CONFIGURATION_BYTES = 2 * 1024 * 1024
 DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES = 4 * 1024 * 1024 * 1024
 MAXIMUM_RUN_OUTPUT_BYTES = 64 * 1024 * 1024 * 1024
-_COLLECTOR_ID = re.compile(
-    r"^(?:core\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*|(?:plugin|mod)\.[a-z][a-z0-9_]*)$"
-)
+_COLLECTOR_ID = re.compile(r"^(?:core\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*|(?:plugin|mod)\.[a-z][a-z0-9_]*)$")
 _SETTING_NAME = re.compile(r"^[a-z][a-z0-9_]*$")
-_ROOT_FIELDS = frozenset({
-    "schema_version", "runtime", "interaction", "maintenance", "logging", "collectors",
-})
-_RUNTIME_FIELDS = frozenset({
-    "output_root", "default_max_workers", "maximum_workers", "package_completed_runs", "maximum_run_output_bytes",
-    "blocked_capabilities",
-})
+_ROOT_FIELDS = frozenset(
+    {
+        "schema_version",
+        "runtime",
+        "interaction",
+        "maintenance",
+        "logging",
+        "collectors",
+    }
+)
+_RUNTIME_FIELDS = frozenset(
+    {
+        "output_root",
+        "default_max_workers",
+        "maximum_workers",
+        "package_completed_runs",
+        "maximum_run_output_bytes",
+        "blocked_capabilities",
+    }
+)
 _INTERACTION_FIELDS = frozenset({"history_enabled", "similarity_threshold", "model_name", "model_debug"})
-_MAINTENANCE_FIELDS = frozenset({
-    "remote_manifest_url", "remote_manifest_sha256", "local_manifest_path",
-    "minimum_python", "recommended_python", "sysinternals_enabled", "sysinternals_download_url",
-})
-_LOGGING_FIELDS = frozenset({
-    "level", "console_enabled", "color_enabled", "file_enabled", "maximum_bytes",
-    "delete_previous", "retention_days",
-})
+_MAINTENANCE_FIELDS = frozenset(
+    {
+        "remote_manifest_url",
+        "remote_manifest_sha256",
+        "local_manifest_path",
+        "minimum_python",
+        "recommended_python",
+        "sysinternals_enabled",
+        "sysinternals_download_url",
+    }
+)
+_LOGGING_FIELDS = frozenset(
+    {
+        "level",
+        "console_enabled",
+        "color_enabled",
+        "file_enabled",
+        "maximum_bytes",
+        "delete_previous",
+        "retention_days",
+    }
+)
 _LOG_LEVELS = frozenset({"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INTERNAL", "EXCEPTION"})
 DEFAULT_CONFIGURATION_FILENAME = "logicytics.yaml"
 DEFAULT_SYSINTERNALS_DOWNLOAD_URL = "https://download.sysinternals.com/files/SysinternalsSuite.zip"
 
-type CollectorSettingValue = str | int | float
-type CollectorSettings = Mapping[str, CollectorSettingValue]
+CollectorSettingValue = str | int | float
+CollectorSettings = Mapping[str, CollectorSettingValue]
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,45 +85,47 @@ class CollectorSettingRule:
 _COLLECTOR_SETTING_SCHEMAS: Mapping[
     str,
     Mapping[str, CollectorSettingRule],
-] = MappingProxyType({
-    "core.network.bandwidth_sample": {
-        "sample_count": CollectorSettingRule("integer", 1, 10),
-        "interval_seconds": CollectorSettingRule("number", 0.1, 60),
-    },
-    "core.packet.packet_capture": {
-        "packet_count": CollectorSettingRule("integer", 1, 10_000),
-        "timeout_seconds": CollectorSettingRule("number", 1, 60),
-        "retry_window_seconds": CollectorSettingRule("number", 0, 60),
-        "interface": CollectorSettingRule("text"),
-    },
-    "core.filesystem.system_drive_tree": {
-        "max_entries": CollectorSettingRule("integer", 1, 50_000),
-        "max_depth": CollectorSettingRule("integer", 1, 32),
-    },
-    "core.filesystem.system_drive_listing": {
-        "max_entries": CollectorSettingRule("integer", 1, 50_000),
-        "max_depth": CollectorSettingRule("integer", 1, 32),
-    },
-    "core.filesystem.sensitive_file_inventory": {
-        "root": CollectorSettingRule("absolute_path"),
-        "max_directories": CollectorSettingRule("integer", 1, 50_000),
-        "max_matches": CollectorSettingRule("integer", 1, 5_000),
-    },
-    "core.process.memory_map": {
-        "max_regions": CollectorSettingRule("integer", 1, 100_000),
-        "output_limit_bytes": CollectorSettingRule(
-            "integer",
-            1_024,
-            64 * 1024 * 1024,
-        ),
-        "disk_safety_margin_bytes": CollectorSettingRule(
-            "integer",
-            0,
-            MAXIMUM_RUN_OUTPUT_BYTES,
-        ),
-        "dump_directory": CollectorSettingRule("workspace_path"),
-    },
-})
+] = MappingProxyType(
+    {
+        "core.network.bandwidth_sample": {
+            "sample_count": CollectorSettingRule("integer", 1, 10),
+            "interval_seconds": CollectorSettingRule("number", 0.1, 60),
+        },
+        "core.packet.packet_capture": {
+            "packet_count": CollectorSettingRule("integer", 1, 10_000),
+            "timeout_seconds": CollectorSettingRule("number", 1, 60),
+            "retry_window_seconds": CollectorSettingRule("number", 0, 60),
+            "interface": CollectorSettingRule("text"),
+        },
+        "core.filesystem.system_drive_tree": {
+            "max_entries": CollectorSettingRule("integer", 1, 50_000),
+            "max_depth": CollectorSettingRule("integer", 1, 32),
+        },
+        "core.filesystem.system_drive_listing": {
+            "max_entries": CollectorSettingRule("integer", 1, 50_000),
+            "max_depth": CollectorSettingRule("integer", 1, 32),
+        },
+        "core.filesystem.sensitive_file_inventory": {
+            "root": CollectorSettingRule("absolute_path"),
+            "max_directories": CollectorSettingRule("integer", 1, 50_000),
+            "max_matches": CollectorSettingRule("integer", 1, 5_000),
+        },
+        "core.process.memory_map": {
+            "max_regions": CollectorSettingRule("integer", 1, 100_000),
+            "output_limit_bytes": CollectorSettingRule(
+                "integer",
+                1_024,
+                64 * 1024 * 1024,
+            ),
+            "disk_safety_margin_bytes": CollectorSettingRule(
+                "integer",
+                0,
+                MAXIMUM_RUN_OUTPUT_BYTES,
+            ),
+            "dump_directory": CollectorSettingRule("workspace_path"),
+        },
+    }
+)
 
 
 def _positive_integer(value: object, *, minimum: int, maximum: int) -> bool:
@@ -142,9 +170,7 @@ def _validate_collector_settings(settings: Mapping[str, Mapping[str, Any]]) -> N
         schema = _COLLECTOR_SETTING_SCHEMAS.get(collector_id)
         if schema is None:
             if collector_id.startswith("core.") and values:
-                raise PlanError(
-                    f"{collector_id} does not declare configurable settings"
-                )
+                raise PlanError(f"{collector_id} does not declare configurable settings")
             continue
         unknown = sorted(set(values) - set(schema))
         if unknown:
@@ -203,10 +229,10 @@ def _yaml_scalar(value: str, *, line_number: int) -> object:
         return False
     if value == "{}":
         return {}
-    if value.startswith(("\"", "'")):
+    if value.startswith(('"', "'")):
         if not value.endswith(value[0]):
             raise PlanError(f"invalid YAML string at line {line_number}")
-        if value[0] == "\"":
+        if value[0] == '"':
             try:
                 return json.loads(value)
             except json.JSONDecodeError as error:
@@ -258,7 +284,7 @@ def _load_yaml_mapping(payload: bytes) -> dict[str, Any]:
             raise PlanError(f"invalid YAML mapping entry at line {number}")
         key, value = content.split(":", 1)
         key = key.strip()
-        if not key or key.startswith(("\"", "'")) or any(character.isspace() for character in key):
+        if not key or key.startswith(('"', "'")) or any(character.isspace() for character in key):
             raise PlanError(f"invalid YAML key at line {number}")
         records.append((indent, number, key, value.strip()))
     if not records:
@@ -290,7 +316,39 @@ def _load_yaml_mapping(payload: bytes) -> dict[str, Any]:
 
 def default_configuration_yaml() -> str:
     """Return the YAML template written by installer and repair flows."""
-    return """# Logicytics user configuration\nschema_version: 4\nruntime:\n  output_root: output/data\n  default_max_workers: 4\n  maximum_workers: 16\n  package_completed_runs: true\n  blocked_capabilities: {}\ninteraction:\n  history_enabled: false\n  similarity_threshold: 0.55\n  model_name: stdlib-sequence-matcher\n  model_debug: false\nmaintenance:\n  local_manifest_path: project.manifest.json\n  minimum_python: \"3.11\"\n  recommended_python: \"3.11\"\n  sysinternals_enabled: true\n  sysinternals_download_url: https://download.sysinternals.com/files/SysinternalsSuite.zip\nlogging:\n  level: INFO\n  console_enabled: true\n  color_enabled: true\n  file_enabled: true\n  maximum_bytes: 4194304\n  delete_previous: false\n  retention_days: 30\ncollectors: {}\n"""
+    return "\n".join(
+        (
+            "# Logicytics user configuration",
+            "schema_version: 4",
+            "runtime:",
+            "  output_root: output/data",
+            "  default_max_workers: 4",
+            "  maximum_workers: 16",
+            "  package_completed_runs: true",
+            "  blocked_capabilities: {}",
+            "interaction:",
+            "  history_enabled: false",
+            "  similarity_threshold: 0.55",
+            "  model_name: stdlib-sequence-matcher",
+            "  model_debug: false",
+            "maintenance:",
+            "  local_manifest_path: project.manifest.json",
+            '  minimum_python: "3.11"',
+            '  recommended_python: "3.11"',
+            "  sysinternals_enabled: true",
+            "  sysinternals_download_url: https://download.sysinternals.com/files/SysinternalsSuite.zip",
+            "logging:",
+            "  level: INFO",
+            "  console_enabled: true",
+            "  color_enabled: true",
+            "  file_enabled: true",
+            "  maximum_bytes: 4194304",
+            "  delete_previous: false",
+            "  retention_days: 30",
+            "collectors: {}",
+            "",
+        )
+    )
 
 
 def write_default_configuration(project_root: Path, *, overwrite: bool = False) -> Path:
@@ -386,8 +444,10 @@ class AppConfig:
 
 def default_config(project_root: Path) -> AppConfig:
     """Create safe defaults rooted at the checked-out project."""
-    return AppConfig(schema_version=SCHEMA_VERSION,
-                     runtime=RuntimeSettings(output_root=project_root / "output" / "data"))
+    return AppConfig(
+        schema_version=SCHEMA_VERSION,
+        runtime=RuntimeSettings(output_root=project_root / "output" / "data"),
+    )
 
 
 def load_config(project_root: Path, config_path: Path | None = None) -> AppConfig:
@@ -412,9 +472,7 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     if not isinstance(schema_version, int) or isinstance(schema_version, bool):
         raise PlanError("configuration schema_version must be an integer")
     if schema_version != SCHEMA_VERSION:
-        raise PlanError(
-            f"unsupported configuration schema_version {schema_version}; expected {SCHEMA_VERSION}"
-        )
+        raise PlanError(f"unsupported configuration schema_version {schema_version}; expected {SCHEMA_VERSION}")
     unknown_root = sorted(set(raw) - _ROOT_FIELDS)
     if unknown_root:
         raise PlanError(f"configuration contains unsupported root settings: {', '.join(unknown_root)}")
@@ -434,9 +492,9 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     default_workers = runtime_raw.get("default_max_workers", 4)
     maximum_workers = runtime_raw.get("maximum_workers", 16)
     if not _positive_integer(default_workers, minimum=1, maximum=64) or not _positive_integer(
-            maximum_workers,
-            minimum=1,
-            maximum=64,
+        maximum_workers,
+        minimum=1,
+        maximum=64,
     ):
         raise PlanError("worker limits must be integers")
     if not 1 <= default_workers <= maximum_workers <= 64:
@@ -449,9 +507,9 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
         DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES,
     )
     if not _positive_integer(
-            maximum_run_output_bytes,
-            minimum=1,
-            maximum=MAXIMUM_RUN_OUTPUT_BYTES,
+        maximum_run_output_bytes,
+        minimum=1,
+        maximum=MAXIMUM_RUN_OUTPUT_BYTES,
     ):
         raise PlanError("runtime maximum_run_output_bytes must be an integer from 1 to 68719476736")
     blocked_capabilities = _configured_capabilities(
@@ -464,7 +522,8 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
         raise PlanError("interaction configuration must be an object")
     unknown_interaction = sorted(set(interaction_raw) - _INTERACTION_FIELDS)
     if unknown_interaction:
-        raise PlanError(f"interaction configuration contains unsupported settings: {', '.join(unknown_interaction)}")
+        unsupported_settings = ", ".join(unknown_interaction)
+        raise PlanError(f"interaction configuration contains unsupported settings: {unsupported_settings}")
     history_enabled = interaction_raw.get("history_enabled", False)
     model_debug = interaction_raw.get("model_debug", False)
     similarity_threshold = interaction_raw.get("similarity_threshold", 0.55)
@@ -481,51 +540,29 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
         raise PlanError("maintenance configuration must be an object")
     unknown_maintenance = sorted(set(maintenance_raw) - _MAINTENANCE_FIELDS)
     if unknown_maintenance:
-        raise PlanError(
-            "maintenance configuration contains unsupported settings: "
-            f"{', '.join(unknown_maintenance)}"
-        )
+        raise PlanError(f"maintenance configuration contains unsupported settings: {', '.join(unknown_maintenance)}")
     remote_url = maintenance_raw.get("remote_manifest_url")
     remote_sha256 = maintenance_raw.get("remote_manifest_sha256")
     if (remote_url is None) != (remote_sha256 is None):
         raise PlanError("remote manifest URL and SHA-256 must be configured together")
-    if remote_url is not None and (
-            not isinstance(remote_url, str)
-            or not remote_url.startswith("https://")
-            or "\n" in remote_url
-    ):
+    if remote_url is not None and (not isinstance(remote_url, str) or not remote_url.startswith("https://") or "\n" in remote_url):
         raise PlanError("remote_manifest_url must be an HTTPS URL")
-    if remote_sha256 is not None and (
-            not isinstance(remote_sha256, str)
-            or re.fullmatch(r"[0-9a-f]{64}", remote_sha256) is None
-    ):
+    if remote_sha256 is not None and (not isinstance(remote_sha256, str) or re.fullmatch(r"[0-9a-f]{64}", remote_sha256) is None):
         raise PlanError("remote_manifest_sha256 must be a lowercase SHA-256 digest")
     local_manifest_value = maintenance_raw.get("local_manifest_path", "project.manifest.json")
     if not isinstance(local_manifest_value, str) or not local_manifest_value.strip():
         raise PlanError("local_manifest_path must be a non-empty relative path")
     local_manifest_path = Path(local_manifest_value)
-    if (
-            local_manifest_path.is_absolute()
-            or local_manifest_path.drive
-            or ".." in local_manifest_path.parts
-    ):
+    if local_manifest_path.is_absolute() or local_manifest_path.drive or ".." in local_manifest_path.parts:
         raise PlanError("local_manifest_path must remain inside the project")
     version_pattern = re.compile(r"^\d+\.\d+$")
     minimum_python = maintenance_raw.get("minimum_python", "3.11")
     recommended_python = maintenance_raw.get("recommended_python", "3.11")
-    if (
-            not isinstance(minimum_python, str)
-            or version_pattern.fullmatch(minimum_python) is None
-    ):
+    if not isinstance(minimum_python, str) or version_pattern.fullmatch(minimum_python) is None:
         raise PlanError("minimum_python must use major.minor form")
-    if (
-            not isinstance(recommended_python, str)
-            or version_pattern.fullmatch(recommended_python) is None
-    ):
+    if not isinstance(recommended_python, str) or version_pattern.fullmatch(recommended_python) is None:
         raise PlanError("recommended_python must use major.minor form")
-    if tuple(map(int, recommended_python.split("."))) < tuple(
-            map(int, minimum_python.split("."))
-    ):
+    if tuple(map(int, recommended_python.split("."))) < tuple(map(int, minimum_python.split("."))):
         raise PlanError("recommended_python must not be older than minimum_python")
     sysinternals_enabled = maintenance_raw.get("sysinternals_enabled", True)
     sysinternals_download_url = maintenance_raw.get(
@@ -542,9 +579,7 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
         raise PlanError("logging configuration must be an object")
     unknown_logging = sorted(set(logging_raw) - _LOGGING_FIELDS)
     if unknown_logging:
-        raise PlanError(
-            f"logging configuration contains unsupported settings: {', '.join(unknown_logging)}"
-        )
+        raise PlanError(f"logging configuration contains unsupported settings: {', '.join(unknown_logging)}")
     logging_level = logging_raw.get("level", "INFO")
     if not isinstance(logging_level, str) or logging_level.upper() not in _LOG_LEVELS:
         raise PlanError("logging level must be DEBUG, INFO, WARNING, ERROR, CRITICAL, INTERNAL, or EXCEPTION")
@@ -552,30 +587,18 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     color_enabled = logging_raw.get("color_enabled", True)
     file_enabled = logging_raw.get("file_enabled", True)
     delete_previous = logging_raw.get("delete_previous", False)
-    if not all(
-            isinstance(value, bool)
-            for value in (console_enabled, color_enabled, file_enabled, delete_previous)
-    ):
+    if not all(isinstance(value, bool) for value in (console_enabled, color_enabled, file_enabled, delete_previous)):
         raise PlanError("logging enable, color, file, and deletion settings must be boolean")
     log_maximum_bytes = logging_raw.get("maximum_bytes", 4 * 1024 * 1024)
-    if (
-            not isinstance(log_maximum_bytes, int)
-            or isinstance(log_maximum_bytes, bool)
-            or not 1024 <= log_maximum_bytes <= 64 * 1024 * 1024
-    ):
+    if not isinstance(log_maximum_bytes, int) or isinstance(log_maximum_bytes, bool) or not 1024 <= log_maximum_bytes <= 64 * 1024 * 1024:
         raise PlanError("logging maximum_bytes must be an integer from 1024 to 67108864")
     retention_days = logging_raw.get("retention_days", 30)
-    if (
-            not isinstance(retention_days, int)
-            or isinstance(retention_days, bool)
-            or not 0 <= retention_days <= 3650
-    ):
+    if not isinstance(retention_days, int) or isinstance(retention_days, bool) or not 0 <= retention_days <= 3650:
         raise PlanError("logging retention_days must be an integer from 0 to 3650")
 
     collector_settings = raw.get("collectors", {})
     if not isinstance(collector_settings, dict) or not all(
-            isinstance(key, str) and isinstance(value, dict)
-            for key, value in collector_settings.items()
+        isinstance(key, str) and isinstance(value, dict) for key, value in collector_settings.items()
     ):
         raise PlanError("collectors configuration must map collector IDs to objects")
     _validate_collector_settings(collector_settings)

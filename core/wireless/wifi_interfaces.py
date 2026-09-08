@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import json
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -13,11 +20,7 @@ from logicytics.platform_adapters import which
 def _is_access_denied(detail: str) -> bool:
     """Recognize common permission-denied wording from netsh output."""
     normalized = detail.casefold()
-    return (
-            "permission denied" in normalized
-            or ("access" in normalized and "denied" in normalized)
-            or "requires elevation" in normalized
-    )
+    return "permission denied" in normalized or ("access" in normalized and "denied" in normalized) or "requires elevation" in normalized
 
 
 def _normalize_interface_name(name: str) -> str:
@@ -32,13 +35,19 @@ class WifiInterfacesCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the bounded, subprocess-gated wireless interface artifact contract."""
         return CollectorMetadata(
-            id="core.wireless.wifi_interfaces", name="Wi-Fi interfaces", version="4.0.0",
+            id="core.wireless.wifi_interfaces",
+            name="Wi-Fi interfaces",
+            version="4.0.0",
             specialty=Specialty.WIRELESS,
             output_media_types=("application/json",),
             description="Exports local Wi-Fi interface state and normalized interface names without key material.",
-            author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
-            sensitive_data_categories=("network_configuration",), default_profiles=("deep",),
-            timeout_seconds=30, maximum_output_bytes=256 * 1024,
+            author="Logicytics",
+            supported_platforms=("win32",),
+            capabilities=(Capability.SUBPROCESS,),
+            sensitive_data_categories=("network_configuration",),
+            default_profiles=("deep",),
+            timeout_seconds=30,
+            maximum_output_bytes=256 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -56,14 +65,20 @@ class WifiInterfacesCollector(CoreCollector):
         context.report_progress("wifi_interfaces_started")
         completed = subprocess.run(
             ["netsh", "wlan", "show", "interfaces"],
-            capture_output=True, check=False, text=True, timeout=25,
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=25,
         )
         detail = completed.stderr.strip()
         if completed.returncode != 0:
             message = detail or completed.stdout.strip() or f"netsh exit code {completed.returncode}"
             if _is_access_denied(message):
-                return CollectorResult(CollectorStatus.SKIPPED,
-                                       "Wi-Fi interface access was denied for the current account", errors=(message,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "Wi-Fi interface access was denied for the current account",
+                    errors=(message,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "Wi-Fi interface query failed", errors=(message,))
 
         interfaces: list[dict[str, str]] = []

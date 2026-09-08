@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, \
-    ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    EvidenceKind,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import filesystem_adapter
 
@@ -23,12 +30,18 @@ class MediaBackupCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the explicit-consent media backup artifact contract."""
         return CollectorMetadata(
-            id="core.media.media_backup", name="Pictures and Videos backup", version="4.0.0", specialty=Specialty.MEDIA,
+            id="core.media.media_backup",
+            name="Pictures and Videos backup",
+            version="4.0.0",
+            specialty=Specialty.MEDIA,
             output_media_types=("application/octet-stream",),
             description="Copies bounded JPG, JPEG, PNG, and MP4 files from current-user Pictures and Videos folders.",
-            author="Logicytics", supported_platforms=("win32",),
+            author="Logicytics",
+            supported_platforms=("win32",),
             capabilities=(Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),
-            sensitive_data_categories=("personal_media",), default_profiles=("deep",), timeout_seconds=300,
+            sensitive_data_categories=("personal_media",),
+            default_profiles=("deep",),
+            timeout_seconds=300,
             maximum_output_bytes=512 * 1024 * 1024,
         )
 
@@ -75,8 +88,7 @@ class MediaBackupCollector(CoreCollector):
                     if size > MAX_FILE_BYTES or copied_bytes + size > MAX_TOTAL_BYTES:
                         skipped_files += 1
                         continue
-                    timestamp = datetime.fromtimestamp(candidate.stat().st_mtime, timezone.utc).strftime(
-                        "%Y%m%dT%H%M%SZ")
+                    timestamp = datetime.fromtimestamp(candidate.stat().st_mtime, UTC).strftime("%Y%m%dT%H%M%SZ")
                     destination = destination_root / category / f"{candidate.stem}_{timestamp}{candidate.suffix.casefold()}"
                     suffix = 1
                     while destination.exists():
@@ -101,13 +113,17 @@ class MediaBackupCollector(CoreCollector):
         artifacts = []
         for path in copied:
             if context.is_cancelled:
-                for unpublished in copied[len(artifacts):]:
+                for unpublished in copied[len(artifacts) :]:
                     unpublished.unlink(missing_ok=True)
                 return CollectorResult.cancelled("cancelled during media registration", tuple(artifacts))
             artifacts.append(context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW))
         artifact_tuple = tuple(artifacts)
-        context.report_progress("media_backup_finished", copied_files=len(artifacts), skipped_files=skipped_files,
-                                bytes_written=sum(item.size_bytes for item in artifact_tuple))
+        context.report_progress(
+            "media_backup_finished",
+            copied_files=len(artifacts),
+            skipped_files=skipped_files,
+            bytes_written=sum(item.size_bytes for item in artifact_tuple),
+        )
         return CollectorResult.succeeded("current-user media backup collected", artifact_tuple)
 
     def cleanup(self, context: CollectorContext) -> None:

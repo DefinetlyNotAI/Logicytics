@@ -9,16 +9,16 @@ from pathlib import Path
 from unittest.mock import patch
 
 from logicytics.cli import CLI, cli_methods, main
-from logicytics.module.configuration import (
-    default_config,
-    load_config,
-)
 from logicytics.contracts import (
     Capability,
     OutputPolicy,
     PostRunAction,
     RunRequest,
     RunStatus,
+)
+from logicytics.module.configuration import (
+    default_config,
+    load_config,
 )
 from logicytics.module.discovery import PreflightReport, preflight
 from logicytics.module.environment import EnvironmentReport
@@ -27,8 +27,8 @@ from logicytics.module.logging import (
     FileEventLogger,
 )
 from logicytics.module.planner import BUILTIN_PROFILES, build_plan
-from logicytics.platform_adapters import ProcessAdapter
 from logicytics.module.runtime import RunSupervisor
+from logicytics.platform_adapters import ProcessAdapter
 from tests.fixtures.collectors import COLLECTOR, delayed_collector_source
 
 
@@ -46,15 +46,17 @@ class PlanningTests(unittest.TestCase):
         return collector_ids
 
     def test_post_run_actions_are_typed_exclusive_and_require_verified_packaging(
-            self,
+        self,
     ) -> None:
         """Power actions remain explicit and cannot run before durable package publication."""
-        arguments = cli_methods.parser().parse_args([
-            "run",
-            "--shutdown",
-            "--performance-check",
-            "--acknowledge-authorization",
-        ])
+        arguments = cli_methods.parser().parse_args(
+            [
+                "run",
+                "--shutdown",
+                "--performance-check",
+                "--acknowledge-authorization",
+            ]
+        )
 
         request = cli_methods.request(arguments, default_workers=4)
 
@@ -63,19 +65,23 @@ class PlanningTests(unittest.TestCase):
         self.assertEqual(1, request.max_workers)
 
         with self.assertRaises(SystemExit):
-            cli_methods.parser().parse_args([
-                "run",
-                "--reboot",
-                "--shutdown",
-            ])
+            cli_methods.parser().parse_args(
+                [
+                    "run",
+                    "--reboot",
+                    "--shutdown",
+                ]
+            )
 
         with self.assertRaisesRegex(ValueError, "require packaged output"):
             cli_methods.request(
-                cli_methods.parser().parse_args([
-                    "run",
-                    "--reboot",
-                    "--no-package",
-                ]),
+                cli_methods.parser().parse_args(
+                    [
+                        "run",
+                        "--reboot",
+                        "--no-package",
+                    ]
+                ),
                 default_workers=1,
             )
 
@@ -105,9 +111,9 @@ class PlanningTests(unittest.TestCase):
             )
 
             with patch.object(
-                    ProcessAdapter,
-                    ProcessAdapter.run.__name__,
-                    return_value=completed,
+                ProcessAdapter,
+                ProcessAdapter.run.__name__,
+                return_value=completed,
             ) as command:
                 RunSupervisor._execute_post_run_action(
                     PostRunAction.REBOOT,
@@ -131,14 +137,18 @@ class PlanningTests(unittest.TestCase):
                 encoding="utf-8",
             )
             sensitive_id = "core.system.z_sensitive"
-            source = delayed_collector_source("z_sensitive", 0.0).replace(
-                "from logicytics import CollectorMetadata",
-                "from logicytics import Capability, CollectorMetadata",
-            ).replace(
-                '            capabilities=(),',
-                '            capabilities=(Capability.SENSITIVE_FILES,),\n'
-                '            sensitive_data_categories=("credentials",),\n'
-                '            default_profiles=("deep",),',
+            source = (
+                delayed_collector_source("z_sensitive", 0.0)
+                .replace(
+                    "from logicytics import CollectorMetadata",
+                    "from logicytics import Capability, CollectorMetadata",
+                )
+                .replace(
+                    "            capabilities=(),",
+                    "            capabilities=(Capability.SENSITIVE_FILES,),\n"
+                    '            sensitive_data_categories=("credentials",),\n'
+                    '            default_profiles=("deep",),',
+                )
             )
             (core_directory / "z_sensitive.py").write_text(source, encoding="utf-8")
             report = preflight(root)
@@ -215,14 +225,18 @@ class PlanningTests(unittest.TestCase):
             core_directory.mkdir(parents=True)
             (root / "plugins").mkdir()
             collector_id = "core.system.network_source"
-            source = delayed_collector_source("network_source", 0.0).replace(
-                "from logicytics import CollectorMetadata",
-                "from logicytics import Capability, CollectorMetadata",
-            ).replace(
-                '            capabilities=(),',
-                '            capabilities=(Capability.NETWORK,),\n'
-                '            network_access=NetworkAccess.LOCAL,\n'
-                '            default_profiles=("standard",),',
+            source = (
+                delayed_collector_source("network_source", 0.0)
+                .replace(
+                    "from logicytics import CollectorMetadata",
+                    "from logicytics import Capability, CollectorMetadata",
+                )
+                .replace(
+                    "            capabilities=(),",
+                    "            capabilities=(Capability.NETWORK,),\n"
+                    "            network_access=NetworkAccess.LOCAL,\n"
+                    '            default_profiles=("standard",),',
+                )
             )
             (core_directory / "network_source.py").write_text(source, encoding="utf-8")
             report = preflight(root)
@@ -233,7 +247,11 @@ class PlanningTests(unittest.TestCase):
             with self.assertRaisesRegex(PlanError, "offline profile prohibits network-capable"):
                 build_plan(
                     report,
-                    RunRequest(profile="offline", include=(collector_id,), approved_capabilities=(Capability.NETWORK,)),
+                    RunRequest(
+                        profile="offline",
+                        include=(collector_id,),
+                        approved_capabilities=(Capability.NETWORK,),
+                    ),
                 )
 
     def test_policy_error_reports_every_selected_collector(self) -> None:
@@ -245,21 +263,21 @@ class PlanningTests(unittest.TestCase):
             (root / "plugins").mkdir()
 
             for filename, capability in (
-                    ("a_subprocess", "Capability.SUBPROCESS"),
-                    ("b_network", "Capability.NETWORK"),
-                    ("c_subprocess", "Capability.SUBPROCESS"),
+                ("a_subprocess", "Capability.SUBPROCESS"),
+                ("b_network", "Capability.NETWORK"),
+                ("c_subprocess", "Capability.SUBPROCESS"),
             ):
-                source = delayed_collector_source(filename, 0.0).replace(
-                    "from logicytics import CollectorMetadata",
-                    "from logicytics import Capability, CollectorMetadata",
-                ).replace(
-                    '            capabilities=(),',
-                    f'            capabilities=({capability},),\n'
-                    + (
-                        "            network_access=NetworkAccess.LOCAL,\n"
-                        if capability == "Capability.NETWORK"
-                        else ""
-                    ),
+                source = (
+                    delayed_collector_source(filename, 0.0)
+                    .replace(
+                        "from logicytics import CollectorMetadata",
+                        "from logicytics import Capability, CollectorMetadata",
+                    )
+                    .replace(
+                        "            capabilities=(),",
+                        f"            capabilities=({capability},),\n"
+                        + ("            network_access=NetworkAccess.LOCAL,\n" if capability == "Capability.NETWORK" else ""),
+                    )
                 )
                 (core_directory / f"{filename}.py").write_text(source, encoding="utf-8")
 
@@ -284,9 +302,9 @@ class PlanningTests(unittest.TestCase):
                 message.index("core.system.c_subprocess"),
             )
             for collector_id in (
-                    "core.system.a_subprocess",
-                    "core.system.b_network",
-                    "core.system.c_subprocess",
+                "core.system.a_subprocess",
+                "core.system.b_network",
+                "core.system.c_subprocess",
             ):
                 self.assertIn(collector_id, message)
             self.assertIn(
@@ -305,8 +323,8 @@ class PlanningTests(unittest.TestCase):
                     "from logicytics import CollectorMetadata",
                     "from logicytics import Capability, CollectorMetadata",
                 ).replace(
-                    '            capabilities=(),',
-                    '            capabilities=(Capability.SENSITIVE_FILES,),\n'
+                    "            capabilities=(),",
+                    "            capabilities=(Capability.SENSITIVE_FILES,),\n"
                     '            sensitive_data_categories=("credentials", "personal_documents"),\n'
                     '            default_profiles=("deep",),',
                 ),
@@ -375,7 +393,7 @@ class PlanningTests(unittest.TestCase):
             self.assertFalse(configuration.runtime.output_root.exists())
 
     def test_collector_command_runs_only_the_selected_id_and_declared_dependencies(
-            self,
+        self,
     ) -> None:
         """Direct execution never pulls unrelated profile members into its supervised run."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -395,31 +413,32 @@ class PlanningTests(unittest.TestCase):
 
             output = io.StringIO()
 
-            with patch.object(
+            with (
+                patch.object(
                     CLI,
                     "project_root",
                     return_value=root,
-            ), patch(
-                "sys.stderr",
-                output,
+                ),
+                patch(
+                    "sys.stderr",
+                    output,
+                ),
             ):
                 self.assertEqual(
                     0,
-                    main([
-                        "collector",
-                        "core.system.first",
-                        "--acknowledge-authorization",
-                    ]),
+                    main(
+                        [
+                            "collector",
+                            "core.system.first",
+                            "--acknowledge-authorization",
+                        ]
+                    ),
                 )
 
-            manifests = list(
-                (root / "output" / "data").glob("run-*/manifest.json")
-            )
+            manifests = list((root / "output" / "data").glob("run-*/manifest.json"))
             self.assertEqual(1, len(manifests))
 
-            manifest = json.loads(
-                manifests[0].read_text(encoding="utf-8")
-            )
+            manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
 
             self.assertEqual(
                 ["core.system.first"],
@@ -473,7 +492,13 @@ class PlanningTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "not present in the original"):
                 cli_methods.request(
                     parser.parse_args(
-                        ["run", "--rerun-from", str(manifest_path), "--include", "core.system.other"]
+                        [
+                            "run",
+                            "--rerun-from",
+                            str(manifest_path),
+                            "--include",
+                            "core.system.other",
+                        ]
                     ),
                     2,
                 )
@@ -490,7 +515,13 @@ class PlanningTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, "unsupported schema_version"):
                         cli_methods.request(
                             parser.parse_args(
-                                ["run", "--rerun-from", str(manifest_path), "--include", collector_id]
+                                [
+                                    "run",
+                                    "--rerun-from",
+                                    str(manifest_path),
+                                    "--include",
+                                    collector_id,
+                                ]
                             ),
                             2,
                         )
@@ -559,21 +590,27 @@ class PlanningTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(PlanError, "explicitly excluded"):
                 build_plan(preflight(root), RunRequest(include=(target_id,), exclude=(dependency_id,)))
-            sensitive_source = delayed_collector_source("a_dependency", 0.0).replace(
-                "from logicytics import CollectorMetadata,",
-                "from logicytics import Capability, CollectorMetadata,",
-            ).replace(
-                '            capabilities=(),',
-                '            capabilities=(Capability.SENSITIVE_FILES,),\n'
-                '            sensitive_data_categories=("credentials",),\n'
-                '            default_profiles=("deep",),',
+            sensitive_source = (
+                delayed_collector_source("a_dependency", 0.0)
+                .replace(
+                    "from logicytics import CollectorMetadata,",
+                    "from logicytics import Capability, CollectorMetadata,",
+                )
+                .replace(
+                    "            capabilities=(),",
+                    "            capabilities=(Capability.SENSITIVE_FILES,),\n"
+                    '            sensitive_data_categories=("credentials",),\n'
+                    '            default_profiles=("deep",),',
+                )
             )
             (core_directory / "a_dependency.py").write_text(sensitive_source, encoding="utf-8")
             report = preflight(root)
             self.assertEqual((), report.invalid)
             with self.assertRaisesRegex(PlanError, "sensitive dependency"):
-                build_plan(report,
-                           RunRequest(include=(target_id,), approved_capabilities=(Capability.SENSITIVE_FILES,)))
+                build_plan(
+                    report,
+                    RunRequest(include=(target_id,), approved_capabilities=(Capability.SENSITIVE_FILES,)),
+                )
             approved = build_plan(
                 report,
                 RunRequest(
@@ -601,8 +638,8 @@ class PlanningTests(unittest.TestCase):
                 "from logicytics import CollectorMetadata",
                 "from logicytics import Capability, CollectorMetadata",
             ).replace(
-                'capabilities=(),',
-                'capabilities=(Capability.FILESYSTEM_READ,),',
+                "capabilities=(),",
+                "capabilities=(Capability.FILESYSTEM_READ,),",
             )
             collector_path.write_text(secured_collector, encoding="utf-8")
             report = preflight(root)
@@ -622,9 +659,8 @@ class PlanningTests(unittest.TestCase):
                 "from logicytics import CollectorMetadata",
                 "from logicytics import Capability, CollectorMetadata",
             ).replace(
-                'capabilities=(),',
-                'capabilities=(Capability.ELEVATED_PRIVILEGES,), '
-                'privilege_level=PrivilegeLevel.ELEVATED,',
+                "capabilities=(),",
+                "capabilities=(Capability.ELEVATED_PRIVILEGES,), privilege_level=PrivilegeLevel.ELEVATED,",
             )
             collector_path.write_text(secured_collector, encoding="utf-8")
             report = preflight(root)
@@ -641,8 +677,8 @@ class PlanningTests(unittest.TestCase):
                         with self.assertRaisesRegex(PlanError, "administrator account"):
                             build_plan(report, approved)
             with patch(
-                    "logicytics.module.planner.inspect_environment",
-                    return_value=EnvironmentReport(True, True, None),
+                "logicytics.module.planner.inspect_environment",
+                return_value=EnvironmentReport(True, True, None),
             ):
                 plan = build_plan(report, approved)
             self.assertEqual(1, len(plan.collectors))

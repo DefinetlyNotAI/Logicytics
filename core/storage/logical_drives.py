@@ -3,10 +3,19 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
-from logicytics import get_logical_drives, ularge_integer, get_disk_free_space, get_drive_type
+from logicytics import (
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+    get_disk_free_space,
+    get_drive_type,
+    get_logical_drives,
+    ularge_integer,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 _DRIVE_TYPES = {
@@ -35,10 +44,10 @@ def _logical_drives() -> list[dict[str, int | str]]:
         free = ularge_integer()
 
         if not get_disk_free_space(
-                root,
-                available,
-                total,
-                free,
+            root,
+            available,
+            total,
+            free,
         ):
             continue
 
@@ -98,7 +107,7 @@ class LogicalDrivesCollector(CoreCollector):
         except OSError as error:
             return CollectorResult(CollectorStatus.FAILED, "could not read logical drives", errors=(str(error),))
         report = {
-            "collected_at": datetime.now(timezone.utc).isoformat(),
+            "collected_at": datetime.now(UTC).isoformat(),
             "drives": drives,
         }
         output = context.workspace / "logical_drives.json"

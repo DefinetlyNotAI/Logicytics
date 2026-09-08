@@ -4,13 +4,28 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, EvidenceKind, Specialty, \
-    ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    EvidenceKind,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import filesystem_adapter
 
-CHROMIUM_FILES = ("History", "History-journal", "Cookies", "Cookies-journal", "Login Data", "Login Data-journal",
-                  "Bookmarks", "Preferences")
+CHROMIUM_FILES = (
+    "History",
+    "History-journal",
+    "Cookies",
+    "Cookies-journal",
+    "Login Data",
+    "Login Data-journal",
+    "Bookmarks",
+    "Preferences",
+)
 FIREFOX_FILES = ("places.sqlite", "cookies.sqlite", "logins.json", "key4.db", "prefs.js")
 MAX_FILE_BYTES = 50 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
@@ -38,14 +53,23 @@ class BrowserDataBackupCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the explicit-consent browser-data artifact contract."""
         return CollectorMetadata(
-            id="core.browser.browser_data_backup", name="Browser data backup", version="4.0.0",
+            id="core.browser.browser_data_backup",
+            name="Browser data backup",
+            version="4.0.0",
             specialty=Specialty.BROWSER,
             output_media_types=("application/octet-stream",),
             description="Copies bounded local profile evidence from Edge, Chrome, Firefox, Opera, and Opera GX.",
-            author="Logicytics", supported_platforms=("win32",),
-            capabilities=(Capability.FILESYSTEM_READ, Capability.BROWSER_DATA, Capability.SENSITIVE_FILES),
-            sensitive_data_categories=("browser_history", "cookies", "credentials"), default_profiles=("deep",),
-            timeout_seconds=300, maximum_output_bytes=256 * 1024 * 1024,
+            author="Logicytics",
+            supported_platforms=("win32",),
+            capabilities=(
+                Capability.FILESYSTEM_READ,
+                Capability.BROWSER_DATA,
+                Capability.SENSITIVE_FILES,
+            ),
+            sensitive_data_categories=("browser_history", "cookies", "credentials"),
+            default_profiles=("deep",),
+            timeout_seconds=300,
+            maximum_output_bytes=256 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -61,10 +85,12 @@ class BrowserDataBackupCollector(CoreCollector):
         home = filesystem_adapter.home()
         local = filesystem_adapter.environment_path("LOCALAPPDATA", home / "AppData" / "Local")
         roaming = filesystem_adapter.environment_path("APPDATA", home / "AppData" / "Roaming")
-        chromium_roots = (("chrome", local / "Google" / "Chrome" / "User Data"),
-                          ("edge", local / "Microsoft" / "Edge" / "User Data"),
-                          ("opera", roaming / "Opera Software" / "Opera Stable"),
-                          ("opera_gx", roaming / "Opera Software" / "Opera GX Stable"))
+        chromium_roots = (
+            ("chrome", local / "Google" / "Chrome" / "User Data"),
+            ("edge", local / "Microsoft" / "Edge" / "User Data"),
+            ("opera", roaming / "Opera Software" / "Opera Stable"),
+            ("opera_gx", roaming / "Opera Software" / "Opera GX Stable"),
+        )
         copied: list[Path] = []
         copied_bytes = 0
         context.report_progress("browser_data_backup_started")
@@ -76,10 +102,7 @@ class BrowserDataBackupCollector(CoreCollector):
                     profile_roots = [
                         path
                         for path in filesystem_adapter.children(root)
-                        if path.is_dir() and (
-                                path.name == "Default"
-                                or path.name.startswith("Profile ")
-                        )
+                        if path.is_dir() and (path.name == "Default" or path.name.startswith("Profile "))
                     ]
             except OSError:
                 continue
@@ -87,9 +110,11 @@ class BrowserDataBackupCollector(CoreCollector):
                 for filename in CHROMIUM_FILES:
                     if context.is_cancelled:
                         return CollectorResult(CollectorStatus.CANCELLED, "cancelled during browser data backup")
-                    destination, copied_bytes = _copy_file(profile / filename,
-                                                           context.workspace / "browser_data" / browser / profile.name / filename,
-                                                           copied_bytes)
+                    destination, copied_bytes = _copy_file(
+                        profile / filename,
+                        context.workspace / "browser_data" / browser / profile.name / filename,
+                        copied_bytes,
+                    )
                     if context.is_cancelled:
                         if destination is not None:
                             destination.unlink(missing_ok=True)
@@ -109,9 +134,11 @@ class BrowserDataBackupCollector(CoreCollector):
                     for copied_path in copied:
                         copied_path.unlink(missing_ok=True)
                     return CollectorResult(CollectorStatus.CANCELLED, "cancelled during browser data backup")
-                destination, copied_bytes = _copy_file(profile / filename,
-                                                       context.workspace / "browser_data" / "firefox" / profile.name / filename,
-                                                       copied_bytes)
+                destination, copied_bytes = _copy_file(
+                    profile / filename,
+                    context.workspace / "browser_data" / "firefox" / profile.name / filename,
+                    copied_bytes,
+                )
                 if context.is_cancelled:
                     if destination is not None:
                         destination.unlink(missing_ok=True)
@@ -121,18 +148,23 @@ class BrowserDataBackupCollector(CoreCollector):
                 if destination is not None:
                     copied.append(destination)
         if not copied:
-            return CollectorResult(CollectorStatus.SKIPPED,
-                                   "no supported local browser profile data met the bounded backup policy")
+            return CollectorResult(
+                CollectorStatus.SKIPPED,
+                "no supported local browser profile data met the bounded backup policy",
+            )
         artifacts = []
         for path in copied:
             if context.is_cancelled:
-                for unpublished in copied[len(artifacts):]:
+                for unpublished in copied[len(artifacts) :]:
                     unpublished.unlink(missing_ok=True)
                 return CollectorResult.cancelled("cancelled during browser-data registration", tuple(artifacts))
             artifacts.append(context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW))
         artifact_tuple = tuple(artifacts)
-        context.report_progress("browser_data_backup_finished", copied_files=len(artifact_tuple),
-                                bytes_written=sum(item.size_bytes for item in artifact_tuple))
+        context.report_progress(
+            "browser_data_backup_finished",
+            copied_files=len(artifact_tuple),
+            bytes_written=sum(item.size_bytes for item in artifact_tuple),
+        )
         return CollectorResult.succeeded("browser data backup collected", artifact_tuple)
 
     def cleanup(self, context: CollectorContext) -> None:

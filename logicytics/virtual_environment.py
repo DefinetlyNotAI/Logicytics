@@ -8,7 +8,6 @@ from typing import TextIO
 
 from logicytics.module.presentation import render_alert
 
-
 _LOCAL_ENVIRONMENT = Path(".venv")
 _ACTIVATION_SCRIPT = Path("Scripts") / "Activate.ps1"
 

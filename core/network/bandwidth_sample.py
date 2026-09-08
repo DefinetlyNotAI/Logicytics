@@ -5,7 +5,14 @@ from __future__ import annotations
 import json
 import time
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -22,8 +29,7 @@ def _setting(settings: object, key: str, default: int, maximum: int) -> int:
 
 def _interval_setting(settings: object) -> float:
     """Return the configured finite positive sampling interval."""
-    value = settings.get("interval_seconds", _DEFAULT_INTERVAL_SECONDS) if isinstance(settings,
-                                                                                      dict) else _DEFAULT_INTERVAL_SECONDS
+    value = settings.get("interval_seconds", _DEFAULT_INTERVAL_SECONDS) if isinstance(settings, dict) else _DEFAULT_INTERVAL_SECONDS
     if isinstance(value, (int, float)) and not isinstance(value, bool) and 0.1 <= value <= 60:
         return float(value)
     return float(_DEFAULT_INTERVAL_SECONDS)
@@ -42,14 +48,19 @@ class BandwidthSampleCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the subprocess-gated bounded bandwidth-sampling artifact contract."""
         return CollectorMetadata(
-            id="core.network.bandwidth_sample", name="Network bandwidth sample", version="4.0.0",
+            id="core.network.bandwidth_sample",
+            name="Network bandwidth sample",
+            version="4.0.0",
             specialty=Specialty.NETWORK,
             output_media_types=("application/json",),
             description="Calculates local per-interface average and peak bandwidth from adapter counter samples.",
             author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
+            supported_platforms=("win32",),
+            capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("network_identifiers",),
-            default_profiles=("deep",), timeout_seconds=90, maximum_output_bytes=512 * 1024,
+            default_profiles=("deep",),
+            timeout_seconds=90,
+            maximum_output_bytes=512 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -72,26 +83,42 @@ class BandwidthSampleCollector(CoreCollector):
         for index in range(samples):
             if context.is_cancelled:
                 return CollectorResult(CollectorStatus.CANCELLED, "cancelled during bandwidth sampling")
-            completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
-                                       capture_output=True, check=False, text=True, timeout=20)
+            completed = subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+                capture_output=True,
+                check=False,
+                text=True,
+                timeout=20,
+            )
             if completed.returncode != 0:
                 detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
                 if _is_access_denied(detail):
-                    return CollectorResult(CollectorStatus.SKIPPED,
-                                           "bandwidth-sample access was denied for the current account",
-                                           errors=(detail,))
+                    return CollectorResult(
+                        CollectorStatus.SKIPPED,
+                        "bandwidth-sample access was denied for the current account",
+                        errors=(detail,),
+                    )
                 return CollectorResult(CollectorStatus.FAILED, "bandwidth-sample query failed", errors=(detail,))
             try:
                 raw = json.loads(completed.stdout)
             except json.JSONDecodeError as error:
-                return CollectorResult(CollectorStatus.FAILED, "bandwidth-sample query returned invalid JSON",
-                                       errors=(str(error),))
+                return CollectorResult(
+                    CollectorStatus.FAILED,
+                    "bandwidth-sample query returned invalid JSON",
+                    errors=(str(error),),
+                )
             records = raw if isinstance(raw, list) else [raw]
             if not all(isinstance(record, dict) for record in records):
                 return CollectorResult(CollectorStatus.FAILED, "bandwidth-sample query returned an unexpected result")
-            observations.append({str(record.get("Name", "unavailable")): {
-                "received": int(record.get("ReceivedBytes", 0)), "sent": int(record.get("SentBytes", 0))} for record in
-                records})
+            observations.append(
+                {
+                    str(record.get("Name", "unavailable")): {
+                        "received": int(record.get("ReceivedBytes", 0)),
+                        "sent": int(record.get("SentBytes", 0)),
+                    }
+                    for record in records
+                }
+            )
             if index + 1 < samples:
                 time.sleep(interval)
         rates: dict[str, dict[str, float]] = {}
@@ -101,10 +128,16 @@ class BandwidthSampleCollector(CoreCollector):
                     continue
                 receive = max(0, counters["received"] - previous[name]["received"]) / interval
                 sent = max(0, counters["sent"] - previous[name]["sent"]) / interval
-                values = rates.setdefault(name, {"receive_average_bytes_per_second": 0.0,
-                                                 "receive_peak_bytes_per_second": 0.0,
-                                                 "send_average_bytes_per_second": 0.0,
-                                                 "send_peak_bytes_per_second": 0.0, "sample_intervals": 0.0})
+                values = rates.setdefault(
+                    name,
+                    {
+                        "receive_average_bytes_per_second": 0.0,
+                        "receive_peak_bytes_per_second": 0.0,
+                        "send_average_bytes_per_second": 0.0,
+                        "send_peak_bytes_per_second": 0.0,
+                        "sample_intervals": 0.0,
+                    },
+                )
                 values["sample_intervals"] += 1
                 values["receive_average_bytes_per_second"] += receive
                 values["send_average_bytes_per_second"] += sent
@@ -115,11 +148,20 @@ class BandwidthSampleCollector(CoreCollector):
             values["send_average_bytes_per_second"] /= values["sample_intervals"]
         output = context.workspace / "bandwidth_sample.json"
         output.write_text(
-            json.dumps({"sample_count": samples, "interval_seconds": interval, "interfaces": rates}, indent=2,
-                       sort_keys=True) + "\n", encoding="utf-8")
+            json.dumps(
+                {"sample_count": samples, "interval_seconds": interval, "interfaces": rates},
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("bandwidth_sample_finished", interface_count=len(rates),
-                                bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "bandwidth_sample_finished",
+            interface_count=len(rates),
+            bytes_written=artifact.size_bytes,
+        )
         return CollectorResult.succeeded("network bandwidth sample collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

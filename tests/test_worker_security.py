@@ -5,12 +5,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from logicytics.module.configuration import (
-    default_config,
-)
 from logicytics.contracts import (
     Capability,
     RunRequest,
+)
+from logicytics.module.configuration import (
+    default_config,
 )
 from logicytics.module.discovery import preflight
 from logicytics.module.planner import build_plan
@@ -48,12 +48,13 @@ class WorkerSecurityTests(unittest.TestCase):
                     outcome = RunSupervisor(root, default_config(root)).run(plan)
                     records = {record.id: record for record in outcome.manifest.collectors}
                     self.assertEqual("failed", records["core.system.a_attacker"].status)
-                    self.assertIn("escapes its private workspace", "\n".join(records["core.system.a_attacker"].errors))
+                    self.assertIn(
+                        "escapes its private workspace",
+                        "\n".join(records["core.system.a_attacker"].errors),
+                    )
                     self.assertEqual("succeeded", records["core.system.z_independent"].status)
                     self.assertFalse((root / "repository-compromised.txt").exists())
-                    self.assertFalse(
-                        (outcome.run_directory / "collectors" / "z_independent" / "compromised.txt").exists()
-                    )
+                    self.assertFalse((outcome.run_directory / "collectors" / "z_independent" / "compromised.txt").exists())
 
     def test_collector_cannot_mutate_its_process_environment(self) -> None:
         """A collector must not change process environment or working-directory policy."""
@@ -65,8 +66,7 @@ class WorkerSecurityTests(unittest.TestCase):
             collector_path.write_text(
                 COLLECTOR.replace("from pathlib import Path\n", "from pathlib import Path\nimport os\n").replace(
                     '        output = context.workspace / "system.txt"',
-                    '        os.environ["LOGICYTICS_COLLECTOR_MUTATION"] = "unexpected"\n'
-                    '        output = context.workspace / "system.txt"',
+                    '        os.environ["LOGICYTICS_COLLECTOR_MUTATION"] = "unexpected"\n        output = context.workspace / "system.txt"',
                 ),
                 encoding="utf-8",
             )
@@ -85,11 +85,7 @@ class WorkerSecurityTests(unittest.TestCase):
 
             base = COLLECTOR.replace(
                 "from pathlib import Path\n",
-                "from pathlib import Path\n"
-                "import socket\n"
-                "import subprocess\n"
-                "import sys\n"
-                "import winreg\n",
+                "from pathlib import Path\nimport socket\nimport subprocess\nimport sys\nimport winreg\n",
             )
 
             attempts = (
@@ -112,8 +108,7 @@ class WorkerSecurityTests(unittest.TestCase):
                     collector_path.write_text(
                         base.replace(
                             '        output = context.workspace / "system.txt"',
-                            f'        {operation}\n'
-                            '        output = context.workspace / "system.txt"',
+                            f'        {operation}\n        output = context.workspace / "system.txt"',
                         ),
                         encoding="utf-8",
                     )
@@ -146,21 +141,19 @@ class WorkerSecurityTests(unittest.TestCase):
 
                     remediation = failure["remediation"]
                     if not isinstance(remediation, str):
-                        self.fail(
-                            f"remediation must be str, got {type(remediation).__name__}"
-                        )
+                        self.fail(f"remediation must be str, got {type(remediation).__name__}")
 
                     self.assertIn("capability", remediation)
 
                     retry_safe = failure["retry_safe"]
                     if not isinstance(retry_safe, bool):
-                        self.fail(
-                            f"retry_safe must be bool, got {type(retry_safe).__name__}"
-                        )
+                        self.fail(f"retry_safe must be bool, got {type(retry_safe).__name__}")
 
                     self.assertFalse(retry_safe)
 
-    def test_worker_enforces_external_browser_sensitive_and_private_key_read_capabilities(self) -> None:
+    def test_worker_enforces_external_browser_sensitive_and_private_key_read_capabilities(
+        self,
+    ) -> None:
         """External evidence reads require filesystem access plus every applicable sensitive grant."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -179,7 +172,11 @@ class WorkerSecurityTests(unittest.TestCase):
                 (ordinary, (), "filesystem_read capability"),
                 (ordinary, (Capability.FILESYSTEM_READ,), None),
                 (browser, (Capability.FILESYSTEM_READ,), "browser_data capability"),
-                (browser, (Capability.FILESYSTEM_READ, Capability.BROWSER_DATA), "sensitive_files capability"),
+                (
+                    browser,
+                    (Capability.FILESYSTEM_READ, Capability.BROWSER_DATA),
+                    "sensitive_files capability",
+                ),
                 (
                     private_key,
                     (Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES),
@@ -187,7 +184,11 @@ class WorkerSecurityTests(unittest.TestCase):
                 ),
                 (
                     private_key,
-                    (Capability.FILESYSTEM_READ, Capability.SENSITIVE_FILES, Capability.PRIVATE_KEYS),
+                    (
+                        Capability.FILESYSTEM_READ,
+                        Capability.SENSITIVE_FILES,
+                        Capability.PRIVATE_KEYS,
+                    ),
                     None,
                 ),
             )
@@ -200,10 +201,12 @@ class WorkerSecurityTests(unittest.TestCase):
                         COLLECTOR.replace(
                             "from pathlib import Path\n",
                             "from pathlib import Path\nfrom logicytics import Capability\n",
-                        ).replace(
-                            '            capabilities=(),',
-                            f'            capabilities=({declared}),',
-                        ).replace(
+                        )
+                        .replace(
+                            "            capabilities=(),",
+                            f"            capabilities=({declared}),",
+                        )
+                        .replace(
                             '        output = context.workspace / "system.txt"',
                             f"        Path({str(evidence)!r}).read_text(encoding='utf-8')\n"
                             '        output = context.workspace / "system.txt"',
@@ -240,13 +243,14 @@ class WorkerSecurityTests(unittest.TestCase):
                 COLLECTOR.replace(
                     "from pathlib import Path\n",
                     "from pathlib import Path\nimport socket\nfrom logicytics import Capability\n",
-                ).replace(
-                    '            capabilities=(),',
-                    '            capabilities=(Capability.NETWORK,),\n'
-                    '            network_access=NetworkAccess.LOCAL,',
-                ).replace(
+                )
+                .replace(
+                    "            capabilities=(),",
+                    "            capabilities=(Capability.NETWORK,),\n            network_access=NetworkAccess.LOCAL,",
+                )
+                .replace(
                     '        output = context.workspace / "system.txt"',
-                    '        socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)\n'
+                    "        socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)\n"
                     '        output = context.workspace / "system.txt"',
                 ),
                 encoding="utf-8",
@@ -274,27 +278,30 @@ class WorkerSecurityTests(unittest.TestCase):
                 COLLECTOR.replace(
                     "from pathlib import Path\n",
                     "from pathlib import Path\nimport subprocess\nimport sys\nfrom logicytics import Capability\n",
-                ).replace(
-                    '            capabilities=(),',
-                    '            capabilities=(Capability.SUBPROCESS,),',
-                ).replace(
+                )
+                .replace(
+                    "            capabilities=(),",
+                    "            capabilities=(Capability.SUBPROCESS,),",
+                )
+                .replace(
                     '        output = context.workspace / "system.txt"',
-                    '        subprocess.run([sys.executable, "-c", "pass"], check=True)\n'
-                    '        output = context.workspace / "system.txt"',
+                    '        subprocess.run([sys.executable, "-c", "pass"], check=True)\n        output = context.workspace / "system.txt"',
                 ),
                 encoding="utf-8",
             )
             plan = build_plan(
                 preflight(root),
-                        RunRequest(
-                            max_workers=1,
-                            acknowledge_authorization=True,
-                        ),
+                RunRequest(
+                    max_workers=1,
+                    acknowledge_authorization=True,
+                ),
             )
             outcome = RunSupervisor(root, default_config(root)).run(plan)
             self.assertEqual("succeeded", outcome.manifest.collectors[0].status)
 
-    def test_worker_blocks_application_update_power_and_peer_collector_commands_without_stopping_peers(self) -> None:
+    def test_worker_blocks_application_update_power_and_peer_collector_commands_without_stopping_peers(
+        self,
+    ) -> None:
         """Subprocess approval cannot escape the collector role or affect an independent worker."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -322,16 +329,20 @@ class WorkerSecurityTests(unittest.TestCase):
             )
             for command, category in attempts:
                 with self.subTest(command=command):
-                    attacker = delayed_collector_source("a_attacker", 0.0).replace(
-                        "from pathlib import Path\n",
-                        "from pathlib import Path\nimport subprocess\nfrom logicytics import Capability\n",
-                    ).replace(
-                        '            capabilities=(),',
-                        '            capabilities=(Capability.SUBPROCESS,),',
-                    ).replace(
-                        '        output = context.workspace / "system.txt"',
-                        f"        subprocess.run({command!r}, check=True)\n"
-                        '        output = context.workspace / "system.txt"',
+                    attacker = (
+                        delayed_collector_source("a_attacker", 0.0)
+                        .replace(
+                            "from pathlib import Path\n",
+                            "from pathlib import Path\nimport subprocess\nfrom logicytics import Capability\n",
+                        )
+                        .replace(
+                            "            capabilities=(),",
+                            "            capabilities=(Capability.SUBPROCESS,),",
+                        )
+                        .replace(
+                            '        output = context.workspace / "system.txt"',
+                            f'        subprocess.run({command!r}, check=True)\n        output = context.workspace / "system.txt"',
+                        )
                     )
                     (core_directory / "a_attacker.py").write_text(attacker, encoding="utf-8")
                     report = preflight(root)
@@ -356,7 +367,9 @@ class WorkerSecurityTests(unittest.TestCase):
                     self.assertEqual("partial", outcome.manifest.status.value)
                     self.assertFalse(protected_configuration.exists())
 
-    def test_preflight_rejects_collector_imports_of_application_and_orchestration_services(self) -> None:
+    def test_preflight_rejects_collector_imports_of_application_and_orchestration_services(
+        self,
+    ) -> None:
         """Collectors may import public contracts but never the main application control surface."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -380,10 +393,7 @@ class WorkerSecurityTests(unittest.TestCase):
                     report = preflight(root)
                     self.assertEqual(1, len(report.invalid))
                     self.assertIn("forbidden application import", "\n".join(report.invalid[0].static_errors))
-                    diagnostic = next(
-                        item for item in report.invalid[0].diagnostics
-                        if "forbidden application import" in item.message
-                    )
+                    diagnostic = next(item for item in report.invalid[0].diagnostics if "forbidden application import" in item.message)
                     self.assertEqual("static.engine_boundary", diagnostic.rule)
 
 

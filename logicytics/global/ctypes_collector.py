@@ -204,10 +204,10 @@ _GetMappedFileNameW.restype = DWORD
 
 
 def open_process(
-        process_id: int,
-        *,
-        access: int = PROCESS_QUERY_LIMITED_INFORMATION,
-        inherit_handle: bool = False,
+    process_id: int,
+    *,
+    access: int = PROCESS_QUERY_LIMITED_INFORMATION,
+    inherit_handle: bool = False,
 ) -> HANDLE | None:
     """Open a Windows process and return its handle, or None on failure."""
 
@@ -235,8 +235,8 @@ def get_exit_code_process(handle: HANDLE) -> int | None:
     exit_code = DWORD()
 
     if not _GetExitCodeProcess(
-            handle,
-            ctypes.byref(exit_code),
+        handle,
+        ctypes.byref(exit_code),
     ):
         return None
 
@@ -250,8 +250,8 @@ def close_handle(handle: HANDLE) -> bool:
 
 
 def get_process_memory_info(
-        process: HANDLE,
-        counters: ProcessMemoryCounters,
+    process: HANDLE,
+    counters: ProcessMemoryCounters,
 ) -> bool:
     """Populate memory counters for a process."""
 
@@ -270,8 +270,8 @@ def get_process_memory_info(
 
 
 def virtual_query(
-        address: int,
-        memory: MemoryBasicInformation,
+    address: int,
+    memory: MemoryBasicInformation,
 ) -> int:
     """Query the virtual-memory region containing an address."""
 
@@ -285,9 +285,9 @@ def virtual_query(
 
 
 def get_mapped_file_name(
-        process: HANDLE,
-        address: int,
-        buffer_size: int = 32_768,
+    process: HANDLE,
+    address: int,
+    buffer_size: int = 32_768,
 ) -> str | None:
     """Return the mapped filename associated with a process address."""
 
@@ -336,12 +336,12 @@ def get_drive_type(root: str) -> int:
 
 
 def get_volume_information(
-        root: str,
-        label: ctypes.Array[ctypes.c_wchar],
-        serial: DWORD,
-        maximum_component_length: DWORD,
-        flags: DWORD,
-        filesystem: ctypes.Array[ctypes.c_wchar],
+    root: str,
+    label: ctypes.Array[ctypes.c_wchar],
+    serial: DWORD,
+    maximum_component_length: DWORD,
+    flags: DWORD,
+    filesystem: ctypes.Array[ctypes.c_wchar],
 ) -> bool:
     """Populate volume metadata for a filesystem root."""
 
@@ -360,10 +360,10 @@ def get_volume_information(
 
 
 def get_disk_free_space(
-        root: str,
-        available: ULARGE_INTEGER,
-        total: ULARGE_INTEGER,
-        free: ULARGE_INTEGER,
+    root: str,
+    available: ULARGE_INTEGER,
+    total: ULARGE_INTEGER,
+    free: ULARGE_INTEGER,
 ) -> bool:
     """Populate disk space counters for a filesystem root."""
 
@@ -396,8 +396,8 @@ def global_memory_status() -> MemoryStatus:
 
 
 def query_registry_key_info(
-        key_handle: int,
-        timestamp: FILETIME,
+    key_handle: int,
+    timestamp: FILETIME,
 ) -> int:
     """Query registry key metadata and populate its last-write timestamp."""
 
@@ -468,35 +468,28 @@ __all__ = [
     "ULARGE_INTEGER",
     "ULONG",
     "WORD",
-
     # Constants
     "PROCESS_QUERY_LIMITED_INFORMATION",
     "STILL_ACTIVE",
-
     # Process API
     "close_handle",
     "get_current_process",
     "get_exit_code_process",
     "get_process_memory_info",
     "open_process",
-
     # Virtual memory API
     "get_mapped_file_name",
     "pointer_value",
     "virtual_query",
-
     # Drive and volume API
     "get_disk_free_space",
     "get_drive_type",
     "get_logical_drives",
     "get_volume_information",
-
     # Memory API
     "global_memory_status",
-
     # Registry API
     "query_registry_key_info",
-
     # ctypes factories
     "create_unicode_buffer",
     "dword",

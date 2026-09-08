@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from logicytics import CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
-from logicytics import global_memory_status
+from logicytics import (
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+    global_memory_status,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 
 
@@ -51,7 +57,7 @@ class MemorySnapshotCollector(CoreCollector):
         except OSError as error:
             return CollectorResult(CollectorStatus.FAILED, "could not read Windows memory status", errors=(str(error),))
         report = {
-            "collected_at": datetime.now(timezone.utc).isoformat(),
+            "collected_at": datetime.now(UTC).isoformat(),
             "memory_load_percent": status.dwMemoryLoad,
             "physical_memory": {
                 "total_bytes": status.ullTotalPhys,

@@ -22,9 +22,7 @@ class WindowsFeaturesCollectorTests(unittest.TestCase):
     def test_power_shell_dism_access_error_is_recognized(self) -> None:
         """DISM's 'access to ... is denied' wording must map to a skipped collector."""
         module = _module()
-        self.assertTrue(
-            module._is_access_denied("Set current directory failed: Access to the path is denied.")
-        )
+        self.assertTrue(module._is_access_denied("Set current directory failed: Access to the path is denied."))
 
 
 if __name__ == "__main__":

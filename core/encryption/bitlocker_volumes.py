@@ -5,13 +5,20 @@ from __future__ import annotations
 import getpass
 import json
 import platform
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
-from logicytics.platform_adapters import network_adapter as socket, windows_api_adapter
+from logicytics.platform_adapters import network_adapter as socket
 from logicytics.platform_adapters import process_adapter as subprocess
-from logicytics.platform_adapters import which
+from logicytics.platform_adapters import which, windows_api_adapter
 
 
 def _is_access_denied(detail: str) -> bool:
@@ -79,18 +86,24 @@ class BitlockerVolumesCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED,
-                                       "BitLocker volume access was denied for the current account", errors=(detail,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "BitLocker volume access was denied for the current account",
+                    errors=(detail,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "BitLocker volume query failed", errors=(detail,))
         try:
             volumes = json.loads(completed.stdout) if completed.stdout.strip() else []
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "BitLocker volume query returned invalid JSON",
-                                   errors=(str(error),))
+            return CollectorResult(
+                CollectorStatus.FAILED,
+                "BitLocker volume query returned invalid JSON",
+                errors=(str(error),),
+            )
         if not isinstance(volumes, (dict, list)):
             return CollectorResult(CollectorStatus.FAILED, "BitLocker volume query returned an unexpected result")
         report = {
-            "collected_at": datetime.now(timezone.utc).isoformat(),
+            "collected_at": datetime.now(UTC).isoformat(),
             "user": getpass.getuser(),
             "is_administrator": _is_administrator(),
             "hostname": socket.gethostname(),

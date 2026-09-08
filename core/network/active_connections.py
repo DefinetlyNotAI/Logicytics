@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -59,15 +66,21 @@ class ActiveConnectionsCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"netstat exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "netstat access was denied for the current account",
-                                       errors=(detail,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "netstat access was denied for the current account",
+                    errors=(detail,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "active-connection query failed", errors=(detail,))
         output = context.workspace / "active_connections.txt"
         output.write_text(completed.stdout, encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/plain")
         connection_count = sum(1 for line in completed.stdout.splitlines() if line.lstrip().startswith(("TCP", "UDP")))
-        context.report_progress("active_connections_finished", connection_count=connection_count,
-                                bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "active_connections_finished",
+            connection_count=connection_count,
+            bytes_written=artifact.size_bytes,
+        )
         return CollectorResult.succeeded("active network connections collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

@@ -25,19 +25,24 @@ class TerminalLifecycleTests(unittest.TestCase):
         """Windows startup clears the shared screen buffer through cls, not escape bytes."""
         output = _InteractiveBuffer()
         errors = _InteractiveBuffer()
-        with patch.object(terminal.sys, "stdout", output), patch.object(
+        with (
+            patch.object(terminal.sys, "stdout", output),
+            patch.object(
                 terminal.sys,
                 "stderr",
                 errors,
-        ), patch.object(
+            ),
+            patch.object(
                 terminal.os,
                 "name",
                 "nt",
-        ), patch.object(
+            ),
+            patch.object(
                 terminal.os,
                 "system",
                 return_value=0,
-        ) as system:
+            ) as system,
+        ):
             terminal._clear_terminal()
 
         system.assert_called_once_with("cls")
@@ -60,11 +65,15 @@ class TerminalLifecycleTests(unittest.TestCase):
         output = _InteractiveBuffer()
         errors = _InteractiveBuffer()
 
-        with patch.object(terminal.sys, "stdout", output), patch.object(
+        with (
+            patch.object(terminal.sys, "stdout", output),
+            patch.object(
                 terminal.sys,
                 "stderr",
                 errors,
-        ), patch.object(terminal, "_clear_terminal") as clear_terminal:
+            ),
+            patch.object(terminal, "_clear_terminal") as clear_terminal,
+        ):
             with terminal.terminal_lifecycle():
                 with terminal.terminal_lifecycle():
                     output.write("command output")
@@ -77,11 +86,15 @@ class TerminalLifecycleTests(unittest.TestCase):
         output = io.StringIO()
         errors = io.StringIO()
 
-        with patch.object(terminal.sys, "stdout", output), patch.object(
+        with (
+            patch.object(terminal.sys, "stdout", output),
+            patch.object(
                 terminal.sys,
                 "stderr",
                 errors,
-        ), patch.object(terminal, "_clear_terminal") as clear_terminal:
+            ),
+            patch.object(terminal, "_clear_terminal") as clear_terminal,
+        ):
             with terminal.terminal_lifecycle():
                 output.write("machine output")
 
@@ -93,11 +106,15 @@ class TerminalLifecycleTests(unittest.TestCase):
         output = _InteractiveBuffer()
         errors = _InteractiveBuffer()
 
-        with patch.object(terminal.sys, "stdout", output), patch.object(
+        with (
+            patch.object(terminal.sys, "stdout", output),
+            patch.object(
                 terminal.sys,
                 "stderr",
                 errors,
-        ), patch.object(terminal, "_clear_terminal") as clear_terminal:
+            ),
+            patch.object(terminal, "_clear_terminal") as clear_terminal,
+        ):
             with self.assertRaisesRegex(RuntimeError, "interrupted"):
                 with terminal.terminal_lifecycle():
                     output.write("command output")

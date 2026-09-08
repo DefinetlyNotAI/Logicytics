@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import json
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -14,10 +21,10 @@ def _is_unavailable(detail: str) -> bool:
     """Recognize missing Defender-provider and access-denied results without failing a run."""
     normalized = detail.casefold()
     return (
-            "permission denied" in normalized
-            or ("access" in normalized and "denied" in normalized)
-            or "not recognized" in normalized
-            or "cannot find" in normalized
+        "permission denied" in normalized
+        or ("access" in normalized and "denied" in normalized)
+        or "not recognized" in normalized
+        or "cannot find" in normalized
     )
 
 
@@ -72,14 +79,20 @@ class DefenderStatusCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_unavailable(detail):
-                return CollectorResult(CollectorStatus.SKIPPED, "Microsoft Defender status is unavailable",
-                                       errors=(detail,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "Microsoft Defender status is unavailable",
+                    errors=(detail,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "Microsoft Defender status query failed", errors=(detail,))
         try:
             status = json.loads(completed.stdout) if completed.stdout.strip() else {}
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "Defender status query returned invalid JSON",
-                                   errors=(str(error),))
+            return CollectorResult(
+                CollectorStatus.FAILED,
+                "Defender status query returned invalid JSON",
+                errors=(str(error),),
+            )
         if not isinstance(status, dict):
             return CollectorResult(CollectorStatus.FAILED, "Defender status query returned an unexpected result")
         output = context.workspace / "defender_status.json"

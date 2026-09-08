@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 import tomllib
 import unittest
 from pathlib import Path
@@ -25,10 +24,10 @@ class ReleaseDocumentationTests(unittest.TestCase):
         self.assertIn("complete recreation", self.release.casefold())
         self.assertIn("verified run", self.readme.casefold())
         for provisional in (
-                "being rebuilt",
-                "early v4 implementation",
-                "broader collection catalog is being rebuilt",
-                "to be released",
+            "being rebuilt",
+            "early v4 implementation",
+            "broader collection catalog is being rebuilt",
+            "to be released",
         ):
             with self.subTest(provisional=provisional):
                 self.assertNotIn(provisional, self.readme.casefold())
@@ -49,10 +48,7 @@ class ReleaseDocumentationTests(unittest.TestCase):
             with self.subTest(mode=mode):
                 self.assertIn(f"`{mode}`", self.release)
         media_types = {
-            media_type
-            for candidate in core
-            if candidate.metadata is not None
-            for media_type in candidate.metadata.output_media_types
+            media_type for candidate in core if candidate.metadata is not None for media_type in candidate.metadata.output_media_types
         }
         for media_type in media_types:
             with self.subTest(media_type=media_type):
@@ -64,22 +60,41 @@ class ReleaseDocumentationTests(unittest.TestCase):
 
     def test_user_and_contributor_guides_cover_the_release_entry_points(self) -> None:
         documents = (
-            "CONFIGURATION.md", "CONTRIBUTING.md", "OUTPUTS.md", "MODS.md",
-            "MIGRATION.md", "FLOW_MATRIX.md", "V4_RELEASE.md",
-            "SECURITY.md", "CODE_OF_CONDUCT.md",
+            "CONFIGURATION.md",
+            "CONTRIBUTING.md",
+            "OUTPUTS.md",
+            "MODS.md",
+            "MIGRATION.md",
+            "FLOW_MATRIX.md",
+            "V4_RELEASE.md",
+            "SECURITY.md",
+            "CODE_OF_CONDUCT.md",
         )
         for document in documents:
             with self.subTest(document=document):
-                location = self.root / "docs" / document if document.endswith(".md") and document not in {
-                    "CONTRIBUTING.md", "SECURITY.md", "CODE_OF_CONDUCT.md",
-                } else self.root / document
+                location = (
+                    self.root / "docs" / document
+                    if document.endswith(".md")
+                    and document
+                    not in {
+                        "CONTRIBUTING.md",
+                        "SECURITY.md",
+                        "CODE_OF_CONDUCT.md",
+                    }
+                    else self.root / document
+                )
                 self.assertTrue(location.is_file())
         self.assertIn("Logicytics Wiki", self.readme)
         contributor = (self.root / "CONTRIBUTING.md").read_text(encoding="utf-8")
         for requirement in (
-                "Development setup", "Architecture boundaries", "Core collector changes",
-                "Plugins and MODs", "Configuration changes", "Testing expectations",
-                "conventional commit", "Developer Certificate of Origin",
+            "Development setup",
+            "Architecture boundaries",
+            "Core collector changes",
+            "Plugins and MODs",
+            "Configuration changes",
+            "Testing expectations",
+            "conventional commit",
+            "Developer Certificate of Origin",
         ):
             with self.subTest(requirement=requirement):
                 self.assertIn(requirement, contributor)

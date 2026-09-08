@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -53,15 +60,17 @@ class MountedVolumesCollector(CoreCollector):
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"mountvol exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED,
-                                       "mounted-volume access was denied for the current account", errors=(detail,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "mounted-volume access was denied for the current account",
+                    errors=(detail,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "mounted-volume query failed", errors=(detail,))
         output = context.workspace / "mounted_volumes.txt"
         output.write_text(completed.stdout, encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/plain")
         volume_count = sum(1 for line in completed.stdout.splitlines() if line.strip().startswith("\\\\?\\Volume{"))
-        context.report_progress("mounted_volumes_finished", volume_count=volume_count,
-                                bytes_written=artifact.size_bytes)
+        context.report_progress("mounted_volumes_finished", volume_count=volume_count, bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("mounted-volume mappings collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

@@ -11,7 +11,10 @@ from logicytics.module.artifacts import WorkspaceArtifactWriter
 from logicytics.module.discovery import preflight
 from logicytics.module.output_contracts import core_output_contract
 from logicytics.platform_adapters import (
-    process_adapter, registry_adapter, which, windows_api_adapter,
+    process_adapter,
+    registry_adapter,
+    which,
+    windows_api_adapter,
 )
 
 
@@ -23,8 +26,8 @@ class WindowsIntegrationTests(unittest.TestCase):
         self.assertIn(privilege, {True, False, None})
 
         with registry_adapter.OpenKey(
-                registry_adapter.HKEY_LOCAL_MACHINE,
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+            registry_adapter.HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
         ) as key:
             product_name, _ = registry_adapter.QueryValueEx(key, "ProductName")
         self.assertTrue(str(product_name).strip())
@@ -32,11 +35,27 @@ class WindowsIntegrationTests(unittest.TestCase):
         powershell = which("powershell")
         self.assertIsNotNone(powershell)
         probes = {
-            "powershell": [powershell, "-NoProfile", "-NonInteractive", "-Command", "Get-ExecutionPolicy"],
-            "wmi": [powershell, "-NoProfile", "-NonInteractive", "-Command",
-                    "Get-CimInstance Win32_OperatingSystem | Select-Object -First 1 Caption | ConvertTo-Json -Compress"],
-            "event_log": [powershell, "-NoProfile", "-NonInteractive", "-Command",
-                          "Get-WinEvent -LogName System -MaxEvents 1 | Select-Object Id | ConvertTo-Json -Compress"],
+            "powershell": [
+                powershell,
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                "Get-ExecutionPolicy",
+            ],
+            "wmi": [
+                powershell,
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                "Get-CimInstance Win32_OperatingSystem | Select-Object -First 1 Caption | ConvertTo-Json -Compress",
+            ],
+            "event_log": [
+                powershell,
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                "Get-WinEvent -LogName System -MaxEvents 1 | Select-Object Id | ConvertTo-Json -Compress",
+            ],
         }
         ipconfig = which("ipconfig")
         self.assertIsNotNone(ipconfig)
@@ -49,9 +68,7 @@ class WindowsIntegrationTests(unittest.TestCase):
             probes["wmic"] = [wmic, "computersystem", "get", "Name", "/format:list"]
         for name, command in probes.items():
             with self.subTest(integration=name):
-                result = process_adapter.run(
-                    command, capture_output=True, check=False, text=True, timeout=30
-                )
+                result = process_adapter.run(command, capture_output=True, check=False, text=True, timeout=30)
                 self.assertIsInstance(result.returncode, int)
                 self.assertLessEqual(len(result.stdout.encode("utf-8")), process_adapter.maximum_capture_bytes)
                 self.assertLessEqual(len(result.stderr.encode("utf-8")), process_adapter.maximum_capture_bytes)
@@ -60,9 +77,7 @@ class WindowsIntegrationTests(unittest.TestCase):
         sysinternals = [which(name) for name in ("autorunsc", "handle", "pslist")]
         for executable in (path for path in sysinternals if path is not None):
             with self.subTest(integration="sysinternals", executable=executable):
-                result = process_adapter.run(
-                    [executable, "-?"], capture_output=True, check=False, text=True, timeout=20
-                )
+                result = process_adapter.run([executable, "-?"], capture_output=True, check=False, text=True, timeout=20)
                 self.assertIsInstance(result.returncode, int)
 
     def test_every_shipped_output_contract_publishes_on_windows(self) -> None:
@@ -99,8 +114,8 @@ class WindowsIntegrationTests(unittest.TestCase):
                     )
 
                     for pattern, media_type in zip(
-                            contract.workspace_patterns,
-                            contract.media_types,
+                        contract.workspace_patterns,
+                        contract.media_types,
                     ):
                         parts: list[str] = []
 
@@ -121,10 +136,7 @@ class WindowsIntegrationTests(unittest.TestCase):
 
                         self.assertIn(
                             artifact.relative_path,
-                            {
-                                f"{metadata.id.replace('.', '_')}/"
-                                f"{source.relative_to(workspace).as_posix()}"
-                            },
+                            {f"{metadata.id.replace('.', '_')}/{source.relative_to(workspace).as_posix()}"},
                         )
 
 

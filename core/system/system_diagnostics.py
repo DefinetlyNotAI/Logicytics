@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import json
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -23,13 +30,19 @@ class SystemDiagnosticsCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the subprocess-gated system-diagnostics JSON artifact contract."""
         return CollectorMetadata(
-            id="core.system.system_diagnostics", name="System diagnostics", version="4.0.0",
+            id="core.system.system_diagnostics",
+            name="System diagnostics",
+            version="4.0.0",
             specialty=Specialty.SYSTEM,
             output_media_types=("application/json",),
             description="Exports architecture, CPU, page-size, and boot-time diagnostics through Windows CIM.",
-            author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
-            sensitive_data_categories=("system_configuration",), default_profiles=("deep",),
-            timeout_seconds=45, maximum_output_bytes=256 * 1024,
+            author="Logicytics",
+            supported_platforms=("win32",),
+            capabilities=(Capability.SUBPROCESS,),
+            sensitive_data_categories=("system_configuration",),
+            default_profiles=("deep",),
+            timeout_seconds=45,
+            maximum_output_bytes=256 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -47,24 +60,39 @@ class SystemDiagnosticsCollector(CoreCollector):
         context.report_progress("system_diagnostics_started")
         command = (
             "$ErrorActionPreference = 'Stop'; $os = Get-CimInstance -ClassName Win32_OperatingSystem; "
-            "$cpu = @(Get-CimInstance -ClassName Win32_Processor | Select-Object Name, Architecture, AddressWidth, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed); "
-            "[pscustomobject]@{ OperatingSystem = $os.Caption; Version = $os.Version; Architecture = $os.OSArchitecture; "
-            "Machine = $env:PROCESSOR_IDENTIFIER; PageSizeBytes = [Environment]::SystemPageSize; ProcessorCount = $cpu.Count; "
-            "Processors = $cpu; LastBootUpTime = $os.LastBootUpTime; CollectedAt = [DateTime]::UtcNow.ToString('o') } | ConvertTo-Json -Depth 5"
+            "$cpu = @(Get-CimInstance -ClassName Win32_Processor | "
+            "Select-Object Name, Architecture, AddressWidth, NumberOfCores, "
+            "NumberOfLogicalProcessors, MaxClockSpeed); "
+            "[pscustomobject]@{ OperatingSystem = $os.Caption; Version = $os.Version; "
+            "Architecture = $os.OSArchitecture; Machine = $env:PROCESSOR_IDENTIFIER; "
+            "PageSizeBytes = [Environment]::SystemPageSize; ProcessorCount = $cpu.Count; "
+            "Processors = $cpu; LastBootUpTime = $os.LastBootUpTime; "
+            "CollectedAt = [DateTime]::UtcNow.ToString('o') } | ConvertTo-Json -Depth 5"
         )
-        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
-                                   capture_output=True, check=False, text=True, timeout=40)
+        completed = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=40,
+        )
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED,
-                                       "system-diagnostics access was denied for the current account", errors=(detail,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "system-diagnostics access was denied for the current account",
+                    errors=(detail,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "system-diagnostics query failed", errors=(detail,))
         try:
             diagnostics = json.loads(completed.stdout)
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "system-diagnostics query returned invalid JSON",
-                                   errors=(str(error),))
+            return CollectorResult(
+                CollectorStatus.FAILED,
+                "system-diagnostics query returned invalid JSON",
+                errors=(str(error),),
+            )
         if not isinstance(diagnostics, dict):
             return CollectorResult(CollectorStatus.FAILED, "system-diagnostics query returned an unexpected result")
         output = context.workspace / "system_diagnostics.json"

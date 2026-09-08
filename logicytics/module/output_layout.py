@@ -39,12 +39,12 @@ def ensure_output_layout(output_root: Path) -> OutputLayout:
     """Create the complete stable output tree for a state-changing application action."""
     layout = output_layout(output_root)
     for directory in (
-            layout.data,
-            layout.logs,
-            layout.debug_logs,
-            layout.performance_logs,
-            layout.packages,
-            layout.hashes,
+        layout.data,
+        layout.logs,
+        layout.debug_logs,
+        layout.performance_logs,
+        layout.packages,
+        layout.hashes,
     ):
         directory.mkdir(parents=True, exist_ok=True)
     return layout

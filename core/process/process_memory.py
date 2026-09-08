@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import json
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -23,11 +30,18 @@ class ProcessMemoryCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the subprocess-gated process-memory JSON artifact contract."""
         return CollectorMetadata(
-            id="core.process.process_memory", name="Process memory", version="4.0.0", specialty=Specialty.PROCESS,
+            id="core.process.process_memory",
+            name="Process memory",
+            version="4.0.0",
+            specialty=Specialty.PROCESS,
             output_media_types=("application/json",),
             description="Exports aggregate working-set, private, and virtual memory counters for local processes.",
-            author="Logicytics", supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
-            sensitive_data_categories=("process_metadata",), default_profiles=("deep",), timeout_seconds=60,
+            author="Logicytics",
+            supported_platforms=("win32",),
+            capabilities=(Capability.SUBPROCESS,),
+            sensitive_data_categories=("process_metadata",),
+            default_profiles=("deep",),
+            timeout_seconds=60,
             maximum_output_bytes=4 * 1024 * 1024,
         )
 
@@ -49,19 +63,30 @@ class ProcessMemoryCollector(CoreCollector):
             "Select-Object Id, ProcessName, WorkingSet64, PrivateMemorySize64, VirtualMemorySize64, HandleCount, CPU, StartTime | "
             "ConvertTo-Json -Depth 3"
         )
-        completed = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
-                                   capture_output=True, check=False, text=True, timeout=55)
+        completed = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=55,
+        )
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"PowerShell exit code {completed.returncode}"
             if _is_access_denied(detail):
-                return CollectorResult(CollectorStatus.SKIPPED,
-                                       "process-memory access was denied for the current account", errors=(detail,))
+                return CollectorResult(
+                    CollectorStatus.SKIPPED,
+                    "process-memory access was denied for the current account",
+                    errors=(detail,),
+                )
             return CollectorResult(CollectorStatus.FAILED, "process-memory query failed", errors=(detail,))
         try:
             processes = json.loads(completed.stdout) if completed.stdout.strip() else []
         except json.JSONDecodeError as error:
-            return CollectorResult(CollectorStatus.FAILED, "process-memory query returned invalid JSON",
-                                   errors=(str(error),))
+            return CollectorResult(
+                CollectorStatus.FAILED,
+                "process-memory query returned invalid JSON",
+                errors=(str(error),),
+            )
         if not isinstance(processes, (dict, list)):
             return CollectorResult(CollectorStatus.FAILED, "process-memory query returned an unexpected result")
         output = context.workspace / "process_memory.json"

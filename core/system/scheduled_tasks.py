@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import json
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 from logicytics.platform_adapters import which
@@ -23,13 +30,19 @@ class ScheduledTasksCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the subprocess-gated scheduled-task JSON artifact contract."""
         return CollectorMetadata(
-            id="core.system.scheduled_tasks", name="Scheduled tasks", version="4.0.0", specialty=Specialty.SYSTEM,
+            id="core.system.scheduled_tasks",
+            name="Scheduled tasks",
+            version="4.0.0",
+            specialty=Specialty.SYSTEM,
             output_media_types=("application/json",),
             description="Exports up to 1,000 local scheduled-task names, paths, authors, descriptions, and states.",
             author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
+            supported_platforms=("win32",),
+            capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("system_configuration",),
-            default_profiles=("deep",), timeout_seconds=60, maximum_output_bytes=2 * 1024 * 1024,
+            default_profiles=("deep",),
+            timeout_seconds=60,
+            maximum_output_bytes=2 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -46,8 +59,7 @@ class ScheduledTasksCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before scheduled-task collection")
         context.report_progress("scheduled_tasks_started")
         command = (
-            "Get-ScheduledTask | Select-Object -First 1000 TaskName, TaskPath, State, Author, Description, URI | "
-            "ConvertTo-Json -Depth 3"
+            "Get-ScheduledTask | Select-Object -First 1000 TaskName, TaskPath, State, Author, Description, URI | ConvertTo-Json -Depth 3"
         )
         completed = subprocess.run(
             ["powershell", "-NoProfile", "-NonInteractive", "-Command", command],

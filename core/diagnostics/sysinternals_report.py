@@ -5,7 +5,14 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import process_adapter as subprocess
 
@@ -20,14 +27,19 @@ class SysinternalsReportCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the subprocess-gated Sysinternals report artifact contract."""
         return CollectorMetadata(
-            id="core.diagnostics.sysinternals_report", name="Sysinternals report", version="4.0.0",
+            id="core.diagnostics.sysinternals_report",
+            name="Sysinternals report",
+            version="4.0.0",
             specialty=Specialty.DIAGNOSTICS,
             output_media_types=("text/plain",),
             description="Reports supported Sysinternals binary/archive state and consolidates available tool output.",
             author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.SUBPROCESS,),
+            supported_platforms=("win32",),
+            capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("system_diagnostics",),
-            default_profiles=("deep",), timeout_seconds=180, maximum_output_bytes=512 * 1024,
+            default_profiles=("deep",),
+            timeout_seconds=180,
+            maximum_output_bytes=512 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -41,17 +53,22 @@ class SysinternalsReportCollector(CoreCollector):
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before Sysinternals collection")
         project_root = Path(__file__).resolve().parents[2]
-        search_roots = (project_root / "sysinternals", project_root / "tools" / "sysinternals",
-                        Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Sysinternals")
+        search_roots = (
+            project_root / "sysinternals",
+            project_root / "tools" / "sysinternals",
+            Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Sysinternals",
+        )
         archive_paths = tuple(root.with_suffix(".zip") for root in search_roots)
         sections: list[str] = ["Sysinternals report", ""]
         context.report_progress("sysinternals_report_started")
         for tool in TOOLS:
-            binary = next((root / f"{tool}.exe" for root in search_roots if (root / f"{tool}.exe").is_file()), None)
+            binary = next(
+                (root / f"{tool}.exe" for root in search_roots if (root / f"{tool}.exe").is_file()),
+                None,
+            )
             sections.append(f"## {tool}")
             if binary is None:
-                archive_state = "archive available" if any(
-                    path.is_file() for path in archive_paths) else "binary and archive missing"
+                archive_state = "archive available" if any(path.is_file() for path in archive_paths) else "binary and archive missing"
                 sections.extend((f"status: {archive_state}", ""))
                 continue
             try:
@@ -59,8 +76,7 @@ class SysinternalsReportCollector(CoreCollector):
             except OSError as error:
                 sections.extend((f"status: execution error: {error}", ""))
                 continue
-            output = (completed.stdout + (
-                "\n" if completed.stdout and completed.stderr else "") + completed.stderr).strip()
+            output = (completed.stdout + ("\n" if completed.stdout and completed.stderr else "") + completed.stderr).strip()
             sections.extend((f"status: executed (exit {completed.returncode})", output[:MAX_OUTPUT_CHARS], ""))
         report = "\n".join(sections)
         output_path = context.workspace / "sysinternals_report.txt"

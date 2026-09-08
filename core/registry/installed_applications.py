@@ -3,9 +3,16 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from logicytics import Capability, CollectorMetadata, CollectorResult, CoreCollector, Specialty, ValidationResult
+from logicytics import (
+    Capability,
+    CollectorMetadata,
+    CollectorResult,
+    CoreCollector,
+    Specialty,
+    ValidationResult,
+)
 from logicytics.contracts import CollectorContext, CollectorStatus
 from logicytics.platform_adapters import registry_adapter as winreg
 
@@ -52,11 +59,16 @@ def _installed_applications() -> list[dict[str, str | None]]:
                         if identity in seen:
                             continue
                         seen.add(identity)
-                        applications.append({"display_name": display_name, "display_version": version or None,
-                                             "publisher": _registry_value(key, "Publisher"),
-                                             "install_date": _registry_value(key, "InstallDate"),
-                                             "install_location": _registry_value(key, "InstallLocation"),
-                                             "uninstall_key": key_name})
+                        applications.append(
+                            {
+                                "display_name": display_name,
+                                "display_version": version or None,
+                                "publisher": _registry_value(key, "Publisher"),
+                                "install_date": _registry_value(key, "InstallDate"),
+                                "install_location": _registry_value(key, "InstallLocation"),
+                                "uninstall_key": key_name,
+                            }
+                        )
                 except OSError:
                     continue
     return sorted(applications, key=lambda item: (item["display_name"] or "").casefold())
@@ -69,14 +81,19 @@ class InstalledApplicationsCollector(CoreCollector):
     def metadata(cls) -> CollectorMetadata:
         """Declare the registry-read, bounded installed-application artifact contract."""
         return CollectorMetadata(
-            id="core.registry.installed_applications", name="Installed applications", version="4.0.0",
+            id="core.registry.installed_applications",
+            name="Installed applications",
+            version="4.0.0",
             specialty=Specialty.REGISTRY,
             output_media_types=("application/json",),
             description="Exports installed application names, versions, publishers, and install metadata from uninstall keys.",
             author="Logicytics",
-            supported_platforms=("win32",), capabilities=(Capability.REGISTRY_READ,),
+            supported_platforms=("win32",),
+            capabilities=(Capability.REGISTRY_READ,),
             sensitive_data_categories=("system_configuration",),
-            default_profiles=("deep",), timeout_seconds=60, maximum_output_bytes=4 * 1024 * 1024,
+            default_profiles=("deep",),
+            timeout_seconds=60,
+            maximum_output_bytes=4 * 1024 * 1024,
         )
 
     def validate(self, context: CollectorContext) -> ValidationResult:
@@ -99,11 +116,20 @@ class InstalledApplicationsCollector(CoreCollector):
         applications = _installed_applications()
         output = context.workspace / "installed_applications.json"
         output.write_text(
-            json.dumps({"collected_at": datetime.now(timezone.utc).isoformat(), "applications": applications}, indent=2,
-                       sort_keys=True) + "\n", encoding="utf-8")
+            json.dumps(
+                {"collected_at": datetime.now(UTC).isoformat(), "applications": applications},
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("installed_applications_finished", application_count=len(applications),
-                                bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "installed_applications_finished",
+            application_count=len(applications),
+            bytes_written=artifact.size_bytes,
+        )
         return CollectorResult.succeeded("installed applications collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

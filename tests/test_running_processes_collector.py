@@ -16,12 +16,12 @@ class _UnusedArtifactWriter(ArtifactWriter):
     """Raise if a skipped collector unexpectedly attempts artifact registration."""
 
     def register_file(
-            self,
-            source: Path,
-            *,
-            media_type: str = "application/octet-stream",
-            transformations: tuple[str, ...] = (),
-            evidence_kind: str | None = None,
+        self,
+        source: Path,
+        *,
+        media_type: str = "application/octet-stream",
+        transformations: tuple[str, ...] = (),
+        evidence_kind: str | None = None,
     ):
         raise AssertionError("a skipped collector must not register artifacts")
 
@@ -29,7 +29,7 @@ class _UnusedArtifactWriter(ArtifactWriter):
 class _NoopLogger(EventLogger):
     """Discard events while directly exercising a collector method."""
 
-    def event(self, level: str, message: str, **fields: int | float | str) -> None:
+    def event(self, level: str, message: str, **fields: float | str) -> None:
         return None
 
 
@@ -61,9 +61,9 @@ class RunningProcessesCollectorTests(unittest.TestCase):
                 cancellation_file=workspace / ".cancelled",
             )
             with patch.object(
-                    module.subprocess,
-                    module.subprocess.run.__name__,
-                    return_value=CompletedProcess([], 1, "", "ERROR: Access denied"),
+                module.subprocess,
+                module.subprocess.run.__name__,
+                return_value=CompletedProcess([], 1, "", "ERROR: Access denied"),
             ):
                 result = collector_type().collect(context)
         self.assertEqual(CollectorStatus.SKIPPED, result.status)

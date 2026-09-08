@@ -5,12 +5,12 @@ import unittest
 from pathlib import Path
 
 from logicytics.cli import cli_methods
-from logicytics.module.configuration import (
-    default_config,
-)
 from logicytics.contracts import (
     ResourceClass,
     RunRequest,
+)
+from logicytics.module.configuration import (
+    default_config,
 )
 from logicytics.module.discovery import preflight
 from logicytics.module.planner import build_plan
@@ -52,10 +52,7 @@ class SchedulerTests(unittest.TestCase):
                 planned_ids.append(candidate.metadata.id)
 
             outcome = RunSupervisor(root, default_config(root)).run(plan)
-            records = {
-                record.id: record
-                for record in outcome.manifest.collectors
-            }
+            records = {record.id: record for record in outcome.manifest.collectors}
 
             self.assertEqual(
                 planned_ids,
@@ -73,7 +70,10 @@ class SchedulerTests(unittest.TestCase):
     def test_explicit_execution_modes_control_isolated_worker_overlap(self) -> None:
         """First-class CLI policies determine real sequential versus bounded worker overlap."""
         for execution_mode, expect_overlap in (("--sequential", False), ("--parallel", True)):
-            with self.subTest(execution_mode=execution_mode), tempfile.TemporaryDirectory() as temporary:
+            with (
+                self.subTest(execution_mode=execution_mode),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
                 root = Path(temporary)
                 core_directory = root / "core" / "system"
                 core_directory.mkdir(parents=True)
@@ -83,9 +83,7 @@ class SchedulerTests(unittest.TestCase):
                         delayed_collector_source(filename, 0.3),
                         encoding="utf-8",
                     )
-                arguments = cli_methods.parser().parse_args(
-                    ["run", execution_mode, "--acknowledge-authorization"]
-                )
+                arguments = cli_methods.parser().parse_args(["run", execution_mode, "--acknowledge-authorization"])
                 run_request = cli_methods.request(arguments, default_workers=2)
                 report = preflight(root)
                 self.assertEqual((), report.invalid)
@@ -140,11 +138,14 @@ class SchedulerTests(unittest.TestCase):
     def test_conflicting_resource_classes_run_without_worker_overlap(self) -> None:
         """Disk, network, and registry resource conflicts each serialize their owners."""
         for resource_class in (
-                ResourceClass.DISK_HEAVY,
-                ResourceClass.NETWORK_HEAVY,
-                ResourceClass.REGISTRY_SENSITIVE,
+            ResourceClass.DISK_HEAVY,
+            ResourceClass.NETWORK_HEAVY,
+            ResourceClass.REGISTRY_SENSITIVE,
         ):
-            with self.subTest(resource_class=resource_class), tempfile.TemporaryDirectory() as temporary:
+            with (
+                self.subTest(resource_class=resource_class),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
                 root = Path(temporary)
                 core_directory = root / "core" / "system"
                 core_directory.mkdir(parents=True)

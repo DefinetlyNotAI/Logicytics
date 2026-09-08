@@ -29,8 +29,8 @@ class SysinternalsState:
 
 
 def ensure_sysinternals(
-        project_root: Path,
-        settings: MaintenanceSettings | None = None,
+    project_root: Path,
+    settings: MaintenanceSettings | None = None,
 ) -> SysinternalsState:
     """Honor YAML opt-out or securely download, validate, and extract Sysinternals."""
     settings = settings or MaintenanceSettings()
@@ -43,9 +43,10 @@ def ensure_sysinternals(
     if not archive.is_file():
         archive.parent.mkdir(parents=True, exist_ok=True)
         try:
-            with urlopen(settings.sysinternals_download_url, timeout=30) as response, NamedTemporaryFile(
-                    mode="wb", dir=archive.parent, delete=False
-            ) as temporary:
+            with (
+                urlopen(settings.sysinternals_download_url, timeout=30) as response,
+                NamedTemporaryFile(mode="wb", dir=archive.parent, delete=False) as temporary,
+            ):
                 temporary.write(response.read())
                 downloaded = Path(temporary.name)
         except (OSError, URLError) as error:

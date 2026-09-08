@@ -90,8 +90,11 @@ class PairedDevicesCollector(CoreCollector):
         output = context.workspace / "bluetooth_devices.json"
         output.write_text(json.dumps(devices, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="application/json")
-        context.report_progress("bluetooth_devices_finished", device_count=len(devices),
-                                bytes_written=artifact.size_bytes)
+        context.report_progress(
+            "bluetooth_devices_finished",
+            device_count=len(devices),
+            bytes_written=artifact.size_bytes,
+        )
         return CollectorResult.succeeded("Bluetooth device metadata collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

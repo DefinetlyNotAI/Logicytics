@@ -7,10 +7,10 @@ import zipfile
 from pathlib import Path
 
 from logicytics.cli import cli_methods
-from logicytics.module.configuration import default_config
 from logicytics.contracts import Capability, RunRequest
+from logicytics.module.configuration import default_config
 from logicytics.module.discovery import preflight
-from logicytics.module.errors import PlanError, PreflightError
+from logicytics.module.errors import PreflightError
 from logicytics.module.planner import build_plan
 from logicytics.module.runtime import RunSupervisor
 from tests.fixtures.collectors import mod_metadata
@@ -88,17 +88,9 @@ class ModTests(unittest.TestCase):
             )
             self.assertEqual(2, len(record.artifacts))
 
-            report_artifact = next(
-                item
-                for item in record.artifacts
-                if item["name"] == "report.txt"
-            )
+            report_artifact = next(item for item in record.artifacts if item["name"] == "report.txt")
 
-            artifact_path = (
-                    outcome.run_directory
-                    / "artifacts"
-                    / str(report_artifact["relative_path"])
-            )
+            artifact_path = outcome.run_directory / "artifacts" / str(report_artifact["relative_path"])
 
             self.assertEqual(
                 "mod evidence\n",
@@ -112,9 +104,7 @@ class ModTests(unittest.TestCase):
             mods_package = Path(package["mods_path"])
             mods_hash = Path(package["mods_sha256_path"])
 
-            self.assertTrue(
-                mods_package.name.startswith("mods-run-")
-            )
+            self.assertTrue(mods_package.name.startswith("mods-run-"))
             self.assertTrue(mods_hash.is_file())
 
             with zipfile.ZipFile(mods_package) as archive:
@@ -124,16 +114,11 @@ class ModTests(unittest.TestCase):
                     "metadata/mods.json",
                     names,
                 )
-                self.assertTrue(
-                    any(
-                        name.endswith("/report.txt")
-                        for name in names
-                    )
-                )
+                self.assertTrue(any(name.endswith("/report.txt") for name in names))
                 self.assertIsNone(archive.testzip())
 
     def test_python_mod_cannot_mutate_project_configuration_without_write_approval(
-            self,
+        self,
     ) -> None:
         """The Python MOD bootstrap blocks host writes while an independent MOD still succeeds."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -149,15 +134,8 @@ class ModTests(unittest.TestCase):
             mods.mkdir()
 
             scripts = {
-                "good.py": (
-                    "from pathlib import Path\n"
-                    "Path('report.txt').write_text('ok', encoding='utf-8')\n"
-                ),
-                "malicious.py": (
-                    "from pathlib import Path\n"
-                    f"Path({str(configuration_path)!r}).write_text("
-                    "'replaced', encoding='utf-8')\n"
-                ),
+                "good.py": ("from pathlib import Path\nPath('report.txt').write_text('ok', encoding='utf-8')\n"),
+                "malicious.py": (f"from pathlib import Path\nPath({str(configuration_path)!r}).write_text('replaced', encoding='utf-8')\n"),
             }
 
             for filename, source in scripts.items():
@@ -193,10 +171,7 @@ class ModTests(unittest.TestCase):
                 default_config(root),
             ).run(plan)
 
-            records = {
-                record.id: record
-                for record in outcome.manifest.collectors
-            }
+            records = {record.id: record for record in outcome.manifest.collectors}
 
             self.assertEqual(
                 "succeeded",
@@ -208,10 +183,7 @@ class ModTests(unittest.TestCase):
                 records["mod.malicious"].status,
             )
             self.assertTrue(
-                any(
-                    "private workspace" in error
-                    for error in records["mod.malicious"].errors
-                ),
+                any("private workspace" in error for error in records["mod.malicious"].errors),
                 records["mod.malicious"].errors,
             )
 

@@ -7,9 +7,9 @@ import json
 import os
 import re
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING, IO
+from typing import IO, TYPE_CHECKING
 
 from logicytics.contracts import Artifact
 from logicytics.module.artifacts import sha256_file
@@ -36,7 +36,7 @@ def _package_filename(manifest: RunManifest) -> str:
         raise ValueError("package requested_at must be a valid timestamp") from error
     if requested_at.tzinfo is None:
         raise ValueError("package requested_at must include a timezone")
-    timestamp = requested_at.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+    timestamp = requested_at.astimezone(UTC).strftime("%Y%m%dT%H%M%S.%fZ")
     return f"{manifest.action}-{timestamp}-{manifest.run_id}.zip"
 
 
@@ -105,13 +105,13 @@ def _artifact_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[
         relative = PurePosixPath(artifact.relative_path)
         owner = artifact.collector_id.replace(".", "_")
         if (
-                not artifact.relative_path
-                or "\\" in artifact.relative_path
-                or relative.is_absolute()
-                or ".." in relative.parts
-                or relative.as_posix() != artifact.relative_path
-                or len(relative.parts) < 2
-                or relative.parts[0] != owner
+            not artifact.relative_path
+            or "\\" in artifact.relative_path
+            or relative.is_absolute()
+            or ".." in relative.parts
+            or relative.as_posix() != artifact.relative_path
+            or len(relative.parts) < 2
+            or relative.parts[0] != owner
         ):
             raise ValueError(f"manifest artifact escapes its collector-owned store: {artifact.relative_path}")
         source = artifact_root.joinpath(*relative.parts)
@@ -120,9 +120,7 @@ def _artifact_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[
         try:
             source.resolve(strict=True).relative_to(artifact_root / owner)
         except (OSError, ValueError) as error:
-            raise ValueError(
-                f"manifest artifact escapes its collector-owned store: {artifact.relative_path}"
-            ) from error
+            raise ValueError(f"manifest artifact escapes its collector-owned store: {artifact.relative_path}") from error
         archive_name = _artifact_archive_name(artifact)
         if archive_name in archive_names:
             raise ValueError(f"manifest contains duplicate artifact path: {artifact.relative_path}")
@@ -140,10 +138,7 @@ def _artifact_archive_name(artifact: Artifact) -> str:
 
 def _artifact_checksum_catalog(manifest: RunManifest) -> str:
     """Return a deterministic SHA-256 catalog for every packaged evidence member."""
-    entries = sorted(
-        (_artifact_archive_name(artifact), artifact.sha256)
-        for artifact in manifest.artifact_list()
-    )
+    entries = sorted((_artifact_archive_name(artifact), artifact.sha256) for artifact in manifest.artifact_list())
     return "".join(f"{digest}  {archive_name}\n" for archive_name, digest in entries)
 
 
@@ -226,10 +221,10 @@ def _verify_archive(package_path: Path, manifest: RunManifest, expected_names: s
 
 
 def _package_mod_artifacts(
-        package_directory: Path,
-        hash_directory: Path,
-        manifest: RunManifest,
-        artifact_sources: list[tuple[Path, str]],
+    package_directory: Path,
+    hash_directory: Path,
+    manifest: RunManifest,
+    artifact_sources: list[tuple[Path, str]],
 ) -> dict[str, str]:
     """Publish MODS evidence in a separately named atomic package and sidecar."""
     mod_sources = [
@@ -248,10 +243,7 @@ def _package_mod_artifacts(
     temporary_hash = hash_path.with_suffix(".sha256.tmp")
     mod_catalog = {
         "run_id": manifest.run_id,
-        "artifacts": [
-            item for item in manifest.artifact_catalog()
-            if str(item.get("collector_id", "")).startswith("mod.")
-        ],
+        "artifacts": [item for item in manifest.artifact_catalog() if str(item.get("collector_id", "")).startswith("mod.")],
     }
     expected_names = {"metadata/mods.json", *(archive_name for _, archive_name in mod_sources)}
     try:
@@ -301,7 +293,11 @@ def _package_mod_artifacts(
             temporary_package.unlink()
         if temporary_hash.exists():
             temporary_hash.unlink()
-    return {"mods_path": str(package_path), "mods_sha256_path": str(hash_path), "mods_sha256": digest}
+    return {
+        "mods_path": str(package_path),
+        "mods_sha256_path": str(hash_path),
+        "mods_sha256": digest,
+    }
 
 
 def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: Path) -> tuple[Path, Path]:
@@ -375,6 +371,6 @@ def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: 
     return package_path, hash_path
 
 
-def package_run(outcome: "RunOutcome") -> tuple[Path, Path]:
+def package_run(outcome: RunOutcome) -> tuple[Path, Path]:
     """Compatibility wrapper for callers holding a complete runtime outcome."""
     return package_manifest(outcome.run_directory, outcome.manifest, outcome.manifest_path)
