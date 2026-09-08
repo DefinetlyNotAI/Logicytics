@@ -22,7 +22,12 @@ class TerminalLifecycleTests(unittest.TestCase):
 
     def test_windows_clear_uses_the_real_console_command(self) -> None:
         """Windows startup clears the shared screen buffer through cls, not escape bytes."""
-        with patch.object(terminal.os, "name", "nt"), patch.object(
+        output = _InteractiveBuffer()
+        with patch.object(terminal.sys, "stdout", output), patch.object(
+                terminal.os,
+                "name",
+                "nt",
+        ), patch.object(
                 terminal.os,
                 "system",
                 return_value=0,
@@ -30,6 +35,7 @@ class TerminalLifecycleTests(unittest.TestCase):
             terminal._clear_terminal()
 
         system.assert_called_once_with("cls")
+        self.assertEqual("", output.getvalue())
 
     def test_interactive_lifecycle_clears_once_and_ends_with_a_newline(self) -> None:
         """The outer lifecycle performs real clearing once and leaves a clean prompt line."""
