@@ -29,6 +29,7 @@ The installer is the only Logicytics command designed to run outside a virtual e
 
 ```powershell
 python -m logicytics.cli.installer
+.\.venv\Scripts\Activate.ps1
 python -m logicytics preflight
 ```
 
@@ -42,6 +43,7 @@ python -m logicytics run --profile standard --acknowledge-authorization
 Use the bundled runner for the complete dynamically discovered test suite:
 
 ```powershell
+.\.venv\Scripts\Activate.ps1
 python -m logicytics.cli.tests
 ```
 
@@ -323,7 +325,15 @@ python -m logicytics.cli.installer --overwrite-config
 | --environment PATH | Virtual environment directory; default is .venv. Relative paths use the repository root. |
 | --overwrite-config | Replace the root YAML template with default values.                                      |
 
-After installation, use .venv\Scripts\python.exe for normal commands.
+After installation, activate the environment before running a normal command:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+If the environment is already present, every normal command prints this same
+activation instruction instead of running outside it. If `.venv` is absent or
+incomplete, it directs you to the installer instead.
 
 ### Test runner
 
@@ -331,6 +341,7 @@ The test runner discovers the complete tests package, logs suite lifecycle,
 and returns CI-friendly status. It requires the managed virtual environment.
 
 ```powershell
+.\.venv\Scripts\Activate.ps1
 python -m logicytics.cli.tests
 python -m logicytics.cli.tests --verbosity 0
 python -m logicytics.cli.tests --verbosity 1

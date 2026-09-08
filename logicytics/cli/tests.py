@@ -8,10 +8,10 @@ import sys
 import unittest
 from pathlib import Path
 
-from logicytics.module.configuration import load_config
-from logicytics.module.errors import PlanError
-from logicytics.module.logging import ApplicationLogger, HumanArgumentParser, get_application_logger
-from logicytics.module.output_layout import ensure_output_layout
+from logicytics.virtual_environment import (
+    is_running_in_virtual_environment,
+    render_virtual_environment_error,
+)
 
 
 def project_root() -> Path:
@@ -19,23 +19,24 @@ def project_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def _require_virtual_environment() -> None:
-    """Reject normal tooling execution outside the environment prepared by installer."""
-    if sys.prefix == sys.base_prefix:
-        raise RuntimeError("Logicytics tests require a virtual environment. Run logicytics.cli.installer first.")
-
-
 def main(argv: list[str] | None = None) -> int:
     """Dynamically discover tests and return a CI-appropriate result code."""
+    root = project_root()
+    if not is_running_in_virtual_environment():
+        render_virtual_environment_error(sys.stderr, root)
+        return 2
+    from logicytics.module.configuration import load_config
+    from logicytics.module.errors import PlanError
+    from logicytics.module.logging import (
+        ApplicationLogger,
+        HumanArgumentParser,
+        get_application_logger,
+    )
+    from logicytics.module.output_layout import ensure_output_layout
+
     parser = HumanArgumentParser(description="Run all discovered Logicytics tests.")
     parser.add_argument("--verbosity", type=int, choices=(0, 1, 2), default=2)
     arguments = parser.parse_args(argv)
-    try:
-        _require_virtual_environment()
-    except RuntimeError as error:
-        ApplicationLogger.render_section(sys.stderr, "Test runner error", (str(error),))
-        return 2
-    root = project_root()
     try:
         configuration = load_config(root)
         layout = ensure_output_layout(configuration.runtime.output_root)

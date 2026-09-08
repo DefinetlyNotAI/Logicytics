@@ -42,6 +42,10 @@ from logicytics.module.planner import BUILTIN_PROFILES, build_plan
 from logicytics.module.runtime import RunSupervisor
 from logicytics.module.sysinternals import ensure_sysinternals
 from logicytics.platform_adapters import process_adapter
+from logicytics.virtual_environment import (
+    is_running_in_virtual_environment,
+    virtual_environment_error,
+)
 
 
 class CLI:
@@ -625,14 +629,11 @@ class CLI:
 
 def main(argv: list[str] | None = None) -> int:
     """Run the selected preflight, planning, or supervised execution command."""
-    if sys.prefix == sys.base_prefix:
+    if not is_running_in_virtual_environment():
         ApplicationLogger.render_section(
             sys.stderr,
             "Logicytics startup error",
-            (
-                "Logicytics must run inside a virtual environment.",
-                "Next step: run python -m logicytics.cli.installer first.",
-            ),
+            virtual_environment_error(CLI.project_root()),
         )
         return 2
     cli_parser = cli_methods.parser()

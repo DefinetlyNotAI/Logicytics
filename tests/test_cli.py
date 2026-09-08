@@ -18,6 +18,40 @@ from logicytics.platform_adapters import process_adapter
 class CliTests(unittest.TestCase):
     """CLI modes, parser constraints, reruns, and launch behavior."""
 
+    def test_cli_requires_activating_the_existing_local_environment(self) -> None:
+        """A local environment gets an activation instruction instead of an installer prompt."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            activation_script = root / ".venv" / "Scripts" / "Activate.ps1"
+            activation_script.parent.mkdir(parents=True)
+            activation_script.write_text("", encoding="utf-8")
+            output = io.StringIO()
+
+            with patch("logicytics.cli._project_root", return_value=root), patch.object(
+                    sys,
+                    "prefix",
+                    sys.base_prefix,
+            ), patch("sys.stderr", output):
+                self.assertEqual(2, main(["preflight"]))
+
+            self.assertIn(r".\.venv\Scripts\Activate.ps1", output.getvalue())
+            self.assertNotIn("installer first", output.getvalue())
+
+    def test_cli_requires_the_installer_when_the_local_environment_is_missing(self) -> None:
+        """A missing or incomplete local environment gets the installer instruction."""
+        with tempfile.TemporaryDirectory() as temporary:
+            output = io.StringIO()
+
+            with patch("logicytics.cli._project_root", return_value=Path(temporary)), patch.object(
+                    sys,
+                    "prefix",
+                    sys.base_prefix,
+            ), patch("sys.stderr", output):
+                self.assertEqual(2, main(["preflight"]))
+
+            rendered = " ".join(output.getvalue().split())
+            self.assertIn("python -m logicytics.cli.installer", rendered)
+
     def test_run_parser_accepts_performance_check(self) -> None:
         """The run command must expose the performance mode used by the request builder."""
         arguments = cli_methods.parser().parse_args(["run", "--performance-check"])
