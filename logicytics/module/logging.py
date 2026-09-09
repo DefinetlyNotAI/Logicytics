@@ -806,15 +806,33 @@ class ApplicationLogger(EventLogger):
 class HumanArgumentParser(argparse.ArgumentParser):
     """Present argparse failures through the same readable CLI section layout."""
 
-    def error(self, message: str) -> None:
-        """Render one concise argument error and its usage without raw argparse output."""
+    def reference_lines(self) -> tuple[str, ...]:
+        """Return every visible option as compact, presentation-ready help rows."""
         usage = " ".join(self.format_usage().split())
         while usage.lower().startswith("usage:"):
             usage = usage[len("usage:") :].strip()
+        usage = usage.replace(",", ", ")
+        rows = [f"Usage: {usage}", "Options:"]
+        formatter = self._get_formatter()
+        for action in self._actions:
+            if action.help is argparse.SUPPRESS:
+                continue
+            invocation = re.sub(r",\s*", ", ", formatter._format_action_invocation(action))
+            description = formatter._expand_help(action).strip() if action.help else "No description provided."
+            rows.append(f"{invocation} - {description}")
+        return tuple(rows)
+
+    def error(self, message: str) -> None:
+        """Render a concise error followed by the complete command reference."""
         ApplicationLogger.render_error(
             sys.stderr,
             "Command-line error",
-            (f"Error: {message}", f"Usage: {usage}"),
+            (f"Error: {message}",),
+        )
+        ApplicationLogger.render_section(
+            sys.stderr,
+            "Available command options",
+            self.reference_lines(),
         )
         raise SystemExit(2)
 

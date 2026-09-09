@@ -272,6 +272,22 @@ class CliTests(unittest.TestCase):
                 cli_methods.parser().parse_args(["run", "--default", "--performance-check"])
         self.assertIn("not allowed with argument", errors.getvalue())
 
+    def test_argument_error_keeps_the_complete_command_reference(self) -> None:
+        """Invalid arguments retain every available flag and capability in a readable section."""
+        output = io.StringIO()
+
+        with patch("sys.stderr", output), self.assertRaises(SystemExit):
+            cli_methods.parser().parse_args(["collector"])
+
+        rendered = output.getvalue()
+        self.assertIn("Command-line error", rendered)
+        self.assertIn("Available command options", rendered)
+        self.assertIn("--block-capability", rendered)
+        self.assertIn("private_keys", rendered)
+        self.assertIn("--interactive", rendered)
+        self.assertIn("Confirm you are authorized", rendered)
+        self.assertIn("collector_id", rendered)
+
     def test_update_can_explicitly_launch_an_allowlisted_action_in_a_new_window(
         self,
     ) -> None:
