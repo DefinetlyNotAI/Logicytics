@@ -38,7 +38,7 @@ def output_layout(output_root: Path) -> OutputLayout:
         debug_logs=logs / "debug",
         performance_logs=logs / "performance",
         packages=data / "zip",
-        hashes=data / "zip" / "hashes",
+        hashes=data / "hashes",
         application_log=logs / "Logicytics.log",
     )
 

@@ -80,7 +80,7 @@ Every run owns a SHA-256 fingerprint, redacted manifest, human summary,
 structured logs, and artifact checksum catalog under
 `output/data/run/<fingerprint>/`. Its verified ZIP and SHA-256 sidecar are
 published to `output/data/zip/<fingerprint>.zip` and
-`output/data/zip/hashes/<fingerprint>.zip.sha256`. A rerun records its parent
+`output/data/hashes/<zip-sha256-first-8>.zip.sha256`. A rerun records its parent
 and receives a separate fingerprint. Manifest-only output is explicit.
 Finished evidence remains with its run until the user removes that run; worker
 scratch data is removed only after durable publication.

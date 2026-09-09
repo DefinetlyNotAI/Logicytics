@@ -24,7 +24,7 @@ Only one mode or alias may be selected per invocation. Prefer named `--mode` val
 - `CODE/config.ini` is read only as a legacy compatibility input; v4 writes canonical manifests and does not mutate the file.
 - `core.integration.legacy_code_outputs` remains the explicit bridge for approved legacy `CODE` output. It is not an implicit scan of the repository.
 - `MODS/` is an opt-in Python extension area. MOD sidecars declare the script, capabilities, output paths, and media types before a run can select them.
-- There are no global `ACCESS/`, `RUNS/`, `LOGS/`, or `PACKAGES/` stores. Run-owned evidence is written to `runtime.output_root/run/<fingerprint>/`; verified ZIPs and their hashes are published to `runtime.output_root/zip/<fingerprint>.zip` and `runtime.output_root/zip/hashes/<fingerprint>.zip.sha256`.
+- There are no global `ACCESS/`, `RUNS/`, `LOGS/`, or `PACKAGES/` stores. Run-owned evidence is written to `runtime.output_root/run/<fingerprint>/`; verified ZIPs and their hashes are published to `runtime.output_root/zip/<fingerprint>.zip` and `runtime.output_root/hashes/<zip-sha256-first-8>.zip.sha256`.
 
 Do not copy v3 JSON settings into the v4 YAML path. Translate supported values using [CONFIGURATION.md](CONFIGURATION.md), then run `python -m logicytics preflight` before collecting.
 

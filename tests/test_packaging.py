@@ -88,7 +88,7 @@ class PackagingTests(unittest.TestCase):
             self.assertTrue(Path(package["sha256_path"]).is_file())
             self.assertEqual(configuration.runtime.output_root.resolve() / "zip", Path(package["path"]).parent)
             self.assertEqual(
-                configuration.runtime.output_root.resolve() / "zip" / "hashes",
+                configuration.runtime.output_root.resolve() / "hashes",
                 Path(package["sha256_path"]).parent,
             )
             self.assertTrue((outcome.run_directory / "logs" / "engine.jsonl").is_file())
@@ -101,8 +101,8 @@ class PackagingTests(unittest.TestCase):
             self.assertTrue(package_path.is_file())
             self.assertTrue(hash_path.is_file())
             self.assertEqual(f"{run_fingerprint(outcome.manifest.run_id)}.zip", package_path.name)
-            self.assertEqual(f"{package_path.name}.sha256", hash_path.name)
             package_digest, sidecar_name = hash_path.read_text(encoding="ascii").split()
+            self.assertEqual(f"{package_path.stem[:8]}.zip.sha256", hash_path.name)
             self.assertEqual(package_path.name, sidecar_name)
             self.assertEqual(hashlib.sha256(package_path.read_bytes()).hexdigest(), package_digest)
             self.assertEqual(package_digest, package["sha256"])
@@ -263,7 +263,7 @@ class PackagingTests(unittest.TestCase):
 
             self.assertEqual((expected_root / "run").resolve(), outcome.run_directory.parent)
             self.assertEqual((expected_root / "zip").resolve(), package_path.parent)
-            self.assertEqual((expected_root / "zip" / "hashes").resolve(), hash_path.parent)
+            self.assertEqual((expected_root / "hashes").resolve(), hash_path.parent)
             self.assertEqual("preserve existing evidence", legacy_evidence.read_text(encoding="utf-8"))
             self.assertFalse((root / "custom" / "PACKAGES").exists())
             self.assertEqual(
@@ -674,7 +674,7 @@ class PackagingTests(unittest.TestCase):
             original_replace = os.replace
 
             def fail_sidecar(source: str | Path, destination: str | Path) -> None:
-                if Path(destination) == hash_path and Path(source).suffix == ".tmp":
+                if Path(destination).parent == hash_path.parent and Path(source).suffix == ".tmp":
                     raise OSError("simulated sidecar publication failure")
                 original_replace(source, destination)
 
@@ -685,7 +685,7 @@ class PackagingTests(unittest.TestCase):
             self.assertEqual(original_hash, hash_path.read_bytes())
             self.assertFalse(package_path.with_suffix(".zip.tmp").exists())
             self.assertFalse(package_path.with_suffix(".zip.backup").exists())
-            self.assertFalse(hash_path.with_suffix(".sha256.tmp").exists())
+            self.assertFalse((hash_path.parent / f".{package_path.name}.sha256.tmp").exists())
             self.assertFalse(hash_path.with_suffix(".sha256.backup").exists())
 
     def test_package_rejects_manifest_artifact_path_escape_and_forged_collector_ownership(

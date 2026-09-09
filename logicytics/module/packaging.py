@@ -25,6 +25,27 @@ _SUMMARY_ARCHIVE_PATH = "reports/summary.txt"
 _ARTIFACT_HASH_ARCHIVE_PATH = "hashes/artifacts.sha256"
 
 
+def _sidecar_filename(package_name: str) -> str:
+    """Return a concise sidecar name from the package's storage fingerprint."""
+    match = re.fullmatch(r"(?P<prefix>mods-)?(?P<fingerprint>[0-9a-f]{64})\.zip", package_name)
+    if match is None:
+        raise ValueError("package name must contain a lowercase SHA-256 storage fingerprint")
+    return f"{match['prefix'] or ''}{match['fingerprint'][:8]}.zip.sha256"
+
+
+def _validate_sidecar_slot(hash_path: Path, package_name: str) -> None:
+    """Refuse a truncated-name collision before replacing a sidecar."""
+    if not hash_path.exists():
+        return
+    if not hash_path.is_file() or hash_path.is_symlink():
+        raise ValueError(f"hash sidecar path is not a regular file: {hash_path}")
+    existing_values = hash_path.read_text(encoding="ascii").split()
+    if len(existing_values) != 2 or existing_values[1] != package_name:
+        raise FileExistsError(
+            f"SHA-256 sidecar filename collision for {hash_path.name}; preserve the existing package sidecar"
+        )
+
+
 def _package_filename(manifest: RunManifest) -> str:
     """Return the canonical ZIP filename from the opaque run fingerprint."""
     if not isinstance(manifest.action, str) or not re.fullmatch(r"run|rerun", manifest.action):
@@ -239,9 +260,8 @@ def _package_mod_artifacts(
     if not mod_sources:
         return {}
     package_path = package_directory / f"mods-{_package_filename(manifest)}"
-    hash_path = hash_directory / f"{package_path.name}.sha256"
     temporary_package = package_path.with_suffix(".zip.tmp")
-    temporary_hash = hash_path.with_suffix(".sha256.tmp")
+    temporary_hash = hash_directory / f".{package_path.name}.sha256.tmp"
     mod_catalog = {
         "run_id": manifest.run_id,
         "artifacts": [item for item in manifest.artifact_catalog() if str(item.get("collector_id", "")).startswith("mod.")],
@@ -265,6 +285,8 @@ def _package_mod_artifacts(
                     raise ValueError(f"MODS artifact verification failed: {artifact.relative_path}")
 
         digest = sha256_file(temporary_package)
+        hash_path = hash_directory / _sidecar_filename(package_path.name)
+        _validate_sidecar_slot(hash_path, package_path.name)
         temporary_hash.write_text(f"{digest}  {package_path.name}\n", encoding="ascii")
         package_backup = package_path.with_suffix(".zip.backup")
         hash_backup = hash_path.with_suffix(".sha256.backup")
@@ -312,11 +334,10 @@ def package_manifest(
     """Package registered artifacts, manifest, and summary without scanning arbitrary files."""
     data_root = run_directory.parent.parent
     package_directory = package_directory or data_root / "zip"
-    hash_directory = hash_directory or package_directory / "hashes"
+    hash_directory = hash_directory or data_root / "hashes"
     package_directory.mkdir(parents=True, exist_ok=True)
     hash_directory.mkdir(parents=True, exist_ok=True)
     package_path = package_directory / _package_filename(manifest)
-    hash_path = hash_directory / f"{package_path.name}.sha256"
 
     summary_path = run_directory / "reports" / "summary.txt"
     artifact_hash_path = hash_directory / "artifacts.sha256"
@@ -331,7 +352,7 @@ def package_manifest(
     expected_names.update(archive_name for _, archive_name in artifact_sources)
     expected_names.update(archive_name for _, archive_name in log_sources)
     temporary_package = package_path.with_suffix(".zip.tmp")
-    temporary_hash = hash_path.with_suffix(".sha256.tmp")
+    temporary_hash = hash_directory / f".{package_path.name}.sha256.tmp"
     try:
         with zipfile.ZipFile(temporary_package, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             _stream_archive_member(archive, manifest_path, _MANIFEST_ARCHIVE_PATH)
@@ -341,6 +362,8 @@ def package_manifest(
                 _stream_archive_member(archive, source, archive_name)
         _verify_archive(temporary_package, manifest, expected_names)
         package_sha256 = sha256_file(temporary_package)
+        hash_path = hash_directory / _sidecar_filename(package_path.name)
+        _validate_sidecar_slot(hash_path, package_path.name)
         temporary_hash.write_text(f"{package_sha256}  {package_path.name}\n", encoding="ascii")
         package_backup = package_path.with_suffix(".zip.backup")
         hash_backup = hash_path.with_suffix(".sha256.backup")

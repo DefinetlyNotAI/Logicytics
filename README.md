@@ -74,7 +74,7 @@ output/data/run/<fingerprint>/
   reports/               # generated summaries
 
 output/data/zip/<fingerprint>.zip
-output/data/zip/hashes/<fingerprint>.zip.sha256
+output/data/hashes/<fingerprint-first-8>.zip.sha256
 ```
 
 The console is intentionally brief. Use `manifest.json` to inspect a run, the package hash to verify a package, and `output/logs/Logicytics.log` for the human-readable application log. The fingerprint is a SHA-256 identity derived from the immutable run ID. Set `logging.level: DEBUG` in `logicytics.yaml` when you need detailed worker lifecycle information and file call sites.

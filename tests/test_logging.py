@@ -189,6 +189,9 @@ class LoggingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             layout = ensure_output_layout(root / "output" / "data")
+            self.assertEqual((root / "output" / "data" / "run").resolve(), layout.runs)
+            self.assertEqual((root / "output" / "data" / "zip").resolve(), layout.packages)
+            self.assertEqual((root / "output" / "data" / "hashes").resolve(), layout.hashes)
             for directory in (
                 layout.data,
                 layout.runs,
