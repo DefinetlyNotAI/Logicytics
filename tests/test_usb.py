@@ -49,6 +49,12 @@ class UsbTests(unittest.TestCase):
     def test_usb_is_available_globally_and_after_supported_subcommands(self) -> None:
         """USB mode is available for planning and collection command forms."""
         parser = cli_methods.parser()
+        planned = parser.parse_args(["plan", "--usb=E", "--mode", "balanced"])
+        self.assertEqual("E", planned.usb)
+        self.assertEqual("balanced", planned.mode)
+        reordered = parser.parse_args(["plan", "--mode", "balanced", "--usb=E"])
+        self.assertEqual("E", reordered.usb)
+        self.assertEqual("balanced", reordered.mode)
         self.assertEqual("D", parser.parse_args(["--usb=D", "plan"]).usb)
         self.assertEqual("E", parser.parse_args(["run", "--usb", "E"]).usb)
 

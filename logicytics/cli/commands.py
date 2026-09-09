@@ -350,6 +350,12 @@ class CLI:
                 choices=[capability.value for capability in Capability],
                 help="Block a declared capability for the selected collectors; repeat as needed.",
             )
+            if command == "plan":
+                subparser.add_argument(
+                    "--mode",
+                    choices=tuple(EXECUTION_MODES),
+                    help="Select one user-facing typed execution mode for the plan.",
+                )
             if command == "run":
                 subparser.add_argument(
                     "--rerun-from",
