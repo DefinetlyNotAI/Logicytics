@@ -64,6 +64,7 @@ _EVENT_NAME = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)+$")
 _LOGGER_LOCK = RLock()
 _APPLICATION_LOGGERS: dict[Path, ApplicationLogger] = {}
 _EVENT_LOGGERS: dict[tuple[Path, str, str | None], FileEventLogger] = {}
+_ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 
 def _normalize_level(level: str) -> str:
@@ -94,6 +95,115 @@ class ApplicationLogger(EventLogger):
         self._last_console_step: str | None = None
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._prepare_file()
+
+        self._last_console_line = ""
+        self._progress_indent = ""
+        self._progress_checked = 0
+        self._progress_total = 0
+        self._progress_current = ""
+
+    @staticmethod
+    def _visible_text(text: str) -> str:
+        """Return text with ANSI escape sequences removed."""
+        return _ANSI_ESCAPE.sub("", text)
+
+    def _leading_indent(self, text: str) -> str:
+        """Return the leading whitespace from visible terminal text."""
+        visible = self._visible_text(text)
+
+        return visible[: len(visible) - len(visible.lstrip())]
+
+    def _remember_console_line(self, text: str) -> None:
+        """Remember the last visible non-empty console line."""
+        visible = self._visible_text(text).rstrip("\n")
+
+        if "\n" in visible:
+            visible = visible.split("\n")[-1]
+
+        if visible:
+            self._last_console_line = visible
+
+    @staticmethod
+    def _shorten_component(component: str) -> str:
+        """
+        Shorten one dotted-name component to initials.
+
+        Examples:
+            packet_capture -> pc
+            process_memory_map -> pmm
+            network -> n
+            collector -> c
+        """
+        parts = [part for part in component.split("_") if part]
+
+        if not parts:
+            return component
+
+        if len(parts) == 1:
+            return parts[0][0]
+
+        return "".join(part[0] for part in parts)
+
+    def _shorten_current(self, current: str, max_width: int) -> str:
+        """
+        Render dotted collector names in compact code form.
+
+        The final component is always abbreviated from underscore-separated
+        words, while namespaces remain readable until width requires further
+        shortening.
+
+        Examples:
+            collector.network.packet_capture
+                -> collector.network.pc
+                -> collector.n.pc
+                -> c.n.pc
+
+            collector.system.process_memory_map
+                -> collector.system.pmm
+                -> collector.s.pmm
+                -> c.s.pmm
+        """
+        if not current:
+            return ""
+
+        components = current.split(".")
+
+        if len(components) <= 1:
+            return current
+
+        shortened = components.copy()
+
+        # Always use compact code form for the final component.
+        shortened[-1] = self._shorten_component(shortened[-1])
+
+        result = ".".join(shortened)
+
+        if len(result) <= max_width:
+            return result
+
+        # Shorten namespace components from right to left while preserving
+        # the leading namespace for as long as possible.
+        for index in range(len(shortened) - 2, 0, -1):
+            shortened[index] = self._shorten_component(shortened[index])
+            result = ".".join(shortened)
+
+            if len(result) <= max_width:
+                return result
+
+        # Finally abbreviate the first component.
+        shortened[0] = self._shorten_component(shortened[0])
+        result = ".".join(shortened)
+
+        if len(result) <= max_width:
+            return result
+
+        if max_width <= 0:
+            return ""
+
+        if max_width <= 3:
+            return result[-max_width:]
+
+        return f"…{result[-(max_width - 1):]}"
 
     def _prepare_file(self) -> None:
         """Apply explicit deletion, retention, and bounded truncation policies."""
@@ -333,60 +443,211 @@ class ApplicationLogger(EventLogger):
             if self.settings.console_enabled and console:
                 self._render_step(message)
                 marker, marker_color, text_color = _LEVEL_PRESENTATION[normalized]
+
                 if not self._supports_unicode():
-                    marker = {"\u25cf": "*", "\u00d7": "X", "\u00b7": "."}.get(marker, marker)
+                    marker = {"●": "*", "×": "X", "·": "."}.get(marker, marker)
+
                 console_rows = self._console_rows(marker, console_message)
+
                 if self.settings.color_enabled and self.console.isatty():
                     marker_prefix = f"  {marker} "
                     first_row = self._color_console_text(
-                        console_rows[0][len(marker_prefix) :],
+                        console_rows[0][len(marker_prefix):],
                         text_color,
                     )
-                    colored_rows = f"{marker_color}{_BOLD}{marker_prefix}{_RESET}{first_row}"
+                    colored_rows = (
+                        f"{marker_color}{_BOLD}"
+                        f"{marker_prefix}{_RESET}"
+                        f"{first_row}"
+                    )
+
                     if len(console_rows) > 1:
-                        colored_rows += "\n" + "\n".join(self._color_console_text(row, text_color) for row in console_rows[1:])
+                        colored_rows += "\n" + "\n".join(
+                            self._color_console_text(row, text_color)
+                            for row in console_rows[1:]
+                        )
+
                     self.console.write(f"{colored_rows}{_RESET}\n")
                 else:
                     self.console.write("\n".join(console_rows) + "\n")
-                self.console.flush()
 
-    def incomplete_progress(self, label: str, status: str = "Incomplete") -> None:
-        """Replace the active progress bar with an incomplete status."""
+                self.console.flush()
+                self._remember_console_line(console_rows[-1])
+
+    def incomplete_progress(
+            self,
+            label: str,
+            checked: int | None = None,
+            total: int | None = None,
+            status: str = "Incomplete",
+    ) -> None:
+        """Replace the active progress bar with an incomplete x/y status."""
         if not self.settings.console_enabled or not self.console.isatty():
             return
 
-        rendered = f"{label} [{status}]"
+        bounded_total = max(
+            total if total is not None else self._progress_total,
+            1,
+        )
+        bounded_checked = min(
+            max(
+                checked if checked is not None else self._progress_checked,
+                0,
+            ),
+            bounded_total,
+        )
+
+        rendered = (
+            f"{self._progress_indent}"
+            f"{label} [{status}] "
+            f"{bounded_checked}/{bounded_total}"
+        )
 
         with self._lock:
             if self.settings.color_enabled:
-                rendered = f"\033[93m\033[1m{rendered}\033[0m"
+                rendered = f"\033[91m\033[1m{rendered}\033[0m"
 
             self.console.write(f"\r\033[2K{rendered}\n")
             self.console.flush()
 
-    def progress(self, label: str, checked: int, total: int, current: str = "") -> None:
-        """Render one in-place dependency-free progress bar on interactive consoles."""
+        self._remember_console_line(rendered)
+
+        self._progress_indent = ""
+        self._progress_checked = 0
+        self._progress_total = 0
+        self._progress_current = ""
+
+    def progress(
+            self,
+            label: str,
+            checked: int,
+            total: int,
+            current: str = "",
+    ) -> None:
+        """Render one full-width adaptive in-place progress bar."""
         if not self.settings.console_enabled or not self.console.isatty():
             return
 
         bounded_total = max(total, 1)
         bounded_checked = min(max(checked, 0), bounded_total)
-        available = max(
-            self._console_width() - len(label) - len(str(bounded_total)) * 2 - 12,
-            16,
+
+        if checked == 0 or not self._progress_indent:
+            self._progress_indent = self._leading_indent(
+                self._last_console_line
+            )
+
+        self._progress_checked = bounded_checked
+        self._progress_total = bounded_total
+        self._progress_current = current
+
+        console_width = self._console_width()
+        count = f"{bounded_checked}/{bounded_total}"
+
+        if current:
+            display_current = self._shorten_current(
+                current,
+                max_width=console_width,
+            )
+        else:
+            display_current = ""
+
+        suffix = f" {display_current}" if display_current else ""
+
+        # Layout:
+        #
+        # <indent><label> <bar> <x/y> <current>
+        #
+        # The bar consumes every remaining terminal column.
+        fixed_width = (
+                len(self._progress_indent)
+                + len(label)
+                + 1
+                + 1
+                + len(count)
+                + len(suffix)
         )
-        filled = int(available * bounded_checked / bounded_total)
-        bar = "=" * filled + (">" if filled < available else "")
-        bar = f"{bar:<{available}}"
-        suffix = f" {current}" if current else ""
-        rendered = f"{label} [{bar}] {bounded_checked}/{bounded_total}{suffix}"
-        rendered = rendered[: self._console_width()]
+
+        bar_width = max(console_width - fixed_width, 1)
+
+        # If the current value still makes the line too wide, shorten it again
+        # using the actual space available after reserving one bar character.
+        if display_current:
+            maximum_current_width = max(
+                console_width
+                - len(self._progress_indent)
+                - len(label)
+                - len(count)
+                - 4,
+                1,
+            )
+
+            display_current = self._shorten_current(
+                current,
+                maximum_current_width,
+            )
+            suffix = f" {display_current}"
+
+            fixed_width = (
+                    len(self._progress_indent)
+                    + len(label)
+                    + 1
+                    + 1
+                    + len(count)
+                    + len(suffix)
+            )
+
+            bar_width = max(console_width - fixed_width, 1)
+
+        ratio = bounded_checked / bounded_total
+        filled = min(int(bar_width * ratio), bar_width)
+        unfilled = bar_width - filled
+
+        prefix = (
+            f"{self._progress_indent}"
+            f"{label} "
+        )
+
+        postfix = (
+            f" {count}"
+            f"{suffix}"
+        )
 
         with self._lock:
-            if self.settings.color_enabled:
-                rendered = f"\033[96m\033[1m{rendered}\033[0m"
+            self.console.write("\r\033[2K")
 
-            self.console.write(f"\r\033[2K{rendered}")
+            if self.settings.color_enabled:
+                # Prefix.
+                self.console.write(
+                    f"\033[96m\033[1m{prefix}"
+                )
+
+                # Completed section, bright white.
+                if filled:
+                    self.console.write(
+                        f"\033[97m\033[1m"
+                        f"{'━' * filled}"
+                    )
+
+                # Remaining section, dim gray.
+                if unfilled:
+                    self.console.write(
+                        f"\033[90m"
+                        f"{'━' * unfilled}"
+                    )
+
+                # Counter/current text.
+                self.console.write(
+                    f"\033[96m\033[1m"
+                    f"{postfix}"
+                    f"\033[0m"
+                )
+            else:
+                self.console.write(
+                    f"{prefix}"
+                    f"{'━' * filled}"
+                    f"{'─' * unfilled}"
+                    f"{postfix}"
+                )
 
             if bounded_checked >= bounded_total:
                 self.console.write("\r\033[2K")
@@ -397,11 +658,16 @@ class ApplicationLogger(EventLogger):
         """Write redacted console-only presentation that never pollutes the event log."""
         if end not in {"", "\n"}:
             raise ValueError("raw log end must be empty or a newline")
+
         safe = redact_text(message)
+
         with self._lock:
             if self.settings.console_enabled:
                 self.console.write(safe + end)
                 self.console.flush()
+
+                if end == "\n":
+                    self._remember_console_line(safe)
 
     def separator(self) -> None:
         """Write one presentation-only blank line to the configured console."""
@@ -442,19 +708,26 @@ class ApplicationLogger(EventLogger):
 
     def box(self, title: str, lines: Iterable[str]) -> None:
         """Render console-only output as plain redacted lines."""
+        rendered_lines = tuple(lines)
+
         with self._lock:
             if self.settings.console_enabled:
                 if self._last_console_step is not None:
                     self.console.write("\n")
+
                 render_presentation_section(
                     self.console,
                     title,
-                    lines,
+                    rendered_lines,
                     message_lines=self._message_lines,
                     width=self._console_width,
                     color_enabled=self.settings.color_enabled,
                 )
+
                 self._last_console_step = title
+
+                if rendered_lines:
+                    self._remember_console_line(str(rendered_lines[-1]))
 
     def dispatch(self, messages: Iterable[str]) -> None:
         """Parse and dispatch a batch of optional `LEVEL: message` rows."""
