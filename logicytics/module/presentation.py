@@ -15,6 +15,7 @@ _RIGHT_EDGE_MARGIN = 4
 _DETAIL_MARKER_COLOR = "\033[95m"
 _INFO_COLOR = "\033[96m"
 _WARNING_COLOR = "\033[93m"
+_ERROR_COLOR = "\033[91m"
 _BOLD = "\033[1m"
 _RESET = "\033[0m"
 
@@ -126,15 +127,17 @@ def render_alert(
     message_lines: MessageLines = _plain_message_lines,
     width: ConsoleWidth = console_width,
     color_enabled: bool | None = None,
+    error: bool = False,
 ) -> None:
     """Render a severity-marked alert with a clean title and ASCII rule."""
     available = max(width(), _MIN_CONSOLE_WIDTH)
     safe_title = redact_text(title).strip()
     use_color = (console.isatty() if color_enabled is None else color_enabled) and console.isatty()
+    alert_color = _ERROR_COLOR if error else _WARNING_COLOR
     if use_color:
         rows = [
-            f"{_WARNING_COLOR}{_BOLD}{safe_title}{_RESET}",
-            f"{_WARNING_COLOR}{'-' * available}{_RESET}",
+            f"{alert_color}{_BOLD}{safe_title}{_RESET}",
+            f"{alert_color}{'-' * available}{_RESET}",
             "",
         ]
     else:
@@ -154,14 +157,14 @@ def render_alert(
                 first_row = prefix + wrapped[0]
                 if use_color:
                     marker_prefix = (
-                        f"{_WARNING_COLOR}{_BOLD}{prefix}{_RESET}"
+                        f"{alert_color}{_BOLD}{prefix}{_RESET}"
                         if marker == "!"
                         else f"  {_DETAIL_MARKER_COLOR}{_BOLD}>{_RESET} "
                     )
-                    first_row = f"{marker_prefix}{_WARNING_COLOR}{wrapped[0]}{_RESET}"
+                    first_row = f"{marker_prefix}{alert_color}{wrapped[0]}{_RESET}"
                 rows.append(first_row)
                 rows.extend(
-                    f"{_WARNING_COLOR}{continuation_prefix}{row}{_RESET}" if use_color else f"{continuation_prefix}{row}"
+                    f"{alert_color}{continuation_prefix}{row}{_RESET}" if use_color else f"{continuation_prefix}{row}"
                     for row in wrapped[1:]
                 )
     console.write("\n".join(rows) + "\n")

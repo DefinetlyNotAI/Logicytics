@@ -754,6 +754,19 @@ class ApplicationLogger(EventLogger):
             color_enabled=console.isatty(),
         )
 
+    @classmethod
+    def render_error(cls, console: TextIO, title: str, lines: Iterable[str]) -> None:
+        """Render a red error alert while retaining purple detail markers."""
+        render_presentation_alert(
+            console,
+            title,
+            lines,
+            message_lines=cls._message_lines,
+            width=cls._console_width,
+            color_enabled=console.isatty(),
+            error=True,
+        )
+
     def box(self, title: str, lines: Iterable[str]) -> None:
         """Render console-only output as plain redacted lines."""
         rendered_lines = tuple(lines)
@@ -793,10 +806,10 @@ class HumanArgumentParser(argparse.ArgumentParser):
 
     def error(self, message: str) -> None:
         """Render one concise argument error and its usage without raw argparse output."""
-        usage = self.format_usage().strip()
-        if usage.lower().startswith("usage:"):
+        usage = " ".join(self.format_usage().split())
+        while usage.lower().startswith("usage:"):
             usage = usage[len("usage:") :].strip()
-        ApplicationLogger.render_section(
+        ApplicationLogger.render_error(
             sys.stderr,
             "Command-line error",
             (f"Error: {message}", f"Usage: {usage}"),
