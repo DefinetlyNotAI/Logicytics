@@ -569,7 +569,7 @@ class EventLogger(ABC):
     """A structured event sink scoped to one run or collector worker."""
 
     @abstractmethod
-    def event(self, level: str, message: str, **fields: float | str) -> None:
+    def event(self, level: str, message: str, *, console: bool = True, **fields: float | str) -> None:
         """Record one machine-readable event without exposing raw evidence."""
 
 

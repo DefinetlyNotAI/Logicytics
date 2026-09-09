@@ -304,7 +304,7 @@ class ApplicationLogger(EventLogger):
                     return cls._console_value(parsed)
         return str(value)
 
-    def event(self, level: str, message: str, **fields: float | str) -> None:
+    def event(self, level: str, message: str, *, console: bool = True, **fields: float | str) -> None:
         """Dispatch one typed, redacted event to configured console and file sinks."""
         normalized = _normalize_level(level)
         minimum_level = _normalize_level(self.settings.level)
@@ -330,7 +330,7 @@ class ApplicationLogger(EventLogger):
                 with self.path.open("a", encoding="utf-8") as stream:
                     stream.write("\n".join(rows) + "\n")
                 self._truncate_file()
-            if self.settings.console_enabled:
+            if self.settings.console_enabled and console:
                 self._render_step(message)
                 marker, marker_color, text_color = _LEVEL_PRESENTATION[normalized]
                 if not self._supports_unicode():
@@ -349,6 +349,27 @@ class ApplicationLogger(EventLogger):
                 else:
                     self.console.write("\n".join(console_rows) + "\n")
                 self.console.flush()
+
+    def progress(self, label: str, checked: int, total: int, current: str = "") -> None:
+        """Render one in-place dependency-free progress bar on interactive consoles."""
+        if not self.settings.console_enabled or not self.console.isatty():
+            return
+        bounded_total = max(total, 1)
+        bounded_checked = min(max(checked, 0), bounded_total)
+        available = max(self._console_width() - len(label) - len(str(bounded_total)) * 2 - 12, 16)
+        filled = int(available * bounded_checked / bounded_total)
+        bar = "=" * filled + (">" if filled < available else "")
+        bar = f"{bar:<{available}}"
+        suffix = f" {current}" if current else ""
+        rendered = f"{label} [{bar}] {bounded_checked}/{bounded_total}{suffix}"
+        rendered = rendered[: self._console_width()]
+        with self._lock:
+            if self.settings.color_enabled:
+                rendered = f"\033[96m\033[1m{rendered}\033[0m"
+            self.console.write(f"\r\033[2K{rendered}")
+            if bounded_checked >= bounded_total:
+                self.console.write("\r\033[2K")
+            self.console.flush()
 
     def raw(self, message: str, *, end: str = "\n") -> None:
         """Write redacted console-only presentation that never pollutes the event log."""
@@ -468,7 +489,7 @@ class FileEventLogger(EventLogger):
         self._event_lock = RLock()
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
-    def event(self, level: str, message: str, **fields: float | str) -> None:
+    def event(self, level: str, message: str, *, console: bool = True, **fields: float | str) -> None:
         """Write a timestamped, structured event without relying on global handlers."""
         normalized = _normalize_level(level)
         payload: dict[str, object] = {

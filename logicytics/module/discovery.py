@@ -832,8 +832,17 @@ def preflight(
     *,
     configuration_hash: str = "unconfigured",
     progress: PreflightProgress | None = None,
+    invalidate_cache: bool = False,
 ) -> PreflightReport:
     """Perform static checks then a short-lived isolated metadata probe."""
+    if invalidate_cache:
+        cache_path = _cache_path(project_root)
+        try:
+            cache_path.unlink()
+        except FileNotFoundError:
+            pass
+        except OSError as error:
+            raise OSError(f"unable to invalidate preflight cache: {error}") from error
     candidates = list(discover(project_root))
     cached = _load_cache(project_root, configuration_hash)
     total = len(candidates)

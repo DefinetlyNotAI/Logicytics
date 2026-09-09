@@ -21,13 +21,19 @@ def _project_root() -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     """Guard the interpreter before loading the full CLI implementation."""
-    with terminal_lifecycle():
-        if not is_running_in_virtual_environment():
-            render_virtual_environment_error(sys.stderr, _project_root())
-            return 2
-        from logicytics.cli.commands import main as command_main
+    try:
+        with terminal_lifecycle():
+            if not is_running_in_virtual_environment():
+                render_virtual_environment_error(sys.stderr, _project_root())
+                return 2
+            from logicytics.cli.commands import main as command_main
 
-        return command_main(argv)
+            return command_main(argv)
+    except KeyboardInterrupt:
+        from logicytics.module.logging import ApplicationLogger
+
+        ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
+        return 130
 
 
 def __getattr__(name: str) -> object:

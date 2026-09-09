@@ -278,6 +278,12 @@ class CLI:
                 choices=tuple(BUILTIN_PROFILES),
                 help="Named built-in collector membership and access policy.",
             )
+            if command in {"preflight", "plan"}:
+                subparser.add_argument(
+                    "--invalidate-cache",
+                    action="store_true",
+                    help="Discard cached preflight metadata before validation.",
+                )
             subparser.add_argument(
                 "--include",
                 action="append",
@@ -678,7 +684,11 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
     cli_parser = cli_methods.parser()
-    arguments = cli_parser.parse_args(argv)
+    try:
+        arguments = cli_parser.parse_args(argv)
+    except KeyboardInterrupt:
+        ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
+        return 130
 
     standalone_actions = sum(
         bool(value)
@@ -763,12 +773,14 @@ def main(argv: list[str] | None = None) -> int:
                 application_logger.event(
                     "INFO",
                     "preflight_progress",
+                    console=False,
                     source="logicytics.cli",
                     phase="validating collectors",
                     checked=checked,
                     total=total,
                     current=current,
                 )
+                application_logger.progress("Preflight", checked, total, current)
                 last_preflight_progress_at = now
 
         if arguments.command == "match":
@@ -896,6 +908,7 @@ def main(argv: list[str] | None = None) -> int:
             root,
             configuration_hash=configuration.fingerprint(),
             progress=report_preflight_progress,
+            invalidate_cache=getattr(arguments, "invalidate_cache", False),
         )
         application_logger.event(
             "INFO",
@@ -1184,6 +1197,21 @@ def main(argv: list[str] | None = None) -> int:
             collectors=len(outcome.manifest.collectors),
         )
 
+    except KeyboardInterrupt:
+        if application_logger is not None:
+            with contextlib.suppress(OSError):
+                application_logger.event(
+                    "WARNING",
+                    "command_cancelled",
+                    source="logicytics.cli",
+                    command=str(arguments.command),
+                    exit_code=130,
+                    console=False,
+                )
+            application_logger.box("Command cancelled", ("Interrupted by user.",))
+        else:
+            ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
+        return 130
     except (
         LogicyticsError,
         OSError,
@@ -1225,5 +1253,9 @@ def main(argv: list[str] | None = None) -> int:
 
 cli_methods = CLI()
 if __name__ == "__main__":
-    with terminal_lifecycle():
-        raise SystemExit(main())
+    try:
+        with terminal_lifecycle():
+            raise SystemExit(main())
+    except KeyboardInterrupt:
+        ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
+        raise SystemExit(130)

@@ -44,5 +44,9 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    with terminal_lifecycle():
-        raise SystemExit(main())
+    try:
+        with terminal_lifecycle():
+            raise SystemExit(main())
+    except KeyboardInterrupt:
+        ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
+        raise SystemExit(130)

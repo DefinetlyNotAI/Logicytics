@@ -121,6 +121,19 @@ class PreflightTests(unittest.TestCase):
                 self.assertEqual(1, len(invalidated.valid), invalidated.invalid)
                 self.assertEqual(1, probe.call_count)
 
+            with patch.object(
+                ProcessAdapter,
+                ProcessAdapter.run.__name__,
+                wraps=ProcessAdapter.run,
+            ) as probe:
+                explicitly_invalidated = preflight(
+                    root,
+                    configuration_hash="configuration-b",
+                    invalidate_cache=True,
+                )
+                self.assertEqual(1, len(explicitly_invalidated.valid), explicitly_invalidated.invalid)
+                self.assertEqual(1, probe.call_count)
+
     def test_preflight_reports_collector_progress_before_and_after_validation(self) -> None:
         """Long-running isolated probes expose their current collector to callers."""
         with tempfile.TemporaryDirectory() as temporary:

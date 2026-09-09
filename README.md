@@ -31,12 +31,14 @@ The installer is the only Logicytics command designed to run outside a virtual e
 python -m logicytics.cli.installer
 .\.venv\Scripts\Activate.ps1
 python -m logicytics preflight
+python -m logicytics preflight --invalidate-cache
 ```
 
 When preflight is clean, plan before collecting:
 
 ```powershell
 python -m logicytics plan --profile standard
+python -m logicytics plan --profile standard --invalidate-cache
 python -m logicytics run --profile standard --acknowledge-authorization
 ```
 
@@ -165,6 +167,14 @@ python -m logicytics preflight --mods
 
 It returns 0 when there are no blocking invalid collectors and 2 when a
 blocking validation failure exists. It does not collect evidence.
+
+Preflight caches only successful runtime metadata probes; the deterministic
+plan itself is rebuilt each time. The cache is stored outside the repository at
+`%TEMP%\logicytics-preflight-cache\<project-hash>.json` on Windows (or the
+platform temporary directory equivalent). Entries are invalidated by source,
+interpreter, contract, or configuration changes. Use `--invalidate-cache` on
+`preflight` or `plan` to discard the project cache and force every runtime
+metadata probe to run again.
 
 ## Planning
 

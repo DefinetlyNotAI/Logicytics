@@ -271,6 +271,28 @@ class LoggingTests(unittest.TestCase):
             self.assertNotIn("\u25cf", console.getvalue())
             self.assertNotIn("\u256d", console.getvalue())
 
+    def test_progress_bar_updates_in_place_and_clears_at_completion(self) -> None:
+        """Interactive progress uses one dependency-free carriage-return bar."""
+
+        class TerminalBuffer(io.StringIO):
+            def isatty(self) -> bool:
+                return True
+
+        with tempfile.TemporaryDirectory() as temporary:
+            console = TerminalBuffer()
+            logger = ApplicationLogger(
+                Path(temporary) / "Logicytics.log",
+                LoggingSettings(file_enabled=False, color_enabled=False),
+                console=console,
+            )
+            logger.progress("Preflight", 1, 4, "core.system.info")
+            logger.progress("Preflight", 4, 4, "core.system.info")
+
+            rendered = console.getvalue()
+            self.assertEqual(3, rendered.count("\r\033[2K"))
+            self.assertIn("Preflight [", rendered)
+            self.assertTrue(rendered.endswith("\r\033[2K"))
+
     def test_application_logging_humanizes_structured_values_and_lowercase_settings(self) -> None:
         """Human sinks normalize structured messages, collections, binary values, and levels."""
         with tempfile.TemporaryDirectory() as temporary:

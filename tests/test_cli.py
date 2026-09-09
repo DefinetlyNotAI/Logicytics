@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, patch
 from logicytics.cli import CLI, cli_methods, main
 from logicytics.contracts import Capability
 from logicytics.module.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
+from logicytics.module.configuration import default_config
 from logicytics.platform_adapters import process_adapter
 
 
@@ -77,6 +78,31 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(expected, parser.parse_args(["--config", "custom.yaml", "preflight"]).config)
         self.assertEqual(expected, parser.parse_args(["preflight", "--config", "custom.yaml"]).config)
+
+    def test_preflight_and_plan_expose_cache_invalidation(self) -> None:
+        """Validation-heavy commands can explicitly discard reusable probe metadata."""
+        parser = cli_methods.parser()
+
+        self.assertTrue(parser.parse_args(["preflight", "--invalidate-cache"]).invalidate_cache)
+        self.assertTrue(parser.parse_args(["plan", "--invalidate-cache"]).invalidate_cache)
+
+    def test_ctrl_c_during_command_is_rendered_without_a_traceback(self) -> None:
+        """A user interrupt returns 130 with a concise cancellation section."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            output = io.StringIO()
+            with (
+                patch.object(CLI, CLI.project_root.__name__, return_value=root),
+                patch("logicytics.cli.commands.load_config", return_value=default_config(root)),
+                patch("logicytics.cli.commands.preflight", side_effect=KeyboardInterrupt),
+                patch("sys.stderr", output),
+            ):
+                self.assertEqual(130, main(["preflight"]))
+
+            rendered = output.getvalue()
+            self.assertIn("Command cancelled", rendered)
+            self.assertIn("Interrupted by user.", rendered)
+            self.assertNotIn("Traceback", rendered)
 
     def test_capabilities_default_to_metadata_and_cli_can_block_them(self) -> None:
         """Declared capabilities run by default and can be disabled per invocation."""
