@@ -61,9 +61,13 @@ not collector outputs and never enter the evidence catalog.
 ## Logging presentation
 
 The application log is a bounded, human-readable text log. Each row contains a
-local timestamp with milliseconds, severity, source, and message; long messages
-and fields continue on aligned rows. Console output uses the same redaction and
-humanization rules, with colored severity markers and readable indented fields.
-It never emits raw JSON or `key=value` field fragments. Structured run and
-collector event logs are stored separately as JSONL for tooling and remain
-redacted; they are not printed to the console.
+local timestamp with milliseconds, severity, an exact source, and message; long
+messages and fields continue on aligned rows. Application sources retain their
+full module name (for example, `logicytics.cli.commands`), while collector JSONL
+sources identify the collector (`core.browser.bdb`, `mods.fb`, or
+`plugins.example`). When the configured level is `DEBUG`, application rows also
+include the call-site line number, except for `library.*` sources. Console
+output uses the same redaction and humanization rules, with colored severity
+markers and readable indented fields. It never emits raw JSON or `key=value`
+field fragments. Structured run and collector event logs are stored separately
+as JSONL for tooling and remain redacted; they are not printed to the console.

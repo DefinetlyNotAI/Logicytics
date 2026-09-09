@@ -56,8 +56,8 @@ the virtual environment created by the installer. Both module entry points are
 equivalent:
 
 ```powershell
-.venv\Scripts\python.exe -m logicytics --help
-.venv\Scripts\python.exe -m logicytics.cli --help
+python -m logicytics --help
+python -m logicytics.cli --help
 ```
 
 The CLI has three standalone utility actions and seven subcommands:

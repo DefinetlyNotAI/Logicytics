@@ -87,7 +87,7 @@ class CLI:
             logger.event(
                 "ERROR" if item in invalid else "WARNING",
                 details or "collector validation failed",
-                source="logicytics.cli",
+                source="logicytics.cli.commands",
                 collector=str(item["id"]),
             )
 
@@ -687,7 +687,6 @@ def main(argv: list[str] | None = None) -> int:
     try:
         arguments = cli_parser.parse_args(argv)
     except KeyboardInterrupt:
-        print("\n")
         ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
         return 130
 
@@ -713,6 +712,10 @@ def main(argv: list[str] | None = None) -> int:
     elif arguments.modes:
         arguments.command = "modes"
 
+    if arguments.command is None:
+        cli_parser.print_help()
+        return 0
+
     root = cli_methods.project_root()
     application_logger = None
     command_started_at: float | None = None
@@ -730,7 +733,7 @@ def main(argv: list[str] | None = None) -> int:
         application_logger.event(
             "INFO",
             "command_started",
-            source="logicytics.cli",
+            source="logicytics.cli.commands",
             command=arguments.command,
         )
         started_at = perf_counter()
@@ -746,7 +749,7 @@ def main(argv: list[str] | None = None) -> int:
             application_logger.event(
                 "INFO" if exit_code == 0 else "WARNING",
                 "command_finished",
-                source="logicytics.cli",
+                source="logicytics.cli.commands",
                 command=str(arguments.command),
                 exit_code=exit_code,
                 status=status or ("succeeded" if exit_code == 0 else "failed"),
@@ -773,7 +776,7 @@ def main(argv: list[str] | None = None) -> int:
                     "INFO",
                     "preflight_progress",
                     console=False,
-                    source="logicytics.cli",
+                    source="logicytics.cli.commands",
                     phase="validating collectors",
                     checked=checked,
                     total=total,
@@ -856,7 +859,7 @@ def main(argv: list[str] | None = None) -> int:
             application_logger.event(
                 "INFO",
                 "preflight_started",
-                source="logicytics.cli",
+                source="logicytics.cli.commands",
                 configuration_hash=modes_configuration_hash,
                 purpose="mode_matrix",
             )
@@ -868,7 +871,7 @@ def main(argv: list[str] | None = None) -> int:
             application_logger.event(
                 "INFO",
                 "preflight_finished",
-                source="logicytics.cli",
+                source="logicytics.cli.commands",
                 valid_collectors=len(report.valid),
                 invalid_collectors=len(report.invalid),
                 purpose="mode_matrix",
@@ -901,7 +904,7 @@ def main(argv: list[str] | None = None) -> int:
         application_logger.event(
             "INFO",
             "preflight_started",
-            source="logicytics.cli",
+            source="logicytics.cli.commands",
             configuration_hash=configuration.fingerprint(),
         )
 
@@ -914,7 +917,7 @@ def main(argv: list[str] | None = None) -> int:
         application_logger.event(
             "INFO",
             "preflight_finished",
-            source="logicytics.cli",
+            source="logicytics.cli.commands",
             valid_collectors=len(report.valid),
             invalid_collectors=len(report.invalid),
         )
@@ -1109,7 +1112,7 @@ def main(argv: list[str] | None = None) -> int:
         application_logger.event(
             "INFO",
             "plan_requested",
-            source="logicytics.cli",
+            source="logicytics.cli.commands",
             profile=request.profile,
             include_count=len(request.include),
             exclude_count=len(request.exclude),
@@ -1125,7 +1128,7 @@ def main(argv: list[str] | None = None) -> int:
         application_logger.event(
             "INFO",
             "plan_created",
-            source="logicytics.cli",
+            source="logicytics.cli.commands",
             collectors=len(plan.collectors),
             fingerprint=plan.fingerprint,
         )
@@ -1139,7 +1142,7 @@ def main(argv: list[str] | None = None) -> int:
             application_logger.event(
                 "INFO",
                 "plan_rendered",
-                source="logicytics.cli",
+                source="logicytics.cli.commands",
                 collectors=len(plan.collectors),
             )
 
@@ -1209,7 +1212,7 @@ def main(argv: list[str] | None = None) -> int:
                 application_logger.event(
                     "WARNING",
                     "command_cancelled",
-                    source="logicytics.cli",
+                    source="logicytics.cli.commands",
                     command=str(arguments.command),
                     exit_code=130,
                     console=False,
@@ -1221,7 +1224,6 @@ def main(argv: list[str] | None = None) -> int:
             )
 
         else:
-            print("\r\033[2KIncomplete", flush=True)
             ApplicationLogger.render_section(
                 sys.stderr,
                 "Command cancelled",
@@ -1240,7 +1242,7 @@ def main(argv: list[str] | None = None) -> int:
                 application_logger.event(
                     "EXCEPTION",
                     str(error),
-                    source="logicytics.cli",
+                    source="logicytics.cli.commands",
                     command=str(arguments.command),
                     error_type=type(error).__name__,
                 )
@@ -1249,7 +1251,7 @@ def main(argv: list[str] | None = None) -> int:
                     application_logger.event(
                         "ERROR",
                         "command_finished",
-                        source="logicytics.cli",
+                        source="logicytics.cli.commands",
                         command=str(arguments.command),
                         exit_code=2,
                         status="failed",
@@ -1274,6 +1276,5 @@ if __name__ == "__main__":
         with terminal_lifecycle():
             raise SystemExit(main())
     except KeyboardInterrupt:
-        print("\n")
         ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
         raise SystemExit(130)

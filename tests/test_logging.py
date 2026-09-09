@@ -21,6 +21,7 @@ from logicytics.module.errors import PlanError
 from logicytics.module.logging import (
     ApplicationLogger,
     FileEventLogger,
+    collector_log_source,
     deprecated,
     get_application_logger,
     get_event_logger,
@@ -37,6 +38,31 @@ from tests.fixtures.file_listing import list_files
 
 class LoggingTests(unittest.TestCase):
     """Logging, output layout, file listing, and command-runner behavior."""
+
+    def test_collector_sources_are_specific_and_core_mod_scripts_are_abbreviated(self) -> None:
+        """Collector log sources retain their owner while shortening noisy script names."""
+        self.assertEqual("core.browser.bdb", collector_log_source("core.browser.browser_data_backup"))
+        self.assertEqual("mods.fb", collector_log_source("mod.foo_bar"))
+        self.assertEqual("plugins.folder.abc", collector_log_source("plugin.folder.abc"))
+
+    def test_debug_file_logs_keep_full_source_and_callsite_line(self) -> None:
+        """Debug text logs identify the exact application module and call line."""
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "Logicytics.log"
+            logger = ApplicationLogger(
+                path,
+                LoggingSettings(level="DEBUG", console_enabled=False, color_enabled=False),
+            )
+            logger.event("INFO", "source check", source="logicytics.cli.commands")
+
+            row = path.read_text(encoding="utf-8").splitlines()[0]
+            self.assertRegex(row, r"logicytics\.cli\.commands:\d+")
+            self.assertNotIn(" | cli ", row)
+
+            logger.event("INFO", "library source check", source="library.os")
+            library_row = path.read_text(encoding="utf-8").splitlines()[-1]
+            self.assertIn("| library.os", library_row)
+            self.assertNotRegex(library_row, r"library\.os:\d+")
 
     def test_application_sources_do_not_call_print(self) -> None:
         """Production output must use structured logging instead of direct console prints."""
@@ -145,6 +171,9 @@ class LoggingTests(unittest.TestCase):
                 run_id="run-test",
                 collector_id="core.system.system_info",
             )
+            collector.event("INFO", "collector event")
+            collector_payload = json.loads((event_path.parent / "collector.jsonl").read_text(encoding="utf-8"))
+            self.assertEqual("core.system.si", collector_payload["source"])
             self.assertIs(
                 collector,
                 get_event_logger(
@@ -290,7 +319,7 @@ class LoggingTests(unittest.TestCase):
 
             rendered = console.getvalue()
             self.assertEqual(3, rendered.count("\r\033[2K"))
-            self.assertIn("Preflight [", rendered)
+            self.assertIn("Preflight ", rendered)
             self.assertTrue(rendered.endswith("\r\033[2K"))
 
     def test_application_logging_humanizes_structured_values_and_lowercase_settings(self) -> None:

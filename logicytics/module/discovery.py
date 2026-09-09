@@ -236,9 +236,12 @@ def _iter_candidates(project_root: Path, kind: CollectorKind) -> list[Path]:
     if not root.exists():
         return []
     paths: list[Path] = []
-    for path in sorted(root.rglob("*.py")):
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
         relative = path.relative_to(root)
-        if any(part.startswith("_") or part in {"tests", "examples", "venv", ".venv"} for part in relative.parts):
+        if any(
+            part.startswith(("_", ".")) or part in {"tests", "examples", "venv", ".venv"}
+            for part in relative.parts
+        ):
             continue
         if not _is_within(path, root):
             continue

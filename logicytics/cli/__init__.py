@@ -33,7 +33,6 @@ def main(argv: list[str] | None = None) -> int:
     except KeyboardInterrupt:
         from logicytics.module.logging import ApplicationLogger
 
-        print("\n")
         ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
         return 130
 

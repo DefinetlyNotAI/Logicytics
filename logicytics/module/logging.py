@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import math
 import re
@@ -65,6 +66,51 @@ _LOGGER_LOCK = RLock()
 _APPLICATION_LOGGERS: dict[Path, ApplicationLogger] = {}
 _EVENT_LOGGERS: dict[tuple[Path, str, str | None], FileEventLogger] = {}
 _ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+
+
+def _caller_location() -> tuple[str, int]:
+    """Return the first caller outside this logging module and its source line."""
+    frame = inspect.currentframe()
+    try:
+        frame = frame.f_back if frame is not None else None
+        while frame is not None:
+            module = str(frame.f_globals.get("__name__", ""))
+            if module and module != __name__:
+                return module, frame.f_lineno
+            frame = frame.f_back
+    finally:
+        del frame
+    return __name__, 0
+
+
+def _script_initials(script: str) -> str:
+    """Use the first letter of each underscore-delimited script word."""
+    return "".join(part[0] for part in script.split("_") if part)
+
+
+def collector_log_source(collector_id: str | None) -> str | None:
+    """Render a stable human-facing source name for one collector identifier."""
+    if not collector_id:
+        return None
+    parts = collector_id.split(".")
+    if len(parts) < 2:
+        return collector_id
+    if parts[0] == "core" and len(parts) >= 3:
+        return f"core.{parts[1]}.{_script_initials(parts[-1])}"
+    if parts[0] == "mod":
+        prefix = ".".join(parts[1:-1])
+        suffix = _script_initials(parts[-1])
+        return f"mods.{prefix + '.' if prefix else ''}{suffix}"
+    if parts[0] == "plugin":
+        return f"plugins.{'.'.join(parts[1:])}"
+    return collector_id
+
+
+def _source_with_line(source: str, line: int, *, debug: bool) -> str:
+    """Add a source line in debug logs, except for library implementation sources."""
+    if debug and line > 0 and not source.startswith("library."):
+        return f"{source}:{line}"
+    return source
 
 
 def _normalize_level(level: str) -> str:
@@ -230,9 +276,7 @@ class ApplicationLogger(EventLogger):
     def _rows(level: str, source: str, message: str) -> tuple[str, ...]:
         """Format AIBrain-style fixed columns and aligned wrapped rows."""
         timestamp = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        source_column = source.removeprefix("logicytics.")
-        if len(source_column) > _SOURCE_WIDTH:
-            source_column = source_column[: _SOURCE_WIDTH - 3] + "..."
+        source_column = source
         prefix = f"{timestamp:<{_TIME_WIDTH}} | {level:<{_SEVERITY_WIDTH}} | {source_column:<{_SOURCE_WIDTH}} | "
         continuation = f"{'':<{_TIME_WIDTH}} | {'':<{_SEVERITY_WIDTH}} | {'':<{_SOURCE_WIDTH}} | "
         available = max(_FILE_LOG_LINE_WIDTH - len(prefix), 1)
@@ -336,7 +380,7 @@ class ApplicationLogger(EventLogger):
         for key, value in fields.items():
             label = key.replace("_", " ").capitalize()
             rendered_value = cls._console_value(value)
-            if compact_configuration_hash and key == "configuration_hash":
+            if compact_configuration_hash and key in {"configuration_hash", "fingerprint"}:
                 rendered_value = rendered_value[:7]
             rendered = rendered_value.splitlines() or ["none"]
             rows.append(f"> {label}: {rendered[0]}")
@@ -422,7 +466,11 @@ class ApplicationLogger(EventLogger):
             return
         safe_message = redact_text(message)
         safe_fields = redact_mapping(fields)
-        source = str(safe_fields.pop("source", "logicytics.module"))
+        caller_module, caller_line = _caller_location()
+        source = str(safe_fields.pop("source", caller_module))
+        if source in {"cli", "logicytics.cli", "runtime", "logicytics.runtime"}:
+            source = caller_module
+        source = _source_with_line(source, caller_line, debug=minimum_level == "DEBUG")
         file_lines = list(self._message_lines(safe_message))
         file_lines.extend(self._console_fields(safe_fields))
         rendered_message = "\n".join(file_lines)
@@ -787,11 +835,14 @@ class FileEventLogger(EventLogger):
     def event(self, level: str, message: str, *, console: bool = True, **fields: float | str) -> None:
         """Write a timestamped, structured event without relying on global handlers."""
         normalized = _normalize_level(level)
+        caller_module, _ = _caller_location()
+        source = collector_log_source(self.collector_id) or caller_module
         payload: dict[str, object] = {
             "at": datetime.now(UTC).isoformat(),
             "level": normalized.lower(),
             "message": redact_text(message),
             "run_id": self.run_id,
+            "source": source,
         }
         if self.collector_id is not None:
             payload["collector_id"] = self.collector_id

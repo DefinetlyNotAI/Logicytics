@@ -897,7 +897,7 @@ class RunSupervisor:
         application_logger.event(
             "INFO",
             "run_started",
-            source="logicytics.runtime",
+            source="logicytics.module.runtime",
             run_id=run_id,
             collectors=len(plan.collectors),
             profile=plan.request.profile,
@@ -925,7 +925,7 @@ class RunSupervisor:
             application_logger.event(
                 "WARNING",
                 "run_cancellation_requested",
-                source="logicytics.runtime",
+                source="logicytics.module.runtime",
                 run_id=run_id,
             )
             self._cancel_records(records, manifest, manifest_path, "run cancelled by user")
@@ -939,7 +939,7 @@ class RunSupervisor:
             application_logger.event(
                 "INFO",
                 "run_packaging_started",
-                source="logicytics.runtime",
+                source="logicytics.module.runtime",
                 run_id=run_id,
             )
             try:
@@ -953,7 +953,7 @@ class RunSupervisor:
                 application_logger.event(
                     "INFO",
                     "run_packaged",
-                    source="logicytics.runtime",
+                    source="logicytics.module.runtime",
                     run_id=run_id,
                     package_path=str(package_path),
                 )
@@ -964,7 +964,7 @@ class RunSupervisor:
                 application_logger.event(
                     "ERROR",
                     "run_packaging_failed",
-                    source="logicytics.runtime",
+                    source="logicytics.module.runtime",
                     run_id=run_id,
                     error_type=type(error).__name__,
                 )
@@ -980,7 +980,7 @@ class RunSupervisor:
             application_logger.event(
                 "INFO",
                 "run_packaging_skipped",
-                source="logicytics.runtime",
+                source="logicytics.module.runtime",
                 run_id=run_id,
                 reason=packaging_skip_reason,
             )
@@ -1000,7 +1000,7 @@ class RunSupervisor:
         application_logger.event(
             "INFO",
             "run_finished",
-            source="logicytics.runtime",
+            source="logicytics.module.runtime",
             run_id=run_id,
             status=manifest.status.value,
             artifacts=manifest.total_artifact_bytes,
@@ -1012,7 +1012,7 @@ class RunSupervisor:
             application_logger.event(
                 "WARNING",
                 "post_run_action_scheduled",
-                source="logicytics.runtime",
+                source="logicytics.module.runtime",
                 run_id=run_id,
                 action=plan.request.post_run_action.value,
                 delay_seconds=60,
@@ -1232,7 +1232,7 @@ class RunSupervisor:
                 application_logger.event(
                     "INFO",
                     "collector_started",
-                    source="logicytics.runtime",
+                    source="logicytics.module.runtime",
                     run_id=run_id,
                     **start_fields,
                 )
@@ -1262,7 +1262,7 @@ class RunSupervisor:
                         application_logger.event(
                             "ERROR",
                             "capability_policy_violation",
-                            source="logicytics.runtime",
+                            source="logicytics.module.runtime",
                             run_id=run_id,
                             collector_id=collector_id,
                             code=capability_error.split(":", 1)[0],
@@ -1299,7 +1299,7 @@ class RunSupervisor:
                     application_logger.event(
                         "WARNING" if retry_scheduled else "INFO",
                         "collector_finished",
-                        source="logicytics.runtime",
+                        source="logicytics.module.runtime",
                         run_id=run_id,
                         **finish_fields,
                     )

@@ -90,6 +90,27 @@ class PreflightTests(unittest.TestCase):
                 report.invalid[0].static_errors,
             )
 
+    def test_core_and_plugin_files_must_use_lowercase_snake_case_python_names(self) -> None:
+        """Collector roots reject spaces, extra dots, and non-Python filenames."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_directory = root / "core" / "system"
+            core_directory.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            for filename in ("bad.name.py", "bad name.py", "not_a_script.txt"):
+                (core_directory / filename).write_text("not a collector\n", encoding="utf-8")
+            (root / "plugins" / "bad plugin.py").write_text("not a plugin\n", encoding="utf-8")
+
+            report = preflight(root)
+
+            self.assertEqual(4, len(report.invalid))
+            self.assertTrue(
+                all(
+                    any("filename must be lowercase snake_case.py" in error for error in candidate.static_errors)
+                    for candidate in report.invalid
+                )
+            )
+
     def test_preflight_cache_requires_source_interpreter_contract_and_configuration_identity(
         self,
     ) -> None:
