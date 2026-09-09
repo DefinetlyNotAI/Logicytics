@@ -350,25 +350,47 @@ class ApplicationLogger(EventLogger):
                     self.console.write("\n".join(console_rows) + "\n")
                 self.console.flush()
 
+    def incomplete_progress(self, label: str, status: str = "Incomplete") -> None:
+        """Replace the active progress bar with an incomplete status."""
+        if not self.settings.console_enabled or not self.console.isatty():
+            return
+
+        rendered = f"{label} [{status}]"
+
+        with self._lock:
+            if self.settings.color_enabled:
+                rendered = f"\033[93m\033[1m{rendered}\033[0m"
+
+            self.console.write(f"\r\033[2K{rendered}\n")
+            self.console.flush()
+
     def progress(self, label: str, checked: int, total: int, current: str = "") -> None:
         """Render one in-place dependency-free progress bar on interactive consoles."""
         if not self.settings.console_enabled or not self.console.isatty():
             return
+
         bounded_total = max(total, 1)
         bounded_checked = min(max(checked, 0), bounded_total)
-        available = max(self._console_width() - len(label) - len(str(bounded_total)) * 2 - 12, 16)
+        available = max(
+            self._console_width() - len(label) - len(str(bounded_total)) * 2 - 12,
+            16,
+        )
         filled = int(available * bounded_checked / bounded_total)
         bar = "=" * filled + (">" if filled < available else "")
         bar = f"{bar:<{available}}"
         suffix = f" {current}" if current else ""
         rendered = f"{label} [{bar}] {bounded_checked}/{bounded_total}{suffix}"
         rendered = rendered[: self._console_width()]
+
         with self._lock:
             if self.settings.color_enabled:
                 rendered = f"\033[96m\033[1m{rendered}\033[0m"
+
             self.console.write(f"\r\033[2K{rendered}")
+
             if bounded_checked >= bounded_total:
                 self.console.write("\r\033[2K")
+
             self.console.flush()
 
     def raw(self, message: str, *, end: str = "\n") -> None:

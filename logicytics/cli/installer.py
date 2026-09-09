@@ -48,5 +48,6 @@ if __name__ == "__main__":
         with terminal_lifecycle():
             raise SystemExit(main())
     except KeyboardInterrupt:
+        print("\n")
         ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
         raise SystemExit(130)

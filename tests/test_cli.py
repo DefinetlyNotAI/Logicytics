@@ -13,8 +13,8 @@ from unittest.mock import MagicMock, patch
 
 from logicytics.cli import CLI, cli_methods, main
 from logicytics.contracts import Capability
-from logicytics.module.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
 from logicytics.module.configuration import default_config
+from logicytics.module.modes import EXECUTION_MODES, LEGACY_MODE_ALIASES, mode_matrix
 from logicytics.platform_adapters import process_adapter
 
 

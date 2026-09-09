@@ -7,8 +7,8 @@ import contextlib
 import importlib.util
 import json
 import os
-import subprocess
 import platform
+import subprocess
 import sys
 from pathlib import Path
 from time import perf_counter
@@ -687,6 +687,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         arguments = cli_parser.parse_args(argv)
     except KeyboardInterrupt:
+        print("\n")
         ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
         return 130
 
@@ -711,10 +712,6 @@ def main(argv: list[str] | None = None) -> int:
         arguments.command = "match"
     elif arguments.modes:
         arguments.command = "modes"
-
-    if arguments.command is None:
-        cli_parser.print_help()
-        return 0
 
     root = cli_methods.project_root()
     application_logger = None
@@ -767,7 +764,9 @@ def main(argv: list[str] | None = None) -> int:
             nonlocal last_preflight_progress_at
             now = perf_counter()
             should_report = (
-                last_preflight_progress_at == 0.0 or now - last_preflight_progress_at >= 1.0 or (phase == "checked" and checked == total)
+                    last_preflight_progress_at == 0.0 or
+                    now - last_preflight_progress_at >= 1.0 or
+                    (phase == "checked" and checked == total)
             )
             if should_report:
                 application_logger.event(
@@ -780,7 +779,9 @@ def main(argv: list[str] | None = None) -> int:
                     total=total,
                     current=current,
                 )
-                application_logger.progress("Preflight", checked, total, current)
+                application_logger.progress(
+                    "Preflight", checked, total, current
+                )
                 last_preflight_progress_at = now
 
         if arguments.command == "match":
@@ -1177,9 +1178,11 @@ def main(argv: list[str] | None = None) -> int:
 
         if outcome.manifest.package and "path" in outcome.manifest.package:
             package_sha_path = outcome.manifest.package.get("sha256_path", "unavailable")
-            result_lines.extend((f"Package: {outcome.manifest.package['path']}\nSHA-256: {package_sha_path}").splitlines())
+            result_lines.extend(
+                f"Package: {outcome.manifest.package['path']}\nSHA-256: {package_sha_path}".splitlines()
+            )
 
-        result_lines.extend((f"Run: {outcome.manifest_path}\nStatus: {outcome.manifest.status.value}").splitlines())
+        result_lines.extend(f"Run: {outcome.manifest_path}\nStatus: {outcome.manifest.status.value}".splitlines())
         application_logger.box("Collection result", result_lines)
 
         exit_code = 0 if outcome.manifest.status.value == "succeeded" else 1
@@ -1200,6 +1203,9 @@ def main(argv: list[str] | None = None) -> int:
     except KeyboardInterrupt:
         if application_logger is not None:
             with contextlib.suppress(OSError):
+                application_logger.incomplete_progress("Preflight")
+
+            with contextlib.suppress(OSError):
                 application_logger.event(
                     "WARNING",
                     "command_cancelled",
@@ -1208,9 +1214,20 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code=130,
                     console=False,
                 )
-            application_logger.box("Command cancelled", ("Interrupted by user.",))
+
+            application_logger.box(
+                "Command cancelled",
+                ("Interrupted by user.",),
+            )
+
         else:
-            ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
+            print("\r\033[2KIncomplete", flush=True)
+            ApplicationLogger.render_section(
+                sys.stderr,
+                "Command cancelled",
+                ("Interrupted by user.",),
+            )
+
         return 130
     except (
         LogicyticsError,
@@ -1257,5 +1274,6 @@ if __name__ == "__main__":
         with terminal_lifecycle():
             raise SystemExit(main())
     except KeyboardInterrupt:
+        print("\n")
         ApplicationLogger.render_section(sys.stderr, "Command cancelled", ("Interrupted by user.",))
         raise SystemExit(130)
