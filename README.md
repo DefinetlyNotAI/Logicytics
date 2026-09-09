@@ -67,17 +67,17 @@ Every run validates collectors, records a manifest, and packages the result unle
 Each run receives its own directory under `output/data/`:
 
 ```text
-output/data/run/<fingerprint>/
+output/data/run/<fingerprint-prefix>/
   manifest.json          # status, collector results, and artifact catalog
   artifacts/             # collected evidence
   logs/                  # run and collector JSONL events
   reports/               # generated summaries
 
-output/data/zip/<fingerprint>.zip
-output/data/hashes/<fingerprint-first-8>.zip.sha256
+output/data/zip/<fingerprint-prefix>.zip
+output/data/hashes/<fingerprint-prefix>.zip.sha256
 ```
 
-The console is intentionally brief. Use `manifest.json` to inspect a run, the package hash to verify a package, and `output/logs/Logicytics.log` for the human-readable application log. The fingerprint is a SHA-256 identity derived from the immutable run ID. Set `logging.level: DEBUG` in `logicytics.yaml` when you need detailed worker lifecycle information and file call sites.
+The console is intentionally brief. Use `manifest.json` to inspect a run, the package hash to verify a package, and `output/logs/Logicytics.log` for the human-readable application log. The fingerprint is a SHA-256 identity derived from the immutable run ID; output uses its shortest unique prefix, starting at eight characters and extending only on a collision. Set `logging.level: DEBUG` in `logicytics.yaml` when you need detailed worker lifecycle information and file call sites.
 
 ## Useful commands
 

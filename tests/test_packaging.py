@@ -70,7 +70,7 @@ class PackagingTests(unittest.TestCase):
             self.assertEqual([], outcome.manifest.skipped_collectors)
             self.assertEqual(configuration.runtime.output_root.resolve() / "run", outcome.run_directory.parent)
             self.assertEqual((root / "output" / "data" / "run").resolve(), outcome.run_directory.parent)
-            self.assertEqual(run_fingerprint(outcome.manifest.run_id), outcome.run_directory.name)
+            self.assertEqual(run_fingerprint(outcome.manifest.run_id)[:8], outcome.run_directory.name)
             self.assertTrue(outcome.run_directory.is_absolute())
             self.assertTrue((outcome.run_directory / "artifacts" / "core_system_system_info").is_dir())
             self.assertFalse((root / "system.txt").exists())
@@ -100,7 +100,7 @@ class PackagingTests(unittest.TestCase):
             assert package is not None
             self.assertTrue(package_path.is_file())
             self.assertTrue(hash_path.is_file())
-            self.assertEqual(f"{run_fingerprint(outcome.manifest.run_id)}.zip", package_path.name)
+            self.assertEqual(f"{outcome.run_directory.name}.zip", package_path.name)
             package_digest, sidecar_name = hash_path.read_text(encoding="ascii").split()
             self.assertEqual(f"{package_path.stem[:8]}.zip.sha256", hash_path.name)
             self.assertEqual(package_path.name, sidecar_name)
@@ -363,8 +363,8 @@ class PackagingTests(unittest.TestCase):
             self.assertEqual([selected_id], [record.id for record in rerun.manifest.collectors])
             self.assertNotEqual(original.run_directory, rerun.run_directory)
             self.assertNotEqual(original_package_path, rerun_package_path)
-            self.assertEqual(f"{run_fingerprint(original.manifest.run_id)}.zip", original_package_path.name)
-            self.assertEqual(f"{run_fingerprint(rerun.manifest.run_id)}.zip", rerun_package_path.name)
+            self.assertEqual(f"{original.run_directory.name}.zip", original_package_path.name)
+            self.assertEqual(f"{rerun.run_directory.name}.zip", rerun_package_path.name)
             self.assertEqual(original_manifest, original.manifest_path.read_bytes())
             self.assertEqual(original_package, original_package_path.read_bytes())
             with zipfile.ZipFile(rerun_package_path) as archive:

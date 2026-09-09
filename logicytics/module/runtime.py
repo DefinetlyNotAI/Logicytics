@@ -49,7 +49,7 @@ from logicytics.module.errors import CapabilityPolicyError, LogicyticsError
 from logicytics.module.logging import FileEventLogger, get_application_logger, get_event_logger
 from logicytics.module.manifest import CollectorRecord, RunManifest, utc_now, write_manifest
 from logicytics.module.output_contracts import core_output_contract
-from logicytics.module.output_layout import ensure_output_layout, run_fingerprint
+from logicytics.module.output_layout import allocate_output_run_directory, ensure_output_layout
 from logicytics.module.packaging import package_manifest
 from logicytics.module.planner import RunPlan
 from logicytics.platform_adapters import process_adapter, windows_api_adapter
@@ -866,7 +866,7 @@ class RunSupervisor:
         )
         debug_logging = self.configuration.logging.level.upper() == "DEBUG"
         run_id = f"run-{uuid4().hex}"
-        run_directory = output_layout.runs / run_fingerprint(run_id)
+        run_directory = allocate_output_run_directory(output_layout, run_id)
         workspace_root = run_directory / "collectors"
         artifact_root = run_directory / "artifacts"
         cancellation_file = run_directory / ".cancelled"
@@ -1098,8 +1098,8 @@ class RunSupervisor:
             ],
         }
         performance_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        fingerprint = run_fingerprint(manifest.run_id)
-        log_path = performance_logs / f"{fingerprint[:8]}.log"
+        fingerprint = run_directory.name
+        log_path = performance_logs / f"{fingerprint}.log"
         rows = [
             "Performance report",
             f"Run id: {manifest.run_id}",

@@ -14,7 +14,6 @@ from typing import IO, TYPE_CHECKING
 from logicytics.contracts import Artifact
 from logicytics.module.artifacts import sha256_file
 from logicytics.module.manifest import RunManifest, write_manifest
-from logicytics.module.output_layout import run_fingerprint
 
 if TYPE_CHECKING:
     from logicytics.module.runtime import RunOutcome
@@ -27,10 +26,10 @@ _ARTIFACT_HASH_ARCHIVE_PATH = "hashes/artifacts.sha256"
 
 def _sidecar_filename(package_name: str) -> str:
     """Return a concise sidecar name from the package's storage fingerprint."""
-    match = re.fullmatch(r"(?P<prefix>mods-)?(?P<fingerprint>[0-9a-f]{64})\.zip", package_name)
+    match = re.fullmatch(r"(?P<prefix>mods-)?(?P<fingerprint>[0-9a-f]{8,64})\.zip", package_name)
     if match is None:
         raise ValueError("package name must contain a lowercase SHA-256 storage fingerprint")
-    return f"{match['prefix'] or ''}{match['fingerprint'][:8]}.zip.sha256"
+    return f"{match['prefix'] or ''}{match['fingerprint']}.zip.sha256"
 
 
 def _validate_sidecar_slot(hash_path: Path, package_name: str) -> None:
@@ -46,7 +45,7 @@ def _validate_sidecar_slot(hash_path: Path, package_name: str) -> None:
         )
 
 
-def _package_filename(manifest: RunManifest) -> str:
+def _package_filename(manifest: RunManifest, run_directory: Path) -> str:
     """Return the canonical ZIP filename from the opaque run fingerprint."""
     if not isinstance(manifest.action, str) or not re.fullmatch(r"run|rerun", manifest.action):
         raise ValueError("package action must be a supported run or rerun action")
@@ -59,7 +58,9 @@ def _package_filename(manifest: RunManifest) -> str:
     if requested_at.tzinfo is None:
         raise ValueError("package requested_at must include a timezone")
     requested_at.astimezone(UTC)
-    return f"{run_fingerprint(manifest.run_id)}.zip"
+    if re.fullmatch(r"[0-9a-f]{8,64}", run_directory.name) is None:
+        raise ValueError("run directory must use a hexadecimal fingerprint prefix")
+    return f"{run_directory.name}.zip"
 
 
 def _summary(manifest: RunManifest) -> str:
@@ -247,6 +248,7 @@ def _package_mod_artifacts(
     hash_directory: Path,
     manifest: RunManifest,
     artifact_sources: list[tuple[Path, str]],
+    package_name: str,
 ) -> dict[str, str]:
     """Publish MODS evidence in a separately named atomic package and sidecar."""
     mod_sources = [
@@ -259,7 +261,7 @@ def _package_mod_artifacts(
     ]
     if not mod_sources:
         return {}
-    package_path = package_directory / f"mods-{_package_filename(manifest)}"
+    package_path = package_directory / f"mods-{package_name}"
     temporary_package = package_path.with_suffix(".zip.tmp")
     temporary_hash = hash_directory / f".{package_path.name}.sha256.tmp"
     mod_catalog = {
@@ -337,13 +339,14 @@ def package_manifest(
     hash_directory = hash_directory or data_root / "hashes"
     package_directory.mkdir(parents=True, exist_ok=True)
     hash_directory.mkdir(parents=True, exist_ok=True)
-    package_path = package_directory / _package_filename(manifest)
+    package_name = _package_filename(manifest, run_directory)
+    package_path = package_directory / package_name
 
     summary_path = run_directory / "reports" / "summary.txt"
     artifact_hash_path = hash_directory / "artifacts.sha256"
     artifact_sources = _artifact_sources(run_directory, manifest)
     log_sources = _log_sources(run_directory, manifest)
-    mods_package = _package_mod_artifacts(package_directory, hash_directory, manifest, artifact_sources)
+    mods_package = _package_mod_artifacts(package_directory, hash_directory, manifest, artifact_sources, package_name)
     manifest.package = {"path": str(package_path), **mods_package}
     write_manifest(manifest_path, manifest)
     _write_text_atomic(summary_path, _summary(manifest), encoding="utf-8")

@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 
+_MINIMUM_FINGERPRINT_LENGTH = 8
+
 
 @dataclass(frozen=True, slots=True)
 class OutputLayout:
@@ -24,6 +26,53 @@ class OutputLayout:
 def run_fingerprint(run_id: str) -> str:
     """Return the stable opaque storage fingerprint for one canonical run ID."""
     return sha256(run_id.encode("ascii")).hexdigest()
+
+
+def allocate_run_directory(runs: Path, run_id: str) -> Path:
+    """Return the shortest unoccupied output directory for one run fingerprint."""
+    fingerprint = run_fingerprint(run_id)
+    for length in range(_MINIMUM_FINGERPRINT_LENGTH, len(fingerprint) + 1):
+        candidate = runs / fingerprint[:length]
+        if not candidate.exists():
+            return candidate
+    raise FileExistsError("no unique output fingerprint prefix is available")
+
+
+def allocate_output_run_directory(layout: OutputLayout, run_id: str) -> Path:
+    """Reserve the shortest unique fingerprint across every named output channel."""
+    fingerprint = run_fingerprint(run_id)
+    for length in range(_MINIMUM_FINGERPRINT_LENGTH, len(fingerprint) + 1):
+        token = fingerprint[:length]
+        occupied = (
+            layout.runs / token,
+            layout.packages / f"{token}.zip",
+            layout.packages / f"mods-{token}.zip",
+            layout.hashes / f"{token}.zip.sha256",
+            layout.hashes / f"mods-{token}.zip.sha256",
+            layout.performance_logs / f"{token}.log",
+        )
+        if not any(path.exists() for path in occupied):
+            return layout.runs / token
+    raise FileExistsError("no unique output fingerprint prefix is available")
+
+
+def locate_run_directory(runs: Path, run_id: str) -> Path:
+    """Locate a run directory by its full fingerprint while supporting prefix storage."""
+    fingerprint = run_fingerprint(run_id)
+    matches = sorted(
+        (
+            path
+            for path in runs.iterdir()
+            if path.is_dir()
+            and _MINIMUM_FINGERPRINT_LENGTH <= len(path.name) <= len(fingerprint)
+            and fingerprint.startswith(path.name)
+        ),
+        key=lambda path: len(path.name),
+        reverse=True,
+    )
+    if not matches:
+        raise FileNotFoundError(f"no output directory exists for run {run_id}")
+    return matches[0]
 
 
 def output_layout(output_root: Path) -> OutputLayout:
