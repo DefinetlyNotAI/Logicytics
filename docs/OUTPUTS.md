@@ -1,80 +1,31 @@
-# v4 output contract
+# Results and output layout
 
-This document defines the stable names, formats, locations, and retention rules
-for every shipped collector. `logicytics.output_contracts.core_output_contract`
-is the executable source of truth and the worker rejects an artifact whose
-relative path or MIME type is outside that contract.
+Each run is owned by a fingerprinted directory below `runtime.output_root` (normally `output/data`):
 
-## Canonical paths
+```text
+output/data/
+  run/<unique-prefix>/
+    manifest.json
+    artifacts/<collector_id_with_underscores>/...
+    logs/...
+    reports/...
+  zip/<unique-prefix>.zip
+  hashes/<unique-prefix>.zip.sha256
+  logs/...
+```
 
-Each run directory is `output/data/run/<fingerprint-prefix>/`, where the prefix
-is the shortest unique SHA-256 prefix derived from that immutable run ID. It
-starts at eight characters and extends by one only on a collision. The verified ZIP and
-its sidecar are published outside the evidence tree at
-`output/data/zip/<fingerprint-prefix>.zip` and
-`output/data/hashes/<fingerprint-prefix>.zip.sha256`.
+The prefix starts at eight SHA-256 characters and grows only to resolve a collision. A package contains the manifest, metadata, reports, logs, and evidence under stable `raw` or `derived` sections. A direct collector or `--no-package` run may have only the manifest-backed run folder.
 
-For a collector ID `core.<category>.<name>`, a fixed single-file output is named
-`<name><suffix>` in its private workspace and stored in the run catalog as
-`artifacts/core_<category>_<name>/<name><suffix>`. In a verified ZIP it is
-`evidence/<kind>/core_<category>_<name>/<name><suffix>`, where `<kind>` is `raw`
-for copied source evidence and `derived` for generated reports.
+## Manifest reading order
 
-The suffix is fixed by the declared MIME type:
+1. Read `status`, `run_id`, request, and plan.
+2. Count collector records by status.
+3. Read each failed or skipped record's summary, errors, and actionable failure details.
+4. Follow `artifacts` entries to exact files.
+5. Verify package and hash metadata before sharing or extracting a ZIP.
 
-| MIME type           | Suffix  |
-|---------------------|---------|
-| `application/json`  | `.json` |
-| `application/xml`   | `.xml`  |
-| `application/zip`   | `.zip`  |
-| `text/csv`          | `.csv`  |
-| `text/html`         | `.html` |
-| `text/plain`        | `.txt`  |
-| `text/vnd.graphviz` | `.dot`  |
+## Stable artifact rules
 
-This rule covers every shipped collector except the explicitly listed contracts
-below. MIME types remain those declared by each collector's `CollectorMetadata`.
+Artifacts are collector-owned, use POSIX separators, carry a MIME type and SHA-256, and cannot escape their owner directory. Typical MIME-to-suffix mappings are `application/json` → `.json`, `text/csv` → `.csv`, `text/html` → `.html`, `text/plain` → `.txt`, `application/xml` → `.xml`, `application/zip` → `.zip`, and `text/vnd.graphviz` → `.dot`.
 
-| Collector                                  | Stable workspace path pattern   |
-|--------------------------------------------|---------------------------------|
-| `core.bluetooth.paired_devices`            | `bluetooth_devices.json`        |
-| `core.browser.browser_data_backup`         | `browser_data/*/*/*`            |
-| `core.filesystem.sensitive_file_inventory` | `sensitive_file_inventory/**`   |
-| `core.integration.legacy_code_outputs`     | `legacy_code/**`                |
-| `core.media.media_backup`                  | `media_backup/**`               |
-| `core.process.memory_map`                  | `**/memory_map.json`            |
-| `core.registry.hklm_backup`                | `hklm_backup.reg`               |
-| `core.system.windows_system_data_backup`   | `windows_system_data/*/*`       |
-| `core.wireless.wifi_profile_keys`          | `wifi_profiles_with_keys/*.xml` |
-
-`core.bluetooth.bluetooth_history` uses the fixed
-`bluetooth_history.json` name. Its content carries `collected_at`; the run ID and
-package timestamp preserve snapshot history without making the output contract
-time-dependent.
-
-## Retention
-
-Collector workspaces are private staging locations and are removed after durable
-publication. The run tree, manifest, package, package hash, reports, and logs are
-retained together until the user explicitly removes that run. Schema v4 does not
-silently expire completed evidence. Copied evidence has no separate lifetime:
-raw and derived artifacts follow their owning run. A manifest-only run follows
-the same retained-with-run rule but has no ZIP or package-hash sidecar.
-
-Global application, debug, and performance logs live under `output/logs/` and
-follow the logging limits described in the configuration documentation; they are
-not collector outputs and never enter the evidence catalog.
-
-## Logging presentation
-
-The application log is a bounded, human-readable text log. Each row contains a
-local timestamp with milliseconds, severity, an exact source, and message; long
-messages and fields continue on aligned rows. Application sources retain their
-full module name (for example, `logicytics.cli.commands`), while collector JSONL
-sources identify the collector (`core.browser.bdb`, `mods.fb`, or
-`plugins.example`). When the configured level is `DEBUG`, application rows also
-include the call-site line number, except for `library.*` sources. Console
-output uses the same redaction and humanization rules, with colored severity
-markers and readable indented fields. It never emits raw JSON or `key=value`
-field fragments. Structured run and collector event logs are stored separately
-as JSONL for tooling and remain redacted; they are not printed to the console.
+Completed evidence, manifests, packages, hashes, reports, and run logs are retained together until explicit user removal. Application-log rotation is separate and controlled by `logging.retention_days`.

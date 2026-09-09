@@ -21,6 +21,8 @@
 
 Logicytics is a Windows evidence collection framework. It validates every collector before use, runs each one in isolation, and keeps the result in a manifest-backed run folder. A collector can succeed, skip, or fail without obscuring the rest of the verified run.
 
+The complete user and developer manual is in [`docs/README.md`](docs/README.md) and is mirrored to the [Logicytics Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki).
+
 > Use Logicytics only on systems and data you are authorized to inspect.
 
 ## Start here

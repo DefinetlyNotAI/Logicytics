@@ -1,32 +1,9 @@
-# Migration
+# Moving from older layouts
 
-Logicytics v4 uses `logicytics.yaml` as its sole settings source and keeps application execution code under `logicytics/module/`. Commands live under `logicytics/cli/`; globally available Windows ctypes infrastructure lives under `logicytics/global/`.
+Use `logicytics.yaml` as the single settings source. Execution code lives under `logicytics/module/`, command parsing under `logicytics/cli/`, and the public API under `logicytics/module/api.py`.
 
-Run `python -m logicytics.cli.installer` to prepare the virtual environment and root YAML configuration, then run `python -m logicytics preflight` from that environment.
+Older mode flags remain compatibility aliases: `--default` selects `standard`, `--threaded` selects `balanced`, `--minimal` selects `quick`, and `--depth` selects `thorough`. New scripts should use `--mode` or `--profile`.
 
-## Command aliases
+Legacy `CODE/config.ini` is read only as a compatibility input. The explicit `core.integration.legacy_code_outputs` collector imports approved generated output; the engine does not implicitly scan the repository. `MODS/` is opt-in and requires sidecars. Run evidence is owned by its manifest-backed run folder. There are no global `ACCESS/`, `RUNS/`, `LOGS/`, or `PACKAGES/` stores.
 
-The old mode flags remain explicit compatibility aliases. Their v4 equivalents are:
-
-| Legacy flag           | v4 mode              |
-|-----------------------|----------------------|
-| `--default`           | `--mode standard`    |
-| `--threaded`          | `--mode balanced`    |
-| `--minimal`           | `--mode quick`       |
-| `--depth`             | `--mode thorough`    |
-
-Only one mode or alias may be selected per invocation. `--performance-check` is
-now a run option rather than a mode: use `run --mode <mode> --performance-check`
-to measure any selected mode serially. Use `--mods` to opt into Python MODS
-sidecars. Prefer named `--mode` values in new automation.
-
-## File and collector bridges
-
-- `CODE/config.ini` is read only as a legacy compatibility input; v4 writes canonical manifests and does not mutate the file.
-- `core.integration.legacy_code_outputs` remains the explicit bridge for approved legacy `CODE` output. It is not an implicit scan of the repository.
-- `MODS/` is an opt-in Python extension area. MOD sidecars declare the script, capabilities, output paths, and media types before a run can select them.
-- There are no global `ACCESS/`, `RUNS/`, `LOGS/`, or `PACKAGES/` stores. Run-owned evidence is written to `runtime.output_root/run/<fingerprint-prefix>/`; verified ZIPs and their hashes are published to `runtime.output_root/zip/<fingerprint-prefix>.zip` and `runtime.output_root/hashes/<fingerprint-prefix>.zip.sha256`. Prefixes start at eight characters and extend only to resolve a collision.
-
-Do not copy v3 JSON settings into the v4 YAML path. Translate supported values using [CONFIGURATION.md](CONFIGURATION.md), then run `python -m logicytics preflight` before collecting.
-
-Technical migration guidance is maintained in the [Logicytics Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki).
+Translate supported settings using [Configuration](CONFIGURATION.md), then run `preflight` and `plan` before collecting.
