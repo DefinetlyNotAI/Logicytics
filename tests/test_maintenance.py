@@ -266,8 +266,8 @@ class MaintenanceTests(unittest.TestCase):
                     main(["dev", "--write-manifest", "--next-version", "4.1.0"]),
                 )
             rendered = output.getvalue()
-            self.assertIn("Development checks", rendered)
-            self.assertIn("Manifest written: yes", rendered)
+            self.assertIn("Development summary", rendered)
+            self.assertIn("Manifest: written", rendered)
             self.assertNotIn("{", rendered)
             development_path = root / "output" / "logs" / "debug" / "development.json"
             payload = json.loads(development_path.read_text(encoding="utf-8"))

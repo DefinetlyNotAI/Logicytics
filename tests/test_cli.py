@@ -326,7 +326,8 @@ class CliTests(unittest.TestCase):
                 )
 
             rendered = output.getvalue()
-            self.assertIn("Update result", rendered)
+            self.assertIn("Update summary", rendered)
+            self.assertIn("Update started", rendered)
             self.assertIn("Launched action: debug", rendered)
             self.assertIn("Launched process id: 321", rendered)
             self.assertNotIn("{", rendered)
@@ -387,7 +388,7 @@ class CliTests(unittest.TestCase):
             payload = json.loads((root / "output" / "logs" / "debug" / "update.json").read_text(encoding="utf-8"))
             self.assertFalse(payload["remote_reachable"])
             self.assertFalse(payload["applied"])
-            self.assertIn("GitHub reachable: no", output.getvalue())
+            self.assertIn("Result: update was not applied.", output.getvalue())
 
     def test_update_reports_a_missing_git_executable(self) -> None:
         """Maintenance status remains readable when Git is not installed."""
@@ -409,7 +410,7 @@ class CliTests(unittest.TestCase):
             payload = json.loads((root / "output" / "logs" / "debug" / "update.json").read_text(encoding="utf-8"))
             self.assertFalse(payload["git_available"])
             self.assertFalse(payload["remote_reachable"])
-            self.assertIn("Git available: no", output.getvalue())
+            self.assertIn("Install Git, then run the update command again.", output.getvalue())
 
     def test_new_window_launcher_uses_current_interpreter_without_a_shell(
         self,

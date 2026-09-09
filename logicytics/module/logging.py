@@ -378,7 +378,7 @@ class ApplicationLogger(EventLogger):
         """Render structured fields as readable labels instead of JSON fragments."""
         rows: list[str] = []
         for key, value in fields.items():
-            label = key.replace("_", " ").capitalize()
+            label = key.replace("_", " ").capitalize().replace("Github", "GitHub")
             rendered_value = cls._console_value(value)
             if compact_configuration_hash and key in {"configuration_hash", "fingerprint"}:
                 rendered_value = rendered_value[:7]
@@ -402,6 +402,8 @@ class ApplicationLogger(EventLogger):
             "run": "Collection",
             "collector": "Collector execution",
             "package": "Packaging",
+            "update": "Update",
+            "development": "Development",
         }.get(prefix)
 
     def _render_step(self, message: str) -> None:

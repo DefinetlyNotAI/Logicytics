@@ -564,6 +564,13 @@ class CLI:
     ) -> int:
         """Run read-only contribution checks and an explicitly confirmed manifest update."""
         settings = configuration.maintenance
+        logger.event(
+            "INFO",
+            "development_checks_started",
+            source="logicytics.cli.commands",
+            manifest_write_requested=arguments.write_manifest,
+            interactive=arguments.interactive,
+        )
         existing = load_local_manifest(root, settings)
 
         comparison = (
@@ -580,6 +587,15 @@ class CLI:
         checks = developer_checks(root, settings)
         next_version = arguments.next_version
         write_requested = arguments.write_manifest
+        logger.event(
+            "INFO",
+            "development_integrity_reviewed",
+            source="logicytics.cli.commands",
+            manifest_available=existing is not None,
+            missing_files=len(comparison["missing"]),
+            modified_files=len(comparison["modified"]),
+            extra_files=len(comparison["extra"]),
+        )
 
         if arguments.interactive:
             organization_checks: tuple[
@@ -630,6 +646,12 @@ class CLI:
             if next_version is None:
                 raise ValueError("a semantic next version is required to write the integrity manifest")
 
+            logger.event(
+                "INFO",
+                "development_manifest_write_started",
+                source="logicytics.cli.commands",
+                next_version=next_version,
+            )
             manifest = build_manifest(root, settings, next_version)
             written_manifest = write_local_manifest(
                 root,
@@ -638,6 +660,12 @@ class CLI:
             )
 
             manifest_path = str(written_manifest)
+            logger.event(
+                "INFO",
+                "development_manifest_written",
+                source="logicytics.cli.commands",
+                manifest_path=manifest_path,
+            )
 
         payload = {
             "checks": checks,
@@ -660,17 +688,22 @@ class CLI:
                 "crowded_modules",
             )
         )
+        logger.event(
+            "INFO" if organization_issues == 0 else "WARNING",
+            "development_structure_reviewed",
+            source="logicytics.cli.commands",
+            organization_issues=organization_issues,
+            github_reachable=bool(repository["remote_reachable"]),
+        )
         logger.box(
-            "Development checks",
+            "Development summary",
             (
-                f"Missing files: {len(comparison['missing'])}",
-                f"Modified files: {len(comparison['modified'])}",
-                f"Extra files: {len(comparison['extra'])}",
-                f"Unchanged files: {len(comparison['unchanged'])}",
+                f"Integrity: {len(comparison['missing'])} missing, "
+                f"{len(comparison['modified'])} modified, {len(comparison['extra'])} extra",
                 f"Organization issues: {organization_issues}",
-                f"GitHub reachable: {'yes' if repository['remote_reachable'] else 'no'}",
-                f"Manifest written: {'yes' if manifest_path else 'no'}",
-                f"Manifest path: {manifest_path or 'none'}",
+                f"GitHub: {'reachable' if repository['remote_reachable'] else 'unreachable'}",
+                f"Manifest: {'written' if manifest_path else 'not changed'}",
+                *((f"Manifest path: {manifest_path}",) if manifest_path else ()),
                 f"Diagnostic report: {development_path}",
             ),
         )
@@ -1019,26 +1052,53 @@ def main(argv: list[str] | None = None) -> int:
             if arguments.new_window != (arguments.launch_action is not None):
                 raise ValueError("--new-window and --launch-action must be provided together")
 
+            application_logger.event(
+                "INFO",
+                "update_started",
+                source="logicytics.cli.commands",
+                action="apply update" if arguments.apply else "check for updates",
+            )
             repository = cli_methods.repository_status(root)
             payload: dict[str, object] = {
                 **repository,
                 "applied": False,
             }
+            application_logger.event(
+                "INFO" if repository["remote_reachable"] else "WARNING",
+                "update_repository_checked",
+                source="logicytics.cli.commands",
+                git_available=bool(repository["git_available"]),
+                repository_ready=bool(repository["is_repository"]),
+                origin_configured=bool(repository["origin_configured"]),
+                github_reachable=bool(repository["remote_reachable"]),
+            )
 
             pull_returncode: int | None = None
 
             if not repository["remote_reachable"]:
                 update_path = layout.debug_logs / "update.json"
                 cli_methods.write_json(update_path, payload)
+                if not repository["git_available"]:
+                    next_step = "Install Git, then run the update command again."
+                elif not repository["is_repository"]:
+                    next_step = "Run the update command from a Git repository."
+                elif not repository["origin_configured"]:
+                    next_step = "Configure the repository's origin remote, then retry."
+                else:
+                    next_step = "Restore GitHub connectivity, then retry the update command."
+                application_logger.event(
+                    "WARNING",
+                    "update_not_applied",
+                    source="logicytics.cli.commands",
+                    reason="repository remote is unavailable",
+                    diagnostic_report=str(update_path),
+                )
                 application_logger.box(
-                    "Update result",
+                    "Update summary",
                     (
-                        f"Git available: {'yes' if repository['git_available'] else 'no'}",
-                        f"Repository: {'yes' if repository['is_repository'] else 'no'}",
-                        f"Origin configured: {'yes' if repository['origin_configured'] else 'no'}",
-                        "GitHub reachable: no",
+                        "Result: update was not applied.",
+                        f"Next step: {next_step}",
                         f"Diagnostic report: {update_path}",
-                        "Update was not applied because the configured Git remote is unreachable.",
                     ),
                 )
                 return finish_command(
@@ -1049,7 +1109,12 @@ def main(argv: list[str] | None = None) -> int:
                 )
 
             if arguments.apply:
-
+                application_logger.event(
+                    "INFO",
+                    "update_apply_started",
+                    source="logicytics.cli.commands",
+                    command="git pull",
+                )
                 pulled = process_adapter.run(
                     ["git", "pull"],
                     cwd=root,
@@ -1068,6 +1133,12 @@ def main(argv: list[str] | None = None) -> int:
                         "stderr": pulled.stderr,
                     }
                 )
+                application_logger.event(
+                    "INFO" if pulled.returncode == 0 else "ERROR",
+                    "update_apply_finished",
+                    source="logicytics.cli.commands",
+                    exit_code=pulled.returncode,
+                )
 
             update_succeeded = not arguments.apply or pull_returncode == 0
 
@@ -1083,20 +1154,16 @@ def main(argv: list[str] | None = None) -> int:
             update_path = layout.debug_logs / "update.json"
             cli_methods.write_json(update_path, payload)
             update_lines = [
-                f"Git available: {'yes' if repository['git_available'] else 'no'}",
-                f"Repository: {'yes' if repository['is_repository'] else 'no'}",
-                f"Origin configured: {'yes' if repository['origin_configured'] else 'no'}",
-                f"GitHub reachable: {'yes' if repository['remote_reachable'] else 'no'}",
-                f"Update applied: {'yes' if arguments.apply else 'no'}",
-                f"Update status: {'succeeded' if update_succeeded else 'failed'}",
+                f"Repository: {'ready' if repository['is_repository'] else 'not detected'}",
+                "GitHub: reachable",
+                f"Action: {'git pull completed' if arguments.apply else 'connectivity check only'}",
+                f"Result: {'succeeded' if update_succeeded else 'failed'}",
             ]
             if arguments.apply:
                 pull_exit_code = pull_returncode if pull_returncode is not None else "none"
                 update_lines.append(f"Git pull exit code: {pull_exit_code}")
-                if payload.get("stdout"):
-                    update_lines.extend(("Git output:", *str(payload["stdout"]).splitlines()))
-                if payload.get("stderr"):
-                    update_lines.extend(("Git warnings:", *str(payload["stderr"]).splitlines()))
+                if not update_succeeded:
+                    update_lines.append("Next step: inspect the diagnostic report, resolve Git's error, then retry.")
             if payload.get("launched_action"):
                 update_lines.extend(
                     (
@@ -1105,7 +1172,14 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 )
             update_lines.append(f"Diagnostic report: {update_path}")
-            application_logger.box("Update result", tuple(update_lines))
+            application_logger.event(
+                "INFO" if update_succeeded else "ERROR",
+                "update_finished",
+                source="logicytics.cli.commands",
+                action="applied" if arguments.apply else "checked",
+                status="succeeded" if update_succeeded else "failed",
+            )
+            application_logger.box("Update summary", tuple(update_lines))
 
             return finish_command(
                 0 if update_succeeded else 1,
