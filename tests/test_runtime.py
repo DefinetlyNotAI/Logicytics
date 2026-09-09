@@ -1,3 +1,5 @@
+"""Regression coverage for isolated collector runtime behavior."""
+
 from __future__ import annotations
 
 import json
@@ -163,6 +165,42 @@ class RuntimeTests(unittest.TestCase):
 
             self.assertIn(f"Started: {record.started_at}", summary)
             self.assertIn(f"Finished: {record.finished_at}", summary)
+
+    def test_worker_uses_its_private_temporary_directory_when_host_temp_is_unusable(self) -> None:
+        """A collector process must not inherit a broken host TEMP or TMP directory."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(
+                COLLECTOR.replace(
+                    "from pathlib import Path\n",
+                    "from pathlib import Path\nimport tempfile\n",
+                ).replace(
+                    'output.write_text("ok\\n", encoding="utf-8")',
+                    "output.write_text(tempfile.gettempdir(), encoding=\"utf-8\")",
+                ),
+                encoding="utf-8",
+            )
+            unavailable = root / "unavailable-temp"
+
+            with patch.dict(os.environ, {"TEMP": str(unavailable), "TMP": str(unavailable)}):
+                plan = build_plan(preflight(root), RunRequest(max_workers=1, acknowledge_authorization=True))
+                outcome = RunSupervisor(root, default_config(root)).run(plan)
+
+            record = outcome.manifest.collectors[0]
+            package = outcome.manifest.package
+            assert package is not None
+
+            with zipfile.ZipFile(Path(package["path"])) as archive:
+                observed = archive.read("evidence/derived/core_system_system_info/system.txt").decode("utf-8")
+
+            self.assertEqual("succeeded", record.status, record.errors)
+            self.assertEqual(
+                ("collectors", "core_system_system_info", "tmp"),
+                Path(observed).parts[-3:],
+            )
 
     def test_transient_collector_failure_retries_in_a_new_isolated_worker(self) -> None:
         """An explicitly retryable collector may recover before any evidence is registered."""

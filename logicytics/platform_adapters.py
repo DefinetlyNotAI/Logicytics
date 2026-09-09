@@ -14,7 +14,7 @@ import tempfile
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, overload
 
 _ctypes_collector = importlib.import_module("logicytics.global.ctypes_collector")
 query_registry_key_info = _ctypes_collector.query_registry_key_info
@@ -43,6 +43,22 @@ class ProcessAdapter:
             raise ValueError("command must contain at least one argument")
 
         return normalized
+
+    @staticmethod
+    @overload
+    def run(
+        command: Sequence[str | os.PathLike[str]],
+        *,
+        text: Literal[True],
+        **options: Any,
+    ) -> subprocess.CompletedProcess[str]: ...
+
+    @staticmethod
+    @overload
+    def run(
+        command: Sequence[str | os.PathLike[str]],
+        **options: Any,
+    ) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]: ...
 
     @staticmethod
     def run(
@@ -156,7 +172,10 @@ class ProcessAdapter:
         if not isinstance(process_id, int) or isinstance(process_id, bool) or process_id <= 0:
             raise ValueError("process_id must be a positive integer")
 
-        os.killpg(process_id, signal.SIGTERM)
+        kill_process_group = getattr(os, "killpg", None)
+        if kill_process_group is None:
+            raise OSError("process groups are unavailable on this platform")
+        kill_process_group(process_id, signal.SIGTERM)
 
 
 process_adapter = ProcessAdapter()

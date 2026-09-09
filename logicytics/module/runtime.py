@@ -14,6 +14,7 @@ import shlex
 import shutil
 import socket
 import sys
+import tempfile
 import traceback
 import zipfile
 from collections.abc import Callable, Mapping
@@ -598,6 +599,27 @@ def _run_mod_worker(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]
     result_queue.put({"collector_id": metadata.id, "result": _serialize_result(result)})
 
 
+def _configure_worker_temporary_directory(directory: Path) -> Callable[[], None]:
+    """Route stdlib and child-process temporary files into one worker workspace."""
+    location = str(directory.resolve())
+    previous_tempdir = tempfile.tempdir
+    previous_environment = {name: os.environ.get(name) for name in ("TEMP", "TMP")}
+    tempfile.tempdir = location
+    os.environ["TEMP"] = location
+    os.environ["TMP"] = location
+
+    def restore() -> None:
+        """Restore the inherited process temporary-directory configuration."""
+        tempfile.tempdir = previous_tempdir
+        for name, previous_value in previous_environment.items():
+            if previous_value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = previous_value
+
+    return restore
+
+
 def _worker_entry(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) -> None:
     """Run a single collector in an isolated child process."""
     if os.name != "nt":
@@ -606,6 +628,7 @@ def _worker_entry(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) 
     workspace.mkdir(parents=True, exist_ok=True)
     temporary_directory = workspace / "tmp"
     temporary_directory.mkdir(exist_ok=True)
+    restore_temporary_directory = _configure_worker_temporary_directory(temporary_directory)
     if payload["execution_type"] != "collector":
         try:
             _run_mod_worker(payload, result_queue)
@@ -621,6 +644,8 @@ def _worker_entry(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) 
                     ),
                 }
             )
+        finally:
+            restore_temporary_directory()
         return
     stdout_path = workspace / "stdout.log"
     stderr_path = workspace / "stderr.log"
@@ -776,6 +801,8 @@ def _worker_entry(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) 
                 ),
             }
         )
+    finally:
+        restore_temporary_directory()
 
 
 def _serialize_result(result: CollectorResult) -> _SerializedResult:
