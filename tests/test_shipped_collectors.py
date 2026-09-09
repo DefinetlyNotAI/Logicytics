@@ -821,10 +821,10 @@ class ShippedCollectorTests(unittest.TestCase):
                 "core.system.system_diagnostics",
                 "core.system.system_info",
                 "core.system.windows_services",
-                "core.system.wmic_inventory",
             },
             memberships["standard"],
         )
+        self.assertIn("core.system.wmic_inventory", memberships["deep"])
         self.assertEqual(
             {item.id for item in metadata},
             memberships["deep"],
