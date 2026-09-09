@@ -44,12 +44,10 @@ Sysinternals integrations behind mockable platform adapters. Optional host
 features produce explicit availability or skip results and never stop unrelated
 collectors.
 
-The canonical profiles are `minimal`, `standard`, `deep`, and `offline`. The
-canonical modes are `standard`, `balanced`, `quick`, `thorough`, `offline`,
-`extensions` and `performance`; supported historical mode flags remain
-validated aliases. `python -m logicytics --modes` shows a human-readable mode
-summary and writes the authoritative machine-readable collector inclusion
-matrix to `output/logs/debug/modes.json`.
+The only user-facing collection modes are `quick`, `balanced`, `standard`,
+`offline`, `performance`, and `thorough`. `python -m logicytics --modes` shows
+a human-readable mode summary and writes the authoritative machine-readable
+collector inclusion matrix to `output/logs/debug/modes.json`.
 
 Core evidence contracts include `application/json`, `application/octet-stream`,
 `application/xml`, `application/zip`, `text/csv`, `text/html`, `text/plain`, and

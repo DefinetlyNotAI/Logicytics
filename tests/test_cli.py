@@ -158,7 +158,6 @@ class CliTests(unittest.TestCase):
             "quick": ("minimal", 4, False, False),
             "thorough": ("deep", 4, False, False),
             "offline": ("offline", 4, False, False),
-            "extensions": ("standard", 4, True, False),
             "performance": ("standard", 1, False, True),
         }
 
@@ -194,7 +193,6 @@ class CliTests(unittest.TestCase):
             "threaded": "--threaded",
             "minimal": "--minimal",
             "depth": "--depth",
-            "modded": "--modded",
             "performance_check": "--performance-check",
         }
 
@@ -218,7 +216,7 @@ class CliTests(unittest.TestCase):
                         "--mode",
                         "quick",
                         "--profile",
-                        "deep",
+                        "thorough",
                     ]
                 ),
                 4,

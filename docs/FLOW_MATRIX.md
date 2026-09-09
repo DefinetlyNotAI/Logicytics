@@ -12,7 +12,7 @@ tests normally.
 | minimal / quick     | `test_typed_mode_registry_maps_every_user_mode_and_legacy_alias`           |
 | deep / thorough     | `test_typed_mode_registry_maps_every_user_mode_and_legacy_alias`           |
 | performance         | `test_performance_report_is_finalized_before_automatic_packaging`          |
-| modded / extensions | `test_mods_require_sidecars_and_run_as_isolated_registered_artifacts`      |
+| MODS (`--mods`)     | `test_mods_require_sidecars_and_run_as_isolated_registered_artifacts`      |
 | debug               | `test_dev_writes_explicit_manifest_and_debug_persists_diagnostics`         |
 | update              | `test_update_can_explicitly_launch_an_allowlisted_action_in_a_new_window`  |
 | usage               | `test_semantic_flag_matching_history_usage_and_graph_are_local_and_opt_in` |

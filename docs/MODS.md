@@ -1,8 +1,8 @@
 # MODS compatibility contract
 
 `MODS/` is the opt-in compatibility area for Python collectors. Normal runs
-never execute these files. Use `run --modded` to run the standard core profile
-followed by valid MODS payloads. Only Python `.py` scripts are accepted.
+never execute these files. Use `run --mods` to run valid MODS payloads with the
+selected core profile. Only Python `.py` scripts are accepted.
 
 ## Layout and discovery
 

@@ -220,8 +220,8 @@ class ModTests(unittest.TestCase):
                 report.invalid[0].static_errors,
             )
 
-    def test_extensions_mode_selects_python_mods_and_rejects_nopy(self) -> None:
-        """The extension mode accepts Python MODS only and has no non-Python alias."""
+    def test_mods_flag_selects_python_mods_and_rejects_nopy(self) -> None:
+        """The explicit MODS flag accepts Python sidecars and rejects non-Python aliases."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             mods = root / "MODS"
@@ -249,11 +249,11 @@ class ModTests(unittest.TestCase):
             )
 
             parser = cli_methods.parser()
-            modded_request = cli_methods.request(
-                parser.parse_args(["run", "--modded"]),
+            mods_request = cli_methods.request(
+                parser.parse_args(["run", "--mods"]),
                 2,
             )
-            self.assertTrue(modded_request.enable_mods)
+            self.assertTrue(mods_request.enable_mods)
             with self.assertRaises(SystemExit):
                 parser.parse_args(["run", "--nopy"])
 

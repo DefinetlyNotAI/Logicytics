@@ -14,10 +14,10 @@ The old mode flags remain explicit compatibility aliases. Their v4 equivalents a
 | `--threaded`          | `--mode balanced`    |
 | `--minimal`           | `--mode quick`       |
 | `--depth`             | `--mode thorough`    |
-| `--modded`            | `--mode extensions`  |
 | `--performance-check` | `--mode performance` |
 
-Only one mode or alias may be selected per invocation. Prefer named `--mode` values in new automation.
+Only one mode or alias may be selected per invocation. Use `--mods` to opt into
+Python MODS sidecars. Prefer named `--mode` values in new automation.
 
 ## File and collector bridges
 

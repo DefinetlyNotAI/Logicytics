@@ -63,27 +63,20 @@ class ExecutionMode:
 
 
 _MODE_LIST = (
-    ExecutionMode(
-        "standard",
-        "Standard built-in collection with deterministic sequential execution.",
-        "standard",
-        ExecutionStrategy.SEQUENTIAL,
-    ),
+    ExecutionMode("quick", "Fast essential local inventory.", "minimal"),
     ExecutionMode(
         "balanced",
         "Standard built-in collection using the configured bounded worker pool.",
         "standard",
         ExecutionStrategy.PARALLEL,
     ),
-    ExecutionMode("quick", "Fast essential local inventory.", "minimal"),
-    ExecutionMode("thorough", "Extended and potentially slower local inventory.", "deep"),
-    ExecutionMode("offline", "Local-only collection with network access forbidden.", "offline"),
     ExecutionMode(
-        "extensions",
-        "Standard collection followed by explicitly declared MODS extensions.",
         "standard",
-        enable_mods=True,
+        "Standard built-in collection with deterministic sequential execution.",
+        "standard",
+        ExecutionStrategy.SEQUENTIAL,
     ),
+    ExecutionMode("offline", "Local-only collection with network access forbidden.", "offline"),
     ExecutionMode(
         "performance",
         "Sequential standard collection with per-collector duration reporting.",
@@ -91,6 +84,7 @@ _MODE_LIST = (
         ExecutionStrategy.SEQUENTIAL,
         performance_check=True,
     ),
+    ExecutionMode("thorough", "Extended and potentially slower local inventory.", "deep"),
 )
 
 EXECUTION_MODES: Mapping[str, ExecutionMode] = MappingProxyType({mode.name: mode for mode in _MODE_LIST})
@@ -100,7 +94,6 @@ LEGACY_MODE_ALIASES: Mapping[str, str] = MappingProxyType(
         "threaded": "balanced",
         "minimal": "quick",
         "depth": "thorough",
-        "modded": "extensions",
         "performance_check": "performance",
     }
 )

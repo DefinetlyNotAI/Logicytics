@@ -50,7 +50,7 @@ from logicytics.module.modes import (
     resolve_execution_mode,
 )
 from logicytics.module.output_layout import ensure_output_layout
-from logicytics.module.planner import BUILTIN_PROFILES, build_plan
+from logicytics.module.planner import build_plan
 from logicytics.module.runtime import RunSupervisor
 from logicytics.module.sysinternals import ensure_sysinternals
 from logicytics.platform_adapters import process_adapter
@@ -111,13 +111,14 @@ class CLI:
         """Build an immutable run request while enforcing mode and rerun conflicts."""
         legacy_flags = {flag: getattr(arguments, flag, False) for flag in LEGACY_MODE_ALIASES}
 
-        mode = resolve_execution_mode(getattr(arguments, "mode", None), legacy_flags)
-        explicit_profile = getattr(arguments, "profile", None)
+        selected_mode = resolve_execution_mode(getattr(arguments, "mode", None), legacy_flags)
+        profile_mode = resolve_execution_mode(getattr(arguments, "profile", None), {})
 
-        if mode is not None and explicit_profile is not None:
+        if selected_mode is not None and profile_mode is not None:
             raise ValueError("--profile cannot be combined with a named collection mode")
 
-        profile = mode.profile if mode is not None else explicit_profile or "standard"
+        mode = selected_mode or profile_mode
+        profile = mode.profile if mode is not None else "standard"
 
         explicit_sequential = getattr(arguments, "sequential", False)
         explicit_parallel = getattr(arguments, "parallel", False)
@@ -281,8 +282,8 @@ class CLI:
             subparser.add_argument(
                 "--profile",
                 default=None,
-                choices=tuple(BUILTIN_PROFILES),
-                help="Named built-in collector membership and access policy.",
+                choices=tuple(EXECUTION_MODES),
+                help="Named user-facing collection mode.",
             )
             if command in {"preflight", "plan"}:
                 subparser.add_argument(
@@ -363,11 +364,6 @@ class CLI:
                 )
                 mode.add_argument("--minimal", action="store_true", help="Run the minimal built-in profile.")
                 mode.add_argument("--depth", action="store_true", help="Run the deep built-in profile.")
-                mode.add_argument(
-                    "--modded",
-                    action="store_true",
-                    help="Run the standard profile plus all valid MODS scripts.",
-                )
                 mode.add_argument(
                     "--performance-check",
                     action="store_true",
