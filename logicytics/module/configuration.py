@@ -456,6 +456,8 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     if not path.is_absolute():
         path = project_root / path
     if not path.exists():
+        if config_path is not None:
+            raise PlanError(f"configuration file does not exist: {path}")
         return default_config(project_root)
     if path.suffix.casefold() not in {".yaml", ".yml"}:
         raise PlanError("configuration must be a YAML file")

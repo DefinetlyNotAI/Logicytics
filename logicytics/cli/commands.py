@@ -22,6 +22,7 @@ from logicytics.module.errors import LogicyticsError
 from logicytics.module.interaction import (
     load_history,
     match_flag,
+    record_command,
     record_match,
     usage_statistics,
     write_usage_graph,
@@ -715,8 +716,10 @@ def main(argv: list[str] | None = None) -> int:
         arguments.command = "modes"
 
     if arguments.command is None:
-        cli_parser.print_help()
-        return 0
+        if arguments.config is None:
+            cli_parser.print_help()
+            return 0
+        arguments.command = "config"
 
     root = cli_methods.project_root()
     application_logger = None
@@ -761,6 +764,25 @@ def main(argv: list[str] | None = None) -> int:
             return exit_code
 
         history_path = configuration.runtime.output_root / "interaction_history.json.gz"
+
+        if configuration.interaction.history_enabled and arguments.command not in {"match", "usage"}:
+            record_command(
+                history_path,
+                str(arguments.command),
+                mode=getattr(arguments, "mode", None) or getattr(arguments, "profile", None),
+            )
+
+        if arguments.command == "config":
+            selected_path = arguments.config.resolve()
+            application_logger.box(
+                "Configuration",
+                (
+                    "Configuration validated successfully.",
+                    f"Path: {selected_path}",
+                    f"Schema version: {configuration.schema_version}",
+                ),
+            )
+            return finish_command(0, status="configuration_validated", configuration_path=str(selected_path))
 
         last_preflight_progress_at = 0.0
 
@@ -1264,6 +1286,7 @@ def main(argv: list[str] | None = None) -> int:
         PermissionError,
         ValueError,
     ) as error:
+        error_title = "Configuration validation failed" if arguments.command == "config" else "Command error"
         if application_logger is not None:
             with contextlib.suppress(OSError):
                 application_logger.event(
@@ -1287,11 +1310,11 @@ def main(argv: list[str] | None = None) -> int:
                     )
 
         if application_logger is not None:
-            application_logger.box("Command error", (str(error),))
+            application_logger.box(error_title, (str(error),))
         else:
             ApplicationLogger.render_section(
                 sys.stderr,
-                "Command error",
+                error_title,
                 (str(error),),
             )
         return 2

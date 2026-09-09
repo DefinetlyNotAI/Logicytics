@@ -124,6 +124,24 @@ def record_match(path: Path, match: FlagMatch) -> None:
     temporary.replace(path)
 
 
+def record_command(path: Path, command: str, *, mode: str | None = None) -> None:
+    """Record one local command interaction when history tracking is enabled."""
+    if not command:
+        raise ValueError("command history requires a command name")
+    matched_flag = mode or command
+    input_value = command if mode is None else f"{command} --profile {mode}"
+    record_match(
+        path,
+        FlagMatch(
+            input=input_value,
+            matched_flag=matched_flag,
+            accuracy=1.0,
+            source="command",
+            model_name="command-history",
+        ),
+    )
+
+
 def usage_statistics(history: Iterable[Mapping[str, object]]) -> dict[str, object]:
     """Aggregate total, accuracy, common values, and per-flag frequencies."""
     records = list(history)
