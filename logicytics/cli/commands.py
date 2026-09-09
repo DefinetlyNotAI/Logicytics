@@ -57,6 +57,7 @@ from logicytics.platform_adapters import process_adapter
 from logicytics.terminal import terminal_lifecycle
 from logicytics.virtual_environment import (
     is_running_in_virtual_environment,
+    virtual_environment_details,
     virtual_environment_error,
 )
 
@@ -954,7 +955,7 @@ def main(argv: list[str] | None = None) -> int:
                     "implementation": (platform.python_implementation()),
                     "version": platform.python_version(),
                     "prefix": sys.prefix,
-                    "virtual_environment": (sys.prefix != sys.base_prefix),
+                    "virtual_environment": virtual_environment_details(),
                     "psutil_available": (importlib.util.find_spec("psutil") is not None),
                     "cpu_count": os.cpu_count(),
                 },
@@ -983,7 +984,7 @@ def main(argv: list[str] | None = None) -> int:
                 (
                     f"Valid collectors: {len(report.valid)}",
                     f"Invalid collectors: {len(report.invalid)}",
-                    f"Virtual environment: {'yes' if sys.prefix != sys.base_prefix else 'no'}",
+                    f"Virtual environment: {'yes' if is_running_in_virtual_environment() else 'no'}",
                     f"Diagnostic report: {debug_path}",
                 ),
             )

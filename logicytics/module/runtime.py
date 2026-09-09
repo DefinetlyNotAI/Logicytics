@@ -940,7 +940,7 @@ class RunSupervisor:
 
         manifest.finalize_status()
         if plan.request.performance_check:
-            self._write_performance_report(run_directory, manifest)
+            self._write_performance_report(run_directory, output_layout.performance_logs, manifest)
         should_package = self.configuration.runtime.package_completed_runs and plan.request.output_policy is OutputPolicy.PACKAGE
         if should_package:
             run_logger.event("info", "run_packaging_started")
@@ -1081,8 +1081,8 @@ class RunSupervisor:
         run_logger.event("warning", "post_run_action_scheduled", action=action.value, delay_seconds=60)
 
     @staticmethod
-    def _write_performance_report(run_directory: Path, manifest: RunManifest) -> None:
-        """Finalize run-owned timing diagnostics before evidence packaging begins."""
+    def _write_performance_report(run_directory: Path, performance_logs: Path, manifest: RunManifest) -> None:
+        """Publish packaged timing evidence and the global readable performance log."""
         performance_path = run_directory / "logs" / "performance.json"
         payload = {
             "run_id": manifest.run_id,
@@ -1098,6 +1098,22 @@ class RunSupervisor:
             ],
         }
         performance_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        fingerprint = run_fingerprint(manifest.run_id)
+        log_path = performance_logs / f"{fingerprint[:8]}.log"
+        rows = [
+            "Performance report",
+            f"Run id: {manifest.run_id}",
+            f"Run fingerprint: {fingerprint}",
+            f"Run status: {manifest.status.value}",
+            "",
+            "Collector timings",
+            "-----------------",
+        ]
+        for record in manifest.collectors:
+            duration = "unavailable" if record.duration_seconds is None else f"{record.duration_seconds:.3f}s"
+            memory = "unavailable" if record.peak_memory_bytes is None else str(record.peak_memory_bytes)
+            rows.append(f"{record.id}: {duration}; status={record.status}; peak_memory_bytes={memory}")
+        log_path.write_text("\n".join(rows) + "\n", encoding="utf-8")
 
     def _supervise(
         self,
