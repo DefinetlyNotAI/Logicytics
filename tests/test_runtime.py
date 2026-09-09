@@ -7,6 +7,7 @@ import os
 import tempfile
 import unittest
 import zipfile
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -21,6 +22,7 @@ from logicytics.contracts import (
     RunRequest,
 )
 from logicytics.module.configuration import (
+    LoggingSettings,
     default_config,
 )
 from logicytics.module.discovery import preflight
@@ -31,6 +33,31 @@ from tests.fixtures.collectors import COLLECTOR, delayed_collector_source
 
 class RuntimeTests(unittest.TestCase):
     """Worker lifecycle, retries, failures, timeouts, cleanup, and cancellation."""
+
+    def test_debug_logging_includes_full_worker_lifecycle_details_and_callsites(self) -> None:
+        """DEBUG must retain launch and completion evidence without bloating INFO logs."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            collector_path = root / "core" / "system" / "system_info.py"
+            collector_path.parent.mkdir(parents=True)
+            (root / "plugins").mkdir()
+            collector_path.write_text(COLLECTOR, encoding="utf-8")
+            report = preflight(root)
+            plan = build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True))
+            configuration = replace(
+                default_config(root),
+                logging=LoggingSettings(level="DEBUG", console_enabled=False, color_enabled=False),
+            )
+
+            RunSupervisor(root, configuration).run(plan)
+
+            rendered = (root / "output" / "logs" / "Logicytics.log").read_text(encoding="utf-8")
+
+        self.assertRegex(rendered, r"logicytics\.module\.runtime:\d+")
+        self.assertIn("Run launch details", rendered)
+        self.assertIn("Collector launch details", rendered)
+        self.assertIn("Collector completion details", rendered)
+        self.assertIn("Run completion details", rendered)
 
     def test_failed_dependency_skips_dependent_without_launching_it(self) -> None:
         """A failed prerequisite must contain failure and prevent dependent execution."""
