@@ -101,6 +101,7 @@ class _WorkerPayload(TypedDict):
     metadata: dict[str, object]
     blocked_capabilities: tuple[Capability, ...]
     workspace: str
+    temporary_directory: str
     artifact_root: str
     cancellation_file: str
     settings: dict[str, Any]
@@ -134,6 +135,7 @@ class _ActiveWorker:
     timeout_seconds: int
     maximum_memory_bytes: int
     workspace: Path
+    temporary_directory: Path
     parallel_safe: bool
     resource_class: ResourceClass
     reserved_output_bytes: int
@@ -517,8 +519,8 @@ def _run_mod_worker(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]
                 "SYSTEMROOT": os.environ.get("SYSTEMROOT", ""),
                 "WINDIR": os.environ.get("WINDIR", ""),
                 "COMSPEC": os.environ.get("COMSPEC", ""),
-                "TEMP": str(workspace / "tmp"),
-                "TMP": str(workspace / "tmp"),
+                "TEMP": payload["temporary_directory"],
+                "TMP": payload["temporary_directory"],
                 "LOGICYTICS_RUN_ID": payload["run_id"],
                 "LOGICYTICS_COLLECTOR_ID": metadata.id,
                 "LOGICYTICS_WORKSPACE": str(workspace),
@@ -626,8 +628,8 @@ def _worker_entry(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) 
         os.setsid()
     workspace = Path(payload["workspace"])
     workspace.mkdir(parents=True, exist_ok=True)
-    temporary_directory = workspace / "tmp"
-    temporary_directory.mkdir(exist_ok=True)
+    temporary_directory = Path(payload["temporary_directory"])
+    temporary_directory.mkdir(parents=True, exist_ok=True)
     restore_temporary_directory = _configure_worker_temporary_directory(temporary_directory)
     if payload["execution_type"] != "collector":
         try:
@@ -868,6 +870,7 @@ class RunSupervisor:
         run_id = f"run-{uuid4().hex}"
         run_directory = allocate_output_run_directory(output_layout, run_id)
         workspace_root = run_directory / "collectors"
+        temporary_root = self._temporary_root(run_id)
         artifact_root = run_directory / "artifacts"
         cancellation_file = run_directory / ".cancelled"
         workspace_root.mkdir(parents=True, exist_ok=False)
@@ -919,6 +922,7 @@ class RunSupervisor:
                 plan,
                 run_id,
                 workspace_root,
+                temporary_root,
                 artifact_root,
                 cancellation_file,
                 manifest,
@@ -1120,6 +1124,7 @@ class RunSupervisor:
         plan: RunPlan,
         run_id: str,
         workspace_root: Path,
+        temporary_root: Path,
         artifact_root: Path,
         cancellation_file: Path,
         manifest: RunManifest,
@@ -1229,6 +1234,7 @@ class RunSupervisor:
                 pending.pop(0)
                 retry_not_before.pop(metadata.id, None)
                 workspace = workspace_root / metadata.id.replace(".", "_")
+                temporary_directory = temporary_root / metadata.id.replace(".", "_")
                 payload: _WorkerPayload = {
                     "run_id": run_id,
                     "collector_id": metadata.id,
@@ -1238,6 +1244,7 @@ class RunSupervisor:
                     "metadata": dict(cast(Mapping[str, object], metadata.to_dict())),
                     "blocked_capabilities": plan.request.blocked_capabilities,
                     "workspace": str(workspace),
+                    "temporary_directory": str(temporary_directory),
                     "artifact_root": str(artifact_root),
                     "cancellation_file": str(cancellation_file),
                     "settings": dict(self.configuration.settings_for(metadata.id)),
@@ -1261,6 +1268,7 @@ class RunSupervisor:
                     metadata.timeout_seconds,
                     metadata.maximum_memory_bytes,
                     workspace,
+                    temporary_directory,
                     metadata.parallel_safe,
                     metadata.resource_class,
                     output_budget,
@@ -1542,12 +1550,17 @@ class RunSupervisor:
             return 0
         return sum(path.stat().st_size for path in directory.rglob("*") if path.is_file())
 
+    def _temporary_root(self, run_id: str) -> Path:
+        """Return a run-private temporary root from the configured storage policy."""
+        if self.configuration.runtime.temporary_directory == "project":
+            return self.project_root / ".temp" / run_id
+        return Path(tempfile.gettempdir()) / "logicytics" / run_id
+
     @staticmethod
     def _cleanup_worker_temporary_directory(worker: _ActiveWorker) -> None:
         """Remove only a terminal worker's private scratch directory, never its logs."""
-        temporary_directory = worker.workspace / "tmp"
         try:
-            shutil.rmtree(temporary_directory, ignore_errors=True)
+            shutil.rmtree(worker.temporary_directory, ignore_errors=True)
         except OSError:
             pass
 

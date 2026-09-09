@@ -5,6 +5,7 @@ runtime:
   default_max_workers: 4
   maximum_workers: 16
   package_completed_runs: true
+  temporary_directory: project
 interaction:
   history_enabled: true
   similarity_threshold: 0.55

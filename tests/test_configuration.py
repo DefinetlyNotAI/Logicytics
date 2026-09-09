@@ -200,6 +200,26 @@ max_retry_time = 30
             self.assertEqual(root / "custom" / "evidence", load_config(root).runtime.output_root)
             self.assertFalse(expected.exists())
 
+    def test_runtime_temporary_directory_is_project_local_by_default_or_system_selected(self) -> None:
+        """Temporary worker files use project .temp unless the YAML opts into the system TEMP directory."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.assertEqual("project", default_config(root).runtime.temporary_directory)
+
+            config_path = root / "logicytics.yaml"
+            config_path.write_text(
+                '{"schema_version":4,"runtime":{"temporary_directory":"system"}}',
+                encoding="utf-8",
+            )
+            self.assertEqual("system", load_config(root).runtime.temporary_directory)
+
+            config_path.write_text(
+                '{"schema_version":4,"runtime":{"temporary_directory":"invalid"}}',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(PlanError, "temporary_directory"):
+                load_config(root)
+
     def test_configuration_manifest_redacts_nested_secrets_without_mutating_worker_settings(
         self,
     ) -> None:

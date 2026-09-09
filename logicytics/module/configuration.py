@@ -40,6 +40,7 @@ _RUNTIME_FIELDS = frozenset(
         "package_completed_runs",
         "maximum_run_output_bytes",
         "blocked_capabilities",
+        "temporary_directory",
     }
 )
 _INTERACTION_FIELDS = frozenset({"history_enabled", "similarity_threshold", "model_name", "model_debug"})
@@ -326,6 +327,7 @@ def default_configuration_yaml() -> str:
             "  maximum_workers: 16",
             "  package_completed_runs: true",
             "  blocked_capabilities: {}",
+            "  temporary_directory: project",
             "interaction:",
             "  history_enabled: false",
             "  similarity_threshold: 0.55",
@@ -372,6 +374,7 @@ class RuntimeSettings:
     package_completed_runs: bool = True
     maximum_run_output_bytes: int = DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES
     blocked_capabilities: tuple[Capability, ...] = ()
+    temporary_directory: str = "project"
 
 
 @dataclass(frozen=True, slots=True)
@@ -518,6 +521,9 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
         runtime_raw.get("blocked_capabilities", {}),
         "runtime blocked_capabilities",
     )
+    temporary_directory = runtime_raw.get("temporary_directory", "project")
+    if not isinstance(temporary_directory, str) or temporary_directory not in {"project", "system"}:
+        raise PlanError("runtime temporary_directory must be project or system")
 
     interaction_raw = raw.get("interaction", {})
     if not isinstance(interaction_raw, dict):
@@ -613,6 +619,7 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
             package_completed_runs=package_completed_runs,
             maximum_run_output_bytes=maximum_run_output_bytes,
             blocked_capabilities=blocked_capabilities,
+            temporary_directory=temporary_directory,
         ),
         interaction=InteractionSettings(
             history_enabled=history_enabled,

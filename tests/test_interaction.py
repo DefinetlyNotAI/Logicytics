@@ -39,7 +39,7 @@ class InteractionTests(unittest.TestCase):
             self.assertIn("History persisted: no", rendered)
             self.assertNotIn("{", rendered)
             self.assertNotIn('"matched_flag"', rendered)
-            self.assertFalse((root / "output" / "data" / "interaction_history.json.gz").exists())
+            self.assertFalse((root / ".cache" / "interaction_history.json.gz").exists())
 
             (root / "logicytics.yaml").write_text(
                 json.dumps(
@@ -70,7 +70,7 @@ class InteractionTests(unittest.TestCase):
             self.assertIn("Model: stdlib-test-model", rendered)
             self.assertIn("History persisted: yes", rendered)
             self.assertNotIn("{", rendered)
-            history_path = root / "output" / "data" / "interaction_history.json.gz"
+            history_path = root / ".cache" / "interaction_history.json.gz"
             history = load_history(history_path)
             self.assertEqual(1, len(history))
             self.assertIn("timestamp", history[0])
@@ -90,7 +90,7 @@ class InteractionTests(unittest.TestCase):
             self.assertIn("Total interactions: 1", rendered)
             self.assertIn("depth: 1", rendered)
             self.assertNotIn("{", rendered)
-            graph_path = root / "output" / "data" / "flag_usage.svg"
+            graph_path = root / ".cache" / "flag_usage.svg"
             self.assertTrue(graph_path.exists())
             self.assertIn("<svg", graph_path.read_text(encoding="utf-8"))
 

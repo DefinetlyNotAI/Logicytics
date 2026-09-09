@@ -796,7 +796,9 @@ def main(argv: list[str] | None = None) -> int:
             )
             return exit_code
 
-        history_path = configuration.runtime.output_root / "interaction_history.json.gz"
+        cache_directory = root / ".cache"
+        cache_directory.mkdir(parents=True, exist_ok=True)
+        history_path = cache_directory / "interaction_history.json.gz"
 
         if configuration.interaction.history_enabled and arguments.command not in {"match", "usage"}:
             record_command(
@@ -886,7 +888,7 @@ def main(argv: list[str] | None = None) -> int:
             average_accuracy = float(raw_average_accuracy) if isinstance(raw_average_accuracy, (int, float)) else 0.0
 
             graph_path = write_usage_graph(
-                configuration.runtime.output_root / "flag_usage.svg",
+                cache_directory / "flag_usage.svg",
                 statistics,
             )
 

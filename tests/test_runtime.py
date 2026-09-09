@@ -224,10 +224,25 @@ class RuntimeTests(unittest.TestCase):
                 observed = archive.read("evidence/derived/core_system_system_info/system.txt").decode("utf-8")
 
             self.assertEqual("succeeded", record.status, record.errors)
-            self.assertEqual(
-                ("collectors", "core_system_system_info", "tmp"),
-                Path(observed).parts[-3:],
+            temporary_directory = Path(observed)
+            self.assertEqual((root / ".temp").resolve(), temporary_directory.parent.parent.resolve())
+            self.assertEqual("core_system_system_info", temporary_directory.name)
+
+    def test_system_temporary_policy_uses_the_os_temp_root(self) -> None:
+        """The system policy resolves worker scratch paths under the operating-system temp directory."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            configuration = default_config(root)
+            system_configuration = replace(
+                configuration,
+                runtime=replace(configuration.runtime, temporary_directory="system"),
             )
+            system_temp = root / "system-temp"
+
+            with patch("logicytics.module.runtime.tempfile.gettempdir", return_value=str(system_temp)):
+                temporary_root = RunSupervisor(root, system_configuration)._temporary_root("run-test")
+
+            self.assertEqual(system_temp / "logicytics" / "run-test", temporary_root)
 
     def test_transient_collector_failure_retries_in_a_new_isolated_worker(self) -> None:
         """An explicitly retryable collector may recover before any evidence is registered."""
@@ -404,7 +419,7 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual("failed", failed.status)
             self.assertEqual("succeeded", succeeded.status)
             self.assertEqual("cleaned", (workspace / "cleanup.marker").read_text(encoding="utf-8"))
-            self.assertFalse((workspace / "tmp").exists())
+            self.assertFalse((root / ".temp").joinpath(outcome.manifest.run_id, "core_system_a_failed").exists())
             self.assertEqual(1, len(failed.artifacts))
             self.assertIn("RuntimeError", "\n".join(failed.errors))
             self.assertEqual("process", failed.isolation_mode)
