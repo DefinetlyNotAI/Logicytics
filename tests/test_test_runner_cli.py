@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from logicytics.cli import tests as test_runner
@@ -85,13 +86,26 @@ class TestRunnerCliTests(unittest.TestCase):
             "Test suite",
             ("Tests: 7", "Failures: 0", "Errors: 0", "Skipped: 1", "Result: passed"),
         )
-        logger.event.assert_any_call("INFO", "test_suite_started", source="logicytics.cli.tests")
-        logger.event.assert_any_call("INFO", "test_suite_finished", source="logicytics.cli.tests")
+        logger.event.assert_any_call(
+            "INFO",
+            "test_suite_started",
+            source="logicytics.cli.tests",
+            tests=0,
+            mode="normal",
+        )
+        logger.event.assert_any_call(
+            "INFO",
+            "test_suite_finished",
+            source="logicytics.cli.tests",
+            tests=7,
+        )
 
     def test_runner_boxes_failure_details_and_returns_nonzero(self) -> None:
         """Failed discovery remains CI-visible while preserving the runner's diagnostic transcript."""
         result = MagicMock()
-        result.failures = ((object(), "assertion failed"),)
+        failed_test = MagicMock()
+        failed_test.id.return_value = "tests.example.ExampleTests.test_failure"
+        result.failures = ((failed_test, "assertion failed"),)
         result.errors = ()
         result.skipped = ()
         result.testsRun = 1
@@ -121,8 +135,80 @@ class TestRunnerCliTests(unittest.TestCase):
         ):
             self.assertEqual(1, test_runner.main([]))
 
-        logger.box.assert_any_call("Test failures", ("FAIL: example test", "assertion failed"))
-        logger.event.assert_any_call("ERROR", "test_suite_failed", source="logicytics.cli.tests")
+        logger.box.assert_any_call(
+            "Test failures",
+            ("Failure: tests.example.ExampleTests.test_failure", "Reason: assertion failed"),
+        )
+        logger.event.assert_any_call(
+            "ERROR",
+            "test_suite_failed",
+            source="logicytics.cli.tests",
+            failures=1,
+            errors=0,
+        )
+
+    def test_normal_mode_captures_test_output_and_reports_progress(self) -> None:
+        """Normal runs expose only progress and the final summary, never noisy test output."""
+
+        class NoisyTest(unittest.TestCase):
+            """Emit representative output that normal presentation must capture."""
+
+            def runTest(self) -> None:
+                print("noisy test output")
+                sys.stderr.write("noisy test error\n")
+
+        logger = MagicMock()
+        configuration = SimpleNamespace(
+            logging=SimpleNamespace(level="INFO"),
+            runtime=SimpleNamespace(output_root=Path("output")),
+        )
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            patch("logicytics.module.configuration.load_config", return_value=configuration),
+            patch("logicytics.module.output_layout.ensure_output_layout", return_value=MagicMock()),
+            patch("logicytics.module.logging.get_application_logger", return_value=logger),
+            patch.object(test_runner.unittest.defaultTestLoader, "discover", return_value=unittest.TestSuite((NoisyTest(),))),
+            patch("sys.stdout", stdout),
+            patch("sys.stderr", stderr),
+        ):
+            self.assertEqual(0, test_runner.main([]))
+
+        self.assertEqual("", stdout.getvalue())
+        self.assertEqual("", stderr.getvalue())
+        first_progress, last_progress = logger.progress.call_args_list
+        self.assertEqual(("Tests", 0, 1), first_progress.args[:3])
+        self.assertEqual(("Tests", 1, 1), last_progress.args[:3])
+
+    def test_debug_mode_keeps_the_raw_unittest_stream(self) -> None:
+        """Debug runs intentionally retain the complete unittest output for diagnosis."""
+
+        class NoisyTest(unittest.TestCase):
+            """Emit representative output that DEBUG presentation must retain."""
+
+            def runTest(self) -> None:
+                print("noisy test output")
+
+        logger = MagicMock()
+        configuration = SimpleNamespace(
+            logging=SimpleNamespace(level="DEBUG"),
+            runtime=SimpleNamespace(output_root=Path("output")),
+        )
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            patch("logicytics.module.configuration.load_config", return_value=configuration),
+            patch("logicytics.module.output_layout.ensure_output_layout", return_value=MagicMock()),
+            patch("logicytics.module.logging.get_application_logger", return_value=logger),
+            patch.object(test_runner.unittest.defaultTestLoader, "discover", return_value=unittest.TestSuite((NoisyTest(),))),
+            patch("sys.stdout", stdout),
+            patch("sys.stderr", stderr),
+        ):
+            self.assertEqual(0, test_runner.main([]))
+
+        self.assertIn("noisy test output", stdout.getvalue())
+        self.assertIn("NoisyTest", stderr.getvalue())
+        logger.progress.assert_not_called()
 
 
 if __name__ == "__main__":

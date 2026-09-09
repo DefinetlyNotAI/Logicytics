@@ -864,6 +864,7 @@ class RunSupervisor:
             output_layout.application_log,
             self.configuration.logging,
         )
+        debug_logging = self.configuration.logging.level.upper() == "DEBUG"
         run_id = f"run-{uuid4().hex}"
         run_directory = self.configuration.runtime.output_root / run_id
         workspace_root = run_directory / "collectors"
@@ -898,12 +899,19 @@ class RunSupervisor:
             "INFO",
             "run_started",
             source="logicytics.module.runtime",
-            run_id=run_id,
             collectors=len(plan.collectors),
             profile=plan.request.profile,
-            max_workers=plan.request.max_workers,
-            plan_fingerprint=plan.fingerprint,
         )
+        if debug_logging:
+            application_logger.event(
+                "DEBUG",
+                "run_launch_details",
+                source="logicytics.module.runtime",
+                run_id=run_id,
+                max_workers=plan.request.max_workers,
+                plan_fingerprint=plan.fingerprint,
+                output_policy=plan.request.output_policy.value,
+            )
 
         records = {record.id: record for record in manifest.collectors}
         try:
@@ -940,7 +948,6 @@ class RunSupervisor:
                 "INFO",
                 "run_packaging_started",
                 source="logicytics.module.runtime",
-                run_id=run_id,
             )
             try:
                 package_path, hash_path = package_manifest(run_directory, manifest, manifest_path)
@@ -954,15 +961,22 @@ class RunSupervisor:
                     "INFO",
                     "run_packaged",
                     source="logicytics.module.runtime",
-                    run_id=run_id,
-                    package_path=str(package_path),
                 )
+                if debug_logging:
+                    application_logger.event(
+                        "DEBUG",
+                        "run_package_details",
+                        source="logicytics.module.runtime",
+                        run_id=run_id,
+                        package_path=str(package_path),
+                        hash_path=str(hash_path),
+                    )
             except (OSError, ValueError, zipfile.BadZipFile) as error:
                 manifest.status = RunStatus.FAILED
                 manifest.package = {"status": "failed", "error": f"{type(error).__name__}: {error}"}
                 run_logger.event("error", "run_packaging_failed", error_type=type(error).__name__)
                 application_logger.event(
-                    "ERROR",
+                    "CRITICAL",
                     "run_packaging_failed",
                     source="logicytics.module.runtime",
                     run_id=run_id,
@@ -981,7 +995,6 @@ class RunSupervisor:
                 "INFO",
                 "run_packaging_skipped",
                 source="logicytics.module.runtime",
-                run_id=run_id,
                 reason=packaging_skip_reason,
             )
         write_manifest(manifest_path, manifest)
@@ -997,16 +1010,29 @@ class RunSupervisor:
             duration_seconds=round(monotonic() - run_started_at, 3),
             **{f"{status}_count": count for status, count in status_counts.items()},
         )
+        application_level = {
+            RunStatus.SUCCEEDED: "INFO",
+            RunStatus.PARTIAL: "WARNING",
+            RunStatus.CANCELLED: "WARNING",
+            RunStatus.FAILED: "ERROR",
+        }.get(manifest.status, "CRITICAL")
         application_logger.event(
-            "INFO",
+            application_level,
             "run_finished",
             source="logicytics.module.runtime",
-            run_id=run_id,
             status=manifest.status.value,
-            artifacts=manifest.total_artifact_bytes,
             duration_seconds=round(monotonic() - run_started_at, 3),
             **{f"{status}_count": count for status, count in status_counts.items()},
         )
+        if debug_logging:
+            application_logger.event(
+                "DEBUG",
+                "run_completion_details",
+                source="logicytics.module.runtime",
+                run_id=run_id,
+                artifacts=manifest.total_artifact_bytes,
+                manifest_path=str(manifest_path),
+            )
         if plan.request.post_run_action is not PostRunAction.NONE:
             self._execute_post_run_action(plan.request.post_run_action, manifest, run_logger)
             application_logger.event(
@@ -1233,9 +1259,17 @@ class RunSupervisor:
                     "INFO",
                     "collector_started",
                     source="logicytics.module.runtime",
-                    run_id=run_id,
-                    **start_fields,
+                    collector_id=metadata.id,
+                    attempt=records[metadata.id].attempt_count,
                 )
+                if self.configuration.logging.level.upper() == "DEBUG":
+                    application_logger.event(
+                        "DEBUG",
+                        "collector_launch_details",
+                        source="logicytics.module.runtime",
+                        run_id=run_id,
+                        **start_fields,
+                    )
                 write_manifest(manifest_path, manifest)
                 if not metadata.parallel_safe:
                     break
@@ -1296,13 +1330,30 @@ class RunSupervisor:
                         "retry_scheduled": retry_scheduled,
                     }
                     run_logger.event(finish_level, "collector_finished", **finish_fields)
+                    application_level = (
+                        "ERROR"
+                        if record.status == CollectorStatus.FAILED
+                        else "WARNING"
+                        if retry_scheduled or record.status in {CollectorStatus.CANCELLED, CollectorStatus.SKIPPED}
+                        else "INFO"
+                    )
                     application_logger.event(
-                        "WARNING" if retry_scheduled else "INFO",
+                        application_level,
                         "collector_finished",
                         source="logicytics.module.runtime",
-                        run_id=run_id,
-                        **finish_fields,
+                        collector_id=collector_id,
+                        status=record.status,
+                        duration_seconds=record.duration_seconds or 0.0,
+                        summary=record.summary or "not-finished",
                     )
+                    if self.configuration.logging.level.upper() == "DEBUG":
+                        application_logger.event(
+                            "DEBUG",
+                            "collector_completion_details",
+                            source="logicytics.module.runtime",
+                            run_id=run_id,
+                            **finish_fields,
+                        )
                     write_manifest(manifest_path, manifest)
 
             for collector_id, worker in tuple(active.items()):

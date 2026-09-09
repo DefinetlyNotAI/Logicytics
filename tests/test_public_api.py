@@ -298,15 +298,8 @@ class PublicApiTests(unittest.TestCase):
             console_logger.box.assert_called_once()
             title, rendered = console_logger.box.call_args.args
             self.assertEqual("Collection result", title)
-            self.assertIn("Collectors:", rendered)
-            self.assertIn(
-                "core.system.system_info status=succeeded duration_seconds=",
-                "\n".join(rendered),
-            )
-            self.assertIn(
-                "summary=test artifact created",
-                "\n".join(rendered),
-            )
+            self.assertIn("Collectors: 1", rendered)
+            self.assertTrue(any(line.startswith("Run: ") for line in rendered))
 
     def test_public_run_queries_reject_traversal_forged_identity_and_manifest_links(self) -> None:
         """Persisted status lookup cannot leave its configured run or trust a forged manifest."""

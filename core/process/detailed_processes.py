@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from subprocess import TimeoutExpired
+
 from logicytics import (
     Capability,
     CollectorMetadata,
@@ -56,13 +58,20 @@ class DetailedProcessesCollector(CoreCollector):
         if context.is_cancelled:
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before detailed-process collection")
         context.report_progress("detailed_processes_started")
-        completed = subprocess.run(
-            ["tasklist", "/v", "/fo", "csv", "/nh"],
-            capture_output=True,
-            check=False,
-            text=True,
-            timeout=40,
-        )
+        try:
+            completed = subprocess.run(
+                ["tasklist", "/v", "/fo", "csv", "/nh"],
+                capture_output=True,
+                check=False,
+                text=True,
+                timeout=40,
+            )
+        except TimeoutExpired as error:
+            return CollectorResult(
+                CollectorStatus.SKIPPED,
+                "detailed tasklist query timed out",
+                errors=(f"tasklist timed out after {error.timeout} seconds",),
+            )
         if completed.returncode != 0:
             detail = completed.stderr.strip() or f"tasklist exit code {completed.returncode}"
             if _is_access_denied(detail):

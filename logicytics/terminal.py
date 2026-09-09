@@ -24,6 +24,18 @@ def _clear_terminal() -> None:
 
 
 @contextmanager
+def isolated_terminal_lifecycle() -> Iterator[None]:
+    """Temporarily detach an embedded test suite from its caller's screen lifecycle."""
+    global _ACTIVE_SESSIONS
+    active_sessions = _ACTIVE_SESSIONS
+    _ACTIVE_SESSIONS = 0
+    try:
+        yield
+    finally:
+        _ACTIVE_SESSIONS = active_sessions
+
+
+@contextmanager
 def terminal_lifecycle() -> Iterator[None]:
     """Clear an interactive screen once and leave one final newline on normal unwind."""
     global _ACTIVE_SESSIONS

@@ -26,7 +26,12 @@ from logicytics.module.interaction import (
     usage_statistics,
     write_usage_graph,
 )
-from logicytics.module.logging import ApplicationLogger, HumanArgumentParser, get_application_logger
+from logicytics.module.logging import (
+    ApplicationLogger,
+    HumanArgumentParser,
+    collector_log_source,
+    get_application_logger,
+)
 from logicytics.module.maintenance import (
     build_manifest,
     compare_files,
@@ -1153,40 +1158,65 @@ def main(argv: list[str] | None = None) -> int:
             configuration,
         ).run(plan)
 
-        result_lines = ["Collectors:"]
+        status_counts: dict[str, int] = {}
+        for record in outcome.manifest.collectors:
+            status_counts[record.status] = status_counts.get(record.status, 0) + 1
+
+        result_level = {
+            "succeeded": "INFO",
+            "partial": "WARNING",
+            "cancelled": "WARNING",
+            "failed": "ERROR",
+        }.get(outcome.manifest.status.value, "CRITICAL")
+        application_logger.event(
+            result_level,
+            "collection_result",
+            source="logicytics.cli.commands",
+            status=outcome.manifest.status.value,
+            collectors=len(outcome.manifest.collectors),
+            succeeded_count=status_counts.get("succeeded", 0),
+            skipped_count=status_counts.get("skipped", 0),
+            failed_count=status_counts.get("failed", 0),
+            cancelled_count=status_counts.get("cancelled", 0),
+        )
 
         for record in outcome.manifest.collectors:
-            duration = "not-started" if record.duration_seconds is None else f"{record.duration_seconds:.3f}"
-
-            result_lines.append(
-                f"- {record.id} status={record.status} duration_seconds={duration} summary={record.summary or 'not-finished'}"
-            )
-
+            if record.status == "succeeded":
+                continue
+            severity = "ERROR" if record.status == "failed" else "WARNING"
             if record.failure is not None:
-                result_lines.append(
-                    f"  failure "
-                    f"operation={record.failure['operation']} "
-                    f"retry_safe="
-                    f"{str(record.failure['retry_safe']).lower()} "
-                    f"platform_error="
-                    f"{record.failure['platform_error']} "
-                    f"remediation="
-                    f"{record.failure['remediation']}"
+                application_logger.event(
+                    severity,
+                    "collector_result",
+                    source=collector_log_source(record.id) or "logicytics.cli.commands",
+                    collector_id=record.id,
+                    status=record.status,
+                    summary=record.summary or "not-finished",
+                    duration_seconds=record.duration_seconds or 0.0,
+                    operation=str(record.failure.get("operation", "unknown")),
+                    platform_error=str(record.failure.get("platform_error", "unknown")),
+                    remediation=str(record.failure.get("remediation", "none")),
                 )
-
-        if plan.request.performance_check:
-            performance_path = outcome.run_directory / "logs" / "performance.json"
-
-            result_lines.append(f"Performance: {performance_path}")
-
-        if outcome.manifest.package and "path" in outcome.manifest.package:
-            package_sha_path = outcome.manifest.package.get("sha256_path", "unavailable")
-            result_lines.extend(
-                f"Package: {outcome.manifest.package['path']}\nSHA-256: {package_sha_path}".splitlines()
+                continue
+            application_logger.event(
+                severity,
+                "collector_result",
+                source=collector_log_source(record.id) or "logicytics.cli.commands",
+                collector_id=record.id,
+                status=record.status,
+                summary=record.summary or "not-finished",
+                duration_seconds=record.duration_seconds or 0.0,
             )
 
-        result_lines.extend(f"Run: {outcome.manifest_path}\nStatus: {outcome.manifest.status.value}".splitlines())
-        application_logger.box("Collection result", result_lines)
+        if outcome.manifest.status.value == "succeeded":
+            result_lines = [f"Collectors: {len(outcome.manifest.collectors)}"]
+            if outcome.manifest.package and "path" in outcome.manifest.package:
+                package_sha_path = outcome.manifest.package.get("sha256_path", "unavailable")
+                result_lines.extend(
+                    f"Package: {outcome.manifest.package['path']}\nSHA-256: {package_sha_path}".splitlines()
+                )
+            result_lines.append(f"Run: {outcome.manifest_path}")
+            application_logger.box("Collection result", result_lines)
 
         exit_code = 0 if outcome.manifest.status.value == "succeeded" else 1
 

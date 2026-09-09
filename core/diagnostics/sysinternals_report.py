@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from subprocess import TimeoutExpired
+from time import monotonic
 
 from logicytics import (
     Capability,
@@ -18,6 +20,8 @@ from logicytics.platform_adapters import process_adapter as subprocess
 
 TOOLS = ("psfile", "psgetsid", "psinfo", "pslist", "psloggedon", "psloglist")
 MAX_OUTPUT_CHARS = 512_000
+MAX_COLLECTION_SECONDS = 45
+MAX_TOOL_SECONDS = 8
 
 
 class SysinternalsReportCollector(CoreCollector):
@@ -38,7 +42,7 @@ class SysinternalsReportCollector(CoreCollector):
             capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("system_diagnostics",),
             default_profiles=("deep",),
-            timeout_seconds=180,
+            timeout_seconds=60,
             maximum_output_bytes=512 * 1024,
         )
 
@@ -61,6 +65,7 @@ class SysinternalsReportCollector(CoreCollector):
         archive_paths = tuple(root.with_suffix(".zip") for root in search_roots)
         sections: list[str] = ["Sysinternals report", ""]
         context.report_progress("sysinternals_report_started")
+        deadline = monotonic() + MAX_COLLECTION_SECONDS
         for tool in TOOLS:
             binary = next(
                 (root / f"{tool}.exe" for root in search_roots if (root / f"{tool}.exe").is_file()),
@@ -71,10 +76,19 @@ class SysinternalsReportCollector(CoreCollector):
                 archive_state = "archive available" if any(path.is_file() for path in archive_paths) else "binary and archive missing"
                 sections.extend((f"status: {archive_state}", ""))
                 continue
+            remaining = deadline - monotonic()
+            if remaining <= 0:
+                sections.extend(("status: skipped because the collection time budget was exhausted", ""))
+                continue
+            timeout = min(MAX_TOOL_SECONDS, max(1, int(remaining)))
+            context.report_progress("sysinternals_tool_started", tool=tool, timeout_seconds=timeout)
             try:
-                completed = subprocess.run([str(binary)], capture_output=True, check=False, text=True, timeout=25)
+                completed = subprocess.run([str(binary)], capture_output=True, check=False, text=True, timeout=timeout)
             except OSError as error:
                 sections.extend((f"status: execution error: {error}", ""))
+                continue
+            except TimeoutExpired as error:
+                sections.extend((f"status: timed out after {error.timeout} seconds", ""))
                 continue
             output = (completed.stdout + ("\n" if completed.stdout and completed.stderr else "") + completed.stderr).strip()
             sections.extend((f"status: executed (exit {completed.returncode})", output[:MAX_OUTPUT_CHARS], ""))

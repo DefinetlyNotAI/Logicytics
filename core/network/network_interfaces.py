@@ -86,13 +86,17 @@ class NetworkInterfacesCollector(CoreCollector):
             return CollectorResult(CollectorStatus.CANCELLED, "cancelled before network-interface collection")
         context.report_progress("network_interfaces_started")
         command = (
-            "$adapters = Get-NetAdapter; "
+            "$adapters = @(Get-NetAdapter); "
             "Get-NetIPAddress -AddressFamily IPv4 | ForEach-Object { "
             "$adapter = $adapters | Where-Object ifIndex -eq $_.InterfaceIndex | Select-Object -First 1; "
+            "$status = if ($null -eq $adapter) { 'Unknown' } else { $adapter.Status.ToString() }; "
+            "$linkSpeed = if ($null -eq $adapter) { $null } else { $adapter.LinkSpeed }; "
+            "$mediaConnectionState = if ($null -eq $adapter) { 'Unknown' } else { $adapter.MediaConnectionState.ToString() }; "
+            "$fullDuplex = if ($null -eq $adapter) { $null } else { $adapter.FullDuplex }; "
             "[pscustomobject]@{ InterfaceAlias = $_.InterfaceAlias; IPAddress = $_.IPAddress; "
             "PrefixLength = $_.PrefixLength; AddressState = $_.AddressState.ToString(); "
-            "Status = $adapter.Status.ToString(); LinkSpeed = $adapter.LinkSpeed; "
-            "MediaConnectionState = $adapter.MediaConnectionState.ToString(); FullDuplex = $adapter.FullDuplex } "
+            "Status = $status; LinkSpeed = $linkSpeed; "
+            "MediaConnectionState = $mediaConnectionState; FullDuplex = $fullDuplex } "
             "} | ConvertTo-Json -Depth 3"
         )
         completed = subprocess.run(

@@ -23,6 +23,7 @@ class WindowsFeaturesCollectorTests(unittest.TestCase):
         """DISM's 'access to ... is denied' wording must map to a skipped collector."""
         module = _module()
         self.assertTrue(module._is_access_denied("Set current directory failed: Access to the path is denied."))
+        self.assertTrue(module._is_access_denied("The requested operation requires elevation."))
 
 
 if __name__ == "__main__":
