@@ -124,21 +124,25 @@ class CLI:
         explicit_sequential = getattr(arguments, "sequential", False)
         explicit_parallel = getattr(arguments, "parallel", False)
 
+        performance_check = bool(getattr(arguments, "performance_check", False))
+
+        if performance_check and explicit_parallel:
+            raise ValueError("performance checking requires sequential execution")
+
         if mode is not None:
             if explicit_sequential and mode.strategy is ExecutionStrategy.PARALLEL:
                 if legacy_flags["threaded"]:
                     raise ValueError("sequential execution conflicts with legacy --threaded mode")
-                raise ValueError(f"{mode.name} mode requires configured parallel execution")
+                if not performance_check:
+                    raise ValueError(f"{mode.name} mode requires configured parallel execution")
 
             if explicit_parallel and mode.strategy is ExecutionStrategy.SEQUENTIAL:
-                if legacy_flags["performance_check"] or legacy_flags["default_mode"]:
-                    raise ValueError("parallel execution conflicts with sequential performance/default mode")
+                if legacy_flags["default_mode"]:
+                    raise ValueError("parallel execution conflicts with sequential default mode")
                 raise ValueError(f"{mode.name} mode requires sequential execution")
 
-        sequential = explicit_sequential or (mode is not None and mode.strategy is ExecutionStrategy.SEQUENTIAL)
-        parallel = explicit_parallel or (mode is not None and mode.strategy is ExecutionStrategy.PARALLEL)
-
-        performance_check = mode.performance_check if mode is not None else False
+        sequential = performance_check or explicit_sequential or (mode is not None and mode.strategy is ExecutionStrategy.SEQUENTIAL)
+        parallel = not performance_check and (explicit_parallel or (mode is not None and mode.strategy is ExecutionStrategy.PARALLEL))
 
         enable_mods = getattr(arguments, "mods", False) or (mode.enable_mods if mode is not None else False)
 
@@ -365,10 +369,10 @@ class CLI:
                 )
                 mode.add_argument("--minimal", action="store_true", help="Run the minimal built-in profile.")
                 mode.add_argument("--depth", action="store_true", help="Run the deep built-in profile.")
-                mode.add_argument(
+                subparser.add_argument(
                     "--performance-check",
                     action="store_true",
-                    help="Run serially and save per-collector duration measurements.",
+                    help="Measure the selected mode serially and save per-collector duration measurements.",
                 )
                 subparser.add_argument(
                     "--no-package",
@@ -428,11 +432,6 @@ class CLI:
                     "--new-window",
                     action="store_true",
                     help="Launch --launch-action in a visible, separate Windows command window.",
-                )
-                subparser.add_argument(
-                    "--performance-check",
-                    action="store_true",
-                    help="Run collectors sequentially and write a per-collector duration report.",
                 )
             if command == "dev":
                 subparser.add_argument(

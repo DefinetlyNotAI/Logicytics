@@ -64,11 +64,12 @@ class CliTests(unittest.TestCase):
             self.assertIn("python -m logicytics.cli.installer", rendered)
 
     def test_run_parser_accepts_performance_check(self) -> None:
-        """The run command must expose the performance mode used by the request builder."""
-        arguments = cli_methods.parser().parse_args(["run", "--performance-check"])
+        """The run flag serially measures the explicitly selected collection mode."""
+        arguments = cli_methods.parser().parse_args(["run", "--mode", "thorough", "--performance-check"])
         self.assertTrue(arguments.performance_check)
         request = cli_methods.request(arguments, default_workers=4)
         self.assertTrue(request.performance_check)
+        self.assertEqual("deep", request.profile)
         self.assertEqual(1, request.max_workers)
 
     def test_config_flag_is_accepted_before_or_after_a_subcommand(self) -> None:
@@ -150,15 +151,14 @@ class CliTests(unittest.TestCase):
         )
 
     def test_typed_mode_registry_maps_every_user_mode_and_legacy_alias(self) -> None:
-        """One immutable matrix owns profile, scheduling, MODS, and performance behavior."""
+        """One immutable matrix owns profile, scheduling, and MODS behavior."""
         parser = cli_methods.parser()
         expected = {
-            "standard": ("standard", 1, False, False),
-            "balanced": ("standard", 4, False, False),
-            "quick": ("minimal", 4, False, False),
-            "thorough": ("deep", 4, False, False),
-            "offline": ("offline", 4, False, False),
-            "performance": ("standard", 1, False, True),
+            "standard": ("standard", 1, False),
+            "balanced": ("standard", 4, False),
+            "quick": ("minimal", 4, False),
+            "thorough": ("deep", 4, False),
+            "offline": ("offline", 4, False),
         }
 
         self.assertEqual(set(expected), set(EXECUTION_MODES))
@@ -184,7 +184,6 @@ class CliTests(unittest.TestCase):
                         run_request.profile,
                         run_request.max_workers,
                         run_request.enable_mods,
-                        run_request.performance_check,
                     ),
                 )
 
@@ -193,7 +192,6 @@ class CliTests(unittest.TestCase):
             "threaded": "--threaded",
             "minimal": "--minimal",
             "depth": "--depth",
-            "performance_check": "--performance-check",
         }
 
         for field, mode_name in LEGACY_MODE_ALIASES.items():
@@ -224,6 +222,8 @@ class CliTests(unittest.TestCase):
 
         with patch("sys.stderr"), self.assertRaises(SystemExit):
             parser.parse_args(["run", "--mode", "quick", "--minimal"])
+        with patch("sys.stderr"), self.assertRaises(SystemExit):
+            parser.parse_args(["run", "--mode", "performance"])
 
     def test_modes_action_renders_a_summary_and_writes_the_machine_readable_matrix(self) -> None:
         """Users see a readable summary while release checks use the saved mode registry."""
@@ -267,10 +267,12 @@ class CliTests(unittest.TestCase):
         self.assertIn("Logicytics v4 run-oriented evidence framework", rendered)
         self.assertIn("preflight", rendered)
         self.assertIn("run", rendered)
-        with patch("sys.stderr", new_callable=io.StringIO) as errors:
-            with self.assertRaises(SystemExit):
-                cli_methods.parser().parse_args(["run", "--default", "--performance-check"])
-        self.assertIn("not allowed with argument", errors.getvalue())
+        request = cli_methods.request(
+            cli_methods.parser().parse_args(["run", "--default", "--performance-check"]),
+            default_workers=4,
+        )
+        self.assertTrue(request.performance_check)
+        self.assertEqual(1, request.max_workers)
 
     def test_argument_error_keeps_the_complete_command_reference(self) -> None:
         """Invalid arguments retain every available flag and capability in a readable section."""
@@ -494,8 +496,8 @@ class CliTests(unittest.TestCase):
         conflicts = (
             (["run", "--sequential", "--workers", "2"], 4, "sequential execution"),
             (["run", "--sequential", "--threaded"], 4, "legacy --threaded"),
-            (["run", "--parallel", "--performance-check"], 4, "performance/default"),
-            (["run", "--parallel", "--default"], 4, "performance/default"),
+            (["run", "--parallel", "--performance-check"], 4, "performance checking requires sequential"),
+            (["run", "--parallel", "--default"], 4, "sequential default mode"),
             (["run", "--parallel", "--workers", "1"], 4, "at least two"),
             (["run", "--parallel"], 1, "at least two"),
         )

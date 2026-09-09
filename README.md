@@ -58,9 +58,10 @@ Every run validates collectors, records a manifest, and packages the result unle
 | Deterministic sequential collection | `python -m logicytics run --mode standard --acknowledge-authorization`    |
 | Local-only collection               | `python -m logicytics run --mode offline --acknowledge-authorization`     |
 | Extended collection                 | `python -m logicytics run --mode thorough --acknowledge-authorization`    |
-| Duration report                     | `python -m logicytics run --mode performance --acknowledge-authorization` |
+| Thorough duration report            | `python -m logicytics run --mode thorough --acknowledge-authorization --performance-check` |
 
 `thorough` can include administrator-only collectors. Start an elevated shell when the plan reports that requirement. See every available mode with `python -m logicytics --modes`.
+Add `--performance-check` to any `run --mode ...` command to time that mode's selected collectors serially.
 
 ## Where results go
 

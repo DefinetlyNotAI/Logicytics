@@ -514,6 +514,7 @@ class PackagingTests(unittest.TestCase):
             self.assertTrue(performance_path.is_file())
             report = json.loads(performance_path.read_text(encoding="utf-8"))
             self.assertEqual(outcome.manifest.run_id, report["run_id"])
+            self.assertEqual("standard", report["profile"])
             self.assertEqual("core.system.system_info", report["collectors"][0]["id"])
             self.assertIsNotNone(report["collectors"][0]["duration_seconds"])
             package = outcome.manifest.package

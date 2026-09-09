@@ -59,7 +59,6 @@ class ExecutionMode:
     profile: str
     strategy: ExecutionStrategy = ExecutionStrategy.CONFIGURED
     enable_mods: bool = False
-    performance_check: bool = False
 
 
 _MODE_LIST = (
@@ -77,13 +76,6 @@ _MODE_LIST = (
         ExecutionStrategy.SEQUENTIAL,
     ),
     ExecutionMode("offline", "Local-only collection with network access forbidden.", "offline"),
-    ExecutionMode(
-        "performance",
-        "Sequential standard collection with per-collector duration reporting.",
-        "standard",
-        ExecutionStrategy.SEQUENTIAL,
-        performance_check=True,
-    ),
     ExecutionMode("thorough", "Extended and potentially slower local inventory.", "deep"),
 )
 
@@ -94,7 +86,6 @@ LEGACY_MODE_ALIASES: Mapping[str, str] = MappingProxyType(
         "threaded": "balanced",
         "minimal": "quick",
         "depth": "thorough",
-        "performance_check": "performance",
     }
 )
 

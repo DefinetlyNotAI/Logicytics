@@ -45,7 +45,8 @@ features produce explicit availability or skip results and never stop unrelated
 collectors.
 
 The only user-facing collection modes are `quick`, `balanced`, `standard`,
-`offline`, `performance`, and `thorough`. `python -m logicytics --modes` shows
+`offline`, and `thorough`. Add `--performance-check` to `run` to measure any
+selected mode serially. `python -m logicytics --modes` shows
 a human-readable mode summary and writes the authoritative machine-readable
 collector inclusion matrix to `output/logs/debug/modes.json`.
 

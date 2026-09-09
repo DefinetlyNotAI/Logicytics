@@ -1090,6 +1090,7 @@ class RunSupervisor:
         performance_path = run_directory / "logs" / "performance.json"
         payload = {
             "run_id": manifest.run_id,
+            "profile": manifest.request.get("profile", "standard"),
             "collectors": [
                 {
                     "id": record.id,
@@ -1108,6 +1109,7 @@ class RunSupervisor:
             "Performance report",
             f"Run id: {manifest.run_id}",
             f"Run fingerprint: {fingerprint}",
+            f"Collection profile: {payload['profile']}",
             f"Run status: {manifest.status.value}",
             "",
             "Collector timings",
