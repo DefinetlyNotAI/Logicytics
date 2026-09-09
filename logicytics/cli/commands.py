@@ -7,6 +7,7 @@ import contextlib
 import importlib.util
 import json
 import os
+import subprocess
 import platform
 import sys
 from pathlib import Path
@@ -60,7 +61,7 @@ class CLI:
 
     @staticmethod
     def render_preflight(
-        logger: object,
+        logger: ApplicationLogger,
         validation: dict[str, list[dict[str, object]]],
         sysinternals: dict[str, str],
     ) -> None:
@@ -78,7 +79,8 @@ class CLI:
             ),
         )
         for item in (*invalid, *quarantined):
-            diagnostics = item.get("diagnostics", [])
+            raw_diagnostics = item.get("diagnostics", [])
+            diagnostics = raw_diagnostics if isinstance(raw_diagnostics, list) else []
             details = "; ".join(
                 str(diagnostic.get("message", "invalid collector")) for diagnostic in diagnostics if isinstance(diagnostic, dict)
             )
@@ -264,6 +266,12 @@ class CLI:
         subcommands = parser.add_subparsers(dest="command", parser_class=HumanArgumentParser)
         for command in ("preflight", "debug", "update", "dev", "plan", "run", "collector"):
             subparser = subcommands.add_parser(command, help=f"Run the {command} action.")
+            subparser.add_argument(
+                "--config",
+                type=Path,
+                default=argparse.SUPPRESS,
+                help="Path to the authoritative Logicytics YAML configuration file",
+            )
             subparser.add_argument(
                 "--profile",
                 default=None,
@@ -460,13 +468,90 @@ class CLI:
         )
         return process.pid
 
+    @staticmethod
+    def repository_status(root: Path) -> dict[str, bool | int | str | None]:
+        """Check the local Git worktree, origin declaration, and remote reachability."""
+        status: dict[str, bool | int | str | None] = {
+            "git_available": False,
+            "git_version": None,
+            "is_repository": False,
+            "origin_configured": False,
+            "remote_reachable": False,
+            "repository_returncode": None,
+            "origin_returncode": None,
+            "reachability_returncode": None,
+        }
+        try:
+            git = process_adapter.run(
+                ["git", "--version"],
+                capture_output=True,
+                check=False,
+                text=True,
+            )
+        except OSError:
+            return status
+
+        git_output = git.stdout if isinstance(git.stdout, str) else ""
+        status["git_available"] = git.returncode == 0
+        status["git_version"] = git_output.strip() or None
+        if git.returncode != 0:
+            return status
+
+        try:
+            repository = process_adapter.run(
+                ["git", "rev-parse", "--is-inside-work-tree"],
+                cwd=root,
+                capture_output=True,
+                check=False,
+                text=True,
+            )
+        except OSError:
+            return status
+        status["repository_returncode"] = repository.returncode
+        repository_output = repository.stdout if isinstance(repository.stdout, str) else ""
+        status["is_repository"] = repository.returncode == 0 and repository_output.strip().casefold() == "true"
+        if not status["is_repository"]:
+            return status
+
+        try:
+            origin = process_adapter.run(
+                ["git", "remote", "get-url", "origin"],
+                cwd=root,
+                capture_output=True,
+                check=False,
+                text=True,
+            )
+        except OSError:
+            return status
+        status["origin_returncode"] = origin.returncode
+        origin_output = origin.stdout if isinstance(origin.stdout, str) else ""
+        status["origin_configured"] = origin.returncode == 0 and bool(origin_output.strip())
+        if not status["origin_configured"]:
+            return status
+
+        try:
+            reachability = process_adapter.run(
+                ["git", "ls-remote", "--exit-code", "origin", "HEAD"],
+                cwd=root,
+                capture_output=True,
+                check=False,
+                text=True,
+                timeout=15,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return status
+        status["reachability_returncode"] = reachability.returncode
+        status["remote_reachable"] = reachability.returncode == 0
+        return status
+
     def run_developer_action(
         self,
         root: Path,
         configuration: AppConfig,
         arguments: argparse.Namespace,
         debug_logs: Path,
-        logger: object,
+        logger: ApplicationLogger,
+        repository: dict[str, bool | int | str | None],
     ) -> int:
         """Run read-only contribution checks and an explicitly confirmed manifest update."""
         settings = configuration.maintenance
@@ -548,6 +633,7 @@ class CLI:
         payload = {
             "checks": checks,
             "comparison": comparison,
+            "repository": repository,
             "current_version": local_version(root),
             "existing_manifest_version": (existing.version if existing else None),
             "manifest_written": manifest_path,
@@ -573,12 +659,13 @@ class CLI:
                 f"Extra files: {len(comparison['extra'])}",
                 f"Unchanged files: {len(comparison['unchanged'])}",
                 f"Organization issues: {organization_issues}",
+                f"GitHub reachable: {'yes' if repository['remote_reachable'] else 'no'}",
                 f"Manifest written: {'yes' if manifest_path else 'no'}",
                 f"Manifest path: {manifest_path or 'none'}",
                 f"Diagnostic report: {development_path}",
             ),
         )
-        return 0
+        return 0 if organization_issues == 0 and repository["remote_reachable"] else 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -722,6 +809,8 @@ def main(argv: list[str] | None = None) -> int:
 
         if arguments.command == "usage":
             statistics = usage_statistics(load_history(history_path))
+            raw_average_accuracy = statistics.get("average_accuracy", 0.0)
+            average_accuracy = float(raw_average_accuracy) if isinstance(raw_average_accuracy, (int, float)) else 0.0
 
             graph_path = write_usage_graph(
                 configuration.runtime.output_root / "flag_usage.svg",
@@ -738,7 +827,7 @@ def main(argv: list[str] | None = None) -> int:
                 "Interaction usage",
                 (
                     f"Total interactions: {statistics['total_interactions']}",
-                    f"Average confidence: {float(statistics['average_accuracy']):.1%}",
+                    f"Average confidence: {average_accuracy:.1%}",
                     f"Common device: {statistics['common_device'] or 'none'}",
                     f"Common input: {statistics['common_input'] or 'none'}",
                     "Flag frequency:",
@@ -772,11 +861,11 @@ def main(argv: list[str] | None = None) -> int:
                 purpose="mode_matrix",
             )
 
-            payload = mode_matrix((*report.valid, *report.invalid))
+            matrix_payload = mode_matrix((*report.valid, *report.invalid))
             matrix_path = layout.debug_logs / "modes.json"
-            cli_methods.write_json(matrix_path, payload)
+            cli_methods.write_json(matrix_path, matrix_payload)
             mode_rows = []
-            for item in payload["modes"]:
+            for item in matrix_payload["modes"]:
                 aliases = ", ".join(item["legacy_aliases"]) or "none"
                 mode_rows.append(f"{item['name']}: {item['description']} ({len(item['collector_ids'])} collectors; aliases: {aliases})")
             application_logger.box(
@@ -889,43 +978,36 @@ def main(argv: list[str] | None = None) -> int:
             if arguments.new_window != (arguments.launch_action is not None):
                 raise ValueError("--new-window and --launch-action must be provided together")
 
-            git = process_adapter.run(
-                ["git", "--version"],
-                capture_output=True,
-                check=False,
-                text=True,
-            )
-
-            is_repository = (root / ".git").exists()
-
+            repository = cli_methods.repository_status(root)
             payload: dict[str, object] = {
-                "git_available": git.returncode == 0,
-                "git_version": (git.stdout.strip() or None),
-                "is_repository": is_repository,
+                **repository,
                 "applied": False,
             }
 
             pull_returncode: int | None = None
 
+            if not repository["remote_reachable"]:
+                update_path = layout.debug_logs / "update.json"
+                cli_methods.write_json(update_path, payload)
+                application_logger.box(
+                    "Update result",
+                    (
+                        f"Git available: {'yes' if repository['git_available'] else 'no'}",
+                        f"Repository: {'yes' if repository['is_repository'] else 'no'}",
+                        f"Origin configured: {'yes' if repository['origin_configured'] else 'no'}",
+                        "GitHub reachable: no",
+                        f"Diagnostic report: {update_path}",
+                        "Update was not applied because the configured Git remote is unreachable.",
+                    ),
+                )
+                return finish_command(
+                    2,
+                    status="repository_unreachable",
+                    git_available=str(repository["git_available"]),
+                    remote_reachable=str(repository["remote_reachable"]),
+                )
+
             if arguments.apply:
-                if git.returncode != 0 or not is_repository:
-                    update_path = layout.debug_logs / "update.json"
-                    cli_methods.write_json(update_path, payload)
-                    application_logger.box(
-                        "Update result",
-                        (
-                            "Git available: no",
-                            f"Repository: {'yes' if is_repository else 'no'}",
-                            f"Diagnostic report: {update_path}",
-                            "Update was not applied because Git or the repository is unavailable.",
-                        ),
-                    )
-                    return finish_command(
-                        2,
-                        status="git_unavailable",
-                        git_available=git.returncode == 0,
-                        is_repository=is_repository,
-                    )
 
                 pulled = process_adapter.run(
                     ["git", "pull"],
@@ -960,8 +1042,10 @@ def main(argv: list[str] | None = None) -> int:
             update_path = layout.debug_logs / "update.json"
             cli_methods.write_json(update_path, payload)
             update_lines = [
-                f"Git available: {'yes' if git.returncode == 0 else 'no'}",
-                f"Repository: {'yes' if is_repository else 'no'}",
+                f"Git available: {'yes' if repository['git_available'] else 'no'}",
+                f"Repository: {'yes' if repository['is_repository'] else 'no'}",
+                f"Origin configured: {'yes' if repository['origin_configured'] else 'no'}",
+                f"GitHub reachable: {'yes' if repository['remote_reachable'] else 'no'}",
                 f"Update applied: {'yes' if arguments.apply else 'no'}",
                 f"Update status: {'succeeded' if update_succeeded else 'failed'}",
             ]
@@ -989,12 +1073,14 @@ def main(argv: list[str] | None = None) -> int:
             )
 
         if arguments.command == "dev":
+            repository = cli_methods.repository_status(root)
             exit_code = cli_methods.run_developer_action(
                 root,
                 configuration,
                 arguments,
                 layout.debug_logs,
                 application_logger,
+                repository,
             )
             return finish_command(
                 exit_code,

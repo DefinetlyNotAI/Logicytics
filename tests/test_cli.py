@@ -1,3 +1,5 @@
+"""Regression coverage for the public command-line interface."""
+
 from __future__ import annotations
 
 import io
@@ -67,6 +69,14 @@ class CliTests(unittest.TestCase):
         request = cli_methods.request(arguments, default_workers=4)
         self.assertTrue(request.performance_check)
         self.assertEqual(1, request.max_workers)
+
+    def test_config_flag_is_accepted_before_or_after_a_subcommand(self) -> None:
+        """Configuration selection must not depend on flag placement around the action."""
+        parser = cli_methods.parser()
+        expected = Path("custom.yaml")
+
+        self.assertEqual(expected, parser.parse_args(["--config", "custom.yaml", "preflight"]).config)
+        self.assertEqual(expected, parser.parse_args(["preflight", "--config", "custom.yaml"]).config)
 
     def test_capabilities_default_to_metadata_and_cli_can_block_them(self) -> None:
         """Declared capabilities run by default and can be disabled per invocation."""
@@ -246,12 +256,16 @@ class CliTests(unittest.TestCase):
             root = Path(temporary)
             (root / ".git").mkdir()
 
-            git = subprocess.CompletedProcess(
-                ["git", "--version"],
-                0,
-                "git version 2.0\n",
-                "",
-            )
+            def reachable_git(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+                if command == ["git", "--version"]:
+                    return subprocess.CompletedProcess(command, 0, "git version 2.0\n", "")
+                if command == ["git", "rev-parse", "--is-inside-work-tree"]:
+                    return subprocess.CompletedProcess(command, 0, "true\n", "")
+                if command == ["git", "remote", "get-url", "origin"]:
+                    return subprocess.CompletedProcess(command, 0, "https://github.com/example/logicytics.git\n", "")
+                if command == ["git", "ls-remote", "--exit-code", "origin", "HEAD"]:
+                    return subprocess.CompletedProcess(command, 0, "head\tHEAD\n", "")
+                self.fail(f"unexpected Git command: {command}")
             output = io.StringIO()
 
             with (
@@ -263,7 +277,7 @@ class CliTests(unittest.TestCase):
                 patch.object(
                     process_adapter,
                     process_adapter.run.__name__,
-                    return_value=git,
+                    side_effect=reachable_git,
                 ),
                 patch.object(
                     CLI,
@@ -295,6 +309,7 @@ class CliTests(unittest.TestCase):
             payload = json.loads((root / "output" / "logs" / "debug" / "update.json").read_text(encoding="utf-8"))
             self.assertEqual("debug", payload["launched_action"])
             self.assertEqual(321, payload["launched_process_id"])
+            self.assertTrue(payload["remote_reachable"])
             launch.assert_called_once_with(root, "debug")
 
             error_logger = MagicMock()
@@ -320,6 +335,57 @@ class CliTests(unittest.TestCase):
             )
             event_messages = [call.args[1] for call in error_logger.event.call_args_list if len(call.args) > 1]
             self.assertIn("command_finished", event_messages)
+
+    def test_update_refuses_an_unreachable_git_remote(self) -> None:
+        """A local Git directory is insufficient when its configured remote cannot be reached."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            output = io.StringIO()
+
+            def unreachable_git(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+                if command == ["git", "--version"]:
+                    return subprocess.CompletedProcess(command, 0, "git version 2.0\n", "")
+                if command == ["git", "rev-parse", "--is-inside-work-tree"]:
+                    return subprocess.CompletedProcess(command, 0, "true\n", "")
+                if command == ["git", "remote", "get-url", "origin"]:
+                    return subprocess.CompletedProcess(command, 0, "https://github.com/example/logicytics.git\n", "")
+                if command == ["git", "ls-remote", "--exit-code", "origin", "HEAD"]:
+                    return subprocess.CompletedProcess(command, 128, "", "network unavailable")
+                self.fail(f"unexpected Git command: {command}")
+
+            with (
+                patch.object(CLI, CLI.project_root.__name__, return_value=root),
+                patch.object(process_adapter, process_adapter.run.__name__, side_effect=unreachable_git),
+                patch("sys.stderr", output),
+            ):
+                self.assertEqual(2, main(["update", "--apply"]))
+
+            payload = json.loads((root / "output" / "logs" / "debug" / "update.json").read_text(encoding="utf-8"))
+            self.assertFalse(payload["remote_reachable"])
+            self.assertFalse(payload["applied"])
+            self.assertIn("GitHub reachable: no", output.getvalue())
+
+    def test_update_reports_a_missing_git_executable(self) -> None:
+        """Maintenance status remains readable when Git is not installed."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            output = io.StringIO()
+
+            with (
+                patch.object(CLI, CLI.project_root.__name__, return_value=root),
+                patch.object(
+                    process_adapter,
+                    process_adapter.run.__name__,
+                    side_effect=FileNotFoundError("git executable is unavailable"),
+                ),
+                patch("sys.stderr", output),
+            ):
+                self.assertEqual(2, main(["update", "--apply"]))
+
+            payload = json.loads((root / "output" / "logs" / "debug" / "update.json").read_text(encoding="utf-8"))
+            self.assertFalse(payload["git_available"])
+            self.assertFalse(payload["remote_reachable"])
+            self.assertIn("Git available: no", output.getvalue())
 
     def test_new_window_launcher_uses_current_interpreter_without_a_shell(
         self,

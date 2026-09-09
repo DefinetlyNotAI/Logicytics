@@ -1,3 +1,5 @@
+"""Regression coverage for maintenance and integrity-manifest behavior."""
+
 from __future__ import annotations
 
 import hashlib
@@ -169,6 +171,16 @@ class MaintenanceTests(unittest.TestCase):
         """Side actions remain separate from collection and write only their dedicated artifacts."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
+            repository = {
+                "git_available": True,
+                "git_version": "git version 2.0",
+                "is_repository": True,
+                "origin_configured": True,
+                "remote_reachable": True,
+                "repository_returncode": 0,
+                "origin_returncode": 0,
+                "reachability_returncode": 0,
+            }
             (root / "pyproject.toml").write_text(
                 '[project]\nname = "fixture"\nversion = "4.0.0"\n',
                 encoding="utf-8",
@@ -179,6 +191,7 @@ class MaintenanceTests(unittest.TestCase):
             )
             with (
                 patch.object(CLI, "project_root", return_value=root),
+                patch.object(CLI, "repository_status", return_value=repository),
                 patch(
                     "sys.stdout",
                     new_callable=io.StringIO,
@@ -215,6 +228,16 @@ class MaintenanceTests(unittest.TestCase):
         """The v4 developer action writes its JSON manifest and leaves legacy files untouched."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
+            repository = {
+                "git_available": True,
+                "git_version": "git version 2.0",
+                "is_repository": True,
+                "origin_configured": True,
+                "remote_reachable": True,
+                "repository_returncode": 0,
+                "origin_returncode": 0,
+                "reachability_returncode": 0,
+            }
             (root / "pyproject.toml").write_text(
                 '[project]\nname = "fixture"\nversion = "4.0.0"\n',
                 encoding="utf-8",
@@ -232,6 +255,7 @@ class MaintenanceTests(unittest.TestCase):
             output = io.StringIO()
             with (
                 patch.object(CLI, "project_root", return_value=root),
+                patch.object(CLI, "repository_status", return_value=repository),
                 patch(
                     "sys.stderr",
                     output,

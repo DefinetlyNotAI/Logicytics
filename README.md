@@ -78,7 +78,8 @@ action for the parser-generated help.
 
 ### Global flags
 
-These flags go before the action name:
+`--config PATH` may be placed before or after an action name. The other global
+flags go before the action name:
 
 | Flag          | Description                                                               |
 |---------------|---------------------------------------------------------------------------|
@@ -146,7 +147,7 @@ isolated worker with the unique `CAPABILITY_DECLARATION_MISMATCH` diagnostic.
 | Profile  | Selection policy                                                                                        |
 |----------|---------------------------------------------------------------------------------------------------------|
 | minimal  | Essential local system, memory, and storage inventory.                                                  |
-| standard | Shipped core collectors declaring standard membership.                                                  |
+| standard | Routine local system and security configuration inventory (29 of 66 shipped collectors).              |
 | deep     | Extended declared inventory; sensitive and privileged work still needs explicit selection and approval. |
 | offline  | Local-only inventory; network and packet-capture collectors are rejected.                               |
 
@@ -273,8 +274,8 @@ python -m logicytics --config C:\path\to\logicytics.yaml debug
 
 ### Update
 
-update checks Git availability and repository state. It is read-only unless
---apply is supplied.
+update verifies Git, the current worktree, its `origin`, and that the remote
+answers a read-only Git query. It is read-only unless --apply is supplied.
 
 | Flag                                  | Description                                                                         |
 |---------------------------------------|-------------------------------------------------------------------------------------|
@@ -292,7 +293,8 @@ python -m logicytics update --launch-action preflight --new-window
 ### Developer checks
 
 dev runs repository organization and integrity checks without collecting
-evidence.
+evidence. It also reports whether the configured GitHub remote is reachable;
+an unreachable remote makes the check fail.
 
 | Flag                   | Description                                                |
 |------------------------|------------------------------------------------------------|

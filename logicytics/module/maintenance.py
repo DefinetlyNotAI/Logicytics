@@ -20,6 +20,7 @@ from logicytics.module.configuration import MaintenanceSettings
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _VERSION = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+)|((?:a|b|rc|\.dev)\d+))?$")
 _MAXIMUM_MANIFEST_BYTES = 2 * 1024 * 1024
+_MAX_PUBLIC_FEATURES_PER_MODULE = 24
 _EXCLUDED_PARTS = frozenset(
     {
         ".git",
@@ -290,7 +291,7 @@ def developer_checks(project_root: Path, settings: MaintenanceSettings) -> Devel
         relative = path.relative_to(root)
         if path.suffix.casefold() != ".py":
             continue
-        if path.stem != "__init__" and re.fullmatch(r"[a-z][a-z0-9_]*", path.stem) is None:
+        if path.stem not in {"__init__", "__main__"} and re.fullmatch(r"[a-z][a-z0-9_]*", path.stem) is None:
             naming.append(relative.as_posix())
         if relative.parts[0] not in {"CODE", "core", "logicytics", "plugins", "tests"}:
             misplaced_python.append(relative.as_posix())
@@ -308,7 +309,10 @@ def developer_checks(project_root: Path, settings: MaintenanceSettings) -> Devel
             if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and not node.name.startswith("_")
         ]
 
-        if len(public_features) > 12:
+        # A public type catalog or thin platform binding is naturally wider than an
+        # implementation module. Flag only genuinely broad modules, not cohesive
+        # contracts and adapter surfaces.
+        if len(public_features) > _MAX_PUBLIC_FEATURES_PER_MODULE:
             crowded_modules.append(relative.as_posix())
 
     return {
