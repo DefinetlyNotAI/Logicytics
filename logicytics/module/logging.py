@@ -411,8 +411,6 @@ class ApplicationLogger(EventLogger):
         step = self._lifecycle_step(message)
         if step is None or step == self._last_console_step:
             return
-        if self._last_console_step is not None:
-            self.console.write("\n")
         render_presentation_step_heading(
             self.console,
             step,
@@ -775,9 +773,6 @@ class ApplicationLogger(EventLogger):
 
         with self._lock:
             if self.settings.console_enabled:
-                if self._last_console_step is not None:
-                    self.console.write("\n")
-
                 render_presentation_section(
                     self.console,
                     title,

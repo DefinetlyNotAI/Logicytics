@@ -55,13 +55,14 @@ def render_banner(console: TextIO, *, width: ConsoleWidth = terminal_width) -> N
     rule = "-" * available
     if console.isatty():
         rows = (
-            f"\n{_INFO_COLOR}{_BOLD}{title}{_RESET}",
+            "",
+            f"{_INFO_COLOR}{_BOLD}{title}{_RESET}",
             f"{_INFO_COLOR}{rule}{_RESET}",
             f"\033[97m{subtitle}{_RESET}",
             "\n",
         )
     else:
-        rows = (title, rule, subtitle, "")
+        rows = ("", title, rule, subtitle, "")
     console.write("\n".join(rows))
     console.flush()
 
@@ -73,7 +74,7 @@ def render_step_heading(
     width: ConsoleWidth = console_width,
 ) -> None:
     """Separate a lifecycle phase with a titled ASCII rule and breathing room."""
-    console.write(f"{_heading(title, width=width)}\n\n")
+    console.write(f"\n{_heading(title, width=width)}\n\n")
     console.flush()
 
 
@@ -115,7 +116,7 @@ def render_section(
                     first_row = f"{prefix[:-2]}{_DETAIL_MARKER_COLOR}{_BOLD}>{_RESET} {indentation}{wrapped[0]}"
                 rows.append(first_row)
                 rows.extend(f"{continuation_prefix}{part}" for part in wrapped[1:])
-    console.write("\n".join(rows) + "\n")
+    console.write("\n" + "\n".join(rows) + "\n")
     console.flush()
 
 
@@ -167,5 +168,5 @@ def render_alert(
                     f"{alert_color}{continuation_prefix}{row}{_RESET}" if use_color else f"{continuation_prefix}{row}"
                     for row in wrapped[1:]
                 )
-    console.write("\n".join(rows) + "\n")
+    console.write("\n" + "\n".join(rows) + "\n")
     console.flush()

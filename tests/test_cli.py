@@ -282,6 +282,7 @@ class CliTests(unittest.TestCase):
         rendered = output.getvalue()
         self.assertIn("Command-line error", rendered)
         self.assertIn("Available command options", rendered)
+        self.assertIn("collector_id\n\nAvailable command options", rendered)
         self.assertIn("--block-capability", rendered)
         self.assertIn("private_keys", rendered)
         self.assertIn("--interactive", rendered)

@@ -297,7 +297,7 @@ class LoggingTests(unittest.TestCase):
             rows = console.getvalue().splitlines()
             self.assertTrue(rows[0].startswith("  * "))
             self.assertTrue(rows[1].startswith("    "))
-            summary_start = rows.index("Summary", 2)
+            summary_start = rows.index("Summary", 3)
             self.assertEqual("-" * ApplicationLogger._console_width(), rows[summary_start + 1])
             self.assertEqual("", rows[summary_start + 2])
             self.assertEqual("  > finished", rows[summary_start + 3])
@@ -375,10 +375,11 @@ class LoggingTests(unittest.TestCase):
             logger.box("Summary", ("detail " * 40,))
 
             rows = console.getvalue().splitlines()
-            self.assertEqual("Summary", rows[0])
-            self.assertEqual("-" * ApplicationLogger._console_width(), rows[1])
-            self.assertEqual("", rows[2])
-            self.assertGreater(len(rows), 3)
+            self.assertEqual("", rows[0])
+            self.assertEqual("Summary", rows[1])
+            self.assertEqual("-" * ApplicationLogger._console_width(), rows[2])
+            self.assertEqual("", rows[3])
+            self.assertGreater(len(rows), 4)
             self.assertTrue(all(len(row) <= ApplicationLogger._console_width() for row in rows))
 
     def test_application_logging_groups_lifecycle_events_into_titled_steps(self) -> None:
