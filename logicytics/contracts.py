@@ -210,8 +210,16 @@ class CollectorMetadata:
             raise ValueError("metadata output_media_types must be a non-empty tuple of MIME types")
         if len(set(self.output_media_types)) != len(self.output_media_types):
             raise ValueError("metadata output_media_types must not contain duplicates")
-        if self.sensitive_data_categories and {"standard", "minimal"}.intersection(self.default_profiles):
-            raise ValueError("sensitive collectors must not belong to standard or minimal profiles")
+        standard_categories = {
+            "encryption_configuration",
+            "hardware_inventory",
+            "security_configuration",
+            "system_configuration",
+        }
+        if "minimal" in self.default_profiles and self.sensitive_data_categories:
+            raise ValueError("sensitive collectors must not belong to the minimal profile")
+        if "standard" in self.default_profiles and not set(self.sensitive_data_categories).issubset(standard_categories):
+            raise ValueError("standard collectors may contain only routine local configuration categories")
         if not isinstance(self.capabilities, tuple) or not all(isinstance(capability, Capability) for capability in self.capabilities):
             raise ValueError("metadata capabilities must be a tuple of Capability values")
         if not isinstance(self.privilege_level, PrivilegeLevel):

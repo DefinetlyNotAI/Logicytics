@@ -16,7 +16,7 @@ from logicytics.module.errors import PlanError, PreflightError
 BUILTIN_PROFILES = MappingProxyType(
     {
         "minimal": "Essential local system, memory, and storage inventory only.",
-        "standard": "Shipped core collectors explicitly declaring standard membership.",
+        "standard": "Routine local system and security configuration inventory.",
         "deep": "Extended declared inventory, subject to declared-capability blocking policy.",
         "offline": "Declared local-only inventory with network and packet access prohibited.",
     }

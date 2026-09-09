@@ -1,3 +1,5 @@
+"""Regression coverage for collector contracts and metadata safeguards."""
+
 from __future__ import annotations
 
 import unittest
@@ -60,7 +62,7 @@ class ContractTests(unittest.TestCase):
             CollectorMetadata(**{**common, "resource_class": "disk_heavy"})
         with self.assertRaisesRegex(ValueError, "ResourceClass"):
             CollectorMetadata.from_dict({**CollectorMetadata(**common).to_dict(), "resource_class": "unknown"})
-        with self.assertRaisesRegex(ValueError, "sensitive collectors"):
+        with self.assertRaisesRegex(ValueError, "routine local configuration"):
             CollectorMetadata(**{**common, "sensitive_data_categories": ("credentials",)})
         for retries in (-1, 4, True):
             with self.subTest(maximum_retries=retries):

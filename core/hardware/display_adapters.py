@@ -34,7 +34,7 @@ class DisplayAdaptersCollector(CoreCollector):
             supported_platforms=("win32",),
             capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("hardware_inventory",),
-            default_profiles=("deep",),
+            default_profiles=("standard", "deep"),
             timeout_seconds=30,
             maximum_output_bytes=256 * 1024,
         )

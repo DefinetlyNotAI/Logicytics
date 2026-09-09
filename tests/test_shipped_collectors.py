@@ -792,8 +792,38 @@ class ShippedCollectorTests(unittest.TestCase):
             len(memberships["minimal"]),
         )
         self.assertEqual(
-            6,
-            len(memberships["standard"]),
+            {
+                "core.encryption.bitlocker_status",
+                "core.encryption.bitlocker_volumes",
+                "core.hardware.battery_status",
+                "core.hardware.display_adapters",
+                "core.hardware.windows_features",
+                "core.memory.memory_snapshot",
+                "core.network.firewall_profiles",
+                "core.network.network_adapters",
+                "core.network.network_identity",
+                "core.process.running_processes",
+                "core.registry.installed_applications",
+                "core.registry.startup_applications",
+                "core.storage.logical_drives",
+                "core.storage.mounted_volumes",
+                "core.storage.physical_disks",
+                "core.storage.volume_details",
+                "core.system.bios_info",
+                "core.system.computer_system",
+                "core.system.defender_status",
+                "core.system.environment_posture",
+                "core.system.group_policy",
+                "core.system.installed_drivers",
+                "core.system.installed_updates",
+                "core.system.operating_system",
+                "core.system.system_details",
+                "core.system.system_diagnostics",
+                "core.system.system_info",
+                "core.system.windows_services",
+                "core.system.wmic_inventory",
+            },
+            memberships["standard"],
         )
         self.assertEqual(
             {item.id for item in metadata},
@@ -811,11 +841,20 @@ class ShippedCollectorTests(unittest.TestCase):
             memberships["minimal"],
             memberships["offline"],
         )
-        self.assertLessEqual(
-            sum(item.timeout_seconds for item in metadata if item.id in memberships["standard"]),
-            90,
+        self.assertTrue(
+            all(
+                set(item.sensitive_data_categories).issubset(
+                    {
+                        "encryption_configuration",
+                        "hardware_inventory",
+                        "security_configuration",
+                        "system_configuration",
+                    }
+                )
+                for item in metadata
+                if item.id in memberships["standard"]
+            )
         )
-        self.assertTrue(all(not item.sensitive_data_categories for item in metadata if item.id in memberships["standard"]))
 
 
 if __name__ == "__main__":

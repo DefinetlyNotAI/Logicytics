@@ -40,7 +40,7 @@ class ComputerSystemCollector(CoreCollector):
             supported_platforms=("win32",),
             capabilities=(Capability.SUBPROCESS,),
             sensitive_data_categories=("system_configuration",),
-            default_profiles=("deep",),
+            default_profiles=("standard", "deep"),
             timeout_seconds=45,
             maximum_output_bytes=128 * 1024,
         )

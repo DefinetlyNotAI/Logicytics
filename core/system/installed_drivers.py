@@ -37,7 +37,7 @@ class InstalledDriversCollector(CoreCollector):
             author="Logicytics",
             supported_platforms=("win32",),
             capabilities=(Capability.SUBPROCESS,),
-            default_profiles=("deep",),
+            default_profiles=("standard", "deep"),
             timeout_seconds=30,
             maximum_output_bytes=4 * 1024 * 1024,
         )

@@ -1,3 +1,5 @@
+"""Regression coverage for static collector preflight validation."""
+
 from __future__ import annotations
 
 import io
@@ -206,7 +208,7 @@ class PreflightTests(unittest.TestCase):
             )
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
-            self.assertIn("sensitive collectors", report.invalid[0].runtime_error or "")
+            self.assertIn("routine local configuration", report.invalid[0].runtime_error or "")
             with self.assertRaises(PreflightError):
                 build_plan(report, RunRequest())
 

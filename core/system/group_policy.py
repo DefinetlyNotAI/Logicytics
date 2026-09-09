@@ -37,7 +37,7 @@ class GroupPolicyCollector(CoreCollector):
             author="Logicytics",
             supported_platforms=("win32",),
             capabilities=(Capability.SUBPROCESS,),
-            default_profiles=("deep",),
+            default_profiles=("standard", "deep"),
             timeout_seconds=45,
             maximum_output_bytes=2 * 1024 * 1024,
         )
