@@ -10,6 +10,7 @@ import os
 import platform
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 from time import perf_counter
 from typing import Literal
@@ -27,6 +28,7 @@ from logicytics.module.interaction import (
     usage_statistics,
     write_usage_graph,
 )
+from logicytics.module.usb import ensure_usb_storage, find_windows_installation
 from logicytics.module.logging import (
     ApplicationLogger,
     HumanArgumentParser,
@@ -265,6 +267,13 @@ class CLI:
             help="Path to the authoritative Logicytics YAML configuration file",
         )
         parser.add_argument(
+            "--usb",
+            nargs="?",
+            const="",
+            metavar="DRIVE",
+            help="Run from removable storage and locate Windows by scanning A through Z; optionally select its drive letter.",
+        )
+        parser.add_argument(
             "--usage",
             action="store_true",
             help="Show local interaction statistics and create a usage graph.",
@@ -283,6 +292,14 @@ class CLI:
                 type=Path,
                 default=argparse.SUPPRESS,
                 help="Path to the authoritative Logicytics YAML configuration file",
+            )
+            subparser.add_argument(
+                "--usb",
+                nargs="?",
+                const="",
+                default=argparse.SUPPRESS,
+                metavar="DRIVE",
+                help="Run from removable storage and locate Windows; optionally select its drive letter.",
             )
             subparser.add_argument(
                 "--profile",
@@ -759,6 +776,25 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         configuration = load_config(root, arguments.config)
+        cache_directory = root / ".cache"
+        preflight_cache_directory: Path | None = None
+        preflight_temporary_directory: Path | None = None
+        usb_value = getattr(arguments, "usb", None)
+        if usb_value is not None:
+            usb_context = find_windows_installation(usb_value or None)
+            ensure_usb_storage(
+                usb_context,
+                project_root=root,
+                output_root=configuration.runtime.output_root,
+                cache_directory=cache_directory,
+                temporary_directory=root / ".temp",
+            )
+            configuration = replace(
+                configuration,
+                runtime=replace(configuration.runtime, temporary_directory="project"),
+            )
+            preflight_cache_directory = cache_directory / "preflight"
+            preflight_temporary_directory = root / ".temp" / "preflight"
 
         layout = ensure_output_layout(configuration.runtime.output_root)
 
@@ -772,6 +808,14 @@ def main(argv: list[str] | None = None) -> int:
             "command_started",
             source="logicytics.cli.commands",
             command=arguments.command,
+            **(
+                {
+                    "usb_windows_drive": usb_context.windows_drive,
+                    "usb_drive_scan": ", ".join(usb_context.scanned_drives),
+                }
+                if usb_value is not None
+                else {}
+            ),
         )
         started_at = perf_counter()
         command_started_at = started_at
@@ -795,7 +839,6 @@ def main(argv: list[str] | None = None) -> int:
             )
             return exit_code
 
-        cache_directory = root / ".cache"
         cache_directory.mkdir(parents=True, exist_ok=True)
         history_path = cache_directory / "interaction_history.json.gz"
 
@@ -925,6 +968,8 @@ def main(argv: list[str] | None = None) -> int:
                 root,
                 configuration_hash=modes_configuration_hash,
                 progress=report_preflight_progress,
+                cache_directory=preflight_cache_directory,
+                temporary_directory=preflight_temporary_directory,
             )
             application_logger.event(
                 "INFO",
@@ -971,6 +1016,8 @@ def main(argv: list[str] | None = None) -> int:
             configuration_hash=configuration.fingerprint(),
             progress=report_preflight_progress,
             invalidate_cache=getattr(arguments, "invalidate_cache", False),
+            cache_directory=preflight_cache_directory,
+            temporary_directory=preflight_temporary_directory,
         )
         application_logger.event(
             "INFO",

@@ -63,6 +63,11 @@ Every run validates collectors, records a manifest, and packages the result unle
 `thorough` can include administrator-only collectors. Start an elevated shell when the plan reports that requirement. See every available mode with `python -m logicytics --modes`.
 Add `--performance-check` to any `run --mode ...` command to time that mode's selected collectors serially.
 
+For offline collection from removable storage, add `--usb` to `preflight`,
+`plan`, `run`, or `collector`. It scans `A:` through `Z:` and uses the first
+drive containing `Windows`; use `--usb=E` to select a specific Windows drive.
+USB mode rejects output, cache, and temporary storage on that Windows disk.
+
 ## Where results go
 
 Each run receives its own directory under `output/data/`:

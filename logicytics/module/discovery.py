@@ -724,7 +724,7 @@ def _accept_runtime_metadata(candidate: CollectorCandidate, payload: object) -> 
         candidate.metadata = metadata
 
 
-def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
+def _runtime_probe(project_root: Path, candidate: CollectorCandidate, temporary_root: Path | None = None) -> None:
     """Probe metadata in a short-lived restricted worker after static validation."""
     engine_root = Path(__file__).resolve().parents[2]
     pythonpath = os.pathsep.join((str(engine_root), str(project_root)))
@@ -736,7 +736,9 @@ def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
         candidate.kind.value,
         candidate.expected_class,
     ]
-    with tempfile.TemporaryDirectory(prefix="logicytics-preflight-") as temporary:
+    if temporary_root is not None:
+        temporary_root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="logicytics-preflight-", dir=temporary_root) as temporary:
         probe_directory = Path(temporary)
         environment = {
             "PYTHONPATH": pythonpath,
@@ -774,10 +776,11 @@ def _runtime_probe(project_root: Path, candidate: CollectorCandidate) -> None:
     _accept_runtime_metadata(candidate, metadata_payload)
 
 
-def _cache_path(project_root: Path) -> Path:
+def _cache_path(project_root: Path, cache_directory: Path | None = None) -> Path:
     """Keep disposable validation state outside source and evidence directories."""
     project_key = hashlib.sha256(str(project_root.resolve()).encode("utf-8")).hexdigest()
-    return Path(tempfile.gettempdir()) / "logicytics-preflight-cache" / f"{project_key}.json"
+    root = cache_directory if cache_directory is not None else Path(tempfile.gettempdir()) / "logicytics-preflight-cache"
+    return root / f"{project_key}.json"
 
 
 def _source_hash(path: Path) -> str:
@@ -785,9 +788,9 @@ def _source_hash(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _load_cache(project_root: Path, configuration_hash: str) -> dict[str, object]:
+def _load_cache(project_root: Path, configuration_hash: str, cache_directory: Path | None = None) -> dict[str, object]:
     """Load only a cache created for this interpreter, contract, and configuration."""
-    path = _cache_path(project_root)
+    path = _cache_path(project_root, cache_directory)
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError):
@@ -804,7 +807,12 @@ def _load_cache(project_root: Path, configuration_hash: str) -> dict[str, object
     return entries if isinstance(entries, dict) else {}
 
 
-def _write_cache(project_root: Path, configuration_hash: str, candidates: list[CollectorCandidate]) -> None:
+def _write_cache(
+    project_root: Path,
+    configuration_hash: str,
+    candidates: list[CollectorCandidate],
+    cache_directory: Path | None = None,
+) -> None:
     """Atomically persist successful probes; invalid candidates are always reprobed."""
     entries: dict[str, object] = {}
     for candidate in candidates:
@@ -823,7 +831,7 @@ def _write_cache(project_root: Path, configuration_hash: str, candidates: list[C
         "configuration_hash": configuration_hash,
         "entries": entries,
     }
-    path = _cache_path(project_root)
+    path = _cache_path(project_root, cache_directory)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -836,10 +844,12 @@ def preflight(
     configuration_hash: str = "unconfigured",
     progress: PreflightProgress | None = None,
     invalidate_cache: bool = False,
+    cache_directory: Path | None = None,
+    temporary_directory: Path | None = None,
 ) -> PreflightReport:
     """Perform static checks then a short-lived isolated metadata probe."""
     if invalidate_cache:
-        cache_path = _cache_path(project_root)
+        cache_path = _cache_path(project_root, cache_directory)
         try:
             cache_path.unlink()
         except FileNotFoundError:
@@ -847,7 +857,7 @@ def preflight(
         except OSError as error:
             raise OSError(f"unable to invalidate preflight cache: {error}") from error
     candidates = list(discover(project_root))
-    cached = _load_cache(project_root, configuration_hash)
+    cached = _load_cache(project_root, configuration_hash, cache_directory)
     total = len(candidates)
     for index, candidate in enumerate(candidates, start=1):
         if progress is not None:
@@ -869,7 +879,7 @@ def preflight(
         ):
             _accept_runtime_metadata(candidate, entry.get("metadata"))
         else:
-            _runtime_probe(project_root, candidate)
+            _runtime_probe(project_root, candidate, temporary_directory)
         if progress is not None:
             progress("checked", index, total, candidate.selection_id)
     seen_ids: set[str] = set()
@@ -879,5 +889,5 @@ def preflight(
         if candidate.metadata.id in seen_ids:
             candidate.runtime_error = f"duplicate collector ID: {candidate.metadata.id}"
         seen_ids.add(candidate.metadata.id)
-    _write_cache(project_root, configuration_hash, candidates)
+    _write_cache(project_root, configuration_hash, candidates, cache_directory)
     return PreflightReport(tuple(candidates))
