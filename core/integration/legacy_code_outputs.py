@@ -63,7 +63,7 @@ class LegacyCodeOutputsCollector(CoreCollector):
             supported_platforms=("win32",),
             capabilities=(Capability.FILESYSTEM_READ,),
             sensitive_data_categories=("legacy_generated_evidence",),
-            default_profiles=("deep",),
+            default_profiles=("manual",),
             timeout_seconds=120,
             maximum_output_bytes=512 * 1024 * 1024,
             maximum_artifact_bytes=_MAXIMUM_FILE_BYTES,

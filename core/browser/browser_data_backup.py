@@ -148,10 +148,8 @@ class BrowserDataBackupCollector(CoreCollector):
                 if destination is not None:
                     copied.append(destination)
         if not copied:
-            return CollectorResult(
-                CollectorStatus.SKIPPED,
-                "no supported local browser profile data met the bounded backup policy",
-            )
+            context.report_progress("browser_data_backup_finished", copied_files=0, bytes_written=0)
+            return CollectorResult.succeeded("no supported local browser profile data met the bounded backup policy")
         artifacts = []
         for path in copied:
             if context.is_cancelled:

@@ -824,9 +824,14 @@ class ShippedCollectorTests(unittest.TestCase):
             },
             memberships["standard"],
         )
-        self.assertIn("core.system.wmic_inventory", memberships["deep"])
+        self.assertNotIn("core.system.wmic_inventory", memberships["deep"])
+        self.assertNotIn("core.integration.legacy_code_outputs", memberships["deep"])
         self.assertEqual(
-            {item.id for item in metadata},
+            {
+                item.id
+                for item in metadata
+                if item.id not in {"core.system.wmic_inventory", "core.integration.legacy_code_outputs"}
+            },
             memberships["deep"],
         )
         self.assertLess(

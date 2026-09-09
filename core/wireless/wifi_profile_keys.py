@@ -80,7 +80,8 @@ class WifiProfileKeysCollector(CoreCollector):
             return CollectorResult(CollectorStatus.FAILED, "Wi-Fi profile-key export failed", errors=(message,))
         profiles = sorted(path for path in filesystem_adapter.glob(export_directory, "*.xml") if path.is_file())
         if not profiles:
-            return CollectorResult(CollectorStatus.SKIPPED, "no saved Wi-Fi profiles with key material were exported")
+            context.report_progress("wifi_profile_keys_finished", profile_count=0, bytes_written=0)
+            return CollectorResult.succeeded("no saved Wi-Fi profiles with key material were exported")
         artifacts = tuple(
             context.artifacts.register_file(Path(profile), media_type="application/xml", evidence_kind=EvidenceKind.RAW)
             for profile in profiles
