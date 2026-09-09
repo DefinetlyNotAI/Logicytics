@@ -11,6 +11,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from difflib import SequenceMatcher
+from html import escape
 from pathlib import Path
 
 FLAG_DESCRIPTIONS: Mapping[str, str] = {
@@ -179,29 +180,41 @@ def usage_statistics(history: Iterable[Mapping[str, object]]) -> dict[str, objec
 
 
 def write_usage_graph(path: Path, statistics: Mapping[str, object]) -> Path:
-    """Write a portable SVG bar graph without optional plotting dependencies."""
+    """Write a portable SVG graph for the currently recorded commands and modes."""
     raw_counts = statistics.get("per_flag_frequency", {})
-    counts = dict(raw_counts) if isinstance(raw_counts, Mapping) else {}
-    labels = sorted(FLAG_DESCRIPTIONS)
+    source_counts = raw_counts if isinstance(raw_counts, Mapping) else {}
+    counts = {
+        label: count
+        for label, count in source_counts.items()
+        if isinstance(label, str)
+        and isinstance(count, int)
+        and not isinstance(count, bool)
+        and count > 0
+    }
+    labels = sorted(counts)
     width, row_height = 760, 30
-    height = 70 + row_height * len(labels)
-    maximum = max((int(counts.get(label, 0)) for label in labels), default=0) or 1
+    height = 70 + row_height * max(len(labels), 1)
+    maximum = max(counts.values(), default=1)
     rows: list[str] = []
     for index, label in enumerate(labels):
-        count = int(counts.get(label, 0))
+        count = counts[label]
         y = 48 + index * row_height
         bar_width = int(500 * count / maximum)
         rows.extend(
             (
-                f'<text x="12" y="{y + 16}" font-family="monospace" font-size="13">{label}</text>',
+                f'<text x="12" y="{y + 16}" font-family="monospace" font-size="13">{escape(label)}</text>',
                 f'<rect x="190" y="{y}" width="{bar_width}" height="20" fill="#3b82f6"/>',
                 f'<text x="{200 + bar_width}" y="{y + 16}" font-family="monospace" font-size="13">{count}</text>',
             )
         )
+    if not rows:
+        rows.append('<text x="12" y="64" font-family="sans-serif" font-size="13">No tracked interactions yet.</text>')
     svg = (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
         f'viewBox="0 0 {width} {height}"><rect width="100%" height="100%" fill="white"/>'
-        '<text x="12" y="28" font-family="sans-serif" font-size="20">Logicytics flag usage</text>' + "".join(rows) + "</svg>\n"
+        '<text x="12" y="28" font-family="sans-serif" font-size="20">Logicytics command and mode usage</text>'
+        + "".join(rows)
+        + "</svg>\n"
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(svg, encoding="utf-8")

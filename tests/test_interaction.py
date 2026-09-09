@@ -14,7 +14,12 @@ from logicytics.module.configuration import (
     load_config,
 )
 from logicytics.module.errors import PlanError
-from logicytics.module.interaction import load_history, match_flag, usage_statistics
+from logicytics.module.interaction import (
+    load_history,
+    match_flag,
+    usage_statistics,
+    write_usage_graph,
+)
 
 
 class InteractionTests(unittest.TestCase):
@@ -107,6 +112,24 @@ class InteractionTests(unittest.TestCase):
         self.assertEqual("history", result.source)
         statistics = usage_statistics([{**history[0], "accuracy": 0.9, "device_name": "host"}])
         self.assertEqual("collect the strange moon report", statistics["common_input"])
+
+    def test_usage_graph_contains_only_current_nonzero_command_and_mode_counts(
+        self,
+    ) -> None:
+        """The graph must match recorded usage rather than an obsolete fixed flag list."""
+        with tempfile.TemporaryDirectory() as temporary:
+            graph_path = Path(temporary) / "flag_usage.svg"
+            write_usage_graph(
+                graph_path,
+                {"per_flag_frequency": {"config": 3, "quick": 2, "thorough": 1}},
+            )
+
+            graph = graph_path.read_text(encoding="utf-8")
+            self.assertIn("Logicytics command and mode usage", graph)
+            self.assertIn(">config<", graph)
+            self.assertIn(">quick<", graph)
+            self.assertIn(">thorough<", graph)
+            self.assertNotIn(">default<", graph)
 
     def test_interaction_configuration_rejects_unsafe_or_ambiguous_values(self) -> None:
         """Matching and persistence policy must be typed before any history is opened."""
