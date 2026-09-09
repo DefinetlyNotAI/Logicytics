@@ -206,6 +206,42 @@ class LoggingTests(unittest.TestCase):
                 with self.subTest(logging=invalid_logging), self.assertRaises(PlanError):
                     load_config(root, config_path)
 
+    def test_severity_text_colors_keep_purple_exclusive_to_detail_markers(self) -> None:
+        """Severity text uses its own palette; purple is reserved for indented markers."""
+
+        class TerminalBuffer(io.StringIO):
+            def isatty(self) -> bool:
+                return True
+
+        expected_colors = {
+            "DEBUG": "\033[90m",
+            "INTERNAL": "\033[90m",
+            "INFO": "\033[97m",
+            "WARNING": "\033[93m",
+            "ERROR": "\033[91m",
+            "EXCEPTION": "\033[91m",
+            "CRITICAL": "\033[31m",
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            console = TerminalBuffer()
+            logger = ApplicationLogger(
+                Path(temporary) / "Logicytics.log",
+                LoggingSettings(level="DEBUG", file_enabled=False, color_enabled=True),
+                console=console,
+            )
+            for level, text_color in expected_colors.items():
+                console.seek(0)
+                console.truncate(0)
+                logger.event(level, "plain message")
+                rendered = console.getvalue()
+                self.assertIn(f"{text_color}\033[1m", rendered)
+                self.assertNotIn("\033[95m", rendered)
+
+            logger.event("INFO", "message with detail", detail="value")
+            rendered = console.getvalue()
+            self.assertIn("\033[95m\033[1m>\033[0m", rendered)
+            self.assertIn("\033[97m\033[1m Detail: value", rendered)
+
     def test_application_logging_wraps_console_rows_and_falls_back_to_ascii(self) -> None:
         """Compact console records stay aligned on terminals without Unicode support."""
 

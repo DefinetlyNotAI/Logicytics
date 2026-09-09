@@ -13,6 +13,8 @@ _DEFAULT_CONSOLE_WIDTH = 82
 _MIN_CONSOLE_WIDTH = 60
 _RIGHT_EDGE_MARGIN = 4
 _DETAIL_MARKER_COLOR = "\033[95m"
+_INFO_COLOR = "\033[96m"
+_WARNING_COLOR = "\033[93m"
 _BOLD = "\033[1m"
 _RESET = "\033[0m"
 
@@ -49,12 +51,16 @@ def render_banner(console: TextIO, *, width: ConsoleWidth = terminal_width) -> N
     available = max(width(), _MIN_CONSOLE_WIDTH)
     title = "LOGICYTICS"
     subtitle = "Local evidence collection framework"
-    rows = (
-        title,
-        "-" * available,
-        subtitle,
-        "",
-    )
+    rule = "-" * available
+    if console.isatty():
+        rows = (
+            f"\n{_INFO_COLOR}{_BOLD}{title}{_RESET}",
+            f"{_INFO_COLOR}{rule}{_RESET}",
+            f"\033[97m{subtitle}{_RESET}",
+            "\n",
+        )
+    else:
+        rows = (title, rule, subtitle, "")
     console.write("\n".join(rows))
     console.flush()
 
@@ -77,11 +83,15 @@ def render_section(
     *,
     message_lines: MessageLines = _plain_message_lines,
     width: ConsoleWidth = console_width,
-    color_enabled: bool = False,
+    color_enabled: bool | None = None,
 ) -> None:
     """Render the shared indented, wrapped console section presentation."""
-    rows = [_heading(title, width=width), ""]
-    use_color = color_enabled and console.isatty()
+    use_color = (console.isatty() if color_enabled is None else color_enabled) and console.isatty()
+    heading = _heading(title, width=width)
+    if use_color:
+        heading_title, heading_rule = heading.split("\n", 1)
+        heading = f"{_INFO_COLOR}{_BOLD}{heading_title}{_RESET}\n{_INFO_COLOR}{heading_rule}{_RESET}"
+    rows = [heading, ""]
     for line in lines:
         for raw_row in line.splitlines() or [""]:
             safe_row = redact_text(raw_row)
@@ -115,11 +125,20 @@ def render_alert(
     *,
     message_lines: MessageLines = _plain_message_lines,
     width: ConsoleWidth = console_width,
+    color_enabled: bool | None = None,
 ) -> None:
     """Render a severity-marked alert with a clean title and ASCII rule."""
     available = max(width(), _MIN_CONSOLE_WIDTH)
     safe_title = redact_text(title).strip()
-    rows = [safe_title, "-" * available, ""]
+    use_color = (console.isatty() if color_enabled is None else color_enabled) and console.isatty()
+    if use_color:
+        rows = [
+            f"{_WARNING_COLOR}{_BOLD}{safe_title}{_RESET}",
+            f"{_WARNING_COLOR}{'-' * available}{_RESET}",
+            "",
+        ]
+    else:
+        rows = [safe_title, "-" * available, ""]
     for line_index, line in enumerate(lines):
         marker = "!" if line_index == 0 else ">"
         prefix = f"  {marker} "
@@ -132,7 +151,18 @@ def render_alert(
                     break_long_words=True,
                     break_on_hyphens=False,
                 ) or [""]
-                rows.append(prefix + wrapped[0])
-                rows.extend(f"{continuation_prefix}{row}" for row in wrapped[1:])
+                first_row = prefix + wrapped[0]
+                if use_color:
+                    marker_prefix = (
+                        f"{_WARNING_COLOR}{_BOLD}{prefix}{_RESET}"
+                        if marker == "!"
+                        else f"  {_DETAIL_MARKER_COLOR}{_BOLD}>{_RESET} "
+                    )
+                    first_row = f"{marker_prefix}{_WARNING_COLOR}{wrapped[0]}{_RESET}"
+                rows.append(first_row)
+                rows.extend(
+                    f"{_WARNING_COLOR}{continuation_prefix}{row}{_RESET}" if use_color else f"{continuation_prefix}{row}"
+                    for row in wrapped[1:]
+                )
     console.write("\n".join(rows) + "\n")
     console.flush()

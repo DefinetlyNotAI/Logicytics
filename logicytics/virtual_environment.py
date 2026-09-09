@@ -27,7 +27,7 @@ def virtual_environment_error(root: Path) -> tuple[str, str]:
         )
     return (
         "Logicytics must run inside a virtual environment.",
-        "Next step: run python -m logicytics.cli.installer first.",
+        "Next step: python -m logicytics.cli.installer",
     )
 
 

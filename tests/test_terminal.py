@@ -63,6 +63,22 @@ class TerminalLifecycleTests(unittest.TestCase):
         self.assertNotIn("|", console.getvalue())
         self.assertTrue(all(ord(character) < 128 for row in rows for character in row))
 
+    def test_interactive_banners_use_severity_colors(self) -> None:
+        """Interactive startup and warning banners retain visible color cues."""
+        console = _InteractiveBuffer()
+        render_banner(console, width=lambda: 80)
+        self.assertIn("\033[96m", console.getvalue())
+        self.assertIn("\033[97m", console.getvalue())
+        self.assertNotIn("\033[95m", console.getvalue())
+
+        console = _InteractiveBuffer()
+        from logicytics.module.logging import ApplicationLogger
+
+        ApplicationLogger.render_alert(console, "Startup warning", ("Activate the environment", "Use the installer"))
+        rendered = console.getvalue()
+        self.assertIn("\033[93m", rendered)
+        self.assertIn("\033[95m", rendered)
+
     def test_interactive_lifecycle_clears_once_and_ends_with_a_newline(self) -> None:
         """The outer lifecycle performs real clearing once and leaves a clean prompt line."""
         output = _InteractiveBuffer()

@@ -45,12 +45,12 @@ _LEVEL_ORDER = {
 }
 _LEVEL_PRESENTATION = {
     "DEBUG": ("\u00b7", "\033[90m", "\033[90m"),
-    "INTERNAL": ("\u00b7", "\033[95m", "\033[95m"),
+    "INTERNAL": ("\u00b7", "\033[90m", "\033[90m"),
     "INFO": ("\u25cf", "\033[96m", "\033[97m"),
     "WARNING": ("!", "\033[93m", "\033[93m"),
     "ERROR": ("\u00d7", "\033[91m", "\033[91m"),
     "EXCEPTION": ("\u00d7", "\033[91m", "\033[91m"),
-    "CRITICAL": ("\u00d7", "\033[91m", "\033[91m"),
+    "CRITICAL": ("\u00d7", "\033[31m", "\033[31m"),
 }
 _DETAIL_MARKER_COLOR = "\033[95m"
 _RESET = "\033[0m"
@@ -394,6 +394,7 @@ class ApplicationLogger(EventLogger):
             lines,
             message_lines=cls._message_lines,
             width=cls._console_width,
+            color_enabled=console.isatty(),
         )
 
     def box(self, title: str, lines: Iterable[str]) -> None:
