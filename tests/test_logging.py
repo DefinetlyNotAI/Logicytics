@@ -191,6 +191,7 @@ class LoggingTests(unittest.TestCase):
             layout = ensure_output_layout(root / "output" / "data")
             for directory in (
                 layout.data,
+                layout.runs,
                 layout.logs,
                 layout.debug_logs,
                 layout.performance_logs,

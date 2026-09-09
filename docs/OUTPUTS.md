@@ -7,6 +7,12 @@ relative path or MIME type is outside that contract.
 
 ## Canonical paths
 
+Each run directory is `output/data/run/<fingerprint>/`, where the fingerprint is
+the SHA-256 identity derived from that immutable run ID. The verified ZIP and
+its sidecar are published outside the evidence tree at
+`output/data/zip/<fingerprint>.zip` and
+`output/data/zip/hashes/<fingerprint>.zip.sha256`.
+
 For a collector ID `core.<category>.<name>`, a fixed single-file output is named
 `<name><suffix>` in its private workspace and stored in the run catalog as
 `artifacts/core_<category>_<name>/<name><suffix>`. In a verified ZIP it is

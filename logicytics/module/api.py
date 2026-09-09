@@ -18,6 +18,7 @@ from logicytics.module.configuration import AppConfig, load_config
 from logicytics.module.discovery import preflight
 from logicytics.module.errors import ArtifactError, PlanError
 from logicytics.module.manifest import MANIFEST_SCHEMA_VERSION
+from logicytics.module.output_layout import run_fingerprint
 from logicytics.module.planner import RunPlan, build_plan
 from logicytics.module.runtime import RunOutcome, RunSupervisor
 
@@ -245,7 +246,7 @@ def query_run(
     if not isinstance(run_id, str) or _RUN_ID.fullmatch(run_id) is None:
         raise PlanError("run_id must be a canonical run identifier")
     output_root = settings.runtime.output_root.resolve()
-    run_directory = output_root / run_id
+    run_directory = output_root / "run" / run_fingerprint(run_id)
     manifest_path = run_directory / "manifest.json"
     try:
         if run_directory.resolve(strict=True) != run_directory:

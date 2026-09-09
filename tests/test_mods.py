@@ -14,6 +14,7 @@ from logicytics.module.configuration import default_config
 from logicytics.module.discovery import preflight
 from logicytics.module.errors import PreflightError
 from logicytics.module.planner import build_plan
+from logicytics.module.output_layout import run_fingerprint
 from logicytics.module.runtime import RunSupervisor
 from tests.fixtures.collectors import mod_metadata
 
@@ -106,7 +107,7 @@ class ModTests(unittest.TestCase):
             mods_package = Path(package["mods_path"])
             mods_hash = Path(package["mods_sha256_path"])
 
-            self.assertTrue(mods_package.name.startswith("mods-run-"))
+            self.assertEqual(f"mods-{run_fingerprint(outcome.manifest.run_id)}.zip", mods_package.name)
             self.assertTrue(mods_hash.is_file())
 
             with zipfile.ZipFile(mods_package) as archive:

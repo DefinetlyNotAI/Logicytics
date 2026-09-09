@@ -14,6 +14,7 @@ from typing import IO, TYPE_CHECKING
 from logicytics.contracts import Artifact
 from logicytics.module.artifacts import sha256_file
 from logicytics.module.manifest import RunManifest, write_manifest
+from logicytics.module.output_layout import run_fingerprint
 
 if TYPE_CHECKING:
     from logicytics.module.runtime import RunOutcome
@@ -25,7 +26,7 @@ _ARTIFACT_HASH_ARCHIVE_PATH = "hashes/artifacts.sha256"
 
 
 def _package_filename(manifest: RunManifest) -> str:
-    """Return a deterministic, filesystem-safe action and UTC run timestamp identity."""
+    """Return the canonical ZIP filename from the opaque run fingerprint."""
     if not isinstance(manifest.action, str) or not re.fullmatch(r"run|rerun", manifest.action):
         raise ValueError("package action must be a supported run or rerun action")
     if not isinstance(manifest.run_id, str) or not re.fullmatch(r"run-[0-9a-f]{32}", manifest.run_id):
@@ -36,8 +37,8 @@ def _package_filename(manifest: RunManifest) -> str:
         raise ValueError("package requested_at must be a valid timestamp") from error
     if requested_at.tzinfo is None:
         raise ValueError("package requested_at must include a timezone")
-    timestamp = requested_at.astimezone(UTC).strftime("%Y%m%dT%H%M%S.%fZ")
-    return f"{manifest.action}-{timestamp}-{manifest.run_id}.zip"
+    requested_at.astimezone(UTC)
+    return f"{run_fingerprint(manifest.run_id)}.zip"
 
 
 def _summary(manifest: RunManifest) -> str:
@@ -300,10 +301,18 @@ def _package_mod_artifacts(
     }
 
 
-def package_manifest(run_directory: Path, manifest: RunManifest, manifest_path: Path) -> tuple[Path, Path]:
+def package_manifest(
+    run_directory: Path,
+    manifest: RunManifest,
+    manifest_path: Path,
+    *,
+    package_directory: Path | None = None,
+    hash_directory: Path | None = None,
+) -> tuple[Path, Path]:
     """Package registered artifacts, manifest, and summary without scanning arbitrary files."""
-    package_directory = run_directory / "packages"
-    hash_directory = run_directory / "hashes"
+    data_root = run_directory.parent.parent
+    package_directory = package_directory or data_root / "zip"
+    hash_directory = hash_directory or package_directory / "hashes"
     package_directory.mkdir(parents=True, exist_ok=True)
     hash_directory.mkdir(parents=True, exist_ok=True)
     package_path = package_directory / _package_filename(manifest)

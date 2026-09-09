@@ -437,7 +437,7 @@ class PlanningTests(unittest.TestCase):
                     ),
                 )
 
-            manifests = list((root / "output" / "data").glob("run-*/manifest.json"))
+            manifests = list((root / "output" / "data" / "run").glob("*/manifest.json"))
             self.assertEqual(1, len(manifests))
 
             manifest = json.loads(manifests[0].read_text(encoding="utf-8"))

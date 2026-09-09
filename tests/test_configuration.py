@@ -168,7 +168,7 @@ max_retry_time = 30
             )
             outcome = RunSupervisor(root, configuration).run(plan)
 
-            self.assertEqual(root / "output" / "data", outcome.run_directory.parent)
+            self.assertEqual((root / "output" / "data" / "run").resolve(), outcome.run_directory.parent)
             self.assertIsNone(outcome.manifest.configuration["migrated_from_schema"])
             self.assertEqual("keep legacy evidence", legacy.read_text(encoding="utf-8"))
             self.assertEqual(original, config_path.read_text(encoding="utf-8"))

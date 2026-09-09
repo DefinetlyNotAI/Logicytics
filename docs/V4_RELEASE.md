@@ -76,12 +76,14 @@ process, workspace, event channel, cancellation marker, configuration snapshot,
 and artifact writer. Terminal states are explicit: `succeeded`, `partial`,
 `skipped`, `cancelled`, or `failed`.
 
-Every run owns a UTC/request/run-ID package name, redacted manifest, human
-summary, structured logs, artifact checksum catalog, verified ZIP, and external
-ZIP SHA-256 sidecar under `output/data/run-<id>/`. A rerun records its parent and
-uses a separate package identity. Manifest-only output is explicit. Finished
-evidence remains with its run until the user removes that run; worker scratch
-data is removed only after durable publication.
+Every run owns a SHA-256 fingerprint, redacted manifest, human summary,
+structured logs, and artifact checksum catalog under
+`output/data/run/<fingerprint>/`. Its verified ZIP and SHA-256 sidecar are
+published to `output/data/zip/<fingerprint>.zip` and
+`output/data/zip/hashes/<fingerprint>.zip.sha256`. A rerun records its parent
+and receives a separate fingerprint. Manifest-only output is explicit.
+Finished evidence remains with its run until the user removes that run; worker
+scratch data is removed only after durable publication.
 
 Artifact publication is workspace-confined, streamed where possible, size/file
 bounded, MIME-checked, and SHA-256 cataloged. Packages contain registered evidence

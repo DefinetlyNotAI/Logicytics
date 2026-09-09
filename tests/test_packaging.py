@@ -26,6 +26,7 @@ from logicytics.module.configuration import (
 )
 from logicytics.module.discovery import preflight
 from logicytics.module.manifest import write_manifest
+from logicytics.module.output_layout import run_fingerprint
 from logicytics.module.packaging import package_run
 from logicytics.module.planner import build_plan
 from logicytics.module.runtime import RunSupervisor
@@ -67,8 +68,9 @@ class PackagingTests(unittest.TestCase):
             self.assertFalse(outcome.manifest.cancellation_requested)
             self.assertEqual([], outcome.manifest.errors)
             self.assertEqual([], outcome.manifest.skipped_collectors)
-            self.assertEqual(configuration.runtime.output_root, outcome.run_directory.parent)
-            self.assertEqual(root / "output" / "data", outcome.run_directory.parent)
+            self.assertEqual(configuration.runtime.output_root.resolve() / "run", outcome.run_directory.parent)
+            self.assertEqual((root / "output" / "data" / "run").resolve(), outcome.run_directory.parent)
+            self.assertEqual(run_fingerprint(outcome.manifest.run_id), outcome.run_directory.name)
             self.assertTrue(outcome.run_directory.is_absolute())
             self.assertTrue((outcome.run_directory / "artifacts" / "core_system_system_info").is_dir())
             self.assertFalse((root / "system.txt").exists())
@@ -84,8 +86,11 @@ class PackagingTests(unittest.TestCase):
             assert package is not None
             self.assertTrue(Path(package["path"]).is_file())
             self.assertTrue(Path(package["sha256_path"]).is_file())
-            self.assertEqual(outcome.run_directory / "packages", Path(package["path"]).parent)
-            self.assertEqual(outcome.run_directory / "hashes", Path(package["sha256_path"]).parent)
+            self.assertEqual(configuration.runtime.output_root.resolve() / "zip", Path(package["path"]).parent)
+            self.assertEqual(
+                configuration.runtime.output_root.resolve() / "zip" / "hashes",
+                Path(package["sha256_path"]).parent,
+            )
             self.assertTrue((outcome.run_directory / "logs" / "engine.jsonl").is_file())
             self.assertFalse((root / "ACCESS").exists())
             self.assertFalse((root / "output" / "RUNS").exists())
@@ -95,9 +100,7 @@ class PackagingTests(unittest.TestCase):
             assert package is not None
             self.assertTrue(package_path.is_file())
             self.assertTrue(hash_path.is_file())
-            requested_at = datetime.fromisoformat(outcome.manifest.requested_at)
-            timestamp = requested_at.strftime("%Y%m%dT%H%M%S.%fZ")
-            self.assertEqual(f"run-{timestamp}-{outcome.manifest.run_id}.zip", package_path.name)
+            self.assertEqual(f"{run_fingerprint(outcome.manifest.run_id)}.zip", package_path.name)
             self.assertEqual(f"{package_path.name}.sha256", hash_path.name)
             package_digest, sidecar_name = hash_path.read_text(encoding="ascii").split()
             self.assertEqual(package_path.name, sidecar_name)
@@ -258,9 +261,9 @@ class PackagingTests(unittest.TestCase):
             package_path = Path(package["path"])
             hash_path = Path(package["sha256_path"])
 
-            self.assertEqual(expected_root, outcome.run_directory.parent)
-            self.assertEqual(outcome.run_directory / "packages", package_path.parent)
-            self.assertEqual(outcome.run_directory / "hashes", hash_path.parent)
+            self.assertEqual((expected_root / "run").resolve(), outcome.run_directory.parent)
+            self.assertEqual((expected_root / "zip").resolve(), package_path.parent)
+            self.assertEqual((expected_root / "zip" / "hashes").resolve(), hash_path.parent)
             self.assertEqual("preserve existing evidence", legacy_evidence.read_text(encoding="utf-8"))
             self.assertFalse((root / "custom" / "PACKAGES").exists())
             self.assertEqual(
@@ -360,9 +363,8 @@ class PackagingTests(unittest.TestCase):
             self.assertEqual([selected_id], [record.id for record in rerun.manifest.collectors])
             self.assertNotEqual(original.run_directory, rerun.run_directory)
             self.assertNotEqual(original_package_path, rerun_package_path)
-            self.assertTrue(original_package_path.name.startswith("run-"))
-            self.assertTrue(rerun_package_path.name.startswith("rerun-"))
-            self.assertIn(rerun.manifest.run_id, rerun_package_path.name)
+            self.assertEqual(f"{run_fingerprint(original.manifest.run_id)}.zip", original_package_path.name)
+            self.assertEqual(f"{run_fingerprint(rerun.manifest.run_id)}.zip", rerun_package_path.name)
             self.assertEqual(original_manifest, original.manifest_path.read_bytes())
             self.assertEqual(original_package, original_package_path.read_bytes())
             with zipfile.ZipFile(rerun_package_path) as archive:

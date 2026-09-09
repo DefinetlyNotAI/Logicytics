@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from hashlib import sha256
 from pathlib import Path
 
 
@@ -11,12 +12,18 @@ class OutputLayout:
     """Resolved global output locations outside individual run directories."""
 
     data: Path
+    runs: Path
     logs: Path
     debug_logs: Path
     performance_logs: Path
     packages: Path
     hashes: Path
     application_log: Path
+
+
+def run_fingerprint(run_id: str) -> str:
+    """Return the stable opaque storage fingerprint for one canonical run ID."""
+    return sha256(run_id.encode("ascii")).hexdigest()
 
 
 def output_layout(output_root: Path) -> OutputLayout:
@@ -26,11 +33,12 @@ def output_layout(output_root: Path) -> OutputLayout:
     logs = output / "logs"
     return OutputLayout(
         data=data,
+        runs=data / "run",
         logs=logs,
         debug_logs=logs / "debug",
         performance_logs=logs / "performance",
         packages=data / "zip",
-        hashes=data / "hashes",
+        hashes=data / "zip" / "hashes",
         application_log=logs / "Logicytics.log",
     )
 
@@ -40,6 +48,7 @@ def ensure_output_layout(output_root: Path) -> OutputLayout:
     layout = output_layout(output_root)
     for directory in (
         layout.data,
+        layout.runs,
         layout.logs,
         layout.debug_logs,
         layout.performance_logs,

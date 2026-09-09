@@ -49,7 +49,7 @@ from logicytics.module.errors import CapabilityPolicyError, LogicyticsError
 from logicytics.module.logging import FileEventLogger, get_application_logger, get_event_logger
 from logicytics.module.manifest import CollectorRecord, RunManifest, utc_now, write_manifest
 from logicytics.module.output_contracts import core_output_contract
-from logicytics.module.output_layout import ensure_output_layout
+from logicytics.module.output_layout import ensure_output_layout, run_fingerprint
 from logicytics.module.packaging import package_manifest
 from logicytics.module.planner import RunPlan
 from logicytics.platform_adapters import process_adapter, windows_api_adapter
@@ -866,7 +866,7 @@ class RunSupervisor:
         )
         debug_logging = self.configuration.logging.level.upper() == "DEBUG"
         run_id = f"run-{uuid4().hex}"
-        run_directory = self.configuration.runtime.output_root / run_id
+        run_directory = output_layout.runs / run_fingerprint(run_id)
         workspace_root = run_directory / "collectors"
         artifact_root = run_directory / "artifacts"
         cancellation_file = run_directory / ".cancelled"
@@ -950,7 +950,13 @@ class RunSupervisor:
                 source="logicytics.module.runtime",
             )
             try:
-                package_path, hash_path = package_manifest(run_directory, manifest, manifest_path)
+                package_path, hash_path = package_manifest(
+                    run_directory,
+                    manifest,
+                    manifest_path,
+                    package_directory=output_layout.packages,
+                    hash_directory=output_layout.hashes,
+                )
                 run_logger.event(
                     "info",
                     "run_packaged",
