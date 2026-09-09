@@ -1,3 +1,5 @@
+"""Regression coverage for artifact writing and output validation."""
+
 from __future__ import annotations
 
 import tempfile

@@ -1,3 +1,5 @@
+"""Regression coverage for optional mod discovery and execution."""
+
 from __future__ import annotations
 
 import json

@@ -1,3 +1,5 @@
+"""Regression coverage for collector planning and profile selection."""
+
 from __future__ import annotations
 
 import io

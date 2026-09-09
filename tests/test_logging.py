@@ -1,3 +1,5 @@
+"""Regression coverage for structured console and file logging."""
+
 from __future__ import annotations
 
 import ast

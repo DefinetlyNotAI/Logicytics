@@ -1,3 +1,5 @@
+"""Regression coverage for interaction history and rendered analysis artifacts."""
+
 from __future__ import annotations
 
 import io

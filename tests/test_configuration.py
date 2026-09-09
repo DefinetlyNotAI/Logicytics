@@ -1,3 +1,5 @@
+"""Regression coverage for application configuration parsing and validation."""
+
 from __future__ import annotations
 
 import json

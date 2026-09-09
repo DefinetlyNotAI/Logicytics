@@ -1,3 +1,5 @@
+"""Regression coverage for collector scheduling and resource coordination."""
+
 from __future__ import annotations
 
 import tempfile

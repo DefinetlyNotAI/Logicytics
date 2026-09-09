@@ -1,3 +1,5 @@
+"""Regression coverage for deterministic run-package generation."""
+
 from __future__ import annotations
 
 import hashlib

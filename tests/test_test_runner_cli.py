@@ -1,3 +1,5 @@
+"""Regression coverage for the integrated command-line test runner."""
+
 from __future__ import annotations
 
 import io
