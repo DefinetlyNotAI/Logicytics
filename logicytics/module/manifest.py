@@ -6,10 +6,12 @@ import getpass
 import json
 import os
 import platform
+from contextlib import suppress
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
+from time import sleep
 from typing import Any
 
 from logicytics.contracts import CONTRACT_VERSION, Artifact, CollectorResult, RunStatus
@@ -17,6 +19,8 @@ from logicytics.module.redaction import redact_mapping, redact_text
 from logicytics.platform_adapters import windows_api_adapter
 
 MANIFEST_SCHEMA_VERSION = 1
+_MANIFEST_REPLACE_DELAYS = (0.05, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2)
+_RETRYABLE_WINDOWS_ERRORS = frozenset({5, 32, 33})
 
 
 def utc_now() -> str:
@@ -264,4 +268,15 @@ def write_manifest(path: Path, manifest: RunManifest) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(".tmp")
     temporary.write_text(json.dumps(manifest.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    os.replace(temporary, path)
+    try:
+        for delay in (*_MANIFEST_REPLACE_DELAYS, None):
+            try:
+                os.replace(temporary, path)
+                return
+            except PermissionError as error:
+                if error.winerror not in _RETRYABLE_WINDOWS_ERRORS or delay is None:
+                    raise
+                sleep(delay)
+    finally:
+        with suppress(OSError):
+            temporary.unlink()

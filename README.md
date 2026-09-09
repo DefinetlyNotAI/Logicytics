@@ -51,14 +51,14 @@ If a normal command says the environment is missing, run the installer. If it sa
 
 Every run validates collectors, records a manifest, and packages the result unless `--no-package` is supplied.
 
-| Need | Command |
-|---|---|
-| Fast local inventory | `python -m logicytics run --mode quick --acknowledge-authorization` |
-| Everyday collection | `python -m logicytics run --mode balanced --acknowledge-authorization` |
-| Deterministic sequential collection | `python -m logicytics run --mode standard --acknowledge-authorization` |
-| Local-only collection | `python -m logicytics run --mode offline --acknowledge-authorization` |
-| Extended collection | `python -m logicytics run --mode thorough --acknowledge-authorization` |
-| Duration report | `python -m logicytics run --mode performance --acknowledge-authorization` |
+| Need                                | Command                                                                   |
+|-------------------------------------|---------------------------------------------------------------------------|
+| Fast local inventory                | `python -m logicytics run --mode quick --acknowledge-authorization`       |
+| Everyday collection                 | `python -m logicytics run --mode balanced --acknowledge-authorization`    |
+| Deterministic sequential collection | `python -m logicytics run --mode standard --acknowledge-authorization`    |
+| Local-only collection               | `python -m logicytics run --mode offline --acknowledge-authorization`     |
+| Extended collection                 | `python -m logicytics run --mode thorough --acknowledge-authorization`    |
+| Duration report                     | `python -m logicytics run --mode performance --acknowledge-authorization` |
 
 `thorough` can include administrator-only collectors. Start an elevated shell when the plan reports that requirement. See every available mode with `python -m logicytics --modes`.
 
