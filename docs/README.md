@@ -1,12 +1,16 @@
 # Logicytics documentation
 
-This is the complete user and developer manual for Logicytics, a Windows evidence-collection engine. Read only [Getting Started](GETTING_STARTED.md) to perform a safe first run; use the rest as a reference library.
+Logicytics is a Windows-focused, run-oriented evidence collector. It plans a bounded request, gives every selected collector an isolated workspace, registers the resulting files, and records the outcome in a durable manifest. This manual is for operators who need a defensible collection workflow and developers who need to preserve the engine's contracts.
+
+Start with [Installation](INSTALLATION.md), then follow [Getting Started](GETTING_STARTED.md). For an actual investigation or administrative collection, keep [Operations](OPERATIONS.md) open beside the terminal and finish with [Evidence Review](EVIDENCE_REVIEW.md).
 
 ## Choose a path
 
 | Goal | Read |
 | --- | --- |
-| I have never used the tool | [Getting Started](GETTING_STARTED.md), [Safety](SAFETY.md), [Results](OUTPUTS.md) |
+| I have never used the tool | [Installation](INSTALLATION.md), [Getting Started](GETTING_STARTED.md), [Safety](SAFETY.md) |
+| I need to run a collection responsibly | [Operations](OPERATIONS.md), [Safety](SAFETY.md), [Core Collector Catalog](CORE_COLLECTORS.md) |
+| I need to review or hand over evidence | [Evidence Review](EVIDENCE_REVIEW.md), [Results](OUTPUTS.md), [Formats](FORMATS.md) |
 | I need every command | [Command Reference](COMMANDS.md) |
 | I want to understand the engine | [Engine](ENGINE.md), [Architecture](ARCHITECTURE.md) |
 | I need to change settings | [Configuration](CONFIGURATION.md) |
@@ -20,6 +24,17 @@ This is the complete user and developer manual for Logicytics, a Windows evidenc
 ## Safety rule of thumb
 
 Logicytics can collect sensitive local evidence. Only run it on systems and data you are authorized to examine. Start with `preflight`, review the plan, use the smallest profile that answers the question, and inspect the selected capabilities before authorizing a run.
+
+## A normal operator workflow
+
+1. Install or repair the managed environment with the installer.
+2. Run `preflight`; resolve invalid sources before collecting.
+3. Create a `plan` for the exact mode and selectors you intend to use.
+4. Review the collector IDs, declared capabilities, output location, and any sensitive sources. Add exclusions or `--block-capability` where needed.
+5. Run only after adding `--acknowledge-authorization` deliberately.
+6. Read `manifest.json` before relying on or sharing the output. A package is evidence delivery, not a success signal by itself.
+
+The engine intentionally records skipped, partial, failed, and cancelled work instead of silently treating it as success. Those statuses are useful evidence: read them before retrying or expanding scope.
 
 ## Documentation conventions
 

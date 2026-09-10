@@ -6,13 +6,13 @@
 
 The root keys are `schema_version`, `runtime`, `interaction`, `maintenance`, `logging`, and `collectors`. The parser currently requires `schema_version: 4`; this is a file-schema identifier, not a release guide.
 
-| Section | Keys |
-| --- | --- |
-| `runtime` | `output_root`, `default_max_workers`, `maximum_workers`, `package_completed_runs`, `maximum_run_output_bytes`, `blocked_capabilities`, `temporary_directory` |
-| `interaction` | `history_enabled`, `similarity_threshold`, `model_name`, `model_debug` |
+| Section       | Keys                                                                                                                                                                |
+|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `runtime`     | `output_root`, `default_max_workers`, `maximum_workers`, `package_completed_runs`, `maximum_run_output_bytes`, `blocked_capabilities`, `temporary_directory`        |
+| `interaction` | `history_enabled`, `similarity_threshold`, `model_name`, `model_debug`                                                                                              |
 | `maintenance` | `remote_manifest_url`, `remote_manifest_sha256`, `local_manifest_path`, `minimum_python`, `recommended_python`, `sysinternals_enabled`, `sysinternals_download_url` |
-| `logging` | `level`, `console_enabled`, `color_enabled`, `file_enabled`, `maximum_bytes`, `delete_previous`, `retention_days` |
-| `collectors` | A mapping from collector ID to that collector's declared settings |
+| `logging`     | `level`, `console_enabled`, `color_enabled`, `file_enabled`, `maximum_bytes`, `delete_previous`, `retention_days`                                                   |
+| `collectors`  | A mapping from collector ID to that collector's declared settings                                                                                                   |
 
 Relative `runtime.output_root` and `maintenance.local_manifest_path` stay inside the project. `temporary_directory` is `project` or `system`. `blocked_capabilities` is a mapping of capability names to booleans; `true` blocks matching requests. Remote manifests require HTTPS and a lowercase SHA-256 digest. Optional Sysinternals discovery is controlled by `sysinternals_enabled` and its download URL.
 
@@ -20,14 +20,14 @@ Relative `runtime.output_root` and `maintenance.local_manifest_path` stay inside
 
 Core collectors reject settings they do not declare. Extension IDs may define their own settings. The supported core settings are:
 
-| Collector | Settings |
-| --- | --- |
-| `core.network.bandwidth_sample` | `sample_count` 1–10; `interval_seconds` 0.1–60 |
-| `core.packet.packet_capture` | `packet_count` 1–10000; `timeout_seconds` 1–60; `retry_window_seconds` 0–60; `interface` text |
-| `core.filesystem.system_drive_tree` | `max_entries` 1–50000; `max_depth` 1–32 |
-| `core.filesystem.system_drive_listing` | `max_entries` 1–50000; `max_depth` 1–32 |
-| `core.filesystem.sensitive_file_inventory` | `root` path; `max_directories` 1–50000; `max_matches` 1–5000 |
-| `core.process.memory_map` | `max_regions` 1–100000; `output_limit_bytes` 1024–67108864; `disk_safety_margin_bytes` 0–68719476736; `dump_directory` relative path |
+| Collector                                  | Settings                                                                                                                             |
+|--------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `core.network.bandwidth_sample`            | `sample_count` 1–10; `interval_seconds` 0.1–60                                                                                       |
+| `core.packet.packet_capture`               | `packet_count` 1–10000; `timeout_seconds` 1–60; `retry_window_seconds` 0–60; `interface` text                                        |
+| `core.filesystem.system_drive_tree`        | `max_entries` 1–50000; `max_depth` 1–32                                                                                              |
+| `core.filesystem.system_drive_listing`     | `max_entries` 1–50000; `max_depth` 1–32                                                                                              |
+| `core.filesystem.sensitive_file_inventory` | `root` path; `max_directories` 1–50000; `max_matches` 1–5000                                                                         |
+| `core.process.memory_map`                  | `max_regions` 1–100000; `output_limit_bytes` 1024–67108864; `disk_safety_margin_bytes` 0–68719476736; `dump_directory` relative path |
 
 ## Complete example
 
@@ -81,5 +81,5 @@ Core collectors reject settings they do not declare. Extension IDs may define th
 Validate a changed file before collecting:
 
 ```powershell
-.\.venv\Scripts\python.exe -m logicytics preflight --config .\logicytics.yaml
+python -m logicytics preflight --config .\logicytics.yaml
 ```

@@ -5,19 +5,19 @@ The installer is the only command intended to run outside the managed environmen
 ## Global form
 
 ```text
-.\.venv\Scripts\python.exe -m logicytics [global options] <command> [command options]
+python -m logicytics [global options] <command> [command options]
 ```
 
 Global options:
 
-| Option | Meaning |
-| --- | --- |
-| `--config PATH` | Use a specific authoritative YAML file |
+| Option          | Meaning                                                                              |
+|-----------------|--------------------------------------------------------------------------------------|
+| `--config PATH` | Use a specific authoritative YAML file                                               |
 | `--usb [DRIVE]` | Locate a Windows installation on removable storage; optionally choose a drive letter |
-| `--usage` | Show local interaction statistics and create a usage graph |
-| `--modes` | Show the typed execution-mode inclusion matrix |
-| `--match TEXT` | Suggest the closest documented action for natural-language text |
-| `-h`, `--help` | Show help |
+| `--usage`       | Show local interaction statistics and create a usage graph                           |
+| `--modes`       | Show the typed execution-mode inclusion matrix                                       |
+| `--match TEXT`  | Suggest the closest documented action for natural-language text                      |
+| `-h`, `--help`  | Show help                                                                            |
 
 ## Installer
 
@@ -30,7 +30,7 @@ The menu prepares the virtual environment and root YAML. It is intentionally sep
 ## `preflight`
 
 ```powershell
-.\.venv\Scripts\python.exe -m logicytics preflight [options]
+python -m logicytics preflight [options]
 ```
 
 Checks all selected source trees and prerequisites without running collection. Options: `--profile`, `--invalidate-cache`, repeated `--include ID`, repeated `--exclude ID`, `--plugins`, `--mods`, repeated `--block-capability CAP`, `--config`, and `--usb [DRIVE]`.
@@ -38,7 +38,7 @@ Checks all selected source trees and prerequisites without running collection. O
 ## `plan`
 
 ```powershell
-.\.venv\Scripts\python.exe -m logicytics plan --mode MODE [options]
+python -m logicytics plan --mode MODE [options]
 ```
 
 Creates and prints a plan without starting workers. Options are `--mode {quick,balanced,standard,offline,thorough}`, `--profile`, `--invalidate-cache`, `--include`, `--exclude`, `--plugins`, `--mods`, `--workers COUNT`, repeated `--block-capability`, `--config`, and `--usb`.
@@ -46,7 +46,7 @@ Creates and prints a plan without starting workers. Options are `--mode {quick,b
 ## `run`
 
 ```powershell
-.\.venv\Scripts\python.exe -m logicytics run --mode MODE [options]
+python -m logicytics run --mode MODE [options]
 ```
 
 The mode options are mutually exclusive: `--mode MODE`, `--default`, `--threaded`, `--minimal`, or `--depth`. `--profile` is the named profile form and should not conflict with the mode selection.
@@ -58,7 +58,7 @@ All run options: `--include ID`, `--exclude ID`, `--plugins`, `--mods`, `--worke
 ## `collector`
 
 ```powershell
-.\.venv\Scripts\python.exe -m logicytics collector core.system.system_info --acknowledge-authorization
+python -m logicytics collector core.system.system_info --acknowledge-authorization
 ```
 
 Runs one exact collector ID independently. It accepts `--profile`, repeated `--include`/`--exclude`, `--plugins`, `--mods`, `--workers`, repeated `--block-capability`, `--no-package`, `--acknowledge-authorization`, `--interactive`, `--config`, and `--usb`.
@@ -66,7 +66,7 @@ Runs one exact collector ID independently. It accepts `--profile`, repeated `--i
 ## `debug`
 
 ```powershell
-.\.venv\Scripts\python.exe -m logicytics debug
+python -m logicytics debug
 ```
 
 Writes a diagnostic JSON report containing environment, Python, configuration, maintenance, optional tool, and preflight information. It accepts the common config and USB options plus selection and capability options.
@@ -74,7 +74,7 @@ Writes a diagnostic JSON report containing environment, Python, configuration, m
 ## `update`
 
 ```powershell
-.\.venv\Scripts\python.exe -m logicytics update [--apply] [--launch-action {preflight,debug,dev}] [--new-window]
+python -m logicytics update [--apply] [--launch-action { preflight, debug, dev }] [--new-window]
 ```
 
 Checks Git and remote reachability. `--apply` explicitly runs `git pull`. `--launch-action` must be paired with `--new-window`; the action is allowlisted.
@@ -82,7 +82,7 @@ Checks Git and remote reachability. `--apply` explicitly runs `git pull`. `--lau
 ## `dev`
 
 ```powershell
-.\.venv\Scripts\python.exe -m logicytics dev [--write-manifest] [--next-version VERSION] [--interactive]
+python -m logicytics dev [--write-manifest] [--next-version VERSION] [--interactive]
 ```
 
 Runs developer integrity and contribution checks. Writing the local integrity manifest requires a valid semantic version and the explicit write option.

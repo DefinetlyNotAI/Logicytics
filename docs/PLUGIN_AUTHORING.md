@@ -61,9 +61,9 @@ Use an ID beginning with `plugin.`; a lowercase name, semantic version, supporte
 ## Enable and test
 
 ```powershell
-.\.venv\Scripts\python.exe -m logicytics preflight --plugins
-.\.venv\Scripts\python.exe -m logicytics plan --mode standard --plugins
-.\.venv\Scripts\python.exe -m logicytics run --mode standard --plugins --acknowledge-authorization
+python -m logicytics preflight --plugins
+python -m logicytics plan --mode standard --plugins
+python -m logicytics run --mode standard --plugins --acknowledge-authorization
 ```
 
 If the plugin is sensitive, do not put it in a routine profile. Use an exact `--include plugin.example` selection and document the authorization decision.
