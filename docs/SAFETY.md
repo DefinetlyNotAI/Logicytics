@@ -22,9 +22,8 @@ event channel, a cancellation boundary, and declared resource limits. One failur
 does not normally stop independent collectors. The supervisor terminates only the worker process tree it owns when a
 timeout or memory limit is exceeded.
 
-Core collectors are discovered from `core/` and selected by profiles. Plugin collectors in `plugins/` and Python MODS in
-`MODS/` never run unless explicitly enabled. A plugin or MOD must pass static and runtime preflight before it can enter
-a plan.
+Core collectors are discovered from `core/` and selected by profiles. Plugin collectors in `plugins/` never run unless
+explicitly enabled. A plugin must pass static and runtime preflight before it can enter a plan.
 
 ## Capability gates
 
@@ -46,6 +45,6 @@ package, hash, and logs are no longer needed.
 
 - `--reboot` and `--shutdown` are mutually exclusive and are scheduled only after durable package publication.
 - `--performance-check` forces serial measurement and is intended for measurement, not fastest collection.
-- `--plugins` and `--mods` execute additional user-owned code.
+- `--plugins` executes additional user-owned collector code.
 - `--usb` changes the source Windows installation and rejects unsafe output/cache/temp placement on that disk.
 - `--update --apply` performs `git pull`; use it only when repository state and remote are understood.

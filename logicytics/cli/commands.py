@@ -149,8 +149,6 @@ class CLI:
         parallel = not performance_check and (
                 explicit_parallel or (mode is not None and mode.strategy is ExecutionStrategy.PARALLEL))
 
-        enable_mods = getattr(arguments, "mods", False) or (mode.enable_mods if mode is not None else False)
-
         requested_workers = getattr(arguments, "workers", None)
 
         if sequential and requested_workers is not None and requested_workers != 1:
@@ -224,10 +222,8 @@ class CLI:
         include_arguments = tuple(getattr(arguments, "include", ()) or ())
         exclude_arguments = tuple(getattr(arguments, "exclude", ()) or ())
         plugins_enabled = bool(getattr(arguments, "plugins", False))
-        mods_enabled = bool(getattr(arguments, "mods", False))
-
         if selection_only and (
-                include_arguments or exclude_arguments or arguments.profile is not None or plugins_enabled or mods_enabled):
+                include_arguments or exclude_arguments or arguments.profile is not None or plugins_enabled):
             raise ValueError("collector execution cannot combine its ID with profile or selection flags")
 
         includes = (arguments.collector_id,) if selection_only else include_arguments
@@ -242,7 +238,6 @@ class CLI:
             exclude=exclude_arguments,
             selection_only=selection_only,
             enable_plugins=plugins_enabled,
-            enable_mods=enable_mods,
             max_workers=worker_count,
             acknowledge_authorization=getattr(
                 arguments,
@@ -337,11 +332,6 @@ class CLI:
                 "--plugins",
                 action="store_true",
                 help="Enable all valid opt-in plugin collectors for the selected profile.",
-            )
-            subparser.add_argument(
-                "--mods",
-                action="store_true",
-                help="Enable valid sidecar-declared scripts from the MODS directory.",
             )
             subparser.add_argument(
                 "--workers",
@@ -1044,7 +1034,6 @@ def main(argv: list[str] | None = None) -> int:
             validation = report.to_dict(
                 selected_plugins=tuple(arguments.include),
                 enable_plugins=arguments.plugins,
-                enable_mods=arguments.mods,
             )
 
             sysinternals = ensure_sysinternals(root, configuration.maintenance).to_dict()
@@ -1277,7 +1266,6 @@ def main(argv: list[str] | None = None) -> int:
             exclude_count=len(request.exclude),
             blocked_capabilities=len(request.blocked_capabilities),
             enable_plugins=request.enable_plugins,
-            enable_mods=request.enable_mods,
             max_workers=request.max_workers,
         )
         plan = build_plan(

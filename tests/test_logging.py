@@ -39,10 +39,9 @@ from tests.fixtures.file_listing import list_files
 class LoggingTests(unittest.TestCase):
     """Logging, output layout, file listing, and command-runner behavior."""
 
-    def test_collector_sources_are_specific_and_core_mod_scripts_are_abbreviated(self) -> None:
+    def test_collector_sources_are_specific_and_scripts_are_abbreviated(self) -> None:
         """Collector log sources retain their owner while shortening noisy script names."""
         self.assertEqual("core.browser.bdb", collector_log_source("core.browser.browser_data_backup"))
-        self.assertEqual("mods.fb", collector_log_source("mod.foo_bar"))
         self.assertEqual("plugins.folder.abc", collector_log_source("plugin.folder.abc"))
 
     def test_debug_file_logs_keep_full_source_and_callsite_line(self) -> None:

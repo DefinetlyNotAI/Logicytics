@@ -52,13 +52,12 @@ class ExecutionStrategy(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class ExecutionMode:
-    """Complete profile, extension, and scheduling behavior for one named mode."""
+    """Complete profile and scheduling behavior for one named mode."""
 
     name: str
     description: str
     profile: str
     strategy: ExecutionStrategy = ExecutionStrategy.CONFIGURED
-    enable_mods: bool = False
 
 
 _MODE_LIST = (
@@ -116,9 +115,7 @@ def _candidate_modes(candidate: CollectorCandidate) -> tuple[str, ...]:
     metadata = candidate.metadata
     selected: list[str] = []
     for mode in EXECUTION_MODES.values():
-        if candidate.kind is CollectorKind.MOD:
-            enabled = mode.enable_mods
-        elif candidate.kind is CollectorKind.PLUGIN:
+        if candidate.kind is CollectorKind.PLUGIN:
             enabled = False
         else:
             enabled = mode.profile in metadata.default_profiles

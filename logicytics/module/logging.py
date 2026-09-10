@@ -97,10 +97,6 @@ def collector_log_source(collector_id: str | None) -> str | None:
         return collector_id
     if parts[0] == "core" and len(parts) >= 3:
         return f"core.{parts[1]}.{_script_initials(parts[-1])}"
-    if parts[0] == "mod":
-        prefix = ".".join(parts[1:-1])
-        suffix = _script_initials(parts[-1])
-        return f"mods.{prefix + '.' if prefix else ''}{suffix}"
     if parts[0] == "plugin":
         return f"plugins.{'.'.join(parts[1:])}"
     return collector_id

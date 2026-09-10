@@ -5,7 +5,6 @@ from __future__ import annotations
 import contextlib
 import importlib.util
 import json
-import mimetypes
 import multiprocessing
 import os
 import queue
@@ -42,7 +41,6 @@ from logicytics.contracts import (
     ValidationResult,
 )
 from logicytics.module.artifacts import WorkspaceArtifactWriter
-from logicytics.module.command_runner import parse_level_messages
 from logicytics.module.configuration import AppConfig
 from logicytics.module.discovery import CollectorCandidate
 from logicytics.module.errors import CapabilityPolicyError, LogicyticsError
@@ -443,169 +441,6 @@ def _result_from_dict(data: _SerializedResult) -> CollectorResult:
     )
 
 
-def _mod_command(
-        script: Path,
-        execution_type: str,
-        workspace: Path | None = None,
-        collector_id: str = "mod.legacy",
-        capabilities: tuple[Capability, ...] = (),
-        blocked_capabilities: tuple[Capability, ...] = (),
-) -> list[str]:
-    """Build a shell-free command for one copied legacy MODS script."""
-    if execution_type != "mod_python":
-        raise ValueError("MODS supports Python (.py) scripts only")
-    if workspace is None:
-        raise ValueError("Python mod execution requires a private workspace")
-    runner = Path(__file__).with_name("mod_runner.py")
-    return [
-        sys.executable,
-        "-I",
-        str(runner),
-        str(script),
-        str(workspace),
-        collector_id,
-        json.dumps([capability.value for capability in capabilities]),
-        json.dumps([capability.value for capability in blocked_capabilities]),
-    ]
-
-
-def _run_mod_worker(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) -> None:
-    """Adapt a sidecar-declared legacy script to the isolated collector contract."""
-    metadata = CollectorMetadata.from_dict(payload["metadata"], allow_custom_specialty=True)
-    workspace = Path(payload["workspace"])
-    artifact_root = Path(payload["artifact_root"])
-    cancellation_file = Path(payload["cancellation_file"])
-    source_directory = workspace / "source"
-    source_directory.mkdir(parents=True, exist_ok=True)
-    source = Path(payload["path"])
-    copied_script = source_directory / source.name
-    shutil.copy2(source, copied_script)
-    writer = WorkspaceArtifactWriter(
-        metadata.id,
-        workspace,
-        artifact_root,
-        metadata.maximum_output_bytes,
-        metadata.maximum_artifact_files,
-        source_category=str(metadata.specialty),
-        maximum_artifact_bytes=metadata.maximum_artifact_bytes,
-        run_output_budget_bytes=payload["run_output_budget_bytes"],
-        cancellation_file=cancellation_file,
-    )
-    logger = get_event_logger(
-        workspace / "events.jsonl",
-        run_id=payload["run_id"],
-        collector_id=metadata.id,
-    )
-    stdout_path = workspace / "script_stdout.txt"
-    stderr_path = workspace / "script_stderr.txt"
-    guard = _WorkerMutationGuard(
-        workspace,
-        artifact_root,
-        metadata.id,
-        metadata.capabilities,
-        source,
-        payload["blocked_capabilities"],
-    )
-    result: CollectorResult
-    try:
-        if cancellation_file.exists():
-            result = CollectorResult.cancelled("mod cancelled before execution")
-        else:
-            command = _mod_command(
-                copied_script,
-                payload["execution_type"],
-                workspace,
-                metadata.id,
-                metadata.capabilities,
-                payload["blocked_capabilities"],
-            )
-            environment = {
-                "PATH": os.environ.get("PATH", ""),
-                "SYSTEMROOT": os.environ.get("SYSTEMROOT", ""),
-                "WINDIR": os.environ.get("WINDIR", ""),
-                "COMSPEC": os.environ.get("COMSPEC", ""),
-                "TEMP": payload["temporary_directory"],
-                "TMP": payload["temporary_directory"],
-                "LOGICYTICS_RUN_ID": payload["run_id"],
-                "LOGICYTICS_COLLECTOR_ID": metadata.id,
-                "LOGICYTICS_WORKSPACE": str(workspace),
-            }
-            guard.active = True
-            try:
-                completed = process_adapter.run(
-                    command,
-                    cwd=workspace,
-                    env=environment,
-                    capture_directory=workspace / "tmp",
-                    capture_output=True,
-                    check=False,
-                    text=True,
-                )
-            finally:
-                guard.active = False
-            stdout_path.write_text(completed.stdout, encoding="utf-8")
-            stderr_path.write_text(completed.stderr, encoding="utf-8")
-            for level, message in parse_level_messages(completed.stdout):
-                logger.event(level.casefold(), message)
-            excluded_roots = {source_directory.resolve(), (workspace / "tmp").resolve()}
-            excluded_files = {
-                stdout_path.resolve(),
-                stderr_path.resolve(),
-                (workspace / "events.jsonl").resolve(),
-            }
-            candidates = [stdout_path, stderr_path]
-            candidates.extend(
-                path
-                for path in sorted(workspace.rglob("*"))
-                if path.is_file()
-                and path.resolve() not in excluded_files
-                and not any(path.resolve().is_relative_to(root) for root in excluded_roots)
-            )
-            artifacts: list[Artifact] = []
-            for path in candidates:
-                if not path.exists() or path.stat().st_size == 0:
-                    continue
-                media_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
-                if media_type not in metadata.output_media_types:
-                    raise ValueError(f"mod output media type was not declared: {media_type} ({path.name})")
-                artifacts.append(writer.register_file(path, media_type=media_type))
-            if cancellation_file.exists():
-                result = CollectorResult.cancelled("mod cancelled after execution", tuple(artifacts))
-            elif completed.returncode == 0:
-                result = CollectorResult.succeeded("legacy mod completed", tuple(artifacts))
-            else:
-                result = CollectorResult.failed(
-                    "legacy mod exited unsuccessfully",
-                    errors=(
-                        f"exit code {completed.returncode}",
-                        completed.stderr.strip() or "no stderr",
-                    ),
-                    artifacts=tuple(artifacts),
-                )
-    except CapabilityPolicyError as error:
-        guard.active = False
-        logger.event(
-            "error",
-            "capability_policy_violation",
-            code=error.code,
-            capability=error.capability,
-            operation=error.operation,
-        )
-        result = CollectorResult.failed(
-            "legacy mod capability policy violation",
-            errors=(str(error),),
-            artifacts=writer.artifacts,
-        )
-    except BaseException as error:
-        guard.active = False
-        result = CollectorResult.failed(
-            "legacy mod worker crashed",
-            errors=(f"{type(error).__name__}: {error}", traceback.format_exc()),
-            artifacts=writer.artifacts,
-        )
-    result_queue.put({"collector_id": metadata.id, "result": _serialize_result(result)})
-
-
 def _configure_worker_temporary_directory(directory: Path) -> Callable[[], None]:
     """Route stdlib and child-process temporary files into one worker workspace."""
     location = str(directory.resolve())
@@ -637,23 +472,8 @@ def _worker_entry(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) 
     temporary_directory.mkdir(parents=True, exist_ok=True)
     restore_temporary_directory = _configure_worker_temporary_directory(temporary_directory)
     if payload["execution_type"] != "collector":
-        try:
-            _run_mod_worker(payload, result_queue)
-        except BaseException as error:
-            result_queue.put(
-                {
-                    "collector_id": payload["collector_id"],
-                    "result": _serialize_result(
-                        CollectorResult.failed(
-                            "legacy mod worker crashed",
-                            errors=(f"{type(error).__name__}: {error}", traceback.format_exc()),
-                        )
-                    ),
-                }
-            )
-        finally:
-            restore_temporary_directory()
-        return
+        restore_temporary_directory()
+        raise ValueError("unsupported collector execution type")
     stdout_path = workspace / "stdout.log"
     stderr_path = workspace / "stderr.log"
     try:

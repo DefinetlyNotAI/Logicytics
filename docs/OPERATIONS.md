@@ -89,12 +89,12 @@ publication.
 
 ## Extensions and removable media
 
-Plugins and MODS are opt-in because they are user-owned code. Include them only after their source, metadata or sidecar,
-and capability declarations have been reviewed:
+Plugins are opt-in because they are user-owned collector code. Include them only after their source, metadata, and
+capability declarations have been reviewed:
 
 ```powershell
-python -m logicytics preflight --plugins --mods
-python -m logicytics plan --mode standard --plugins --mods
+python -m logicytics preflight --plugins
+python -m logicytics plan --mode standard --plugins
 ```
 
 Use `--usb [DRIVE]` only when deliberately targeting a Windows installation on removable storage. The engine rejects

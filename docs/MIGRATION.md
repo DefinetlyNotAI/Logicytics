@@ -7,8 +7,8 @@ Older mode flags remain compatibility aliases: `--default` selects `standard`, `
 `--minimal` selects `quick`, and `--depth` selects `thorough`. New scripts should use `--mode` or `--profile`.
 
 Legacy `CODE/config.ini` is read only as a compatibility input. The explicit `core.integration.legacy_code_outputs`
-collector imports approved generated output; the engine does not implicitly scan the repository. `MODS/` is opt-in and
-requires sidecars. Run evidence is owned by its manifest-backed run folder. There are no global `ACCESS/`, `RUNS/`,
+collector imports approved generated output; the engine does not implicitly scan the repository. Extension support is
+limited to reviewed `PluginCollector` modules under `plugins/`. Run evidence is owned by its manifest-backed run folder. There are no global `ACCESS/`, `RUNS/`,
 `LOGS/`, or `PACKAGES/` stores.
 
 Translate supported settings using [Configuration](CONFIGURATION.md), then run `preflight` and `plan` before collecting.

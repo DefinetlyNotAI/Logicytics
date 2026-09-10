@@ -510,7 +510,6 @@ class ShippedCollectorTests(unittest.TestCase):
         for bridge in (
                 "CODE/config.ini",
                 "core.integration.legacy_code_outputs",
-                "MODS/",
         ):
             self.assertIn(
                 bridge,

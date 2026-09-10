@@ -26,10 +26,10 @@ _ARTIFACT_HASH_ARCHIVE_PATH = "hashes/artifacts.sha256"
 
 def _sidecar_filename(package_name: str) -> str:
     """Return a concise sidecar name from the package's storage fingerprint."""
-    match = re.fullmatch(r"(?P<prefix>mods-)?(?P<fingerprint>[0-9a-f]{8,64})\.zip", package_name)
+    match = re.fullmatch(r"(?P<fingerprint>[0-9a-f]{8,64})\.zip", package_name)
     if match is None:
         raise ValueError("package name must contain a lowercase SHA-256 storage fingerprint")
-    return f"{match['prefix'] or ''}{match['fingerprint']}.zip.sha256"
+    return f"{match['fingerprint']}.zip.sha256"
 
 
 def _validate_sidecar_slot(hash_path: Path, package_name: str) -> None:
@@ -244,89 +244,6 @@ def _verify_archive(package_path: Path, manifest: RunManifest, expected_names: s
                 raise ValueError(f"packaged artifact verification failed: {artifact.relative_path}")
 
 
-def _package_mod_artifacts(
-        package_directory: Path,
-        hash_directory: Path,
-        manifest: RunManifest,
-        artifact_sources: list[tuple[Path, str]],
-        package_name: str,
-) -> dict[str, str]:
-    """Publish MODS evidence in a separately named atomic package and sidecar."""
-    mod_sources = [
-        (source, archive_name)
-        for source, archive_name in artifact_sources
-        if any(
-            artifact.collector_id.startswith("mod.") and _artifact_archive_name(artifact) == archive_name
-            for artifact in manifest.artifact_list()
-        )
-    ]
-    if not mod_sources:
-        return {}
-    package_path = package_directory / f"mods-{package_name}"
-    temporary_package = package_path.with_suffix(".zip.tmp")
-    temporary_hash = hash_directory / f".{package_path.name}.sha256.tmp"
-    mod_catalog = {
-        "run_id": manifest.run_id,
-        "artifacts": [item for item in manifest.artifact_catalog() if
-                      str(item.get("collector_id", "")).startswith("mod.")],
-    }
-    expected_names = {"metadata/mods.json", *(archive_name for _, archive_name in mod_sources)}
-    try:
-        with zipfile.ZipFile(temporary_package, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr("metadata/mods.json", json.dumps(mod_catalog, indent=2, sort_keys=True) + "\n")
-            for source, archive_name in mod_sources:
-                _stream_archive_member(archive, source, archive_name)
-        with zipfile.ZipFile(temporary_package) as archive:
-            if set(archive.namelist()) != expected_names or archive.testzip() is not None:
-                raise ValueError("MODS package contents failed verification")
-            for artifact in manifest.artifact_list():
-                if not artifact.collector_id.startswith("mod."):
-                    continue
-                member = archive.getinfo(_artifact_archive_name(artifact))
-                with archive.open(member) as stream:
-                    digest = _sha256_stream(stream)
-                if member.file_size != artifact.size_bytes or digest != artifact.sha256:
-                    raise ValueError(f"MODS artifact verification failed: {artifact.relative_path}")
-
-        digest = sha256_file(temporary_package)
-        hash_path = hash_directory / _sidecar_filename(package_path.name)
-        _validate_sidecar_slot(hash_path, package_path.name)
-        temporary_hash.write_text(f"{digest}  {package_path.name}\n", encoding="ascii")
-        package_backup = package_path.with_suffix(".zip.backup")
-        hash_backup = hash_path.with_suffix(".sha256.backup")
-        try:
-            if package_path.exists():
-                os.replace(package_path, package_backup)
-            if hash_path.exists():
-                os.replace(hash_path, hash_backup)
-            os.replace(temporary_package, package_path)
-            os.replace(temporary_hash, hash_path)
-        except BaseException:
-            if package_path.exists():
-                package_path.unlink()
-            if hash_path.exists() and hash_backup.exists():
-                hash_path.unlink()
-            if package_backup.exists():
-                os.replace(package_backup, package_path)
-            if hash_backup.exists():
-                os.replace(hash_backup, hash_path)
-            raise
-        if package_backup.exists():
-            package_backup.unlink()
-        if hash_backup.exists():
-            hash_backup.unlink()
-    finally:
-        if temporary_package.exists():
-            temporary_package.unlink()
-        if temporary_hash.exists():
-            temporary_hash.unlink()
-    return {
-        "mods_path": str(package_path),
-        "mods_sha256_path": str(hash_path),
-        "mods_sha256": digest,
-    }
-
-
 def package_manifest(
         run_directory: Path,
         manifest: RunManifest,
@@ -348,8 +265,7 @@ def package_manifest(
     artifact_hash_path = hash_directory / "artifacts.sha256"
     artifact_sources = _artifact_sources(run_directory, manifest)
     log_sources = _log_sources(run_directory, manifest)
-    mods_package = _package_mod_artifacts(package_directory, hash_directory, manifest, artifact_sources, package_name)
-    manifest.package = {"path": str(package_path), **mods_package}
+    manifest.package = {"path": str(package_path)}
     write_manifest(manifest_path, manifest)
     _write_text_atomic(summary_path, _summary(manifest), encoding="utf-8")
     _write_text_atomic(artifact_hash_path, _artifact_checksum_catalog(manifest), encoding="ascii")
@@ -402,7 +318,6 @@ def package_manifest(
         "path": str(package_path),
         "sha256_path": str(hash_path),
         "sha256": package_sha256,
-        **mods_package,
     }
     write_manifest(manifest_path, manifest)
     return package_path, hash_path

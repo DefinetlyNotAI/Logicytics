@@ -70,8 +70,8 @@ python -m logicytics run --mode standard `
 ```
 
 Use `--sequential` for a deterministic troubleshooting run, `--no-package` when you need only the manifest-backed run
-directory, and `--interactive` when a console window should remain open at the end. Do not add `--plugins` or `--mods`
-just to make a command work: those switches opt into user-owned executable code.
+directory, and `--interactive` when a console window should remain open at the end. Do not add `--plugins` just to make
+a command work: it opts into reviewed user-owned collector code.
 
 ## 4. Decide whether the result answers the question
 

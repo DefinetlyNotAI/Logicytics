@@ -66,33 +66,6 @@ def plugin_collector_source() -> str:
     )
 
 
-def mod_metadata(name: str, *, filesystem_write: bool = False) -> dict[str, Any]:
-    """Return a complete sidecar declaration for a harmless legacy script fixture."""
-    return {
-        "id": f"mod.{name}",
-        "name": f"{name} mod",
-        "version": "1.0.0",
-        "specialty": "integration",
-        "description": "Harmless isolated legacy script fixture.",
-        "author": "tests",
-        "supported_platforms": [sys.platform],
-        "capabilities": [
-            "subprocess",
-            *(["filesystem_write"] if filesystem_write else []),
-        ],
-        "privilege_level": "standard",
-        "sensitive_data_categories": [],
-        "network_access": "none",
-        "estimated_cost": "low",
-        "timeout_seconds": 15,
-        "maximum_output_bytes": 1024 * 1024,
-        "maximum_artifact_files": 10,
-        "output_media_types": ["text/plain"],
-        "minimum_contract_version": "4.0",
-        "default_profiles": ["standard"],
-    }
-
-
 def delayed_collector_source(
         filename: str,
         delay: float,

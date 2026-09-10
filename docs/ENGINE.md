@@ -9,7 +9,7 @@ request -> configuration -> preflight -> plan -> isolated workers -> artifacts -
 ## 1. Request
 
 The CLI or Python API creates an immutable `RunRequest`. It contains the profile, exact includes/excludes, plugin and
-MOD switches, worker limit, blocked capabilities, performance policy, rerun source, output policy, and optional post-run
+plugin enablement, worker limit, blocked capabilities, performance policy, rerun source, output policy, and optional post-run
 action. Invalid combinations are rejected before collection.
 
 ## 2. Configuration

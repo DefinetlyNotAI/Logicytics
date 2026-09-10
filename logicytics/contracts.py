@@ -14,7 +14,7 @@ from typing import Any
 
 CONTRACT_VERSION = "4.0"
 _CUSTOM_SPECIALTY = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
-_COLLECTOR_ID = re.compile(r"^(?:core|plugin|mod)\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)?$")
+_COLLECTOR_ID = re.compile(r"^(?:core|plugin)\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)?$")
 _SEMANTIC_VERSION = re.compile(r"^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$")
 _CONTRACT_VERSION = re.compile(r"^\d+\.\d+$")
 _LABEL = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
@@ -29,7 +29,6 @@ class CollectorKind(StrEnum):
 
     CORE = "core"
     PLUGIN = "plugin"
-    MOD = "mod"
 
 
 class CollectorStatus(StrEnum):
@@ -506,7 +505,6 @@ class RunRequest:
     exclude: tuple[str, ...] = ()
     selection_only: bool = False
     enable_plugins: bool = False
-    enable_mods: bool = False
     max_workers: int = 4
     acknowledge_authorization: bool = False
     blocked_capabilities: tuple[Capability, ...] = ()
@@ -541,7 +539,6 @@ class RunRequest:
         for name in (
                 "selection_only",
                 "enable_plugins",
-                "enable_mods",
                 "acknowledge_authorization",
                 "performance_check",
         ):

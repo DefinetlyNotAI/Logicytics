@@ -11,6 +11,7 @@ from logicytics.contracts import (
     CollectorStatus,
     EvidenceKind,
     ResourceClass,
+    RunRequest,
     Specialty,
 )
 
@@ -45,7 +46,8 @@ class ContractTests(unittest.TestCase):
             specialty=Specialty.SYSTEM,
             description="Example collector.",
             author="tests",
-        )
+            )
+
         with self.assertRaisesRegex(ValueError, "id has an invalid schema"):
             CollectorMetadata(**{**common, "id": "example"})
         with self.assertRaisesRegex(ValueError, "semantic versioning"):
@@ -169,6 +171,11 @@ class ContractTests(unittest.TestCase):
             with self.subTest(changes=changes):
                 with self.assertRaisesRegex(ValueError, message):
                     Artifact(**{**valid, **changes})
+
+    def test_requests_reject_removed_script_extension_identifiers(self) -> None:
+        """Only core and plugin collector IDs belong to the public contract."""
+        with self.assertRaisesRegex(ValueError, "collector IDs"):
+            RunRequest(include=("mod.legacy",))
 
 
 if __name__ == "__main__":

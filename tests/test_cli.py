@@ -72,6 +72,11 @@ class CliTests(unittest.TestCase):
         self.assertEqual("deep", request.profile)
         self.assertEqual(1, request.max_workers)
 
+    def test_run_parser_rejects_removed_script_extension_flag(self) -> None:
+        """Only typed plugin collectors remain an opt-in extension surface."""
+        with self.assertRaises(SystemExit):
+            cli_methods.parser().parse_args(["run", "--mods"])
+
     def test_config_flag_is_accepted_before_or_after_a_subcommand(self) -> None:
         """Configuration selection must not depend on flag placement around the action."""
         parser = cli_methods.parser()
@@ -151,14 +156,14 @@ class CliTests(unittest.TestCase):
         )
 
     def test_typed_mode_registry_maps_every_user_mode_and_legacy_alias(self) -> None:
-        """One immutable matrix owns profile, scheduling, and MODS behavior."""
+        """One immutable matrix owns profile and scheduling behavior."""
         parser = cli_methods.parser()
         expected = {
-            "standard": ("standard", 1, False),
-            "balanced": ("standard", 4, False),
-            "quick": ("minimal", 4, False),
-            "thorough": ("deep", 4, False),
-            "offline": ("offline", 4, False),
+            "standard": ("standard", 1),
+            "balanced": ("standard", 4),
+            "quick": ("minimal", 4),
+            "thorough": ("deep", 4),
+            "offline": ("offline", 4),
         }
 
         self.assertEqual(set(expected), set(EXECUTION_MODES))
@@ -183,7 +188,6 @@ class CliTests(unittest.TestCase):
                     (
                         run_request.profile,
                         run_request.max_workers,
-                        run_request.enable_mods,
                     ),
                 )
 

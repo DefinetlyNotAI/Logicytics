@@ -23,7 +23,7 @@ with [Evidence Review](EVIDENCE_REVIEW.md).
 | I need to read JSON, CSV, HTML, or ZIP output | [Results](OUTPUTS.md) and [Formats](FORMATS.md)                                                |
 | I want to run a plugin                        | [Plugins](PLUGINS.md)                                                                          |
 | I want to write a collector                   | [Plugin Authoring](PLUGIN_AUTHORING.md), [Contracts](CONTRACTS.md)                             |
-| Something went wrong                          | [Troubleshooting](TROUBLESHOOTING.md)                                                          |
+| Something went wrong                          | [Troubleshooting](TROUBLESHOOTING.md), [Error Reference](ERRORS.md)                            |
 | I am maintaining the repository               | [Development](DEVELOPMENT.md), [Verification](VERIFICATION.md)                                 |
 
 ## Safety rule of thumb

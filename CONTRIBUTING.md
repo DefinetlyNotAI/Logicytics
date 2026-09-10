@@ -79,16 +79,15 @@ responses, cancellation coverage, and output-contract evidence. If structured
 bytes change intentionally, update the relevant golden file in `tests/golden/`
 and explain why.
 
-## Plugins and MODs
+## Plugins
 
-Plugins implement the typed `PluginCollector` contract and remain opt-in. MODs
-use a sidecar declaration and may be Python, PowerShell, batch, or executable
-payloads. Neither extension type may bypass preflight, planning, capability
-approval, isolated workspaces, artifact registration, or package filtering.
+Plugins implement the typed `PluginCollector` contract and remain opt-in. They
+may not bypass preflight, planning, capability approval, isolated workspaces,
+artifact registration, or package filtering.
 
-Read [MODS.md](docs/MODS.md) before changing discovery or extension behavior. Read
-[MIGRATION.md](docs/MIGRATION.md) before changing a legacy flag, schema migration,
-historical `CODE` evidence import, or MOD adapter. Compatibility code must remain
+Read [PLUGIN_AUTHORING.md](docs/PLUGIN_AUTHORING.md) before changing discovery or
+extension behavior. Read [MIGRATION.md](docs/MIGRATION.md) before changing a legacy
+flag, schema migration, or historical `CODE` evidence import. Compatibility code must remain
 a bounded translation into the canonical v4 model.
 
 ## Configuration changes
@@ -98,7 +97,7 @@ Configuration changes must preserve the strict schema in
 parser-backed tests in the same commit as any setting, default, bound, migration
 alias, or source-precedence change.
 
-Profiles, modes, include/exclude selections, plugin/MOD enablement, capability
+Profiles, modes, include/exclude selections, plugin enablement, capability
 approval, authorization acknowledgement, scheduling overrides, reruns, package
 policy, and post-run power actions are invocation-only `RunRequest` behavior.
 They do not belong in persistent configuration.
@@ -146,7 +145,6 @@ Keep user and developer documentation synchronized with behavior:
   troubleshooting.
 - [CONFIGURATION.md](docs/CONFIGURATION.md): every persistent setting and migration.
 - [OUTPUTS.md](docs/OUTPUTS.md): artifact and retention contracts.
-- [MODS.md](docs/MODS.md): extension contract.
 - [MIGRATION.md](docs/MIGRATION.md): supported compatibility boundary.
 - [FLOW_MATRIX.md](docs/FLOW_MATRIX.md): executable flow evidence.
 

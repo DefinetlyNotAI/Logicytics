@@ -20,7 +20,7 @@ SCHEMA_VERSION = 4
 MAXIMUM_CONFIGURATION_BYTES = 2 * 1024 * 1024
 DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES = 4 * 1024 * 1024 * 1024
 MAXIMUM_RUN_OUTPUT_BYTES = 64 * 1024 * 1024 * 1024
-_COLLECTOR_ID = re.compile(r"^(?:core\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*|(?:plugin|mod)\.[a-z][a-z0-9_]*)$")
+_COLLECTOR_ID = re.compile(r"^(?:core\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*|plugin\.[a-z][a-z0-9_]*)$")
 _SETTING_NAME = re.compile(r"^[a-z][a-z0-9_]*$")
 _ROOT_FIELDS = frozenset(
     {

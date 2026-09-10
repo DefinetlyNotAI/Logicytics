@@ -8,7 +8,7 @@ changing engine or collector code. Keep the standard-library-first installer pat
 ## Change boundaries
 
 Engine changes belong under `logicytics/module/`; contract changes belong in `logicytics/contracts.py`; shipped
-collection belongs under the matching `core/<specialty>/` directory; user extensions belong in `plugins/` or `MODS/`;
+collection belongs under the matching `core/<specialty>/` directory; user extensions belong in `plugins/`;
 documentation changes belong in `docs/`. Do not commit collected evidence, caches, credentials, or local manifests.
 
 ## Adding a core collector

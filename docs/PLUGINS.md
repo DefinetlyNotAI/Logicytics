@@ -1,36 +1,37 @@
-# Plugins and extensions
+# Plugin support
 
-There are two extension routes. A `PluginCollector` is a typed Python collector in `plugins/`; a MOD is a Python script
-in `MODS/` with a JSON sidecar. Both are opt-in, preflighted, isolated, quota-bound, and included in manifest-led
-packaging when they publish evidence.
+Plugins are the only supported extension mechanism. A plugin is a typed Python `PluginCollector` stored below `plugins/`; it is never selected by a normal core-only request. Script sidecars, batch, PowerShell, and executable extension paths are not supported.
 
-## Plugins
+## Enable a reviewed plugin
 
-Plugins use the full collector contract and are enabled with `--plugins`. They can be selected by exact ID with
-`--include plugin.name`. Read [Plugin Authoring](PLUGIN_AUTHORING.md) for the complete lifecycle.
+1. Read its source and declared metadata.
+2. Run preflight with plugins enabled.
+3. Build a plan and review the exact ID, capabilities, sensitivity, limits, and dependencies.
+4. Run only with explicit authorization.
 
-## MODS
-
-MODS accepts Python `.py` files only. A runnable file requires an adjacent `<file>.py.mod.json` sidecar. Lowercase
-snake_case filenames are required; names beginning with `_` are ignored. Normal runs never execute MODS.
-
-Example layout:
-
-```text
-MODS/
-  inventory/
-    local_report.py
-    local_report.py.mod.json
+```powershell
+.\.venv\Scripts\python.exe -m logicytics preflight --plugins
+.\.venv\Scripts\python.exe -m logicytics plan --mode standard --plugins
+.\.venv\Scripts\python.exe -m logicytics run --mode standard --plugins --acknowledge-authorization
 ```
 
-Required sidecar fields include `id` (`mod.local_report`), `name`, `version`, `specialty`, `description`, `author`,
-`supported_platforms`, `capabilities`, `privilege_level`, `sensitive_data_categories`, `network_access`,
-`estimated_cost`, `timeout_seconds`, `maximum_output_bytes`, `maximum_artifact_files`, `output_media_types`,
-`minimum_contract_version`, and `default_profiles`.
+For a sensitive plugin, prefer an exact `--include plugin.name` request and document why the capability set is authorized. A blocked capability always overrides a plugin declaration.
 
-MODS scripts run with `LOGICYTICS_WORKSPACE` as their private working directory. Non-empty files, allowed MIME types,
-standard output, and standard error can become artifacts. Lines formatted as `LEVEL: message` become structured events.
-A MOD failure affects only that MOD.
+## Discovery and identity
 
-The `subprocess` capability is required for MOD execution; other capabilities must also be declared. A blocked
-capability still overrides the declaration. Review third-party scripts before enabling them.
+Plugin modules live under `plugins/`. Each valid module exposes exactly one `PluginCollector` subclass. A plugin ID begins with `plugin.` and must match its file or folder ownership: a normal `plugins/example.py` exposes `plugin.example`; a `main.py` entry point uses its containing folder name.
+
+Discovery statically validates the source first, then probes metadata in a short-lived restricted process. Invalid unselected plugins are quarantined so an unrelated optional plugin cannot break normal core collection. A selected or globally enabled invalid plugin blocks the request.
+
+## Contract requirements
+
+The complete field-by-field contract is in [Contracts](CONTRACTS.md) and a runnable minimal pattern is in [Plugin Authoring](PLUGIN_AUTHORING.md). In short, a plugin must:
+
+- have no import-time collection, network, registry, subprocess, or output side effects;
+- construct deterministic metadata and explicitly declare access, privilege, network reach, sensitive categories, limits, output MIME types, and contract version;
+- perform bounded work only in its private workspace and temporary directory;
+- register complete artifacts through `context.artifacts`, never by writing directly to an output or package path;
+- check cancellation during long work and return typed `succeeded`, `partial`, `skipped`, `cancelled`, or `failed` outcomes; and
+- keep all host access within declared capabilities and supported platform adapters.
+
+Plugins do not gain authority merely because they are enabled. The runtime applies the same isolated worker, quota, logging, artifact, packaging, cancellation, and capability-policy rules used for core collectors.

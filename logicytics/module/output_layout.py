@@ -46,9 +46,7 @@ def allocate_output_run_directory(layout: OutputLayout, run_id: str) -> Path:
         occupied = (
             layout.runs / token,
             layout.packages / f"{token}.zip",
-            layout.packages / f"mods-{token}.zip",
             layout.hashes / f"{token}.zip.sha256",
-            layout.hashes / f"mods-{token}.zip.sha256",
             layout.performance_logs / f"{token}.log",
         )
         if not any(path.exists() for path in occupied):

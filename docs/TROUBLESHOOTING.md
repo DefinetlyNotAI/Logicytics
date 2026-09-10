@@ -36,8 +36,8 @@ First confirm the exact dotted ID in [Core Collector Catalog](CORE_COLLECTORS.md
 blocks as the intended run. A collector can be excluded by a selector, not belong to the mode, be invalid in preflight,
 or require a capability you blocked.
 
-Plugins require `--plugins`; MODS require `--mods`. Their absence from a normal core-only plan is intentional. Review
-their sidecars and source before enabling them.
+Plugins require `--plugins`. Their absence from a normal core-only plan is intentional. Review their source and metadata
+before enabling them.
 
 ## A collector is skipped, partial, failed, or canceled
 

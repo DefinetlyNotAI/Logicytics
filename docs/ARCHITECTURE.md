@@ -7,7 +7,6 @@
 | `logicytics/` | Public package, contracts, CLI, configuration, discovery, planning, runtime, logging, manifests, packaging, and platform adapters |
 | `core/`       | Shipped read-only collector implementations grouped by specialty                                                                  |
 | `plugins/`    | Opt-in user-owned `PluginCollector` implementations                                                                               |
-| `MODS/`       | Opt-in Python scripts enabled by metadata sidecars                                                                                |
 | `tests/`      | Unit, contract, resilience, security, and Windows integration tests                                                               |
 | `docs/`       | This user, operator, and developer manual                                                                                         |
 | `output/`     | Local run output; do not commit evidence                                                                                          |

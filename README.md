@@ -125,12 +125,11 @@ Use `python -m logicytics --help` or append `--help` to any command for its full
 `logicytics.yaml` is the single user configuration file. It controls output locations, worker limits, logging, optional
 Sysinternals setup, and declared collector settings. Keep credentials and secrets out of it.
 
-Core collectors are shipped and validated as part of the application. Plugins and MODs are opt-in and must pass the same
+Core collectors are shipped and validated as part of the application. Plugins are opt-in and must pass the same
 validation boundary before they can run.
 
 - [Configuration reference](docs/CONFIGURATION.md)
 - [Output contract](docs/OUTPUTS.md)
-- [MODS guide](docs/MODS.md)
 - [Migration guide](docs/MIGRATION.md)
 - [Flow matrix](docs/FLOW_MATRIX.md)
 

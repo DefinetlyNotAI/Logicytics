@@ -24,7 +24,7 @@ from logicytics.module.runtime import RunOutcome, RunSupervisor
 
 _RUN_ID = re.compile(r"run-[0-9a-f]{32}")
 _ARTIFACT_ID = re.compile(r"artifact\.[0-9a-f]{32}")
-_COLLECTOR_ID = re.compile(r"(?:core|plugin|mod)\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)?")
+_COLLECTOR_ID = re.compile(r"(?:core|plugin)\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)?")
 _MAXIMUM_ARTIFACT_READ_BYTES = 64 * 1024 * 1024
 _DEFAULT_ARTIFACT_READ_BYTES = 16 * 1024 * 1024
 
