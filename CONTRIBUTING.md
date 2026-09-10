@@ -36,7 +36,7 @@ The canonical pipeline is:
   `RunRequest` policy and validated metadata.
 - `logicytics/module/runtime.py` owns per-run and per-worker lifecycle, cancellation,
   retries, timeouts, failure aggregation, and post-run actions.
-- `logicytics/platform_adapters.py` owns host command, process, registry,
+- `logicytics/module/platform_adapters.py` owns host command, process, registry,
   filesystem, network, privilege, and Win32 access. Collectors must use these
   injectable seams instead of importing host APIs directly.
 - `logicytics/module/artifacts.py` is the only publication path from collector

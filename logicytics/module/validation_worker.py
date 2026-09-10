@@ -12,7 +12,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 
-from logicytics.contracts import (
+from logicytics.module.contracts import (
     Artifact,
     ArtifactWriter,
     Collector,

@@ -6,7 +6,7 @@ enabled with `--plugins`. It is deliberately opt-in and is isolated like a core 
 ## Minimal plugin
 
 ```python
-from logicytics.contracts import (
+from logicytics.module.contracts import (
     CollectorMetadata, CollectorResult, CollectorStatus, CollectorContext,
     PluginCollector, ValidationResult, ArtifactWriter,
 )

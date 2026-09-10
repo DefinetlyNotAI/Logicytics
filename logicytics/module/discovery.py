@@ -14,14 +14,14 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from subprocess import TimeoutExpired
 
-from logicytics.contracts import (
+from logicytics.module.contracts import (
     CONTRACT_VERSION,
     Capability,
     CollectorKind,
     CollectorMetadata,
     Specialty,
 )
-from logicytics.platform_adapters import process_adapter
+from logicytics.module.platform_adapters import process_adapter
 
 _FILENAME = re.compile(r"^[a-z][a-z0-9_]*\.py$")
 _VAGUE_NAMES = {"main.py", "misc.py", "stuff.py", "utils.py"}
@@ -48,8 +48,10 @@ _APPLICATION_IMPORTS = {
 _CACHE_SCHEMA_VERSION = 2
 _COLLECTOR_SERVICE_MODULES = {
     "logicytics.contracts",
+    "logicytics.module.contracts",
     "logicytics.global.ctypes_collector",
     "logicytics.platform_adapters",
+    "logicytics.module.platform_adapters",
 }
 
 PreflightProgress = Callable[[str, int, int, str], None]

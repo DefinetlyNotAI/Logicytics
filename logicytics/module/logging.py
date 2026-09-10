@@ -17,7 +17,7 @@ from threading import RLock
 from time import perf_counter, time
 from typing import ParamSpec, TextIO, TypeVar
 
-from logicytics.contracts import EventLogger
+from logicytics.module.contracts import EventLogger
 from logicytics.module.configuration import LoggingSettings
 from logicytics.module.presentation import (
     console_width as presentation_console_width,

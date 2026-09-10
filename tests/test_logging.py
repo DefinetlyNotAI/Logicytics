@@ -29,7 +29,7 @@ from logicytics.module.logging import (
     timed,
 )
 from logicytics.module.output_layout import ensure_output_layout
-from logicytics.virtual_environment import (
+from logicytics.module.virtual_environment import (
     render_virtual_environment_error,
     virtual_environment_error,
 )

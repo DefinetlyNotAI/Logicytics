@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from logicytics.contracts import CollectorMetadata
+from logicytics.module.contracts import CollectorMetadata
 
 _MEDIA_SUFFIX = {
     "application/json": ".json",

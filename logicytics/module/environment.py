@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
-from logicytics.platform_adapters import (
+from logicytics.module.platform_adapters import (
     process_adapter,
     registry_adapter,
     which,

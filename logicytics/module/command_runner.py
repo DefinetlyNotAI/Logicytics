@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from logicytics.platform_adapters import process_adapter
+from logicytics.module.platform_adapters import process_adapter
 
 
 @dataclass(frozen=True, slots=True)

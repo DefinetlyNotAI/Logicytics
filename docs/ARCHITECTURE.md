@@ -4,7 +4,7 @@
 
 | Folder        | Responsibility                                                                                                                    |
 |---------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| `logicytics/` | Public package, contracts, CLI, configuration, discovery, planning, runtime, logging, manifests, packaging, and platform adapters |
+| `logicytics/` | Public package, CLI, and the internal engine modules for contracts, configuration, discovery, planning, runtime, logging, manifests, packaging, and platform adapters |
 | `core/`       | Shipped read-only collector implementations grouped by specialty                                                                  |
 | `plugins/`    | Opt-in user-owned `PluginCollector` implementations                                                                               |
 | `tests/`      | Unit, contract, resilience, security, and Windows integration tests                                                               |
@@ -14,7 +14,7 @@
 
 ## Engine modules
 
-- `contracts.py` defines enums, metadata, request, context, artifact, result, and collector interfaces.
+- `module/contracts.py` defines enums, metadata, request, context, artifact, result, and collector interfaces.
 - `configuration.py` loads and validates `logicytics.yaml`.
 - `discovery.py` finds candidates, performs static checks, probes metadata, and manages the disposable validation cache.
 - `planner.py` resolves profiles, selectors, dependencies, capabilities, ordering, and run fingerprints.
@@ -23,6 +23,8 @@
 - `manifest.py` writes the durable run record.
 - `packaging.py` builds and verifies ZIP packages and hash sidecars.
 - `api.py` exposes planning, collection, run queries, and bounded artifact reads.
+- `module/platform_adapters.py` owns the injectable host-process and Windows API boundaries.
+- `cli/terminal.py` manages console lifecycle and `cli/virtual_environment.py` validates the supported interpreter environment.
 - `cli/commands.py` maps command-line arguments to the public engine operations.
 
 ## Boundary rules

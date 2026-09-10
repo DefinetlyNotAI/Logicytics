@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING, TypeAlias, cast
 if TYPE_CHECKING:
     from unittest.runner import _ResultClassType
 
-from logicytics.terminal import isolated_terminal_lifecycle, terminal_lifecycle
-from logicytics.virtual_environment import (
+from logicytics.module.terminal import isolated_terminal_lifecycle, terminal_lifecycle
+from logicytics.module.virtual_environment import (
     is_running_in_virtual_environment,
     render_virtual_environment_error,
 )

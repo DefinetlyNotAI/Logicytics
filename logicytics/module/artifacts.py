@@ -12,7 +12,7 @@ from pathlib import Path
 from threading import RLock
 from uuid import uuid4
 
-from logicytics.contracts import Artifact, ArtifactWriter, EvidenceKind
+from logicytics.module.contracts import Artifact, ArtifactWriter, EvidenceKind
 from logicytics.module.errors import ArtifactError
 
 

@@ -8,7 +8,7 @@ from enum import Enum
 from types import MappingProxyType
 from typing import TypedDict
 
-from logicytics.contracts import CollectorKind
+from logicytics.module.contracts import CollectorKind
 from logicytics.module.discovery import CollectorCandidate
 
 

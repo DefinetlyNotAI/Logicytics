@@ -8,7 +8,7 @@ import sys
 from dataclasses import asdict, dataclass
 from types import MappingProxyType
 
-from logicytics.contracts import Capability, CollectorKind, RunRequest
+from logicytics.module.contracts import Capability, CollectorKind, RunRequest
 from logicytics.module.discovery import CollectorCandidate, PreflightReport
 from logicytics.module.environment import inspect_environment
 from logicytics.module.errors import PlanError, PreflightError

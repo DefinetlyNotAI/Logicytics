@@ -6,8 +6,8 @@ import sys
 from pathlib import Path
 
 from logicytics.cli.commands import cli_methods, CLI
-from logicytics.terminal import terminal_lifecycle
-from logicytics.virtual_environment import (
+from logicytics.module.terminal import terminal_lifecycle
+from logicytics.module.virtual_environment import (
     is_running_in_virtual_environment,
     render_virtual_environment_error,
 )

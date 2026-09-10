@@ -26,7 +26,7 @@ from time import monotonic, sleep
 from typing import Any, Protocol, TypedDict, TypeVar, cast
 from uuid import uuid4
 
-from logicytics.contracts import (
+from logicytics.module.contracts import (
     Artifact,
     Capability,
     CollectorContext,
@@ -50,7 +50,7 @@ from logicytics.module.output_contracts import core_output_contract
 from logicytics.module.output_layout import allocate_output_run_directory, ensure_output_layout
 from logicytics.module.packaging import package_manifest
 from logicytics.module.planner import RunPlan
-from logicytics.platform_adapters import process_adapter, windows_api_adapter
+from logicytics.module.platform_adapters import process_adapter, windows_api_adapter
 
 _T = TypeVar("_T")
 

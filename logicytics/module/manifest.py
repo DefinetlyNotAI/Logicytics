@@ -14,9 +14,9 @@ from pathlib import Path, PurePosixPath
 from time import sleep
 from typing import Any
 
-from logicytics.contracts import CONTRACT_VERSION, Artifact, CollectorResult, RunStatus
+from logicytics.module.contracts import CONTRACT_VERSION, Artifact, CollectorResult, RunStatus
 from logicytics.module.redaction import redact_mapping, redact_text
-from logicytics.platform_adapters import windows_api_adapter
+from logicytics.module.platform_adapters import windows_api_adapter
 
 MANIFEST_SCHEMA_VERSION = 1
 _MANIFEST_REPLACE_DELAYS = (0.05, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2)

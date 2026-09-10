@@ -12,7 +12,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from logicytics.contracts import Capability
+from logicytics.module.contracts import Capability
 from logicytics.module.errors import PlanError
 from logicytics.module.redaction import redact_mapping
 

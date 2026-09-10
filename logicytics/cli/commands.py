@@ -15,8 +15,8 @@ from pathlib import Path
 from time import perf_counter
 from typing import Literal
 
-from logicytics.contracts import Capability, OutputPolicy, PostRunAction, RunRequest
 from logicytics.module.configuration import AppConfig, load_config
+from logicytics.module.contracts import Capability, OutputPolicy, PostRunAction, RunRequest
 from logicytics.module.discovery import preflight
 from logicytics.module.environment import inspect_environment
 from logicytics.module.errors import LogicyticsError
@@ -53,12 +53,12 @@ from logicytics.module.modes import (
 )
 from logicytics.module.output_layout import ensure_output_layout
 from logicytics.module.planner import build_plan
+from logicytics.module.platform_adapters import process_adapter
 from logicytics.module.runtime import RunSupervisor
 from logicytics.module.sysinternals import ensure_sysinternals
+from logicytics.module.terminal import terminal_lifecycle
 from logicytics.module.usb import ensure_usb_storage, find_windows_installation
-from logicytics.platform_adapters import process_adapter
-from logicytics.terminal import terminal_lifecycle
-from logicytics.virtual_environment import (
+from logicytics.module.virtual_environment import (
     is_running_in_virtual_environment,
     virtual_environment_details,
     virtual_environment_error,

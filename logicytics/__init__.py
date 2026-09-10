@@ -1,9 +1,10 @@
 """Logicytics v4 public contracts and lazily loaded application API."""
 
 import importlib
+import sys
 from typing import TYPE_CHECKING
 
-from logicytics.contracts import (
+from logicytics.module.contracts import (
     CONTRACT_VERSION,
     Capability,
     CollectionEstimate,
@@ -51,6 +52,14 @@ _APPLICATION_EXPORTS = frozenset(
         "run_collection",
     }
 )
+
+# Keep the former import paths working for shipped collectors and independently
+# authored plugins while the implementation lives in its domain subpackages.
+for _legacy_name, _module_name in {
+    "contracts": "logicytics.module.contracts",
+    "platform_adapters": "logicytics.module.platform_adapters",
+}.items():
+    sys.modules.setdefault(f"{__name__}.{_legacy_name}", importlib.import_module(_module_name))
 
 
 def __getattr__(name: str):
