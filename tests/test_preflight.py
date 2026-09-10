@@ -112,7 +112,7 @@ class PreflightTests(unittest.TestCase):
             )
 
     def test_preflight_cache_requires_source_interpreter_contract_and_configuration_identity(
-        self,
+            self,
     ) -> None:
         """Only an exact validation context may reuse an isolated runtime probe."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -125,27 +125,27 @@ class PreflightTests(unittest.TestCase):
             self.assertEqual(1, len(initial.valid), initial.invalid)
 
             with patch.object(
-                ProcessAdapter,
-                ProcessAdapter.run.__name__,
-                wraps=ProcessAdapter.run,
+                    ProcessAdapter,
+                    ProcessAdapter.run.__name__,
+                    wraps=ProcessAdapter.run,
             ) as probe:
                 cached = preflight(root, configuration_hash="configuration-a")
                 self.assertEqual(1, len(cached.valid), cached.invalid)
                 probe.assert_not_called()
 
             with patch.object(
-                ProcessAdapter,
-                ProcessAdapter.run.__name__,
-                wraps=ProcessAdapter.run,
+                    ProcessAdapter,
+                    ProcessAdapter.run.__name__,
+                    wraps=ProcessAdapter.run,
             ) as probe:
                 invalidated = preflight(root, configuration_hash="configuration-b")
                 self.assertEqual(1, len(invalidated.valid), invalidated.invalid)
                 self.assertEqual(1, probe.call_count)
 
             with patch.object(
-                ProcessAdapter,
-                ProcessAdapter.run.__name__,
-                wraps=ProcessAdapter.run,
+                    ProcessAdapter,
+                    ProcessAdapter.run.__name__,
+                    wraps=ProcessAdapter.run,
             ) as probe:
                 explicitly_invalidated = preflight(
                     root,
@@ -164,7 +164,8 @@ class PreflightTests(unittest.TestCase):
             collector_path.write_text(COLLECTOR, encoding="utf-8")
             progress: list[tuple[str, int, int, str]] = []
 
-            report = preflight(root, progress=lambda phase, checked, total, current: progress.append((phase, checked, total, current)))
+            report = preflight(root, progress=lambda phase, checked, total, current: progress.append(
+                (phase, checked, total, current)))
 
             self.assertEqual(1, len(report.valid), report.invalid)
             self.assertEqual(("checking", 0, 1, "core.system_info"), progress[0])
@@ -277,7 +278,8 @@ class PreflightTests(unittest.TestCase):
                 records["core.system.a_first"].errors,
             )
             self.assertEqual("failed", records["core.system.b_second"].status)
-            self.assertTrue(any("maximum_run_output_bytes" in error for error in records["core.system.b_second"].errors))
+            self.assertTrue(
+                any("maximum_run_output_bytes" in error for error in records["core.system.b_second"].errors))
             self.assertLessEqual(outcome.manifest.total_artifact_bytes, 7)
 
     def test_exhausted_run_output_budget_skips_unstarted_collectors(self) -> None:
@@ -465,9 +467,9 @@ class PreflightTests(unittest.TestCase):
             )
 
             for arguments, expected_exit in (
-                (["preflight"], 0),
-                (["preflight", "--include", "plugin.broken_plugin"], 2),
-                (["preflight", "--plugins"], 2),
+                    (["preflight"], 0),
+                    (["preflight", "--include", "plugin.broken_plugin"], 2),
+                    (["preflight", "--plugins"], 2),
             ):
                 with self.subTest(arguments=arguments):
                     output = io.StringIO()
@@ -506,7 +508,8 @@ class PreflightTests(unittest.TestCase):
             report = preflight(root)
             self.assertEqual(1, len(report.invalid))
             self.assertIn("collect must return CollectorResult", report.invalid[0].static_errors)
-            diagnostic = next(item for item in report.invalid[0].diagnostics if item.message == "collect must return CollectorResult")
+            diagnostic = next(
+                item for item in report.invalid[0].diagnostics if item.message == "collect must return CollectorResult")
             source_lines = collector_path.read_text(encoding="utf-8").splitlines()
             expected_line = next(
                 index
@@ -600,7 +603,7 @@ class PreflightTests(unittest.TestCase):
             self.assertIn("validate() must return ValidationResult", report.invalid[0].runtime_error or "")
 
     def test_preflight_rejects_validation_filesystem_process_network_and_environment_side_effects(
-        self,
+            self,
     ) -> None:
         """No validation probe may mutate files, launch processes, open sockets, or alter its environment."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -677,12 +680,12 @@ class PreflightTests(unittest.TestCase):
             (root / "plugins").mkdir()
             collector_path.write_text(COLLECTOR, encoding="utf-8")
             with patch.object(
-                discovery.process_adapter,
-                discovery.process_adapter.run.__name__,
-                side_effect=subprocess.TimeoutExpired(
-                    ["validation-worker"],
-                    timeout=10,
-                ),
+                    discovery.process_adapter,
+                    discovery.process_adapter.run.__name__,
+                    side_effect=subprocess.TimeoutExpired(
+                        ["validation-worker"],
+                        timeout=10,
+                    ),
             ):
                 report = preflight(root)
             self.assertEqual(1, len(report.invalid))

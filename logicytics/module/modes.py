@@ -91,8 +91,8 @@ LEGACY_MODE_ALIASES: Mapping[str, str] = MappingProxyType(
 
 
 def resolve_execution_mode(
-    selected: str | None,
-    legacy_flags: Mapping[str, bool],
+        selected: str | None,
+        legacy_flags: Mapping[str, bool],
 ) -> ExecutionMode | None:
     """Resolve a user-facing name or exactly one parser-exclusive legacy alias."""
     aliases = [name for flag, name in LEGACY_MODE_ALIASES.items() if legacy_flags.get(flag, False)]
@@ -128,11 +128,13 @@ def _candidate_modes(candidate: CollectorCandidate) -> tuple[str, ...]:
 
 
 def mode_matrix(
-    candidates: Iterable[CollectorCandidate] = (),
+        candidates: Iterable[CollectorCandidate] = (),
 ) -> ModeMatrix:
     """Return the versioned mode definitions and complete collector inclusion matrix."""
     aliases_by_mode = {
-        name: sorted(f"--{flag.removesuffix('_mode').replace('_', '-')}" for flag, target in LEGACY_MODE_ALIASES.items() if target == name)
+        name: sorted(
+            f"--{flag.removesuffix('_mode').replace('_', '-')}" for flag, target in LEGACY_MODE_ALIASES.items() if
+            target == name)
         for name in EXECUTION_MODES
     }
 
@@ -224,7 +226,8 @@ def render_mode_matrix_markdown(matrix: Mapping[str, object]) -> str:
         else:
             selection = "mode selected"
 
-        rows.append(f"| `{collector.get('id', '')}` | `{collector.get('kind', '')}` | {'yes' if valid else 'no'} | {modes} | {selection} |")
+        rows.append(
+            f"| `{collector.get('id', '')}` | `{collector.get('kind', '')}` | {'yes' if valid else 'no'} | {modes} | {selection} |")
 
     rows.append("")
     return "\n".join(rows)

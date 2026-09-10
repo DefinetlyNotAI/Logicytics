@@ -19,15 +19,19 @@
     <a href="https://www.bestpractices.dev/projects/9451"><img src="https://www.bestpractices.dev/projects/9451/badge" alt="OpenSSF Best Practices Badge"></a>
 </div>
 
-Logicytics is a Windows evidence collection framework. It validates every collector before use, runs each one in isolation, and keeps the result in a manifest-backed run folder. A collector can succeed, skip, or fail without obscuring the rest of the verified run.
+Logicytics is a Windows evidence collection framework. It validates every collector before use, runs each one in
+isolation, and keeps the result in a manifest-backed run folder. A collector can succeed, skip, or fail without
+obscuring the rest of the verified run.
 
-The complete user and developer manual is in [`docs/README.md`](docs/README.md) and is mirrored to the [Logicytics Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki).
+The complete user and developer manual is in [`docs/README.md`](docs/README.md) and is mirrored to
+the [Logicytics Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki).
 
 > Use Logicytics only on systems and data you are authorized to inspect.
 
 ## Start here
 
-The installer is the only command intended to run outside the managed virtual environment. Run it once from the repository root:
+The installer is the only command intended to run outside the managed virtual environment. Run it once from the
+repository root:
 
 ```powershell
 python -m logicytics.cli.installer
@@ -47,22 +51,24 @@ python -m logicytics plan --profile standard
 python -m logicytics run --profile standard --acknowledge-authorization
 ```
 
-If a normal command says the environment is missing, run the installer. If it says the environment is not active, run `.\.venv\Scripts\Activate.ps1` first.
+If a normal command says the environment is missing, run the installer. If it says the environment is not active, run
+`.\.venv\Scripts\Activate.ps1` first.
 
 ## Choose a run
 
 Every run validates collectors, records a manifest, and packages the result unless `--no-package` is supplied.
 
-| Need                                | Command                                                                   |
-|-------------------------------------|---------------------------------------------------------------------------|
-| Fast local inventory                | `python -m logicytics run --mode quick --acknowledge-authorization`       |
-| Everyday collection                 | `python -m logicytics run --mode balanced --acknowledge-authorization`    |
-| Deterministic sequential collection | `python -m logicytics run --mode standard --acknowledge-authorization`    |
-| Local-only collection               | `python -m logicytics run --mode offline --acknowledge-authorization`     |
-| Extended collection                 | `python -m logicytics run --mode thorough --acknowledge-authorization`    |
+| Need                                | Command                                                                                    |
+|-------------------------------------|--------------------------------------------------------------------------------------------|
+| Fast local inventory                | `python -m logicytics run --mode quick --acknowledge-authorization`                        |
+| Everyday collection                 | `python -m logicytics run --mode balanced --acknowledge-authorization`                     |
+| Deterministic sequential collection | `python -m logicytics run --mode standard --acknowledge-authorization`                     |
+| Local-only collection               | `python -m logicytics run --mode offline --acknowledge-authorization`                      |
+| Extended collection                 | `python -m logicytics run --mode thorough --acknowledge-authorization`                     |
 | Thorough duration report            | `python -m logicytics run --mode thorough --acknowledge-authorization --performance-check` |
 
-`thorough` can include administrator-only collectors. Start an elevated shell when the plan reports that requirement. See every available mode with `python -m logicytics --modes`.
+`thorough` can include administrator-only collectors. Start an elevated shell when the plan reports that requirement.
+See every available mode with `python -m logicytics --modes`.
 Add `--performance-check` to any `run --mode ...` command to time that mode's selected collectors serially.
 
 For offline collection from removable storage, add `--usb` to `preflight`,
@@ -85,7 +91,13 @@ output/data/zip/<fingerprint-prefix>.zip
 output/data/hashes/<fingerprint-prefix>.zip.sha256
 ```
 
-The console is intentionally brief. Use `manifest.json` to inspect a run, the package hash to verify a package, and `output/logs/Logicytics.log` for the human-readable application log. Interaction history and its usage graph live in `.cache/`, which is created automatically. Worker scratch files default to project-local `.temp/`; set `runtime.temporary_directory: system` in `logicytics.yaml` to use `%TEMP%/logicytics/` instead. The fingerprint is a SHA-256 identity derived from the immutable run ID; output uses its shortest unique prefix, starting at eight characters and extending only on a collision. Set `logging.level: DEBUG` in `logicytics.yaml` when you need detailed worker lifecycle information and file call sites.
+The console is intentionally brief. Use `manifest.json` to inspect a run, the package hash to verify a package, and
+`output/logs/Logicytics.log` for the human-readable application log. Interaction history and its usage graph live in
+`.cache/`, which is created automatically. Worker scratch files default to project-local `.temp/`; set
+`runtime.temporary_directory: system` in `logicytics.yaml` to use `%TEMP%/logicytics/` instead. The fingerprint is a
+SHA-256 identity derived from the immutable run ID; output uses its shortest unique prefix, starting at eight characters
+and extending only on a collision. Set `logging.level: DEBUG` in `logicytics.yaml` when you need detailed worker
+lifecycle information and file call sites.
 
 ## Useful commands
 
@@ -110,9 +122,11 @@ Use `python -m logicytics --help` or append `--help` to any command for its full
 
 ## Configuration and extensions
 
-`logicytics.yaml` is the single user configuration file. It controls output locations, worker limits, logging, optional Sysinternals setup, and declared collector settings. Keep credentials and secrets out of it.
+`logicytics.yaml` is the single user configuration file. It controls output locations, worker limits, logging, optional
+Sysinternals setup, and declared collector settings. Keep credentials and secrets out of it.
 
-Core collectors are shipped and validated as part of the application. Plugins and MODs are opt-in and must pass the same validation boundary before they can run.
+Core collectors are shipped and validated as part of the application. Plugins and MODs are opt-in and must pass the same
+validation boundary before they can run.
 
 - [Configuration reference](docs/CONFIGURATION.md)
 - [Output contract](docs/OUTPUTS.md)
@@ -122,9 +136,11 @@ Core collectors are shipped and validated as part of the application. Plugins an
 
 ## Help and contributing
 
-The [Logicytics Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) covers setup, troubleshooting, collector development, architecture, and security in more depth.
+The [Logicytics Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) covers setup, troubleshooting, collector
+development, architecture, and security in more depth.
 
-For changes to Logicytics, read [CONTRIBUTING.md](CONTRIBUTING.md). Please also review [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+For changes to Logicytics, read [CONTRIBUTING.md](CONTRIBUTING.md). Please also review [SECURITY.md](SECURITY.md)
+and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## License
 

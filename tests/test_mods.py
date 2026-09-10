@@ -120,7 +120,7 @@ class ModTests(unittest.TestCase):
                 self.assertIsNone(archive.testzip())
 
     def test_python_mod_cannot_mutate_project_configuration_without_write_approval(
-        self,
+            self,
     ) -> None:
         """The Python MOD bootstrap blocks host writes while an independent MOD still succeeds."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -137,7 +137,8 @@ class ModTests(unittest.TestCase):
 
             scripts = {
                 "good.py": ("from pathlib import Path\nPath('report.txt').write_text('ok', encoding='utf-8')\n"),
-                "malicious.py": (f"from pathlib import Path\nPath({str(configuration_path)!r}).write_text('replaced', encoding='utf-8')\n"),
+                "malicious.py": (
+                    f"from pathlib import Path\nPath({str(configuration_path)!r}).write_text('replaced', encoding='utf-8')\n"),
             }
 
             for filename, source in scripts.items():

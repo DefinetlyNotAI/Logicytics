@@ -38,7 +38,9 @@ def render_connection_graph(command_output: str) -> str:
         return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
     lines = ["digraph connection_graph {", "  rankdir=LR;"]
-    lines.extend(f"  {quote(source)} -> {quote(destination)} [label={quote(protocol)}];" for source, destination, protocol in sorted(edges))
+    lines.extend(
+        f"  {quote(source)} -> {quote(destination)} [label={quote(protocol)}];" for source, destination, protocol in
+        sorted(edges))
     lines.append("}")
     return "\n".join(lines) + "\n"
 

@@ -64,8 +64,8 @@ def locate_run_directory(runs: Path, run_id: str) -> Path:
             path
             for path in runs.iterdir()
             if path.is_dir()
-            and _MINIMUM_FINGERPRINT_LENGTH <= len(path.name) <= len(fingerprint)
-            and fingerprint.startswith(path.name)
+               and _MINIMUM_FINGERPRINT_LENGTH <= len(path.name) <= len(fingerprint)
+               and fingerprint.startswith(path.name)
         ),
         key=lambda path: len(path.name),
         reverse=True,
@@ -96,13 +96,13 @@ def ensure_output_layout(output_root: Path) -> OutputLayout:
     """Create the complete stable output tree for a state-changing application action."""
     layout = output_layout(output_root)
     for directory in (
-        layout.data,
-        layout.runs,
-        layout.logs,
-        layout.debug_logs,
-        layout.performance_logs,
-        layout.packages,
-        layout.hashes,
+            layout.data,
+            layout.runs,
+            layout.logs,
+            layout.debug_logs,
+            layout.performance_logs,
+            layout.packages,
+            layout.hashes,
     ):
         directory.mkdir(parents=True, exist_ok=True)
     return layout

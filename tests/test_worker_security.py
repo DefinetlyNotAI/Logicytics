@@ -56,7 +56,8 @@ class WorkerSecurityTests(unittest.TestCase):
                     )
                     self.assertEqual("succeeded", records["core.system.z_independent"].status)
                     self.assertFalse((root / "repository-compromised.txt").exists())
-                    self.assertFalse((outcome.run_directory / "collectors" / "z_independent" / "compromised.txt").exists())
+                    self.assertFalse(
+                        (outcome.run_directory / "collectors" / "z_independent" / "compromised.txt").exists())
 
     def test_collector_cannot_mutate_its_process_environment(self) -> None:
         """A collector must not change process environment or working-directory policy."""
@@ -154,7 +155,7 @@ class WorkerSecurityTests(unittest.TestCase):
                     self.assertFalse(retry_safe)
 
     def test_worker_enforces_external_browser_sensitive_and_private_key_read_capabilities(
-        self,
+            self,
     ) -> None:
         """External evidence reads require filesystem access plus every applicable sensitive grant."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -302,7 +303,7 @@ class WorkerSecurityTests(unittest.TestCase):
             self.assertEqual("succeeded", outcome.manifest.collectors[0].status)
 
     def test_worker_blocks_application_update_power_and_peer_collector_commands_without_stopping_peers(
-        self,
+            self,
     ) -> None:
         """Subprocess approval cannot escape the collector role or affect an independent worker."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -370,7 +371,7 @@ class WorkerSecurityTests(unittest.TestCase):
                     self.assertFalse(protected_configuration.exists())
 
     def test_preflight_rejects_collector_imports_of_application_and_orchestration_services(
-        self,
+            self,
     ) -> None:
         """Collectors may import public contracts but never the main application control surface."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -395,7 +396,8 @@ class WorkerSecurityTests(unittest.TestCase):
                     report = preflight(root)
                     self.assertEqual(1, len(report.invalid))
                     self.assertIn("forbidden application import", "\n".join(report.invalid[0].static_errors))
-                    diagnostic = next(item for item in report.invalid[0].diagnostics if "forbidden application import" in item.message)
+                    diagnostic = next(item for item in report.invalid[0].diagnostics if
+                                      "forbidden application import" in item.message)
                     self.assertEqual("static.engine_boundary", diagnostic.rule)
 
 

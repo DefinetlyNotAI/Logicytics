@@ -25,4 +25,4 @@ logging:
   maximum_bytes: 4194304
   delete_previous: true
   retention_days: 30
-collectors: {}
+collectors: { }

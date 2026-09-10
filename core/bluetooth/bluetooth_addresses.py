@@ -34,7 +34,7 @@ def _format_address(instance_id: str | None) -> str | None:
         instance_id,
     )
 
-    return ":".join(match.group(1)[offset : offset + 2].upper() for offset in range(0, 12, 2)) if match else None
+    return ":".join(match.group(1)[offset: offset + 2].upper() for offset in range(0, 12, 2)) if match else None
 
 
 class BluetoothAddressesCollector(CoreCollector):

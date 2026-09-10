@@ -73,9 +73,9 @@ class WmicInventoryCollectorTests(unittest.TestCase):
                 cancellation_file=root / ".cancelled",
             )
             with patch.object(
-                wmic_inventory,
-                wmic_inventory.which.__name__,
-                return_value=None,
+                    wmic_inventory,
+                    wmic_inventory.which.__name__,
+                    return_value=None,
             ):
                 collector = wmic_inventory.WmicInventoryCollector()
                 validation = collector.validate(context)

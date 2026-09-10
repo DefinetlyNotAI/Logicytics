@@ -215,7 +215,7 @@ class PublicApiTests(unittest.TestCase):
                 collector.status = "failed"
 
     def test_public_run_snapshot_and_cli_expose_verified_collector_failure_and_duration(
-        self,
+            self,
     ) -> None:
         """Callers can inspect redacted lifecycle timing and actionable failure details without parsing manifests."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -388,7 +388,7 @@ class PublicApiTests(unittest.TestCase):
                 query_run(root, outcome.manifest.run_id)
 
     def test_public_artifact_reads_reject_forgery_tampering_escapes_and_unbounded_access(
-        self,
+            self,
     ) -> None:
         """Only exact, bounded, manifest-cataloged bytes from the producing collector may be read."""
         with tempfile.TemporaryDirectory() as temporary:

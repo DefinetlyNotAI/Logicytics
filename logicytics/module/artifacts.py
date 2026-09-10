@@ -38,24 +38,25 @@ class WorkspaceArtifactWriter(ArtifactWriter):
     """Copies approved files from one collector workspace to the run artifact tree."""
 
     def __init__(
-        self,
-        collector_id: str,
-        workspace: Path,
-        artifact_root: Path,
-        maximum_output_bytes: int,
-        maximum_artifact_files: int,
-        *,
-        source_category: str | None = None,
-        maximum_artifact_bytes: int | None = None,
-        run_output_budget_bytes: int | None = None,
-        cancellation_file: Path | None = None,
-        allowed_relative_paths: tuple[str, ...] | None = None,
-        allowed_media_types: tuple[str, ...] | None = None,
+            self,
+            collector_id: str,
+            workspace: Path,
+            artifact_root: Path,
+            maximum_output_bytes: int,
+            maximum_artifact_files: int,
+            *,
+            source_category: str | None = None,
+            maximum_artifact_bytes: int | None = None,
+            run_output_budget_bytes: int | None = None,
+            cancellation_file: Path | None = None,
+            allowed_relative_paths: tuple[str, ...] | None = None,
+            allowed_media_types: tuple[str, ...] | None = None,
     ) -> None:
         """Initialize a workspace-bound writer with collector and run output quotas."""
         self._collector_id = collector_id
         collector_parts = collector_id.split(".", 2)
-        resolved_category = source_category if source_category is not None else (collector_parts[1] if len(collector_parts) > 1 else "")
+        resolved_category = source_category if source_category is not None else (
+            collector_parts[1] if len(collector_parts) > 1 else "")
         if not isinstance(resolved_category, str) or not resolved_category.strip():
             raise ArtifactError("artifact source_category must be a non-empty string")
         self._source_category = resolved_category
@@ -64,18 +65,19 @@ class WorkspaceArtifactWriter(ArtifactWriter):
         self._maximum_output_bytes = maximum_output_bytes
         self._maximum_artifact_bytes = maximum_output_bytes if maximum_artifact_bytes is None else maximum_artifact_bytes
         if (
-            not isinstance(self._maximum_artifact_bytes, int)
-            or isinstance(
-                self._maximum_artifact_bytes,
-                bool,
-            )
-            or not 1 <= self._maximum_artifact_bytes <= maximum_output_bytes
+                not isinstance(self._maximum_artifact_bytes, int)
+                or isinstance(
+            self._maximum_artifact_bytes,
+            bool,
+        )
+                or not 1 <= self._maximum_artifact_bytes <= maximum_output_bytes
         ):
             raise ArtifactError("maximum_artifact_bytes must be a positive integer within maximum_output_bytes")
         self._maximum_artifact_files = maximum_artifact_files
         self._run_output_budget_bytes = run_output_budget_bytes
         if run_output_budget_bytes is not None and (
-            not isinstance(run_output_budget_bytes, int) or isinstance(run_output_budget_bytes, bool) or run_output_budget_bytes < 1
+                not isinstance(run_output_budget_bytes, int) or isinstance(run_output_budget_bytes,
+                                                                           bool) or run_output_budget_bytes < 1
         ):
             raise ArtifactError("run_output_budget_bytes must be a positive integer")
         self._cancellation_file = cancellation_file
@@ -92,12 +94,12 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             return tuple(self._artifacts)
 
     def register_file(
-        self,
-        source: Path,
-        *,
-        media_type: str = "application/octet-stream",
-        evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
-        transformations: tuple[str, ...] = (),
+            self,
+            source: Path,
+            *,
+            media_type: str = "application/octet-stream",
+            evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
+            transformations: tuple[str, ...] = (),
     ) -> Artifact:
         """Serialize destination allocation, quota checks, publication, and catalog updates."""
         with self._registration_lock:
@@ -109,24 +111,25 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             )
 
     def _register_file(
-        self,
-        source: Path,
-        *,
-        media_type: str,
-        evidence_kind: EvidenceKind,
-        transformations: tuple[str, ...],
+            self,
+            source: Path,
+            *,
+            media_type: str,
+            evidence_kind: EvidenceKind,
+            transformations: tuple[str, ...],
     ) -> Artifact:
         """Copy one validated source into the run artifact tree and catalog it."""
         if not isinstance(media_type, str) or not re.fullmatch(
-            r"[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*",
-            media_type,
+                r"[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*",
+                media_type,
         ):
             raise ArtifactError("artifact media_type must be a valid MIME type")
         if self._allowed_media_types is not None and media_type not in self._allowed_media_types:
             raise ArtifactError(f"artifact media type is outside the collector output contract: {media_type}")
         if not isinstance(evidence_kind, EvidenceKind):
             raise ArtifactError("artifact evidence_kind must be an EvidenceKind value")
-        if not isinstance(transformations, tuple) or any(not isinstance(step, str) or not step.strip() for step in transformations):
+        if not isinstance(transformations, tuple) or any(
+                not isinstance(step, str) or not step.strip() for step in transformations):
             raise ArtifactError("artifact transformations must be a tuple of non-empty strings")
         self._check_cancellation()
         source = source.resolve()
@@ -140,7 +143,7 @@ class WorkspaceArtifactWriter(ArtifactWriter):
 
         relative_source = source.relative_to(self._workspace)
         if self._allowed_relative_paths is not None and not any(
-            fnmatch.fnmatchcase(relative_source.as_posix(), pattern) for pattern in self._allowed_relative_paths
+                fnmatch.fnmatchcase(relative_source.as_posix(), pattern) for pattern in self._allowed_relative_paths
         ):
             relative_path = relative_source.as_posix()
             raise ArtifactError(f"artifact path is outside the collector output contract: {relative_path}")
@@ -182,15 +185,16 @@ class WorkspaceArtifactWriter(ArtifactWriter):
             raise ArtifactError("collector artifact exceeds its declared maximum_artifact_bytes")
         if self._bytes_registered + size_bytes > self._maximum_output_bytes:
             raise ArtifactError("collector output exceeds its declared maximum_output_bytes")
-        if self._run_output_budget_bytes is not None and (self._bytes_registered + size_bytes > self._run_output_budget_bytes):
+        if self._run_output_budget_bytes is not None and (
+                self._bytes_registered + size_bytes > self._run_output_budget_bytes):
             raise ArtifactError("run output exceeds configured maximum_run_output_bytes")
 
     def _copy_artifact(
-        self,
-        source: Path,
-        destination: Path,
-        expected_size: int,
-        expected_modified_at: int,
+            self,
+            source: Path,
+            destination: Path,
+            expected_size: int,
+            expected_modified_at: int,
     ) -> str:
         """Stream bounded evidence to an atomic destination while observing cancellation."""
         temporary = destination.with_name(f".{destination.name}.{uuid4().hex}.tmp")

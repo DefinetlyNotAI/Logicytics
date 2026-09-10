@@ -60,11 +60,11 @@ def _score(query: str, flag: str, description: str) -> float:
 
 
 def match_flag(
-    user_input: str,
-    *,
-    threshold: float,
-    model_name: str,
-    history: Iterable[Mapping[str, object]] = (),
+        user_input: str,
+        *,
+        threshold: float,
+        model_name: str,
+        history: Iterable[Mapping[str, object]] = (),
 ) -> FlagMatch:
     """Match names and descriptions, then consult prior accepted inputs when weak."""
     if not isinstance(user_input, str) or not user_input.strip():
@@ -187,9 +187,9 @@ def write_usage_graph(path: Path, statistics: Mapping[str, object]) -> Path:
         label: count
         for label, count in source_counts.items()
         if isinstance(label, str)
-        and isinstance(count, int)
-        and not isinstance(count, bool)
-        and count > 0
+           and isinstance(count, int)
+           and not isinstance(count, bool)
+           and count > 0
     }
     labels = sorted(counts)
     width, row_height = 760, 30
@@ -210,11 +210,11 @@ def write_usage_graph(path: Path, statistics: Mapping[str, object]) -> Path:
     if not rows:
         rows.append('<text x="12" y="64" font-family="sans-serif" font-size="13">No tracked interactions yet.</text>')
     svg = (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-        f'viewBox="0 0 {width} {height}"><rect width="100%" height="100%" fill="white"/>'
-        '<text x="12" y="28" font-family="sans-serif" font-size="20">Logicytics command and mode usage</text>'
-        + "".join(rows)
-        + "</svg>\n"
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+            f'viewBox="0 0 {width} {height}"><rect width="100%" height="100%" fill="white"/>'
+            '<text x="12" y="28" font-family="sans-serif" font-size="20">Logicytics command and mode usage</text>'
+            + "".join(rows)
+            + "</svg>\n"
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(svg, encoding="utf-8")

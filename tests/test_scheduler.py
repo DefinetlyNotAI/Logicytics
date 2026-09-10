@@ -140,9 +140,9 @@ class SchedulerTests(unittest.TestCase):
     def test_conflicting_resource_classes_run_without_worker_overlap(self) -> None:
         """Disk, network, and registry resource conflicts each serialize their owners."""
         for resource_class in (
-            ResourceClass.DISK_HEAVY,
-            ResourceClass.NETWORK_HEAVY,
-            ResourceClass.REGISTRY_SENSITIVE,
+                ResourceClass.DISK_HEAVY,
+                ResourceClass.NETWORK_HEAVY,
+                ResourceClass.REGISTRY_SENSITIVE,
         ):
             with (
                 self.subTest(resource_class=resource_class),

@@ -96,8 +96,8 @@ class LegacyCodeOutputsCollector(CoreCollector):
         candidates: list[Path] = []
 
         for path in sorted(
-            filesystem_adapter.recursive(code_root),
-            key=lambda candidate: candidate.as_posix(),
+                filesystem_adapter.recursive(code_root),
+                key=lambda candidate: candidate.as_posix(),
         ):
             if context.is_cancelled:
                 return CollectorResult.cancelled("cancelled during legacy CODE discovery")
@@ -109,11 +109,11 @@ class LegacyCodeOutputsCollector(CoreCollector):
 
             try:
                 if (
-                    not path.is_file()
-                    or path.is_symlink()
-                    or path.resolve().parent != (code_root / relative.parent).resolve()
-                    or path.suffix.casefold() not in _EVIDENCE_EXTENSIONS
-                    or path.stat().st_size > _MAXIMUM_FILE_BYTES
+                        not path.is_file()
+                        or path.is_symlink()
+                        or path.resolve().parent != (code_root / relative.parent).resolve()
+                        or path.suffix.casefold() not in _EVIDENCE_EXTENSIONS
+                        or path.stat().st_size > _MAXIMUM_FILE_BYTES
                 ):
                     continue
             except OSError:

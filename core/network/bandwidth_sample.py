@@ -29,7 +29,8 @@ def _setting(settings: object, key: str, default: int, maximum: int) -> int:
 
 def _interval_setting(settings: object) -> float:
     """Return the configured finite positive sampling interval."""
-    value = settings.get("interval_seconds", _DEFAULT_INTERVAL_SECONDS) if isinstance(settings, dict) else _DEFAULT_INTERVAL_SECONDS
+    value = settings.get("interval_seconds", _DEFAULT_INTERVAL_SECONDS) if isinstance(settings,
+                                                                                      dict) else _DEFAULT_INTERVAL_SECONDS
     if isinstance(value, (int, float)) and not isinstance(value, bool) and 0.1 <= value <= 60:
         return float(value)
     return float(_DEFAULT_INTERVAL_SECONDS)

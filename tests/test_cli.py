@@ -292,7 +292,7 @@ class CliTests(unittest.TestCase):
         self.assertIn("collector_id", rendered)
 
     def test_update_can_explicitly_launch_an_allowlisted_action_in_a_new_window(
-        self,
+            self,
     ) -> None:
         """The paired update options launch exactly one shell-free visible Windows action."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -309,6 +309,7 @@ class CliTests(unittest.TestCase):
                 if command == ["git", "ls-remote", "--exit-code", "origin", "HEAD"]:
                     return subprocess.CompletedProcess(command, 0, "head\tHEAD\n", "")
                 self.fail(f"unexpected Git command: {command}")
+
             output = io.StringIO()
 
             with (
@@ -432,7 +433,7 @@ class CliTests(unittest.TestCase):
             self.assertIn("Install Git, then run the update command again.", output.getvalue())
 
     def test_new_window_launcher_uses_current_interpreter_without_a_shell(
-        self,
+            self,
     ) -> None:
         """Visible maintenance windows preserve argument boundaries and repository cwd."""
         root = Path("C:/repo").resolve()

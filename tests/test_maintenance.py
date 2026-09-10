@@ -35,7 +35,7 @@ class MaintenanceTests(unittest.TestCase):
     """Maintenance, integrity manifests, developer actions, and Sysinternals behavior."""
 
     def test_maintenance_configuration_requires_pinned_https_and_python_order(
-        self,
+            self,
     ) -> None:
         """Integrity endpoints and Python policy fail closed during configuration loading."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -57,10 +57,10 @@ class MaintenanceTests(unittest.TestCase):
             self.assertEqual("3.12", loaded.maintenance.recommended_python)
 
             for mutation in (
-                {"remote_manifest_url": "http://example.invalid/project.json"},
-                {"remote_manifest_sha256": None},
-                {"local_manifest_path": "../escape.json"},
-                {"minimum_python": "3.12", "recommended_python": "3.11"},
+                    {"remote_manifest_url": "http://example.invalid/project.json"},
+                    {"remote_manifest_sha256": None},
+                    {"local_manifest_path": "../escape.json"},
+                    {"minimum_python": "3.12", "recommended_python": "3.11"},
             ):
                 invalid = json.loads(json.dumps(valid))
                 invalid["maintenance"].update(mutation)
@@ -69,7 +69,7 @@ class MaintenanceTests(unittest.TestCase):
                     load_config(root, config)
 
     def test_authenticated_remote_manifest_is_strict_data_only_configuration(
-        self,
+            self,
     ) -> None:
         """Pinned HTTPS bytes are accepted, while unpinned or execution-bearing data is rejected."""
         payload = json.dumps(
@@ -86,9 +86,9 @@ class MaintenanceTests(unittest.TestCase):
         response = MagicMock()
         response.__enter__.return_value.read.return_value = payload
         with patch.object(
-            maintenance.urllib.request,
-            "urlopen",
-            return_value=response,
+                maintenance.urllib.request,
+                "urlopen",
+                return_value=response,
         ):
             manifest = fetch_remote_manifest(settings)
 

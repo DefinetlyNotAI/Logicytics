@@ -21,10 +21,10 @@ def _is_access_denied(detail: str) -> bool:
     """Recognize common Windows and PowerShell permission-denied error wording."""
     normalized = detail.casefold()
     return (
-        "permission denied" in normalized
-        or ("access" in normalized and "denied" in normalized)
-        or "requires elevation" in normalized
-        or "elevation is required" in normalized
+            "permission denied" in normalized
+            or ("access" in normalized and "denied" in normalized)
+            or "requires elevation" in normalized
+            or "elevation is required" in normalized
     )
 
 

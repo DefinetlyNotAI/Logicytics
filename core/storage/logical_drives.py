@@ -44,10 +44,10 @@ def _logical_drives() -> list[dict[str, int | str]]:
         free = ularge_integer()
 
         if not get_disk_free_space(
-            root,
-            available,
-            total,
-            free,
+                root,
+                available,
+                total,
+                free,
         ):
             continue
 

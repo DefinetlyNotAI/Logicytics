@@ -2,16 +2,16 @@
 
 ## Top-level folders
 
-| Folder | Responsibility |
-| --- | --- |
+| Folder        | Responsibility                                                                                                                    |
+|---------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | `logicytics/` | Public package, contracts, CLI, configuration, discovery, planning, runtime, logging, manifests, packaging, and platform adapters |
-| `core/` | Shipped read-only collector implementations grouped by specialty |
-| `plugins/` | Opt-in user-owned `PluginCollector` implementations |
-| `MODS/` | Opt-in Python scripts enabled by metadata sidecars |
-| `tests/` | Unit, contract, resilience, security, and Windows integration tests |
-| `docs/` | This user, operator, and developer manual |
-| `output/` | Local run output; do not commit evidence |
-| `.github/` | Contribution templates, security automation, and documentation publishing workflow |
+| `core/`       | Shipped read-only collector implementations grouped by specialty                                                                  |
+| `plugins/`    | Opt-in user-owned `PluginCollector` implementations                                                                               |
+| `MODS/`       | Opt-in Python scripts enabled by metadata sidecars                                                                                |
+| `tests/`      | Unit, contract, resilience, security, and Windows integration tests                                                               |
+| `docs/`       | This user, operator, and developer manual                                                                                         |
+| `output/`     | Local run output; do not commit evidence                                                                                          |
+| `.github/`    | Contribution templates, security automation, and documentation publishing workflow                                                |
 
 ## Engine modules
 
@@ -28,8 +28,12 @@
 
 ## Boundary rules
 
-Collectors may depend on contracts and approved platform adapters. They should not reach into supervisor internals, write outside their workspace, alter global configuration, or create unbounded output. The runtime owns cleanup and process termination. The manifest is the source for later inspection; do not infer success from a console line alone.
+Collectors may depend on contracts and approved platform adapters. They should not reach into supervisor internals,
+write outside their workspace, alter global configuration, or create unbounded output. The runtime owns cleanup and
+process termination. The manifest is the source for later inspection; do not infer success from a console line alone.
 
 ## Core source layout
 
-The core ID follows `core.<specialty>.<name>` and normally maps to `core/<specialty>/<name>.py`. A module contains one collector class with a PascalCase name ending in `Collector`, a `metadata()` class method, lifecycle methods, and no import-time collection. The catalog in [Core Collectors](CORE_COLLECTORS.md) is grouped by the live source tree.
+The core ID follows `core.<specialty>.<name>` and normally maps to `core/<specialty>/<name>.py`. A module contains one
+collector class with a PascalCase name ending in `Collector`, a `metadata()` class method, lifecycle methods, and no
+import-time collection. The catalog in [Core Collectors](CORE_COLLECTORS.md) is grouped by the live source tree.

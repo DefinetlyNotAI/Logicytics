@@ -166,9 +166,9 @@ def build_manifest(project_root: Path, settings: MaintenanceSettings, version: s
 
 
 def write_local_manifest(
-    project_root: Path,
-    settings: MaintenanceSettings,
-    manifest: IntegrityManifest,
+        project_root: Path,
+        settings: MaintenanceSettings,
+        manifest: IntegrityManifest,
 ) -> Path:
     """Atomically publish an explicitly approved local manifest update."""
     path = (project_root / settings.local_manifest_path).resolve()
@@ -188,9 +188,9 @@ def write_local_manifest(
 
 
 def compare_files(
-    project_root: Path,
-    settings: MaintenanceSettings,
-    manifest: IntegrityManifest,
+        project_root: Path,
+        settings: MaintenanceSettings,
+        manifest: IntegrityManifest,
 ) -> dict[str, list[str]]:
     """Report exact missing, modified, extra, and unchanged project files."""
     root = project_root.resolve()
@@ -230,7 +230,8 @@ def compare_versions(local: str, remote: str) -> str:
             label, number = pep_match.groups()
             identifiers = ((0, {".dev": 0, "a": 1, "b": 2, "rc": 3}[label]), (0, int(number)))
         elif prerelease is not None:
-            identifiers = tuple((0, int(identifier)) if identifier.isdigit() else (1, identifier) for identifier in prerelease.split("."))
+            identifiers = tuple((0, int(identifier)) if identifier.isdigit() else (1, identifier) for identifier in
+                                prerelease.split("."))
         is_stable = prerelease is None and pep_prerelease is None
         return int(major), int(minor), int(patch), 1 if is_stable else 0, identifiers
 
@@ -262,9 +263,11 @@ def maintenance_diagnostics(project_root: Path, settings: MaintenanceSettings) -
         "local_version": local_version(project_root),
         "manifest_source": selected.source if selected else None,
         "manifest_version": selected.version if selected else None,
-        "version_status": (compare_versions(local_version(project_root), selected.version) if selected else "unconfigured"),
+        "version_status": (
+            compare_versions(local_version(project_root), selected.version) if selected else "unconfigured"),
         "files": (
-            compare_files(project_root, settings, selected) if selected else {"missing": [], "modified": [], "extra": [], "unchanged": []}
+            compare_files(project_root, settings, selected) if selected else {"missing": [], "modified": [],
+                                                                              "extra": [], "unchanged": []}
         ),
         "remote_enabled": remote is not None,
     }

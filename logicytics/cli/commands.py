@@ -28,7 +28,6 @@ from logicytics.module.interaction import (
     usage_statistics,
     write_usage_graph,
 )
-from logicytics.module.usb import ensure_usb_storage, find_windows_installation
 from logicytics.module.logging import (
     ApplicationLogger,
     HumanArgumentParser,
@@ -56,6 +55,7 @@ from logicytics.module.output_layout import ensure_output_layout
 from logicytics.module.planner import build_plan
 from logicytics.module.runtime import RunSupervisor
 from logicytics.module.sysinternals import ensure_sysinternals
+from logicytics.module.usb import ensure_usb_storage, find_windows_installation
 from logicytics.platform_adapters import process_adapter
 from logicytics.terminal import terminal_lifecycle
 from logicytics.virtual_environment import (
@@ -70,9 +70,9 @@ class CLI:
 
     @staticmethod
     def render_preflight(
-        logger: ApplicationLogger,
-        validation: dict[str, list[dict[str, object]]],
-        sysinternals: dict[str, str],
+            logger: ApplicationLogger,
+            validation: dict[str, list[dict[str, object]]],
+            sysinternals: dict[str, str],
     ) -> None:
         """Present validated collectors and diagnostics without exposing internal JSON."""
         valid = validation["valid"]
@@ -91,7 +91,8 @@ class CLI:
             raw_diagnostics = item.get("diagnostics", [])
             diagnostics = raw_diagnostics if isinstance(raw_diagnostics, list) else []
             details = "; ".join(
-                str(diagnostic.get("message", "invalid collector")) for diagnostic in diagnostics if isinstance(diagnostic, dict)
+                str(diagnostic.get("message", "invalid collector")) for diagnostic in diagnostics if
+                isinstance(diagnostic, dict)
             )
             logger.event(
                 "ERROR" if item in invalid else "WARNING",
@@ -107,9 +108,9 @@ class CLI:
 
     @staticmethod
     def request(
-        arguments: argparse.Namespace,
-        default_workers: int,
-        configured_blocked_capabilities: tuple[Capability, ...] = (),
+            arguments: argparse.Namespace,
+            default_workers: int,
+            configured_blocked_capabilities: tuple[Capability, ...] = (),
     ) -> RunRequest:
         """Build an immutable run request while enforcing mode and rerun conflicts."""
         legacy_flags = {flag: getattr(arguments, flag, False) for flag in LEGACY_MODE_ALIASES}
@@ -143,8 +144,10 @@ class CLI:
                     raise ValueError("parallel execution conflicts with sequential default mode")
                 raise ValueError(f"{mode.name} mode requires sequential execution")
 
-        sequential = performance_check or explicit_sequential or (mode is not None and mode.strategy is ExecutionStrategy.SEQUENTIAL)
-        parallel = not performance_check and (explicit_parallel or (mode is not None and mode.strategy is ExecutionStrategy.PARALLEL))
+        sequential = performance_check or explicit_sequential or (
+                mode is not None and mode.strategy is ExecutionStrategy.SEQUENTIAL)
+        parallel = not performance_check and (
+                explicit_parallel or (mode is not None and mode.strategy is ExecutionStrategy.PARALLEL))
 
         enable_mods = getattr(arguments, "mods", False) or (mode.enable_mods if mode is not None else False)
 
@@ -179,17 +182,17 @@ class CLI:
                 raise ValueError(f"original run manifest cannot be loaded: {error}") from error
 
             if not isinstance(previous, dict) or not isinstance(
-                previous.get("run_id"),
-                str,
+                    previous.get("run_id"),
+                    str,
             ):
                 raise ValueError("original run manifest must contain a valid run_id")
 
             manifest_schema_version = previous.get("manifest_schema_version")
 
             if (
-                not isinstance(manifest_schema_version, int)
-                or isinstance(manifest_schema_version, bool)
-                or manifest_schema_version != MANIFEST_SCHEMA_VERSION
+                    not isinstance(manifest_schema_version, int)
+                    or isinstance(manifest_schema_version, bool)
+                    or manifest_schema_version != MANIFEST_SCHEMA_VERSION
             ):
                 schema_version_display = "None" if manifest_schema_version is None else repr(manifest_schema_version)
 
@@ -223,12 +226,14 @@ class CLI:
         plugins_enabled = bool(getattr(arguments, "plugins", False))
         mods_enabled = bool(getattr(arguments, "mods", False))
 
-        if selection_only and (include_arguments or exclude_arguments or arguments.profile is not None or plugins_enabled or mods_enabled):
+        if selection_only and (
+                include_arguments or exclude_arguments or arguments.profile is not None or plugins_enabled or mods_enabled):
             raise ValueError("collector execution cannot combine its ID with profile or selection flags")
 
         includes = (arguments.collector_id,) if selection_only else include_arguments
 
-        requested_blocked_capabilities = tuple(Capability(value) for value in getattr(arguments, "block_capability", ()))
+        requested_blocked_capabilities = tuple(
+            Capability(value) for value in getattr(arguments, "block_capability", ()))
         blocked_capabilities = tuple(dict.fromkeys((*configured_blocked_capabilities, *requested_blocked_capabilities)))
 
         return RunRequest(
@@ -247,7 +252,8 @@ class CLI:
             blocked_capabilities=blocked_capabilities,
             performance_check=performance_check,
             rerun_from=parent_run_id,
-            output_policy=(OutputPolicy.MANIFEST_ONLY if getattr(arguments, "no_package", False) else OutputPolicy.PACKAGE),
+            output_policy=(
+                OutputPolicy.MANIFEST_ONLY if getattr(arguments, "no_package", False) else OutputPolicy.PACKAGE),
             post_run_action=(
                 PostRunAction.REBOOT
                 if getattr(arguments, "reboot", False)
@@ -576,13 +582,13 @@ class CLI:
         return status
 
     def run_developer_action(
-        self,
-        root: Path,
-        configuration: AppConfig,
-        arguments: argparse.Namespace,
-        debug_logs: Path,
-        logger: ApplicationLogger,
-        repository: dict[str, bool | int | str | None],
+            self,
+            root: Path,
+            configuration: AppConfig,
+            arguments: argparse.Namespace,
+            debug_logs: Path,
+            logger: ApplicationLogger,
+            repository: dict[str, bool | int | str | None],
     ) -> int:
         """Run read-only contribution checks and an explicitly confirmed manifest update."""
         settings = configuration.maintenance
@@ -640,11 +646,11 @@ class CLI:
                     *(
                         f"{name.title()}: {len(comparison[name])}"
                         for name in (
-                            "missing",
-                            "modified",
-                            "extra",
-                            "unchanged",
-                        )
+                        "missing",
+                        "modified",
+                        "extra",
+                        "unchanged",
+                    )
                     ),
                     *(f"{name.replace('_', ' ').title()}: {len(checks[name])}" for name in organization_checks),
                 ),
@@ -827,10 +833,10 @@ def main(argv: list[str] | None = None) -> int:
         command_started_at = started_at
 
         def finish_command(
-            exit_code: int,
-            *,
-            status: str | None = None,
-            **fields: float | str,
+                exit_code: int,
+                *,
+                status: str | None = None,
+                **fields: float | str,
         ) -> int:
             """Record one command's terminal status and elapsed time."""
             application_logger.event(
@@ -992,7 +998,8 @@ def main(argv: list[str] | None = None) -> int:
             mode_rows = []
             for item in matrix_payload["modes"]:
                 aliases = ", ".join(item["legacy_aliases"]) or "none"
-                mode_rows.append(f"{item['name']}: {item['description']} ({len(item['collector_ids'])} collectors; aliases: {aliases})")
+                mode_rows.append(
+                    f"{item['name']}: {item['description']} ({len(item['collector_ids'])} collectors; aliases: {aliases})")
             application_logger.box(
                 "Execution modes",
                 (
@@ -1409,10 +1416,10 @@ def main(argv: list[str] | None = None) -> int:
 
         return 130
     except (
-        LogicyticsError,
-        OSError,
-        PermissionError,
-        ValueError,
+            LogicyticsError,
+            OSError,
+            PermissionError,
+            ValueError,
     ) as error:
         error_title = "Configuration validation failed" if arguments.command == "config" else "Command error"
         if application_logger is not None:

@@ -20,7 +20,8 @@ from logicytics.platform_adapters import which
 def _is_access_denied(detail: str) -> bool:
     """Recognize common permission-denied wording from netsh output."""
     normalized = detail.casefold()
-    return "permission denied" in normalized or ("access" in normalized and "denied" in normalized) or "requires elevation" in normalized
+    return "permission denied" in normalized or (
+            "access" in normalized and "denied" in normalized) or "requires elevation" in normalized
 
 
 def _normalize_interface_name(name: str) -> str:

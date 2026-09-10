@@ -380,7 +380,7 @@ class RuntimeTests(unittest.TestCase):
             self.assertIn("Remediation:", summary)
 
     def test_crashed_collector_runs_cleanup_and_packages_partial_evidence_and_isolation_results(
-        self,
+            self,
     ) -> None:
         """A failed process finalizes once, preserves evidence, and cannot stop its neighbor."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -431,7 +431,8 @@ class RuntimeTests(unittest.TestCase):
             assert package is not None
 
             with zipfile.ZipFile(Path(package["path"])) as archive:
-                packaged = {item["id"]: item for item in json.loads(archive.read("metadata/manifest.json"))["collectors"]}
+                packaged = {item["id"]: item for item in
+                            json.loads(archive.read("metadata/manifest.json"))["collectors"]}
                 summary = archive.read("reports/summary.txt").decode("utf-8")
                 self.assertIn(
                     "evidence/derived/core_system_a_failed/system.txt",
@@ -446,7 +447,7 @@ class RuntimeTests(unittest.TestCase):
             self.assertIn("collection failed after evidence registration", summary)
 
     def test_cleanup_failure_preserves_original_collector_crash_and_independent_results(
-        self,
+            self,
     ) -> None:
         """Cleanup errors must be reported without replacing the original failure."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -661,7 +662,8 @@ class RuntimeTests(unittest.TestCase):
             )
             outcome = RunSupervisor(root, default_config(root)).run(plan)
             records = {record.id: record for record in outcome.manifest.collectors}
-            child_pid = int((outcome.run_directory / "collectors" / "core_system_a_tree" / "child.pid").read_text(encoding="ascii"))
+            child_pid = int(
+                (outcome.run_directory / "collectors" / "core_system_a_tree" / "child.pid").read_text(encoding="ascii"))
 
             handle = open_process(child_pid)
             if handle is not None:
@@ -793,9 +795,9 @@ class RuntimeTests(unittest.TestCase):
             )
 
             with patch.object(
-                supervisor,
-                supervisor._supervise.__name__,
-                side_effect=KeyboardInterrupt,
+                    supervisor,
+                    supervisor._supervise.__name__,
+                    side_effect=KeyboardInterrupt,
             ):
                 outcome = supervisor.run(plan)
 

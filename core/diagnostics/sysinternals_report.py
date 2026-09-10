@@ -73,7 +73,8 @@ class SysinternalsReportCollector(CoreCollector):
             )
             sections.append(f"## {tool}")
             if binary is None:
-                archive_state = "archive available" if any(path.is_file() for path in archive_paths) else "binary and archive missing"
+                archive_state = "archive available" if any(
+                    path.is_file() for path in archive_paths) else "binary and archive missing"
                 sections.extend((f"status: {archive_state}", ""))
                 continue
             remaining = deadline - monotonic()
@@ -90,7 +91,8 @@ class SysinternalsReportCollector(CoreCollector):
             except TimeoutExpired as error:
                 sections.extend((f"status: timed out after {error.timeout} seconds", ""))
                 continue
-            output = (completed.stdout + ("\n" if completed.stdout and completed.stderr else "") + completed.stderr).strip()
+            output = (completed.stdout + (
+                "\n" if completed.stdout and completed.stderr else "") + completed.stderr).strip()
             sections.extend((f"status: executed (exit {completed.returncode})", output[:MAX_OUTPUT_CHARS], ""))
         report = "\n".join(sections)
         output_path = context.workspace / "sysinternals_report.txt"

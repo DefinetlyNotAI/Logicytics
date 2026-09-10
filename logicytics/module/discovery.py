@@ -127,11 +127,11 @@ class PreflightReport:
         return tuple(candidate for candidate in self.candidates if not candidate.valid)
 
     def to_dict(
-        self,
-        *,
-        selected_plugins: tuple[str, ...] = (),
-        enable_plugins: bool = False,
-        enable_mods: bool = False,
+            self,
+            *,
+            selected_plugins: tuple[str, ...] = (),
+            enable_plugins: bool = False,
+            enable_mods: bool = False,
     ) -> dict[str, list[dict[str, object]]]:
         """Classify invalid plugins as quarantined unless the request selects them."""
         valid = [
@@ -150,10 +150,10 @@ class PreflightReport:
                 "diagnostics": [asdict(diagnostic) for diagnostic in candidate.diagnostics],
             }
             if (
-                candidate.kind is CollectorKind.CORE
-                or (enable_plugins and candidate.kind is CollectorKind.PLUGIN)
-                or (enable_mods and candidate.kind is CollectorKind.MOD)
-                or candidate.selection_id in selected
+                    candidate.kind is CollectorKind.CORE
+                    or (enable_plugins and candidate.kind is CollectorKind.PLUGIN)
+                    or (enable_mods and candidate.kind is CollectorKind.MOD)
+                    or candidate.selection_id in selected
             ):
                 invalid.append(item)
             else:
@@ -239,8 +239,8 @@ def _iter_candidates(project_root: Path, kind: CollectorKind) -> list[Path]:
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         relative = path.relative_to(root)
         if any(
-            part.startswith(("_", ".")) or part in {"tests", "examples", "venv", ".venv"}
-            for part in relative.parts
+                part.startswith(("_", ".")) or part in {"tests", "examples", "venv", ".venv"}
+                for part in relative.parts
         ):
             continue
         if not _is_within(path, root):
@@ -346,15 +346,17 @@ def _validate_engine_boundary_imports(tree: ast.Module, candidate: CollectorCand
             elif module == "logicytics":
                 forbidden = sorted(alias.name for alias in node.names if alias.name in _APPLICATION_IMPORTS)
                 if forbidden:
-                    candidate.static_errors.append(f"forbidden application import: {', '.join(forbidden)} (line {node.lineno})")
+                    candidate.static_errors.append(
+                        f"forbidden application import: {', '.join(forbidden)} (line {node.lineno})")
     for node in ast.walk(tree):
         if (
-            isinstance(node, ast.Attribute)
-            and isinstance(node.value, ast.Name)
-            and node.value.id in application_aliases
-            and node.attr in _APPLICATION_IMPORTS
+                isinstance(node, ast.Attribute)
+                and isinstance(node.value, ast.Name)
+                and node.value.id in application_aliases
+                and node.attr in _APPLICATION_IMPORTS
         ):
-            candidate.static_errors.append(f"forbidden application import: {node.value.id}.{node.attr} (line {node.lineno})")
+            candidate.static_errors.append(
+                f"forbidden application import: {node.value.id}.{node.attr} (line {node.lineno})")
 
 
 def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
@@ -381,9 +383,11 @@ def _validate_static(path: Path, kind: CollectorKind) -> CollectorCandidate:
     elif public_classes[0].name != expected_class:
         candidate.static_errors.append(f"collector class must be named {expected_class}")
     elif not any(
-        (isinstance(base, ast.Name) and base.id == ("CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
-        or (isinstance(base, ast.Attribute) and base.attr == ("CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
-        for base in public_classes[0].bases
+            (isinstance(base, ast.Name) and base.id == (
+                    "CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
+            or (isinstance(base, ast.Attribute) and base.attr == (
+                    "CoreCollector" if kind is CollectorKind.CORE else "PluginCollector"))
+            for base in public_classes[0].bases
     ):
         candidate.static_errors.append("collector class must inherit from its required base class")
     elif public_classes:
@@ -470,8 +474,8 @@ def _validate_mod(path: Path, mods_root: Path) -> CollectorCandidate:
 
 
 def _validate_class_shape(
-    class_node: ast.ClassDef,
-    candidate: CollectorCandidate,
+        class_node: ast.ClassDef,
+        candidate: CollectorCandidate,
 ) -> None:
     """Enforce the small, documented public API allowed on a collector class."""
     if ast.get_docstring(class_node) is None:
@@ -504,7 +508,7 @@ def _validate_class_shape(
                 continue
 
             is_metadata_constructor = (isinstance(node.func, ast.Name) and node.func.id == "CollectorMetadata") or (
-                isinstance(node.func, ast.Attribute) and node.func.attr == "CollectorMetadata"
+                    isinstance(node.func, ast.Attribute) and node.func.attr == "CollectorMetadata"
             )
 
             if is_metadata_constructor:
@@ -538,7 +542,8 @@ def _validate_class_shape(
 
     if candidate.kind is CollectorKind.CORE and len(metadata_calls) == 1:
         if not any(keyword.arg == "capabilities" for keyword in metadata_calls[0].keywords):
-            candidate.static_errors.append("CAPABILITY_METADATA_MISSING: core metadata must explicitly declare capabilities")
+            candidate.static_errors.append(
+                "CAPABILITY_METADATA_MISSING: core metadata must explicitly declare capabilities")
 
     collect_method = methods.get("collect")
 
@@ -582,13 +587,16 @@ def _validate_class_shape(
 
                         if media_keyword is None:
                             registered_media_types.add("application/octet-stream")
-                        elif isinstance(media_keyword.value, ast.Constant) and isinstance(media_keyword.value.value, str):
+                        elif isinstance(media_keyword.value, ast.Constant) and isinstance(media_keyword.value.value,
+                                                                                          str):
                             registered_media_types.add(media_keyword.value.value)
                         else:
-                            candidate.static_errors.append(f"register_file media_type must be a literal string (line {call.lineno})")
+                            candidate.static_errors.append(
+                                f"register_file media_type must be a literal string (line {call.lineno})")
 
                 if not registered_media_types.issubset(declared_media_types):
-                    candidate.static_errors.append("metadata output_media_types must include every registered artifact type")
+                    candidate.static_errors.append(
+                        "metadata output_media_types must include every registered artifact type")
 
     unknown = sorted(set(methods) - allowed)
 
@@ -645,7 +653,8 @@ def _validate_class_shape(
             candidate.static_errors.append(f"{name} must begin with {expected_first}")
 
         if name in {"metadata", "dependencies"}:
-            is_classmethod = any(isinstance(decorator, ast.Name) and decorator.id == "classmethod" for decorator in method.decorator_list)
+            is_classmethod = any(isinstance(decorator, ast.Name) and decorator.id == "classmethod" for decorator in
+                                 method.decorator_list)
 
             if not is_classmethod:
                 candidate.static_errors.append(f"{name} must be a classmethod")
@@ -676,8 +685,10 @@ def _validate_class_shape(
 
 def discover(project_root: Path) -> tuple[CollectorCandidate, ...]:
     """Discover candidates without importing their modules."""
-    candidates = [_validate_static(path, CollectorKind.CORE) for path in _iter_candidates(project_root, CollectorKind.CORE)]
-    candidates.extend(_validate_static(path, CollectorKind.PLUGIN) for path in _iter_candidates(project_root, CollectorKind.PLUGIN))
+    candidates = [_validate_static(path, CollectorKind.CORE) for path in
+                  _iter_candidates(project_root, CollectorKind.CORE)]
+    candidates.extend(
+        _validate_static(path, CollectorKind.PLUGIN) for path in _iter_candidates(project_root, CollectorKind.PLUGIN))
     mods_root = project_root / "MODS"
     if mods_root.exists():
         for path in sorted(item for item in mods_root.rglob("*") if item.is_file()):
@@ -712,10 +723,11 @@ def _accept_runtime_metadata(candidate: CollectorCandidate, payload: object) -> 
         candidate.runtime_error = "collector ID must start with its owner kind"
     elif candidate.kind is CollectorKind.CORE and specialty != candidate.path.parent.name:
         candidate.runtime_error = "core collector specialty must match its parent folder"
-    elif candidate.kind is CollectorKind.CORE and metadata.id != (f"core.{candidate.path.parent.name}.{candidate.path.stem}"):
+    elif candidate.kind is CollectorKind.CORE and metadata.id != (
+            f"core.{candidate.path.parent.name}.{candidate.path.stem}"):
         candidate.runtime_error = "core collector ID must match core/<specialty>/<filename>.py"
     elif candidate.kind is CollectorKind.PLUGIN and metadata.id != (
-        f"plugin.{candidate.path.parent.name if candidate.path.name == 'main.py' else candidate.path.stem}"
+            f"plugin.{candidate.path.parent.name if candidate.path.name == 'main.py' else candidate.path.stem}"
     ):
         candidate.runtime_error = "plugin collector ID must match its plugin folder or filename"
     elif candidate.kind is CollectorKind.MOD and metadata.id != f"mod.{candidate.path.stem}":
@@ -779,7 +791,8 @@ def _runtime_probe(project_root: Path, candidate: CollectorCandidate, temporary_
 def _cache_path(project_root: Path, cache_directory: Path | None = None) -> Path:
     """Keep disposable validation state outside source and evidence directories."""
     project_key = hashlib.sha256(str(project_root.resolve()).encode("utf-8")).hexdigest()
-    root = cache_directory if cache_directory is not None else Path(tempfile.gettempdir()) / "logicytics-preflight-cache"
+    root = cache_directory if cache_directory is not None else Path(
+        tempfile.gettempdir()) / "logicytics-preflight-cache"
     return root / f"{project_key}.json"
 
 
@@ -808,10 +821,10 @@ def _load_cache(project_root: Path, configuration_hash: str, cache_directory: Pa
 
 
 def _write_cache(
-    project_root: Path,
-    configuration_hash: str,
-    candidates: list[CollectorCandidate],
-    cache_directory: Path | None = None,
+        project_root: Path,
+        configuration_hash: str,
+        candidates: list[CollectorCandidate],
+        cache_directory: Path | None = None,
 ) -> None:
     """Atomically persist successful probes; invalid candidates are always reprobed."""
     entries: dict[str, object] = {}
@@ -839,13 +852,13 @@ def _write_cache(
 
 
 def preflight(
-    project_root: Path,
-    *,
-    configuration_hash: str = "unconfigured",
-    progress: PreflightProgress | None = None,
-    invalidate_cache: bool = False,
-    cache_directory: Path | None = None,
-    temporary_directory: Path | None = None,
+        project_root: Path,
+        *,
+        configuration_hash: str = "unconfigured",
+        progress: PreflightProgress | None = None,
+        invalidate_cache: bool = False,
+        cache_directory: Path | None = None,
+        temporary_directory: Path | None = None,
 ) -> PreflightReport:
     """Perform static checks then a short-lived isolated metadata probe."""
     if invalidate_cache:
@@ -873,9 +886,9 @@ def preflight(
         relative_path = candidate.path.resolve().relative_to(project_root.resolve()).as_posix()
         entry = cached.get(relative_path)
         if (
-            isinstance(entry, dict)
-            and entry.get("kind") == candidate.kind.value
-            and entry.get("source_hash") == _source_hash(candidate.path)
+                isinstance(entry, dict)
+                and entry.get("kind") == candidate.kind.value
+                and entry.get("source_hash") == _source_hash(candidate.path)
         ):
             _accept_runtime_metadata(candidate, entry.get("metadata"))
         else:

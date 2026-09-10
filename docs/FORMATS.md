@@ -1,10 +1,13 @@
 # Reading generated values
 
-Start with the run's `manifest.json`. It is the index of truth: use its collector IDs and artifact records to find files rather than assuming a filename exists.
+Start with the run's `manifest.json`. It is the index of truth: use its collector IDs and artifact records to find files
+rather than assuming a filename exists.
 
 ## Common fields
 
-An artifact has an ID, collector ID, POSIX-style run-relative path, name, MIME type, evidence kind (`raw` or `derived`), byte size, collection timestamp, transformations, and SHA-256. JSON values may contain `null` when Windows did not provide a value. Text and CSV should be read as UTF-8 where possible; preserve raw bytes when a file is marked binary.
+An artifact has an ID, collector ID, POSIX-style run-relative path, name, MIME type, evidence kind (`raw` or `derived`),
+byte size, collection timestamp, transformations, and SHA-256. JSON values may contain `null` when Windows did not
+provide a value. Text and CSV should be read as UTF-8 where possible; preserve raw bytes when a file is marked binary.
 
 ## Format guidance
 
@@ -18,7 +21,8 @@ An artifact has an ID, collector ID, POSIX-style run-relative path, name, MIME t
 
 ## Using values in a script
 
-The public API can load a validated `RunSnapshot` and read bounded artifacts. Prefer the API to globbing the output tree because it revalidates manifest structure and collector ownership.
+The public API can load a validated `RunSnapshot` and read bounded artifacts. Prefer the API to globbing the output tree
+because it revalidates manifest structure and collector ownership.
 
 ```python
 from pathlib import Path
@@ -33,4 +37,5 @@ with data as stream:
     first_bytes = stream.read(1024)
 ```
 
-Keep the run ID and artifact ID from the manifest. Do not trust a path supplied by a user until it has been checked against the manifest and the expected output root.
+Keep the run ID and artifact ID from the manifest. Do not trust a path supplied by a user until it has been checked
+against the manifest and the expected output root.

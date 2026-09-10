@@ -21,10 +21,10 @@ def _is_unavailable(detail: str) -> bool:
     """Recognize missing Defender-provider and access-denied results without failing a run."""
     normalized = detail.casefold()
     return (
-        "permission denied" in normalized
-        or ("access" in normalized and "denied" in normalized)
-        or "not recognized" in normalized
-        or "cannot find" in normalized
+            "permission denied" in normalized
+            or ("access" in normalized and "denied" in normalized)
+            or "not recognized" in normalized
+            or "cannot find" in normalized
     )
 
 

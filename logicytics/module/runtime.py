@@ -70,21 +70,21 @@ class _ProcessContext(Protocol):
     """Typed multiprocessing context subset used by the supervisor."""
 
     def Process(
-        self,
-        group: None = None,
-        target: Callable[..., object] | None = None,
-        name: str | None = None,
-        args: tuple[Any, ...] = (),
-        kwargs: dict[str, Any] | None = None,
-        *,
-        daemon: bool | None = None,
+            self,
+            group: None = None,
+            target: Callable[..., object] | None = None,
+            name: str | None = None,
+            args: tuple[Any, ...] = (),
+            kwargs: dict[str, Any] | None = None,
+            *,
+            daemon: bool | None = None,
     ) -> BaseProcess:
         """Create a worker process using the configured multiprocessing context."""
         ...
 
     def Queue(
-        self,
-        maxsize: int = 0,
+            self,
+            maxsize: int = 0,
     ) -> Queue[_T]:
         """Create a typed result queue for worker-to-supervisor messages."""
         ...
@@ -191,13 +191,13 @@ class _WorkerMutationGuard:
     )
 
     def __init__(
-        self,
-        workspace: Path,
-        artifact_root: Path,
-        collector_id: str,
-        capabilities: tuple[Capability, ...],
-        collector_source: Path,
-        blocked_capabilities: tuple[Capability, ...] = (),
+            self,
+            workspace: Path,
+            artifact_root: Path,
+            collector_id: str,
+            capabilities: tuple[Capability, ...],
+            collector_source: Path,
+            blocked_capabilities: tuple[Capability, ...] = (),
     ) -> None:
         """Install audit boundaries for one collector's filesystem and capability scope."""
         self.roots = (
@@ -247,7 +247,8 @@ class _WorkerMutationGuard:
         if not isinstance(value, (str, bytes, os.PathLike)):
             raise PermissionError("collector filesystem mutation has an unsupported target")
         path = Path(os.fsdecode(value)).resolve()
-        if Capability.FILESYSTEM_WRITE in self.capabilities and (Capability.FILESYSTEM_WRITE not in self.blocked_capabilities):
+        if Capability.FILESYSTEM_WRITE in self.capabilities and (
+                Capability.FILESYSTEM_WRITE not in self.blocked_capabilities):
             return
         if not any(path == root or root in path.parents for root in self.roots):
             self._require_capability(
@@ -262,7 +263,8 @@ class _WorkerMutationGuard:
         if isinstance(value, int) or not isinstance(value, (str, bytes, os.PathLike)):
             return
         path = Path(os.fsdecode(value)).resolve()
-        if path == self.collector_source or any(path == root or root in path.parents for root in (*self.roots, *self.runtime_roots)):
+        if path == self.collector_source or any(
+                path == root or root in path.parents for root in (*self.roots, *self.runtime_roots)):
             return
         self._require_capability(
             Capability.FILESYSTEM_READ,
@@ -272,14 +274,15 @@ class _WorkerMutationGuard:
         components = tuple(part.casefold() for part in path.parts)
         browser_data = any(part in {"chrome", "edge", "firefox", "opera software", "opera gx"} for part in components)
         private_key = (
-            ".ssh" in components
-            or path.name.casefold() in {"id_rsa", "id_ed25519", "id_ecdsa", "id_dsa"}
-            or path.suffix.casefold() in {".pem", ".ppk"}
+                ".ssh" in components
+                or path.name.casefold() in {"id_rsa", "id_ed25519", "id_ecdsa", "id_dsa"}
+                or path.suffix.casefold() in {".pem", ".ppk"}
         )
         sensitive = (
-            private_key
-            or browser_data
-            or any(label in path.name.casefold() for label in ("cookie", "credential", "password", "token", "secret", "login data"))
+                private_key
+                or browser_data
+                or any(label in path.name.casefold() for label in
+                       ("cookie", "credential", "password", "token", "secret", "login data"))
         )
         if browser_data:
             self._require_capability(Capability.BROWSER_DATA, "browser_data", f"target={path}")
@@ -343,21 +346,22 @@ class _WorkerMutationGuard:
                     return "main_application"
         command_text = " ".join(normalized)
         if re.search(
-            r"(?<![a-z0-9_.-])logicytics\.(?:json|ya?ml)(?![a-z0-9_.-])",
-            command_text,
-            re.IGNORECASE,
+                r"(?<![a-z0-9_.-])logicytics\.(?:json|ya?ml)(?![a-z0-9_.-])",
+                command_text,
+                re.IGNORECASE,
         ):
             return "configuration_mutation"
         if re.search(
-            r"(?<![a-z0-9_.\\/:-])logicytics(?:\.[a-z_][a-z0-9_]*)?(?![a-z0-9_.\\/:-])",
-            command_text,
-            re.IGNORECASE,
+                r"(?<![a-z0-9_.\\/:-])logicytics(?:\.[a-z_][a-z0-9_]*)?(?![a-z0-9_.\\/:-])",
+                command_text,
+                re.IGNORECASE,
         ):
             return "main_application"
         if self._FORBIDDEN_POWERSHELL.search(command_text):
             return "system_power_or_package_management"
         if tool := self._FORBIDDEN_TOOL_REFERENCE.search(command_text):
-            return "system_power" if tool.group(0).casefold().startswith("shutdown") else "repository_or_package_management"
+            return "system_power" if tool.group(0).casefold().startswith(
+                "shutdown") else "repository_or_package_management"
         for token in normalized:
             candidate = Path(token)
             if candidate.suffix.casefold() != ".py":
@@ -397,7 +401,8 @@ class _WorkerMutationGuard:
             mode = arguments[1] if len(arguments) > 1 else None
             flags = arguments[2] if len(arguments) > 2 else 0
             writing = isinstance(mode, str) and any(flag in mode for flag in "wax+")
-            writing = writing or isinstance(flags, int) and bool(flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND))
+            writing = writing or isinstance(flags, int) and bool(
+                flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND))
             if writing:
                 self._check_path(arguments[0])
             else:
@@ -439,12 +444,12 @@ def _result_from_dict(data: _SerializedResult) -> CollectorResult:
 
 
 def _mod_command(
-    script: Path,
-    execution_type: str,
-    workspace: Path | None = None,
-    collector_id: str = "mod.legacy",
-    capabilities: tuple[Capability, ...] = (),
-    blocked_capabilities: tuple[Capability, ...] = (),
+        script: Path,
+        execution_type: str,
+        workspace: Path | None = None,
+        collector_id: str = "mod.legacy",
+        capabilities: tuple[Capability, ...] = (),
+        blocked_capabilities: tuple[Capability, ...] = (),
 ) -> list[str]:
     """Build a shell-free command for one copied legacy MODS script."""
     if execution_type != "mod_python":
@@ -744,7 +749,8 @@ def _worker_entry(payload: _WorkerPayload, result_queue: Queue[_WorkerMessage]) 
                                 }
                             )
                             if undeclared_media_types:
-                                raise TypeError(f"collector registered undeclared output media types: {', '.join(undeclared_media_types)}")
+                                raise TypeError(
+                                    f"collector registered undeclared output media types: {', '.join(undeclared_media_types)}")
                             result = collector.finalize(context, result)
                             if not isinstance(result, CollectorResult):
                                 raise TypeError("finalize() must return CollectorResult")
@@ -815,7 +821,8 @@ def _serialize_result(result: CollectorResult) -> _SerializedResult:
         "artifacts": [dict(cast(Mapping[str, object], artifact.to_dict())) for artifact in result.artifacts],
         "errors": list(result.errors),
         "metrics": {
-            key: value for key, value in result.metrics.items() if isinstance(value, (int, float, str)) and not isinstance(value, bool)
+            key: value for key, value in result.metrics.items() if
+            isinstance(value, (int, float, str)) and not isinstance(value, bool)
         },
     }
 
@@ -838,10 +845,12 @@ class RunSupervisor:
             metadata.id: sorted(capability.value for capability in set(metadata.capabilities).intersection(blocked))
             for metadata in (_require_metadata(candidate) for candidate in plan.collectors)
         }
-        policy_violations = {collector_id: capabilities for collector_id, capabilities in policy_violations.items() if capabilities}
+        policy_violations = {collector_id: capabilities for collector_id, capabilities in policy_violations.items() if
+                             capabilities}
         if policy_violations:
             details = "; ".join(
-                f"{collector_id}={', '.join(capabilities)}" for collector_id, capabilities in sorted(policy_violations.items())
+                f"{collector_id}={', '.join(capabilities)}" for collector_id, capabilities in
+                sorted(policy_violations.items())
             )
             raise CapabilityPolicyError(
                 "CAPABILITY_BLOCKED",
@@ -852,7 +861,8 @@ class RunSupervisor:
         if plan.collectors and not plan.request.acknowledge_authorization:
             selected_metadata = tuple(_require_metadata(candidate) for candidate in plan.collectors)
             categories = sorted(str(metadata.specialty) for metadata in selected_metadata)
-            sensitive_outputs = sorted({category for metadata in selected_metadata for category in metadata.sensitive_data_categories})
+            sensitive_outputs = sorted(
+                {category for metadata in selected_metadata for category in metadata.sensitive_data_categories})
             raise PermissionError(
                 "collection requires --acknowledge-authorization "
                 "(acknowledge_authorization=True); "
@@ -1057,16 +1067,16 @@ class RunSupervisor:
 
     @staticmethod
     def _execute_post_run_action(
-        action: PostRunAction,
-        manifest: RunManifest,
-        run_logger: FileEventLogger,
+            action: PostRunAction,
+            manifest: RunManifest,
+            run_logger: FileEventLogger,
     ) -> None:
         """Schedule an explicit Windows power action only after verified packaging."""
         package = manifest.package or {}
         if (
-            manifest.status is not RunStatus.SUCCEEDED
-            or not isinstance(package.get("path"), str)
-            or not isinstance(package.get("sha256"), str)
+                manifest.status is not RunStatus.SUCCEEDED
+                or not isinstance(package.get("path"), str)
+                or not isinstance(package.get("sha256"), str)
         ):
             raise LogicyticsError("post-run action requires a successful run and verified package")
         flag = "/r" if action is PostRunAction.REBOOT else "/s"
@@ -1122,18 +1132,18 @@ class RunSupervisor:
         log_path.write_text("\n".join(rows) + "\n", encoding="utf-8")
 
     def _supervise(
-        self,
-        plan: RunPlan,
-        run_id: str,
-        workspace_root: Path,
-        temporary_root: Path,
-        artifact_root: Path,
-        cancellation_file: Path,
-        manifest: RunManifest,
-        manifest_path: Path,
-        records: dict[str, CollectorRecord],
-        run_logger: FileEventLogger,
-        application_logger: EventLogger,
+            self,
+            plan: RunPlan,
+            run_id: str,
+            workspace_root: Path,
+            temporary_root: Path,
+            artifact_root: Path,
+            cancellation_file: Path,
+            manifest: RunManifest,
+            manifest_path: Path,
+            records: dict[str, CollectorRecord],
+            run_logger: FileEventLogger,
+            application_logger: EventLogger,
     ) -> None:
         """Schedule bounded isolated workers and contain each terminal failure."""
         pending = list(plan.collectors)
@@ -1155,7 +1165,8 @@ class RunSupervisor:
                 self._cancel_active(active, records, manifest, manifest_path, "run cancellation requested")
                 for candidate in pending:
                     metadata = _require_metadata(candidate)
-                    records[metadata.id].apply_result(CollectorResult(CollectorStatus.CANCELLED, "not started because run was cancelled"))
+                    records[metadata.id].apply_result(
+                        CollectorResult(CollectorStatus.CANCELLED, "not started because run was cancelled"))
                 return
             while pending and len(active) < worker_limit:
                 if any(not worker.parallel_safe for worker in active.values()):
@@ -1172,7 +1183,8 @@ class RunSupervisor:
                 }
                 if failed_dependencies:
                     pending.pop(0)
-                    details = ", ".join(f"{dependency}={status}" for dependency, status in sorted(failed_dependencies.items()))
+                    details = ", ".join(
+                        f"{dependency}={status}" for dependency, status in sorted(failed_dependencies.items()))
                     records[metadata.id].apply_result(
                         CollectorResult(
                             CollectorStatus.SKIPPED,
@@ -1197,14 +1209,16 @@ class RunSupervisor:
                 if active:
                     candidate_class = metadata.resource_class
 
-                    has_interactive_worker = any(worker.resource_class is ResourceClass.INTERACTIVE for worker in active.values())
+                    has_interactive_worker = any(
+                        worker.resource_class is ResourceClass.INTERACTIVE for worker in active.values())
 
-                    has_same_resource_class = any(worker.resource_class is candidate_class for worker in active.values())
+                    has_same_resource_class = any(
+                        worker.resource_class is candidate_class for worker in active.values())
 
                     conflicts_with_active_worker = (
-                        candidate_class is ResourceClass.INTERACTIVE
-                        or has_interactive_worker
-                        or (candidate_class is not ResourceClass.GENERAL and has_same_resource_class)
+                            candidate_class is ResourceClass.INTERACTIVE
+                            or has_interactive_worker
+                            or (candidate_class is not ResourceClass.GENERAL and has_same_resource_class)
                     )
 
                     if conflicts_with_active_worker:
@@ -1212,7 +1226,7 @@ class RunSupervisor:
 
                 reserved_output_bytes = sum(worker.reserved_output_bytes for worker in active.values())
                 remaining_output_bytes = (
-                    self.configuration.runtime.maximum_run_output_bytes - committed_output_bytes - reserved_output_bytes
+                        self.configuration.runtime.maximum_run_output_bytes - committed_output_bytes - reserved_output_bytes
                 )
                 if remaining_output_bytes < 1:
                     if active:
@@ -1284,7 +1298,8 @@ class RunSupervisor:
                     "output_budget_bytes": output_budget,
                     "resource_class": metadata.resource_class.value,
                     "parallel_safe": metadata.parallel_safe,
-                    "declared_capabilities": ",".join(sorted(capability.value for capability in metadata.capabilities)) or "none",
+                    "declared_capabilities": ",".join(
+                        sorted(capability.value for capability in metadata.capabilities)) or "none",
                 }
                 run_logger.event("info", "collector_started", **start_fields)
                 application_logger.event(
@@ -1321,7 +1336,8 @@ class RunSupervisor:
                     committed_output_bytes += artifact_bytes
                     self._cleanup_worker_temporary_directory(worker)
                     capability_error = next(
-                        (error for error in record.errors if error.startswith(("CAPABILITY_BLOCKED:", "CAPABILITY_DECLARATION_MISMATCH:"))),
+                        (error for error in record.errors if
+                         error.startswith(("CAPABILITY_BLOCKED:", "CAPABILITY_DECLARATION_MISMATCH:"))),
                         None,
                     )
                     if capability_error is not None:
@@ -1406,7 +1422,8 @@ class RunSupervisor:
                         CollectorResult(
                             CollectorStatus.FAILED,
                             "collector exceeded its declared memory limit",
-                            errors=(f"collector working set {memory_bytes} exceeded maximum_memory_bytes={worker.maximum_memory_bytes}",),
+                            errors=(
+                                f"collector working set {memory_bytes} exceeded maximum_memory_bytes={worker.maximum_memory_bytes}",),
                         ),
                         worker,
                     )
@@ -1414,13 +1431,13 @@ class RunSupervisor:
                     committed_output_bytes += artifact_bytes
                     self._cleanup_worker_temporary_directory(worker)
                     if not self._schedule_retry(
-                        candidates[collector_id],
-                        records[collector_id],
-                        artifact_bytes,
-                        pending,
-                        retry_not_before,
-                        cancellation_file,
-                        run_logger,
+                            candidates[collector_id],
+                            records[collector_id],
+                            artifact_bytes,
+                            pending,
+                            retry_not_before,
+                            cancellation_file,
+                            run_logger,
                     ):
                         run_logger.event("error", "collector_memory_limit_exceeded", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
@@ -1441,13 +1458,13 @@ class RunSupervisor:
                     committed_output_bytes += artifact_bytes
                     self._cleanup_worker_temporary_directory(worker)
                     if not self._schedule_retry(
-                        candidates[collector_id],
-                        records[collector_id],
-                        artifact_bytes,
-                        pending,
-                        retry_not_before,
-                        cancellation_file,
-                        run_logger,
+                            candidates[collector_id],
+                            records[collector_id],
+                            artifact_bytes,
+                            pending,
+                            retry_not_before,
+                            cancellation_file,
+                            run_logger,
                     ):
                         run_logger.event("error", "collector_timed_out", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
@@ -1469,13 +1486,13 @@ class RunSupervisor:
                     committed_output_bytes += artifact_bytes
                     self._cleanup_worker_temporary_directory(worker)
                     if not self._schedule_retry(
-                        candidates[collector_id],
-                        records[collector_id],
-                        artifact_bytes,
-                        pending,
-                        retry_not_before,
-                        cancellation_file,
-                        run_logger,
+                            candidates[collector_id],
+                            records[collector_id],
+                            artifact_bytes,
+                            pending,
+                            retry_not_before,
+                            cancellation_file,
+                            run_logger,
                     ):
                         run_logger.event("error", "collector_exited_without_result", collector_id=collector_id)
                     write_manifest(manifest_path, manifest)
@@ -1491,21 +1508,21 @@ class RunSupervisor:
 
     @staticmethod
     def _schedule_retry(
-        candidate: CollectorCandidate,
-        record: CollectorRecord,
-        artifact_bytes: int,
-        pending: list[CollectorCandidate],
-        retry_not_before: dict[str, float],
-        cancellation_file: Path,
-        run_logger: FileEventLogger,
+            candidate: CollectorCandidate,
+            record: CollectorRecord,
+            artifact_bytes: int,
+            pending: list[CollectorCandidate],
+            retry_not_before: dict[str, float],
+            cancellation_file: Path,
+            run_logger: FileEventLogger,
     ) -> bool:
         """Retry only explicitly permitted failed attempts that produced no evidence."""
         metadata = _require_metadata(candidate)
         if (
-            record.status != CollectorStatus.FAILED.value
-            or record.attempt_count > metadata.maximum_retries
-            or artifact_bytes != 0
-            or cancellation_file.exists()
+                record.status != CollectorStatus.FAILED.value
+                or record.attempt_count > metadata.maximum_retries
+                or artifact_bytes != 0
+                or cancellation_file.exists()
         ):
             return False
         record.retry_history.append(
@@ -1670,12 +1687,12 @@ class RunSupervisor:
         RunSupervisor._refresh_worker_progress(record, worker)
 
     def _cancel_active(
-        self,
-        active: dict[str, _ActiveWorker],
-        records: dict[str, CollectorRecord],
-        manifest: RunManifest,
-        manifest_path: Path,
-        reason: str,
+            self,
+            active: dict[str, _ActiveWorker],
+            records: dict[str, CollectorRecord],
+            manifest: RunManifest,
+            manifest_path: Path,
+            reason: str,
     ) -> None:
         """Terminate active workers, mark their records cancelled, and persist the manifest."""
         for collector_id, worker in tuple(active.items()):
@@ -1691,11 +1708,11 @@ class RunSupervisor:
         write_manifest(manifest_path, manifest)
 
     def _cancel_records(
-        self,
-        records: dict[str, CollectorRecord],
-        manifest: RunManifest,
-        manifest_path: Path,
-        reason: str,
+            self,
+            records: dict[str, CollectorRecord],
+            manifest: RunManifest,
+            manifest_path: Path,
+            reason: str,
     ) -> None:
         """Cancel active and still-planned records, then write the final cancellation state."""
         self._cancel_active(self._active_workers, records, manifest, manifest_path, reason)

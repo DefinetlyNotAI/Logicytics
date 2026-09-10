@@ -128,13 +128,13 @@ def _artifact_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[
         relative = PurePosixPath(artifact.relative_path)
         owner = artifact.collector_id.replace(".", "_")
         if (
-            not artifact.relative_path
-            or "\\" in artifact.relative_path
-            or relative.is_absolute()
-            or ".." in relative.parts
-            or relative.as_posix() != artifact.relative_path
-            or len(relative.parts) < 2
-            or relative.parts[0] != owner
+                not artifact.relative_path
+                or "\\" in artifact.relative_path
+                or relative.is_absolute()
+                or ".." in relative.parts
+                or relative.as_posix() != artifact.relative_path
+                or len(relative.parts) < 2
+                or relative.parts[0] != owner
         ):
             raise ValueError(f"manifest artifact escapes its collector-owned store: {artifact.relative_path}")
         source = artifact_root.joinpath(*relative.parts)
@@ -143,7 +143,8 @@ def _artifact_sources(run_directory: Path, manifest: RunManifest) -> list[tuple[
         try:
             source.resolve(strict=True).relative_to(artifact_root / owner)
         except (OSError, ValueError) as error:
-            raise ValueError(f"manifest artifact escapes its collector-owned store: {artifact.relative_path}") from error
+            raise ValueError(
+                f"manifest artifact escapes its collector-owned store: {artifact.relative_path}") from error
         archive_name = _artifact_archive_name(artifact)
         if archive_name in archive_names:
             raise ValueError(f"manifest contains duplicate artifact path: {artifact.relative_path}")
@@ -244,11 +245,11 @@ def _verify_archive(package_path: Path, manifest: RunManifest, expected_names: s
 
 
 def _package_mod_artifacts(
-    package_directory: Path,
-    hash_directory: Path,
-    manifest: RunManifest,
-    artifact_sources: list[tuple[Path, str]],
-    package_name: str,
+        package_directory: Path,
+        hash_directory: Path,
+        manifest: RunManifest,
+        artifact_sources: list[tuple[Path, str]],
+        package_name: str,
 ) -> dict[str, str]:
     """Publish MODS evidence in a separately named atomic package and sidecar."""
     mod_sources = [
@@ -266,7 +267,8 @@ def _package_mod_artifacts(
     temporary_hash = hash_directory / f".{package_path.name}.sha256.tmp"
     mod_catalog = {
         "run_id": manifest.run_id,
-        "artifacts": [item for item in manifest.artifact_catalog() if str(item.get("collector_id", "")).startswith("mod.")],
+        "artifacts": [item for item in manifest.artifact_catalog() if
+                      str(item.get("collector_id", "")).startswith("mod.")],
     }
     expected_names = {"metadata/mods.json", *(archive_name for _, archive_name in mod_sources)}
     try:
@@ -326,12 +328,12 @@ def _package_mod_artifacts(
 
 
 def package_manifest(
-    run_directory: Path,
-    manifest: RunManifest,
-    manifest_path: Path,
-    *,
-    package_directory: Path | None = None,
-    hash_directory: Path | None = None,
+        run_directory: Path,
+        manifest: RunManifest,
+        manifest_path: Path,
+        *,
+        package_directory: Path | None = None,
+        hash_directory: Path | None = None,
 ) -> tuple[Path, Path]:
     """Package registered artifacts, manifest, and summary without scanning arbitrary files."""
     data_root = run_directory.parent.parent

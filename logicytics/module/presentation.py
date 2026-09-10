@@ -68,10 +68,10 @@ def render_banner(console: TextIO, *, width: ConsoleWidth = terminal_width) -> N
 
 
 def render_step_heading(
-    console: TextIO,
-    title: str,
-    *,
-    width: ConsoleWidth = console_width,
+        console: TextIO,
+        title: str,
+        *,
+        width: ConsoleWidth = console_width,
 ) -> None:
     """Separate a lifecycle phase with a titled ASCII rule and breathing room."""
     console.write(f"\n{_heading(title, width=width)}\n\n")
@@ -79,13 +79,13 @@ def render_step_heading(
 
 
 def render_section(
-    console: TextIO,
-    title: str,
-    lines: Iterable[str],
-    *,
-    message_lines: MessageLines = _plain_message_lines,
-    width: ConsoleWidth = console_width,
-    color_enabled: bool | None = None,
+        console: TextIO,
+        title: str,
+        lines: Iterable[str],
+        *,
+        message_lines: MessageLines = _plain_message_lines,
+        width: ConsoleWidth = console_width,
+        color_enabled: bool | None = None,
 ) -> None:
     """Render the shared indented, wrapped console section presentation."""
     use_color = (console.isatty() if color_enabled is None else color_enabled) and console.isatty()
@@ -121,14 +121,14 @@ def render_section(
 
 
 def render_alert(
-    console: TextIO,
-    title: str,
-    lines: Iterable[str],
-    *,
-    message_lines: MessageLines = _plain_message_lines,
-    width: ConsoleWidth = console_width,
-    color_enabled: bool | None = None,
-    error: bool = False,
+        console: TextIO,
+        title: str,
+        lines: Iterable[str],
+        *,
+        message_lines: MessageLines = _plain_message_lines,
+        width: ConsoleWidth = console_width,
+        color_enabled: bool | None = None,
+        error: bool = False,
 ) -> None:
     """Render a severity-marked alert with a clean title and ASCII rule."""
     available = max(width(), _MIN_CONSOLE_WIDTH)

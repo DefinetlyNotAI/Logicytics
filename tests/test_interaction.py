@@ -114,7 +114,7 @@ class InteractionTests(unittest.TestCase):
         self.assertEqual("collect the strange moon report", statistics["common_input"])
 
     def test_usage_graph_contains_only_current_nonzero_command_and_mode_counts(
-        self,
+            self,
     ) -> None:
         """The graph must match recorded usage rather than an obsolete fixed flag list."""
         with tempfile.TemporaryDirectory() as temporary:

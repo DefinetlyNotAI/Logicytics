@@ -1,8 +1,8 @@
 name: Report a bug
 description: Report reproducible Logicytics v4 behavior without sharing private evidence.
 title: "bug: "
-labels: ["progress/Unreviewed"]
-assignees: ["DefinetlyNotAI"]
+labels: [ "progress/Unreviewed" ]
+assignees: [ "DefinetlyNotAI" ]
 body:
   - type: checkboxes
     attributes:

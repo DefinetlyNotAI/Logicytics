@@ -1,10 +1,13 @@
 # Configuration
 
-`logicytics.yaml` is the authoritative user configuration. It is a strict, mapping-only YAML subset; JSON is accepted when it is also valid YAML. The parser rejects unknown keys, duplicate keys, unsafe paths, non-finite numbers, unsupported values, and files larger than 2 MiB before planning.
+`logicytics.yaml` is the authoritative user configuration. It is a strict, mapping-only YAML subset; JSON is accepted
+when it is also valid YAML. The parser rejects unknown keys, duplicate keys, unsafe paths, non-finite numbers,
+unsupported values, and files larger than 2 MiB before planning.
 
 ## Root keys
 
-The root keys are `schema_version`, `runtime`, `interaction`, `maintenance`, `logging`, and `collectors`. The parser currently requires `schema_version: 4`; this is a file-schema identifier, not a release guide.
+The root keys are `schema_version`, `runtime`, `interaction`, `maintenance`, `logging`, and `collectors`. The parser
+currently requires `schema_version: 4`; this is a file-schema identifier, not a release guide.
 
 | Section       | Keys                                                                                                                                                                |
 |---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -14,11 +17,15 @@ The root keys are `schema_version`, `runtime`, `interaction`, `maintenance`, `lo
 | `logging`     | `level`, `console_enabled`, `color_enabled`, `file_enabled`, `maximum_bytes`, `delete_previous`, `retention_days`                                                   |
 | `collectors`  | A mapping from collector ID to that collector's declared settings                                                                                                   |
 
-Relative `runtime.output_root` and `maintenance.local_manifest_path` stay inside the project. `temporary_directory` is `project` or `system`. `blocked_capabilities` is a mapping of capability names to booleans; `true` blocks matching requests. Remote manifests require HTTPS and a lowercase SHA-256 digest. Optional Sysinternals discovery is controlled by `sysinternals_enabled` and its download URL.
+Relative `runtime.output_root` and `maintenance.local_manifest_path` stay inside the project. `temporary_directory` is
+`project` or `system`. `blocked_capabilities` is a mapping of capability names to booleans; `true` blocks matching
+requests. Remote manifests require HTTPS and a lowercase SHA-256 digest. Optional Sysinternals discovery is controlled
+by `sysinternals_enabled` and its download URL.
 
 ## Collector settings
 
-Core collectors reject settings they do not declare. Extension IDs may define their own settings. The supported core settings are:
+Core collectors reject settings they do not declare. Extension IDs may define their own settings. The supported core
+settings are:
 
 | Collector                                  | Settings                                                                                                                             |
 |--------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|

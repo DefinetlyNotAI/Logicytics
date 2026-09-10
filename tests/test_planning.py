@@ -48,7 +48,7 @@ class PlanningTests(unittest.TestCase):
         return collector_ids
 
     def test_post_run_actions_are_typed_exclusive_and_require_verified_packaging(
-        self,
+            self,
     ) -> None:
         """Power actions remain explicit and cannot run before durable package publication."""
         arguments = cli_methods.parser().parse_args(
@@ -113,9 +113,9 @@ class PlanningTests(unittest.TestCase):
             )
 
             with patch.object(
-                ProcessAdapter,
-                ProcessAdapter.run.__name__,
-                return_value=completed,
+                    ProcessAdapter,
+                    ProcessAdapter.run.__name__,
+                    return_value=completed,
             ) as command:
                 RunSupervisor._execute_post_run_action(
                     PostRunAction.REBOOT,
@@ -265,9 +265,9 @@ class PlanningTests(unittest.TestCase):
             (root / "plugins").mkdir()
 
             for filename, capability in (
-                ("a_subprocess", "Capability.SUBPROCESS"),
-                ("b_network", "Capability.NETWORK"),
-                ("c_subprocess", "Capability.SUBPROCESS"),
+                    ("a_subprocess", "Capability.SUBPROCESS"),
+                    ("b_network", "Capability.NETWORK"),
+                    ("c_subprocess", "Capability.SUBPROCESS"),
             ):
                 source = (
                     delayed_collector_source(filename, 0.0)
@@ -278,14 +278,15 @@ class PlanningTests(unittest.TestCase):
                     .replace(
                         "            capabilities=(),",
                         f"            capabilities=({capability},),\n"
-                        + ("            network_access=NetworkAccess.LOCAL,\n" if capability == "Capability.NETWORK" else ""),
+                        + (
+                            "            network_access=NetworkAccess.LOCAL,\n" if capability == "Capability.NETWORK" else ""),
                     )
                 )
                 (core_directory / f"{filename}.py").write_text(source, encoding="utf-8")
 
             with self.assertRaisesRegex(
-                PlanError,
-                "selected collector policy validation failed",
+                    PlanError,
+                    "selected collector policy validation failed",
             ) as rejected:
                 build_plan(
                     preflight(root),
@@ -304,9 +305,9 @@ class PlanningTests(unittest.TestCase):
                 message.index("core.system.c_subprocess"),
             )
             for collector_id in (
-                "core.system.a_subprocess",
-                "core.system.b_network",
-                "core.system.c_subprocess",
+                    "core.system.a_subprocess",
+                    "core.system.b_network",
+                    "core.system.c_subprocess",
             ):
                 self.assertIn(collector_id, message)
             self.assertIn(
@@ -395,7 +396,7 @@ class PlanningTests(unittest.TestCase):
             self.assertFalse(configuration.runtime.output_root.exists())
 
     def test_collector_command_runs_only_the_selected_id_and_declared_dependencies(
-        self,
+            self,
     ) -> None:
         """Direct execution never pulls unrelated profile members into its supervised run."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -679,8 +680,8 @@ class PlanningTests(unittest.TestCase):
                         with self.assertRaisesRegex(PlanError, "administrator account"):
                             build_plan(report, approved)
             with patch(
-                "logicytics.module.planner.inspect_environment",
-                return_value=EnvironmentReport(True, True, None),
+                    "logicytics.module.planner.inspect_environment",
+                    return_value=EnvironmentReport(True, True, None),
             ):
                 plan = build_plan(report, approved)
             self.assertEqual(1, len(plan.collectors))

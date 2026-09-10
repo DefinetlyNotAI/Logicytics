@@ -38,12 +38,12 @@ class _RejectingWriter(ArtifactWriter):
     """Prove cancellation paths never attempt to publish evidence."""
 
     def register_file(
-        self,
-        source: Path,
-        *,
-        media_type: str = "application/octet-stream",
-        evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
-        transformations: tuple[str, ...] = (),
+            self,
+            source: Path,
+            *,
+            media_type: str = "application/octet-stream",
+            evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
+            transformations: tuple[str, ...] = (),
     ) -> NoReturn:
         raise AssertionError("a cancelled collector must not register an artifact")
 
@@ -52,10 +52,10 @@ class _NoopLogger(EventLogger):
     """Discard test events."""
 
     def event(
-        self,
-        level: str,
-        message: str,
-        **fields: float | str,
+            self,
+            level: str,
+            message: str,
+            **fields: float | str,
     ) -> None:
         return None
 
@@ -172,7 +172,7 @@ class ShippedCollectorTests(unittest.TestCase):
         )
 
     def test_event_log_collectors_explicitly_allow_bounded_parallel_scheduling(
-        self,
+            self,
     ) -> None:
         """The independent event channels may overlap while retaining separate identities."""
         project_root = Path(__file__).resolve().parent.parent
@@ -211,7 +211,7 @@ class ShippedCollectorTests(unittest.TestCase):
             )
 
     def test_mode_matrix_represents_every_discovered_collector_exactly_once(
-        self,
+            self,
     ) -> None:
         """Mode documentation covers selected, manual-only, and quarantined collectors."""
         project_root = Path(__file__).resolve().parent.parent
@@ -270,7 +270,7 @@ class ShippedCollectorTests(unittest.TestCase):
             )
 
     def test_every_core_collector_uses_context_artifacts_without_mutable_globals(
-        self,
+            self,
     ) -> None:
         """Migration is complete only when all core modules use owned workspaces and catalogs."""
         project_root = Path(__file__).resolve().parent.parent
@@ -307,14 +307,14 @@ class ShippedCollectorTests(unittest.TestCase):
 
                 for node in ast.walk(tree):
                     if (
-                        isinstance(
-                            node,
-                            (
-                                ast.FunctionDef,
-                                ast.AsyncFunctionDef,
-                            ),
-                        )
-                        and node.name == "collect"
+                            isinstance(
+                                node,
+                                (
+                                        ast.FunctionDef,
+                                        ast.AsyncFunctionDef,
+                                ),
+                            )
+                            and node.name == "collect"
                     ):
                         collect = node
                         break
@@ -329,7 +329,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 self.assertIn("register_file", attributes)
 
     def test_every_core_collector_has_a_stable_output_contract(
-        self,
+            self,
     ) -> None:
         """Every shipped output has explicit names, formats, package paths, and retention."""
         project_root = Path(__file__).resolve().parent.parent
@@ -351,7 +351,8 @@ class ShippedCollectorTests(unittest.TestCase):
                     contract.media_types,
                 )
                 self.assertTrue(contract.workspace_patterns)
-                self.assertTrue(all("\\" not in pattern and not pattern.startswith("/") for pattern in contract.workspace_patterns))
+                self.assertTrue(
+                    all("\\" not in pattern and not pattern.startswith("/") for pattern in contract.workspace_patterns))
                 self.assertEqual(
                     len(contract.workspace_patterns),
                     len(contract.package_patterns),
@@ -363,7 +364,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 )
 
     def test_every_core_collector_obeys_the_typed_lifecycle_contract(
-        self,
+            self,
     ) -> None:
         """All shipped collectors fail closed on cancellation without platform access or artifacts."""
         project_root = Path(__file__).resolve().parent.parent
@@ -427,7 +428,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 collector.cleanup(context)
 
     def test_every_registered_artifact_media_type_is_declared(
-        self,
+            self,
     ) -> None:
         """Static artifact calls cannot introduce an undeclared output format."""
         project_root = Path(__file__).resolve().parent.parent
@@ -453,11 +454,11 @@ class ShippedCollectorTests(unittest.TestCase):
                     continue
 
                 if (
-                    isinstance(
-                        node.func,
-                        ast.Attribute,
-                    )
-                    and node.func.attr == "register_file"
+                        isinstance(
+                            node.func,
+                            ast.Attribute,
+                        )
+                        and node.func.attr == "register_file"
                 ):
                     register_calls.append(node)
 
@@ -473,7 +474,8 @@ class ShippedCollectorTests(unittest.TestCase):
                     if isinstance(value, ast.Constant) and isinstance(value.value, str):
                         declared_at_calls.add(value.value)
 
-            has_implicit_media_type = any(not any(keyword.arg == "media_type" for keyword in call.keywords) for call in register_calls)
+            has_implicit_media_type = any(
+                not any(keyword.arg == "media_type" for keyword in call.keywords) for call in register_calls)
 
             if has_implicit_media_type:
                 declared_at_calls.add("application/octet-stream")
@@ -487,7 +489,7 @@ class ShippedCollectorTests(unittest.TestCase):
                 )
 
     def test_migration_documentation_covers_every_supported_bridge(
-        self,
+            self,
     ) -> None:
         """Public compatibility stays explicit and canonical-output-only."""
         project_root = Path(__file__).resolve().parent.parent
@@ -506,9 +508,9 @@ class ShippedCollectorTests(unittest.TestCase):
                 )
 
         for bridge in (
-            "CODE/config.ini",
-            "core.integration.legacy_code_outputs",
-            "MODS/",
+                "CODE/config.ini",
+                "core.integration.legacy_code_outputs",
+                "MODS/",
         ):
             self.assertIn(
                 bridge,
@@ -542,7 +544,7 @@ class ShippedCollectorTests(unittest.TestCase):
         )
 
     def test_each_core_module_owns_exactly_one_policy_contract(
-        self,
+            self,
     ) -> None:
         """Different permission, sensitivity, timeout, or output policies require separate IDs."""
         project_root = Path(__file__).resolve().parent.parent
@@ -570,8 +572,8 @@ class ShippedCollectorTests(unittest.TestCase):
 
             for node in tree.body:
                 if not isinstance(
-                    node,
-                    ast.ClassDef,
+                        node,
+                        ast.ClassDef,
                 ):
                     continue
 
@@ -605,7 +607,7 @@ class ShippedCollectorTests(unittest.TestCase):
         )
 
     def test_every_core_collector_handles_mocked_windows_platform_responses(
-        self,
+            self,
     ) -> None:
         """Each collector returns a typed result when Windows adapters report unavailable data."""
         project_root = Path(__file__).resolve().parent.parent
@@ -760,7 +762,7 @@ class ShippedCollectorTests(unittest.TestCase):
                         )
 
     def test_default_profiles_keep_quick_runs_small_and_deep_runs_complete(
-        self,
+            self,
     ) -> None:
         """Minimal and standard stay bounded while deep explicitly owns the exhaustive surface."""
         project_root = Path(__file__).resolve().parent.parent

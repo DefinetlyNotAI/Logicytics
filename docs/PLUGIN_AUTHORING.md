@@ -1,6 +1,7 @@
 # Plugin authoring
 
-This guide assumes you can write basic Python. A plugin is a user-owned `PluginCollector` placed under `plugins/` and enabled with `--plugins`. It is deliberately opt-in and is isolated like a core collector.
+This guide assumes you can write basic Python. A plugin is a user-owned `PluginCollector` placed under `plugins/` and
+enabled with `--plugins`. It is deliberately opt-in and is isolated like a core collector.
 
 ## Minimal plugin
 
@@ -41,16 +42,21 @@ class ExamplePluginCollector(PluginCollector):
         return None
 ```
 
-The unused `ArtifactWriter` import in the conceptual example may be removed. Keep the actual module self-contained and import only supported contracts and adapters.
+The unused `ArtifactWriter` import in the conceptual example may be removed. Keep the actual module self-contained and
+import only supported contracts and adapters.
 
 ## Metadata checklist
 
-Use an ID beginning with `plugin.`; a lowercase name, semantic version, supported specialty, one-line description, author, output MIME types, profiles, capabilities, sensible timeout and quotas. Declare network, sensitive data, privilege, dependencies, retry policy, parallel safety, and resource class honestly. Metadata must be deterministic and side-effect-free.
+Use an ID beginning with `plugin.`; a lowercase name, semantic version, supported specialty, one-line description,
+author, output MIME types, profiles, capabilities, sensible timeout and quotas. Declare network, sensitive data,
+privilege, dependencies, retry policy, parallel safety, and resource class honestly. Metadata must be deterministic and
+side-effect-free.
 
 ## Implementation checklist
 
 1. Do not perform work while the module is imported.
-2. Implement `metadata`, `validate`, `collect`, and `cleanup`; add `prepare`, `finalize`, `estimate`, or `dependencies` only when useful.
+2. Implement `metadata`, `validate`, `collect`, and `cleanup`; add `prepare`, `finalize`, `estimate`, or `dependencies`
+   only when useful.
 3. Write only inside `context.workspace` or the provided temporary directory.
 4. Publish only through `register_file`.
 5. Bound loops, files, bytes, subprocess time, and memory.
@@ -66,4 +72,5 @@ python -m logicytics plan --mode standard --plugins
 python -m logicytics run --mode standard --plugins --acknowledge-authorization
 ```
 
-If the plugin is sensitive, do not put it in a routine profile. Use an exact `--include plugin.example` selection and document the authorization decision.
+If the plugin is sensitive, do not put it in a routine profile. Use an exact `--include plugin.example` selection and
+document the authorization decision.

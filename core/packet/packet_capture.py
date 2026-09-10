@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import csv
-import select
 import struct
 import time
+
+import select
 
 from logicytics import (
     Capability,
@@ -34,7 +35,8 @@ def _packet_row(payload: bytes) -> dict[str, str] | None:
     destination = socket.inet_ntoa(payload[16:20])
     source_port = destination_port = ""
     if protocol in {6, 17} and len(payload) >= header_length + 4:
-        source_port, destination_port = (str(value) for value in struct.unpack("!HH", payload[header_length : header_length + 4]))
+        source_port, destination_port = (str(value) for value in
+                                         struct.unpack("!HH", payload[header_length: header_length + 4]))
     return {
         "source_ip": source,
         "destination_ip": destination,

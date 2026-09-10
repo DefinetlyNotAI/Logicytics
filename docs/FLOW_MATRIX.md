@@ -1,19 +1,19 @@
 # Execution flow checklist
 
-| Flow | How to exercise it |
-| --- | --- |
-| Preflight | `python -m logicytics preflight` |
-| Plan without collection | `python -m logicytics plan --mode standard` |
-| One collector | `python -m logicytics collector ID --acknowledge-authorization` |
-| Bounded parallel run | `python -m logicytics run --mode balanced --parallel --acknowledge-authorization` |
-| Deterministic run | `python -m logicytics run --mode standard --sequential --acknowledge-authorization` |
-| Optional extensions | Add `--plugins` or `--mods` after reviewing them |
-| Performance measurement | Add `--performance-check` to `run` |
-| Manifest-only output | Add `--no-package` to `run` or `collector` |
-| Rerun selected IDs | `run --include ID --rerun-from PATH` |
-| Cancellation | Interrupt an active run and inspect its manifest |
-| Permission/optional feature | Inspect the skipped record and remediation |
-| Maintenance | `debug`, `update`, or `dev` |
+| Flow                        | How to exercise it                                                                  |
+|-----------------------------|-------------------------------------------------------------------------------------|
+| Preflight                   | `python -m logicytics preflight`                                                    |
+| Plan without collection     | `python -m logicytics plan --mode standard`                                         |
+| One collector               | `python -m logicytics collector ID --acknowledge-authorization`                     |
+| Bounded parallel run        | `python -m logicytics run --mode balanced --parallel --acknowledge-authorization`   |
+| Deterministic run           | `python -m logicytics run --mode standard --sequential --acknowledge-authorization` |
+| Optional extensions         | Add `--plugins` or `--mods` after reviewing them                                    |
+| Performance measurement     | Add `--performance-check` to `run`                                                  |
+| Manifest-only output        | Add `--no-package` to `run` or `collector`                                          |
+| Rerun selected IDs          | `run --include ID --rerun-from PATH`                                                |
+| Cancellation                | Interrupt an active run and inspect its manifest                                    |
+| Permission/optional feature | Inspect the skipped record and remediation                                          |
+| Maintenance                 | `debug`, `update`, or `dev`                                                         |
 
 The executable regression anchors are:
 
@@ -28,4 +28,5 @@ The executable regression anchors are:
 - `test_cancelled_run_writes_a_recoverable_package_and_manifest`
 - `test_access_denied_is_skipped_not_failed`
 
-The automated suite is the authoritative regression evidence for these flows. Use [Verification](VERIFICATION.md) for the standard commands.
+The automated suite is the authoritative regression evidence for these flows. Use [Verification](VERIFICATION.md) for
+the standard commands.

@@ -41,9 +41,9 @@ class DeepCollectorResilienceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             context = _context(Path(temporary), "core.process.detailed_processes")
             with patch.object(
-                detailed_processes.subprocess,
-                detailed_processes.subprocess.run.__name__,
-                side_effect=subprocess.TimeoutExpired(["tasklist"], 40),
+                    detailed_processes.subprocess,
+                    detailed_processes.subprocess.run.__name__,
+                    side_effect=subprocess.TimeoutExpired(["tasklist"], 40),
             ):
                 result = detailed_processes.DetailedProcessesCollector().collect(context)
         self.assertIs(CollectorStatus.SKIPPED, result.status)
@@ -54,9 +54,9 @@ class DeepCollectorResilienceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             context = _context(Path(temporary), "core.diagnostics.sysinternals_report")
             with patch.object(
-                sysinternals_report.subprocess,
-                sysinternals_report.subprocess.run.__name__,
-                side_effect=subprocess.TimeoutExpired(["psfile.exe"], 25),
+                    sysinternals_report.subprocess,
+                    sysinternals_report.subprocess.run.__name__,
+                    side_effect=subprocess.TimeoutExpired(["psfile.exe"], 25),
             ):
                 result = sysinternals_report.SysinternalsReportCollector().collect(context)
             report = (context.workspace / "sysinternals_report.txt").read_text(encoding="utf-8")
@@ -69,9 +69,9 @@ class DeepCollectorResilienceTests(unittest.TestCase):
             context = _context(Path(temporary), "core.network.network_interfaces")
             response = '[{"InterfaceAlias":"stale","IPAddress":"192.0.2.1","PrefixLength":24}]'
             with patch.object(
-                network_interfaces.subprocess,
-                network_interfaces.subprocess.run.__name__,
-                return_value=subprocess.CompletedProcess((), 0, response, ""),
+                    network_interfaces.subprocess,
+                    network_interfaces.subprocess.run.__name__,
+                    return_value=subprocess.CompletedProcess((), 0, response, ""),
             ) as run:
                 result = network_interfaces.NetworkInterfacesCollector().collect(context)
         self.assertIs(CollectorStatus.SUCCEEDED, result.status)

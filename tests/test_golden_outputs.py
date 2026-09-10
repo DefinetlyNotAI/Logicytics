@@ -36,12 +36,12 @@ class _CaptureWriter(ArtifactWriter):
         self.contents = b""
 
     def register_file(
-        self,
-        source: Path,
-        *,
-        media_type: str = "application/octet-stream",
-        transformations: tuple[str, ...] = (),
-        **kwargs: object,
+            self,
+            source: Path,
+            *,
+            media_type: str = "application/octet-stream",
+            transformations: tuple[str, ...] = (),
+            **kwargs: object,
     ) -> Artifact:
         self.contents = source.read_bytes()
         return Artifact(
@@ -78,9 +78,9 @@ class GoldenOutputTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             writer = _CaptureWriter()
             with patch.object(
-                system_details.subprocess,
-                system_details.subprocess.run.__name__,
-                return_value=CompletedProcess([], 0, expected, ""),
+                    system_details.subprocess,
+                    system_details.subprocess.run.__name__,
+                    return_value=CompletedProcess([], 0, expected, ""),
             ):
                 system_details.SystemDetailsCollector().collect(
                     _context(
@@ -96,9 +96,9 @@ class GoldenOutputTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             writer = _CaptureWriter()
             with patch.object(
-                running_processes.subprocess,
-                running_processes.subprocess.run.__name__,
-                return_value=CompletedProcess([], 0, expected, ""),
+                    running_processes.subprocess,
+                    running_processes.subprocess.run.__name__,
+                    return_value=CompletedProcess([], 0, expected, ""),
             ):
                 running_processes.RunningProcessesCollector().collect(
                     _context(

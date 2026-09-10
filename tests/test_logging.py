@@ -193,13 +193,13 @@ class LoggingTests(unittest.TestCase):
             self.assertEqual((root / "output" / "data" / "zip").resolve(), layout.packages)
             self.assertEqual((root / "output" / "data" / "hashes").resolve(), layout.hashes)
             for directory in (
-                layout.data,
-                layout.runs,
-                layout.logs,
-                layout.debug_logs,
-                layout.performance_logs,
-                layout.packages,
-                layout.hashes,
+                    layout.data,
+                    layout.runs,
+                    layout.logs,
+                    layout.debug_logs,
+                    layout.performance_logs,
+                    layout.packages,
+                    layout.hashes,
             ):
                 self.assertTrue(directory.is_dir())
             config_path = root / "logicytics.yaml"
@@ -226,11 +226,11 @@ class LoggingTests(unittest.TestCase):
             self.assertEqual(7, configuration.logging.retention_days)
 
             for invalid_logging in (
-                {"level": "TRACE"},
-                {"maximum_bytes": True},
-                {"retention_days": -1},
-                {"console_enabled": 1},
-                {"unknown": True},
+                    {"level": "TRACE"},
+                    {"maximum_bytes": True},
+                    {"retention_days": -1},
+                    {"console_enabled": 1},
+                    {"unknown": True},
             ):
                 config_path.write_text(
                     json.dumps({"schema_version": 4, "logging": invalid_logging}),

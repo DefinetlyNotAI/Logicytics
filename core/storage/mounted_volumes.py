@@ -70,7 +70,8 @@ class MountedVolumesCollector(CoreCollector):
         output.write_text(completed.stdout, encoding="utf-8")
         artifact = context.artifacts.register_file(output, media_type="text/plain")
         volume_count = sum(1 for line in completed.stdout.splitlines() if line.strip().startswith("\\\\?\\Volume{"))
-        context.report_progress("mounted_volumes_finished", volume_count=volume_count, bytes_written=artifact.size_bytes)
+        context.report_progress("mounted_volumes_finished", volume_count=volume_count,
+                                bytes_written=artifact.size_bytes)
         return CollectorResult.succeeded("mounted-volume mappings collected", (artifact,))
 
     def cleanup(self, context: CollectorContext) -> None:

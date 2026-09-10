@@ -192,7 +192,7 @@ class CollectorMetadata:
         if not _CONTRACT_VERSION.fullmatch(self.minimum_contract_version):
             raise ValueError("metadata minimum_contract_version has an invalid schema")
         if not isinstance(self.specialty, Specialty) and (
-            not isinstance(self.specialty, str) or not _CUSTOM_SPECIALTY.fullmatch(self.specialty)
+                not isinstance(self.specialty, str) or not _CUSTOM_SPECIALTY.fullmatch(self.specialty)
         ):
             raise ValueError("metadata specialty has an invalid schema")
         self._validate_labels("supported_platforms", self.supported_platforms, require_value=True)
@@ -203,9 +203,10 @@ class CollectorMetadata:
         if primary_specialty in self.secondary_categories:
             raise ValueError("metadata secondary_categories must not repeat the primary specialty")
         if (
-            not isinstance(self.output_media_types, tuple)
-            or not self.output_media_types
-            or not all(isinstance(media_type, str) and _MEDIA_TYPE.fullmatch(media_type) for media_type in self.output_media_types)
+                not isinstance(self.output_media_types, tuple)
+                or not self.output_media_types
+                or not all(
+            isinstance(media_type, str) and _MEDIA_TYPE.fullmatch(media_type) for media_type in self.output_media_types)
         ):
             raise ValueError("metadata output_media_types must be a non-empty tuple of MIME types")
         if len(set(self.output_media_types)) != len(self.output_media_types):
@@ -218,9 +219,11 @@ class CollectorMetadata:
         }
         if "minimal" in self.default_profiles and self.sensitive_data_categories:
             raise ValueError("sensitive collectors must not belong to the minimal profile")
-        if "standard" in self.default_profiles and not set(self.sensitive_data_categories).issubset(standard_categories):
+        if "standard" in self.default_profiles and not set(self.sensitive_data_categories).issubset(
+                standard_categories):
             raise ValueError("standard collectors may contain only routine local configuration categories")
-        if not isinstance(self.capabilities, tuple) or not all(isinstance(capability, Capability) for capability in self.capabilities):
+        if not isinstance(self.capabilities, tuple) or not all(
+                isinstance(capability, Capability) for capability in self.capabilities):
             raise ValueError("metadata capabilities must be a tuple of Capability values")
         if not isinstance(self.privilege_level, PrivilegeLevel):
             raise ValueError("metadata privilege_level must be a PrivilegeLevel value")
@@ -234,7 +237,7 @@ class CollectorMetadata:
         if Capability.NETWORK in self.capabilities and self.network_access is NetworkAccess.NONE:
             raise ValueError("metadata network_access must declare local or remote access")
         if not isinstance(self.dependencies, tuple) or not all(
-            isinstance(dependency, str) and _COLLECTOR_ID.fullmatch(dependency) for dependency in self.dependencies
+                isinstance(dependency, str) and _COLLECTOR_ID.fullmatch(dependency) for dependency in self.dependencies
         ):
             raise ValueError("metadata dependencies must be collector IDs")
         if len(set(self.dependencies)) != len(self.dependencies) or self.id in self.dependencies:
@@ -242,27 +245,28 @@ class CollectorMetadata:
         if self.maximum_artifact_bytes is None:
             object.__setattr__(self, "maximum_artifact_bytes", self.maximum_output_bytes)
         for name in (
-            "timeout_seconds",
-            "maximum_memory_bytes",
-            "maximum_output_bytes",
-            "maximum_artifact_bytes",
-            "maximum_artifact_files",
+                "timeout_seconds",
+                "maximum_memory_bytes",
+                "maximum_output_bytes",
+                "maximum_artifact_bytes",
+                "maximum_artifact_files",
         ):
             value = getattr(self, name)
             if not isinstance(value, int) or isinstance(value, bool) or value < 1:
                 raise ValueError(f"metadata {name} must be a positive integer")
         if self.maximum_artifact_bytes > self.maximum_output_bytes:
             raise ValueError("metadata maximum_artifact_bytes must not exceed maximum_output_bytes")
-        if not isinstance(self.maximum_retries, int) or isinstance(self.maximum_retries, bool) or not (0 <= self.maximum_retries <= 3):
+        if not isinstance(self.maximum_retries, int) or isinstance(self.maximum_retries, bool) or not (
+                0 <= self.maximum_retries <= 3):
             raise ValueError("metadata maximum_retries must be an integer from 0 to 3")
         if (
-            not isinstance(self.retry_delay_seconds, (int, float))
-            or isinstance(
-                self.retry_delay_seconds,
-                bool,
-            )
-            or not isfinite(self.retry_delay_seconds)
-            or not 0 <= self.retry_delay_seconds <= 30
+                not isinstance(self.retry_delay_seconds, (int, float))
+                or isinstance(
+            self.retry_delay_seconds,
+            bool,
+        )
+                or not isfinite(self.retry_delay_seconds)
+                or not 0 <= self.retry_delay_seconds <= 30
         ):
             raise ValueError("metadata retry_delay_seconds must be a number from 0 to 30")
         if not isinstance(self.parallel_safe, bool):
@@ -274,9 +278,9 @@ class CollectorMetadata:
     def _validate_labels(name: str, values: tuple[str, ...], *, require_value: bool = False) -> None:
         """Require unique lower-snake-case labels for selector-like metadata fields."""
         if (
-            not isinstance(values, tuple)
-            or (require_value and not values)
-            or not all(isinstance(value, str) and _LABEL.fullmatch(value) for value in values)
+                not isinstance(values, tuple)
+                or (require_value and not values)
+                or not all(isinstance(value, str) and _LABEL.fullmatch(value) for value in values)
         ):
             raise ValueError(f"metadata {name} must be a tuple of lowercase labels")
         if len(set(values)) != len(values):
@@ -301,7 +305,8 @@ class CollectorMetadata:
         try:
             values["specialty"] = Specialty(specialty)
         except ValueError:
-            if not allow_custom_specialty or not isinstance(specialty, str) or not _CUSTOM_SPECIALTY.fullmatch(specialty):
+            if not allow_custom_specialty or not isinstance(specialty, str) or not _CUSTOM_SPECIALTY.fullmatch(
+                    specialty):
                 raise ValueError("collector specialty is unsupported")
             values["specialty"] = specialty
         values["capabilities"] = tuple(Capability(capability) for capability in values.get("capabilities", ()))
@@ -310,12 +315,12 @@ class CollectorMetadata:
         values["network_access"] = NetworkAccess(values.get("network_access", NetworkAccess.NONE))
         values["estimated_cost"] = EstimatedCost(values.get("estimated_cost", EstimatedCost.LOW))
         for field_name in (
-            "supported_platforms",
-            "sensitive_data_categories",
-            "secondary_categories",
-            "output_media_types",
-            "dependencies",
-            "default_profiles",
+                "supported_platforms",
+                "sensitive_data_categories",
+                "secondary_categories",
+                "output_media_types",
+                "dependencies",
+                "default_profiles",
         ):
             values[field_name] = tuple(values.get(field_name, ()))
         return cls(**values)
@@ -365,7 +370,7 @@ class Artifact:
         if collected_at.tzinfo is None:
             raise ValueError("artifact collected_at must include a timezone")
         if not isinstance(self.transformations, tuple) or any(
-            not isinstance(step, str) or not step.strip() for step in self.transformations
+                not isinstance(step, str) or not step.strip() for step in self.transformations
         ):
             raise ValueError("artifact transformations must be a tuple of non-empty strings")
         if not isinstance(self.evidence_kind, EvidenceKind):
@@ -437,15 +442,16 @@ class CollectorResult:
         artifact_paths = tuple(item.relative_path for item in self.artifacts)
         if len(set(artifact_ids)) != len(artifact_ids) or len(set(artifact_paths)) != len(artifact_paths):
             raise ValueError("collector result artifacts must have unique IDs and paths")
-        if not isinstance(self.errors, tuple) or not all(isinstance(error, str) and error.strip() for error in self.errors):
+        if not isinstance(self.errors, tuple) or not all(
+                isinstance(error, str) and error.strip() for error in self.errors):
             raise ValueError("collector result errors must be a tuple of non-empty strings")
         if not isinstance(self.metrics, Mapping) or not all(
-            isinstance(name, str)
-            and name.strip()
-            and isinstance(value, (int, float, str))
-            and not isinstance(value, bool)
-            and (not isinstance(value, float) or isfinite(value))
-            for name, value in self.metrics.items()
+                isinstance(name, str)
+                and name.strip()
+                and isinstance(value, (int, float, str))
+                and not isinstance(value, bool)
+                and (not isinstance(value, float) or isfinite(value))
+                for name, value in self.metrics.items()
         ):
             raise ValueError("collector result metrics must contain finite scalar values")
 
@@ -456,11 +462,11 @@ class CollectorResult:
 
     @classmethod
     def partial(
-        cls,
-        summary: str,
-        artifacts: tuple[Artifact, ...] = (),
-        *,
-        errors: tuple[str, ...] = (),
+            cls,
+            summary: str,
+            artifacts: tuple[Artifact, ...] = (),
+            *,
+            errors: tuple[str, ...] = (),
     ) -> CollectorResult:
         """Return an explicitly incomplete result while preserving registered evidence."""
         return cls(CollectorStatus.PARTIAL, summary, artifacts, errors=errors)
@@ -472,20 +478,20 @@ class CollectorResult:
 
     @classmethod
     def cancelled(
-        cls,
-        summary: str,
-        artifacts: tuple[Artifact, ...] = (),
+            cls,
+            summary: str,
+            artifacts: tuple[Artifact, ...] = (),
     ) -> CollectorResult:
         """Return explicit cancellation while retaining already registered evidence."""
         return cls(CollectorStatus.CANCELLED, summary, artifacts)
 
     @classmethod
     def failed(
-        cls,
-        summary: str,
-        *,
-        errors: tuple[str, ...] = (),
-        artifacts: tuple[Artifact, ...] = (),
+            cls,
+            summary: str,
+            *,
+            errors: tuple[str, ...] = (),
+            artifacts: tuple[Artifact, ...] = (),
     ) -> CollectorResult:
         """Return explicit failure while retaining already registered evidence."""
         return cls(CollectorStatus.FAILED, summary, artifacts, errors=errors)
@@ -519,40 +525,43 @@ class RunRequest:
         for name in ("include", "exclude"):
             selections = getattr(self, name)
             if not isinstance(selections, tuple) or not all(
-                isinstance(collector_id, str) and _COLLECTOR_ID.fullmatch(collector_id) for collector_id in selections
+                    isinstance(collector_id, str) and _COLLECTOR_ID.fullmatch(collector_id) for collector_id in
+                    selections
             ):
                 raise ValueError(f"request {name} must be a tuple of collector IDs")
             if len(set(selections)) != len(selections):
                 raise ValueError(f"request {name} must not contain duplicate collector IDs")
         if set(self.include).intersection(self.exclude):
             raise ValueError("request include and exclude selections must not overlap")
-        if self.rerun_from is not None and (not isinstance(self.rerun_from, str) or not _RUN_ID.fullmatch(self.rerun_from)):
+        if self.rerun_from is not None and (
+                not isinstance(self.rerun_from, str) or not _RUN_ID.fullmatch(self.rerun_from)):
             raise ValueError("request rerun_from must be a valid original run ID")
         if self.rerun_from is not None and not self.include:
             raise ValueError("request rerun_from requires explicit included collector IDs")
         for name in (
-            "selection_only",
-            "enable_plugins",
-            "enable_mods",
-            "acknowledge_authorization",
-            "performance_check",
+                "selection_only",
+                "enable_plugins",
+                "enable_mods",
+                "acknowledge_authorization",
+                "performance_check",
         ):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"request {name} must be boolean")
         if self.selection_only and not self.include:
             raise ValueError("request selection_only requires explicit included collector IDs")
-        if not isinstance(self.max_workers, int) or isinstance(self.max_workers, bool) or not 1 <= self.max_workers <= 64:
+        if not isinstance(self.max_workers, int) or isinstance(self.max_workers,
+                                                               bool) or not 1 <= self.max_workers <= 64:
             raise ValueError("request max_workers must be an integer from 1 to 64")
         if self.performance_check and self.max_workers != 1:
             raise ValueError("request performance_check requires max_workers=1")
         if not isinstance(self.blocked_capabilities, tuple) or not all(
-            isinstance(capability, Capability) for capability in self.blocked_capabilities
+                isinstance(capability, Capability) for capability in self.blocked_capabilities
         ):
             raise ValueError("request blocked_capabilities must be a tuple of Capability values")
         if len(set(self.blocked_capabilities)) != len(self.blocked_capabilities):
             raise ValueError("request blocked_capabilities must not contain duplicates")
         if not isinstance(self.approved_capabilities, tuple) or not all(
-            isinstance(capability, Capability) for capability in self.approved_capabilities
+                isinstance(capability, Capability) for capability in self.approved_capabilities
         ):
             raise ValueError("request approved_capabilities must be a tuple of Capability values")
         if len(set(self.approved_capabilities)) != len(self.approved_capabilities):
@@ -577,15 +586,15 @@ class CollectorContext:
     """The limited, per-worker interface exposed to a collector."""
 
     def __init__(
-        self,
-        run_id: str,
-        collector_id: str,
-        workspace: Path,
-        temporary_directory: Path,
-        artifacts: ArtifactWriter,
-        logger: EventLogger,
-        settings: Mapping[str, object],
-        cancellation_file: Path,
+            self,
+            run_id: str,
+            collector_id: str,
+            workspace: Path,
+            temporary_directory: Path,
+            artifacts: ArtifactWriter,
+            logger: EventLogger,
+            settings: Mapping[str, object],
+            cancellation_file: Path,
     ) -> None:
         """Initialize the limited worker context and its cancellation boundary."""
         self.run_id = run_id
@@ -631,12 +640,12 @@ class ArtifactWriter(ABC):
 
     @abstractmethod
     def register_file(
-        self,
-        source: Path,
-        *,
-        media_type: str = "application/octet-stream",
-        evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
-        transformations: tuple[str, ...] = (),
+            self,
+            source: Path,
+            *,
+            media_type: str = "application/octet-stream",
+            evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
+            transformations: tuple[str, ...] = (),
     ) -> Artifact:
         """Register a file created within the collector workspace."""
 

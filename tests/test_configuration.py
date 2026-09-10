@@ -221,7 +221,7 @@ max_retry_time = 30
                 load_config(root)
 
     def test_configuration_manifest_redacts_nested_secrets_without_mutating_worker_settings(
-        self,
+            self,
     ) -> None:
         """Manifest snapshots hide credentials while collectors retain configured access."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -354,7 +354,7 @@ max_retry_time = 30
                 self.assertEqual(settings, configuration.settings_for(collector_id))
 
     def test_configuration_validates_metadata_only_memory_map_limits_and_workspace_paths(
-        self,
+            self,
     ) -> None:
         """The existing metadata-only memory mapper rejects unsafe values before worker launch."""
         with tempfile.TemporaryDirectory() as temporary:

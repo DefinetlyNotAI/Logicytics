@@ -50,7 +50,8 @@ def _failure_details(result: unittest.TestResult) -> tuple[tuple[str, str, str],
     for category, failures in (("Failure", result.failures), ("Error", result.errors)):
         for test, traceback_text in failures:
             test_name = test.id() if hasattr(test, "id") else str(test)
-            tail = next((line.strip() for line in reversed(traceback_text.splitlines()) if line.strip()), "No detail provided")
+            tail = next((line.strip() for line in reversed(traceback_text.splitlines()) if line.strip()),
+                        "No detail provided")
             details.append((category, test_name, tail))
     return tuple(details)
 

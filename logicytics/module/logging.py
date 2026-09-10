@@ -127,11 +127,11 @@ class ApplicationLogger(EventLogger):
     """Thread-safe human-readable file and colored-console event sink."""
 
     def __init__(
-        self,
-        path: Path,
-        settings: LoggingSettings,
-        *,
-        console: TextIO | None = None,
+            self,
+            path: Path,
+            settings: LoggingSettings,
+            *,
+            console: TextIO | None = None,
     ) -> None:
         """Initialize a bounded application logger with explicit file and console sinks."""
         self.path = path.resolve()
@@ -269,7 +269,7 @@ class ApplicationLogger(EventLogger):
                 stream.readline()
                 retained = stream.read()
             record = _RECORD_START.search(retained)
-            retained = retained[record.start() :] if record is not None else b""
+            retained = retained[record.start():] if record is not None else b""
             self.path.write_bytes(retained)
 
     @staticmethod
@@ -284,13 +284,13 @@ class ApplicationLogger(EventLogger):
             segment
             for line in message.splitlines() or [""]
             for segment in (
-                textwrap.wrap(
-                    line,
-                    width=available,
-                    break_long_words=True,
-                    break_on_hyphens=False,
-                )
-                or [""]
+                    textwrap.wrap(
+                        line,
+                        width=available,
+                        break_long_words=True,
+                        break_on_hyphens=False,
+                    )
+                    or [""]
             )
         ]
         first = prefix + wrapped[0]
@@ -370,10 +370,10 @@ class ApplicationLogger(EventLogger):
 
     @classmethod
     def _console_fields(
-        cls,
-        fields: Mapping[str, object],
-        *,
-        compact_configuration_hash: bool = False,
+            cls,
+            fields: Mapping[str, object],
+            *,
+            compact_configuration_hash: bool = False,
     ) -> tuple[str, ...]:
         """Render structured fields as readable labels instead of JSON fragments."""
         rows: list[str] = []
@@ -723,10 +723,10 @@ class ApplicationLogger(EventLogger):
 
     @classmethod
     def render_section(
-        cls,
-        console: TextIO,
-        title: str,
-        lines: Iterable[str],
+            cls,
+            console: TextIO,
+            title: str,
+            lines: Iterable[str],
     ) -> None:
         """Render a plain, indented console section for startup and fallback paths."""
         render_presentation_section(
@@ -739,10 +739,10 @@ class ApplicationLogger(EventLogger):
 
     @classmethod
     def render_alert(
-        cls,
-        console: TextIO,
-        title: str,
-        lines: Iterable[str],
+            cls,
+            console: TextIO,
+            title: str,
+            lines: Iterable[str],
     ) -> None:
         """Render a bordered startup or error alert using the shared logger presentation."""
         render_presentation_alert(
@@ -805,7 +805,7 @@ class HumanArgumentParser(argparse.ArgumentParser):
         """Return every visible option as compact, presentation-ready help rows."""
         usage = " ".join(self.format_usage().split())
         while usage.lower().startswith("usage:"):
-            usage = usage[len("usage:") :].strip()
+            usage = usage[len("usage:"):].strip()
         usage = usage.replace(",", ", ")
         rows = [f"Usage: {usage}", "Options:"]
         formatter = self._get_formatter()
@@ -833,16 +833,17 @@ class HumanArgumentParser(argparse.ArgumentParser):
 
 
 def get_application_logger(
-    path: Path,
-    settings: LoggingSettings,
-    *,
-    console: TextIO | None = None,
+        path: Path,
+        settings: LoggingSettings,
+        *,
+        console: TextIO | None = None,
 ) -> ApplicationLogger:
     """Return one configured logger instance per canonical application log path."""
     resolved = path.resolve()
     with _LOGGER_LOCK:
         logger = _APPLICATION_LOGGERS.get(resolved)
-        if logger is None or logger.settings != settings or console is not None or (console is None and logger.console is not sys.stderr):
+        if logger is None or logger.settings != settings or console is not None or (
+                console is None and logger.console is not sys.stderr):
             logger = ApplicationLogger(resolved, settings, console=console)
             if console is None:
                 _APPLICATION_LOGGERS[resolved] = logger
@@ -891,7 +892,8 @@ def get_event_logger(path: Path, *, run_id: str, collector_id: str | None = None
         return logger
 
 
-def timed(logger: EventLogger, *, level: str = "info") -> Callable[[Callable[Parameters, Result]], Callable[Parameters, Result]]:
+def timed(logger: EventLogger, *, level: str = "info") -> Callable[
+    [Callable[Parameters, Result]], Callable[Parameters, Result]]:
     """Decorate a function so structured start, finish, error, and duration events are written."""
 
     def decorate(function: Callable[Parameters, Result]) -> Callable[Parameters, Result]:
@@ -932,7 +934,7 @@ def raise_logged(logger: EventLogger, exception_type: type[Exception], message: 
 
 
 def deprecated(
-    logger: EventLogger, *, removal_version: str, reason: str, include_stack: bool = False
+        logger: EventLogger, *, removal_version: str, reason: str, include_stack: bool = False
 ) -> Callable[[Callable[Parameters, Result]], Callable[Parameters, Result]]:
     """Decorate a function so each invocation emits a structured deprecation warning."""
 

@@ -39,12 +39,12 @@ class _ProbeArtifactWriter(ArtifactWriter):
     """Reject evidence registration during preflight validation."""
 
     def register_file(
-        self,
-        source: Path,
-        *,
-        media_type: str = "application/octet-stream",
-        evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
-        transformations: tuple[str, ...] = (),
+            self,
+            source: Path,
+            *,
+            media_type: str = "application/octet-stream",
+            evidence_kind: EvidenceKind = EvidenceKind.DERIVED,
+            transformations: tuple[str, ...] = (),
     ) -> Artifact:
         """Prevent a validation method from registering collection artifacts."""
         raise RuntimeError("validate() must not register artifacts")
@@ -98,7 +98,8 @@ class _ValidationSideEffectGuard:
             mode = arguments[1] if len(arguments) > 1 else None
             flags = arguments[2] if len(arguments) > 2 else 0
             writing = isinstance(mode, str) and any(flag in mode for flag in "wax+")
-            writing = writing or isinstance(flags, int) and bool(flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND))
+            writing = writing or isinstance(flags, int) and bool(
+                flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND))
             if not writing:
                 return
         elif event not in self._BLOCKED_EVENTS:
@@ -118,8 +119,8 @@ def _load_module(path: Path):
 
 
 def _validate_contract(
-    collector_type: type[Collector],
-    kind: CollectorKind,
+        collector_type: type[Collector],
+        kind: CollectorKind,
 ) -> CollectorMetadata:
     """Validate collector signatures, metadata consistency, and probe purity."""
     required_base = CoreCollector if kind is CollectorKind.CORE else PluginCollector

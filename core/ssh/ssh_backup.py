@@ -87,9 +87,9 @@ class SshBackupCollector(CoreCollector):
         cancelled = False
 
         with zipfile.ZipFile(
-            archive,
-            "w",
-            compression=zipfile.ZIP_DEFLATED,
+                archive,
+                "w",
+                compression=zipfile.ZIP_DEFLATED,
         ) as output:
             try:
                 candidates: list[Path] = sorted(

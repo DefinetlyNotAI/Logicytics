@@ -204,15 +204,15 @@ class MemoryMapCollector(CoreCollector):
                 )
 
             serialized = (
-                json.dumps(
-                    {
-                        "region_count": len(regions),
-                        "truncated": truncated,
-                        "regions": regions,
-                    },
-                    indent=2,
-                )
-                + "\n"
+                    json.dumps(
+                        {
+                            "region_count": len(regions),
+                            "truncated": truncated,
+                            "regions": regions,
+                        },
+                        indent=2,
+                    )
+                    + "\n"
             )
 
             serialized_size = len(serialized.encode("utf-8"))

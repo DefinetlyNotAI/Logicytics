@@ -91,7 +91,7 @@ class WindowsSystemDataBackupCollector(CoreCollector):
         artifacts = []
         for path in copied:
             if context.is_cancelled:
-                for unpublished in copied[len(artifacts) :]:
+                for unpublished in copied[len(artifacts):]:
                     unpublished.unlink(missing_ok=True)
                 return CollectorResult.cancelled("cancelled during system-data registration", tuple(artifacts))
             artifacts.append(context.artifacts.register_file(path, evidence_kind=EvidenceKind.RAW))

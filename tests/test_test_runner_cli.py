@@ -168,7 +168,8 @@ class TestRunnerCliTests(unittest.TestCase):
             patch("logicytics.module.configuration.load_config", return_value=configuration),
             patch("logicytics.module.output_layout.ensure_output_layout", return_value=MagicMock()),
             patch("logicytics.module.logging.get_application_logger", return_value=logger),
-            patch.object(test_runner.unittest.defaultTestLoader, "discover", return_value=unittest.TestSuite((NoisyTest(),))),
+            patch.object(test_runner.unittest.defaultTestLoader, "discover",
+                         return_value=unittest.TestSuite((NoisyTest(),))),
             patch("sys.stdout", stdout),
             patch("sys.stderr", stderr),
         ):
@@ -200,7 +201,8 @@ class TestRunnerCliTests(unittest.TestCase):
             patch("logicytics.module.configuration.load_config", return_value=configuration),
             patch("logicytics.module.output_layout.ensure_output_layout", return_value=MagicMock()),
             patch("logicytics.module.logging.get_application_logger", return_value=logger),
-            patch.object(test_runner.unittest.defaultTestLoader, "discover", return_value=unittest.TestSuite((NoisyTest(),))),
+            patch.object(test_runner.unittest.defaultTestLoader, "discover",
+                         return_value=unittest.TestSuite((NoisyTest(),))),
             patch("sys.stdout", stdout),
             patch("sys.stderr", stderr),
         ):

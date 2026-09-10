@@ -21,7 +21,8 @@ _MAX_EVENTS = 1_000
 def _is_access_denied(detail: str) -> bool:
     """Recognize common access-denied wording emitted by PowerShell event queries."""
     normalized = detail.casefold()
-    return "permission denied" in normalized or "unauthorized" in normalized or ("access" in normalized and "denied" in normalized)
+    return "permission denied" in normalized or "unauthorized" in normalized or (
+            "access" in normalized and "denied" in normalized)
 
 
 class SecurityEventsCollector(CoreCollector):

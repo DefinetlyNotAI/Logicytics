@@ -31,19 +31,19 @@ from logicytics.platform_adapters import (
 class ProcessAdapterTests(unittest.TestCase):
     def test_process_adapter_normalizes_and_delegates_shell_free_commands(self) -> None:
         def execute(
-            command: Sequence[str],
-            *,
-            stdout: BinaryIO,
-            stderr: BinaryIO,
-            **_options: object,
+                command: Sequence[str],
+                *,
+                stdout: BinaryIO,
+                stderr: BinaryIO,
+                **_options: object,
         ) -> subprocess.CompletedProcess[str]:
             stdout.write(b"output")
             stderr.write(b"warning")
             return subprocess.CompletedProcess(command, 7)
 
         with patch(
-            "logicytics.platform_adapters.subprocess.run",
-            side_effect=execute,
+                "logicytics.platform_adapters.subprocess.run",
+                side_effect=execute,
         ) as invoke:
             result = ProcessAdapter().run(
                 ["tool", Path("argument")],
@@ -111,9 +111,9 @@ class ProcessAdapterTests(unittest.TestCase):
             )
         self.assertEqual(("tool", "argument"), popen.call_args.args[0])
         with patch.object(
-            windows_api_adapter,
-            windows_api_adapter.process_working_set.__name__,
-            return_value=4096,
+                windows_api_adapter,
+                windows_api_adapter.process_working_set.__name__,
+                return_value=4096,
         ) as memory:
             self.assertEqual(
                 4096,
@@ -172,9 +172,9 @@ class ProcessAdapterTests(unittest.TestCase):
     def test_process_adapter_rejects_shell_empty_and_unbounded_timeout_inputs(self) -> None:
         adapter = ProcessAdapter()
         for command, options, message in (
-            ([], {}, "at least one"),
-            (["tool"], {"shell": True}, "shell"),
-            (["tool"], {"timeout": 0}, "timeout"),
+                ([], {}, "at least one"),
+                (["tool"], {"shell": True}, "shell"),
+                (["tool"], {"timeout": 0}, "timeout"),
         ):
             with self.subTest(command=command, options=options):
                 with self.assertRaisesRegex(ValueError, message):

@@ -26,8 +26,8 @@ class WindowsIntegrationTests(unittest.TestCase):
         self.assertIn(privilege, {True, False, None})
 
         with registry_adapter.OpenKey(
-            registry_adapter.HKEY_LOCAL_MACHINE,
-            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+                registry_adapter.HKEY_LOCAL_MACHINE,
+                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
         ) as key:
             product_name, _ = registry_adapter.QueryValueEx(key, "ProductName")
         self.assertTrue(str(product_name).strip())
@@ -77,7 +77,8 @@ class WindowsIntegrationTests(unittest.TestCase):
         sysinternals = [which(name) for name in ("autorunsc", "handle", "pslist")]
         for executable in (path for path in sysinternals if path is not None):
             with self.subTest(integration="sysinternals", executable=executable):
-                result = process_adapter.run([executable, "-?"], capture_output=True, check=False, text=True, timeout=20)
+                result = process_adapter.run([executable, "-?"], capture_output=True, check=False, text=True,
+                                             timeout=20)
                 self.assertIsInstance(result.returncode, int)
 
     def test_every_shipped_output_contract_publishes_on_windows(self) -> None:
@@ -114,8 +115,8 @@ class WindowsIntegrationTests(unittest.TestCase):
                     )
 
                     for pattern, media_type in zip(
-                        contract.workspace_patterns,
-                        contract.media_types,
+                            contract.workspace_patterns,
+                            contract.media_types,
                     ):
                         parts: list[str] = []
 

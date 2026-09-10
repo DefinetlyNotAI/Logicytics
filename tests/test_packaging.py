@@ -236,7 +236,7 @@ class PackagingTests(unittest.TestCase):
                 outcome.manifest.to_dict()
 
     def test_configured_output_root_colocates_packages_without_touching_legacy_evidence(
-        self,
+            self,
     ) -> None:
         """Custom roots own runs and ZIPs; old ACCESS evidence is neither moved nor deleted."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -331,7 +331,8 @@ class PackagingTests(unittest.TestCase):
             report = preflight(root)
             self.assertEqual((), report.invalid)
             configuration = default_config(root)
-            original = RunSupervisor(root, configuration).run(build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True)))
+            original = RunSupervisor(root, configuration).run(
+                build_plan(report, RunRequest(max_workers=1, acknowledge_authorization=True)))
             original_package_metadata = original.manifest.package
             assert original_package_metadata is not None
             original_manifest = original.manifest_path.read_bytes()
@@ -378,7 +379,7 @@ class PackagingTests(unittest.TestCase):
             self.assertIn(f"Parent run: {original.manifest.run_id}", summary)
 
     def test_sensitive_artifact_bytes_are_preserved_while_packaged_diagnostics_are_redacted(
-        self,
+            self,
     ) -> None:
         """Evidence retains intentional secrets, but no packaged diagnostics disclose them."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -444,7 +445,8 @@ class PackagingTests(unittest.TestCase):
                     archive.read(f"evidence/{artifact.evidence_kind.value}/{artifact.relative_path}").decode("utf-8"),
                 )
                 diagnostics = "\n".join(
-                    archive.read(name).decode("utf-8") for name in archive.namelist() if not name.startswith("evidence/")
+                    archive.read(name).decode("utf-8") for name in archive.namelist() if
+                    not name.startswith("evidence/")
                 )
                 self.assertNotIn("evidence-password", diagnostics)
                 self.assertNotIn("evidence-token", diagnostics)
@@ -487,7 +489,8 @@ class PackagingTests(unittest.TestCase):
                 packaged_record = json.loads(archive.read("metadata/manifest.json"))["collectors"][0]
                 self.assertEqual(failure, packaged_record["failure"])
                 diagnostics = "\n".join(
-                    archive.read(name).decode("utf-8") for name in archive.namelist() if not name.startswith("evidence/")
+                    archive.read(name).decode("utf-8") for name in archive.namelist() if
+                    not name.startswith("evidence/")
                 )
                 self.assertNotIn("crash-password", diagnostics)
                 self.assertNotIn("crash-token", diagnostics)
@@ -527,7 +530,7 @@ class PackagingTests(unittest.TestCase):
                 package_run(outcome)
 
     def test_collector_resource_progress_persists_in_manifest_summary_and_performance_report(
-        self,
+            self,
     ) -> None:
         """Incremental progress fields remain visible live and in every packaged diagnostic."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -578,7 +581,8 @@ class PackagingTests(unittest.TestCase):
             self.assertGreater(float(record.progress["elapsed_seconds"]), 0)
             self.assertTrue(
                 any(
-                    snapshot["collectors"][0]["status"] == "running" and snapshot["collectors"][0]["progress"]["files_scanned"] >= 3
+                    snapshot["collectors"][0]["status"] == "running" and snapshot["collectors"][0]["progress"][
+                        "files_scanned"] >= 3
                     for snapshot in snapshots
                 )
             )
@@ -618,9 +622,9 @@ class PackagingTests(unittest.TestCase):
             original_write = packaging._stream_archive_member
 
             def tampering_write(
-                archive: zipfile.ZipFile,
-                filename: Path,
-                arcname: str,
+                    archive: zipfile.ZipFile,
+                    filename: Path,
+                    arcname: str,
             ) -> None:
                 if arcname.startswith("evidence/"):
                     archive.writestr(arcname, b"tampered artifact bytes")
@@ -690,7 +694,7 @@ class PackagingTests(unittest.TestCase):
             self.assertFalse(hash_path.with_suffix(".sha256.backup").exists())
 
     def test_package_rejects_manifest_artifact_path_escape_and_forged_collector_ownership(
-        self,
+            self,
     ) -> None:
         """A modified manifest cannot package outside files or another collector's evidence."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -883,7 +887,8 @@ class PackagingTests(unittest.TestCase):
             def guarded_open(path: Path, *arguments: Any, **options: Any) -> Any:
                 stream = original_open(path, *arguments, **options)
                 resolved_path = path.resolve()
-                if resolved_path in {source.resolve(), expected_package_path.resolve()} and arguments and arguments[0] == "rb":
+                if resolved_path in {source.resolve(), expected_package_path.resolve()} and arguments and arguments[
+                    0] == "rb":
                     return BoundedReader(stream, path)
                 return stream
 

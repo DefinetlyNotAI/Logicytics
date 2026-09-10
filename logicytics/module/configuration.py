@@ -228,7 +228,7 @@ def _yaml_scalar(value: str, *, line_number: int) -> object:
         return True
     if value in {"false", "False", "FALSE"}:
         return False
-    if value == "{}":
+    if re.fullmatch(r"{\s*}", value):
         return {}
     if value.startswith(('"', "'")):
         if not value.endswith(value[0]):
@@ -497,9 +497,9 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     default_workers = runtime_raw.get("default_max_workers", 4)
     maximum_workers = runtime_raw.get("maximum_workers", 16)
     if not _positive_integer(default_workers, minimum=1, maximum=64) or not _positive_integer(
-        maximum_workers,
-        minimum=1,
-        maximum=64,
+            maximum_workers,
+            minimum=1,
+            maximum=64,
     ):
         raise PlanError("worker limits must be integers")
     if not 1 <= default_workers <= maximum_workers <= 64:
@@ -512,9 +512,9 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
         DEFAULT_MAXIMUM_RUN_OUTPUT_BYTES,
     )
     if not _positive_integer(
-        maximum_run_output_bytes,
-        minimum=1,
-        maximum=MAXIMUM_RUN_OUTPUT_BYTES,
+            maximum_run_output_bytes,
+            minimum=1,
+            maximum=MAXIMUM_RUN_OUTPUT_BYTES,
     ):
         raise PlanError("runtime maximum_run_output_bytes must be an integer from 1 to 68719476736")
     blocked_capabilities = _configured_capabilities(
@@ -553,9 +553,11 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     remote_sha256 = maintenance_raw.get("remote_manifest_sha256")
     if (remote_url is None) != (remote_sha256 is None):
         raise PlanError("remote manifest URL and SHA-256 must be configured together")
-    if remote_url is not None and (not isinstance(remote_url, str) or not remote_url.startswith("https://") or "\n" in remote_url):
+    if remote_url is not None and (
+            not isinstance(remote_url, str) or not remote_url.startswith("https://") or "\n" in remote_url):
         raise PlanError("remote_manifest_url must be an HTTPS URL")
-    if remote_sha256 is not None and (not isinstance(remote_sha256, str) or re.fullmatch(r"[0-9a-f]{64}", remote_sha256) is None):
+    if remote_sha256 is not None and (
+            not isinstance(remote_sha256, str) or re.fullmatch(r"[0-9a-f]{64}", remote_sha256) is None):
         raise PlanError("remote_manifest_sha256 must be a lowercase SHA-256 digest")
     local_manifest_value = maintenance_raw.get("local_manifest_path", "project.manifest.json")
     if not isinstance(local_manifest_value, str) or not local_manifest_value.strip():
@@ -598,7 +600,8 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
     if not all(isinstance(value, bool) for value in (console_enabled, color_enabled, file_enabled, delete_previous)):
         raise PlanError("logging enable, color, file, and deletion settings must be boolean")
     log_maximum_bytes = logging_raw.get("maximum_bytes", 4 * 1024 * 1024)
-    if not isinstance(log_maximum_bytes, int) or isinstance(log_maximum_bytes, bool) or not 1024 <= log_maximum_bytes <= 64 * 1024 * 1024:
+    if not isinstance(log_maximum_bytes, int) or isinstance(log_maximum_bytes,
+                                                            bool) or not 1024 <= log_maximum_bytes <= 64 * 1024 * 1024:
         raise PlanError("logging maximum_bytes must be an integer from 1024 to 67108864")
     retention_days = logging_raw.get("retention_days", 30)
     if not isinstance(retention_days, int) or isinstance(retention_days, bool) or not 0 <= retention_days <= 3650:
@@ -606,7 +609,7 @@ def load_config(project_root: Path, config_path: Path | None = None) -> AppConfi
 
     collector_settings = raw.get("collectors", {})
     if not isinstance(collector_settings, dict) or not all(
-        isinstance(key, str) and isinstance(value, dict) for key, value in collector_settings.items()
+            isinstance(key, str) and isinstance(value, dict) for key, value in collector_settings.items()
     ):
         raise PlanError("collectors configuration must map collector IDs to objects")
     _validate_collector_settings(collector_settings)

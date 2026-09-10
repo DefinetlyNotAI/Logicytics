@@ -18,7 +18,8 @@ from logicytics.platform_adapters import which
 def _is_access_denied(detail: str, return_code: int) -> bool:
     """Recognize textual and HRESULT access-denied results from manage-bde."""
     normalized = detail.casefold()
-    return return_code == 2147749891 or "permission denied" in normalized or ("access" in normalized and "denied" in normalized)
+    return return_code == 2147749891 or "permission denied" in normalized or (
+            "access" in normalized and "denied" in normalized)
 
 
 class BitlockerStatusCollector(CoreCollector):

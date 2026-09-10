@@ -94,13 +94,13 @@ def mod_metadata(name: str, *, filesystem_write: bool = False) -> dict[str, Any]
 
 
 def delayed_collector_source(
-    filename: str,
-    delay: float,
-    *,
-    parallel_safe: bool = True,
-    dependencies: tuple[str, ...] = (),
-    resource_class: ResourceClass = ResourceClass.GENERAL,
-    fail: bool = False,
+        filename: str,
+        delay: float,
+        *,
+        parallel_safe: bool = True,
+        dependencies: tuple[str, ...] = (),
+        resource_class: ResourceClass = ResourceClass.GENERAL,
+        fail: bool = False,
 ) -> str:
     """Create a valid fixture collector with observable scheduling duration."""
     class_name = "".join(part.title() for part in filename.split("_"))

@@ -29,8 +29,8 @@ class SysinternalsState:
 
 
 def ensure_sysinternals(
-    project_root: Path,
-    settings: MaintenanceSettings | None = None,
+        project_root: Path,
+        settings: MaintenanceSettings | None = None,
 ) -> SysinternalsState:
     """Honor YAML opt-out or securely download, validate, and extract Sysinternals."""
     settings = settings or MaintenanceSettings()

@@ -34,7 +34,7 @@ class ProcessAdapter:
 
     @staticmethod
     def _command(
-        command: Sequence[str | os.PathLike[str]],
+            command: Sequence[str | os.PathLike[str]],
     ) -> tuple[str, ...]:
         """Validate and normalize an explicit shell-free command sequence."""
         normalized = tuple(argument if isinstance(argument, str) else argument.__fspath__() for argument in command)
@@ -47,23 +47,25 @@ class ProcessAdapter:
     @staticmethod
     @overload
     def run(
-        command: Sequence[str | os.PathLike[str]],
-        *,
-        text: Literal[True],
-        **options: Any,
-    ) -> subprocess.CompletedProcess[str]: ...
+            command: Sequence[str | os.PathLike[str]],
+            *,
+            text: Literal[True],
+            **options: Any,
+    ) -> subprocess.CompletedProcess[str]:
+        ...
 
     @staticmethod
     @overload
     def run(
-        command: Sequence[str | os.PathLike[str]],
-        **options: Any,
-    ) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]: ...
+            command: Sequence[str | os.PathLike[str]],
+            **options: Any,
+    ) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]:
+        ...
 
     @staticmethod
     def run(
-        command: Sequence[str | os.PathLike[str]],
-        **options: Any,
+            command: Sequence[str | os.PathLike[str]],
+            **options: Any,
     ) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]:
         """Delegate to the guarded stdlib runner while retaining its familiar result contract."""
         normalized = ProcessAdapter._command(command)
@@ -110,7 +112,8 @@ class ProcessAdapter:
             stderr_size = stderr.tell()
 
             if stdout_size > ProcessAdapter.maximum_capture_bytes or stderr_size > ProcessAdapter.maximum_capture_bytes:
-                raise ValueError(f"command output exceeds the {ProcessAdapter.maximum_capture_bytes}-byte capture limit")
+                raise ValueError(
+                    f"command output exceeds the {ProcessAdapter.maximum_capture_bytes}-byte capture limit")
 
             stdout.seek(0)
             stderr.seek(0)
@@ -134,9 +137,9 @@ class ProcessAdapter:
         )
 
     def popen(
-        self,
-        command: Sequence[str | os.PathLike[str]],
-        **options: Any,
+            self,
+            command: Sequence[str | os.PathLike[str]],
+            **options: Any,
     ) -> subprocess.Popen[Any]:
         """Start one explicit long-lived process without invoking a command shell."""
         normalized = self._command(command)
