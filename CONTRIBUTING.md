@@ -149,7 +149,6 @@ Keep user and developer documentation synchronized with behavior:
 - [MODS.md](docs/MODS.md): extension contract.
 - [MIGRATION.md](docs/MIGRATION.md): supported compatibility boundary.
 - [FLOW_MATRIX.md](docs/FLOW_MATRIX.md): executable flow evidence.
-- [V4_RELEASE.md](docs/V4_RELEASE.md): v4 recreation scope and release verification.
 
 The repository wiki is complementary documentation, not a substitute for the
 versioned contract files required to review a change.
