@@ -50,6 +50,7 @@ def ensure_sysinternals(
                 urlopen(settings.sysinternals_download_url, timeout=30) as response,
                 NamedTemporaryFile(mode="wb", dir=archive.parent, delete=False) as temporary,
             ):
+                downloaded = Path(temporary.name)
                 content_length = response.headers.get("Content-Length")
                 if content_length is not None and int(content_length) > MAX_ARCHIVE_BYTES:
                     raise ValueError("download exceeds the maximum archive size")
@@ -59,8 +60,9 @@ def ensure_sysinternals(
                     if total > MAX_ARCHIVE_BYTES:
                         raise ValueError("download exceeds the maximum archive size")
                     temporary.write(chunk)
-                downloaded = Path(temporary.name)
         except (OSError, URLError, ValueError) as error:
+            if downloaded is not None:
+                downloaded.unlink(missing_ok=True)
             return SysinternalsState(f"download_failed: {error}", archive, extraction_directory)
         try:
             assert downloaded is not None
