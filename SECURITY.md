@@ -3,8 +3,8 @@
 ## Supported versions
 
 | Version | Security support | Release date       |
-|---------|------------------|--------------------|
-| 4.0.x   | Supported        | September XX, 2026 |
+| ------- | ---------------- | ------------------ |
+| 4.0.x   | Supported        | September 25, 2026 |
 | 3.6.x   | Partial Support  | July 26, 2025      |
 | 3.5.x   | Partial Support  | July 26, 2025      |
 | 3.4.x   | Partial Support  | January 3, 2025    |
