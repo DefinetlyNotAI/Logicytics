@@ -16,9 +16,10 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal, overload
 
-_ctypes_collector = importlib.import_module("logicytics.global.ctypes_collector")
-query_registry_key_info = _ctypes_collector.query_registry_key_info
-filetime = _ctypes_collector.filetime
+def _windows_registry_bindings():
+    """Load Windows-only registry bindings only when registry access is requested."""
+    bindings = importlib.import_module("logicytics.global.ctypes_collector")
+    return bindings.filetime, bindings.query_registry_key_info
 
 try:
     import winreg as _winreg
@@ -227,6 +228,7 @@ class RegistryAdapter:
         if _winreg is None:
             return None
 
+        filetime, query_registry_key_info = _windows_registry_bindings()
         timestamp = filetime()
         result = query_registry_key_info(
             key.handle,
