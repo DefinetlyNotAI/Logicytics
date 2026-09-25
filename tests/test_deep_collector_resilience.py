@@ -57,6 +57,10 @@ class DeepCollectorResilienceTests(unittest.TestCase):
                     sysinternals_report.subprocess,
                     sysinternals_report.subprocess.run.__name__,
                     side_effect=subprocess.TimeoutExpired(["psfile.exe"], 25),
+            ), patch.object(
+                    sysinternals_report.Path,
+                    "is_file",
+                    return_value=True,
             ):
                 result = sysinternals_report.SysinternalsReportCollector().collect(context)
             report = (context.workspace / "sysinternals_report.txt").read_text(encoding="utf-8")
