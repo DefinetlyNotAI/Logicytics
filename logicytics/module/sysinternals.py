@@ -11,6 +11,8 @@ from urllib.request import urlopen
 
 from logicytics.module.configuration import MaintenanceSettings
 
+MAX_ARCHIVE_BYTES = 128 * 1024 * 1024
+
 
 @dataclass(frozen=True, slots=True)
 class SysinternalsState:
@@ -42,16 +44,26 @@ def ensure_sysinternals(
         return SysinternalsState("extracted", archive, extraction_directory)
     if not archive.is_file():
         archive.parent.mkdir(parents=True, exist_ok=True)
+        downloaded: Path | None = None
         try:
             with (
                 urlopen(settings.sysinternals_download_url, timeout=30) as response,
                 NamedTemporaryFile(mode="wb", dir=archive.parent, delete=False) as temporary,
             ):
-                temporary.write(response.read())
+                content_length = response.headers.get("Content-Length")
+                if content_length is not None and int(content_length) > MAX_ARCHIVE_BYTES:
+                    raise ValueError("download exceeds the maximum archive size")
+                total = 0
+                while chunk := response.read(1024 * 1024):
+                    total += len(chunk)
+                    if total > MAX_ARCHIVE_BYTES:
+                        raise ValueError("download exceeds the maximum archive size")
+                    temporary.write(chunk)
                 downloaded = Path(temporary.name)
-        except (OSError, URLError) as error:
+        except (OSError, URLError, ValueError) as error:
             return SysinternalsState(f"download_failed: {error}", archive, extraction_directory)
         try:
+            assert downloaded is not None
             if not zipfile.is_zipfile(downloaded):
                 return SysinternalsState("download_failed: archive is not a ZIP file", archive, extraction_directory)
             downloaded.replace(archive)
