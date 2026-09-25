@@ -6,7 +6,7 @@ import io
 import unittest
 from unittest.mock import patch
 
-from logicytics import terminal
+from logicytics.module import terminal
 from logicytics.module.presentation import render_banner
 
 
