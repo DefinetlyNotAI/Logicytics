@@ -1,125 +1,173 @@
 # Contributing to Logicytics
 
-Looking to contribute something to Logicytics? **Here's how you can help.**
+Logicytics v4 is a Windows-focused evidence collector with strict authorization,
+isolation, output, and compatibility contracts. Keep changes focused and preserve
+those contracts. Use the [issue tracker](https://github.com/DefinetlyNotAI/Logicytics/issues)
+for reproducible bugs and scoped feature proposals.
 
-Please take a moment to review this document to make the contribution
-process easy and effective for everyone involved.
+## Development setup
 
-Following these guidelines helps to communicate that you respect the time of
-the developers managing and developing this open source project. In return,
-they should reciprocate that respect in addressing your issue or assessing
-patches and features.
+Requirements:
 
-## Using the issue tracker
+- Windows for live collector and platform integration checks.
+- Python 3.11 or later. The v4 engine has no third-party runtime dependency.
+- Git for developer integrity and explicit update actions.
 
-The [issue tracker](https://github.com/DefinetlyNotAI/Logicytics/issues) is
-the preferred channel for bug reports and features requests
-and submitting pull requests, but please respect the following
-restrictions:
+From a fresh checkout:
 
-- Please **Do not** derail or troll issues. Keep the discussion on topic and
-  respect the opinions of others.
+```powershell
+python -m logicytics preflight
+python -m unittest discover -v
+python -m compileall -q logicytics core tests
+```
 
-- Please **Do not** post comments consisting solely of "+1" or "👍 ".
-  Use [GitHub's "reactions" feature](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments)
-  instead. We reserve the right to delete comments which violate this rule.
+`preflight` must report no invalid core collector. Some live Windows features such
+as WMIC, BitLocker, or Sysinternals are optional; absence must produce an explicit
+skip or availability result rather than breaking unrelated collection.
 
-## Issues assignment
+## Architecture boundaries
 
-I will be looking at the open issues, analyse them, and provide guidance on how to proceed.
+The canonical pipeline is:
 
-Issues can be assigned to anyone other than me and contributors are welcome
-to participate in the discussion and provide their input on how to best solve the issue,
-and even submit a PR if they want to.
+`request -> validated plan -> isolated collectors -> registered artifacts -> manifest -> package`
 
-Please wait that the issue is ready to be worked on before submitting a PR.
-We don't want to waste your time.
+- `logicytics/cli/` parses and renders. It does not collect evidence.
+- `logicytics/module/planner.py` resolves one deterministic plan from immutable
+  `RunRequest` policy and validated metadata.
+- `logicytics/module/runtime.py` owns per-run and per-worker lifecycle, cancellation,
+  retries, timeouts, failure aggregation, and post-run actions.
+- `logicytics/module/platform_adapters.py` owns host command, process, registry,
+  filesystem, network, privilege, and Win32 access. Collectors must use these
+  injectable seams instead of importing host APIs directly.
+- `logicytics/module/artifacts.py` is the only publication path from collector
+  workspaces into the run artifact catalog.
+- `logicytics/module/packaging.py` consumes the finalized catalog; it never scans source
+  directories for arbitrary files.
+- Maintenance, debug, update, developer, and usage behavior stays separate from
+  normal collection.
 
-Please keep in mind that I am a human and have limited resources and am not always able to respond immediately.
-I will try to provide feedback as soon as possible, but please be patient.
+Importing `logicytics` must not start collection, load the supervisor, or create
+files. Do not add global mutable run state, implicit current-directory behavior,
+collector-to-collector calls, or a second execution/output path.
 
-If you don't get a response immediately,
-it doesn't mean that we are ignoring you or that we don't care about your issue or PR.
-We will get back to you as soon as we can.
+## Core collector changes
 
-If you decide to pull a PR or fork the project, keep in mind that you should only add/edit the scripts you need to,
-leave core files alone.
+Each `core/<specialty>/<collector_name>.py` module owns exactly one public
+`<CollectorName>Collector` and one primary job. Split a feature into a new ID when
+it needs a different capability, privilege level, network reach, sensitive-data
+category, timeout/cost policy, or output contract.
 
-## Guidelines for Modifications 📃
+A collector must:
 
-When making modifications to the Logicytics project,
-please adhere to the following guidelines on the Wiki page.
+- inherit `CoreCollector` and provide fully typed, documented `metadata`,
+  `validate`, `prepare`, `collect`, `finalize`, and `cleanup` behavior;
+- use an ID, class name, file name, and `Specialty` that agree;
+- declare platform, capabilities, privilege, network access, sensitivity,
+  profiles, dependencies, scheduling policy, timeouts, retries, memory/output
+  limits, artifact count, and every MIME type it can publish;
+- check `context.is_cancelled` before work and during every long loop, query,
+  capture, copy, or traversal;
+- write only beneath `context.workspace`, report structured progress, register
+  every result through `context.artifacts`, and return a typed result;
+- turn expected absence or permission denial into an actionable `skipped` or
+  `partial` result without hiding an actual failure;
+- avoid `print`, `exit`, nested worker pools, mutable globals, repository writes,
+  package-wide cleanup, secrets in logs, and unbounded reads or subprocess output.
 
-## Issues and labels 🛠️
+Run the collector directly and through the orchestrator. Add mocked Windows
+responses, cancellation coverage, and output-contract evidence. If structured
+bytes change intentionally, update the relevant golden file in `tests/golden/`
+and explain why.
 
-Our bug tracker utilizes several labels to help organize and identify issues.
+## Plugins
 
-For a complete look at our labels, see the [project labels page](https://github.com/DefinetlyNotAI/Logicytics/labels).
+Plugins implement the typed `PluginCollector` contract and remain opt-in. They
+may not bypass preflight, planning, capability approval, isolated workspaces,
+artifact registration, or package filtering.
 
-## Bug reports 🐛
+Read [PLUGIN_AUTHORING.md](docs/PLUGIN_AUTHORING.md) before changing discovery or
+extension behavior. Read [MIGRATION.md](docs/MIGRATION.md) before changing a legacy
+flag, schema migration, or historical `CODE` evidence import. Compatibility code must remain
+a bounded translation into the canonical v4 model.
 
-A bug is a _demonstrable problem_ that is caused by the code in the repository.
-Good bug reports are extremely helpful!
+## Configuration changes
 
-Guidelines for bug reports:
+Configuration changes must preserve the strict schema in
+[CONFIGURATION.md](docs/CONFIGURATION.md). Update the field reference and its
+parser-backed tests in the same commit as any setting, default, bound, migration
+alias, or source-precedence change.
 
-1. **Use the GitHub issue search** &mdash; check if the issue has already been
-   reported.
+Profiles, modes, include/exclude selections, plugin enablement, capability
+approval, authorization acknowledgement, scheduling overrides, reruns, package
+policy, and post-run power actions are invocation-only `RunRequest` behavior.
+They do not belong in persistent configuration.
 
-2. **Check if the issue has been fixed** &mdash; try to reproduce it using the
-   latest `main` (or `version` branch if the issue is about a version) in the repository.
+## Evidence, security, and compatibility
 
-A good bug report shouldn't leave others needing to chase you up for more
-information. Please try to be as detailed as possible in your report. What is
-your environment? What steps will reproduce the issue? What browser(s) and OS
-experience the problem? Do other browsers show the bug differently? What
-would you expect to be the outcome? All these details will help people to fix
-any potential bugs.
+- Update [OUTPUTS.md](docs/OUTPUTS.md) when a filename, MIME type, package path,
+  evidence kind, or retention rule changes.
+- Keep source, executables, models, configuration secrets, caches, and library
+  internals out of evidence packages.
+- Preserve reproducible package hashes and manifest schema validation.
+- Add explicit capabilities for sensitive or elevated access. Never weaken
+  authorization to make a test pass.
+- Follow [SECURITY.md](SECURITY.md) for vulnerability reports. Do not put secrets
+  or real private evidence in issues, fixtures, logs, or commits.
 
-## Feature requests 🚀
+## Testing expectations
 
-Feature requests are welcome. But take a moment to find out whether your idea
-fits with the scope and aims of the project. It's up to _you_ to make a strong
-case to convince the project's developers of the merits of this feature. Please
-provide as much detail and context as possible.
+Use the narrowest relevant tests while iterating, then run the complete gates
+before opening a pull request:
 
-## Pull requests 📝
+```powershell
+python -m unittest discover -v
+python -m compileall -q logicytics core tests
+python -m logicytics preflight
+git diff --check
+```
 
-Good pull requests—patches, improvements, new features—are a fantastic
-help. They should remain focused in scope and avoid containing unrelated
-commits.
+On Windows, also run:
 
-**Please ask first** before embarking on any **significant** pull request (e.g.
-implementing features, refactoring code, porting to a different language),
-otherwise you risk spending a lot of time working on something that the
-project's developers might not want to merge into the project. For trivial
-things, or things that don't require a lot of your time, you can go ahead and
-make a PR.
+```powershell
+python -m unittest tests.test_windows_integration -v
+```
 
-Please adhere to the coding guidelines used throughout the
-project (indentation, accurate comments, etc.) and any other requirements
-(such as test coverage).
+The suite includes static preflight, lifecycle/cancellation checks, mocked
+collector responses, golden output bytes, flow/mode matrices, package/hash
+reproduction, documentation contracts, and bounded live Windows probes. A build
+or compile check alone is not sufficient evidence.
 
-View the Wiki for more information on how to write pull requests.
+## Documentation changes
 
-**IMPORTANT**: By submitting a patch, you agree to allow the project owners to
-license your work under the terms of the [License](https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE)
+Keep user and developer documentation synchronized with behavior:
 
-## License 📝
+- [README.md](README.md): installation, quick start, CLI, permissions, and
+  troubleshooting.
+- [CONFIGURATION.md](docs/CONFIGURATION.md): every persistent setting and migration.
+- [OUTPUTS.md](docs/OUTPUTS.md): artifact and retention contracts.
+- [MIGRATION.md](docs/MIGRATION.md): supported compatibility boundary.
+- [FLOW_MATRIX.md](docs/FLOW_MATRIX.md): executable flow evidence.
 
-By contributing your code, you agree to license your contribution under
-the [MIT License](https://github.com/DefinetlyNotAI/Logicytics/blob/main/LICENSE).
-By contributing to the documentation, you agree to license your contribution under
-the [Creative Commons Attribution 3.0 Unported License](https://creativecommons.org/licenses/by/3.0/).
+The repository wiki is complementary documentation, not a substitute for the
+versioned contract files required to review a change.
 
-You also agree to the [Developer Certificate of Origin](DCO.md).
+## Issues and pull requests
 
-## Communication 🗣️
+A useful bug report includes the Logicytics version, Windows edition/build,
+Python version, command and sanitized configuration, expected and actual result,
+exit code, relevant redacted logs, and exact reproduction steps. State whether
+the process was elevated and whether an optional Windows feature was installed.
 
-- **Issues**: Use GitHub issues for bug reports and feature requests. Keep the discussion focused and relevant.
-- **Pull Requests**: Use pull requests to propose changes. Be prepared to discuss your changes and address any feedback.
+Pull requests should:
 
-If you have any questions or need further clarification, please feel free to [contact](mailto:Nirt_12023@outlook.com)
-me.
+- solve one coherent problem and avoid unrelated edits;
+- use conventional commit subjects such as `feat:`, `fix:`, `refactor:`,
+  `test:`, or `docs:` with a detailed body;
+- include tests and documentation proportional to the changed contract;
+- preserve unrelated work and never include generated evidence or secrets;
+- pass the complete verification gates above; and
+- comply with the [Developer Certificate of Origin](.github/DCO.md),
+  [Code of Conduct](CODE_OF_CONDUCT.md), and repository license.
 
-Thank you for your contributions!
+By contributing code, you agree to license it under the [MIT License](LICENSE).
+Documentation contributions use the repository's stated documentation license.

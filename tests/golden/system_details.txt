@@ -1,0 +1,3 @@
+Host Name:                 GOLDEN-HOST
+OS Name:                   Microsoft Windows 11 Pro
+System Type:               x64-based PC

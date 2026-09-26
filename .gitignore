@@ -319,6 +319,8 @@ $RECYCLE.BIN/
 *.pyc
 /CODE/SysInternal_Suite/.sys.ignore
 /ACCESS/
+/output/
+/tools/
 /CODE/vulnscan/tools/NN features/
 /CODE/logicytics/User_History.json.gz
 /CODE/logicytics/User_History.json
@@ -329,3 +331,5 @@ $RECYCLE.BIN/
 /CODE/SysInternal_Suite/PsLoggedon.exe
 /CODE/SysInternal_Suite/psloglist.exe
 .idea/
+.cache/
+.temp/

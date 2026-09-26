@@ -1,10 +1,8 @@
-# Logicytics: System Data Harvester
+# Logicytics
 
-Logicytics is a cutting-edge tool designed to
-meticulously harvest and collect a vast array of Windows system data for forensic analysis.
-Crafted with Python, it's an actively developed project that is dedicated
-to gathering as much sensitive data as possible and packaging it neatly into a ZIP file.
-This comprehensive guide is here to equip you with everything you need to use Logicytics effectively.
+<p align="center">
+  <strong>Reliable Windows evidence collection, organized around one verified run at a time.</strong>
+</p>
 
 <div style="text-align:center;" align="center">
     <a href="https://github.com/DefinetlyNotAI/Logicytics/issues"><img src="https://img.shields.io/github/issues/DefinetlyNotAI/Logicytics" alt="GitHub Issues"></a>
@@ -21,232 +19,128 @@ This comprehensive guide is here to equip you with everything you need to use Lo
     <a href="https://www.bestpractices.dev/projects/9451"><img src="https://www.bestpractices.dev/projects/9451/badge" alt="OpenSSF Best Practices Badge"></a>
 </div>
 
-> [!CAUTION]
-> By using this software, you agree to the license, and agree that you hold responsibility of how you use and modify the
-> code.
+Logicytics is a Windows evidence collection framework. It validates every collector before use, runs each one in
+isolation, and keeps the result in a manifest-backed run folder. A collector can succeed, skip, or fail without
+obscuring the rest of the verified run.
 
-## Installation and Setup
+The complete user and developer manual is in [`docs/README.md`](docs/README.md) and is mirrored to
+the [Logicytics Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki).
 
-To install and setup Logicytics, follow these steps:
+> Use Logicytics only on systems and data you are authorized to inspect.
 
-1. **Install Python**: If you don't have Python installed, you can download it from
-   the [official website](https://www.python.org/downloads/).
+## Start here
 
-2. **Install Dependencies**: Logicytics requires Python modules. You can install all the required modules by running the
-   following command in your terminal:     `pip install -r requirements.txt`
+The installer is the only command intended to run outside the managed virtual environment. Run it once from the
+repository root:
 
-3. **Run Logicytics**: To run Logicytics, simply run the following command in your terminal: `python Logicytics.py -h` -
-   This opens a help menu.
+```powershell
+python -m logicytics.cli.installer
+```
 
-> [!IMPORTANT]
-> We recommend Python Version `3.11` or higher, as the project is developed and tested on this version.
->
-> To use vulnscan, you will need `torch` - Installation instructions can be
-> found [here](https://pytorch.org/#fws_68845ae25b0fb).
-> If you have a supported GPU, it is recommended to install the Nvidea GPU version of PyTorch for better performance.
->
-> Settings should be: `Stable -> Windows -> Pip -> Python` and if you have a supported CUDA version, select that too
-> else CPU.
+Then activate the environment and check the installation:
 
-### Prerequisites
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m logicytics preflight
+```
 
-- **Python**: The project requires Python 3.8 or higher. You can download Python from
-  the [official website](https://www.python.org/downloads/).
+When preflight reports no invalid collectors, make a plan and run it:
 
-- **Dependencies**: The project requires certain Python modules to be installed. You can install all the required
-  modules by running the following command in your terminal: `pip install -r requirements.txt`.
+```powershell
+python -m logicytics plan --profile standard
+python -m logicytics run --profile standard --acknowledge-authorization
+```
 
-- **Administrative Privileges**: To be able to run the program using certain features of the project, like registry
-  modification, you must run the program with administrative privileges.
+If a normal command says the environment is missing, run the installer. If it says the environment is not active, run
+`.\.venv\Scripts\Activate.ps1` first.
 
-- **System Requirements**: The project has been tested on Windows 10 and 11. It will not work on other operating
-  systems.
+## Choose a run
 
-- **Knowledge of Command Line**: The project uses command line options for the user to interact with the program. It is
-  recommended to have a basic understanding of command line options.
+Every run validates collectors, records a manifest, and packages the result unless `--no-package` is supplied.
 
-> [!IMPORTANT]
-> You may create a `.sys.ignore` file in the `CODE/SysInternal_Suite` directory to not extract the exe binaries from the
-> ZIP file (This is done for the OpenSSF score and to discourage binaries being used without source code), if the
-`.sys.ignore` file is not found, it will auto extract the binaries and run them using `Logicytics`.
->
-> For more details on these binaries,
-> go [here](https://learn.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite) - For you weary cautious
-> internet
-> crusaders, you can view the [source code here](https://github.com/MicrosoftDocs/sysinternals) and compare hashes and
-> perform your audits.
+| Need                                | Command                                                                                    |
+|-------------------------------------|--------------------------------------------------------------------------------------------|
+| Fast local inventory                | `python -m logicytics run --mode quick --acknowledge-authorization`                        |
+| Everyday collection                 | `python -m logicytics run --mode balanced --acknowledge-authorization`                     |
+| Deterministic sequential collection | `python -m logicytics run --mode standard --acknowledge-authorization`                     |
+| Local-only collection               | `python -m logicytics run --mode offline --acknowledge-authorization`                      |
+| Extended collection                 | `python -m logicytics run --mode thorough --acknowledge-authorization`                     |
+| Thorough duration report            | `python -m logicytics run --mode thorough --acknowledge-authorization --performance-check` |
 
-## Step-by-Step Installation and Usage
+`thorough` can include administrator-only collectors. Start an elevated shell when the plan reports that requirement.
+See every available mode with `python -m logicytics --modes`.
+Add `--performance-check` to any `run --mode ...` command to time that mode's selected collectors serially.
 
-1) Install Python
-   If you don't have Python installed, you can download it from the <a href="https://www.python.org/downloads/">official
-   website</a>.
-   Make sure to select the option to "Add Python to PATH" during installation.
+For offline collection from removable storage, add `--usb` to `preflight`,
+`plan`, `run`, or `collector`. It scans `A:` through `Z:` and uses the first
+drive containing `Windows`; use `--usb=E` to select a specific Windows drive.
+USB mode rejects output, cache, and temporary storage on that Windows disk.
 
-2) Install Dependencies
-   Logicytics requires Python modules. You can install all the required modules by running the following command in your
-   terminal:
-   `pip install -r requirements.txt`
+## Where results go
 
-3) Run Logicytics
-   To run Logicytics, simply run the following command in your terminal:
-   <code>python Logicytics.py -h</code>
-   This opens a help menu.
+Each run receives its own directory under `output/data/`:
 
-4) Run the Program
-   Once you have run the program, you can run the program with the following command:
-   `python Logicytics.py -h`
-   Replace the flags with the ones you want to use.
-   you must have admin privileges while running!
+```text
+output/data/run/<fingerprint-prefix>/
+  manifest.json          # status, collector results, and artifact catalog
+  artifacts/             # collected evidence
+  logs/                  # run and collector JSONL events
+  reports/               # generated summaries
 
-> [!TIP]
-> Although it's really recommended to use admin, by setting debug in the config.json to true, you can bypass this
-> requirement
+output/data/zip/<fingerprint-prefix>.zip
+output/data/hashes/<fingerprint-prefix>.zip.sha256
+```
 
-5) Wait for magic to happen
-   Logicytics will now run and gather data according to the flags you used.
+The console is intentionally brief. Use `manifest.json` to inspect a run, the package hash to verify a package, and
+`output/logs/Logicytics.log` for the human-readable application log. Interaction history and its usage graph live in
+`.cache/`, which is created automatically. Worker scratch files default to project-local `.temp/`; set
+`runtime.temporary_directory: system` in `logicytics.yaml` to use `%TEMP%/logicytics/` instead. The fingerprint is a
+SHA-256 identity derived from the immutable run ID; output uses its shortest unique prefix, starting at eight characters
+and extending only on a collision. Set `logging.level: DEBUG` in `logicytics.yaml` when you need detailed worker
+lifecycle information and file call sites.
 
-6) Enjoy the gathered data
-   Once the program has finished running, you can find the gathered data in the "ACCESS/DATA" folder. Both Zip and Hash
-   will be found there.
+## Useful commands
 
-> [!NOTE]
-> All Zips and Hashes follow a conventional naming mechanism that goes as follows
-> `Logicytics_{CODE-or-MODS}_{Flag-Used}_{Date-And-Time}.zip`
+```powershell
+# Revalidate every collector instead of reusing cached preflight probes
+python -m logicytics preflight --invalidate-cache
 
-7) Share the love
-   If you like Logicytics, please consider sharing it with others or spreading the word about it.
+# Inspect a plan without collecting evidence
+python -m logicytics plan --profile standard
 
-8) Contribute to the project
-   If you have an idea or want to contribute to the project, you can submit an issue or PR on
-   the <a href="https://github.com/DefinetlyNotAI/Logicytics">GitHub repository</a>.
+# Run one collector only
+python -m logicytics collector core.system.system_info --acknowledge-authorization
 
-### Basic Usage
+# Run the complete test suite
+python -m logicytics.cli.tests
 
-After running and successfully collecting data, you may traverse the ACCESS directory as much as you like,
-Remove add and delete files, it's the safe directory where your backups, hashes, data zips and logs are found.
+# See diagnostics, configuration, and maintenance state
+python -m logicytics debug
+```
 
-> [!TIP]
-> Watch this [video](https://www.youtube.com/watch?v=XVTBmdTQqOs) to see a real life demo of Logicytics (Although the
-> tools and interface may be changed as it's an older version `2.1.1` - `2.3.3`)
+Use `python -m logicytics --help` or append `--help` to any command for its full flags.
 
-## Configuration
+## Configuration and extensions
 
-Logicytics uses a config.ini file to store configurations. The config.ini is located in the CODE directory.
+`logicytics.yaml` is the single user configuration file. It controls output locations, worker limits, logging, optional
+Sysinternals setup, and declared collector settings. Keep credentials and secrets out of it.
 
-The config.ini file is a INI file that contains important information, you can find it [here](CODE/config.ini)
+Core collectors are shipped and validated as part of the application. Plugins are opt-in and must pass the same
+validation boundary before they can run.
 
-The config.ini file is used to store the DEBUG flag bool, the VERSION, and the CURRENT_FILES.
-It is also used to store and save settings for other programs.
+- [Configuration reference](docs/CONFIGURATION.md)
+- [Output contract](docs/OUTPUTS.md)
+- [Migration guide](docs/MIGRATION.md)
+- [Flow matrix](docs/FLOW_MATRIX.md)
 
-> [!TIP]
-> CURRENT_FILES is an array of strings that contains the names of the files you have,
-> this is used to later check for corruption or bugs.
-> VERSION is the version of the project, used to check and pull for updates.
+## Help and contributing
 
-## Mods
+The [Logicytics Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) covers setup, troubleshooting, collector
+development, architecture, and security in more depth.
 
-Mods are special files that are run with the `--modded` flag.
-These files are essentially scripts that are run after the main Logicytics.py script is run
-and the verified scripts are run.
+For changes to Logicytics, read [CONTRIBUTING.md](CONTRIBUTING.md). Please also review [SECURITY.md](SECURITY.md)
+and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
-They are used to add extra functionality to the script.
-They are located in the `MODS` directory. In order to make a mod,
-you need to create a python file with the `.py` extension or any of the supported extensions `.exe .ps1 .bat`
-in the `MODS` directory.
+## License
 
-These file will be run after the main script is run.
-When making a mod, you should avoid acting based on other files directly,
-as this can cause conflicts with the data harvesting.
-Instead, you should use the `Logicytics.py` file and other scripts as a reference
-for how to add features to the script.
-
-The `--modded` flag is used to run all files in the `MODS` directory.
-This flag is not needed for other files in the `CODE` directory to run,
-but it is needed for mods to run.
-
-The `--modded` flag can also be used to run custom scripts.
-If you want to run a custom script with the `--modded` flag,
-you can add the script to the `MODS` directory, and it will be run with the `--modded` flag.
-
-To check all the mods and how to make your own, you can check the `Logicytics.py` file and the Wiki.
-Also refer to the contributing.md for more info
-
-## Troubleshooting
-
-If you are having issues, here are some troubleshooting tips:
-
-Some errors may not necessarily mean the script is at fault,
-but other OS related faults like files not existing,
-or files not being modified, or files not being created.
-
-Some tips are:
-
-- Check if the script is running as admin and not in a VM
-- Check if the script has the correct permissions and correct dependencies to run
-- Check if the script is not being blocked by a firewall or antivirus or by a VPN or proxy
-- Check if the script is not being blocked by any other software or service
-
-If those don't work attempt:
-
-- Try running the script with powershell instead of cmd, or vice versa
-- Try running the script in a different directory, computer or python version above 3.8
-    - Note: The version used to develop, test and run the script is 3.11
-- Try running the `--debug` flag and check the logs
-
-### Support Resources
-
-Check out the [wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki) for help.
-
-> [!TIP]
-> You can check out future plans [here](PLANS.md),
-> you can contribute these plans if you have no idea's on what to contribute!
-
-### Want to create your own mod?
-
-Check out the [contributing guidlines](CONTRIBUTING.md) file for more info
-
-### Want More?
-
-If there is a specific piece of data that you would like to see extracted by Logicytics,
-please let us know. We are constantly working to improve the project and adding new features.
-
-### Want to create your own mod?
-
-Check out the [contributing guidlines](CONTRIBUTING.md) file for more info,
-as well as the [wiki guidelines](https://github.com/DefinetlyNotAI/Logicytics/wiki/5-How-to-Contribute) for more info
-Tips and tricks of the given modules/APIs can be
-found [here](https://github.com/DefinetlyNotAI/Logicytics/wiki/6-Code-tips-and-tricks) too!
-
-> [!IMPORTANT]
-> Always adhere to the [coding standards](https://github.com/DefinetlyNotAI/Logicytics/wiki/7-Advanced-Coding-Standards)
-> of Logicytics!
-
-## Conclusion
-
-Logicytics is a powerful tool that can extract a wide variety of data from a Windows system.
-With its ability to extract data from various sources, Logicytics can be used for a variety of purposes,
-from forensics to system information gathering.
-Its ability to extract data from various sources makes it a valuable tool
-for any Windows system administrator or forensic investigator.
-
-> [!CAUTION]
-> Please remember that extracting data from a system without proper authorization is illegal and unethical.
-> Always obtain proper authorization before extracting any data from a system.
-
-## Support Me
-
-Please consider buying me a coffee or sponsoring me in GitHub sponsor,
-I am saving for my college funds, and I need your help!
-Supporters will be placed in the Credits ❤️
-
-### Links
-
-- [Project's Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki)
-- [Project's Future](PLANS.md)
-- [Project's License](LICENSE)
-
-### License
-
-- [Developer Certificate of Origin](DCO.md)
-- [Our License](LICENSE)
+Logicytics is released under the [project license](LICENSE).
