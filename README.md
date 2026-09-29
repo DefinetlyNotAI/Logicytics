@@ -25,6 +25,7 @@ obscuring the rest of the verified run.
 
 The complete user and developer manual is in [`docs/README.md`](docs/README.md) and is mirrored to
 the [Logicytics Wiki](https://github.com/DefinetlyNotAI/Logicytics/wiki).
+Candidate features for the next nine 4.x releases are tracked in the [4.x roadmap](PLAN.md).
 
 > Use Logicytics only on systems and data you are authorized to inspect.
 
